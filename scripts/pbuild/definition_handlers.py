@@ -46,3 +46,7 @@ class ArrayHandler( handler.NodeHandler ) :
 
     def element_data( self, data ) :
         self.data = data
+
+handlers = [
+    ArrayHandler
+]

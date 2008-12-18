@@ -53,7 +53,7 @@ class Array( Definition ) :
         self.items.append( item )
 
     def to_string( self ) :
-        return ",".join( self.items )
+        return "[" + ",".join( self.items ) + "]"
 
     def to_array( self ) :
         return self.items

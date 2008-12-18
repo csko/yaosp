@@ -1,0 +1,88 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2008 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="compile">
+    <array name="arch_files">
+        <item>arch/i386/src/boot.S</item>
+        <item>arch/i386/src/start.c</item>
+    </array>
+
+    <array name="files">
+    </array>
+
+    <target name="clean">
+    </target>
+
+    <target name="prepare" type="private">
+        <mkdir>objs</mkdir>
+        <mkdir>objs/arch</mkdir>
+    </target>
+
+    <target name="compile">
+        <call target="prepare"/>
+
+        <echo>Compiling architecture specific files</echo>
+
+        <for var="i" array="${arch_files}">
+            <echo>-> ${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/arch/filename(${i}).o</output>
+                <include>./include</include>
+                <flag>-c</flag>
+                <flag>-m32</flag>
+            </gcc>
+        </for>
+
+        <echo>Compiling architecture independent files</echo>
+
+        <for var="i" array="${files}">
+            <echo>-> ${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/filename(${i}).o</output>
+                <include>./include</include>
+                <flag>-c</flag>
+                <flag>-m32</flag>
+            </gcc>
+        </for>
+
+        <echo>Linking kernel binary</echo>
+        <echo>-> objs/kernel</echo>
+
+        <ld>
+            <input>objs/*.o</input>
+            <input>objs/arch/*.o</input>
+            <output>objs/kernel</output>
+            <linkerscript>arch/i386/linker.ld</linkerscript>
+        </ld>
+    </target>
+
+    <target name="install">
+        <copy from="objs/kernel" to="../../build/system/kernel"/>
+    </target>
+
+    <target name="all">
+        <call target="clean"/>
+        <call target="compile"/>
+        <call target="install"/>
+    </target>
+</build>

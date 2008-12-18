@@ -37,11 +37,21 @@ _start:
 
     movl $_kernel_stack_top, %esp
 
+    /* clear EBP */
+
+    xorl %ebp, %ebp 
+
     /* Check if the kernel was loaded with a multiboot
        compatible bootloader or not */
 
     cmpl $MB_BOOTLOADER_MAGIC, %eax
     jne _multiboot_nok
+
+    /* Pass the pointer to the multiboot info and
+       call the C entry function */
+
+    pushl %ebx
+    call arch_start
 
 _multiboot_nok:
     hlt

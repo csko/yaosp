@@ -31,10 +31,15 @@ class TargetHandler( handler.NodeHandler ) :
             self.target.add_sub_work( work )
 
     def node_started( self, attrs ) :
+        private = False
+
         if not "name" in attrs :
             return
 
-        self.target = works.Target( attrs[ "name" ] )
+        if "type" in attrs and attrs[ "type" ] == "private" :
+            private = True
+
+        self.target = works.Target( attrs[ "name" ], private )
 
     def node_finished( self ) :
         self.get_context().add_target( self.target )
@@ -65,6 +70,38 @@ class GccHandler( handler.NodeHandler ) :
             self.work.set_output( self.data )
         elif name == "flag" :
             self.work.add_flag( self.data )
+        elif name == "include" :
+            self.work.add_include( self.data )
+
+    def element_data( self, data ) :
+        self.data = data
+
+class LdHandler( handler.NodeHandler ) :
+    handled_node = "ld"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+        self.data = ""
+
+    def node_started( self, attrs ) :
+        self.work = works.LdWork()
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
+    def start_element( self, name, attrs ) :
+        self.data = ""
+
+    def end_element( self, name ) :
+        if name == "input" :
+            self.work.add_input( self.data )
+        elif name == "output" :
+            self.work.set_output( self.data )
+        elif name == "linkerscript" :
+            self.work.set_linker_script( self.data )
 
     def element_data( self, data ) :
         self.data = data
@@ -108,3 +145,123 @@ class ForHandler( handler.NodeHandler ) :
     def node_finished( self ) :
         if self.work != None :
             self.get_parent().add_work( self.work )
+
+class MkDirHandler( handler.NodeHandler ) :
+    handled_node = "mkdir"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.data = ""
+        self.work = None
+
+    def node_started( self, attrs ) :
+        self.work = works.MakeDirectory()
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.work.set_directory( self.data )
+            self.get_parent().add_work( self.work )
+
+    def element_data( self, data ) :
+        self.data = data
+
+class RmDirHandler( handler.NodeHandler ) :
+    handled_node = "rmdir"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.data = ""
+        self.work = None
+
+    def node_started( self, attrs ) :
+        self.work = works.RemoveDirectory()
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.work.set_directory( self.data )
+            self.get_parent().add_work( self.work )
+
+    def element_data( self, data ) :
+        self.data = data
+
+class CallHandler( handler.NodeHandler ) :
+    handled_node = "call"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+
+    def node_started( self, attrs ) :
+        if not "target" in attrs :
+            return
+
+        if "directory" in attrs :
+            directory = attrs[ "directory" ]
+        else :
+            directory = None
+
+        self.work = works.CallTarget( attrs[ "target" ], directory )
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
+class CopyHandler( handler.NodeHandler ) :
+    handled_node = "copy"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+
+    def node_started( self, attrs ) :
+        if not "from" in attrs or not "to" in attrs :
+            return
+
+        self.work = works.CopyWork( attrs[ "from" ], attrs[ "to" ] )
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
+class ExecHandler( handler.NodeHandler ) :
+    handled_node = "exec"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.data = ""
+        self.work = None
+
+    def node_started( self, attrs ) :
+        if not "executable" in attrs :
+            return
+
+        self.work = works.ExecWork( attrs[ "executable" ] )
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
+    def end_element( self, name ) :
+        if name == "arg" :
+            self.work.add_argument( self.data )
+
+    def element_data( self, data ) :
+        self.data = data
+
+handlers = [
+    TargetHandler,
+    GccHandler,
+    LdHandler,
+    EchoHandler,
+    ForHandler,
+    MkDirHandler,
+    RmDirHandler,
+    CallHandler,
+    CopyHandler,
+    ExecHandler
+]

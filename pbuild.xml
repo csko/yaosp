@@ -1,0 +1,66 @@
+<!--
+
+Top level build file
+
+Copyright (c) 2008 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <target name="all">
+        <call target="prepare_build"/>
+        <call target="compile_sources"/>
+        <call target="create_iso"/>
+    </target>
+
+    <target name="clean">
+        <call target="clean_sources"/>
+    </target>
+
+    <target name="prepare_build" type="private">
+        <mkdir>build</mkdir>
+        <mkdir>build/boot</mkdir>
+        <mkdir>build/boot/grub</mkdir>
+        <mkdir>build/system</mkdir>
+    </target>
+
+    <target name="compile_sources" type="private">
+        <call target="all" directory="source"/>
+    </target>
+
+    <target name="create_iso" type="private">
+        <copy from="scripts/grub/menu.lst" to="build/boot/grub/menu.lst"/>
+        <copy from="scripts/grub/stage2_eltorito" to="build/boot/grub/stage2_eltorito"/>
+        
+        <exec executable="mkisofs">
+            <arg>-R</arg>
+            <arg>-l</arg>
+            <arg>-b</arg>
+            <arg>boot/grub/stage2_eltorito</arg>
+            <arg>-boot-load-size</arg>
+            <arg>4</arg>
+            <arg>-boot-info-table</arg>
+            <arg>-no-emul-boot</arg>
+            <arg>-o</arg>
+            <arg>os.iso</arg>
+            <arg>build</arg>
+        </exec>
+    </target>
+
+    <target name="clean_sources" type="private">
+        <call target="clean" directory="source"/>
+    </target>
+</build>
