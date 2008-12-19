@@ -63,6 +63,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-c</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-fno-builtin</flag>
             </gcc>
         </for>
 
@@ -77,6 +80,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-c</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-fno-builtin</flag>
             </gcc>
         </for>
 

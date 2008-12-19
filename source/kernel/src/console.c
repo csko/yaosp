@@ -19,6 +19,7 @@
 #include <types.h>
 #include <console.h>
 #include <lib/stdarg.h>
+#include <lib/printf.h>
 
 #include <arch/spinlock.h>
 
@@ -34,6 +35,7 @@ static int kprintf_helper( void* data, char c ) {
     if ( screen != NULL ) {
         screen->ops->putchar( screen, c );
     }
+
     return 0;
 }
 
