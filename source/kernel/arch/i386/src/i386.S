@@ -17,11 +17,13 @@
  */
 
 #include <arch/cpu.h>
+#include <arch/gdt.h>
 
 .section .text
 
 .global disable_interrupts
 .global enable_interrupts
+.global reload_segment_descriptors
 
 disable_interrupts:
     pushfl
@@ -35,3 +37,14 @@ enable_interrupts:
     sti
     ret
 .size enable_interrupts,.-enable_interrupts
+
+reload_segment_descriptors:
+    movw $KERNEL_DS, %ax
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %ds
+    movw %ax, %ss
+    ljmpl $KERNEL_CS, $1f
+1:
+    ret
+.size reload_segment_descriptors,.-reload_segment_descriptors

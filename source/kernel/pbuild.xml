@@ -30,6 +30,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/start.c</item>
         <item>arch/i386/src/screen.c</item>
         <item>arch/i386/src/spinlock.c</item>
+        <item>arch/i386/src/gdt.c</item>
     </array>
 
     <array name="files">

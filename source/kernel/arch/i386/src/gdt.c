@@ -1,4 +1,4 @@
-/* C entry point of the i386 architecture
+/* Global Descriptor Table handling
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,16 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <console.h>
-
-#include <arch/screen.h>
 #include <arch/gdt.h>
 
-void arch_start( void ) {
-    init_screen();
-    kprintf( "Screen initialized.\n" );
+gdt_descriptor_t gdt[ GDT_ENTRIES ] = {
+  /* NULL descriptor */
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  /* Kernel CS */
+  { 0xFFFF, 0, 0, 0x9A, 0xF, 0, 0, 1, 1, 0 },
+  /* Kernel DS */
+  { 0xFFFF, 0, 0, 0x92, 0xF, 0, 0, 1, 1, 0 },
+  /* User CS */
+  { 0xFFFF, 0, 0, 0xFE, 0xF, 0, 0, 1, 1, 0 },
+  /* User DS */
+  { 0xFFFF, 0, 0, 0xF2, 0xF, 0, 0, 1, 1, 0 },
+};
 
-    kprintf( "Initializing GDT ... " );
-    init_gdt();
-    kprintf( "done\n" );
+int init_gdt( void ) {
+    gdt_t gdtp;
+
+    gdtp.size = sizeof( gdt ) - 1;
+    gdtp.base = ( uint32_t )&gdt;
+
+    __asm__ __volatile__(
+        "lgdt %0\n"
+        :
+        : "m" ( gdtp )
+    );
+
+    reload_segment_descriptors();
+
+    return 0;
 }
