@@ -29,6 +29,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </array>
 
     <target name="clean">
+        <delete>objs/arch/*</delete>
+        <rmdir>objs/arch</rmdir>
+        <delete>objs/*</delete>
+        <rmdir>objs</rmdir>
     </target>
 
     <target name="prepare" type="private">

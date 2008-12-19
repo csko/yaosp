@@ -15,16 +15,21 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+import os
 import sys
 import xml.sax
-import context
-import handler
+import context as ctx
+import handler as hndlr
 import work_handlers
 import definition_handlers
 
 if __name__ == "__main__" :
-    context = context.BuildContext()
-    handler = handler.BuildHandler( context )
+    if not os.path.isfile( "pbuild.xml" ) :
+        print "pbuild.xml not found in the current directory!"
+        sys.exit( 0 )
+
+    context = ctx.BuildContext()
+    handler = hndlr.BuildHandler( context )
 
     handler.add_node_handlers( work_handlers.handlers )
     handler.add_node_handlers( definition_handlers.handlers )

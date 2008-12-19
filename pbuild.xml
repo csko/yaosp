@@ -44,7 +44,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="create_iso" type="private">
         <copy from="scripts/grub/menu.lst" to="build/boot/grub/menu.lst"/>
         <copy from="scripts/grub/stage2_eltorito" to="build/boot/grub/stage2_eltorito"/>
-        
+
         <exec executable="mkisofs">
             <arg>-R</arg>
             <arg>-l</arg>
@@ -55,7 +55,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <arg>-boot-info-table</arg>
             <arg>-no-emul-boot</arg>
             <arg>-o</arg>
-            <arg>os.iso</arg>
+            <arg>yaosp.iso</arg>
             <arg>build</arg>
         </exec>
     </target>

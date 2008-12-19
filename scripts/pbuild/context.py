@@ -86,6 +86,9 @@ class BuildContext :
         pattern = pattern.replace( "*", ".*" )
         mask = re.compile( pattern )
 
+        if not os.path.isdir( directory ) :
+            return []
+
         entries = os.listdir( directory )
 
         result = []

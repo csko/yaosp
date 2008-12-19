@@ -205,7 +205,10 @@ class RemoveDirectory( Work ) :
         self.directory = directory
 
     def execute( self, context ) :
-        os.rmdir( self.directory )
+        try :
+            os.rmdir( self.directory )
+        except OSError, e :
+            pass
 
 class CallTarget( Work ) :
     def __init__( self, target, directory ) :
@@ -254,6 +257,22 @@ class CopyWork( Work ) :
 
         src_file.close()
         dest_file.close()
+
+class DeleteWork( Work ) :
+    def __init__( self ) :
+        self.file = ""
+
+    def set_file( self, file ) :
+        self.file = file
+
+    def execute( self, context ) :
+        files = context.replace_wildcards( self.file )
+
+        for file in files :
+            try :
+                os.remove( file )
+            except OSError, e :
+                pass
 
 class ExecWork( Work ) :
     def __init__( self, executable ) :

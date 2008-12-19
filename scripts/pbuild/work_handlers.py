@@ -227,6 +227,26 @@ class CopyHandler( handler.NodeHandler ) :
         if self.work != None :
             self.get_parent().add_work( self.work )
 
+class DeleteHandler( handler.NodeHandler ) :
+    handled_node = "delete"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.data = ""
+        self.work = None
+
+    def node_started( self, attrs ) :
+        self.work = works.DeleteWork()
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.work.set_file( self.data )
+            self.get_parent().add_work( self.work )
+
+    def element_data( self, data ) :
+        self.data = data
+
 class ExecHandler( handler.NodeHandler ) :
     handled_node = "exec"
 
@@ -263,5 +283,6 @@ handlers = [
     RmDirHandler,
     CallHandler,
     CopyHandler,
+    DeleteHandler,
     ExecHandler
 ]
