@@ -97,5 +97,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="clean"/>
         <call target="compile"/>
         <call target="install"/>
+        <call target="test" directory="tst"/>
     </target>
 </build>

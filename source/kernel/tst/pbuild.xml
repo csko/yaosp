@@ -1,0 +1,22 @@
+<build default="test">
+    <target name="test">
+        <call target="printf_test"/>
+    </target>
+
+    <target name="printf_test" type="private">
+        <echo>Compiling printf test ...</echo>
+
+        <gcc>
+            <input>test_printf.c</input>
+            <input>../src/lib/printf.c</input>
+            <output>test_printf</output>
+            <include>../include</include>
+        </gcc>
+
+        <echo>Running printf test ...</echo>
+
+        <exec executable="./test_printf"/>
+
+        <delete>test_printf</delete>
+    </target>
+</build>
