@@ -287,3 +287,14 @@ class ExecWork( Work ) :
 
         process = subprocess.Popen( command )
         process.wait()
+
+class SymlinkWork( Work ) :
+    def __init__( self, src, dest ) :
+        self.src = src
+        self.dest = dest
+
+    def execute( self, context ) :
+        try :
+            os.symlink( self.src, self.dest )
+        except OSError, e :
+            pass

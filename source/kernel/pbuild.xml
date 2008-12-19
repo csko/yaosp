@@ -33,11 +33,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <rmdir>objs/arch</rmdir>
         <delete>objs/*</delete>
         <rmdir>objs</rmdir>
+        <delete>include/arch</delete>
     </target>
 
     <target name="prepare" type="private">
         <mkdir>objs</mkdir>
         <mkdir>objs/arch</mkdir>
+        <symlink from="../arch/i386/include" to="include/arch"/>
     </target>
 
     <target name="compile">

@@ -273,6 +273,24 @@ class ExecHandler( handler.NodeHandler ) :
     def element_data( self, data ) :
         self.data = data
 
+class SymlinkHandler( handler.NodeHandler ) :
+    handled_node = "symlink"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+
+    def node_started( self, attrs ) :
+        if not "from" in attrs or not "to" in attrs :
+            return
+
+        self.work = works.SymlinkWork( attrs[ "from" ], attrs[ "to" ] )
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
 handlers = [
     TargetHandler,
     GccHandler,
@@ -284,5 +302,6 @@ handlers = [
     CallHandler,
     CopyHandler,
     DeleteHandler,
-    ExecHandler
+    ExecHandler,
+    SymlinkHandler
 ]
