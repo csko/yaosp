@@ -28,7 +28,6 @@
 
 atomic_get:
     movl 4(%esp), %edx
-    lock
     movl (%edx), %eax
     ret
 .size atomic_get,.-atomci_get
@@ -38,7 +37,6 @@ atomic_get:
 atomic_set:
     movl 4(%esp), %edx
     movl 8(%esp), %eax
-    lock
     movl %eax, (%edx)
     ret
 .size atomic_set,.-atomic_set
