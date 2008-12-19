@@ -19,6 +19,9 @@
 #ifndef _ARCH_SCREEN_H_
 #define _ARCH_SCREEN_H_
 
+#define SCREEN_WIDTH 80
+#define SCREEN_HEIGHT 25
+
 int init_screen( void );
 
 #endif // _ARCH_SCREEN_H_

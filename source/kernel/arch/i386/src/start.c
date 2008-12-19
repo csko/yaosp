@@ -17,7 +17,9 @@
  */
 
 #include <arch/screen.h>
+#include <console.h>
 
 void arch_start( void ) {
     init_screen();
+    kprintf("Screen initialized.\n");
 }

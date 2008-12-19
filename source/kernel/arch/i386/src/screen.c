@@ -113,7 +113,7 @@ static void screen_putchar( console_t* console, char c ) {
         }
     }
 
-    /* Move the cursor to the modofied position */
+    /* Move the cursor to the modified position */
 
     screen_move_cursor( console );
 }
@@ -148,8 +148,8 @@ static console_operations_t screen_ops = {
 static console_t screen = {
     .x = 0,
     .y = 0,
-    .width = 80,
-    .height = 25,
+    .width = SCREEN_WIDTH,
+    .height = SCREEN_HEIGHT,
     .ops = &screen_ops
 };
 
