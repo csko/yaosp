@@ -11,6 +11,7 @@
             <input>../src/lib/printf.c</input>
             <output>test_printf</output>
             <include>../include</include>
+            <flag>-Wall</flag>
         </gcc>
 
         <echo>Running printf test ...</echo>

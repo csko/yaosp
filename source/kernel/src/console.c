@@ -34,6 +34,7 @@ static int kprintf_helper( void* data, char c ) {
     if ( screen != NULL ) {
         screen->ops->putchar( screen, c );
     }
+    return 0;
 }
 
 int kprintf( const char* format, ... ) {

@@ -35,6 +35,7 @@ static int printf_test_helper( void* data, char c ) {
     buffer = ( printf_buffer_t* )data;
 
     buffer->buffer[ buffer->position++ ] = c;
+    return 0;
 }
 
 static int printf_test( const char* format, ... ) {
@@ -50,12 +51,14 @@ static int printf_test( const char* format, ... ) {
 int main( int argc, char** argv ) {
     INIT_BUFFER
 
+    DO_TEST( "A", "%c", 'A' )
     DO_TEST( "12", "%d", 12 )
     DO_TEST( "-12", "%d", -12 )
     DO_TEST( "12", "%u", 12 )
     DO_TEST( "c", "%x", 12 )
     DO_TEST( "C", "%X", 12 )
     DO_TEST( "hello", "%s", "hello" )
+    DO_TEST( "  hello world 12 c", "%c %s %s %d %x", ' ', "hello", "world", 12, 12 )
 
     printf( "printf test OK!\n" );
 

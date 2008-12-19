@@ -142,6 +142,8 @@ class GccWork( Work ) :
 
         # Execute a new GCC process
 
+#	Debug
+#        print command
         process = subprocess.Popen( command )
         process.wait()
 

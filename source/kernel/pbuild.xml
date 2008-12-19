@@ -62,6 +62,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <flag>-c</flag>
                 <flag>-m32</flag>
+                <flag>-Wall</flag>
             </gcc>
         </for>
 
@@ -75,6 +76,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <flag>-c</flag>
                 <flag>-m32</flag>
+                <flag>-Wall</flag>
             </gcc>
         </for>
 
