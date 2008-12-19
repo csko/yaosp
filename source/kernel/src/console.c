@@ -18,10 +18,27 @@
 
 #include <types.h>
 #include <console.h>
+#include <lib/stdarg.h>
 
 static console_t* screen = NULL;
 
 int console_set_screen( console_t* console ) {
     screen = console;
+    return 0;
+}
+
+static int kprintf_helper( void* data, char c ) {
+    if ( screen != NULL ) {
+        screen->ops->putchar( screen, c );
+    }
+}
+
+int kprintf( const char* format, ... ) {
+    va_list args;
+
+    va_start( args, format );
+    do_printf( kprintf_helper, NULL, format, args );
+    va_end( args );
+
     return 0;
 }

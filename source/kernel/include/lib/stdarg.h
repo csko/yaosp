@@ -1,4 +1,4 @@
-/* Console structure definitions and functions
+/* Variable argument list handling
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,31 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _CONSOLE_H_
-#define _CONSOLE_H_
+#ifndef _STDARG_H_
+#define _STDARG_H_
 
-struct console;
+typedef __builtin_va_list va_list;
 
-typedef void console_clear_t( struct console* console );
-typedef void console_putchar_t( struct console* console, char c );
-typedef void console_gotoxy_t( struct console* console, int x, int y );
+#define va_start(a,b) __builtin_va_start(a,b)
+#define va_end(a)     __builtin_va_end(a)
+#define va_arg(a,b)   __builtin_va_arg(a,b)
 
-typedef struct console_operations {
-    console_clear_t* clear;
-    console_putchar_t* putchar;
-    console_gotoxy_t* gotoxy;
-} console_operations_t;
-
-typedef struct console {
-    int x;
-    int y;
-    int width;
-    int height;
-    console_operations_t* ops;
-} console_t;
-
-int console_set_screen( console_t* console );
-
-int kprintf( const char* format, ... );
-
-#endif // _CONSOLE_H_
+#endif // _STDARG_H_
