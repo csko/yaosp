@@ -20,12 +20,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="compile">
-    <array name="arch_files">
+    <array name="arch_files_asm">
         <item>arch/i386/src/boot.S</item>
-        <item>arch/i386/src/start.c</item>
-        <item>arch/i386/src/screen.c</item>
         <item>arch/i386/src/atomic.S</item>
         <item>arch/i386/src/i386.S</item>
+    </array>
+
+    <array name="arch_files_c">
+        <item>arch/i386/src/start.c</item>
+        <item>arch/i386/src/screen.c</item>
         <item>arch/i386/src/spinlock.c</item>
     </array>
 
@@ -52,9 +55,27 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling architecture specific files</echo>
+        <echo>Compiling architecture specific assembly files</echo>
 
-        <for var="i" array="${arch_files}">
+        <for var="i" array="${arch_files_asm}">
+            <echo>-> ${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/arch/filename(${i}).o</output>
+                <include>./include</include>
+                <define key="__ASSEMBLER__"/>
+                <flag>-c</flag>
+                <flag>-m32</flag>
+                <flag>-Wall</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-fno-builtin</flag>
+            </gcc>
+        </for>
+
+        <echo>Compiling architecture specific C files</echo>
+
+        <for var="i" array="${arch_files_c}">
             <echo>-> ${i}</echo>
             <gcc>
                 <input>${i}</input>

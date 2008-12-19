@@ -52,6 +52,7 @@ class GccHandler( handler.NodeHandler ) :
 
         self.work = None
         self.data = ""
+        self.def_key = ""
 
     def node_started( self, attrs ) :
         self.work = works.GccWork()
@@ -63,6 +64,10 @@ class GccHandler( handler.NodeHandler ) :
     def start_element( self, name, attrs ) :
         self.data = ""
 
+        if name == "define" :
+            if "key" in attrs :
+                self.def_key = attrs[ "key" ]
+
     def end_element( self, name ) :
         if name == "input" :
             self.work.add_input( self.data )
@@ -72,6 +77,11 @@ class GccHandler( handler.NodeHandler ) :
             self.work.add_flag( self.data )
         elif name == "include" :
             self.work.add_include( self.data )
+        elif name == "define" :
+            if self.def_key != None and len( self.def_key ) > 0 :
+              self.work.add_define( self.def_key, self.data )
+
+            self.def_key = None
 
     def element_data( self, data ) :
         self.data = data

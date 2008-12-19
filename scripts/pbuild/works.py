@@ -101,6 +101,7 @@ class GccWork( Work ) :
         self.output = ""
         self.flags = []
         self.includes = []
+        self.defines = {}
 
     def add_input( self, input ) :
         self.inputs.append( input )
@@ -114,10 +115,14 @@ class GccWork( Work ) :
     def add_include( self, include ) :
         self.includes.append( include )
 
+    def add_define( self, key, value ) :
+        self.defines[ key ] = value
+
     def execute( self, context ) :
         real_inputs = []
         real_flags = None
         real_includes = []
+        real_defines = []
 
         # Parse the input files
 
@@ -135,15 +140,27 @@ class GccWork( Work ) :
         for include in self.includes :
             real_includes.append( "-I" + include )
 
+        # Add defines
+
+        for key in self.defines :
+            value = self.defines[ key ]
+
+            if len( value ) > 0 :
+                real_defines.append( "-D" + key + "=" + value )
+            else :
+                real_defines.append( "-D" + key )
+                
         # Build the command
 
         command = [ "gcc" ] + real_flags + real_inputs + real_includes
+        command += real_defines
         command += [ "-o", context.handle_everything( self.output ) ]
 
         # Execute a new GCC process
 
-#	Debug
-#        print command
+        # Debug
+        # print command
+
         process = subprocess.Popen( command )
         process.wait()
 
