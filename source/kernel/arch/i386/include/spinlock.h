@@ -1,4 +1,4 @@
-/* Console handling functions
+/* Spinlock implementation
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,36 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _ARCH_SPINLOCK_H_
+#define _ARCH_SPINLOCK_H_
+
 #include <types.h>
-#include <console.h>
-#include <lib/stdarg.h>
 
-#include <arch/spinlock.h>
+#include <arch/atomic.h>
 
-static console_t* screen = NULL;
-static spinlock_t console_lock = INIT_SPINLOCK;
+typedef struct spinlock {
+    atomic_t locked;
+    bool enable_interrupts;
+} spinlock_t;
 
-int console_set_screen( console_t* console ) {
-    screen = console;
-    return 0;
-}
+#define INIT_SPINLOCK { ATOMIC_INIT(0), false }
 
-static int kprintf_helper( void* data, char c ) {
-    if ( screen != NULL ) {
-        screen->ops->putchar( screen, c );
-    }
-}
+void spinlock( spinlock_t* lock );
+void spinunlock( spinlock_t* lock );
 
-int kprintf( const char* format, ... ) {
-    va_list args;
+void spinlock_disable( spinlock_t* lock );
+void spinunlock_enable( spinlock_t* lock );
 
-    spinlock_disable( &console_lock );
-
-    va_start( args, format );
-    do_printf( kprintf_helper, NULL, format, args );
-    va_end( args );
-
-    spinunlock_enable( &console_lock );
-
-    return 0;
-}
+#endif // _ARCH_SPINLOCK_H_

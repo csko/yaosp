@@ -1,4 +1,4 @@
-/* Console handling functions
+/* Atomic operations
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,36 +16,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <types.h>
-#include <console.h>
-#include <lib/stdarg.h>
+#ifndef _ARCH_ATOMIC_H_
+#define _ARCH_ATOMIC_H_
 
-#include <arch/spinlock.h>
+#define ATOMIC_INIT(n) { n }
 
-static console_t* screen = NULL;
-static spinlock_t console_lock = INIT_SPINLOCK;
+typedef struct atomic {
+    volatile int value;
+} atomic_t;
 
-int console_set_screen( console_t* console ) {
-    screen = console;
-    return 0;
-}
+int atomic_get( atomic_t* atomic );
+int atomic_set( atomic_t* atomic, int value );
+int atomic_inc( atomic_t* atomic );
+int atomic_dec( atomic_t* atomic );
+int atomic_swap( atomic_t* atomic, int value );
 
-static int kprintf_helper( void* data, char c ) {
-    if ( screen != NULL ) {
-        screen->ops->putchar( screen, c );
-    }
-}
-
-int kprintf( const char* format, ... ) {
-    va_list args;
-
-    spinlock_disable( &console_lock );
-
-    va_start( args, format );
-    do_printf( kprintf_helper, NULL, format, args );
-    va_end( args );
-
-    spinunlock_enable( &console_lock );
-
-    return 0;
-}
+#endif // _ARCH_ATOMIC_H_
