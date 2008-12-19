@@ -1,4 +1,4 @@
-/* C entry point of the i386 architecture
+/* Basic screen output handling functions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,8 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <arch/screen.h>
+#ifndef _ARCH_SCREEN_H_
+#define _ARCH_SCREEN_H_
 
-void arch_start( void ) {
-    init_screen();
-}
+int init_screen( void );
+
+#endif // _ARCH_SCREEN_H_

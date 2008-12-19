@@ -23,9 +23,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="arch_files">
         <item>arch/i386/src/boot.S</item>
         <item>arch/i386/src/start.c</item>
+        <item>arch/i386/src/screen.c</item>
     </array>
 
     <array name="files">
+        <item>src/console.c</item>
+        <item>src/lib/string.c</item>
     </array>
 
     <target name="clean">

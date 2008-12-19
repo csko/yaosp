@@ -1,4 +1,4 @@
-/* C entry point of the i386 architecture
+/* Type definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,8 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <arch/screen.h>
+#ifndef _TYPES_H_
+#define _TYPES_H_
 
-void arch_start( void ) {
-    init_screen();
-}
+#include <arch/types.h>
+
+#define NULL ( ( void* )0 )
+
+typedef signed char int8_t;
+typedef signed short int16_t;
+typedef signed int int32_t;
+
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+
+typedef unsigned int size_t;
+
+#endif // _TYPES_H_

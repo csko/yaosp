@@ -1,4 +1,4 @@
-/* C entry point of the i386 architecture
+/* Console handling functions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,8 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <arch/screen.h>
+#include <types.h>
+#include <console.h>
 
-void arch_start( void ) {
-    init_screen();
+static console_t* screen = NULL;
+
+int console_set_screen( console_t* console ) {
+    screen = console;
+    return 0;
 }

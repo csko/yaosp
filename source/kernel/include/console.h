@@ -1,4 +1,4 @@
-/* C entry point of the i386 architecture
+/* Console structure definitions and functions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,8 +16,29 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <arch/screen.h>
+#ifndef _CONSOLE_H_
+#define _CONSOLE_H_
 
-void arch_start( void ) {
-    init_screen();
-}
+struct console;
+
+typedef void console_clear_t( struct console* console );
+typedef void console_putchar_t( struct console* console, char c );
+typedef void console_gotoxy_t( struct console* console, int x, int y );
+
+typedef struct console_operations {
+    console_clear_t* clear;
+    console_putchar_t* putchar;
+    console_gotoxy_t* gotoxy;
+} console_operations_t;
+
+typedef struct console {
+    int x;
+    int y;
+    int width;
+    int height;
+    console_operations_t* ops;
+} console_t;
+
+int console_set_screen( console_t* console );
+
+#endif // _CONSOLE_H_

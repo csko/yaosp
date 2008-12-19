@@ -1,4 +1,4 @@
-/* C entry point of the i386 architecture
+/* Architecture specific type definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,8 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <arch/screen.h>
+#ifndef _ARCH_TYPES_H_
+#define _ARCH_TYPES_H_
 
-void arch_start( void ) {
-    init_screen();
-}
+typedef signed long long int int64_t;
+
+typedef unsigned long long int uint64_t;
+
+typedef unsigned int ptr_t;
+
+#endif // _ARCH_TYPES_H_
