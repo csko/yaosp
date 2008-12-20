@@ -20,7 +20,7 @@
 #define _ARCH_ATOMIC_H_
 
 /**
- * This value is used to initialize an atomic structure at
+ * This macro is used to initialize an atomic structure at
  * definition time.
  */
 #define ATOMIC_INIT(n) { n }

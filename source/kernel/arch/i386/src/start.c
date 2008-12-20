@@ -19,6 +19,7 @@
 #include <console.h>
 #include <multiboot.h>
 #include <mm/pages.h>
+#include <mm/kmalloc.h>
 
 #include <arch/screen.h>
 #include <arch/gdt.h>
@@ -61,4 +62,17 @@ void arch_start( multiboot_header_t* header ) {
     init_page_allocator( header );
     kprintf( "done\n" );
     kprintf( "Free memory: %u Kb\n", get_free_page_count() * PAGE_SIZE / 1024 );
+
+    /* Initialize kmalloc */
+
+    kprintf( "Initializing kmalloc ... " );
+
+    error = init_kmalloc();
+
+    if ( error < 0 ) {
+        kprintf( "failed (error=%d)\n", error );
+        return;
+    }
+
+    kprintf( "done\n" );
 }
