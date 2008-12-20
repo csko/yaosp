@@ -1,4 +1,4 @@
-/* Interrupt specific functions
+/* Page fault handler
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_INTERRUPT_H_
-#define _ARCH_INTERRUPT_H_
-
 #include <types.h>
+#include <console.h>
 
-bool disable_interrupts( void );
-void enable_interrupts( void );
+#include <arch/cpu.h>
+#include <arch/interrupt.h>
 
-int init_interrupts( void );
+void handle_page_fault( registers_t* regs ) {
+    register_t address;
 
-#endif // _ARCH_INTERRUPT_H_
+    kprintf( "Page fault!\n" );
+
+    __asm__ __volatile__(
+        "movl %%cr2, %0\n"
+        : "=r" ( address )
+    );
+
+    kprintf( "Address=0x%x\n", address );
+
+    disable_interrupts();
+    halt_loop();
+}

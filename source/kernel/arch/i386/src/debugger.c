@@ -1,4 +1,4 @@
-/* Interrupt specific functions
+/* Architecture specific part of the kernel debugger
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_INTERRUPT_H_
-#define _ARCH_INTERRUPT_H_
-
 #include <types.h>
+#include <console.h>
 
-bool disable_interrupts( void );
-void enable_interrupts( void );
+#include <arch/cpu.h>
+#include <arch/interrupt.h>
 
-int init_interrupts( void );
-
-#endif // _ARCH_INTERRUPT_H_
+void handle_debug_exception( registers_t* regs ) {
+    kprintf( "Debug exception!\n" );
+    disable_interrupts();
+    halt_loop();
+}

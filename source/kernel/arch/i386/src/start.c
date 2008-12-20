@@ -21,6 +21,7 @@
 #include <arch/screen.h>
 #include <arch/gdt.h>
 #include <arch/cpu.h>
+#include <arch/interrupt.h>
 
 void arch_start( void ) {
     int error;
@@ -44,4 +45,10 @@ void arch_start( void ) {
         kprintf( "Failed to detect CPU: %d\n", error );
         return;
     }
+
+    /* Initialize interrupts */
+
+    kprintf( "Initializing interrupts ... " );
+    init_interrupts();
+    kprintf( "done\n" );
 }

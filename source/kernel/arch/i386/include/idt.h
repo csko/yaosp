@@ -1,4 +1,4 @@
-/* Interrupt specific functions
+/* Interrupt descriptor table definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_INTERRUPT_H_
-#define _ARCH_INTERRUPT_H_
+#ifndef _ARCH_IDT_H_
+#define _ARCH_IDT_H_
 
 #include <types.h>
 
-bool disable_interrupts( void );
-void enable_interrupts( void );
+#define IDT_ENTRIES 256
 
-int init_interrupts( void );
+typedef struct idt_descriptor {
+    uint16_t base_low;
+    uint16_t selector;
+    uint8_t always0;
+    uint8_t flags;
+    uint16_t base_high;
+} __attribute__(( packed )) idt_descriptor_t;
 
-#endif // _ARCH_INTERRUPT_H_
+typedef struct idt {
+    uint16_t limit;
+    uint32_t base;
+} __attribute__(( packed )) idt_t;
+
+extern idt_descriptor_t idt[ IDT_ENTRIES ];
+
+#endif // _ARCH_IDT_H_

@@ -26,6 +26,7 @@
 .global disable_interrupts
 .global enable_interrupts
 .global reload_segment_descriptors
+.global halt_loop
 
 /* register_t get_eflags( void ) */
 
@@ -72,3 +73,10 @@ reload_segment_descriptors:
 1:
     ret
 .size reload_segment_descriptors,.-reload_segment_descriptors
+
+/* void halt_loop( void ) */
+
+halt_loop:
+    hlt
+    jmp halt_loop
+.size halt_loop,.-halt_loop

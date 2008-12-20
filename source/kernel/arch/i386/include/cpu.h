@@ -50,6 +50,8 @@ enum {
 extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 extern i386_feature_t i386_features[];
 
+void halt_loop( void );
+
 register_t get_eflags( void );
 void set_eflags( register_t eflags );
 
