@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* Process implementation
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _PROCESS_H_
+#define _PROCESS_H_
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
+#include <lib/hashtable.h>
 
-void handle_panic( const char* file, int line, const char* format, ... );
+typedef int process_id;
 
-void kernel_main( void );
+typedef struct process {
+    hashitem_t hash;
 
-#endif // _KERNEL_H_
+    process_id id;
+    char* name;
+} process_t;
+
+int init_processes( void );
+
+#endif // _PROCESS_H_

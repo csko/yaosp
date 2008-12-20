@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* Architecture specific thread functions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _ARCH_THREAD_H_
+#define _ARCH_THREAD_H_
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
+#include <thread.h>
 
-void handle_panic( const char* file, int line, const char* format, ... );
+typedef struct i386_thread {
+    register_t esp;
+} i386_thread_t;
 
-void kernel_main( void );
+int arch_allocate_thread( thread_t* thread );
+int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg );
 
-#endif // _KERNEL_H_
+#endif // _ARCH_THREAD_H_

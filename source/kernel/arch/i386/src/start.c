@@ -18,6 +18,7 @@
 
 #include <console.h>
 #include <multiboot.h>
+#include <kernel.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
 
@@ -96,4 +97,9 @@ void arch_start( multiboot_header_t* header ) {
     }
 
     kprintf( "done\n" );
+
+    /* Call the architecture independent entry
+       point of the kernel */
+
+    kernel_main();
 }

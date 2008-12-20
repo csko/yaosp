@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <mm/kmalloc.h>
 #include <lib/string.h>
 
 #include <arch/lib/string.h>
@@ -87,10 +88,44 @@ void* memmove( void* dest, const void* src, size_t n ) {
 }
 #endif // ARCH_HAVE_MEMMOVE
 
+#ifndef ARCH_HAVE_MEMCPY
+void* memcpy( void* d, const void* s, size_t n ) {
+    char* dest;
+    char* src;
+
+    dest = ( char* )d;
+    src = ( char* )s;
+
+    while ( n-- ) {
+        *dest++ = *src++;
+    }
+
+    return d;
+}
+#endif // ARCH_HAVE_MEMCPY
+
 #ifndef ARCH_HAVE_STRLEN
-size_t strlen(const char* str){
+size_t strlen( const char* str ) {
     size_t r = 0;
-    for(; *str++; r++){}
+    for( ; *str++; r++ ) {}
     return r;
 }
 #endif // ARCH_HAVE_STRLEN
+
+#ifndef ARCH_HAVE_STRDUP
+char* strdup( const char* s ) {
+    size_t len;
+    char* s2;
+
+    len = strlen( s );
+    s2 = ( char* )kmalloc( len + 1 );
+
+    if ( s2 == NULL ) {
+        return s2;
+    }
+
+    memcpy( s2, s, len + 1 );
+
+    return s2;
+}
+#endif // ARCH_HAVE_STRDUP

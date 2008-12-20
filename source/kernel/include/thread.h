@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* Thread implementation
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,44 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _THREAD_H_
+#define _THREAD_H_
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
+#include <types.h>
+#include <lib/hashtable.h>
 
-void handle_panic( const char* file, int line, const char* format, ... );
+typedef int thread_id;
 
-void kernel_main( void );
+enum {
+    THREAD_UNKNOWN = 0,
+    THREAD_READY,
+    THREAD_RUNNING,
+    THREAD_WAITING,
+    THREAD_SLEEPING,
+};
 
-#endif // _KERNEL_H_
+typedef struct thread {
+    hashitem_t hash;
+
+    struct thread* queue_next;
+
+    thread_id id;
+    char* name;
+    int state;
+
+    void* kernel_stack;
+
+    void* arch_data;
+} thread_t;
+
+typedef int thread_entry_t( void* arg );
+
+void kernel_thread_exit( void );
+
+thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg );
+
+thread_t* get_thread_by_id( thread_id id );
+
+int init_threads( void );
+
+#endif // _THREAD_H_

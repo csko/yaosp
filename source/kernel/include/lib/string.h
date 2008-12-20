@@ -16,15 +16,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#ifndef _LIB_STRING_H_
+#define _LIB_STRING_H_
 
 #include <types.h>
 
 void* memset( void* s, int c, size_t n );
 void* memsetw( void* s, int c, size_t n );
 void* memsetl( void* s, int c, size_t n );
-void* memmove( void* dest, const void* src, size_t n );
-size_t strlen( const char *s );
 
-#endif // _STRING_H_
+void* memcpy( void* d, const void* s, size_t n );
+void* memmove( void* dest, const void* src, size_t n );
+
+size_t strlen( const char* s );
+char* strdup( const char* s );
+
+#endif // _LIB_STRING_H_

@@ -24,4 +24,6 @@
  */
 #define MAX_CPU_COUNT 32
 
+#define KERNEL_STACK_PAGES 5
+
 #endif // _CONFIG_H_

@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* Process implementation
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,41 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <console.h>
 #include <process.h>
-#include <thread.h>
-#include <scheduler.h>
+#include <lib/hashtable.h>
 
-#include <arch/interrupt.h>
+static hashtable_t process_table;
 
-void handle_panic( const char* file, int line, const char* format, ... ) {
-    kprintf( "Panic at %s:%d!\n", file, line );
-    disable_interrupts();
-    while ( 1 ) ;
+static void* process_key( hashitem_t* item ) {
+    process_t* process;
+
+    process = ( process_t* )item;
+
+    return ( void* )process->id;
 }
 
-void kernel_main( void ) {
-    kprintf( "Initializing processes ... " );
-    init_processes();
-    kprintf( "done\n" );
+static uint32_t process_hash( const void* key ) {
+    return ( uint32_t )key;
+}
 
-    kprintf( "Initializing threads ... " );
-    init_threads();
-    kprintf( "done\n" );
+static bool process_compare( const void* key1, const void* key2 ) {
+    return ( key1 == key2 );
+}
 
-    kprintf( "Initializing scheduler ... " );
-    init_scheduler();
-    kprintf( "done\n" );
+int init_processes( void ) {
+    int error;
+
+    error = init_hashtable(
+                &process_table,
+                256,
+                process_key,
+                process_hash,
+                process_compare
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
 }

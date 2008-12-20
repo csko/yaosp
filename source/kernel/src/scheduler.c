@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* Scheduler
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#include <thread.h>
+#include <scheduler.h>
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
-
-void handle_panic( const char* file, int line, const char* format, ... );
-
-void kernel_main( void );
-
-#endif // _KERNEL_H_
+int init_scheduler( void ) {
+    return 0;
+}
