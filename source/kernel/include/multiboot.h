@@ -25,4 +25,32 @@
 #define MB_FLAG_ALIGN_MODULES 0x0001
 #define MB_FLAG_MEMORY_INFO   0x0002
 
+#ifndef __ASSEMBLER__
+
+#include <types.h>
+
+typedef struct multiboot_header {
+  uint32_t flags;
+
+  uint32_t memory_lower;
+  uint32_t memory_upper;
+
+  uint32_t boot_device;
+
+  const char* kernel_parameters;
+
+  uint32_t module_count;
+  void* first_module;
+
+  uint32_t unused1;
+  uint32_t unused2;
+  uint32_t unused3;
+  uint32_t unused4;
+
+  uint32_t memory_map_length;
+  uint32_t memory_map_address;
+} multiboot_header_t;
+
+#endif // __ASSEMBLER__
+
 #endif // _MULTIBOOT_H_

@@ -50,11 +50,30 @@ enum {
 extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 extern i386_feature_t i386_features[];
 
+/**
+ * This will execute an endless loops that halts the processor.
+ */
 void halt_loop( void );
 
+/**
+ * Returns the current eflags value from the processor.
+ *
+ * @return The current eflags
+ */
 register_t get_eflags( void );
+/**
+ * Sets the eflags value to the processor.
+ *
+ * @param eflags The eflags value to set
+ */
 void set_eflags( register_t eflags );
 
+/**
+ * This is used during the initialization of the kernel to
+ * detect the processor type and features.
+ *
+ * @return On success 0 is returned
+ */
 int detect_cpu( void );
 
 #endif // __ASSELBLER__

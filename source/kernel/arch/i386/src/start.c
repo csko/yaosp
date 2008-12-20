@@ -17,13 +17,16 @@
  */
 
 #include <console.h>
+#include <multiboot.h>
+#include <mm/pages.h>
 
 #include <arch/screen.h>
 #include <arch/gdt.h>
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
+#include <arch/mm/config.h>
 
-void arch_start( void ) {
+void arch_start( multiboot_header_t* header ) {
     int error;
 
     /* Initialize the screen */
@@ -51,4 +54,11 @@ void arch_start( void ) {
     kprintf( "Initializing interrupts ... " );
     init_interrupts();
     kprintf( "done\n" );
+
+    /* Initialize page allocator */
+
+    kprintf( "Initializing page allocator ... " );
+    init_page_allocator( header );
+    kprintf( "done\n" );
+    kprintf( "Free memory: %u Kb\n", get_free_page_count() * PAGE_SIZE / 1024 );
 }

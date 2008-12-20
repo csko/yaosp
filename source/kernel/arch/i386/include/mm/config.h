@@ -1,4 +1,4 @@
-/* Interrupt specific functions
+/* Architecture specific configurations for the memory manager
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_INTERRUPT_H_
-#define _ARCH_INTERRUPT_H_
+#ifndef _ARCH_MM_CONFIG_H_
+#define _ARCH_MM_CONFIG_H_
 
-#include <types.h>
+#define PAGE_SHIFT 12
+#define PAGE_SIZE  ( 1UL << PAGE_SHIFT )
+#define PAGE_MASK  ( ~( PAGE_SIZE - 1 ) )
+#define PAGE_ALIGN( addr )  ( ( (addr) + PAGE_SIZE - 1 ) & PAGE_MASK )
 
-/**
- * This is used to disable interrupts on the current
- * processor.
- *
- * @return True is returned if interrupts were enabled before this call
- */
-bool disable_interrupts( void );
-/**
- * This is used to enable interrupts on the current processor.
- */
-void enable_interrupts( void );
-
-/**
- * This is used during the kernel initialization to setup the
- * IDT entries and reprogram the PIC.
- *
- * @return On success 0 is returned
- */
-int init_interrupts( void );
-
-#endif // _ARCH_INTERRUPT_H_
+#endif // _ARCH_MM_CONFIG_H_

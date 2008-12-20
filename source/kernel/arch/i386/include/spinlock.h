@@ -30,10 +30,33 @@ typedef struct spinlock {
 
 #define INIT_SPINLOCK { ATOMIC_INIT(0), false }
 
+/**
+ * Locks a spinlock.
+ *
+ * @param lock The spinlock structure to lock on
+ */
 void spinlock( spinlock_t* lock );
+/**
+ * Unlocks a spinlock.
+ *
+ * @param lock The spinlock structure to unlock
+ */
 void spinunlock( spinlock_t* lock );
 
+/**
+ * Disables the interrupts on the current processor and
+ * locks the specified spinlock.
+ *
+ * @param lock The spinlock structure to lock on
+ */
 void spinlock_disable( spinlock_t* lock );
+/**
+ * Unlocks the specified spinlock and then enables the
+ * interrupts on the current processor if it was disabled
+ * previously by the spinlock_disable() call.
+ *
+ * @param lock The spinlock to unlock
+ */
 void spinunlock_enable( spinlock_t* lock );
 
 #endif // _ARCH_SPINLOCK_H_

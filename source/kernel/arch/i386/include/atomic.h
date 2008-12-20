@@ -19,16 +19,55 @@
 #ifndef _ARCH_ATOMIC_H_
 #define _ARCH_ATOMIC_H_
 
+/**
+ * This value is used to initialize an atomic structure at
+ * definition time.
+ */
 #define ATOMIC_INIT(n) { n }
 
 typedef struct atomic {
     volatile int value;
 } atomic_t;
 
+/**
+ * Atomically gets the value stored in the atomic structure.
+ *
+ * @param atomic The pointer to the atomic structure
+ * @return The value stored in the atomic structure
+ */
 int atomic_get( atomic_t* atomic );
+
+/**
+ * Atomically sets the value of the atomic structure.
+ *
+ * @param atomic The pointer to the atomic structure
+ * @param value The number to set the atomic structure to
+ * @return The same as the value parameter
+ */
 int atomic_set( atomic_t* atomic, int value );
-int atomic_inc( atomic_t* atomic );
-int atomic_dec( atomic_t* atomic );
+
+/**
+ * Atomically increments the value of the atomic structure.
+ *
+ * @param atomic The pointer to the atomic structure
+ */
+void atomic_inc( atomic_t* atomic );
+
+/**
+ * Atomically decrements the value of the atomic structure.
+ *
+ * @param atomic The pointer to the atomic structure
+ */
+void atomic_dec( atomic_t* atomic );
+
+/**
+ * Atomically swaps the value stored in the atomic structure
+ * with the value specified as the second parameter.
+ *
+ * @param atomic The pointer to the atomic structure
+ * @param value The value to swap the atomic structure with
+ * @return The old value stored in the structure before the swap operation
+ */
 int atomic_swap( atomic_t* atomic, int value );
 
 #endif // _ARCH_ATOMIC_H_

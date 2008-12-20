@@ -39,6 +39,15 @@ typedef struct console {
     console_operations_t* ops;
 } console_t;
 
+/**
+ * This is used by architecture specific part of the kernel to
+ * specify the screen properties and callbacks. The arch. code
+ * has to fill a console_t structure that is passed to this
+ * function as the first argument.
+ *
+ * @param console The screen instance
+ * @return On success 0 is returned
+ */
 int console_set_screen( console_t* console );
 
 int kprintf( const char* format, ... );

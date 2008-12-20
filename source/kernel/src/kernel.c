@@ -1,4 +1,4 @@
-/* Interrupt specific functions
+/* Miscellaneous kernel functions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_INTERRUPT_H_
-#define _ARCH_INTERRUPT_H_
+#include <console.h>
 
-#include <types.h>
+#include <arch/interrupt.h>
 
-/**
- * This is used to disable interrupts on the current
- * processor.
- *
- * @return True is returned if interrupts were enabled before this call
- */
-bool disable_interrupts( void );
-/**
- * This is used to enable interrupts on the current processor.
- */
-void enable_interrupts( void );
-
-/**
- * This is used during the kernel initialization to setup the
- * IDT entries and reprogram the PIC.
- *
- * @return On success 0 is returned
- */
-int init_interrupts( void );
-
-#endif // _ARCH_INTERRUPT_H_
+void handle_panic( const char* file, int line, const char* format, ... ) {
+    kprintf( "Panic at %s:%d!\n", file, line );
+    disable_interrupts();
+    while ( 1 ) ;
+}

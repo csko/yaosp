@@ -19,6 +19,9 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+/**
+ * The maximum number of CPUs supported.
+ */
 #define MAX_CPU_COUNT 32
 
 #endif // _CONFIG_H_

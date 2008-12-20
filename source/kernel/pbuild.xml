@@ -41,6 +41,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <array name="files">
         <item>src/console.c</item>
+        <item>src/kernel.c</item>
+        <item>src/mm/pages.c</item>
         <item>src/lib/string.c</item>
         <item>src/lib/printf.c</item>
     </array>
