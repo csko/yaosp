@@ -1,6 +1,6 @@
 /* printf() like function for the kernel
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,98 +18,168 @@
 
 #include <types.h>
 #include <lib/printf.h>
-
-static const char lower_digits[] = "0123456789abcdef";
-static const char upper_digits[] = "0123456789ABCDEF";
-
-static void print_number( printf_helper_t* helper, void* data, uint32_t number, const char* digits, int base ) {
-    int off = 0;
-    char buffer[ 32 ];
-
-    while ( number > 0 ) {
-        buffer[ off++ ] = digits[ number % base ];
-        number = number / base;
-    }
-
-    if ( off == 0 ) {
-        helper( data, '0' );
-    } else {
-        do {
-            off--;
-            helper( data, buffer[ off ] );
-        } while ( off > 0 );
-    }
-}
-
-static void print_string( printf_helper_t* helper, void* data, char* string ) {
-    while ( *string ) {
-        helper( data, *string++ );
-    }
-}
+#include <lib/string.h>
 
 int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args ) {
-    bool modifier = false;
+    int state, radix, ret;
+    unsigned char *where, buf[PRINTF_BUFLEN];
+    unsigned int flags, given_wd, actual_wd;
+    state = flags = given_wd = ret = 0;
+    long num;
 
     for ( ; *format != 0; format++ ) {
-        if ( modifier ) {
-            switch ( *format ) {
-                case 'c' : {
-                    char c = ( char )va_arg( args, int );
-                    helper( data, c );
-                    break;
-                }
-
-                case 's' : {
-                    char* string = va_arg( args, char* );
-                    print_string( helper, data, string );
-                    break;
-                }
-
-                case 'd' : {
-                    int number = va_arg( args, int );
-
-                    if ( number < 0 ) {
-                        helper( data, '-' );
-                        number = -number;
-                    }
-
-                    print_number( helper, data, number, lower_digits, 10 );
-
-                    break;
-                }
-
-                case 'u' : {
-                    uint32_t number = va_arg( args, uint32_t );
-                    print_number( helper, data, number, lower_digits, 10 );
-                    break;
-                }
-
-                case 'x' : {
-                    uint32_t number = va_arg( args, uint32_t );
-                    print_number( helper, data, number, lower_digits, 16 );
-                    break;
-                }
-
-                case 'X' : {
-                    uint32_t number = va_arg( args, uint32_t );
-                    print_number( helper, data, number, upper_digits, 16 );
-                    break;
-                }
-            }
-
-            modifier = false;
-        } else {
-            switch ( *format ) {
-                case '%' :
-                    modifier = true;
-                    break;
-
-                default:
+        switch(state){
+            case 0:
+                if(*format != '%'){
                     helper( data, *format );
+                    ret++;
                     break;
-            }
+                }else{
+                    state++;
+                    if(*(++format) == 0)
+                        break;
+                }
+            /* No break */
+            case 1:
+                if(*format == '%'){ /* %%, we are done with this one */
+                    helper( data, *format );
+                    ret++;
+                    state = flags = given_wd = 0;
+                    break;
+                }
+                if(*format == '-'){ /* Left justify */
+                    if(flags & PRINTF_LEFT) /* %-- is not allowed */
+                        state = flags = given_wd = 0;
+                    else
+                        flags |= PRINTF_LEFT;
+                }
+                state++;
+                if(*format == '0'){ /* Left padding with '0' */
+                    flags |= PRINTF_LZERO;
+                    format++;
+                }
+            /* No break */
+            case 2:
+                if(*format >= '0' && *format <= '9'){
+                    given_wd = 10 * given_wd + (*format - '0');
+                }
+                state++;
+            case 3:
+                if(*format == 'N'){
+                    break;
+                }
+                if(*format == 'l'){
+                    flags |= PRINTF_LONG;
+                    break;
+                }
+                if(*format == 'h'){
+                    flags |= PRINTF_SHORT;
+                    break;
+                }
+                state++;
+            case 4:
+                where = buf + PRINTF_BUFLEN - 1;
+                *where = '\0';
+                switch(*format){
+                    case 'X':
+                        flags |= PRINTF_CAPITAL;
+                        /* No break */
+                    case 'x':
+                    case 'p':
+                    case 'n':
+                        radix = 16;
+                        goto PRINTF_DO_NUM;
+                    case 'd':
+                    case 'i':
+                        flags |= PRINTF_SIGNED;
+                        /* No break */
+                    case 'u':
+                        radix = 10;
+                        goto PRINTF_DO_NUM;
+                    case 'o':
+                        radix = 8;
+PRINTF_DO_NUM:
+                        if(flags & PRINTF_LONG){
+                            num = va_arg(args, unsigned long);
+        				}else if(flags & PRINTF_SHORT){
+                            if(flags & PRINTF_SIGNED)
+						        num = va_arg(args, int);
+                            else
+                                num = va_arg(args, unsigned int);
+                        } else {
+                            if(flags & PRINTF_SIGNED)
+                                num = va_arg(args, int);
+                            else
+                                num = va_arg(args, unsigned int);
+                        }
+                        if(flags & PRINTF_SIGNED){
+                            if(num < 0){
+                                flags |= PRINTF_NEEDSIGN;
+                                num = -num;
+                            }
+                        }
+                        do { /* Convert the number to the radix */
+                            unsigned long temp;
+                            temp = (unsigned long)num % radix;
+                            where--;
+                            if(temp < 10)
+                                *where = temp + '0';
+                            else if(flags & PRINTF_CAPITAL)
+                                *where = temp - 10 + 'A';
+                            else
+                                *where = temp - 10 + 'a';
+                            num = (unsigned long)num / radix;
+                        } while(num != 0);
+        				goto PRINTF_OUT;
+		        	case 'c':
+                        flags &= ~PRINTF_LZERO;
+                        where--;
+                        *where = (unsigned char) va_arg(args, unsigned int);
+                        actual_wd = 1;
+                        goto PRINTF_OUT2;
+                    case 's':
+                        flags &= ~PRINTF_LZERO;
+                        where = va_arg(args, unsigned char *);
+PRINTF_OUT:
+				        actual_wd = strlen((char *)where);
+                        if(flags & PRINTF_NEEDSIGN)
+                            actual_wd++;
+                        if((flags & (PRINTF_NEEDSIGN | PRINTF_LZERO)) ==	(PRINTF_NEEDSIGN | PRINTF_LZERO)) {
+                            helper( data, '-' );
+                            ret++;
+                        }
+PRINTF_OUT2:
+                        if((flags & PRINTF_LEFT) == 0){
+                            while(given_wd > actual_wd){
+                                helper( data, flags & PRINTF_LZERO ? '0' : ' ' );
+                                ret++;
+                                given_wd--;
+                            }
+                        }
+                        if((flags & (PRINTF_NEEDSIGN | PRINTF_LZERO)) == PRINTF_NEEDSIGN){
+                            helper( data, '-' );
+                            ret++;
+                        }
+                        while(*where != '\0'){
+                            helper( data, *where++ );
+                            ret++;
+                        }
+                        if  (given_wd < actual_wd)
+                            given_wd = 0;
+                        else
+                            given_wd -= actual_wd;
+                        for(; given_wd; given_wd--){
+                            helper( data, ' ' );
+                            ret++;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            default:
+                state = flags = given_wd = 0;
         }
     }
 
-    return 0;
+    return ret;
 }

@@ -1,6 +1,6 @@
 /* Memory and string manipulator functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,5 +25,6 @@ void* memset( void* s, int c, size_t n );
 void* memsetw( void* s, int c, size_t n );
 void* memsetl( void* s, int c, size_t n );
 void* memmove( void* dest, const void* src, size_t n );
+size_t strlen( const char *s );
 
 #endif // _STRING_H_

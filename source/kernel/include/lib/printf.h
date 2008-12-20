@@ -1,6 +1,6 @@
 /* printf() like function for the kernel
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,6 +18,14 @@
 
 #ifndef _PRINTF_H_
 #define _PRINTF_H_
+#define PRINTF_LEFT     0x01
+#define PRINTF_CAPITAL  0x02
+#define PRINTF_SIGNED   0x04
+#define PRINTF_LONG     0x08
+#define PRINTF_SHORT    0x10
+#define PRINTF_NEEDSIGN 0x20
+#define PRINTF_LZERO    0x40
+#define PRINTF_BUFLEN   16
 
 #include <lib/stdarg.h>
 

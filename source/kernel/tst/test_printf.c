@@ -1,3 +1,20 @@
+/* Test module for printf()
+ *
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of version 2 of the GNU General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +30,7 @@
     data.buffer[ data.position ] = 0; \
     if ( strcmp( buffer, exp ) != 0 ) { \
         printf( \
-            "printf test failed: Expected '%s' but got '%s' for format: '%s'\n", \
+            "test failed: Expected '%s' but got '%s' for format: '%s'\n", \
             exp, \
             buffer, \
             format \
@@ -49,6 +66,7 @@ static int printf_test( const char* format, ... ) {
 }
 
 int main( int argc, char** argv ) {
+    printf("Doing a few printf tests... ");
     INIT_BUFFER
 
     DO_TEST( "A", "%c", 'A' )
@@ -60,7 +78,7 @@ int main( int argc, char** argv ) {
     DO_TEST( "hello", "%s", "hello" )
     DO_TEST( "  hello world 12 c", "%c %s %s %d %x", ' ', "hello", "world", 12, 12 )
 
-    printf( "printf test OK!\n" );
+    printf( "OK!\n" );
 
     return 0;
 }

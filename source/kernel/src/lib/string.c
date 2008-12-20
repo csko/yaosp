@@ -1,6 +1,6 @@
 /* Memory and string manipulator functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -62,6 +62,7 @@ void* memset( void* s, int c, size_t n ) {
 }
 #endif // ARCH_HAVE_MEMSETL
 
+#ifndef ARCH_HAVE_MEMMOVE
 void* memmove( void* dest, const void* src, size_t n ) {
     char* _dest;
     char* _src;
@@ -84,3 +85,12 @@ void* memmove( void* dest, const void* src, size_t n ) {
 
     return dest;
 }
+#endif // ARCH_HAVE_MEMMOVE
+
+#ifndef ARCH_HAVE_STRLEN
+size_t strlen(const char* str){
+    size_t r = 0;
+    for(; *str++; r++){}
+    return r;
+}
+#endif // ARCH_HAVE_MEMMOVE

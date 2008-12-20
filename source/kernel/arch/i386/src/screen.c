@@ -1,6 +1,6 @@
 /* Basic screen output handling functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -41,7 +41,7 @@ static void screen_clear( console_t* console ) {
 
     memsetw( video_memory, ( 7 << 8 ) | ' ', console->width * console->height );
 
-    /* Set the cursor position to the left-top corner of the screen */
+    /* Set the cursor position to the top-left corner of the screen */
 
     console->x = 0;
     console->y = 0;
