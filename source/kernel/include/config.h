@@ -1,4 +1,4 @@
-/* C entry point of the i386 architecture
+/* Configuration definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,32 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <console.h>
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
-#include <arch/screen.h>
-#include <arch/gdt.h>
-#include <arch/cpu.h>
+#define MAX_CPU_COUNT 32
 
-void arch_start( void ) {
-    int error;
-
-    /* Initialize the screen */
-
-    init_screen();
-    kprintf( "Screen initialized.\n" );
-
-    /* Setup our own Global Descriptor Table */
-
-    kprintf( "Initializing GDT ... " );
-    init_gdt();
-    kprintf( "done\n" );
-
-    /* Initialize CPU features */
-
-    error = detect_cpu();
-
-    if ( error < 0 ) {
-        kprintf( "Failed to detect CPU: %d\n", error );
-        return;
-    }
-}
+#endif // _CONFIG_H_

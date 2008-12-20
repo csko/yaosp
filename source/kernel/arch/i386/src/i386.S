@@ -21,9 +21,29 @@
 
 .section .text
 
+.global get_eflags
+.global set_eflags
 .global disable_interrupts
 .global enable_interrupts
 .global reload_segment_descriptors
+
+/* register_t get_eflags( void ) */
+
+get_eflags:
+    pushfl
+    popl %eax
+    ret
+.size get_eflags,.-get_eflags
+
+/* void set_eflags( register_t eflags ) */
+
+set_eflags:
+    pushl 4(%esp)
+    popfl
+    ret
+.size set_eflags,.-set_eflags
+
+/* bool disable_interrupts( void ) */
 
 disable_interrupts:
     pushfl
@@ -33,10 +53,14 @@ disable_interrupts:
     ret
 .size disable_interrupts,.-disable_interrupts
 
+/* void enable_interrupts( void ) */
+
 enable_interrupts:
     sti
     ret
 .size enable_interrupts,.-enable_interrupts
+
+/* void reload_segment_descriptors( void ) */
 
 reload_segment_descriptors:
     movw $KERNEL_DS, %ax

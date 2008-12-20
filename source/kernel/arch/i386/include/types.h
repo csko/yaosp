@@ -24,5 +24,6 @@ typedef signed long long int int64_t;
 typedef unsigned long long int uint64_t;
 
 typedef unsigned int ptr_t;
+typedef unsigned int register_t;
 
 #endif // _ARCH_TYPES_H_

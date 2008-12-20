@@ -18,6 +18,18 @@
 
 #include <lib/string.h>
 
+void* memset( void* s, int c, size_t n ) {
+    char* _src;
+
+    _src = ( char* )s;
+
+    while ( n-- ) {
+        *_src++ = c;
+    }
+
+    return s;
+}
+
 void* memmove( void* dest, const void* src, size_t n ) {
     char* _dest;
     char* _src;
