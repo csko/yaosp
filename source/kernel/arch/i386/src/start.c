@@ -60,7 +60,14 @@ void arch_start( multiboot_header_t* header ) {
     /* Initialize page allocator */
 
     kprintf( "Initializing page allocator ... " );
-    init_page_allocator( header );
+
+    error = init_page_allocator( header );
+
+    if ( error < 0 ) {
+        kprintf( "failed (error=%d)\n", error );
+        return;
+    }
+
     kprintf( "done\n" );
     kprintf( "Free memory: %u Kb\n", get_free_page_count() * PAGE_SIZE / 1024 );
 

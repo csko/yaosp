@@ -42,6 +42,7 @@
 
 #include <types.h>
 #include <kernel.h>
+#include <errno.h>
 #include <mm/pages.h>
 #include <lib/string.h>
 
@@ -139,6 +140,12 @@ int get_free_page_count( void ) {
 int init_page_allocator( multiboot_header_t* header ) {
     ptr_t i;
     ptr_t first_free_page;
+
+    /* Check if we have memory information in the multiboot header */
+
+    if ( ( header->flags & MB_FLAG_MEMORY_INFO ) == 0 ) {
+        return -EINVAL;
+    }
 
     /* Calculate the physical memory size and the number
        of usable memory pages */
