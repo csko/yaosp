@@ -93,4 +93,4 @@ size_t strlen(const char* str){
     for(; *str++; r++){}
     return r;
 }
-#endif // ARCH_HAVE_MEMMOVE
+#endif // ARCH_HAVE_STRLEN
