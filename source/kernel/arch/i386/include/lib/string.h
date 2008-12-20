@@ -1,4 +1,4 @@
-/* Memory and string manipulator functions
+/* Architecture specific string definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#ifndef _ARCH_LIB_STRING_H_
+#define _ARCH_LIB_STRING_H_
 
-#include <types.h>
+#define ARCH_HAVE_MEMSET
+#define ARCH_HAVE_MEMSETW
+#define ARCH_HAVE_MEMSETL
 
-void* memset( void* s, int c, size_t n );
-void* memsetw( void* s, int c, size_t n );
-void* memsetl( void* s, int c, size_t n );
-void* memmove( void* dest, const void* src, size_t n );
-
-#endif // _STRING_H_
+#endif // _ARCH_LIB_STRING_H_

@@ -26,6 +26,7 @@
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
 #include <arch/mm/config.h>
+#include <arch/mm/paging.h>
 
 void arch_start( multiboot_header_t* header ) {
     int error;
@@ -68,6 +69,19 @@ void arch_start( multiboot_header_t* header ) {
     kprintf( "Initializing kmalloc ... " );
 
     error = init_kmalloc();
+
+    if ( error < 0 ) {
+        kprintf( "failed (error=%d)\n", error );
+        return;
+    }
+
+    kprintf( "done\n" );
+
+    /* Initialize paging */
+
+    kprintf( "Initializing paging ... " );
+
+    error = init_paging();
 
     if ( error < 0 ) {
         kprintf( "failed (error=%d)\n", error );

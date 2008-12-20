@@ -18,6 +18,9 @@
 
 #include <lib/string.h>
 
+#include <arch/lib/string.h>
+
+#ifndef ARCH_HAVE_MEMSET
 void* memset( void* s, int c, size_t n ) {
     char* _src;
 
@@ -29,6 +32,35 @@ void* memset( void* s, int c, size_t n ) {
 
     return s;
 }
+#endif // ARCH_HAVE_MEMSET
+
+#ifndef ARCH_HAVE_MEMSETW
+void* memsetw( void* s, int c, size_t n ) {
+    uint16_t* _src;
+
+    _src = ( uint16_t* )s;
+
+    while ( n-- ) {
+        *_src++ = c;
+    }
+
+    return s;
+}
+#endif // ARCH_HAVE_MEMSETW
+
+#ifndef ARCH_HAVE_MEMSETL
+void* memset( void* s, int c, size_t n ) {
+    uint32_t* _src;
+
+    _src = ( uint32_t* )s;
+
+    while ( n-- ) {
+        *_src++ = c;
+    }
+
+    return s;
+}
+#endif // ARCH_HAVE_MEMSETL
 
 void* memmove( void* dest, const void* src, size_t n ) {
     char* _dest;

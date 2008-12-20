@@ -24,4 +24,8 @@
 #define PAGE_MASK  ( ~( PAGE_SIZE - 1 ) )
 #define PAGE_ALIGN( addr )  ( ( (addr) + PAGE_SIZE - 1 ) & PAGE_MASK )
 
+#define PGDIR_SHIFT 22
+#define PGDIR_SIZE  ( 1UL << PGDIR_SHIFT )
+#define PGDIR_MASK  ( ~( PGDIR_SIZE - 1 ) )
+
 #endif // _ARCH_MM_CONFIG_H_

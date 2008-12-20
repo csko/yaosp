@@ -26,6 +26,7 @@
 .global disable_interrupts
 .global enable_interrupts
 .global reload_segment_descriptors
+.global set_cr3
 .global halt_loop
 
 /* register_t get_eflags( void ) */
@@ -73,6 +74,14 @@ reload_segment_descriptors:
 1:
     ret
 .size reload_segment_descriptors,.-reload_segment_descriptors
+
+/* void set_cr3( uint32_t cr3 ) */
+
+set_cr3:
+    movl 4(%esp), %eax
+    movl %eax, %cr3
+    ret
+.size set_cr3,.-set_cr3
 
 /* void halt_loop( void ) */
 

@@ -1,4 +1,4 @@
-/* Memory and string manipulator functions
+/* Memory context definition
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#ifndef _MM_CONTEXT_H_
+#define _MM_CONTEXT_H_
 
-#include <types.h>
+typedef struct memory_context {
+    struct memory_context* next;
 
-void* memset( void* s, int c, size_t n );
-void* memsetw( void* s, int c, size_t n );
-void* memsetl( void* s, int c, size_t n );
-void* memmove( void* dest, const void* src, size_t n );
+    void* arch_data;
+} memory_context_t;
 
-#endif // _STRING_H_
+extern memory_context_t kernel_memory_context;
+
+#endif // _MM_CONTEXT_H_

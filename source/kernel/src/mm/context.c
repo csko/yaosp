@@ -1,4 +1,4 @@
-/* Memory and string manipulator functions
+/* Memory context handling code
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,14 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#include <mm/context.h>
 
-#include <types.h>
-
-void* memset( void* s, int c, size_t n );
-void* memsetw( void* s, int c, size_t n );
-void* memsetl( void* s, int c, size_t n );
-void* memmove( void* dest, const void* src, size_t n );
-
-#endif // _STRING_H_
+memory_context_t kernel_memory_context;

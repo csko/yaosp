@@ -37,14 +37,9 @@ static void screen_move_cursor( console_t* console ) {
 }
 
 static void screen_clear( console_t* console ) {
-    int i;
-    uint16_t* p = video_memory;
-
     /* Fill the video memory with spaces */
 
-    for ( i = 0; i < console->width * console->height; i++ ) {
-        *p++ = ( 7 << 8 ) | ' ';
-    }
+    memsetw( video_memory, ( 7 << 8 ) | ' ', console->width * console->height );
 
     /* Set the cursor position to the left-top corner of the screen */
 
@@ -95,7 +90,6 @@ static void screen_putchar( console_t* console, char c ) {
     /* Check if we filled the last line of the screen */
 
     if ( console->y == console->height ) {
-        int i;
         uint16_t* p;
 
         console->y--;
@@ -108,9 +102,7 @@ static void screen_putchar( console_t* console, char c ) {
 
         p = video_memory + console->width * ( console->height - 1 );
 
-        for ( i = 0; i < console->width; i++, p++ ) {
-            *p = ( 7 << 8 ) | ' ';
-        }
+        memsetw( p, ( 7 << 8 ) | ' ', console->width );
     }
 
     /* Move the cursor to the modified position */

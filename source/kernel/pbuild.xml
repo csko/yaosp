@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/atomic.S</item>
         <item>arch/i386/src/i386.S</item>
         <item>arch/i386/src/isr.S</item>
+        <item>arch/i386/src/lib/string.S</item>
     </array>
 
     <array name="arch_files_c">
@@ -37,6 +38,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/exception.c</item>
         <item>arch/i386/src/debugger.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
+        <item>arch/i386/src/mm/paging.c</item>
     </array>
 
     <array name="files">
@@ -44,6 +46,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/kernel.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
+        <item>src/mm/context.c</item>
         <item>src/lib/string.c</item>
         <item>src/lib/printf.c</item>
     </array>

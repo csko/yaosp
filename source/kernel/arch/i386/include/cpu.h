@@ -51,6 +51,13 @@ extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 extern i386_feature_t i386_features[];
 
 /**
+ * Sets the value of the CR3 register in the processor.
+ *
+ * @param cr3 The value to set the cr3 register to
+ */
+void set_cr3( uint32_t cr3 );
+
+/**
  * This will execute an endless loops that halts the processor.
  */
 void halt_loop( void );
