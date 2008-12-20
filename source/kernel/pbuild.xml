@@ -38,6 +38,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/exception.c</item>
         <item>arch/i386/src/debugger.c</item>
         <item>arch/i386/src/thread.c</item>
+        <item>arch/i386/src/pit.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
     </array>
@@ -48,6 +49,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/process.c</item>
         <item>src/thread.c</item>
         <item>src/scheduler.c</item>
+        <item>src/irq.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

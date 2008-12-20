@@ -17,6 +17,8 @@
  */
 
 #include <types.h>
+#include <console.h>
+#include <irq.h>
 #include <lib/string.h>
 
 #include <arch/idt.h>
@@ -66,20 +68,55 @@ static uint8_t master_mask = 0xFF;
 static uint8_t slave_mask = 0xFF;
 
 static void set_trap_gate( int num, void* handler) {
-  idt[ num ].selector = KERNEL_CS;
-  idt[ num ].base_low = ( ( uint32_t )handler ) & 0xFFFF;
-  idt[ num ].base_high = ( ( uint32_t )handler ) >> 16;
-  idt[ num ].flags = 0xEF;
+    idt[ num ].selector = KERNEL_CS;
+    idt[ num ].base_low = ( ( uint32_t )handler ) & 0xFFFF;
+    idt[ num ].base_high = ( ( uint32_t )handler ) >> 16;
+    idt[ num ].flags = 0xEF;
 }
 
 static void set_interrupt_gate( int num, void* handler ) {
-  idt[ num ].selector = KERNEL_CS;
-  idt[ num ].base_low = ( ( uint32_t )handler ) & 0xFFFF;
-  idt[ num ].base_high = ( ( uint32_t )handler ) >> 16;
-  idt[ num ].flags = 0x8E;
+    idt[ num ].selector = KERNEL_CS;
+    idt[ num ].base_low = ( ( uint32_t )handler ) & 0xFFFF;
+    idt[ num ].base_high = ( ( uint32_t )handler ) >> 16;
+    idt[ num ].flags = 0x8E;
+}
+
+void arch_disable_irq( int irq ) {
+    if ( irq & 8 ) {
+        slave_mask |= ( 1 << ( irq - 8 ) );
+        outb( slave_mask, PIC_SLAVE_IMR );
+    } else {
+        master_mask |= ( 1 << irq );
+        outb( master_mask, PIC_MASTER_IMR );
+    }
+}
+
+void arch_enable_irq( int irq ) {
+    if ( irq & 8 ) {
+        slave_mask &= ~( 1 << ( irq - 8 ) );
+        outb( slave_mask , PIC_SLAVE_IMR );
+    } else {
+        master_mask &= ~( 1 << irq );
+        outb( master_mask, PIC_MASTER_IMR );
+    }
+}
+
+void arch_ack_irq( int irq ) {
+    if ( irq & 8 ) {
+        outb( 0x20, PIC_SLAVE_CMD );
+    }
+
+    outb( 0x20, PIC_MASTER_CMD );
 }
 
 void irq_handler( registers_t* regs ) {
+    int irq;
+
+    irq = regs->int_number - 0x20;
+
+    do_handle_irq( irq, regs );
+
+    arch_ack_irq( irq );
 }
 
 int init_interrupts( void ) {

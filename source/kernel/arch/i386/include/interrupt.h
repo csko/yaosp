@@ -21,6 +21,8 @@
 
 #include <types.h>
 
+#define ARCH_IRQ_COUNT 16
+
 /**
  * This is used to disable interrupts on the current
  * processor.
@@ -32,6 +34,10 @@ bool disable_interrupts( void );
  * This is used to enable interrupts on the current processor.
  */
 void enable_interrupts( void );
+
+void arch_disable_irq( int irq );
+void arch_enable_irq( int irq );
+void arch_act_irq( int irq );
 
 /**
  * This is used during the kernel initialization to setup the

@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* Programmable interval timer
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,15 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _ARCH_PIT_H_
+#define _ARCH_PIT_H_
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
+int init_pit( void );
 
-void handle_panic( const char* file, int line, const char* format, ... );
-
-int arch_late_init( void );
-void kernel_main( void );
-
-#endif // _KERNEL_H_
+#endif // _ARCH_PIT_H_

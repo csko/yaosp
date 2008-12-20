@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* Programmable Interval Timer
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,15 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#include <irq.h>
+#include <console.h>
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
+#include <arch/pit.h>
+#include <arch/io.h>
 
-void handle_panic( const char* file, int line, const char* format, ... );
+static int pit_irq( int irq, void* data, registers_t* regs ) {
+    return 0;
+}
 
-int arch_late_init( void );
-void kernel_main( void );
+int init_pit( void ) {
+    uint32_t base;
 
-#endif // _KERNEL_H_
+    /* Set frequency (1000Hz) */
+
+    base = 1193182L / 1000;
+    outb( 0x36, 0x43 );
+    outb( base & 0xFF, 0x40 );
+    outb( base >> 8, 0x40 );
+
+    /* Request the PIT irq */
+
+    return request_irq( 0, pit_irq, NULL );
+}

@@ -26,6 +26,7 @@
 #include <arch/gdt.h>
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
+#include <arch/pit.h>
 #include <arch/mm/config.h>
 #include <arch/mm/paging.h>
 
@@ -102,4 +103,10 @@ void arch_start( multiboot_header_t* header ) {
        point of the kernel */
 
     kernel_main();
+}
+
+int arch_late_init( void ) {
+    init_pit();
+
+    return 0;
 }

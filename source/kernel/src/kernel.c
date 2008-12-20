@@ -20,16 +20,20 @@
 #include <process.h>
 #include <thread.h>
 #include <scheduler.h>
+#include <kernel.h>
 
 #include <arch/interrupt.h>
+#include <arch/cpu.h>
 
 void handle_panic( const char* file, int line, const char* format, ... ) {
     kprintf( "Panic at %s:%d!\n", file, line );
     disable_interrupts();
-    while ( 1 ) ;
+    halt_loop();
 }
 
 void kernel_main( void ) {
+    int error;
+
     kprintf( "Initializing processes ... " );
     init_processes();
     kprintf( "done\n" );
@@ -41,4 +45,14 @@ void kernel_main( void ) {
     kprintf( "Initializing scheduler ... " );
     init_scheduler();
     kprintf( "done\n" );
+
+    error = arch_late_init();
+
+    if ( error < 0 ) {
+        return;
+    }
+
+    enable_interrupts();
+
+    halt_loop();
 }

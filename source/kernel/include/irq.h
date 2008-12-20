@@ -1,4 +1,4 @@
-/* Miscellaneous kernel functions
+/* IRQ handling code
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,15 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _IRQ_H_
+#define _IRQ_H_
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
+#include <types.h>
 
-void handle_panic( const char* file, int line, const char* format, ... );
+typedef int irq_handler_t( int irq, void* data, registers_t* regs );
 
-int arch_late_init( void );
-void kernel_main( void );
+typedef struct irq_action {
+    irq_handler_t* handler;
+    void* data;
+    struct irq_action* next;
+} irq_action_t;
 
-#endif // _KERNEL_H_
+int request_irq( int irq, irq_handler_t* handler, void* data );
+
+void do_handle_irq( int irq, registers_t* regs );
+
+int init_irq_handlers( void );
+
+#endif // _IRQ_H_
