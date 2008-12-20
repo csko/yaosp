@@ -79,6 +79,7 @@ void kernel_thread_exit( void ) {
 }
 
 thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg ) {
+    int error;
     thread_t* thread;
 
     /* Allocate a new thread */
@@ -87,6 +88,16 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
 
     if ( thread == NULL ) {
         return -ENOMEM;
+    }
+
+    /* Initialize the architecture dependent part of the thread */
+
+    error = arch_create_kernel_thread( thread, ( void* )entry, arg );
+
+    if ( error < 0 ) {
+        /* TODO: free the allocated thread structure */
+
+        return error;
     }
 
     /* Get an unique ID to the new thread and add to the others */

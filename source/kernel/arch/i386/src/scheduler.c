@@ -1,4 +1,4 @@
-/* Interrupt specific functions
+/* Architecture part of the scheduler
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,35 +16,29 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_INTERRUPT_H_
-#define _ARCH_INTERRUPT_H_
-
 #include <types.h>
+#include <scheduler.h>
 
-#define ARCH_IRQ_COUNT 16
+#include <arch/thread.h>
 
-/**
- * This is used to disable interrupts on the current
- * processor.
- *
- * @return True is returned if interrupts were enabled before this call
- */
-bool disable_interrupts( void );
-/**
- * This is used to enable interrupts on the current processor.
- */
-void enable_interrupts( void );
+extern thread_t* current;
 
-void arch_disable_irq( int irq );
-void arch_enable_irq( int irq );
-void arch_ack_irq( int irq );
+void switch_to_thread( register_t esp );
 
-/**
- * This is used during the kernel initialization to setup the
- * IDT entries and reprogram the PIC.
- *
- * @return On success 0 is returned
- */
-int init_interrupts( void );
+void schedule( registers_t* regs ) {
+    thread_t* next;
+    i386_thread_t* arch_thread;
 
-#endif // _ARCH_INTERRUPT_H_
+    if ( current != NULL ) {
+        arch_thread = ( i386_thread_t* )current->arch_data;
+
+        arch_thread->esp = ( register_t )regs;
+    }
+
+    next = do_schedule();
+    arch_thread = ( i386_thread_t* )next->arch_data;
+
+    current = next;
+
+    switch_to_thread( arch_thread->esp );
+}

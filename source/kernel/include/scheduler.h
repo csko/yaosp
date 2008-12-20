@@ -19,6 +19,12 @@
 #ifndef _SCHEDULER_H_
 #define _SCHEDULER_H_
 
+#include <types.h>
+#include <thread.h>
+
+thread_t* do_schedule( void );
+void schedule( registers_t* regs );
+
 int init_scheduler( void );
 
 #endif // _SCHEDULER_H_

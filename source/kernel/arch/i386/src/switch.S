@@ -1,4 +1,4 @@
-/* Programmable Interval Timer
+/* Thread switching code
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,36 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <irq.h>
-#include <console.h>
-#include <scheduler.h>
+.section .text
 
-#include <arch/pit.h>
-#include <arch/io.h>
-#include <arch/interrupt.h>
+.global switch_to_thread
 
-static int pit_irq( int irq, void* data, registers_t* regs ) {
-    /* We have to ack this IRQ here because we'll call
-       the scheduler that won't return here. */
+/* void switch_to_thread( register_t esp ) */
 
-    arch_ack_irq( irq );
-
-    schedule( regs );
-
-    return 0;
-}
-
-int init_pit( void ) {
-    uint32_t base;
-
-    /* Set frequency (1000Hz) */
-
-    base = 1193182L / 1000;
-    outb( 0x36, 0x43 );
-    outb( base & 0xFF, 0x40 );
-    outb( base >> 8, 0x40 );
-
-    /* Request the PIT irq */
-
-    return request_irq( 0, pit_irq, NULL );
-}
+switch_to_thread:
+    movl 4(%esp), %esp
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    addl $8, %esp /* skip int_number and error_code */
+    iret
+.size switch_to_thread,.-switch_to_thread
