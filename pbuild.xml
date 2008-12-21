@@ -28,6 +28,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="clean">
         <call target="clean_sources"/>
+        <call target="clean_iso"/>
     </target>
 
     <target name="prepare_build" type="private">
@@ -62,5 +63,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="clean_sources" type="private">
         <call target="clean" directory="source"/>
+    </target>
+
+    <target name="clean_iso" type="private">
+        <delete>yaosp.iso</delete>
     </target>
 </build>

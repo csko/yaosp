@@ -17,9 +17,40 @@
  */
 
 #include <process.h>
+#include <errno.h>
+#include <mm/kmalloc.h>
+#include <mm/context.h>
 #include <lib/hashtable.h>
+#include <lib/string.h>
 
+static int process_id_counter = 0;
 static hashtable_t process_table;
+
+static process_t* allocate_process( char* name ) {
+    process_t* process;
+
+    process = ( process_t* )kmalloc( sizeof( process_t ) );
+
+    if ( process == NULL ) {
+        return NULL;
+    }
+
+    memset( process, 0, sizeof( process_t ) );
+
+    process->id = -1;
+    process->name = strdup( name );
+
+    if ( process->name == NULL ) {
+        kfree( process );
+        return NULL;
+    }
+
+    return process;
+}
+
+process_t* get_process_by_id( process_id id ) {
+    return ( process_t* )hashtable_get( &process_table, ( const void* )id );
+}
 
 static void* process_key( hashitem_t* item ) {
     process_t* process;
@@ -39,6 +70,9 @@ static bool process_compare( const void* key1, const void* key2 ) {
 
 int init_processes( void ) {
     int error;
+    process_t* process;
+
+    /* Initialize the process hashtable */
 
     error = init_hashtable(
                 &process_table,
@@ -51,6 +85,19 @@ int init_processes( void ) {
     if ( error < 0 ) {
         return error;
     }
+
+    /* Create kernel process */
+
+    process = allocate_process( "kernel" );
+
+    if ( process == NULL ) {
+        return -ENOMEM;
+    }
+
+    process->id = process_id_counter++;
+    process->memory_context = &kernel_memory_context;
+
+    hashtable_add( &process_table, ( hashitem_t* )process );
 
     return 0;
 }

@@ -54,6 +54,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/scheduler.c</item>
         <item>src/irq.c</item>
         <item>src/smp.c</item>
+        <item>src/init.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

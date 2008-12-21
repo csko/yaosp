@@ -24,6 +24,8 @@
 
 void handle_panic( const char* file, int line, const char* format, ... );
 
+int init_thread( void* arg );
+
 int arch_late_init( void );
 void kernel_main( void );
 

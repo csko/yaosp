@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <types.h>
 #include <console.h>
+#include <smp.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -63,6 +64,9 @@ int detect_cpu( void ) {
     register_t largest_func_num;
     char name[ 49 ] = { 0 };
 
+    /* Clear the processor structures */
+
+    memset( processor_table, 0, sizeof( cpu_t ) * MAX_CPU_COUNT );
     memset( arch_processor_table, 0, sizeof( i386_cpu_t ) * MAX_CPU_COUNT );
 
     if ( !cpuid_supported() ) {
@@ -146,6 +150,9 @@ int detect_cpu( void ) {
     kprintf( "\n" );
 
     for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
+        memcpy( processor_table[ i ].name, name, sizeof( name ) );
+        processor_table[ i ].arch_data = ( void* )&arch_processor_table[ i ];
+
         arch_processor_table[ i ].family = family;
         arch_processor_table[ i ].model = model;
         arch_processor_table[ i ].features = features;

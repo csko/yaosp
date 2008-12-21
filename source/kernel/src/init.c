@@ -1,4 +1,4 @@
-/* Process implementation
+/* Init thread
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,25 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROCESS_H_
-#define _PROCESS_H_
+#include <kernel.h>
 
-#include <mm/context.h>
-#include <lib/hashtable.h>
-
-typedef int process_id;
-
-typedef struct process {
-    hashitem_t hash;
-
-    process_id id;
-    char* name;
-
-    memory_context_t* memory_context;
-} process_t;
-
-process_t* get_process_by_id( process_id id );
-
-int init_processes( void );
-
-#endif // _PROCESS_H_
+int init_thread( void* arg ) {
+    return 0;
+}

@@ -34,7 +34,7 @@
 static int thread_id_counter = 0;
 static hashtable_t thread_table;
 
-static thread_t* allocate_thread( const char* name ) {
+static thread_t* allocate_thread( const char* name, process_t* process ) {
     int error;
     thread_t* thread;
 
@@ -46,7 +46,9 @@ static thread_t* allocate_thread( const char* name ) {
 
     memset( thread, 0, sizeof( thread_t ) );
 
+    thread->id = -1;
     thread->name = strdup( name );
+    thread->process = process;
 
     if ( thread->name == NULL ) {
         kfree( thread );
@@ -83,10 +85,23 @@ void kernel_thread_exit( void ) {
 thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg ) {
     int error;
     thread_t* thread;
+    process_t* kernel_process;
+
+    /* Get the kernel process */
+
+    spinlock_disable( &scheduler_lock );
+
+    kernel_process = get_process_by_id( 0 );
+
+    spinunlock_enable( &scheduler_lock );
+
+    if ( kernel_process == NULL ) {
+        return -EINVAL;
+    }
 
     /* Allocate a new thread */
 
-    thread = allocate_thread( name );
+    thread = allocate_thread( name, kernel_process );
 
     if ( thread == NULL ) {
         return -ENOMEM;
@@ -115,6 +130,26 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
     spinunlock_enable( &scheduler_lock );
 
     return thread->id;
+}
+
+int wake_up_thread( thread_id id ) {
+    int error;
+    thread_t* thread;
+
+    spinlock_disable( &scheduler_lock );
+
+    thread = get_thread_by_id( id );
+
+    if ( thread != NULL ) {
+        add_thread_to_ready( thread );
+        error = 0;
+    } else {
+        error = -EINVAL;
+    }
+
+    spinunlock_enable( &scheduler_lock );
+
+    return error;
 }
 
 thread_t* get_thread_by_id( thread_id id ) {

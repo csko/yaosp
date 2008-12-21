@@ -21,8 +21,11 @@
 
 #include <config.h>
 #include <thread.h>
+#include <process.h>
 
 typedef struct cpu {
+    char name[ 255 ];
+
     bool present;
     volatile bool running;
 
@@ -34,6 +37,7 @@ typedef struct cpu {
 
 extern cpu_t processor_table[ MAX_CPU_COUNT ];
 
+process_t* current_process( void );
 thread_t* current_thread( void );
 thread_t* idle_thread( void );
 

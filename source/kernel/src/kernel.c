@@ -58,6 +58,19 @@ void kernel_main( void ) {
 
     init_smp_late();
 
+    /* Create the init thread */
+
+    thread_id init_id = create_kernel_thread( "init", init_thread, NULL );
+
+    if ( init_id < 0 ) {
+        return;
+    }
+
+    wake_up_thread( init_id );
+
+    /* Enable interrupts. The first timer interrupt will
+       start the scheduler */
+
     enable_interrupts();
 
     halt_loop();

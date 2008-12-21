@@ -26,6 +26,10 @@
 
 cpu_t processor_table[ MAX_CPU_COUNT ];
 
+process_t* current_process( void ) {
+    return get_processor()->current_thread->process;
+}
+
 thread_t* current_thread( void ) {
     return get_processor()->current_thread;
 }
@@ -35,8 +39,6 @@ thread_t* idle_thread( void ) {
 }
 
 int init_smp( void ) {
-    memset( processor_table, 0, sizeof( cpu_t ) * MAX_CPU_COUNT );
-
     /* Make the boot CPU available */
 
     processor_table[ 0 ].present = true;

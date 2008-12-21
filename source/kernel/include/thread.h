@@ -20,6 +20,7 @@
 #define _THREAD_H_
 
 #include <types.h>
+#include <process.h>
 #include <lib/hashtable.h>
 
 typedef int thread_id;
@@ -41,6 +42,8 @@ typedef struct thread {
     char* name;
     int state;
 
+    process_t* process;
+
     void* kernel_stack;
 
     void* arch_data;
@@ -51,6 +54,8 @@ typedef int thread_entry_t( void* arg );
 void kernel_thread_exit( void );
 
 thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg );
+
+int wake_up_thread( thread_id id );
 
 thread_t* get_thread_by_id( thread_id id );
 

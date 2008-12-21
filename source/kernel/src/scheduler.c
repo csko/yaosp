@@ -21,13 +21,21 @@
 #include <console.h>
 #include <smp.h>
 
-thread_t* first_ready = NULL;
+thread_t* first_ready;
+thread_t* last_ready;
 
 spinlock_t scheduler_lock = INIT_SPINLOCK;
 
-int thread_test( void* arg ) {
-    while ( true ) {
-        kprintf( "%d", ( int )arg );
+int add_thread_to_ready( thread_t* thread ) {
+    thread->state = THREAD_READY;
+    thread->queue_next = NULL;
+
+    if ( first_ready == NULL ) {
+        first_ready = thread;
+        last_ready = thread;
+    } else {
+        last_ready->queue_next = thread;
+        last_ready = thread;
     }
 
     return 0;
@@ -60,21 +68,8 @@ thread_t* do_schedule( void ) {
 }
 
 int init_scheduler( void ) {
-    thread_id id;
-    thread_t* thread;
-
-#if 0
-    id = create_kernel_thread( "thread1", thread_test, ( void* )1 );
-    thread = get_thread_by_id( id );
-
-    first_ready = thread;
-
-    id = create_kernel_thread( "thread2", thread_test, ( void* )2 );
-    thread = get_thread_by_id( id );
-
-    first_ready->queue_next = thread;
-    thread->queue_next = NULL;
-#endif
+    first_ready = NULL;
+    last_ready = NULL;
 
     return 0;
 }

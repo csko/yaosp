@@ -22,6 +22,7 @@
 
 #include <arch/thread.h>
 #include <arch/cpu.h>
+#include <arch/mm/paging.h>
 
 extern thread_t* current;
 
@@ -31,6 +32,7 @@ void schedule( registers_t* regs ) {
     thread_t* next;
     thread_t* current;
     i386_thread_t* arch_thread;
+    i386_memory_context_t* arch_mem_context;
 
     /* Lock the scheduler */
 
@@ -55,8 +57,15 @@ void schedule( registers_t* regs ) {
     }
 
     arch_thread = ( i386_thread_t* )next->arch_data;
+    arch_mem_context = ( i386_memory_context_t* )next->process->memory_context->arch_data;
 
     get_processor()->current_thread = next;
+
+    /* Set the new memory context if needed */
+
+    if ( ( current == NULL ) || ( current->process != next->process ) ) {
+        set_cr3( ( uint32_t )arch_mem_context->page_directory );
+    }
 
     /* Unlock the scheduler spinlock. The iret instruction in
        switch_to_thread() will enable interrupts if required. */
