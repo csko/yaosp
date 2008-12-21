@@ -7,17 +7,32 @@
         <echo>Compiling printf test ...</echo>
 
         <gcc>
-            <input>test_printf.c</input>
             <input>../src/lib/printf.c</input>
-            <output>test_printf</output>
+            <output>_printf.o</output>
             <include>../include</include>
             <flag>-Wall</flag>
+            <flag>-c</flag>
+        </gcc>
+
+        <gcc>
+            <input>test_printf.c</input>
+            <output>_test_printf.o</output>
+            <flag>-Wall</flag>
+            <flag>-c</flag>
+        </gcc>
+
+        <gcc>
+            <input>_printf.o</input>
+            <input>_test_printf.o</input>
+            <output>test_printf</output>
         </gcc>
 
         <echo>Running printf test ...</echo>
 
         <exec executable="./test_printf"/>
 
+        <delete>_printf.o</delete>
+        <delete>_test_printf.o</delete>
         <delete>test_printf</delete>
     </target>
 </build>

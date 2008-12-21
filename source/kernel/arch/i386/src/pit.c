@@ -23,8 +23,20 @@
 #include <arch/pit.h>
 #include <arch/io.h>
 #include <arch/interrupt.h>
+#include <arch/spinlock.h>
+
+static uint64_t system_time = 0;
+static spinlock_t time_lock = INIT_SPINLOCK;
 
 static int pit_irq( int irq, void* data, registers_t* regs ) {
+    /* Increment the system time */
+
+    spinlock( &time_lock );
+
+    system_time += 1000;
+
+    spinunlock( &time_lock );
+
     /* We have to ack this IRQ here because we'll call
        the scheduler that won't return here. */
 
@@ -33,6 +45,18 @@ static int pit_irq( int irq, void* data, registers_t* regs ) {
     schedule( regs );
 
     return 0;
+}
+
+uint64_t get_system_time( void ) {
+    uint64_t now;
+
+    spinlock_disable( &time_lock );
+
+    now = system_time;
+
+    spinunlock_enable( &time_lock );
+
+    return now;
 }
 
 int init_pit( void ) {

@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <lib/printf.h>
+#include <stdarg.h>
 
 #define INIT_BUFFER \
     data.buffer = buffer; \
