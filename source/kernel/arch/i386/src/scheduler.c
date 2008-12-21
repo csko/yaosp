@@ -50,16 +50,11 @@ void schedule( registers_t* regs ) {
 
     next = do_schedule();
 
-    /* If we got nothing from the scheduler the run the idle thread */
-
-    if ( next == NULL ) {
-        next = idle_thread();
-    }
-
     arch_thread = ( i386_thread_t* )next->arch_data;
     arch_mem_context = ( i386_memory_context_t* )next->process->memory_context->arch_data;
 
     get_processor()->current_thread = next;
+    next->state = THREAD_RUNNING;
 
     /* Set the new memory context if needed */
 

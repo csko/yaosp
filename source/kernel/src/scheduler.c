@@ -20,6 +20,7 @@
 #include <scheduler.h>
 #include <console.h>
 #include <smp.h>
+#include <kernel.h>
 
 thread_t* first_ready;
 thread_t* last_ready;
@@ -48,20 +49,34 @@ thread_t* do_schedule( void ) {
     current = current_thread();
 
     if ( ( current != NULL ) && ( current != idle_thread() ) ) {
-        thread_t* tmp = first_ready;
+        switch ( current->state ) {
+            case THREAD_RUNNING :
+                add_thread_to_ready( current );
+                break;
 
-        while ( tmp->queue_next != NULL ) {
-            tmp = tmp->queue_next;
+            case THREAD_WAITING :
+            case THREAD_SLEEPING :
+            case THREAD_ZOMBIE :
+                break;
+
+            default :
+                panic(
+                    "Thread %s with invalid state (%d) in the scheduler!\n",
+                    current->name,
+                    current->state
+                );
+                break;
         }
-
-        tmp->queue_next = current;
-        current->queue_next = NULL;
     }
 
     next = first_ready;
 
     if ( first_ready != NULL ) {
         first_ready = first_ready->queue_next;
+    }
+
+    if ( next == NULL ) {
+        next = idle_thread();
     }
 
     return next;

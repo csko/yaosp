@@ -17,7 +17,10 @@
  */
 
 #include <kernel.h>
+#include <console.h>
 
 int init_thread( void* arg ) {
+    kprintf( "Init thread started!\n" );
+
     return 0;
 }

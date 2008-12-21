@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <kernel.h>
 #include <scheduler.h>
+#include <smp.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
@@ -77,9 +78,23 @@ static thread_t* allocate_thread( const char* name, process_t* process ) {
     return thread;
 }
 
+void thread_exit( int exit_code ) {
+    thread_t* thread;
+
+    spinlock_disable( &scheduler_lock );
+
+    thread = current_thread();
+    thread->state = THREAD_ZOMBIE;
+
+    spinunlock( &scheduler_lock );
+
+    while ( 1 ) {
+        sched_preempt();
+    }
+}
+
 void kernel_thread_exit( void ) {
-    /* Just for now ... */
-    panic( "Kernel thread exited!" );
+    thread_exit( 0 );
 }
 
 thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg ) {

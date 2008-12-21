@@ -31,6 +31,7 @@ enum {
     THREAD_RUNNING,
     THREAD_WAITING,
     THREAD_SLEEPING,
+    THREAD_ZOMBIE
 };
 
 typedef struct thread {
@@ -51,6 +52,7 @@ typedef struct thread {
 
 typedef int thread_entry_t( void* arg );
 
+void thread_exit( int exit_code );
 void kernel_thread_exit( void );
 
 thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg );

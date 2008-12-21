@@ -16,9 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <arch/gdt.h>
+
 .section .text
 
 .global switch_to_thread
+.global sched_preempt
 
 /* void switch_to_thread( register_t esp ) */
 
@@ -31,3 +34,31 @@ switch_to_thread:
     addl $8, %esp /* skip int_number and error_code */
     iret
 .size switch_to_thread,.-switch_to_thread
+
+/* void sched_preempt( void ) */
+
+sched_preempt:
+    movl 0(%esp), %eax
+    addl $4, %esp
+    pushfl           /* push EFLAGS */
+    pushl $KERNEL_CS /* push CS */
+    pushl %eax       /* push EIP */
+    pushl $0
+    pushl $0
+    pusha
+    push %ds
+    andl $0xFFFF, (%esp)
+    push %es
+    andl $0xFFFF, (%esp)
+    push %fs
+    andl $0xFFFF, (%esp)
+    pushl %esp
+    call schedule
+    addl $4, %esp
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    addl $8, %esp
+    iret
+.size sched_preempt,.-sched_preempt

@@ -31,6 +31,8 @@ int add_thread_to_ready( thread_t* thread );
 thread_t* do_schedule( void );
 void schedule( registers_t* regs );
 
+void sched_preempt( void );
+
 int init_scheduler( void );
 
 #endif // _SCHEDULER_H_
