@@ -28,6 +28,8 @@ extern spinlock_t scheduler_lock;
 
 int add_thread_to_ready( thread_t* thread );
 
+void reset_thread_quantum( thread_t* thread );
+
 thread_t* do_schedule( void );
 void schedule( registers_t* regs );
 

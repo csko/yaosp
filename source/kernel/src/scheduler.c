@@ -21,9 +21,13 @@
 #include <console.h>
 #include <smp.h>
 #include <kernel.h>
+#include <time.h>
 
 thread_t* first_ready;
 thread_t* last_ready;
+
+thread_t* first_expired;
+thread_t* last_expired;
 
 spinlock_t scheduler_lock = INIT_SPINLOCK;
 
@@ -42,32 +46,92 @@ int add_thread_to_ready( thread_t* thread ) {
     return 0;
 }
 
+int add_thread_to_expired( thread_t* thread ) {
+    thread->state = THREAD_READY;
+    thread->queue_next = NULL;
+
+    reset_thread_quantum( thread );
+
+    if ( first_expired == NULL ) {
+        first_expired = thread;
+        last_expired = thread;
+    } else {
+        last_expired->queue_next = thread;
+        last_expired = thread;
+    }
+
+    return 0;
+}
+
+void reset_thread_quantum( thread_t* thread ) {
+    thread->quantum = 50 * 1000;
+}
+
+static void swap_expired_and_ready_lists( void ) {
+    first_ready = first_expired;
+    last_ready = last_expired;
+
+    first_expired = NULL;
+    last_expired = NULL;
+}
+
 thread_t* do_schedule( void ) {
+    uint64_t now;
     thread_t* next;
     thread_t* current;
 
+    now = get_system_time();
     current = current_thread();
 
-    if ( ( current != NULL ) && ( current != idle_thread() ) ) {
-        switch ( current->state ) {
-            case THREAD_RUNNING :
-                add_thread_to_ready( current );
-                break;
+    if ( current != NULL ) {
+        /* Calculate the time how long the previous thread
+           was running */
 
-            case THREAD_WAITING :
-            case THREAD_SLEEPING :
-            case THREAD_ZOMBIE :
-                break;
+        uint64_t runtime = now - current->exec_time;
 
-            default :
-                panic(
-                    "Thread %s with invalid state (%d) in the scheduler!\n",
-                    current->name,
-                    current->state
-                );
-                break;
+        current->cpu_time += runtime;
+
+        if ( current != idle_thread() ) {
+            switch ( current->state ) {
+                case THREAD_RUNNING :
+                    if ( runtime >= current->quantum ) {
+                        add_thread_to_expired( current );
+                    } else {
+                        current->quantum -= runtime;
+                        add_thread_to_ready( current );
+                    }
+
+                    break;
+
+                case THREAD_WAITING :
+                case THREAD_SLEEPING :
+                    current->quantum -= runtime;
+                    /* TODO: this required a bit more thinking during the
+                       implementation if sleeping/waiting */
+                    break;
+
+                case THREAD_ZOMBIE :
+                    break;
+
+                default :
+                    panic(
+                        "Thread %s with invalid state (%d) in the scheduler!\n",
+                        current->name,
+                        current->state
+                    );
+                    break;
+            }
         }
     }
+
+    /* Swap the expired and ready thread lists if the ready list is
+       empty (this means that all runnable thread used its quantum) */
+
+    if ( first_ready == NULL ) {
+        swap_expired_and_ready_lists();
+    }
+
+    /* Get the first thread from the ready list */
 
     next = first_ready;
 
@@ -75,9 +139,15 @@ thread_t* do_schedule( void ) {
         first_ready = first_ready->queue_next;
     }
 
+    /* If the ready list is empty then execute the idle thread */
+
     if ( next == NULL ) {
         next = idle_thread();
     }
+
+    /* Save the execution time of the next thread */
+
+    next->exec_time = now;
 
     return next;
 }
@@ -85,6 +155,9 @@ thread_t* do_schedule( void ) {
 int init_scheduler( void ) {
     first_ready = NULL;
     last_ready = NULL;
+
+    first_expired = NULL;
+    last_expired = NULL;
 
     return 0;
 }

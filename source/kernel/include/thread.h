@@ -48,6 +48,11 @@ typedef struct thread {
     char* name;
     int state;
 
+    uint64_t quantum;
+    uint64_t exec_time;
+
+    uint64_t cpu_time;
+
     process_t* process;
 
     void* kernel_stack;

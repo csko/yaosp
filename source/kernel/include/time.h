@@ -21,6 +21,11 @@
 
 #include <types.h>
 
+/**
+ * Returns the time in microseconds since the system boot.
+ *
+ * @return The system time in microseconds
+ */
 uint64_t get_system_time( void );
 
 #endif // _TIME_H_

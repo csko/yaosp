@@ -47,9 +47,7 @@ static thread_t* allocate_thread( const char* name, process_t* process ) {
 
     memset( thread, 0, sizeof( thread_t ) );
 
-    thread->id = -1;
     thread->name = strdup( name );
-    thread->process = process;
 
     if ( thread->name == NULL ) {
         kfree( thread );
@@ -73,7 +71,11 @@ static thread_t* allocate_thread( const char* name, process_t* process ) {
         return NULL;
     }
 
+    thread->id = -1;
     thread->state = THREAD_READY;
+    thread->process = process;
+
+    reset_thread_quantum( thread );
 
     return thread;
 }
