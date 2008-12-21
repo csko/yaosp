@@ -106,8 +106,8 @@ thread_t* do_schedule( void ) {
                 case THREAD_WAITING :
                 case THREAD_SLEEPING :
                     current->quantum -= runtime;
-                    /* TODO: this required a bit more thinking during the
-                       implementation if sleeping/waiting */
+                    /* TODO: this requires a bit more thinking during the
+                       implementation of sleeping/waiting */
                     break;
 
                 case THREAD_ZOMBIE :

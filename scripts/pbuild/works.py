@@ -128,8 +128,7 @@ class GccWork( Work ) :
 
         for input in self.inputs :
             input = context.replace_definitions( input )
-
-            real_inputs.append( input )
+            real_inputs += context.replace_wildcards( input )
 
         # Parse flags
 
