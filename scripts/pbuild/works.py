@@ -235,14 +235,14 @@ class CallTarget( Work ) :
 
     def execute( self, context ) :
         if self.directory != None :
-            self.directory = context.handle_everything( self.directory )
+            directory = context.handle_everything( self.directory )
 
-            if not os.path.isdir( self.directory ) :
-                print self.directory + " is not a directory!"
+            if not os.path.isdir( directory ) :
+                print directory + " is not a directory!"
                 return
 
             cached_cwd = os.getcwd()
-            os.chdir( cached_cwd + os.sep + self.directory )
+            os.chdir( cached_cwd + os.sep + directory )
 
             context = ctx.BuildContext()
             handler = hndlr.BuildHandler( context )
