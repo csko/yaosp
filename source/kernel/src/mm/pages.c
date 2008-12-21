@@ -160,12 +160,8 @@ int init_page_allocator( multiboot_header_t* header ) {
        We place the page_t structures right after the kernel. */
 
     first_free_page = PAGE_ALIGN( ( ptr_t )&__kernel_end );
-    memory_pages = ( page_t* )first_free_page;
 
-    /* Reserve the pages used by the page allocator structures
-       and bootmodules */
-
-    first_free_page += PAGE_ALIGN( memory_page_count * sizeof( page_t ) );
+    /* Wait, one more thing: the bootmodules :) */
 
     module_count = get_bootmodule_count();
 
@@ -184,6 +180,11 @@ int init_page_allocator( multiboot_header_t* header ) {
         }
     }
 
+    memory_pages = ( page_t* )first_free_page;
+
+    /* Reserve the pages used by the page allocator structures */
+
+    first_free_page += PAGE_ALIGN( memory_page_count * sizeof( page_t ) );
     first_free_page_index = first_free_page / PAGE_SIZE;
 
     /* Clear the memory */
