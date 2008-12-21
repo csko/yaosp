@@ -38,5 +38,6 @@ thread_t* current_thread( void );
 thread_t* idle_thread( void );
 
 int init_smp( void );
+int init_smp_late( void );
 
 #endif // _SMP_H_

@@ -33,6 +33,7 @@ void handle_page_fault( registers_t* regs ) {
     );
 
     kprintf( "Address=0x%x\n", address );
+    kprintf( "CS:EIP=0x%x:0x%x\n", regs->cs, regs->eip );
 
     disable_interrupts();
     halt_loop();

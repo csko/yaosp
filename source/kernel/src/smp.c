@@ -19,6 +19,7 @@
 #include <smp.h>
 #include <types.h>
 #include <thread.h>
+#include <errno.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -40,6 +41,31 @@ int init_smp( void ) {
 
     processor_table[ 0 ].present = true;
     processor_table[ 0 ].running = true;
+
+    return 0;
+}
+
+int init_smp_late( void ) {
+    int i;
+    thread_id id;
+
+    for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
+        if ( !processor_table[ i ].present ) {
+            continue;
+        }
+
+        id = create_kernel_thread( "idle", ( thread_entry_t* )halt_loop, NULL );
+
+        if ( id < 0 ) {
+            return id;
+        }
+
+        processor_table[ i ].idle_thread = get_thread_by_id( id );
+
+        if ( processor_table[ i ].idle_thread == NULL ) {
+            return -EINVAL;
+        }
+    }
 
     return 0;
 }

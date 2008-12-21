@@ -46,11 +46,17 @@ void kernel_main( void ) {
     init_scheduler();
     kprintf( "done\n" );
 
+    kprintf( "Initializing SMP ... " );
+    init_smp();
+    kprintf( "done\n" );
+
     error = arch_late_init();
 
     if ( error < 0 ) {
         return;
     }
+
+    init_smp_late();
 
     enable_interrupts();
 

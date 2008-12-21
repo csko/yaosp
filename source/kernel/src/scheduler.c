@@ -39,7 +39,7 @@ thread_t* do_schedule( void ) {
 
     current = current_thread();
 
-    if ( current != NULL ) {
+    if ( ( current != NULL ) && ( current != idle_thread() ) ) {
         thread_t* tmp = first_ready;
 
         while ( tmp->queue_next != NULL ) {
@@ -51,7 +51,10 @@ thread_t* do_schedule( void ) {
     }
 
     next = first_ready;
-    first_ready = first_ready->queue_next;
+
+    if ( first_ready != NULL ) {
+        first_ready = first_ready->queue_next;
+    }
 
     return next;
 }
@@ -60,6 +63,7 @@ int init_scheduler( void ) {
     thread_id id;
     thread_t* thread;
 
+#if 0
     id = create_kernel_thread( "thread1", thread_test, ( void* )1 );
     thread = get_thread_by_id( id );
 
@@ -70,6 +74,7 @@ int init_scheduler( void ) {
 
     first_ready->queue_next = thread;
     thread->queue_next = NULL;
+#endif
 
     return 0;
 }
