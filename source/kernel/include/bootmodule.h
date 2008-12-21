@@ -1,4 +1,4 @@
-/* Configuration definitions
+/* Boot module management
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,22 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef _BOOTMODULE_H_
+#define _BOOTMODULE_H_
 
-/**
- * The maximum number of CPUs supported.
- */
-#define MAX_CPU_COUNT 32
+#include <types.h>
+#include <multiboot.h>
 
-/**
- * The maximum number of boot modules supported.
- */
-#define MAX_BOOTMODULE_COUNT 16
+typedef struct bootmodule {
+    void* address;
+    size_t size;
+} bootmodule_t;
 
-/**
- * The size of the kernel stack for threads.
- */
-#define KERNEL_STACK_SIZE ( 16 * 1024 )
+int get_bootmodule_count( void );
+bootmodule_t* get_bootmodule_at( int index );
 
-#endif // _CONFIG_H_
+int init_bootmodules( multiboot_header_t* header );
+
+#endif // _BOOTMODULE_H_

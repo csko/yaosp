@@ -43,6 +43,7 @@
 #include <types.h>
 #include <kernel.h>
 #include <errno.h>
+#include <bootmodule.h>
 #include <mm/pages.h>
 #include <lib/string.h>
 
@@ -140,6 +141,7 @@ int get_free_page_count( void ) {
 int init_page_allocator( multiboot_header_t* header ) {
     ptr_t i;
     ptr_t first_free_page;
+    int module_count;
 
     /* Check if we have memory information in the multiboot header */
 
@@ -160,9 +162,28 @@ int init_page_allocator( multiboot_header_t* header ) {
     first_free_page = PAGE_ALIGN( ( ptr_t )&__kernel_end );
     memory_pages = ( page_t* )first_free_page;
 
-    /* Reserve the pages used by the page allocator structures */
+    /* Reserve the pages used by the page allocator structures
+       and bootmodules */
 
     first_free_page += PAGE_ALIGN( memory_page_count * sizeof( page_t ) );
+
+    module_count = get_bootmodule_count();
+
+    if ( module_count > 0 ) {
+        int j;
+        ptr_t module_end;
+        bootmodule_t* module;
+
+        for ( j = 0; j < module_count; j++ ) {
+            module = get_bootmodule_at( j );
+            module_end = PAGE_ALIGN( ( ptr_t )module->address + module->size );
+
+            if ( module_end > first_free_page ) {
+                first_free_page = module_end;
+            }
+        }
+    }
+
     first_free_page_index = first_free_page / PAGE_SIZE;
 
     /* Clear the memory */

@@ -30,26 +30,33 @@
 #include <types.h>
 
 typedef struct multiboot_header {
-  uint32_t flags;
+    uint32_t flags;
 
-  uint32_t memory_lower;
-  uint32_t memory_upper;
+    uint32_t memory_lower;
+    uint32_t memory_upper;
 
-  uint32_t boot_device;
+    uint32_t boot_device;
 
-  const char* kernel_parameters;
+    const char* kernel_parameters;
 
-  uint32_t module_count;
-  void* first_module;
+    uint32_t module_count;
+    void* first_module;
 
-  uint32_t unused1;
-  uint32_t unused2;
-  uint32_t unused3;
-  uint32_t unused4;
+    uint32_t unused1;
+    uint32_t unused2;
+    uint32_t unused3;
+    uint32_t unused4;
 
-  uint32_t memory_map_length;
-  uint32_t memory_map_address;
+    uint32_t memory_map_length;
+    uint32_t memory_map_address;
 } multiboot_header_t;
+
+typedef struct multiboot_module {
+    uint32_t start;
+    uint32_t end;
+    char* parameters;
+    uint32_t reserved;
+} multiboot_module_t;
 
 #endif // __ASSEMBLER__
 

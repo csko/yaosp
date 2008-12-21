@@ -1,4 +1,4 @@
-/* Configuration definitions
+/* Common macro definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,22 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef _MACROS_H_
+#define _MACROS_H_
 
-/**
- * The maximum number of CPUs supported.
- */
-#define MAX_CPU_COUNT 32
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#define MAX(a,b) ((a)<(b)?(b):(a))
 
-/**
- * The maximum number of boot modules supported.
- */
-#define MAX_BOOTMODULE_COUNT 16
-
-/**
- * The size of the kernel stack for threads.
- */
-#define KERNEL_STACK_SIZE ( 16 * 1024 )
-
-#endif // _CONFIG_H_
+#endif // _MACROS_H_

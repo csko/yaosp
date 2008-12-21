@@ -21,7 +21,12 @@
 
 #include <types.h>
 #include <process.h>
+#include <config.h>
 #include <lib/hashtable.h>
+
+#include <arch/mm/config.h>
+
+#define KERNEL_STACK_PAGES ( KERNEL_STACK_SIZE / PAGE_SIZE )
 
 typedef int thread_id;
 

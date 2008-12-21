@@ -19,6 +19,7 @@
 #include <console.h>
 #include <multiboot.h>
 #include <kernel.h>
+#include <bootmodule.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
 
@@ -58,6 +59,16 @@ void arch_start( multiboot_header_t* header ) {
     kprintf( "Initializing interrupts ... " );
     init_interrupts();
     kprintf( "done\n" );
+
+    /* Initializing bootmodules */
+
+    kprintf( "Initializing bootmodules ... " );
+    init_bootmodules( header );
+    kprintf( "done\n" );
+
+    if ( get_bootmodule_count() > 0 ) {
+        kprintf( "Loaded %d module(s)\n", get_bootmodule_count() );
+    }
 
     /* Initialize page allocator */
 
