@@ -1,4 +1,4 @@
-/* Scheduler
+/* Advanced programmable interrupt controller
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,19 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SCHEDULER_H_
-#define _SCHEDULER_H_
+#ifndef _ARCH_APIC_H_
+#define _ARCH_APIC_H_
 
-#include <types.h>
-#include <thread.h>
+enum {
+    LAPIC_ID = 0x20,
+};
 
-#include <arch/spinlock.h>
-
-extern spinlock_t scheduler_lock;
-
-thread_t* do_schedule( void );
-void schedule( registers_t* regs );
-
-int init_scheduler( void );
-
-#endif // _SCHEDULER_H_
+#endif // _ARCH_APIC_H_

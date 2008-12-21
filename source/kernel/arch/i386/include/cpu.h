@@ -26,6 +26,7 @@
 
 #include <types.h>
 #include <config.h>
+#include <smp.h>
 
 typedef struct i386_cpu {
     int family;
@@ -61,6 +62,9 @@ void set_cr3( uint32_t cr3 );
  * This will execute an endless loops that halts the processor.
  */
 void halt_loop( void );
+
+int get_processor_id( void );
+cpu_t* get_processor( void );
 
 /**
  * Returns the current eflags value from the processor.

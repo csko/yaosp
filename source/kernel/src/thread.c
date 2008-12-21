@@ -20,12 +20,14 @@
 #include <config.h>
 #include <errno.h>
 #include <kernel.h>
+#include <scheduler.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
 
 #include <arch/thread.h>
+#include <arch/spinlock.h>
 
 #define MAX_THREAD_COUNT 1000000
 
@@ -102,11 +104,15 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
 
     /* Get an unique ID to the new thread and add to the others */
 
+    spinlock_disable( &scheduler_lock );
+
     do {
         thread->id = ( thread_id_counter++ ) % MAX_THREAD_COUNT;
     } while ( hashtable_get( &thread_table, ( const void* )thread->id ) != NULL );
 
     hashtable_add( &thread_table, ( hashitem_t* )thread );
+
+    spinunlock_enable( &scheduler_lock );
 
     return thread->id;
 }

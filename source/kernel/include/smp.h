@@ -1,4 +1,4 @@
-/* Scheduler
+/* Symmetric multi-processing
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,19 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SCHEDULER_H_
-#define _SCHEDULER_H_
+#ifndef _SMP_H_
+#define _SMP_H_
 
-#include <types.h>
+#include <config.h>
 #include <thread.h>
 
-#include <arch/spinlock.h>
+typedef struct cpu {
+    bool present;
+    volatile bool running;
 
-extern spinlock_t scheduler_lock;
+    thread_t* current_thread;
+    thread_t* idle_thread;
 
-thread_t* do_schedule( void );
-void schedule( registers_t* regs );
+    void* arch_data;
+} cpu_t;
 
-int init_scheduler( void );
+extern cpu_t processor_table[ MAX_CPU_COUNT ];
 
-#endif // _SCHEDULER_H_
+thread_t* current_thread( void );
+thread_t* idle_thread( void );
+
+int init_smp( void );
+
+#endif // _SMP_H_

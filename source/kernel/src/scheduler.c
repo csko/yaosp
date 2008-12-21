@@ -19,9 +19,11 @@
 #include <thread.h>
 #include <scheduler.h>
 #include <console.h>
+#include <smp.h>
 
 thread_t* first_ready = NULL;
-thread_t* current = NULL;
+
+spinlock_t scheduler_lock = INIT_SPINLOCK;
 
 int thread_test( void* arg ) {
     while ( true ) {
@@ -33,6 +35,9 @@ int thread_test( void* arg ) {
 
 thread_t* do_schedule( void ) {
     thread_t* next;
+    thread_t* current;
+
+    current = current_thread();
 
     if ( current != NULL ) {
         thread_t* tmp = first_ready;

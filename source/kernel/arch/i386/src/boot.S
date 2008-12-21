@@ -33,6 +33,10 @@
 /* The entry point of the kernel */
 
 _start:
+    /* Disable interrupts, just to make sure ... */
+
+    cli
+
     /* Setup out own stack for the kernel */
 
     movl $_kernel_stack_top, %esp
