@@ -1,2 +1,3 @@
-title OS
+title yaOSp
 kernel /system/kernel
+module /system/pci

@@ -107,10 +107,26 @@ void* memcpy( void* d, const void* s, size_t n ) {
 #ifndef ARCH_HAVE_STRLEN
 size_t strlen( const char* str ) {
     size_t r = 0;
-    for( ; *str++; r++ ) {}
+    for( ; *str++; r++ ) { }
     return r;
 }
 #endif // ARCH_HAVE_STRLEN
+
+#ifndef ARCH_HAVE_STRCMP
+int strcmp( const char* s1, const char* s2 ) {
+    int result;
+
+    while ( true ) {
+        result = *s1 - *s2++;
+
+        if ( ( result != 0 ) || ( *s1 == 0 ) ) {
+            break;
+        }
+    }
+
+    return result;
+}
+#endif // ARCH_HAVE_STRCMP
 
 #ifndef ARCH_HAVE_STRDUP
 char* strdup( const char* s ) {

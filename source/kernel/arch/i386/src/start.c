@@ -28,6 +28,7 @@
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
 #include <arch/pit.h>
+#include <arch/elf32.h>
 #include <arch/mm/config.h>
 #include <arch/mm/paging.h>
 
@@ -118,6 +119,7 @@ void arch_start( multiboot_header_t* header ) {
 
 int arch_late_init( void ) {
     init_pit();
+    init_elf32_loader();
 
     return 0;
 }

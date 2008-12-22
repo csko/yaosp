@@ -56,6 +56,9 @@ static int printf_test_helper( void* data, char c ) {
     return 0;
 }
 
+typedef int printf_helper_t( void* data, char c );
+int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args );
+
 static int printf_test( const char* format, ... ) {
     va_list args;
 

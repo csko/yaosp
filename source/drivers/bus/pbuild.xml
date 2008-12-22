@@ -21,8 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build>
     <array name="subdirs">
-        <item>kernel</item>
-        <item>drivers</item>
+        <item>pci</item>
     </array>
 
     <target name="all">

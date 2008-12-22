@@ -42,6 +42,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/pit.c</item>
         <item>arch/i386/src/scheduler.c</item>
         <item>arch/i386/src/apic.c</item>
+        <item>arch/i386/src/elf32.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
     </array>
@@ -56,6 +57,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/smp.c</item>
         <item>src/init.c</item>
         <item>src/bootmodule.c</item>
+        <item>src/module.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

@@ -18,9 +18,41 @@
 
 #include <kernel.h>
 #include <console.h>
+#include <bootmodule.h>
+#include <module.h>
+
+static void load_bootmodules( void ) {
+    int i;
+    int error;
+    module_id id;
+    int module_count;
+    bootmodule_t* module;
+
+    module_count = get_bootmodule_count();
+
+    for ( i = 0; i < module_count; i++ ) {
+        module = get_bootmodule_at( i );
+
+        id = load_module_from_bootmodule( module );
+
+        if ( id < 0 ) {
+            kprintf( "Failed to load bootmodule at %d\n", i );
+            continue;
+        }
+
+        error = initialize_module( id );
+
+        if ( error < 0 ) {
+            kprintf( "Failed to load module: %d\n", id );
+            /* TODO: unload the module */
+        }
+    }
+}
 
 int init_thread( void* arg ) {
     kprintf( "Init thread started!\n" );
+
+    //load_bootmodules();
 
     return 0;
 }

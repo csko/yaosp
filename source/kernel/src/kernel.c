@@ -21,6 +21,7 @@
 #include <thread.h>
 #include <scheduler.h>
 #include <kernel.h>
+#include <module.h>
 
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
@@ -33,6 +34,8 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
 
 void kernel_main( void ) {
     int error;
+
+    init_module_loader();
 
     kprintf( "Initializing processes ... " );
     init_processes();
