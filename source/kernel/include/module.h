@@ -20,8 +20,9 @@
 #define _MODULE_H_
 
 #include <types.h>
-#include <bootmodule.h>
 #include <lib/hashtable.h>
+
+/* Module definitions */
 
 typedef int module_id;
 
@@ -32,6 +33,7 @@ typedef struct module {
     hashitem_t hash;
 
     module_id id;
+    char* name;
 
     init_module_t* init;
     destroy_module_t* destroy;
@@ -39,8 +41,21 @@ typedef struct module {
     void* loader_data;
 } module_t;
 
-typedef bool check_module_t( void* data, size_t size );
-typedef module_t* load_module_t( void* data, size_t size );
+/* Module reader definitions */
+
+typedef int read_module_t( void* private, void* data, off_t offset, int size );
+typedef size_t get_module_size_t( void* private );
+
+typedef struct module_reader {
+    void* private;
+    read_module_t* read;
+    get_module_size_t* get_size;
+} module_reader_t;
+
+/* Module loader definitions */
+
+typedef bool check_module_t( module_reader_t* reader );
+typedef module_t* load_module_t( module_reader_t* reader );
 typedef int free_module_t( module_t* module );
 typedef bool get_module_symbol_t( module_t* module, const char* symbol_name, ptr_t* symbol_addr );
 
@@ -52,9 +67,12 @@ typedef struct module_loader {
     get_module_symbol_t* get_symbol;
 } module_loader_t;
 
-module_t* create_module( void );
+module_t* create_module( const char* name );
 
-module_id load_module_from_bootmodule( bootmodule_t* bootmodule );
+int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int size );
+size_t get_module_size( module_reader_t* reader );
+
+module_id load_module( module_reader_t* reader );
 int initialize_module( module_id id );
 
 void set_module_loader( module_loader_t* loader );

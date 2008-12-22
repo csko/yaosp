@@ -28,23 +28,30 @@
 #include <arch/elf32.h>
 #include <arch/mm/config.h>
 
-static bool elf32_module_check( void* data, size_t size ) {
-    elf_header_t* header;
+static bool elf32_module_check( module_reader_t* reader ) {
+    elf_header_t header;
 
-    if ( size < sizeof( elf_header_t ) ) {
+    if ( get_module_size( reader ) < sizeof( elf_header_t ) ) {
         return false;
     }
 
-    header = ( elf_header_t* )data;
-
-    if ( ( header->ident[ ID_MAGIC0 ] != ELF32_MAGIC0 ) ||
-         ( header->ident[ ID_MAGIC1 ] != ELF32_MAGIC1 ) ||
-         ( header->ident[ ID_MAGIC2 ] != ELF32_MAGIC2 ) ||
-         ( header->ident[ ID_MAGIC3 ] != ELF32_MAGIC3 ) ) {
+    if ( read_module_data(
+        reader,
+        ( void* )&header,
+        0,
+        sizeof( elf_header_t )
+    ) != sizeof( elf_header_t ) ) {
         return false;
     }
 
-    if ( header->ident[ ID_CLASS ] != ELF_CLASS_32 ) {
+    if ( ( header.ident[ ID_MAGIC0 ] != ELF32_MAGIC0 ) ||
+         ( header.ident[ ID_MAGIC1 ] != ELF32_MAGIC1 ) ||
+         ( header.ident[ ID_MAGIC2 ] != ELF32_MAGIC2 ) ||
+         ( header.ident[ ID_MAGIC3 ] != ELF32_MAGIC3 ) ) {
+        return false;
+    }
+
+    if ( header.ident[ ID_CLASS ] != ELF_CLASS_32 ) {
         return false;
     }
 
@@ -53,7 +60,11 @@ static bool elf32_module_check( void* data, size_t size ) {
     return true;
 }
 
-static int elf32_parse_dynsym_section( void* data, elf_module_t* elf_module, elf_section_header_t* dynsym_section ) {
+static int elf32_parse_dynsym_section(
+    module_reader_t* reader,
+    elf_module_t* elf_module,
+    elf_section_header_t* dynsym_section
+) {
     uint32_t i;
     elf_symbol_t* symbols;
     elf_section_header_t* string_section;
@@ -68,11 +79,16 @@ static int elf32_parse_dynsym_section( void* data, elf_module_t* elf_module, elf
         return -ENOMEM;
     }
 
-    memcpy(
-        elf_module->strings,
-        ( char* )data + string_section->offset,
+    if ( read_module_data(
+        reader,
+        ( void* )elf_module->strings,
+        string_section->offset,
         string_section->size
-    );
+    ) != string_section->size ) {
+        kfree( elf_module->strings );
+        elf_module->strings = NULL;
+        return -EIO;
+    }
 
     /* Load symbols */
 
@@ -84,11 +100,17 @@ static int elf32_parse_dynsym_section( void* data, elf_module_t* elf_module, elf
         return -ENOMEM;
     }
 
-    memcpy(
-        symbols,
-        ( char* )data + dynsym_section->offset,
+    if ( read_module_data(
+        reader,
+        ( void* )symbols,
+        dynsym_section->offset,
         dynsym_section->size
-    );
+    ) != dynsym_section->size ) {
+        kfree( symbols );
+        kfree( elf_module->strings );
+        elf_module->strings = NULL;
+        return -EIO;
+    }
 
     /* Build our own symbol list */
 
@@ -121,7 +143,11 @@ static int elf32_parse_dynsym_section( void* data, elf_module_t* elf_module, elf
     return 0;
 }
 
-static int elf32_parse_dynamic_section( void* data, elf_module_t* elf_module, elf_section_header_t* dynamic_section ) {
+static int elf32_parse_dynamic_section(
+    module_reader_t* reader,
+    elf_module_t* elf_module,
+    elf_section_header_t* dynamic_section
+) {
     uint32_t i;
     uint32_t dyn_count;
     elf_dynamic_t* dyns;
@@ -137,11 +163,15 @@ static int elf32_parse_dynamic_section( void* data, elf_module_t* elf_module, el
         return -ENOMEM;
     }
 
-    memcpy(
-        dyns,
-        ( char* )data + dynamic_section->offset,
+    if ( read_module_data(
+        reader,
+        ( void* )dyns,
+        dynamic_section->offset,
         dynamic_section->size
-    );
+    ) != dynamic_section->size ) {
+        kfree( dyns );
+        return -EIO;
+    }
 
     dyn_count = dynamic_section->size / dynamic_section->entsize;
 
@@ -178,26 +208,36 @@ static int elf32_parse_dynamic_section( void* data, elf_module_t* elf_module, el
         }
 
         if ( rel_size > 0 ) {
-            memcpy(
-                elf_module->relocs,
-                ( char* )data + rel_address,
+            if ( read_module_data(
+                reader,
+                ( void* )elf_module->relocs,
+                rel_address,
                 rel_size
-            );
+            ) != rel_size ) {
+                kfree( elf_module->relocs );
+                elf_module->relocs = NULL;
+                return -EIO;
+            }
         }
 
         if ( pltrel_size > 0 ) {
-            memcpy(
+            if ( read_module_data(
+                reader,
                 ( char* )elf_module->relocs + rel_size,
-                ( char* )data + pltrel_address,
+                pltrel_address,
                 pltrel_size
-            );
+            ) != pltrel_size ) {
+                kfree( elf_module->relocs );
+                elf_module->relocs = NULL;
+                return -EIO;
+            }
         }
     }
 
     return 0;
 }
 
-static int elf32_parse_section_headers( void* data, elf_module_t* elf_module ) {
+static int elf32_parse_section_headers( module_reader_t* reader, elf_module_t* elf_module ) {
     int error;
     uint32_t i;
     elf_section_header_t* dynsym_section;
@@ -227,7 +267,7 @@ static int elf32_parse_section_headers( void* data, elf_module_t* elf_module ) {
     /* Handle dynsym section */
 
     if ( dynsym_section != NULL ) {
-        error = elf32_parse_dynsym_section( data, elf_module, dynsym_section );
+        error = elf32_parse_dynsym_section( reader, elf_module, dynsym_section );
 
         if ( error < 0 ) {
             return error;
@@ -237,7 +277,7 @@ static int elf32_parse_section_headers( void* data, elf_module_t* elf_module ) {
     /* Handle dynamic section */
 
     if ( dynamic_section != NULL ) {
-        error = elf32_parse_dynamic_section( data, elf_module, dynamic_section );
+        error = elf32_parse_dynamic_section( reader, elf_module, dynamic_section );
 
         if ( error < 0 ) {
             return error;
@@ -247,7 +287,7 @@ static int elf32_parse_section_headers( void* data, elf_module_t* elf_module ) {
     return 0;
 }
 
-static int elf32_module_map( void* data, elf_module_t* elf_module ) {
+static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module ) {
     uint32_t i;
     elf_section_header_t* section_header;
 
@@ -337,13 +377,32 @@ static int elf32_module_map( void* data, elf_module_t* elf_module ) {
     );
 
     if ( elf_module->data_region < 0 ) {
+        /* TODO: delete text region */
         return elf_module->data_region;
     }
 
     /* Copy text and data in */
 
-    memcpy( text_address, ( char* )data + text_offset, text_size );
-    memcpy( data_address, ( char* )data + data_offset, data_size );
+    if ( read_module_data(
+        reader,
+        text_address,
+        text_offset,
+        text_size
+    ) != text_size ) {
+        /* TODO: delete text & data regions */
+        return -EIO;
+    }
+
+    if ( read_module_data(
+        reader,
+        data_address,
+        data_offset,
+        data_size
+    ) != data_size ) {
+        /* TODO: delete text & data regions */
+        return -EIO;
+    }
+
     memset( ( char* )data_address + data_size, 0, data_size_with_bss - data_size );
 
     elf_module->text_address = ( uint32_t )text_address;
@@ -388,11 +447,20 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
     return 0;
 }
 
-static module_t* elf32_module_load( void* data, size_t size ) {
+static module_t* elf32_module_load( module_reader_t* reader ) {
     int error;
     module_t* module;
     elf_module_t* elf_module;
-    elf_header_t* header;
+    elf_header_t header;
+
+    if ( read_module_data(
+        reader,
+        &header,
+        0,
+        sizeof( elf_header_t )
+    ) != sizeof( elf_header_t ) ) {
+        return NULL;
+    }
 
     elf_module = ( elf_module_t* )kmalloc( sizeof( elf_module_t ) );
 
@@ -402,9 +470,7 @@ static module_t* elf32_module_load( void* data, size_t size ) {
 
     memset( elf_module, 0, sizeof( elf_module_t ) );
 
-    header = ( elf_header_t* )data;
-
-    if ( header->shentsize != sizeof( elf_section_header_t ) ) {
+    if ( header.shentsize != sizeof( elf_section_header_t ) ) {
         kprintf( "ELF32: Invalid section header size!\n" );
         kfree( elf_module );
         return NULL;
@@ -412,7 +478,7 @@ static module_t* elf32_module_load( void* data, size_t size ) {
 
     /* Load section headers from the ELF file */
 
-    elf_module->section_count = header->shnum;
+    elf_module->section_count = header.shnum;
 
     elf_module->sections = ( elf_section_header_t* )kmalloc(
         sizeof( elf_section_header_t ) * elf_module->section_count
@@ -423,15 +489,20 @@ static module_t* elf32_module_load( void* data, size_t size ) {
         return NULL;
     }
 
-    memcpy(
-        elf_module->sections,
-        ( char* )data + header->shoff,
+    if ( read_module_data(
+        reader,
+        ( void* )elf_module->sections,
+        header.shoff,
         sizeof( elf_section_header_t ) * elf_module->section_count
-    );
+    ) != sizeof( elf_section_header_t ) * elf_module->section_count ) {
+        kfree( elf_module->sections );
+        kfree( elf_module );
+        return NULL;
+    }
 
     /* Parse section headers */
 
-    error = elf32_parse_section_headers( data, elf_module );
+    error = elf32_parse_section_headers( reader, elf_module );
 
     if ( error < 0 ) {
         kfree( elf_module->sections );
@@ -441,7 +512,7 @@ static module_t* elf32_module_load( void* data, size_t size ) {
 
     /* Map the ELF image to the kernel memory */
 
-    error = elf32_module_map( data, elf_module );
+    error = elf32_module_map( reader, elf_module );
 
     if ( error < 0 ) {
         /* TODO: free other stuffs */
@@ -459,7 +530,9 @@ static module_t* elf32_module_load( void* data, size_t size ) {
         return NULL;
     }
 
-    module = create_module();
+    module = create_module(
+        "elf_module" /* TODO */
+    );
 
     if ( module == NULL ) {
         return NULL;

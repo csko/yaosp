@@ -19,10 +19,13 @@
 #include <symbols.h>
 #include <errno.h>
 #include <console.h>
+#include <mm/kmalloc.h>
 #include <lib/string.h>
 
 static kernel_symbol_t symbols[] = {
     { "kprintf", ( ptr_t )kprintf },
+    { "kmalloc", ( ptr_t )kmalloc },
+    { "kfree", ( ptr_t )kfree },
     { NULL, 0 }
 };
 

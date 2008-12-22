@@ -128,6 +128,32 @@ int strcmp( const char* s1, const char* s2 ) {
 }
 #endif // ARCH_HAVE_STRCMP
 
+#ifndef HAVE_ARCH_STRCHR
+char* strchr( const char* s, int c ) {
+  for ( ; *s != ( char )c; s++ ) {
+    if ( *s == 0 ) {
+      return NULL;
+    }
+  }
+
+  return ( char* )s;
+}
+#endif // HAVE_ARCH_STRCHR
+
+#ifndef HAVE_ARCH_STRRCHR
+char* strrchr( const char* s, int c ) {
+  const char* e = s + strlen( s );
+
+  do {
+    if ( *e == ( char )c ) {
+      return ( char* )e;
+    }
+  } while ( --e >= s );
+
+  return NULL;
+}
+#endif // HAVE_ARCH_STRRCHR
+
 #ifndef ARCH_HAVE_STRDUP
 char* strdup( const char* s ) {
     size_t len;

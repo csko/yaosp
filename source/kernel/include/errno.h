@@ -21,5 +21,6 @@
 
 #define ENOMEM 1
 #define EINVAL 2
+#define EIO    3
 
 #endif // _ERRNO_H_

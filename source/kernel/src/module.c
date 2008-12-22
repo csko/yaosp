@@ -27,7 +27,7 @@ module_loader_t* module_loader;
 static int module_id_counter = 0;
 static hashtable_t module_table;
 
-module_t* create_module( void ) {
+module_t* create_module( const char* name ) {
     module_t* module;
 
     module = ( module_t* )kmalloc( sizeof( module_t ) );
@@ -38,10 +38,26 @@ module_t* create_module( void ) {
 
     memset( module, 0, sizeof( module_t ) );
 
+    module->name = strdup( name );
+
+    if ( module->name == NULL ) {
+        kfree( module );
+        return NULL;
+    }
+
     return module;
 }
 
-module_id load_module_from_bootmodule( bootmodule_t* bootmodule ) {
+int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int size ) {
+    return reader->read( reader->private, buffer, offset, size );
+}
+
+size_t get_module_size( module_reader_t* reader ) {
+    return reader->get_size( reader->private );
+}
+
+//module_id load_module_from_bootmodule( bootmodule_t* bootmodule ) {
+module_id load_module( module_reader_t* reader ) {
     int error;
     module_t* module;
 
@@ -49,11 +65,11 @@ module_id load_module_from_bootmodule( bootmodule_t* bootmodule ) {
         return -EINVAL;
     }
 
-    if ( !module_loader->check( bootmodule->address, bootmodule->size ) ) {
+    if ( !module_loader->check( reader ) ) {
         return -EINVAL;
     }
 
-    module = module_loader->load( bootmodule->address, bootmodule->size );
+    module = module_loader->load( reader );
 
     if ( module == NULL ) {
         return -EINVAL;

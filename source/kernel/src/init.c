@@ -26,14 +26,20 @@ static void load_bootmodules( void ) {
     int error;
     module_id id;
     int module_count;
-    bootmodule_t* module;
+    module_reader_t* reader;
 
     module_count = get_bootmodule_count();
 
     for ( i = 0; i < module_count; i++ ) {
-        module = get_bootmodule_at( i );
+        reader = get_bootmodule_reader( i );
 
-        id = load_module_from_bootmodule( module );
+        if ( reader == NULL ) {
+            continue;
+        }
+
+        id = load_module( reader );
+
+        put_bootmodule_reader( reader );
 
         if ( id < 0 ) {
             kprintf( "Failed to load bootmodule at %d\n", i );

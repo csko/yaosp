@@ -36,5 +36,6 @@ typedef unsigned int uint32_t;
 
 typedef int bool;
 typedef unsigned int size_t;
+typedef int64_t off_t;
 
 #endif // _TYPES_H_
