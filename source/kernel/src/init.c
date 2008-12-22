@@ -52,7 +52,7 @@ static void load_bootmodules( void ) {
 int init_thread( void* arg ) {
     kprintf( "Init thread started!\n" );
 
-    //load_bootmodules();
+    load_bootmodules();
 
     return 0;
 }

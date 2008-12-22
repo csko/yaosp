@@ -119,7 +119,7 @@ int strcmp( const char* s1, const char* s2 ) {
     while ( true ) {
         result = *s1 - *s2++;
 
-        if ( ( result != 0 ) || ( *s1 == 0 ) ) {
+        if ( ( result != 0 ) || ( *s1++ == 0 ) ) {
             break;
         }
     }

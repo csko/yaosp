@@ -58,6 +58,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/init.c</item>
         <item>src/bootmodule.c</item>
         <item>src/module.c</item>
+        <item>src/symbols.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

@@ -22,6 +22,9 @@
 #include <types.h>
 #include <mm/region.h>
 
+#define ELF32_R_SYM(i)  ((i)>>8)
+#define ELF32_R_TYPE(i) ((unsigned char)(i))
+
 enum {
     ID_MAGIC0 = 0,
     ID_MAGIC1,
@@ -64,6 +67,17 @@ enum {
     SF_ALLOC = 2
 };
 
+enum {
+    DYN_PLTRELSZ = 2,
+    DYN_REL = 17,
+    DYN_RELSZ = 18,
+    DYN_JMPREL = 23
+};
+
+enum {
+  R_386_JMP_SLOT = 7,
+};
+
 typedef struct elf_header {
     unsigned char ident[ ID_SIZE ];
     uint16_t type;
@@ -103,6 +117,16 @@ typedef struct elf_symbol {
     uint16_t shndx;
 } __attribute__(( packed )) elf_symbol_t;
 
+typedef struct elf_dynamic {
+    int32_t tag;
+    uint32_t value;
+} elf_dynamic_t;
+
+typedef struct elf_reloc {
+    uint32_t offset;
+    uint32_t info;
+} elf_reloc_t;
+
 typedef struct my_elf_symbol {
     char* name;
     uint32_t address;
@@ -117,6 +141,10 @@ typedef struct elf_module {
     uint32_t symbol_count;
     my_elf_symbol_t* symbols;
 
+    uint32_t reloc_count;
+    elf_reloc_t* relocs;
+
+    uint32_t text_address;
     region_id text_region;
     region_id data_region;
 } elf_module_t;

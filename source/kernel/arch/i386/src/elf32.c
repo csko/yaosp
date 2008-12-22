@@ -19,6 +19,8 @@
 #include <module.h>
 #include <console.h>
 #include <errno.h>
+#include <kernel.h>
+#include <symbols.h>
 #include <mm/kmalloc.h>
 #include <mm/region.h>
 #include <lib/string.h>
@@ -51,12 +53,159 @@ static bool elf32_module_check( void* data, size_t size ) {
     return true;
 }
 
+static int elf32_parse_dynsym_section( void* data, elf_module_t* elf_module, elf_section_header_t* dynsym_section ) {
+    uint32_t i;
+    elf_symbol_t* symbols;
+    elf_section_header_t* string_section;
+
+    string_section = &elf_module->sections[ dynsym_section->link ];
+
+    /* Load the string section */
+
+    elf_module->strings = ( char* )kmalloc( string_section->size );
+
+    if ( elf_module->strings == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy(
+        elf_module->strings,
+        ( char* )data + string_section->offset,
+        string_section->size
+    );
+
+    /* Load symbols */
+
+    symbols = ( elf_symbol_t* )kmalloc( dynsym_section->size );
+
+    if ( symbols == NULL ) {
+        kfree( elf_module->strings );
+        elf_module->strings = NULL;
+        return -ENOMEM;
+    }
+
+    memcpy(
+        symbols,
+        ( char* )data + dynsym_section->offset,
+        dynsym_section->size
+    );
+
+    /* Build our own symbol list */
+
+    elf_module->symbol_count = dynsym_section->size / dynsym_section->entsize;
+
+    elf_module->symbols = ( my_elf_symbol_t* )kmalloc(
+        sizeof( my_elf_symbol_t ) * elf_module->symbol_count
+    );
+
+    if ( elf_module->symbols == NULL ) {
+        kfree( elf_module->strings );
+        kfree( symbols );
+        elf_module->strings = NULL;
+        return -ENOMEM;
+    }
+
+    for ( i = 0; i < elf_module->symbol_count; i++ ) {
+        my_elf_symbol_t* my_symbol;
+        elf_symbol_t* elf_symbol;
+
+        my_symbol = &elf_module->symbols[ i ];
+        elf_symbol = &symbols[ i ];
+
+        my_symbol->name = elf_module->strings + elf_symbol->name;
+        my_symbol->address = elf_symbol->value;
+    }
+
+    kfree( symbols );
+
+    return 0;
+}
+
+static int elf32_parse_dynamic_section( void* data, elf_module_t* elf_module, elf_section_header_t* dynamic_section ) {
+    uint32_t i;
+    uint32_t dyn_count;
+    elf_dynamic_t* dyns;
+
+    uint32_t rel_address;
+    uint32_t rel_size = 0;
+    uint32_t pltrel_address;
+    uint32_t pltrel_size = 0;
+
+    dyns = ( elf_dynamic_t* )kmalloc( dynamic_section->size );
+
+    if ( dyns == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy(
+        dyns,
+        ( char* )data + dynamic_section->offset,
+        dynamic_section->size
+    );
+
+    dyn_count = dynamic_section->size / dynamic_section->entsize;
+
+    for ( i = 0; i < dyn_count; i++ ) {
+        switch ( dyns[ i ].tag ) {
+            case DYN_REL :
+                rel_address = dyns[ i ].value;
+                break;
+
+            case DYN_RELSZ :
+                rel_size = dyns[ i ].value;
+                break;
+
+            case DYN_JMPREL :
+                pltrel_address = dyns[ i ].value;
+                break;
+
+            case DYN_PLTRELSZ :
+                pltrel_size = dyns[ i ].value;
+                break;
+        }
+    }
+
+    kfree( dyns );
+
+    if ( ( rel_size > 0 ) || ( pltrel_size > 0 ) ) {
+        uint32_t reloc_size = rel_size + pltrel_size;
+
+        elf_module->reloc_count = reloc_size / sizeof( elf_reloc_t );
+        elf_module->relocs = ( elf_reloc_t* )kmalloc( reloc_size );
+
+        if ( elf_module->relocs == NULL ) {
+            return -ENOMEM;
+        }
+
+        if ( rel_size > 0 ) {
+            memcpy(
+                elf_module->relocs,
+                ( char* )data + rel_address,
+                rel_size
+            );
+        }
+
+        if ( pltrel_size > 0 ) {
+            memcpy(
+                ( char* )elf_module->relocs + rel_size,
+                ( char* )data + pltrel_address,
+                pltrel_size
+            );
+        }
+    }
+
+    return 0;
+}
+
 static int elf32_parse_section_headers( void* data, elf_module_t* elf_module ) {
+    int error;
     uint32_t i;
     elf_section_header_t* dynsym_section;
+    elf_section_header_t* dynamic_section;
     elf_section_header_t* section_header;
 
     dynsym_section = NULL;
+    dynamic_section = NULL;
 
     /* Loop through the section headers and save those ones we're
        interested in */
@@ -68,75 +217,30 @@ static int elf32_parse_section_headers( void* data, elf_module_t* elf_module ) {
             case SECTION_DYNSYM :
                 dynsym_section = section_header;
                 break;
+
+            case SECTION_DYNAMIC :
+                dynamic_section = section_header;
+                break;
         }
     }
 
     /* Handle dynsym section */
 
     if ( dynsym_section != NULL ) {
-        elf_symbol_t* symbols;
-        elf_section_header_t* string_section;
+        error = elf32_parse_dynsym_section( data, elf_module, dynsym_section );
 
-        string_section = &elf_module->sections[ dynsym_section->link ];
-
-        /* Load the string section */
-
-        elf_module->strings = ( char* )kmalloc( string_section->size );
-
-        if ( elf_module->strings == NULL ) {
-            return -ENOMEM;
+        if ( error < 0 ) {
+            return error;
         }
+    }
 
-        memcpy(
-            elf_module->strings,
-            ( char* )data + string_section->offset,
-            string_section->size
-        );
+    /* Handle dynamic section */
 
-        /* Load symbols */
+    if ( dynamic_section != NULL ) {
+        error = elf32_parse_dynamic_section( data, elf_module, dynamic_section );
 
-        symbols = ( elf_symbol_t* )kmalloc( dynsym_section->size );
-
-        if ( symbols == NULL ) {
-            kfree( elf_module->strings );
-            elf_module->strings = NULL;
-            return -ENOMEM;
-        }
-
-        memcpy(
-            symbols,
-            ( char* )data + dynsym_section->offset,
-            dynsym_section->size
-        );
-
-        /* Build our own symbol list */
-
-        elf_module->symbol_count = dynsym_section->size / dynsym_section->entsize;
-
-        elf_module->symbols = ( my_elf_symbol_t* )kmalloc(
-            sizeof( my_elf_symbol_t ) * elf_module->symbol_count
-        );
-
-        if ( elf_module->symbols == NULL ) {
-            kfree( elf_module->strings );
-            kfree( symbols );
-            elf_module->strings = NULL;
-            return -ENOMEM;
-        }
-
-        kprintf( "Symbol count: %d\n", elf_module->symbol_count );
-
-        for ( i = 0; i < elf_module->symbol_count; i++ ) {
-            my_elf_symbol_t* my_symbol;
-            elf_symbol_t* elf_symbol;
-
-            my_symbol = &elf_module->symbols[ i ];
-            elf_symbol = &symbols[ i ];
-
-            my_symbol->name = elf_module->strings + elf_symbol->name;
-            my_symbol->address = elf_symbol->value;
-
-            kprintf( "Symbol %d: %s (%x)\n", i, my_symbol->name, my_symbol->address );
+        if ( error < 0 ) {
+            return error;
         }
     }
 
@@ -212,9 +316,6 @@ static int elf32_module_map( void* data, elf_module_t* elf_module ) {
     data_size = data_end - data_start + 1;
     data_size_with_bss = bss_end - data_start + 1;
 
-    kprintf( "text_start=0x%x text_size=0x%x\n", text_start, text_size );
-    kprintf( "data_start=0x%x data_size=0x%x\n", data_start, data_size );
-
     elf_module->text_region = create_region(
         "ro",
         PAGE_ALIGN( text_size ),
@@ -222,8 +323,6 @@ static int elf32_module_map( void* data, elf_module_t* elf_module ) {
         ALLOC_PAGES,
         &text_address
     );
-
-    kprintf( "text_region=%d text_address=0x%x\n", elf_module->text_region, text_address );
 
     if ( elf_module->text_region < 0 ) {
         return elf_module->text_region;
@@ -237,19 +336,54 @@ static int elf32_module_map( void* data, elf_module_t* elf_module ) {
         &data_address
     );
 
-    kprintf( "data_region=%d data_address=0x%x\n", elf_module->data_region, data_address );
-
     if ( elf_module->data_region < 0 ) {
         return elf_module->data_region;
     }
 
     /* Copy text and data in */
 
-    kprintf( "text_offset=%d data_offset=%d\n", text_offset, data_offset );
-
     memcpy( text_address, ( char* )data + text_offset, text_size );
     memcpy( data_address, ( char* )data + data_offset, data_size );
     memset( ( char* )data_address + data_size, 0, data_size_with_bss - data_size );
+
+    elf_module->text_address = ( uint32_t )text_address;
+
+    return 0;
+}
+
+static int elf32_relocate_module( elf_module_t* elf_module ) {
+    int error;
+    uint32_t i;
+    uint32_t* target;
+    elf_reloc_t* reloc;
+    my_elf_symbol_t* symbol;
+
+    for ( i = 0; i < elf_module->reloc_count; i++ ) {
+        reloc = &elf_module->relocs[ i ];
+        symbol = &elf_module->symbols[ ELF32_R_SYM( reloc->info ) ];
+
+        switch ( ELF32_R_TYPE( reloc->info ) ) {
+            case R_386_JMP_SLOT : {
+                ptr_t address;
+
+                error = get_kernel_symbol_address( symbol->name, &address );
+
+                if ( error < 0 ) {
+                    kprintf( "ELF32: Symbol %s not found!\n", symbol->name );
+                    return error;
+                }
+
+                target = ( uint32_t* )( elf_module->text_address + reloc->offset );
+                *target = ( uint32_t )address;
+
+                break;
+            }
+
+            default :
+                kprintf( "ELF32: Unknown reloc type: %d (symbol=%s)\n", ELF32_R_TYPE( reloc->info ), symbol->name );
+                break;
+        }
+    }
 
     return 0;
 }
@@ -316,6 +450,15 @@ static module_t* elf32_module_load( void* data, size_t size ) {
         return NULL;
     }
 
+    /* Relocate the ELF module */
+
+    error = elf32_relocate_module( elf_module );
+
+    if ( error < 0 ) {
+        /* TODO: cleanup */
+        return NULL;
+    }
+
     module = create_module();
 
     if ( module == NULL ) {
@@ -341,7 +484,7 @@ static bool elf32_module_get_symbol( module_t* module, const char* symbol_name, 
 
     for ( i = 0; i < elf_module->symbol_count; i++ ) {
         if ( strcmp( elf_module->symbols[ i ].name, symbol_name ) == 0 ) {
-            *symbol_addr = elf_module->symbols[ i ].address;
+            *symbol_addr = elf_module->symbols[ i ].address + elf_module->text_address;
             return true;
         }
     }
