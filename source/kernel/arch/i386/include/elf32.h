@@ -20,6 +20,7 @@
 #define _ARCH_ELF32_H_
 
 #include <types.h>
+#include <mm/region.h>
 
 enum {
     ID_MAGIC0 = 0,
@@ -56,6 +57,11 @@ enum {
     SECTION_REL,
     SECTION_SHLIB,
     SECTION_DYNSYM
+};
+
+enum {
+    SF_WRITE = 1,
+    SF_ALLOC = 2
 };
 
 typedef struct elf_header {
@@ -110,6 +116,9 @@ typedef struct elf_module {
 
     uint32_t symbol_count;
     my_elf_symbol_t* symbols;
+
+    region_id text_region;
+    region_id data_region;
 } elf_module_t;
 
 int init_elf32_loader( void );

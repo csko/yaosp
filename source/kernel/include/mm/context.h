@@ -19,12 +19,41 @@
 #ifndef _MM_CONTEXT_H_
 #define _MM_CONTEXT_H_
 
+#include <mm/region.h>
+
 typedef struct memory_context {
     struct memory_context* next;
+
+    int max_regions;
+    int region_count;
+    region_t** regions;
 
     void* arch_data;
 } memory_context_t;
 
 extern memory_context_t kernel_memory_context;
+
+/**
+ * Inserts a previously created memory region to the specified
+ * memory context. The regions in the memory context structure are
+ * sorted by the address fields.
+ *
+ * @param context The memory context where the new region will be inserted
+ * @param region The region to insert
+ * @return On success 0 is returned
+ */
+int context_insert_region( memory_context_t* context, region_t* region );
+
+/**
+ * Searches for a size byte(s) long unmapped memory region in the specified
+ * memory context.
+ *
+ * @param context The memory context to search in
+ * @param size The size (in bytes) of the unmapped region to look for
+ * @param address A pointer where the start address of the found memory
+                  region will be stored
+ * @return On success true is returned
+ */
+bool context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address );
 
 #endif // _MM_CONTEXT_H_

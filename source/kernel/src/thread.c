@@ -30,8 +30,6 @@
 #include <arch/thread.h>
 #include <arch/spinlock.h>
 
-#define MAX_THREAD_COUNT 1000000
-
 static int thread_id_counter = 0;
 static hashtable_t thread_table;
 
@@ -139,7 +137,11 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
     spinlock_disable( &scheduler_lock );
 
     do {
-        thread->id = ( thread_id_counter++ ) % MAX_THREAD_COUNT;
+        thread->id = thread_id_counter++;
+
+        if ( thread_id_counter < 0 ) {
+            thread_id_counter = 0;
+        }
     } while ( hashtable_get( &thread_table, ( const void* )thread->id ) != NULL );
 
     hashtable_add( &thread_table, ( hashitem_t* )thread );

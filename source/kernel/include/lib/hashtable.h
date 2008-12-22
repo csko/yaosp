@@ -48,5 +48,6 @@ int init_hashtable(
 
 int hashtable_add( hashtable_t* table, hashitem_t* item );
 hashitem_t* hashtable_get( hashtable_t* table, const void* key );
+int hashtable_remove( hashtable_t* table, const void* key );
 
 #endif // _LIB_HASHTABLE_H_

@@ -22,6 +22,7 @@
 #include <bootmodule.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
+#include <mm/region.h>
 
 #include <arch/screen.h>
 #include <arch/gdt.h>
@@ -96,6 +97,12 @@ void arch_start( multiboot_header_t* header ) {
         return;
     }
 
+    kprintf( "done\n" );
+
+    /* Initialize memory region manager */
+
+    kprintf( "Initializing region manager ... " );
+    init_regions();
     kprintf( "done\n" );
 
     /* Initialize paging */

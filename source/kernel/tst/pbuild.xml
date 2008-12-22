@@ -3,7 +3,7 @@
         <call target="printf_test"/>
     </target>
 
-    <target name="printf_test" type="private">
+    <target name="printf_test">
         <echo>Compiling printf test ...</echo>
 
         <gcc>

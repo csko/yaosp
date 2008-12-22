@@ -58,6 +58,8 @@ extern i386_feature_t i386_features[];
  */
 void set_cr3( uint32_t cr3 );
 
+void flush_tlb( void );
+
 /**
  * This will execute an endless loops that halts the processor.
  */

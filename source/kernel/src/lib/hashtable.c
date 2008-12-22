@@ -77,3 +77,34 @@ hashitem_t* hashtable_get( hashtable_t* table, const void* key ) {
 
     return item;
 }
+
+int hashtable_remove( hashtable_t* table, const void* key ) {
+    uint32_t hash;
+    hashitem_t* prev;
+    hashitem_t* item;
+    const void* other_key;
+
+    hash = table->hash_func( key ) & table->size;
+    
+    prev = NULL;
+    item = table->items[ hash ];
+
+    while ( item != NULL ) {
+        other_key = table->key_func( item );
+
+        if ( table->compare_func( key, other_key ) ) {
+            if ( prev == NULL ) {
+                table->items[ hash ] = item->next;
+            } else {
+                prev->next = item->next;
+            }
+
+            return 0;
+        }
+
+        prev = item;
+        item = item->next;
+    }
+
+    return -EINVAL;
+}

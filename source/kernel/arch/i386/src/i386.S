@@ -27,6 +27,7 @@
 .global enable_interrupts
 .global reload_segment_descriptors
 .global set_cr3
+.global flush_tlb
 .global halt_loop
 
 /* register_t get_eflags( void ) */
@@ -82,6 +83,14 @@ set_cr3:
     movl %eax, %cr3
     ret
 .size set_cr3,.-set_cr3
+
+/* void flush_tlb( void ) */
+
+flush_tlb:
+    movl %cr3, %eax
+    movl %eax, %cr3
+    ret
+.size flush_tlb,.-flush_tlb
 
 /* void halt_loop( void ) */
 

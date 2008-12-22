@@ -20,9 +20,11 @@
 #include <console.h>
 #include <errno.h>
 #include <mm/kmalloc.h>
+#include <mm/region.h>
 #include <lib/string.h>
 
 #include <arch/elf32.h>
+#include <arch/mm/config.h>
 
 static bool elf32_module_check( void* data, size_t size ) {
     elf_header_t* header;
@@ -141,6 +143,117 @@ static int elf32_parse_section_headers( void* data, elf_module_t* elf_module ) {
     return 0;
 }
 
+static int elf32_module_map( void* data, elf_module_t* elf_module ) {
+    uint32_t i;
+    elf_section_header_t* section_header;
+
+    bool text_found = false;
+    uint32_t text_start;
+    uint32_t text_end;
+    uint32_t text_size;
+    uint32_t text_offset;
+    void* text_address;
+
+    bool data_found = false;
+    uint32_t data_start;
+    uint32_t data_end;
+    uint32_t data_size;
+    uint32_t data_offset;
+    void* data_address;
+
+    uint32_t bss_end;
+    uint32_t data_size_with_bss;
+
+    for ( i = 0; i < elf_module->section_count; i++ ) {
+        section_header = &elf_module->sections[ i ];
+
+        /* Check if the current section occupies memory during execution */
+
+        if ( section_header->flags & SF_ALLOC ) {
+            if ( section_header->flags & SF_WRITE ) {
+                if ( !data_found ) {
+                    data_found = true;
+                    data_start = section_header->address;
+                    data_offset = section_header->offset;
+                }
+
+                switch ( section_header->type ) {
+                    case SECTION_NOBITS :
+                        bss_end = section_header->address + section_header->size - 1;
+                        break;
+
+                    default :
+                        data_end = section_header->address + section_header->size - 1;
+                        bss_end = data_end;
+                        break;
+                }
+            } else {
+                if ( !text_found ) {
+                    text_found = true;
+                    text_start = section_header->address;
+                    text_offset = section_header->offset;
+                }
+
+                text_end = section_header->address + section_header->size - 1;
+            }
+        }
+    }
+
+    if ( ( !text_found ) || ( !data_found ) ) {
+        return -EINVAL;
+    }
+
+    text_offset -= ( text_start & ~PAGE_MASK );
+    text_start &= PAGE_MASK;
+    text_size = text_end - text_start + 1;
+
+    data_offset -= ( data_start & ~PAGE_MASK );
+    data_start &= PAGE_MASK;
+    data_size = data_end - data_start + 1;
+    data_size_with_bss = bss_end - data_start + 1;
+
+    kprintf( "text_start=0x%x text_size=0x%x\n", text_start, text_size );
+    kprintf( "data_start=0x%x data_size=0x%x\n", data_start, data_size );
+
+    elf_module->text_region = create_region(
+        "ro",
+        PAGE_ALIGN( text_size ),
+        REGION_READ | REGION_KERNEL,
+        ALLOC_PAGES,
+        &text_address
+    );
+
+    kprintf( "text_region=%d text_address=0x%x\n", elf_module->text_region, text_address );
+
+    if ( elf_module->text_region < 0 ) {
+        return elf_module->text_region;
+    }
+
+    elf_module->data_region = create_region(
+        "rw",
+        PAGE_ALIGN( data_size_with_bss ),
+        REGION_READ | REGION_WRITE | REGION_KERNEL,
+        ALLOC_PAGES,
+        &data_address
+    );
+
+    kprintf( "data_region=%d data_address=0x%x\n", elf_module->data_region, data_address );
+
+    if ( elf_module->data_region < 0 ) {
+        return elf_module->data_region;
+    }
+
+    /* Copy text and data in */
+
+    kprintf( "text_offset=%d data_offset=%d\n", text_offset, data_offset );
+
+    memcpy( text_address, ( char* )data + text_offset, text_size );
+    memcpy( data_address, ( char* )data + data_offset, data_size );
+    memset( ( char* )data_address + data_size, 0, data_size_with_bss - data_size );
+
+    return 0;
+}
+
 static module_t* elf32_module_load( void* data, size_t size ) {
     int error;
     module_t* module;
@@ -187,6 +300,17 @@ static module_t* elf32_module_load( void* data, size_t size ) {
     error = elf32_parse_section_headers( data, elf_module );
 
     if ( error < 0 ) {
+        kfree( elf_module->sections );
+        kfree( elf_module );
+        return NULL;
+    }
+
+    /* Map the ELF image to the kernel memory */
+
+    error = elf32_module_map( data, elf_module );
+
+    if ( error < 0 ) {
+        /* TODO: free other stuffs */
         kfree( elf_module->sections );
         kfree( elf_module );
         return NULL;
