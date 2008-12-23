@@ -22,6 +22,8 @@
 #include <kernel.h>
 #include <scheduler.h>
 #include <smp.h>
+#include <waitqueue.h>
+#include <time.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
@@ -149,6 +151,32 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
     spinunlock_enable( &scheduler_lock );
 
     return thread->id;
+}
+
+int sleep_thread( uint64_t microsecs ) {
+    thread_t* thread;
+    waitnode_t node;
+
+    node.wakeup_time = get_system_time() + microsecs;
+
+    spinlock_disable( &scheduler_lock );
+
+    thread = current_thread();
+
+    thread->state = THREAD_SLEEPING;
+    node.thread = thread->id;
+
+    waitqueue_add_node( &sleep_queue, &node );
+
+    spinunlock_enable( &scheduler_lock );
+
+    sched_preempt();
+
+    if ( get_system_time() < node.wakeup_time ) {
+        return -ETIME;
+    }
+
+    return 0;
 }
 
 int wake_up_thread( thread_id id ) {

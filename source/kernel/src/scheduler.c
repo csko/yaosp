@@ -29,6 +29,7 @@ thread_t* last_ready;
 thread_t* first_expired;
 thread_t* last_expired;
 
+waitqueue_t sleep_queue;
 spinlock_t scheduler_lock = INIT_SPINLOCK;
 
 int add_thread_to_ready( thread_t* thread ) {
@@ -105,9 +106,16 @@ thread_t* do_schedule( void ) {
 
                 case THREAD_WAITING :
                 case THREAD_SLEEPING :
-                    current->quantum -= runtime;
-                    /* TODO: this requires a bit more thinking during the
-                       implementation of sleeping/waiting */
+                    if ( runtime >= current->quantum ) {
+                        /* 0 as a quantum is used to tell the wakeup functions
+                           that this thread has to be added to the expired list
+                           instead of the ready */
+                          
+                        current->quantum = 0;
+                    } else {
+                        current->quantum -= runtime;
+                    }
+
                     break;
 
                 case THREAD_ZOMBIE :
@@ -153,11 +161,21 @@ thread_t* do_schedule( void ) {
 }
 
 int init_scheduler( void ) {
+    int error;
+
     first_ready = NULL;
     last_ready = NULL;
 
     first_expired = NULL;
     last_expired = NULL;
+
+    /* Initialize the sleep queue */
+
+    error = init_waitqueue( &sleep_queue );
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     return 0;
 }

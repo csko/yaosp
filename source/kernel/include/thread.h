@@ -67,8 +67,26 @@ void kernel_thread_exit( void );
 
 thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg );
 
+/**
+ * This method can be used to delay the execution of
+ * the current thread for the specified number of microseconds
+ * at least.
+ *
+ * @param microsecs The number of microseconds to delay the thread
+ * @return On success 0 is returned
+ */
+int sleep_thread( uint64_t microsecs );
 int wake_up_thread( thread_id id );
 
+/**
+ * Returns the thread associated with the given ID.
+ * You have to call this method with a locked scheduler!
+ *
+ * @param id The ID of the thread to look for
+ * @return On success a non-NULL pointer is returned
+ *         pointing to the thread with the given ID,
+ *         otherwise NULL
+ */
 thread_t* get_thread_by_id( thread_id id );
 
 int init_threads( void );

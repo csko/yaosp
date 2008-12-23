@@ -21,12 +21,15 @@
 
 #include <types.h>
 #include <thread.h>
+#include <waitqueue.h>
 
 #include <arch/spinlock.h>
 
+extern waitqueue_t sleep_queue;
 extern spinlock_t scheduler_lock;
 
 int add_thread_to_ready( thread_t* thread );
+int add_thread_to_expired( thread_t* thread );
 
 void reset_thread_quantum( thread_t* thread );
 

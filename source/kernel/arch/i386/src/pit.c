@@ -37,6 +37,10 @@ static int pit_irq( int irq, void* data, registers_t* regs ) {
 
     spinunlock( &time_lock );
 
+    /* Wake up sleeper threads */
+
+    waitqueue_wake_up( &sleep_queue, system_time );
+
     /* We have to ack this IRQ here because we'll call
        the scheduler that won't return here. */
 
