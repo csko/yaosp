@@ -61,7 +61,6 @@ static kmalloc_block_t* __kmalloc_create_block( uint32_t pages ) {
 
 static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
     void* p;
-    uint32_t remaining_size;
     kmalloc_chunk_t* chunk;
 
     chunk = block->first_chunk;
@@ -76,13 +75,14 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
         return NULL;
     }
 
-    remaining_size = chunk->size - size - sizeof( kmalloc_chunk_t );
-
     chunk->type = CHUNK_ALLOCATED;
     p = ( void* )( chunk + 1 );
 
-    if ( remaining_size > ( sizeof( kmalloc_chunk_t ) + 4 ) ) {
+    if ( chunk->size > ( size + sizeof( kmalloc_chunk_t ) + 4 ) ) {
+        uint32_t remaining_size;
         kmalloc_chunk_t* new_chunk;
+
+        remaining_size = chunk->size - size - sizeof( kmalloc_chunk_t );
 
         chunk->size = size;
 
@@ -90,7 +90,7 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
 
         new_chunk->magic = KMALLOC_CHUNK_MAGIC;
         new_chunk->type = CHUNK_FREE;
-        new_chunk->size = remaining_size - sizeof( kmalloc_chunk_t );
+        new_chunk->size = remaining_size;
         new_chunk->block = chunk->block;
 
         /* link it to the current block */
