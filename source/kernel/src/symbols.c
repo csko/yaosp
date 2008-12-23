@@ -22,10 +22,37 @@
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
+#include <arch/atomic.h>
+#include <arch/spinlock.h>
+#include <arch/interrupt.h>
+
 static kernel_symbol_t symbols[] = {
+    /* Console output */
     { "kprintf", ( ptr_t )kprintf },
+    { "kvprintf", ( ptr_t )kvprintf },
+
+    /* Memory management */
     { "kmalloc", ( ptr_t )kmalloc },
     { "kfree", ( ptr_t )kfree },
+
+    /* Atomic operations */
+    { "atomic_get", ( ptr_t )atomic_get },
+    { "atomic_set", ( ptr_t )atomic_set },
+    { "atomic_inc", ( ptr_t )atomic_inc },
+    { "atomic_dec", ( ptr_t )atomic_dec },
+    { "atomic_swap", ( ptr_t )atomic_swap },
+
+    /* Spinlock operations */
+    { "spinlock", ( ptr_t )spinlock },
+    { "spinunlock", ( ptr_t )spinunlock },
+    { "spinlock_disable", ( ptr_t )spinlock_disable },
+    { "spinunlock_enable", ( ptr_t )spinunlock_enable },
+
+    /* Interrupt manipulation */
+    { "disable_interrupts", ( ptr_t )disable_interrupts },
+    { "enable_interrupts", ( ptr_t )enable_interrupts },
+
+    /* List terminator */
     { NULL, 0 }
 };
 
