@@ -34,4 +34,6 @@ char* strchr( const char* s, int c );
 char* strrchr( const char* s, int c );
 char* strdup( const char* s );
 
+int snprintf( char* str, size_t size, const char* format, ... );
+
 #endif // _LIB_STRING_H_
