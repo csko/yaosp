@@ -19,7 +19,18 @@
 #ifndef _MACROS_H_
 #define _MACROS_H_
 
+#include <kernel.h>
+
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #define MAX(a,b) ((a)<(b)?(b):(a))
+
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
+
+#define ASSERT(exp) \
+    if ( !( exp ) ) { \
+        panic( "Assertation (%s) failed at: %s:%d\n", \
+            #exp, __FILE__, __LINE__ \
+        ); \
+    }
 
 #endif // _MACROS_H_

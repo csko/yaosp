@@ -19,6 +19,8 @@
 #ifndef _CONSOLE_H_
 #define _CONSOLE_H_
 
+#include <lib/stdarg.h>
+
 struct console;
 
 typedef void console_clear_t( struct console* console );
@@ -51,5 +53,6 @@ typedef struct console {
 int console_set_screen( console_t* console );
 
 int kprintf( const char* format, ... );
+int kvprintf( const char* format, va_list args );
 
 #endif // _CONSOLE_H_

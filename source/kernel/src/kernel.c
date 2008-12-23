@@ -22,12 +22,19 @@
 #include <scheduler.h>
 #include <kernel.h>
 #include <module.h>
+#include <lib/stdarg.h>
 
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
 
 void handle_panic( const char* file, int line, const char* format, ... ) {
-    kprintf( "Panic at %s:%d!\n", file, line );
+    va_list args;
+    kprintf( "Panic at %s:%d: ", file, line );
+
+    va_start( args, format );
+    kvprintf( format, args );
+    va_end( args );
+
     disable_interrupts();
     halt_loop();
 }

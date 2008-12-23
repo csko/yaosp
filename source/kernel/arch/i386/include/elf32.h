@@ -76,6 +76,7 @@ enum {
 
 enum {
   R_386_JMP_SLOT = 7,
+  R_386_RELATIVE = 8
 };
 
 typedef struct elf_header {

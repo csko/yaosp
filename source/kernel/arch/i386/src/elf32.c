@@ -438,6 +438,12 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                 break;
             }
 
+            case R_386_RELATIVE :
+                target = ( uint32_t* )( elf_module->text_address + reloc->offset );
+                *target += elf_module->text_address;
+
+                break;
+
             default :
                 kprintf( "ELF32: Unknown reloc type: %d (symbol=%s)\n", ELF32_R_TYPE( reloc->info ), symbol->name );
                 break;

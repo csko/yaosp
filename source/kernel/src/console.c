@@ -52,3 +52,13 @@ int kprintf( const char* format, ... ) {
 
     return 0;
 }
+
+int kvprintf( const char* format, va_list args ) {
+    spinlock_disable( &console_lock );
+
+    do_printf( kprintf_helper, NULL, format, args );
+
+    spinunlock_enable( &console_lock );
+
+    return 0;
+}
