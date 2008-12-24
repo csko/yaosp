@@ -42,7 +42,7 @@ extern memory_context_t kernel_memory_context;
  * @param region The region to insert
  * @return On success 0 is returned
  */
-int context_insert_region( memory_context_t* context, region_t* region );
+int memory_context_insert_region( memory_context_t* context, region_t* region );
 
 /**
  * Searches for a size byte(s) long unmapped memory region in the specified
@@ -54,6 +54,6 @@ int context_insert_region( memory_context_t* context, region_t* region );
                   region will be stored
  * @return On success true is returned
  */
-bool context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address );
+bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address );
 
 #endif // _MM_CONTEXT_H_

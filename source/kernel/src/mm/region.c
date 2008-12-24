@@ -70,7 +70,7 @@ int region_insert( memory_context_t* context, region_t* region ) {
 
     /* Insert it to the memory context */
 
-    error =  context_insert_region( context, region );
+    error = memory_context_insert_region( context, region );
 
     if ( error < 0 ) {
         hashtable_remove( &region_table, ( const void* )region->id );
@@ -109,7 +109,7 @@ region_id create_region(
 
     /* Search for a suitable unmapped memory region */
 
-    found = context_find_unmapped_region(
+    found = memory_context_find_unmapped_region(
         context,
         size,
         ( flags & REGION_KERNEL ) != 0,

@@ -28,7 +28,7 @@
 
 memory_context_t kernel_memory_context;
 
-int context_insert_region( memory_context_t* context, region_t* region ) {
+int memory_context_insert_region( memory_context_t* context, region_t* region ) {
     int i;
     int regions_to_move;
 
@@ -77,7 +77,7 @@ int context_insert_region( memory_context_t* context, region_t* region ) {
     return 0;
 }
 
-bool context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address ) {
+bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address ) {
     int i;
     ptr_t start;
     ptr_t end;
