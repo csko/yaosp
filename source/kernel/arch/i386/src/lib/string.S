@@ -25,41 +25,53 @@
 /* void* memset( void* d, int c, size_t n ) */
 
 memset:
-    movl 12(%esp), %ecx
+    pushl %ecx
+    pushl %edi
+    movl 20(%esp), %ecx
     testl %ecx, %ecx
     jz 1f
-    movl 4(%esp), %edi
-    movl 8(%esp), %eax
+    movl 12(%esp), %edi
+    movl 16(%esp), %eax
     rep stosb
 1:
-    movl 4(%esp), %eax
+    movl 12(%esp), %eax
+    popl %edi
+    popl %ecx
     ret
 .size memset,.-memset
 
 /* void* memsetw( void* d, int c, size_t n ) */
 
 memsetw:
-    movl 12(%esp), %ecx
+    pushl %ecx
+    pushl %edi
+    movl 20(%esp), %ecx
     testl %ecx, %ecx
     jz 2f
-    movl 4(%esp), %edi
-    movl 8(%esp), %eax
+    movl 12(%esp), %edi
+    movl 16(%esp), %eax
     rep stosw
 2:
-    movl 4(%esp), %eax
+    movl 12(%esp), %eax
+    popl %edi
+    popl %ecx
     ret
 .size memsetw,.-memsetw
 
 /* void* memsetl( void* d, int c, size_t n ) */
 
 memsetl:
-    movl 12(%esp), %ecx
+    pushl %ecx
+    pushl %edi
+    movl 20(%esp), %ecx
     testl %ecx, %ecx
     jz 3f
-    movl 4(%esp), %edi
-    movl 8(%esp), %eax
+    movl 12(%esp), %edi
+    movl 16(%esp), %eax
     rep stosl
 3:
-    movl 4(%esp), %eax
+    movl 12(%esp), %eax
+    popl %edi
+    popl %ecx
     ret
 .size memsetl,.-memsetl
