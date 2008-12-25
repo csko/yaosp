@@ -21,6 +21,8 @@
 
 #include <types.h>
 
+#define INFINITE_TIMEOUT 18446744073709551615ULL
+
 /**
  * Returns the time in microseconds since the system boot.
  *

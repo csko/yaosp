@@ -28,7 +28,7 @@ extern thread_t* current;
 
 void switch_to_thread( register_t esp );
 
-void schedule( registers_t* regs ) {
+int schedule( registers_t* regs ) {
     thread_t* next;
     thread_t* current;
     i386_thread_t* arch_thread;
@@ -37,6 +37,8 @@ void schedule( registers_t* regs ) {
     /* Lock the scheduler */
 
     spinlock_disable( &scheduler_lock );
+
+    /* Save the state of the previously running thread */
 
     current = current_thread();
 
@@ -70,4 +72,6 @@ void schedule( registers_t* regs ) {
     /* Switch to the next thread */
 
     switch_to_thread( arch_thread->esp );
+
+    return 0;
 }

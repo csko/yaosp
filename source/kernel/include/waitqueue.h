@@ -31,11 +31,13 @@ typedef struct waitnode {
 } waitnode_t;
 
 typedef struct waitqueue {
-    waitnode_t* nodes;
+    waitnode_t* first_node;
+    waitnode_t* last_node;
 } waitqueue_t;
 
 /**
- * Inserts a new node to the specified waitqueue.
+ * Inserts a new node to the specified waitqueue. The new node
+ * will be inserted to the list according to its wakeup time.
  *
  * @param queue The pointer to the waitqueue structure
  * @param node The pointer to the waitnode structure that will
@@ -45,14 +47,51 @@ typedef struct waitqueue {
 int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node );
 
 /**
+ * Inserts a new node to the specified waitqueue. The new node
+ * will be inserted to the end of the list.
+ *
+ * @param queue The pointer to the waitqueue structure
+ * @param node The pointer to the waitnode structure that will
+ *             be inserted into the waitqueue
+ * @return On success 0 is returned
+ */
+int waitqueue_add_node_tail( waitqueue_t* queue, waitnode_t* node );
+
+/**
+ * Removes a node from the waitqueue.
+ *
+ * @param queue The pointer to the waitqueue structure
+ * @param node The pointer to the node to remove
+ * @return On success 0 is returned
+ */
+int waitqueue_remove_node( waitqueue_t* queue, waitnode_t* node );
+
+/**
  * Wakes up nodes in the queue with wakeup time less or
  * equal to the specified time in now parameter.
  *
- * @param queueu The pointer to the waitqueue structure
+ * @param queue The pointer to the waitqueue structure
  * @param now The time to use as a reference for the wakeup
  * @return On success 0 is returned
  */
 int waitqueue_wake_up( waitqueue_t* queue, uint64_t now );
+
+/**
+ * Wakes up the first count number of nodes from the queue.
+ *
+ * @param queue The pointer to the waitqueue structure
+ * @param count The number of waiters to wake up
+ * @return On success 0 is returned
+ */
+int waitqueue_wake_up_head( waitqueue_t* queue, int count );
+
+/**
+ * Wakes up all waiters in the waitqueue.
+ *
+ * @param queue The pointer to the waitqueue
+ * @return On success 0 is returned
+ */
+int waitqueue_wake_up_all( waitqueue_t* queue );
 
 /**
  * Initializes a wait queue.

@@ -21,6 +21,8 @@
 #include <bootmodule.h>
 #include <module.h>
 
+#include <semaphore.h>
+
 static void load_bootmodules( void ) {
     int i;
     int error;

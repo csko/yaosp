@@ -19,6 +19,7 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
+#include <semaphore.h>
 #include <mm/context.h>
 #include <lib/hashtable.h>
 
@@ -31,6 +32,7 @@ typedef struct process {
     char* name;
 
     memory_context_t* memory_context;
+    semaphore_context_t* semaphore_context;
 } process_t;
 
 process_t* get_process_by_id( process_id id );

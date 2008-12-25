@@ -20,7 +20,6 @@
 #define _THREAD_H_
 
 #include <types.h>
-#include <process.h>
 #include <config.h>
 #include <lib/hashtable.h>
 
@@ -39,6 +38,8 @@ enum {
     THREAD_ZOMBIE
 };
 
+struct process;
+
 typedef struct thread {
     hashitem_t hash;
 
@@ -53,7 +54,7 @@ typedef struct thread {
 
     uint64_t cpu_time;
 
-    process_t* process;
+    struct process* process;
 
     void* kernel_stack;
 

@@ -22,6 +22,7 @@
 #include <scheduler.h>
 #include <kernel.h>
 #include <module.h>
+#include <semaphore.h>
 #include <lib/stdarg.h>
 
 #include <arch/interrupt.h>
@@ -42,6 +43,7 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
 void kernel_main( void ) {
     int error;
 
+    init_semaphores();
     init_module_loader();
 
     kprintf( "Initializing processes ... " );

@@ -34,7 +34,7 @@ int add_thread_to_expired( thread_t* thread );
 void reset_thread_quantum( thread_t* thread );
 
 thread_t* do_schedule( void );
-void schedule( registers_t* regs );
+int schedule( registers_t* regs );
 
 void sched_preempt( void );
 
