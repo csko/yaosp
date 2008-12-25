@@ -30,6 +30,8 @@ typedef struct spinlock {
 
 #define INIT_SPINLOCK { ATOMIC_INIT(0), false }
 
+int init_spinlock( spinlock_t* lock );
+
 /**
  * Locks a spinlock.
  *

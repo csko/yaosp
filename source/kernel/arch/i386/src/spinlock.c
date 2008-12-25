@@ -19,6 +19,13 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
+int init_spinlock( spinlock_t* lock ) {
+    atomic_set( &lock->locked, 0 );
+    lock->enable_interrupts = false;
+
+    return 0;
+}
+
 void spinlock( spinlock_t* lock ) {
     while ( atomic_swap( &lock->locked, 1 ) == 1 ) {
         __asm__ __volatile__( "pause" );
