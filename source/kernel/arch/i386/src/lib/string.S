@@ -21,6 +21,7 @@
 .global memset
 .global memsetw
 .global memsetl
+.global memcpy
 
 /* void* memset( void* d, int c, size_t n ) */
 
@@ -69,3 +70,29 @@ memsetl:
     popl %edi
     ret
 .size memsetl,.-memsetl
+
+/* void* memcpy( void* d, const void* s, size_t n ) */
+
+memcpy:
+    pushl %esi
+    pushl %edi
+    movl 12(%esp), %edi
+    movl 16(%esp), %esi
+    movl 20(%esp), %ecx
+    movl %ecx, %edx
+    shrl $2, %ecx
+    testl %ecx, %ecx
+    jz 4f
+    rep movsl
+4:
+    movl %edx, %ecx
+    andl $3, %ecx
+    testl %ecx, %ecx
+    jz 5f
+    rep stosb
+5:
+    movl 12(%esp), %eax
+    popl %edi
+    popl %esi
+    ret
+.size memcpy,.-memcpy

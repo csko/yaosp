@@ -22,5 +22,6 @@
 #define ARCH_HAVE_MEMSET
 #define ARCH_HAVE_MEMSETW
 #define ARCH_HAVE_MEMSETL
+#define ARCH_HAVE_MEMCPY
 
 #endif // _ARCH_LIB_STRING_H_
