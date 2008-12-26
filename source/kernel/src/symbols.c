@@ -19,6 +19,7 @@
 #include <symbols.h>
 #include <errno.h>
 #include <console.h>
+#include <devices.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -51,6 +52,16 @@ static kernel_symbol_t symbols[] = {
     /* Interrupt manipulation */
     { "disable_interrupts", ( ptr_t )disable_interrupts },
     { "enable_interrupts", ( ptr_t )enable_interrupts },
+
+    /* Device management */
+    { "register_bus_driver", ( ptr_t )register_bus_driver },
+
+    /* Memory & string functions */
+    { "memcpy", ( ptr_t )memcpy },
+    { "memmove", ( ptr_t )memmove },
+    { "memset", ( ptr_t )memset },
+    { "strcmp", ( ptr_t )strcmp },
+    { "strlen", ( ptr_t )strlen },
 
     /* List terminator */
     { NULL, 0 }

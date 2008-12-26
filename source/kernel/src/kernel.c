@@ -23,6 +23,7 @@
 #include <kernel.h>
 #include <module.h>
 #include <semaphore.h>
+#include <devices.h>
 #include <lib/stdarg.h>
 
 #include <arch/interrupt.h>
@@ -44,6 +45,7 @@ void kernel_main( void ) {
     int error;
 
     init_semaphores();
+    init_devices();
     init_module_loader();
 
     kprintf( "Initializing processes ... " );

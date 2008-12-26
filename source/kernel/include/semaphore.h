@@ -25,6 +25,9 @@
 
 #include <arch/spinlock.h>
 
+#define LOCK(sem) lock_semaphore( sem, 1, INFINITE_TIMEOUT )
+#define UNLOCK(sem) unlock_semaphore( sem, 1 )
+
 typedef enum semaphore_type {
     SEMAPHORE_BINARY,
     SEMAPHORE_COUNTING

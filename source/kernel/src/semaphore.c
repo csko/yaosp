@@ -26,7 +26,7 @@
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
-#define GLOBAL ( 1 << 31 )
+#define GLOBAL ( 1 << 24 )
 #define ID_MASK 0x00FFFFFF
 
 static semaphore_context_t global_semaphore_context;
@@ -176,6 +176,14 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
     semaphore_t* semaphore;
     semaphore_context_t* context;
 
+    /* Check if semaphore ID is valid */
+
+    if ( id < 0 ) {
+        return -EINVAL;
+    }
+
+    /* Decide which context to use */
+
     if ( id & GLOBAL ) {
         context = &global_semaphore_context;
     } else if ( kernel ) {
@@ -269,6 +277,14 @@ try_again:
 static int do_unlock_semaphore( bool kernel, semaphore_id id, int count ) {
     semaphore_t* semaphore;
     semaphore_context_t* context;
+
+    /* Check if semaphore is valid */
+
+    if ( id < 0 ) {
+        return -EINVAL;
+    }
+
+    /* Decide which context to use */
 
     if ( id & GLOBAL ) {
         context = &global_semaphore_context;

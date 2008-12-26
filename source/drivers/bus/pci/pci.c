@@ -21,6 +21,9 @@
 #include <console.h>
 #include <macros.h>
 #include <pci.h>
+#include <devices.h>
+#include <mm/kmalloc.h>
+#include <lib/string.h>
 
 #include <arch/io.h>
 #include <arch/spinlock.h>
@@ -41,6 +44,9 @@ typedef struct pci_access {
 
 static pci_access_t* pci_access;
 static spinlock_t pci_lock = INIT_SPINLOCK;
+
+static int pci_device_count = 0;
+static pci_device_t* pci_devices[ MAX_PCI_DEVICES ];
 
 static int pci_scan_bus( int bus );
 
@@ -341,16 +347,53 @@ static int pci_scan_device( int bus, int dev, int func ) {
         pci_scan_bus( ( int )secondary );
     } else {
         uint32_t device_id;
+        pci_device_t* device;
 
         if ( pci_access->read( bus, dev, func, PCI_DEVICE_ID, 2, &device_id ) < 0 ) {
             return -1;
         }
 
-        kprintf( "PCI: %d:%d:%d 0x%x:0x%x\n", bus, dev, func, vendor_id, device_id );
+        device = ( pci_device_t* )kmalloc( sizeof( pci_device_t ) );
+
+        if ( device == NULL ) {
+            return -ENOMEM;
+        }
+
+        device->bus = bus;
+        device->dev = dev;
+        device->func = func;
+
+        device->vendor_id = vendor_id;
+        device->device_id = device_id;
+
+        if ( pci_device_count < MAX_PCI_DEVICES ) {
+            kprintf( "PCI: %d:%d:%d 0x%x:0x%x\n", bus, dev, func, vendor_id, device_id );
+
+            pci_devices[ pci_device_count++ ] = device;
+        } else {
+            kprintf( "PCI: Too many devices!\n" );
+        }
     }
 
     return 0;
 }
+
+static int pci_bus_get_device_count( void ) {
+    return pci_device_count;
+}
+
+static pci_device_t* pci_bus_get_device( int index ) {
+    if ( ( index < 0 ) || ( index >= pci_device_count ) ) {
+        return NULL;
+    }
+
+    return pci_devices[ index ];
+}
+
+static pci_bus_t pci_bus = {
+    pci_bus_get_device_count,
+    pci_bus_get_device
+};
 
 static int pci_scan_bus( int bus ) {
     int dev;
@@ -383,6 +426,12 @@ static int pci_scan_bus( int bus ) {
 }
 
 int init_module( void ) {
+    int error;
+
+    memset( pci_devices, 0, sizeof( pci_device_t* ) * MAX_PCI_DEVICES );
+
+    /* Detect PCI */
+
     if ( !pci_detect() ) {
         kprintf( "PCI: Bus not detected\n" );
         return -EINVAL;
@@ -390,11 +439,42 @@ int init_module( void ) {
 
     kprintf( "PCI: Using %s\n", pci_access->name );
 
-    pci_scan_bus( 0 );
+    /* Scan the first PCI bus */
+
+    error = pci_scan_bus( 0 );
+
+    if ( error < 0 ) {
+        kprintf( "PCI: Failed to scan first bus! (error=%d)\n", error );
+        return error;
+    }
+
+    kprintf( "PCI: Detected %d devices.\n", pci_device_count );
+
+    /* Register the PCI bus driver */
+
+    error = register_bus_driver( "PCI", ( void* )&pci_bus );
+
+    if ( error < 0 ) {
+        kprintf( "PCI: Failed to register the bus! (error=%d)\n", error );
+        return error;
+    }
 
     return 0;
 }
 
 int destroy_module( void ) {
+    int i;
+
+    pci_access = NULL;
+
+    /* Free the allocated device structures */
+
+    for ( i = 0; i < pci_device_count; i++ ) {
+        kfree( pci_devices[ i ] );
+        pci_devices[ i ] = NULL;
+    }
+
+    pci_device_count = 0;
+
     return 0;
 }
