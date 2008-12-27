@@ -49,6 +49,9 @@ typedef struct pci_device {
 
     uint16_t vendor_id;
     uint16_t device_id;
+    uint8_t class_api;
+    uint8_t class_sub;
+    uint8_t class_base;
 } pci_device_t;
 
 typedef struct pci_bus {

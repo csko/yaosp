@@ -328,6 +328,10 @@ static int pci_scan_device( int bus, int dev, int func ) {
         return -EINVAL;
     }
 
+    if ( pci_access->read( bus, dev, func, PCI_HEADER_TYPE, 1, &header_type ) < 0 ) {
+        return -1;
+    }
+
     /* If this device is a PCI-PCI bridge then scan the new
        bus, otherwise handle as a normal device */
 
@@ -347,11 +351,10 @@ static int pci_scan_device( int bus, int dev, int func ) {
         pci_scan_bus( ( int )secondary );
     } else {
         uint32_t device_id;
+        uint32_t class_api;
+        uint32_t class_sub;
+        uint32_t class_base;
         pci_device_t* device;
-
-        if ( pci_access->read( bus, dev, func, PCI_DEVICE_ID, 2, &device_id ) < 0 ) {
-            return -1;
-        }
 
         device = ( pci_device_t* )kmalloc( sizeof( pci_device_t ) );
 
@@ -364,7 +367,18 @@ static int pci_scan_device( int bus, int dev, int func ) {
         device->func = func;
 
         device->vendor_id = vendor_id;
+
+        if ( ( pci_access->read( bus, dev, func, PCI_DEVICE_ID, 2, &device_id ) < 0 ) ||
+             ( pci_access->read( bus, dev, func, PCI_CLASS_API, 1, &class_api ) < 0 ) ||
+             ( pci_access->read( bus, dev, func, PCI_CLASS_SUB, 1, &class_sub ) < 0 ) ||
+             ( pci_access->read( bus, dev, func, PCI_CLASS_BASE, 1, &class_base ) < 0 ) ) {
+            return -1;
+        }
+
         device->device_id = device_id;
+        device->class_api = class_api;
+        device->class_sub = class_sub;
+        device->class_base = class_base;
 
         if ( pci_device_count < MAX_PCI_DEVICES ) {
             kprintf( "PCI: %d:%d:%d 0x%x:0x%x\n", bus, dev, func, vendor_id, device_id );

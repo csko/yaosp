@@ -45,6 +45,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <output>objs/filename(${i}).o</output>
                 <include>../../../kernel/include</include>
                 <flag>-c</flag>
+                <flag>-O2</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-nostdinc</flag>
