@@ -55,6 +55,17 @@ region_t* allocate_region( const char* name );
 
 int region_insert( struct memory_context* context, region_t* region );
 
+/**
+ * Creates a new memory region.
+ *
+ * @param name The name of the new memory region
+ * @param size The size of the new memory region (has to be page aligned)
+ * @param flags Some extra information for the region allocator
+ * @param alloc_method The method how the pages in the region should be allocated
+ * @param _address A pointer to a memory region where the virtual address of the
+ *                 created region will be stored
+ * @return On success a non-negative region ID is returned
+ */
 region_id create_region(
     const char* name,
     uint32_t size,

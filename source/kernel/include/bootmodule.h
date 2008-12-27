@@ -31,7 +31,19 @@ typedef struct bootmodule {
     size_t size;
 } bootmodule_t;
 
+/**
+ * Returns the number of modules loaded by the bootloader.
+ *
+ * @return The number of bootmodules
+ */
 int get_bootmodule_count( void );
+/**
+ * Returns the bootmodule at the specified index.
+ *
+ * @param index The index of the bootmodule to return
+ * @return When a valid index is specified a non-NULL pointer
+ *         is returned, otherwise NULL
+ */
 bootmodule_t* get_bootmodule_at( int index );
 
 module_reader_t* get_bootmodule_reader( int index );

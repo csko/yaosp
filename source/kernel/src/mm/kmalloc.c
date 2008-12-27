@@ -172,6 +172,10 @@ block_found:
 void kfree( void* p ) {
     kmalloc_chunk_t* chunk;
 
+    if ( p == NULL ) {
+        return;
+    }
+
     spinlock_disable( &kmalloc_lock );
 
     chunk = ( kmalloc_chunk_t* )( ( uint8_t* )p - sizeof( kmalloc_chunk_t ) );

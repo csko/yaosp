@@ -122,8 +122,8 @@ static int elf32_parse_dynsym_section(
 
     if ( elf_module->symbols == NULL ) {
         kfree( elf_module->strings );
-        kfree( symbols );
         elf_module->strings = NULL;
+        kfree( symbols );
         return -ENOMEM;
     }
 
@@ -445,7 +445,11 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                 break;
 
             default :
-                kprintf( "ELF32: Unknown reloc type: %d (symbol=%s)\n", ELF32_R_TYPE( reloc->info ), symbol->name );
+                kprintf(
+                    "ELF32: Unknown reloc type: %d (symbol=%s)\n",
+                    ELF32_R_TYPE( reloc->info ),
+                    symbol->name
+                );
                 break;
         }
     }

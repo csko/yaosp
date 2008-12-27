@@ -26,7 +26,7 @@ typedef unsigned long long int uint64_t;
 typedef unsigned int ptr_t;
 typedef unsigned int register_t;
 
-typedef struct regsisters {
+typedef struct registers {
     /* Saved segment registers */
     register_t fs;
     register_t es;

@@ -51,9 +51,28 @@ typedef struct kmalloc_chunk {
     struct kmalloc_chunk* next;
 } kmalloc_chunk_t;
 
+/**
+ * Allocates a size byte(s) long memory chunk.
+ *
+ * @param size The size of the memory chunk to allocate
+ * @return On success a non-NULL pointer is returned pointing to
+ *         the start of the allocated memory chunk
+ */
 void* kmalloc( uint32_t size );
+
+/**
+ * Frees a previously allocated memory region.
+ *
+ * @param p The pointer to the start of the memory chunk to free
+ */
 void kfree( void* p );
 
+/**
+ * Initializes the kernel memory allocator. This function is called
+ * during the kernel initialization.
+ *
+ * @return On success 0 is returned
+ */
 int init_kmalloc( void );
 
 #endif // _MM_KMALLOC_H_
