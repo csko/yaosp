@@ -467,6 +467,10 @@ int destroy_module( void ) {
 
     pci_access = NULL;
 
+    /* Unregister the PCI bus */
+
+    unregister_bus_driver( "PCI" );
+
     /* Free the allocated device structures */
 
     for ( i = 0; i < pci_device_count; i++ ) {

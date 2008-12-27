@@ -55,6 +55,7 @@ static kernel_symbol_t symbols[] = {
 
     /* Device management */
     { "register_bus_driver", ( ptr_t )register_bus_driver },
+    { "unregister_bus_driver", ( ptr_t )unregister_bus_driver },
 
     /* Memory & string functions */
     { "memcpy", ( ptr_t )memcpy },

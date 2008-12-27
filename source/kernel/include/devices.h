@@ -29,6 +29,8 @@ typedef struct bus_driver {
 } bus_driver_t;
 
 int register_bus_driver( const char* name, void* bus );
+int unregister_bus_driver( const char* name );
+
 void* get_bus_driver( const char* name );
 
 int init_devices( void );

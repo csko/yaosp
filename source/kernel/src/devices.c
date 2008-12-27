@@ -37,6 +37,12 @@ int register_bus_driver( const char* name, void* bus ) {
     }
 
     driver->name = strdup( name );
+
+    if ( driver->name == NULL ) {
+        kfree( driver );
+        return -ENOMEM;
+    }
+
     driver->bus = bus;
 
     LOCK( bus_table_lock );
@@ -56,6 +62,29 @@ int register_bus_driver( const char* name, void* bus ) {
     }
 
     return error;
+}
+
+int unregister_bus_driver( const char* name ) {
+    bus_driver_t* driver;
+
+    LOCK( bus_table_lock );
+
+    driver = ( bus_driver_t* )hashtable_get( &bus_table, ( const void* )name );
+
+    if ( driver != NULL ) {
+        hashtable_remove( &bus_table, ( const void* )name );
+    }
+
+    UNLOCK( bus_table_lock );
+
+    if ( driver == NULL ) {
+        return -EINVAL;
+    }
+
+    kfree( driver->name );
+    kfree( driver );
+
+    return 0;
 }
 
 void* get_bus_driver( const char* name ) {
