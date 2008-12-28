@@ -136,6 +136,7 @@ static int elf32_parse_dynsym_section(
 
         my_symbol->name = elf_module->strings + elf_symbol->name;
         my_symbol->address = elf_symbol->value;
+        my_symbol->info = elf_symbol->info;
     }
 
     kfree( symbols );
@@ -422,14 +423,59 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
         symbol = &elf_module->symbols[ ELF32_R_SYM( reloc->info ) ];
 
         switch ( ELF32_R_TYPE( reloc->info ) ) {
+            case R_386_GLOB_DATA : {
+                uint32_t j;
+                bool found = false;
+                ptr_t address;
+
+                for ( j = 0; j < elf_module->symbol_count; j++ ) {
+                    if ( ( strcmp( elf_module->symbols[ j ].name, symbol->name ) == 0 ) &&
+                         ( ELF32_ST_TYPE( elf_module->symbols[ j ].info ) == STT_FUNC ) ) {
+                        address = elf_module->symbols[ j ].address + elf_module->text_address;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if ( !found ) {
+                    kprintf( "ELF32: Symbol %s not found!\n", symbol->name );
+                    return -EINVAL;
+                }
+
+                target = ( uint32_t* )( elf_module->text_address + reloc->offset );
+                *target = ( uint32_t )address;
+
+                break;
+            }
+
             case R_386_JMP_SLOT : {
                 ptr_t address;
+
+                /* First try kernel symbols */
 
                 error = get_kernel_symbol_address( symbol->name, &address );
 
                 if ( error < 0 ) {
-                    kprintf( "ELF32: Symbol %s not found!\n", symbol->name );
-                    return error;
+                    uint32_t j;
+                    bool found = false;
+
+                    /* Not found, try the symbols exported by the module */
+
+                    for ( j = 0; j < elf_module->symbol_count; j++ ) {
+                        if ( ( strcmp( elf_module->symbols[ j ].name, symbol->name ) == 0 ) &&
+                             ( ELF32_ST_TYPE( elf_module->symbols[ j ].info ) == STT_FUNC ) ) {
+                            address = elf_module->symbols[ j ].address + elf_module->text_address;
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if ( !found ) {
+                        /* No luck :( */
+
+                        kprintf( "ELF32: Symbol %s not found!\n", symbol->name );
+                        return -EINVAL;
+                    }
                 }
 
                 target = ( uint32_t* )( elf_module->text_address + reloc->offset );

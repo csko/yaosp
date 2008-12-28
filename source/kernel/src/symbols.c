@@ -20,6 +20,8 @@
 #include <errno.h>
 #include <console.h>
 #include <devices.h>
+#include <time.h>
+#include <thread.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -56,6 +58,13 @@ static kernel_symbol_t symbols[] = {
     /* Device management */
     { "register_bus_driver", ( ptr_t )register_bus_driver },
     { "unregister_bus_driver", ( ptr_t )unregister_bus_driver },
+    { "get_bus_driver", ( ptr_t )get_bus_driver },
+
+    /* Time functions */
+    { "get_system_time", ( ptr_t )get_system_time },
+
+    /* Thread functions */
+    { "sleep_thread", ( ptr_t )sleep_thread },
 
     /* Memory & string functions */
     { "memcpy", ( ptr_t )memcpy },

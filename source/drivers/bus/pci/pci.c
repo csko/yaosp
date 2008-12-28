@@ -404,9 +404,33 @@ static pci_device_t* pci_bus_get_device( int index ) {
     return pci_devices[ index ];
 }
 
+static int pci_bus_read_config( pci_device_t* device, int offset, int size, uint32_t* data ) {
+    return pci_access->read(
+        device->bus,
+        device->dev,
+        device->func,
+        offset,
+        size,
+        data
+    );
+}
+
+static int pci_bus_write_config( pci_device_t* device, int offset, int size, uint32_t data ) {
+    return pci_access->write(
+        device->bus,
+        device->dev,
+        device->func,
+        offset,
+        size,
+        data
+    );
+}
+
 static pci_bus_t pci_bus = {
-    pci_bus_get_device_count,
-    pci_bus_get_device
+    .get_device_count = pci_bus_get_device_count,
+    .get_device = pci_bus_get_device,
+    .read_config = pci_bus_read_config,
+    .write_config = pci_bus_write_config
 };
 
 static int pci_scan_bus( int bus ) {

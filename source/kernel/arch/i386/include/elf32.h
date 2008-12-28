@@ -25,6 +25,8 @@
 #define ELF32_R_SYM(i)  ((i)>>8)
 #define ELF32_R_TYPE(i) ((unsigned char)(i))
 
+#define ELF32_ST_TYPE(i) ((i)&0xF)
+
 enum {
     ID_MAGIC0 = 0,
     ID_MAGIC1,
@@ -75,8 +77,13 @@ enum {
 };
 
 enum {
-  R_386_JMP_SLOT = 7,
-  R_386_RELATIVE = 8
+    R_386_GLOB_DATA = 6,
+    R_386_JMP_SLOT = 7,
+    R_386_RELATIVE = 8
+};
+
+enum {
+    STT_FUNC = 2
 };
 
 typedef struct elf_header {
@@ -131,6 +138,7 @@ typedef struct elf_reloc {
 typedef struct my_elf_symbol {
     char* name;
     uint32_t address;
+    uint8_t info;
 } my_elf_symbol_t;
 
 typedef struct elf_module {
