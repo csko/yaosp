@@ -411,6 +411,20 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
     return 0;
 }
 
+static bool elf32_module_find_symbol( elf_module_t* elf_module, const char* name, uint8_t type, ptr_t* address ) {
+    uint32_t i;
+
+    for ( i = 0; i < elf_module->symbol_count; i++ ) {
+        if ( ( strcmp( elf_module->symbols[ i ].name, name ) == 0 ) &&
+             ( ELF32_ST_TYPE( elf_module->symbols[ i ].info ) == type ) ) {
+            *address = elf_module->symbols[ i ].address + elf_module->text_address;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static int elf32_relocate_module( elf_module_t* elf_module ) {
     int error;
     uint32_t i;
@@ -424,18 +438,15 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
 
         switch ( ELF32_R_TYPE( reloc->info ) ) {
             case R_386_GLOB_DATA : {
-                uint32_t j;
-                bool found = false;
+                bool found;
                 ptr_t address;
 
-                for ( j = 0; j < elf_module->symbol_count; j++ ) {
-                    if ( ( strcmp( elf_module->symbols[ j ].name, symbol->name ) == 0 ) &&
-                         ( ELF32_ST_TYPE( elf_module->symbols[ j ].info ) == STT_FUNC ) ) {
-                        address = elf_module->symbols[ j ].address + elf_module->text_address;
-                        found = true;
-                        break;
-                    }
-                }
+                found = elf32_module_find_symbol(
+                    elf_module,
+                    symbol->name,
+                    STT_OBJECT,
+                    &address
+                );
 
                 if ( !found ) {
                     kprintf( "ELF32: Symbol %s not found!\n", symbol->name );
@@ -456,19 +467,16 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                 error = get_kernel_symbol_address( symbol->name, &address );
 
                 if ( error < 0 ) {
-                    uint32_t j;
-                    bool found = false;
+                    bool found;
 
                     /* Not found, try the symbols exported by the module */
 
-                    for ( j = 0; j < elf_module->symbol_count; j++ ) {
-                        if ( ( strcmp( elf_module->symbols[ j ].name, symbol->name ) == 0 ) &&
-                             ( ELF32_ST_TYPE( elf_module->symbols[ j ].info ) == STT_FUNC ) ) {
-                            address = elf_module->symbols[ j ].address + elf_module->text_address;
-                            found = true;
-                            break;
-                        }
-                    }
+                    found = elf32_module_find_symbol(
+                        elf_module,
+                        symbol->name,
+                        STT_FUNC,
+                        &address
+                    );
 
                     if ( !found ) {
                         /* No luck :( */

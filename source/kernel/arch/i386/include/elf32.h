@@ -83,6 +83,7 @@ enum {
 };
 
 enum {
+    STT_OBJECT = 1,
     STT_FUNC = 2
 };
 
