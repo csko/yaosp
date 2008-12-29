@@ -104,6 +104,11 @@ thread_t* do_schedule( void ) {
 
                     break;
 
+                case THREAD_READY :
+                    /* The thread tried to sleep but it was woken up before
+                       it could get to the scheduler */
+                    break;
+
                 case THREAD_WAITING :
                 case THREAD_SLEEPING :
                     if ( runtime >= current->quantum ) {
