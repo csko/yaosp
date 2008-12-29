@@ -81,4 +81,40 @@ static inline void outl( uint32_t data, uint16_t port ) {
     );
 }
 
+static inline void inws( uint16_t* buffer, size_t count, uint16_t port ) {
+    __asm__ __volatile__(
+        "rep insw\n"
+        : "=c" ( count ), "=D" ( buffer )
+        : "d" ( port ), "0" ( count ), "1" ( buffer )
+        : "memory"
+    );
+}
+
+static inline void outws( const uint16_t* buffer, size_t count, uint16_t port ) {
+    __asm__ __volatile__(
+        "rep outsw\n"
+        : "=c" ( count ), "=S" ( buffer )
+        : "d" ( port ), "0" ( count ), "1" ( buffer )
+        : "memory"
+    );
+}
+
+static inline void inls( uint32_t* buffer, size_t count, uint16_t port ) {
+    __asm__ __volatile__(
+        "rep insl\n"
+        : "=c" ( count ), "=D" ( buffer )
+        : "d" ( port ), "0" ( count ), "1" ( buffer )
+        : "memory"
+    );
+}
+
+static inline void outls( const uint32_t* buffer, size_t count, uint16_t port ) {
+    __asm__ __volatile__(
+        "rep outsl\n"
+        : "=c" ( count ), "=S" ( buffer )
+        : "d" ( port ), "0" ( count ), "1" ( buffer )
+        : "memory"
+    );
+}
+
 #endif // _ARCH_IO_H_
