@@ -354,16 +354,5 @@ int pata_initialize_controller( pata_controller_t* controller ) {
         }
     }
 
-    port = controller->ports[ 1 ];
-    char* b = kmalloc( 16384 );
-
-    error = pata_port_atapi_read( port, b, 32768, 16384 );
-
-    kprintf( "error=%d\n", error );
-
-    for ( chan = 0x260; chan < 0x300; chan++ ) {
-        kprintf( "%x ", b[chan] );
-    }
-
     return 0;
 }
