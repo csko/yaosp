@@ -1,3 +1,4 @@
 title yaOSp
 kernel /system/kernel
 module /system/pci
+module /system/pata
