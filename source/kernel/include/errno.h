@@ -23,5 +23,6 @@
 #define EINVAL 2
 #define EIO    3
 #define ETIME  4
+#define ENOSYS 5
 
 #endif // _ERRNO_H_

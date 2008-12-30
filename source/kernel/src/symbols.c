@@ -29,6 +29,9 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
+extern void __umoddi3( void );
+extern void __udivdi3( void );
+
 static kernel_symbol_t symbols[] = {
     /* Console output */
     { "kprintf", ( ptr_t )kprintf },
@@ -72,6 +75,10 @@ static kernel_symbol_t symbols[] = {
     { "memset", ( ptr_t )memset },
     { "strcmp", ( ptr_t )strcmp },
     { "strlen", ( ptr_t )strlen },
+
+    /* Misc functions */
+    { "__umoddi3", ( ptr_t )__umoddi3 },
+    { "__udivdi3", ( ptr_t )__udivdi3 },
 
     /* List terminator */
     { NULL, 0 }

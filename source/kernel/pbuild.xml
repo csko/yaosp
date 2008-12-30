@@ -69,6 +69,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/lib/string.c</item>
         <item>src/lib/printf.c</item>
         <item>src/lib/hashtable.c</item>
+        <item>src/lib/udivmoddi4.c</item>
     </array>
 
     <target name="clean">
