@@ -121,7 +121,8 @@ static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
     node = parent->first_child;
 
     while ( node != NULL ) {
-        if ( strncmp( node->name, name, name_len ) == 0 ) {
+        if ( ( strlen( node->name ) == name_len ) &&
+             ( strncmp( node->name, name, name_len ) == 0 ) ) {
             *inode_num = node->inode_number;
             return 0;
         }

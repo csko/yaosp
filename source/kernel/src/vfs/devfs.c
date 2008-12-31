@@ -26,6 +26,8 @@
 static ino_t devfs_inode_counter = 0;
 static hashtable_t devfs_node_table;
 
+static devfs_node_t* devfs_root_node = NULL;
+
 static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, int length, bool is_directory ) {
     int error;
     devfs_node_t* node;
@@ -55,6 +57,7 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
     node->parent = parent;
     node->next_sibling = NULL;
     node->first_child = NULL;
+    node->calls = NULL;
 
     if ( parent != NULL ) {
         node->next_sibling = parent->first_child;
@@ -83,15 +86,13 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
 }
 
 static int devfs_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
-    devfs_node_t* root_node;
+    devfs_root_node = devfs_create_node( NULL, "", -1, true );
 
-    root_node = devfs_create_node( NULL, "", -1, true );
-
-    if ( root_node == NULL ) {
+    if ( devfs_root_node == NULL ) {
         return -ENOMEM;
     }
 
-    *root_inode_num = root_node->inode_number;
+    *root_inode_num = devfs_root_node->inode_number;
 
     return 0;
 }
@@ -122,7 +123,8 @@ static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name,
     node = parent->first_child;
 
     while ( node != NULL ) {
-        if ( strncmp( node->name, name, name_len ) == 0 ) {
+        if ( ( strlen( node->name ) == name_len ) &&
+             ( strncmp( node->name, name, name_len ) == 0 ) ) {
             *inode_num = node->inode_number;
             return 0;
         }
@@ -192,6 +194,77 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
         current++;
         child = child->next_sibling;
     }
+
+    return 0;
+}
+
+int create_device_node( const char* path, device_calls_t* calls, void* cookie ) {
+    int error;
+    char* sep;
+    int node_length;
+    devfs_node_t* parent;
+    devfs_node_t* node;
+    ino_t dummy;
+
+    parent = devfs_root_node;
+
+    /* Go through the directories */
+
+    while ( true ) {
+        size_t length;
+
+        sep = strchr( path, '/' );
+
+        if ( sep == NULL ) {
+            break;
+        }
+
+        length = sep - path;
+
+        node = parent->first_child;
+
+        while ( node != NULL ) {
+            if ( ( strlen( node->name ) == length ) &&
+                 ( strncmp( node->name, path, length ) == 0 ) ) {
+                break;
+            }
+
+            node = node->next_sibling;
+        }
+
+        if ( node == NULL ) {
+            node = devfs_create_node( parent, path, length, true );
+
+            if ( node == NULL ) {
+                return -ENOMEM;
+            }
+        }
+
+        parent = node;
+        path = sep + 1;
+    }
+
+    /* Check if the node is already exists */
+
+    node_length = strlen( path );
+
+    if ( node_length == 0 ) {
+        return -EINVAL;
+    }
+
+    error = devfs_lookup_inode( NULL, parent, path, node_length, &dummy );
+
+    if ( error == 0 ) {
+        return -EEXIST;
+    }
+
+    node = devfs_create_node( parent, path, node_length, false );
+
+    if ( node == NULL ) {
+        return -ENOMEM;
+    }
+
+    node->calls = calls;
 
     return 0;
 }

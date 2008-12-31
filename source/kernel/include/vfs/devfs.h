@@ -48,6 +48,8 @@ typedef struct devfs_dir_cookie {
     int position;
 } devfs_dir_cookie_t;
 
+int create_device_node( const char* path, device_calls_t* calls, void* cookie );
+
 int init_devfs( void );
 
 #endif // _VFS_DEVFS_H_
