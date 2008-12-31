@@ -89,7 +89,7 @@ memcpy:
     andl $3, %ecx
     testl %ecx, %ecx
     jz 5f
-    rep stosb
+    rep movsb
 5:
     movl 12(%esp), %eax
     popl %edi
