@@ -259,19 +259,6 @@ int init_root_filesystem( void ) {
         return -ENOMEM;
     }
 
-    rootfs_node_t* n = rootfs_create_node( root_node, "abc", false );
-    root_node->first_child = n;
-    n->next_sibling = NULL;
-    n = rootfs_create_node( root_node, "def", false );
-    n->next_sibling = root_node->first_child;
-    root_node->first_child = n;
-    n = rootfs_create_node( root_node, "hello world :)", false );
-    n->next_sibling = root_node->first_child;
-    root_node->first_child = n;
-    n = rootfs_create_node( root_node, "123456", false );
-    n->next_sibling = root_node->first_child;
-    root_node->first_child = n;
-
     /* Create the root mount point */
 
     root_mount_point = ( rootfs_mount_point_t* )kmalloc( sizeof( rootfs_mount_point_t ) );

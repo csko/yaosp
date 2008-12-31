@@ -73,8 +73,6 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
     inode->inode_number = inode_number;
     inode->mount_point = mount_point;
 
-    /* TODO: read the inode */
-
     UNLOCK( cache->lock );
 
     /* Read the inode from the filesystem */
