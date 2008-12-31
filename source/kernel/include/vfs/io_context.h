@@ -1,4 +1,4 @@
-/* Process implementation
+/* I/O context
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,43 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROCESS_H_
-#define _PROCESS_H_
+#ifndef _VFS_IO_CONTEXT_H_
+#define _VFS_IO_CONTEXT_H_
 
-#include <semaphore.h>
-#include <mm/context.h>
-#include <vfs/io_context.h>
+#include <vfs/inode.h>
 #include <lib/hashtable.h>
 
-typedef int process_id;
+#include <arch/atomic.h>
 
-typedef struct process {
+typedef enum file_type {
+    TYPE_FILE,
+    TYPE_DIRECTORY
+} file_type_t;
+
+typedef struct file {
     hashitem_t hash;
 
-    process_id id;
-    char* name;
+    int fd;
+    inode_t* inode;
+    file_type_t type;
+    void* cookie;
+} file_t;
 
-    memory_context_t* memory_context;
-    semaphore_context_t* semaphore_context;
-    io_context_t* io_context;
-} process_t;
+typedef struct io_context {
+    inode_t* root_directory;
+    inode_t* current_directory;
+    semaphore_id lock;
 
-process_t* get_process_by_id( process_id id );
+    int fd_counter;
+    hashtable_t file_table;
+} io_context_t;
 
-int init_processes( void );
+file_t* create_file( void );
+void delete_file( file_t* file );
 
-#endif // _PROCESS_H_
+int io_context_insert_file( io_context_t* io_context, file_t* file );
+file_t* io_context_get_file( io_context_t* io_context, int fd );
+
+int init_io_context( io_context_t* io_context );
+
+#endif // _VFS_IO_CONTEXT_H_

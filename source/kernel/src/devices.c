@@ -114,21 +114,8 @@ static void* bus_driver_key( hashitem_t* item ) {
     return ( void* )driver->name;
 }
 
-static uint32_t bus_driver_hash( const void* _key ) {
-    const uint8_t* key = ( const uint8_t* )_key;
-    uint32_t hash = 2166136261U;
-        
-    while ( *key != 0 ) {
-        hash = ( hash ^ *key++ ) * 16777619;
-    }
-        
-    hash += hash << 13;
-    hash ^= hash >> 7;
-    hash += hash << 3;
-    hash ^= hash >> 17;
-    hash += hash << 5;
-        
-    return hash;
+static uint32_t bus_driver_hash( const void* key ) {
+    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
 }
 
 static bool bus_driver_compare( const void* key1, const void* key2 ) {

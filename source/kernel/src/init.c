@@ -21,6 +21,8 @@
 #include <bootmodule.h>
 #include <module.h>
 
+#include <vfs/vfs.h>
+
 static void load_bootmodules( void ) {
     int i;
     int error;
@@ -57,6 +59,10 @@ static void load_bootmodules( void ) {
 
 int init_thread( void* arg ) {
     kprintf( "Init thread started!\n" );
+
+    kprintf( "Initializing Virtual File System ... " );
+    init_vfs();
+    kprintf( "done\n" );
 
     load_bootmodules();
 

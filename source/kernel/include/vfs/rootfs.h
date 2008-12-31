@@ -1,4 +1,4 @@
-/* Process implementation
+/* Root file system
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,31 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROCESS_H_
-#define _PROCESS_H_
+#ifndef _VFS_ROOTFS_H_
+#define _VFS_ROOTFS_H_
 
-#include <semaphore.h>
-#include <mm/context.h>
-#include <vfs/io_context.h>
-#include <lib/hashtable.h>
+#include <vfs/inode.h>
 
-typedef int process_id;
-
-typedef struct process {
+typedef struct rootfs_node {
     hashitem_t hash;
 
-    process_id id;
     char* name;
+    bool is_directory;
+    ino_t inode_number;
 
-    memory_context_t* memory_context;
-    semaphore_context_t* semaphore_context;
-    io_context_t* io_context;
-} process_t;
+    struct rootfs_node* parent;
+    struct rootfs_node* next_sibling;
+    struct rootfs_node* first_child;
+} rootfs_node_t;
 
-process_t* get_process_by_id( process_id id );
+typedef struct rootfs_mount_point {
+    rootfs_node_t* root_node;
+} rootfs_mount_point_t;
 
-int init_processes( void );
+typedef struct rootfs_dir_cookie {
+    int position;
+} rootfs_dir_cookie_t;
 
-#endif // _PROCESS_H_
+int init_root_filesystem( void );
+
+#endif // _VFS_ROOTFS_H_

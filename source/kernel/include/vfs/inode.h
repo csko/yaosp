@@ -1,4 +1,4 @@
-/* Process implementation
+/* Inode related definitions and functions
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,43 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROCESS_H_
-#define _PROCESS_H_
+#ifndef _VFS_INODE_H_
+#define _VFS_INODE_H_
 
+#include <types.h>
 #include <semaphore.h>
-#include <mm/context.h>
-#include <vfs/io_context.h>
 #include <lib/hashtable.h>
 
-typedef int process_id;
+#include <arch/atomic.h>
 
-typedef struct process {
+typedef int64_t ino_t;
+
+struct mount_point;
+
+typedef struct inode {
     hashitem_t hash;
 
-    process_id id;
-    char* name;
+    ino_t inode_number;
+    atomic_t ref_count;
+    struct mount_point* mount_point;
+    void* fs_node;
 
-    memory_context_t* memory_context;
-    semaphore_context_t* semaphore_context;
-    io_context_t* io_context;
-} process_t;
+    struct inode* next_free;
+} inode_t;
 
-process_t* get_process_by_id( process_id id );
+typedef struct inode_cache {
+    hashtable_t inode_table;
 
-int init_processes( void );
+    int free_inode_count;
+    int max_free_inode_count;
+    inode_t* free_inodes;
 
-#endif // _PROCESS_H_
+    semaphore_id lock;
+} inode_cache_t;
+
+inode_t* get_inode( struct mount_point* mount_point, ino_t inode_number );
+int put_inode( inode_t* inode );
+
+int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes );
+
+#endif // _VFS_INODE_H_

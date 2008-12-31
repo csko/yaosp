@@ -1,4 +1,4 @@
-/* Process implementation
+/* Virtual file system
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,40 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROCESS_H_
-#define _PROCESS_H_
+#ifndef _VFS_VFS_H_
+#define _VFS_VFS_H_
 
-#include <semaphore.h>
-#include <mm/context.h>
+#include <vfs/inode.h>
+#include <vfs/filesystem.h>
 #include <vfs/io_context.h>
-#include <lib/hashtable.h>
 
-typedef int process_id;
+#define NAME_MAX 255
 
-typedef struct process {
-    hashitem_t hash;
+typedef struct dirent {
+    ino_t inode;
+    char name[ NAME_MAX + 1 ];
+} dirent_t;
 
-    process_id id;
-    char* name;
+typedef struct mount_point {
+    inode_cache_t inode_cache;
+    filesystem_calls_t* fs_calls;
+    void* fs_data;
+} mount_point_t;
 
-    memory_context_t* memory_context;
-    semaphore_context_t* semaphore_context;
-    io_context_t* io_context;
-} process_t;
+extern io_context_t kernel_io_context;
 
-process_t* get_process_by_id( process_id id );
+mount_point_t* create_mount_point(
+    filesystem_calls_t* fs_calls,
+    void* fs_data,
+    int inode_cache_size,
+    int free_inodes,
+    int max_free_inodes
+);
 
-int init_processes( void );
+int open( const char* path, int flags );
 
-#endif // _PROCESS_H_
+int getdents( int fd, dirent_t* entry );
+
+int init_vfs( void );
+
+#endif // _VFS_VFS_H_

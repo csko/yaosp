@@ -66,6 +66,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>
         <item>src/mm/region.c</item>
+        <item>src/vfs/vfs.c</item>
+        <item>src/vfs/rootfs.c</item>
+        <item>src/vfs/devfs.c</item>
+        <item>src/vfs/inode.c</item>
+        <item>src/vfs/io_context.c</item>
         <item>src/lib/string.c</item>
         <item>src/lib/printf.c</item>
         <item>src/lib/hashtable.c</item>

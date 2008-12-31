@@ -1,0 +1,209 @@
+/* Inode related functions
+ *
+ * Copyright (c) 2008 Zoltan Kovacs
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of version 2 of the GNU General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <macros.h>
+#include <errno.h>
+#include <mm/kmalloc.h>
+#include <vfs/inode.h>
+#include <vfs/vfs.h>
+#include <lib/string.h>
+
+inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
+    int error;
+    inode_t* inode;
+    inode_cache_t* cache;
+
+    cache = &mount_point->inode_cache;
+
+    LOCK( cache->lock );
+
+    /* Get the inode from the hashtable */
+
+    inode = ( inode_t* )hashtable_get( &cache->inode_table, ( const void* )&inode_number );
+
+    /* If it is found increment the reference counter and
+       return it to the caller */
+
+    if ( inode != NULL ) {
+        atomic_inc( &inode->ref_count );
+
+        UNLOCK( cache->lock );
+
+        return inode;
+    }
+
+    /* The inode is not found so we have to load it. First
+       allocate a new inode structure. We get it from the
+       free inode list if it isn't empty, otherwise we use
+       kmalloc to create it. */
+
+    if ( cache->free_inode_count > 0 ) {
+        ASSERT( cache->free_inodes != NULL );
+
+        inode = cache->free_inodes;
+        cache->free_inodes = inode->next_free;
+        cache->free_inode_count--;
+    } else {
+        inode = ( inode_t* )kmalloc( sizeof( inode_t ) );
+
+        if ( inode == NULL ) {
+            UNLOCK( cache->lock );
+
+            return NULL;
+        }
+
+        memset( inode, 0, sizeof( inode_t ) );
+    }
+
+    inode->inode_number = inode_number;
+    inode->mount_point = mount_point;
+
+    /* TODO: read the inode */
+
+    UNLOCK( cache->lock );
+
+    /* Read the inode from the filesystem */
+
+    error = mount_point->fs_calls->read_inode(
+        mount_point->fs_data,
+        inode_number,
+        ( void** )&inode->fs_node
+    );
+
+    LOCK( cache->lock );
+
+    /* In the case of an error we free the inode and
+       return NULL */
+
+    if ( error < 0 ) {
+        if ( cache->free_inode_count < cache->max_free_inode_count ) {
+            inode->next_free = cache->free_inodes;
+            cache->free_inodes = inode;
+            cache->free_inode_count++;
+        }
+
+        UNLOCK( cache->lock );
+
+        if ( inode != NULL ) {
+            kfree( inode );
+        }
+
+        return NULL;
+    }
+
+    /* This is a new inode so the reference count should be 1 */
+
+    atomic_set( &inode->ref_count, 1 );
+
+    /* Insert to the inode table */
+
+    error = hashtable_add( &mount_point->inode_cache.inode_table, ( void* )inode );
+
+    if ( error < 0 ) {
+        /* TODO: cleanup! */
+
+        UNLOCK( cache->lock );
+
+        return NULL;
+    }
+
+    UNLOCK( cache->lock );
+
+    return inode;
+}
+
+int put_inode( inode_t* inode ) {
+    /* TODO */
+    return 0;
+}
+
+static void* inode_key( hashitem_t* item ) {
+    inode_t* inode;
+
+    inode = ( inode_t* )item;
+
+    return ( void* )&inode->inode_number;
+}
+
+static uint32_t inode_hash( const void* key ) {
+    return hash_number( ( uint8_t* )key, sizeof( ino_t ) );
+}
+
+static bool inode_compare( const void* key1, const void* key2 ) {
+    ino_t* inode_num_1;
+    ino_t* inode_num_2;
+
+    inode_num_1 = ( ino_t* )key1;
+    inode_num_2 = ( ino_t* )key2;
+
+    return ( *inode_num_1 == *inode_num_2 );
+}
+
+int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes ) {
+    int i;
+    int error;
+    inode_t* inode;
+
+    /* Initialize inode hashtable */
+
+    error = init_hashtable(
+        &cache->inode_table,
+        current_size,
+        inode_key,
+        inode_hash,
+        inode_compare
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Create the inode cache semaphore */
+
+    cache->lock = create_semaphore( "inode_cache_lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( cache->lock < 0 ) {
+        /* TODO: delete the hashtable */
+        return cache->lock;
+    }
+
+    /* Create the initial free inodes */
+
+    cache->free_inode_count = free_inodes;
+    cache->max_free_inode_count = max_free_inodes;
+    cache->free_inodes = NULL;
+
+    for ( i = 0; i < free_inodes; i++ ) {
+        inode = ( inode_t* )kmalloc( sizeof( inode_t ) );
+
+        if ( inode == NULL ) {
+            /* TODO: delete the hashtable */
+            delete_semaphore( cache->lock );
+            return -ENOMEM;
+        }
+
+        memset( inode, 0, sizeof( inode_t ) );
+
+        atomic_set( &inode->ref_count, 0 );
+
+        inode->next_free = cache->free_inodes;
+        cache->free_inodes = inode;
+    }
+
+    return 0;
+}

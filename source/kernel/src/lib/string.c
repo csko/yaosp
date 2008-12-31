@@ -128,6 +128,24 @@ int strcmp( const char* s1, const char* s2 ) {
 }
 #endif // ARCH_HAVE_STRCMP
 
+#ifndef ARCH_HAVE_STRNCMP
+int strncmp( const char* s1, const char* s2, size_t c ) {
+    int result = 0;
+
+    while ( c ) {
+        result = *s1 - *s2++;
+
+        if ( ( result != 0 ) || ( *s1++ == 0 ) ) {
+            break;
+        }
+
+        c--;
+    }
+
+    return result;
+}
+#endif // ARCH_HAVE_STRNCMP
+
 #ifndef HAVE_ARCH_STRCHR
 char* strchr( const char* s, int c ) {
   for ( ; *s != ( char )c; s++ ) {
@@ -153,6 +171,18 @@ char* strrchr( const char* s, int c ) {
   return NULL;
 }
 #endif // HAVE_ARCH_STRRCHR
+
+#ifndef HAVE_ARCH_STRNCPY
+char* strncpy( char* d, const char* s, size_t c ) {
+  char* tmp = d;
+
+  if ( c > 0 ) {
+    while ( ( c-- ) && ( *d++ = *s++ ) != 0 ) { }
+  }
+
+  return tmp;
+}
+#endif // HAVE_ARCH_STRNCPY
 
 #ifndef ARCH_HAVE_STRDUP
 char* strdup( const char* s ) {

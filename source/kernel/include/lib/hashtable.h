@@ -50,4 +50,9 @@ int hashtable_add( hashtable_t* table, hashitem_t* item );
 hashitem_t* hashtable_get( hashtable_t* table, const void* key );
 int hashtable_remove( hashtable_t* table, const void* key );
 
+/* Common hash functions */
+
+uint32_t hash_number( uint8_t* data, size_t length );
+uint32_t hash_string( uint8_t* data, size_t length );
+
 #endif // _LIB_HASHTABLE_H_

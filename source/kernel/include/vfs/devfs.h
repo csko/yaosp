@@ -1,4 +1,4 @@
-/* Process implementation
+/* Device file system
  *
  * Copyright (c) 2008 Zoltan Kovacs
  *
@@ -16,29 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROCESS_H_
-#define _PROCESS_H_
+#ifndef _VFS_DEVFS_H_
+#define _VFS_DEVFS_H_
 
-#include <semaphore.h>
-#include <mm/context.h>
-#include <vfs/io_context.h>
-#include <lib/hashtable.h>
-
-typedef int process_id;
-
-typedef struct process {
-    hashitem_t hash;
-
-    process_id id;
-    char* name;
-
-    memory_context_t* memory_context;
-    semaphore_context_t* semaphore_context;
-    io_context_t* io_context;
-} process_t;
-
-process_t* get_process_by_id( process_id id );
-
-int init_processes( void );
-
-#endif // _PROCESS_H_
+#endif // _VFS_DEVFS_H_

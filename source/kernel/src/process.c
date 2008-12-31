@@ -18,8 +18,10 @@
 
 #include <process.h>
 #include <errno.h>
+#include <semaphore.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
+#include <vfs/vfs.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
 
@@ -96,6 +98,8 @@ int init_processes( void ) {
 
     process->id = process_id_counter++;
     process->memory_context = &kernel_memory_context;
+    process->semaphore_context = &kernel_semaphore_context;
+    process->io_context = &kernel_io_context;
 
     hashtable_add( &process_table, ( hashitem_t* )process );
 

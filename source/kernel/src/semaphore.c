@@ -29,8 +29,8 @@
 #define GLOBAL ( 1 << 24 )
 #define ID_MASK 0x00FFFFFF
 
-static semaphore_context_t global_semaphore_context;
-static semaphore_context_t kernel_semaphore_context;
+semaphore_context_t global_semaphore_context;
+semaphore_context_t kernel_semaphore_context;
 
 static semaphore_t* allocate_semaphore( const char* name ) {
     semaphore_t* semaphore;

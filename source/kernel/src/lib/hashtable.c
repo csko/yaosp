@@ -108,3 +108,39 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
 
     return -EINVAL;
 }
+
+uint32_t hash_number( uint8_t* data, size_t length ) {
+    size_t i;
+    uint32_t hash;
+
+    hash = 0;
+
+    for ( i = 0; i < length; i++ ) {
+        hash += data[ i ];
+        hash += ( hash << 10 );
+        hash ^= ( hash >> 6 );
+    }
+
+    hash += ( hash << 3 );
+    hash ^= ( hash >> 11 );
+    hash += ( hash << 15 );
+
+    return hash;
+}
+
+uint32_t hash_string( uint8_t* data, size_t length ) {
+    size_t i;
+    uint32_t hash = 2166136261U;
+        
+    for ( i = 0; i < length; i++ ) {
+        hash = ( hash ^ data[ i ] ) * 16777619;
+    }
+        
+    hash += hash << 13;
+    hash ^= hash >> 7;
+    hash += hash << 3;
+    hash ^= hash >> 17;
+    hash += hash << 5;
+        
+    return hash;
+}

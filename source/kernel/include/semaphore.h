@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <waitqueue.h>
+#include <time.h>
 #include <lib/hashtable.h>
 
 #include <arch/spinlock.h>
@@ -58,6 +59,8 @@ typedef struct semaphore_context {
     int semaphore_id_counter;
     hashtable_t semaphore_table;
 } semaphore_context_t;
+
+extern semaphore_context_t kernel_semaphore_context;
 
 /**
  * This functions creates a new kernel semaphore.

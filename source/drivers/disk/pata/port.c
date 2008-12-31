@@ -53,8 +53,6 @@ int pata_port_wait( pata_port_t* port, uint8_t set, uint8_t clear, bool check_er
 }
 
 void pata_port_select( pata_port_t* port ) {
-    uint8_t data;
-
     if ( port->is_slave ) {
         outb( PATA_SELECT_DEFAULT | PATA_SELECT_SLAVE, port->cmd_base + PATA_REG_DEVICE );
     } else {
