@@ -20,8 +20,8 @@
 #define _VFS_FILESYSTEM_H_
 
 #include <types.h>
-
 #include <vfs/inode.h>
+#include <lib/hashtable.h>
 
 struct dirent;
 
@@ -38,6 +38,18 @@ typedef struct filesystem_calls {
     int ( *read )( void* fs_cookie, void* node, void* file_cookie, void* buffer, off_t pos, size_t size );
     int ( *write )( void* fs_cookie, void* node, void* file_cookie, const void* buffer, off_t pos, size_t size );
     int ( *read_directory )( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
+    int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_len, int permissions );
 } filesystem_calls_t;
+
+typedef struct filesystem_descriptor {
+    hashitem_t hash;
+    char* name;
+    filesystem_calls_t* calls;
+} filesystem_descriptor_t;
+
+int register_filesystem( const char* name, filesystem_calls_t* calls );
+filesystem_descriptor_t* get_filesystem( const char* name );
+
+int init_filesystems( void );
 
 #endif // _VFS_FILESYSTEM_H_

@@ -22,13 +22,14 @@
 #include <vfs/vfs.h>
 #include <vfs/rootfs.h>
 #include <vfs/inode.h>
+#include <vfs/devfs.h>
 #include <lib/string.h>
 
 io_context_t kernel_io_context;
+mount_point_t* mount_points;
 
 mount_point_t* create_mount_point(
     filesystem_calls_t* fs_calls,
-    void* fs_data,
     int inode_cache_size,
     int free_inodes,
     int max_free_inodes
@@ -56,76 +57,18 @@ mount_point_t* create_mount_point(
     /* Initialize other members */
 
     mount_point->fs_calls = fs_calls;
-    mount_point->fs_data = fs_data;
 
     return mount_point;
 }
 
-static int lookup_parent_inode( io_context_t* io_context, const char* path, char** name, int* length, inode_t** _parent ) {
-    int error;
-    char* sep;
-    inode_t* parent;
+void delete_mount_point( mount_point_t* mount_point ) {
+    destroy_inode_cache( &mount_point->inode_cache );
+    kfree( mount_point );
+}
 
-    LOCK( io_context->lock );
-
-    if ( path[ 0 ] == '/' ) {
-        parent = io_context->root_directory;
-        path++;
-    } else {
-        parent = io_context->current_directory;
-    }
-
-    if ( parent == NULL ) {
-        UNLOCK( io_context->lock );
-
-        return -EINVAL;
-    }
-
-    atomic_inc( &parent->ref_count );
-
-    UNLOCK( io_context->lock );
-
-    while ( true ) {
-        int length;
-        ino_t inode_number;
-        inode_t* inode;
-
-        sep = strchr( path, '/' );
-
-        if ( sep == NULL ) {
-            break;
-        }
-
-        length = sep - path;
-
-        error = parent->mount_point->fs_calls->lookup_inode(
-            parent->mount_point->fs_data,
-            parent->fs_node,
-            path,
-            length,
-            &inode_number
-        );
-
-        if ( error < 0 ) {    
-            put_inode( parent );
-            return error;
-        }
-
-        inode = get_inode( parent->mount_point, inode_number );
-
-        put_inode( parent );
-
-        if ( inode == NULL ) {
-            return -1;
-        }
-
-        parent = inode;
-        path = sep + 1;
-    }
-
-    *name = ( char* )path;
-    *length = strlen( path );
-    *_parent = parent;
+int insert_mount_point( mount_point_t* mount_point ) {
+    mount_point->next = mount_points;
+    mount_points = mount_point;
 
     return 0;
 }
@@ -204,6 +147,18 @@ static int do_open( bool kernel, const char* path, int flags ) {
             return error;
         }
 
+        /* Follow the mount point */
+
+        if ( file->inode->mount != NULL ) {
+            inode_t* tmp;
+
+            tmp = file->inode;
+            file->inode = tmp->mount;
+
+            atomic_inc( &file->inode->ref_count );
+            put_inode( tmp );
+        }
+
         error = file->inode->mount_point->fs_calls->open(
             file->inode->mount_point->fs_data,
             file->inode->fs_node,
@@ -266,8 +221,126 @@ int getdents( int fd, dirent_t* entry ) {
     return do_getdents( true, fd, entry );
 }
 
+static int do_mkdir( bool kernel, const char* path, int permissions ) {
+    int error;
+    char* name;
+    int length;
+    inode_t* parent;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_parent_inode( io_context, path, &name, &length, &parent );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( parent->mount_point->fs_calls->mkdir != NULL ) {
+        error = parent->mount_point->fs_calls->mkdir(
+            parent->mount_point->fs_data,
+            parent->fs_node,
+            name,
+            length,
+            permissions
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    return error;
+}
+
+int mkdir( const char* path, int permissions ) {
+    return do_mkdir( true, path, permissions );
+}
+
+int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {
+    int error;
+    inode_t* dir_inode;
+    io_context_t* io_context;
+    filesystem_descriptor_t* fs_desc;
+    mount_point_t* mount_point;
+    ino_t root_inode_number;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, dir, &dir_inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( dir_inode->mount != NULL ) {
+        put_inode( dir_inode );
+        return -EBUSY;
+    }
+
+    fs_desc = get_filesystem( filesystem );
+
+    if ( fs_desc == NULL ) {
+        put_inode( dir_inode );
+        return -EINVAL;
+    }
+
+    mount_point = create_mount_point(
+        fs_desc->calls,
+        256,
+        16,
+        32
+    );
+
+    if ( mount_point == NULL ) {
+        put_inode( dir_inode );
+        /* TODO: put filesystem? */
+        return -ENOMEM;
+    }
+
+    error = fs_desc->calls->mount(
+        device,
+        0,
+        &mount_point->fs_data,
+        &root_inode_number
+    );
+
+    if ( error < 0 ) {
+        put_inode( dir_inode );
+        /* TODO: put filesystem? */
+        /* TODO: free mount point */
+        return error;
+    }
+
+    dir_inode->mount = get_inode( mount_point, root_inode_number );
+
+    if ( dir_inode->mount == NULL ) {
+        put_inode( dir_inode );
+        /* TODO: cleanup! :D */
+        return -ENOMEM;
+    }
+
+    put_inode( dir_inode );
+
+    error = insert_mount_point( mount_point );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
 int init_vfs( void ) {
     int error;
+
+    mount_points = NULL;
 
     /* Initialize the kernel I/O context */
 
@@ -277,12 +350,43 @@ int init_vfs( void ) {
         return error;
     }
 
+    /* Initialize filesystem manager */
+
+    error = init_filesystems();
+
+    if ( error < 0 ) {
+        /* TODO: cleanup */
+        return error;
+    }
+
     /* Initialize the root filesystem */
 
     error = init_root_filesystem();
 
     if ( error < 0 ) {
         /* TODO: free io context stuffs */
+        return error;
+    }
+
+    /* Initialize and mount the device filesystem */
+
+    error = init_devfs();
+
+    if ( error < 0 ) {
+        /* TODO: cleanup */
+        return error;
+    }
+
+    error = mkdir( "/device", 0 );
+
+    if ( error < 0 ) {
+        /* TODO: cleanup */
+        return error;
+    }
+
+    error = do_mount( true, "", "/device", "devfs" );
+
+    if ( error < 0 ) {
         return error;
     }
 

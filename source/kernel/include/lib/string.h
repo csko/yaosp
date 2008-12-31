@@ -35,6 +35,7 @@ char* strchr( const char* s, int c );
 char* strrchr( const char* s, int c );
 char* strncpy( char* d, const char* s, size_t c );
 char* strdup( const char* s );
+char* strndup( const char* s, size_t length );
 
 int snprintf( char* str, size_t size, const char* format, ... );
 

@@ -45,6 +45,7 @@ int init_hashtable(
     hash_function_t* hash_func,
     compare_function_t* compare_func
 );
+void destroy_hashtable( hashtable_t* table );
 
 int hashtable_add( hashtable_t* table, hashitem_t* item );
 hashitem_t* hashtable_get( hashtable_t* table, const void* key );

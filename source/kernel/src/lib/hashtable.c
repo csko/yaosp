@@ -44,6 +44,11 @@ int init_hashtable(
     return 0;
 }
 
+void destroy_hashtable( hashtable_t* table ) {
+    kfree( table->items );
+    table->items = NULL;
+}
+
 int hashtable_add( hashtable_t* table, hashitem_t* item ) {
     uint32_t hash;
     const void* key;

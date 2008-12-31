@@ -28,7 +28,7 @@
 static ino_t rootfs_inode_counter = 0;
 static hashtable_t rootfs_node_table;
 
-static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, char* name, bool is_directory ) {
+static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* name, int length, bool is_directory ) {
     int error;
     rootfs_node_t* node;
 
@@ -42,7 +42,11 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, char* name, boo
 
     /* Initialize the node */
 
-    node->name = strdup( name );
+    if ( length == -1 ) {
+        node->name = strdup( name );
+    } else {
+        node->name = strndup( name, length );
+    }
 
     if ( node->name == NULL ) {
         kfree( node );
@@ -53,6 +57,11 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, char* name, boo
     node->parent = parent;
     node->next_sibling = NULL;
     node->first_child = NULL;
+
+    if ( parent != NULL ) {
+        node->next_sibling = parent->first_child;
+        parent->first_child = node;
+    }
 
     /* Insert to the node table */
 
@@ -193,6 +202,42 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
     return 0;
 }
 
+static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_len, int permissions ) {
+    int error;
+    ino_t dummy;
+    rootfs_node_t* node;
+    rootfs_node_t* new_node;
+
+    /* Check if this name already exists */
+
+    error = rootfs_lookup_inode( fs_cookie, _node, name, name_len, &dummy );
+
+    if ( error == 0 ) {
+        return -EEXIST;
+    }
+
+    node = ( rootfs_node_t* )_node;
+
+    if ( !node->is_directory ) {
+        return -EINVAL;
+    }
+
+    /* Create the new node */
+
+    new_node = rootfs_create_node(
+        node,
+        name,
+        name_len,
+        true
+    );
+
+    if ( new_node == NULL ) {
+        return -ENOMEM;
+    }
+
+    return 0;
+}
+
 static filesystem_calls_t rootfs_calls = {
     .probe = NULL,
     .mount = NULL,
@@ -205,7 +250,8 @@ static filesystem_calls_t rootfs_calls = {
     .free_cookie = rootfs_free_cookie,
     .read = NULL,
     .write = NULL,
-    .read_directory = rootfs_read_directory
+    .read_directory = rootfs_read_directory,
+    .mkdir = rootfs_mkdir
 };
 
 static void* rootfs_node_key( hashitem_t* item ) {
@@ -234,7 +280,6 @@ int init_root_filesystem( void ) {
     int error;
     rootfs_node_t* root_node;
     mount_point_t* mount_point;
-    rootfs_mount_point_t* root_mount_point;
 
     /* Initialize the rootfs node hashtable */
 
@@ -252,38 +297,37 @@ int init_root_filesystem( void ) {
 
     /* Create the root node */
 
-    root_node = rootfs_create_node( NULL, "", true );
+    root_node = rootfs_create_node( NULL, "", -1, true );
 
     if ( root_node == NULL ) {
-        /* TODO: destroy the hashtable */
+        destroy_hashtable( &rootfs_node_table );
         return -ENOMEM;
     }
 
     /* Create the root mount point */
 
-    root_mount_point = ( rootfs_mount_point_t* )kmalloc( sizeof( rootfs_mount_point_t ) );
-
-    if ( root_mount_point == NULL ) {
-        /* TODO: destroy the hashtable */
-        rootfs_delete_node( root_node );
-        return -ENOMEM;
-    }
-
-    root_mount_point->root_node = root_node;
-
     mount_point = create_mount_point(
         &rootfs_calls,
-        ( void* )root_mount_point,
         32, /* initial inode cache size */
         4, /*  current free inodes */
         4 /* max free inodes */
     );
 
+    mount_point->fs_data = NULL;
+
     if ( mount_point == NULL ) {
-        /* TODO: destroy the hashtable */
+        destroy_hashtable( &rootfs_node_table );
         rootfs_delete_node( root_node );
-        kfree( root_mount_point );
         return -ENOMEM;
+    }
+
+    error = insert_mount_point( mount_point );
+
+    if ( error < 0 ) {
+        destroy_hashtable( &rootfs_node_table );
+        rootfs_delete_node( root_node );
+        delete_mount_point( mount_point );
+        return error;
     }
 
     /* Initialize kernel I/O context */
@@ -291,10 +335,9 @@ int init_root_filesystem( void ) {
     kernel_io_context.root_directory = get_inode( mount_point, root_node->inode_number );
 
     if ( kernel_io_context.root_directory == NULL ) {
-        /* TODO: destroy the hashtable */
+        /* TODO: remove&destroy mount point */
+        destroy_hashtable( &rootfs_node_table );
         rootfs_delete_node( root_node );
-        kfree( root_mount_point );
-        /* TODO: free the mount point */
         return -EINVAL;
     }
 

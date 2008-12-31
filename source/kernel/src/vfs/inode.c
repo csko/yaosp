@@ -72,6 +72,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
 
     inode->inode_number = inode_number;
     inode->mount_point = mount_point;
+    inode->mount = NULL;
 
     UNLOCK( cache->lock );
 
@@ -152,6 +153,131 @@ static bool inode_compare( const void* key1, const void* key2 ) {
     return ( *inode_num_1 == *inode_num_2 );
 }
 
+int lookup_parent_inode( io_context_t* io_context, const char* path, char** name, int* length, inode_t** _parent ) {
+    int error;
+    char* sep;
+    inode_t* parent;
+
+    LOCK( io_context->lock );
+
+    if ( path[ 0 ] == '/' ) {
+        parent = io_context->root_directory;
+        path++;
+    } else {
+        parent = io_context->current_directory;
+    }
+
+    if ( parent == NULL ) {
+        UNLOCK( io_context->lock );
+
+        return -EINVAL;
+    }
+
+    atomic_inc( &parent->ref_count );
+
+    UNLOCK( io_context->lock );
+
+    while ( true ) {
+        int length;
+        ino_t inode_number;
+        inode_t* inode;
+
+        sep = strchr( path, '/' );
+
+        if ( sep == NULL ) {
+            break;
+        }
+
+        length = sep - path;
+
+        error = parent->mount_point->fs_calls->lookup_inode(
+            parent->mount_point->fs_data,
+            parent->fs_node,
+            path,
+            length,
+            &inode_number
+        );
+
+        if ( error < 0 ) {    
+            put_inode( parent );
+            return error;
+        }
+
+        inode = get_inode( parent->mount_point, inode_number );
+
+        put_inode( parent );
+
+        if ( inode == NULL ) {
+            return -1;
+        }
+
+        /* Follow possible mount point */
+
+        if ( inode->mount == NULL ) {
+            parent = inode;
+        } else {
+            parent = inode->mount;
+
+            atomic_inc( &parent->ref_count );
+            put_inode( inode );
+        }
+
+        path = sep + 1;
+    }
+
+    *name = ( char* )path;
+    *length = strlen( path );
+    *_parent = parent;
+
+    return 0;
+}
+
+int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode ) {
+    int error;
+    char* name;
+    int length;
+    inode_t* inode;
+    ino_t inode_number;
+    inode_t* parent;
+
+    error = lookup_parent_inode( io_context, path, &name, &length, &parent );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = parent->mount_point->fs_calls->lookup_inode(
+        parent->mount_point->fs_data,
+        parent->fs_node,
+        name,
+        length,
+        &inode_number
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    inode = get_inode( parent->mount_point, inode_number );
+
+    put_inode( parent );
+
+    if ( inode == NULL ) {
+        return -ENOMEM;
+    }
+
+    if ( inode->mount == NULL ) {
+        *_inode = inode;
+    } else {
+        atomic_inc( &inode->mount->ref_count );
+        *_inode = inode->mount;
+
+        put_inode( inode );
+    }
+
+    return 0;
+}
+
 int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes ) {
     int i;
     int error;
@@ -204,4 +330,22 @@ int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, i
     }
 
     return 0;
+}
+
+void destroy_inode_cache( inode_cache_t* cache ) {
+    inode_t* inode;
+
+    /* TODO: destroy loaded inodes? */
+
+    destroy_hashtable( &cache->inode_table );
+    delete_semaphore( cache->lock );
+
+    inode = cache->free_inodes;
+
+    while ( cache->free_inodes != NULL ) {
+        inode = cache->free_inodes;
+        cache->free_inodes = inode->next_free;
+
+        kfree( inode );
+    }
 }

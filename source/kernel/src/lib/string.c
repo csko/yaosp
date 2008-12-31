@@ -186,18 +186,42 @@ char* strncpy( char* d, const char* s, size_t c ) {
 
 #ifndef ARCH_HAVE_STRDUP
 char* strdup( const char* s ) {
-    size_t len;
     char* s2;
+    size_t length;
 
-    len = strlen( s );
-    s2 = ( char* )kmalloc( len + 1 );
+    length = strlen( s );
+    s2 = ( char* )kmalloc( length + 1 );
 
     if ( s2 == NULL ) {
-        return s2;
+        return NULL;
     }
 
-    memcpy( s2, s, len + 1 );
+    memcpy( s2, s, length + 1 );
 
     return s2;
 }
 #endif // ARCH_HAVE_STRDUP
+
+#ifndef ARCH_HAVE_STRNDUP
+char* strndup( const char* s, size_t length ) {
+    char* s2;
+    size_t real_length;
+
+    real_length = strlen( s );
+
+    if ( real_length < length ) {
+        length = real_length;
+    }
+
+    s2 = ( char* )kmalloc( length + 1 );
+
+    if ( s2 == NULL ) {
+        return NULL;
+    }
+
+    memcpy( s2, s, length );
+    s2[ length ] = 0;
+
+    return s2;
+}
+#endif // ARCH_HAVE_STRNDUP

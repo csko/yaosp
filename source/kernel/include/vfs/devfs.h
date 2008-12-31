@@ -19,4 +19,35 @@
 #ifndef _VFS_DEVFS_H_
 #define _VFS_DEVFS_H_
 
+#include <vfs/inode.h>
+#include <lib/hashtable.h>
+
+typedef struct device_calls {
+    int ( *open )( void* node, uint32_t flags, void** cookie );
+    int ( *close )( void* node, void* cookie );
+    int ( *ioctl )( void* node, void* cookie, uint32_t command, void* args, bool from_kernel );
+    int ( *read )( void* node, void* cookie, void* buffer, off_t position, size_t size );
+    int ( *write )( void* node, void* cookie, const void* buffer, off_t position, size_t size );
+} device_calls_t;
+
+typedef struct devfs_node {
+    hashitem_t hash;
+
+    char* name;
+    bool is_directory;
+    ino_t inode_number;
+
+    device_calls_t* calls;
+
+    struct devfs_node* parent;
+    struct devfs_node* next_sibling;
+    struct devfs_node* first_child;
+} devfs_node_t;
+
+typedef struct devfs_dir_cookie {
+    int position;
+} devfs_dir_cookie_t;
+
+int init_devfs( void );
+
 #endif // _VFS_DEVFS_H_

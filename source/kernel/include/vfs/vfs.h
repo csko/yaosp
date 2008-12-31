@@ -34,21 +34,23 @@ typedef struct mount_point {
     inode_cache_t inode_cache;
     filesystem_calls_t* fs_calls;
     void* fs_data;
+    struct mount_point* next;
 } mount_point_t;
 
 extern io_context_t kernel_io_context;
 
 mount_point_t* create_mount_point(
     filesystem_calls_t* fs_calls,
-    void* fs_data,
     int inode_cache_size,
     int free_inodes,
     int max_free_inodes
 );
+void delete_mount_point( mount_point_t* mount_point );
+int insert_mount_point( mount_point_t* mount_point );
 
 int open( const char* path, int flags );
-
 int getdents( int fd, dirent_t* entry );
+int mkdir( const char* path, int permissions );
 
 int init_vfs( void );
 

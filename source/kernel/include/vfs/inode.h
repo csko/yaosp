@@ -28,12 +28,14 @@
 typedef int64_t ino_t;
 
 struct mount_point;
+struct io_context;
 
 typedef struct inode {
     hashitem_t hash;
 
     ino_t inode_number;
     atomic_t ref_count;
+    struct inode* mount;
     struct mount_point* mount_point;
     void* fs_node;
 
@@ -53,6 +55,10 @@ typedef struct inode_cache {
 inode_t* get_inode( struct mount_point* mount_point, ino_t inode_number );
 int put_inode( inode_t* inode );
 
+int lookup_parent_inode( struct io_context* io_context, const char* path, char** name, int* length, inode_t** _parent );
+int lookup_inode( struct io_context* io_context, const char* path, inode_t** _inode );
+
 int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes );
+void destroy_inode_cache( inode_cache_t* cache );
 
 #endif // _VFS_INODE_H_

@@ -33,10 +33,6 @@ typedef struct rootfs_node {
     struct rootfs_node* first_child;
 } rootfs_node_t;
 
-typedef struct rootfs_mount_point {
-    rootfs_node_t* root_node;
-} rootfs_mount_point_t;
-
 typedef struct rootfs_dir_cookie {
     int position;
 } rootfs_dir_cookie_t;

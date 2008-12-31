@@ -25,5 +25,7 @@
 #define ETIME  4
 #define ENOSYS 5
 #define ENOENT 6
+#define EEXIST 7
+#define EBUSY  8
 
 #endif // _ERRNO_H_

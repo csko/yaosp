@@ -71,6 +71,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/vfs/devfs.c</item>
         <item>src/vfs/inode.c</item>
         <item>src/vfs/io_context.c</item>
+        <item>src/vfs/filesystem.c</item>
         <item>src/lib/string.c</item>
         <item>src/lib/printf.c</item>
         <item>src/lib/hashtable.c</item>
