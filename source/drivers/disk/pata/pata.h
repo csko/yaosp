@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <pci.h>
+#include <semaphore.h>
 
 /* Maximum number of ports per controller */
 
@@ -52,7 +53,8 @@
 
 /* ATAPI commands */
 
-#define ATAPI_CMD_READ_10 0x28
+#define ATAPI_CMD_READ_CAPACITY 0x25
+#define ATAPI_CMD_READ_10       0x28
 
 /* Possible bits in the status register */
 
@@ -155,6 +157,10 @@ typedef struct pata_port {
     bool use_lba;
     bool use_lba48;
     uint64_t capacity;
+    uint32_t sector_size;
+
+    bool open;
+    semaphore_id lock;
 
     char model_name[ 41 ];
     pata_identify_info_t identify_info;
@@ -191,7 +197,7 @@ int pata_port_send_command( pata_port_t* port, uint8_t cmd, bool check_drdy, uin
 int pata_port_finish_command( pata_port_t* port, bool busy_wait, bool check_drdy, uint64_t timeout );
 int pata_port_ata_read( pata_port_t* port, void* buffer, uint64_t offset, size_t size );
 int pata_port_ata_write( pata_port_t* port, void* buffer, uint64_t offset, size_t size );
-int pata_port_atapi_read( pata_port_t* port, void* buffer, uint64_t offset, size_t size );
+int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read, void* buffer, size_t size );
 
 /* PIO functions */
 

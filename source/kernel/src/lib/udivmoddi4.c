@@ -185,12 +185,55 @@ UDWtype __udivmoddi4( UDWtype n, UDWtype d, UDWtype* rp ) {
     return ww.ll;
 }
 
+DWtype __moddi3( DWtype u, DWtype v ) {
+  Wtype c = 0;
+  DWunion uu = {.ll = u};
+  DWunion vv = {.ll = v};
+  DWtype w;
+
+  if ( uu.s.high < 0 )
+    c = ~c,
+    uu.ll = -uu.ll;
+
+  if ( vv.s.high < 0 )
+    vv.ll = -vv.ll;
+
+  ( void )__udivmoddi4( uu.ll, vv.ll, ( UDWtype* )&w );
+
+  if ( c )
+    w = -w;
+
+  return w;
+}
+
 UDWtype __umoddi3( UDWtype u, UDWtype v ) {
     UDWtype w;
 
     ( void )__udivmoddi4( u, v, &w );
 
     return w;
+}
+
+DWtype __divdi3( DWtype u, DWtype v ) {
+  Wtype c = 0;
+  DWunion uu = {.ll = u};
+  DWunion vv = {.ll = v};
+  DWtype w;
+
+  if (uu.s.high < 0)
+    c = ~c,
+    uu.ll = -uu.ll;
+
+  if (vv.s.high < 0)
+    c = ~c,
+    vv.ll = -vv.ll;
+
+  w = __udivmoddi4( uu.ll, vv.ll, ( UDWtype* )0 );
+
+  if (c)
+    w = -w;
+
+  return w;
 }
 
 UDWtype __udivdi3( UDWtype n, UDWtype d ) {

@@ -121,13 +121,11 @@ int pata_port_ata_write( pata_port_t* port, void* buffer, uint64_t offset, size_
     return -ENOSYS;
 }
 
-int pata_port_atapi_read( pata_port_t* port, void* buffer, uint64_t offset, size_t size ) {
+int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read, void* buffer, size_t size ) {
     int error;
     char* data;
     uint16_t count;
-    uint32_t blocks;
     uint8_t cmd_data[ 7 ];
-    uint8_t packet[ 12 ];
 
     if ( !port->is_atapi ) {
         kprintf( "PATA: ATAPI operation not allowed on non-ATAPI drive!\n" );
@@ -164,24 +162,6 @@ int pata_port_atapi_read( pata_port_t* port, void* buffer, uint64_t offset, size
 
     sleep_thread( 10 );
 
-    offset /= 2048;
-    blocks = size / 2048;
-
-    /* Build the ATAPI packet */
-
-    packet[ 0 ] = ATAPI_CMD_READ_10;
-    packet[ 1 ] = 0;
-    packet[ 2 ] = ( offset >> 24 ) & 0xFF;
-    packet[ 3 ] = ( offset >> 16 ) & 0xFF;
-    packet[ 4 ] = ( offset >> 8 ) & 0xFF;
-    packet[ 5 ] = offset & 0xFF;
-    packet[ 6 ] = ( blocks >> 16 ) & 0xFF;
-    packet[ 7 ] = ( blocks >> 8 ) & 0xFF;
-    packet[ 8 ] = blocks & 0xFF;
-    packet[ 9 ] = 0;
-    packet[ 10 ] = 0;
-    packet[ 11 ] = 0;
-
     /* Write the packet to the device */
 
     pata_port_write_pio( port, packet, 6 );
@@ -194,29 +174,34 @@ int pata_port_atapi_read( pata_port_t* port, void* buffer, uint64_t offset, size
         return error;
     }
 
-    data = ( char* )buffer;
+    if ( do_read ) {
+        data = ( char* )buffer;
 
-    while ( size > 0 ) {
-        /* Wait for DRQ */
+        while ( size > 0 ) {
+            /* Wait for DRQ */
 
-        error = pata_port_wait( port, PATA_STATUS_DRQ, 0, true, 1000000 );
+            error = pata_port_wait( port, PATA_STATUS_DRQ, 0, true, 1000000 );
 
-        if ( error < 0 ) {
-            return error;
+            if ( error < 0 ) {
+                return error;
+            }
+
+            /* Get how much data the device wants to transmit */
+
+            count =
+                ( inb( port->cmd_base + PATA_REG_LBA_HIGH ) << 8 ) |
+                inb( port->cmd_base + PATA_REG_LBA_MID );
+
+            /* Receive the data from the device */
+
+            pata_port_read_pio( port, data, count / 2 );
+
+            size -= count;
+            data += count;
         }
-
-        /* Get how much data the device wants to transmit */
-
-        count =
-            ( inb( port->cmd_base + PATA_REG_LBA_HIGH ) << 8 ) |
-            inb( port->cmd_base + PATA_REG_LBA_MID );
-
-        /* Receive the data from the device */
-
-        pata_port_read_pio( port, data, count / 2 );
-
-        size -= count;
-        data += count;
+    } else {
+        kprintf( "PATA: ATAPI write not supported!\n" );
+        return -EINVAL;
     }
 
     /* Wait for DRQ to clear */

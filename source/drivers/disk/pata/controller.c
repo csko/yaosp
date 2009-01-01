@@ -334,12 +334,26 @@ int pata_initialize_controller( pata_controller_t* controller ) {
     /* Display port informations and create the device nodes */
 
     for ( chan = 0; chan < controller->channels; chan++ ) {
+        int used;
+        semaphore_id lock;
+
+        used = 0;
+
+        lock = create_semaphore( "PATA port lock", SEMAPHORE_BINARY, 0, 1 );
+
+        if ( lock < 0 ) {
+            return lock;
+        }
+
         for ( port_num = 0; port_num < controller->ports_per_channel; port_num++ ) {
             port = controller->ports[ chan * controller->ports_per_channel + port_num ];
 
             if ( port == NULL ) {
                 kprintf( "PATA: Device %d:%d not present\n", chan, port_num );
             } else {
+                port->lock = lock;
+                used++;
+
                 if ( port->is_atapi ) {
                     kprintf( "PATA: Device %d:%d is ATAPI\n", chan, port_num );
                 } else {
@@ -360,6 +374,10 @@ int pata_initialize_controller( pata_controller_t* controller ) {
                     return error;
                 }
             }
+        }
+
+        if ( used == 0 ) {
+            delete_semaphore( lock );
         }
     }
 

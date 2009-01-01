@@ -22,6 +22,7 @@
 #include <devices.h>
 #include <time.h>
 #include <thread.h>
+#include <semaphore.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <lib/string.h>
@@ -30,6 +31,8 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
+extern void __moddi3( void );
+extern void __divdi3( void );
 extern void __umoddi3( void );
 extern void __udivdi3( void );
 
@@ -67,6 +70,12 @@ static kernel_symbol_t symbols[] = {
     /* VFS calls */
     { "create_device_node", ( ptr_t )create_device_node },
 
+    /* Semaphore functions */
+    { "create_semaphore", ( ptr_t )create_semaphore },
+    { "delete_semaphore", ( ptr_t )delete_semaphore },
+    { "lock_semaphore", ( ptr_t )lock_semaphore },
+    { "unlock_semaphore", ( ptr_t )unlock_semaphore },
+
     /* Time functions */
     { "get_system_time", ( ptr_t )get_system_time },
 
@@ -82,6 +91,8 @@ static kernel_symbol_t symbols[] = {
     { "snprintf", ( ptr_t )snprintf },
 
     /* Misc functions */
+    { "__moddi3", ( ptr_t )__moddi3 },
+    { "__divdi3", ( ptr_t )__divdi3 },
     { "__umoddi3", ( ptr_t )__umoddi3 },
     { "__udivdi3", ( ptr_t )__udivdi3 },
 

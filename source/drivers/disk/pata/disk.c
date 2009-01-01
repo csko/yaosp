@@ -36,6 +36,8 @@ int pata_configure_ata_port( pata_port_t* port ) {
         return -1;
     }
 
+    port->sector_size = 512;
+
     return 0;
 }
 

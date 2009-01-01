@@ -18,21 +18,125 @@
 
 #include <console.h>
 #include <errno.h>
+#include <semaphore.h>
+#include <bitops.h>
+#include <macros.h>
 #include <vfs/devfs.h>
 #include <lib/string.h>
 
 #include "pata.h"
 
+typedef struct cdrom_capacity {
+    uint32_t lba;
+    uint32_t block_length;
+} cdrom_capacity_t;
+
 int pata_configure_atapi_port( pata_port_t* port ) {
+    port->sector_size = 2048;
+
+    return 0;
+}
+
+static int pata_cdrom_get_capacity( pata_port_t* port, uint64_t* capacity ) {
+    int error;
+    uint8_t packet[ 12 ];
+    cdrom_capacity_t cdrom_capacity;
+
+    /* Build the ATAPI packet */
+
+    memset( packet, 0, sizeof( packet ) );
+    packet[ 0 ] = ATAPI_CMD_READ_CAPACITY;
+
+    /* Send the packet to the device */
+
+    error = pata_port_atapi_do_packet( port, packet, true, &cdrom_capacity, sizeof( cdrom_capacity ) );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    *capacity = ( 1 + bswap32( cdrom_capacity.lba ) ) * port->sector_size;
+
+    return 0;
+}
+
+static int pata_cdrom_do_read( pata_port_t* port, void* buffer, uint64_t offset, uint32_t size ) {
+    int error;
+    uint64_t block;
+    uint32_t block_count;
+    uint8_t packet[ 12 ];
+
+    block = offset / port->sector_size;
+    block_count = size / port->sector_size;
+
+    packet[ 0 ] = ATAPI_CMD_READ_10;
+    packet[ 1 ] = 0;
+    packet[ 2 ] = ( block >> 24 ) & 0xFF;
+    packet[ 3 ] = ( block >> 16 ) & 0xFF;
+    packet[ 4 ] = ( block >> 8 ) & 0xFF;
+    packet[ 5 ] = block & 0xFF;
+    packet[ 6 ] = ( block_count >> 16 ) & 0xFF;
+    packet[ 7 ] = ( block_count >> 8 ) & 0xFF;
+    packet[ 8 ] = block_count & 0xFF;
+    packet[ 9 ] = 0;
+    packet[ 10 ] = 0;
+    packet[ 11 ] = 0;
+
+    error = pata_port_atapi_do_packet( port, packet, true, buffer, size );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
     return 0;
 }
 
 static int pata_cdrom_open( void* node, uint32_t flags, void** cookie ) {
-    return -ENOSYS;
+    int error;
+    pata_port_t* port;
+
+    port = ( pata_port_t* )node;
+
+    LOCK( port->lock );
+
+    if ( port->open ) {
+        UNLOCK( port->lock );
+
+        return -EBUSY;
+    }
+
+    port->open = true;
+
+    UNLOCK( port->lock );
+
+    error = pata_cdrom_get_capacity( port, &port->capacity );
+
+    if ( error < 0 ) {
+        LOCK( port->lock );
+
+        port->open = false;
+
+        UNLOCK( port->lock );
+
+        return error;
+    }
+
+    return 0;
 }
 
 static int pata_cdrom_close( void* node, void* cookie ) {
-    return -ENOSYS;
+    pata_port_t* port;
+
+    port = ( pata_port_t* )node;
+
+    LOCK( port->lock );
+
+    port->open = false;
+    port->capacity = 0;
+
+    UNLOCK( port->lock );
+
+    return 0;
 }
 
 static int pata_cdrom_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
@@ -40,7 +144,44 @@ static int pata_cdrom_ioctl( void* node, void* cookie, uint32_t command, void* a
 }
 
 static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t position, size_t size ) {
-    return -ENOSYS;
+    int error;
+    uint8_t* data;
+    pata_port_t* port;
+
+    port = ( pata_port_t* )node;
+
+    if ( ( position % port->sector_size ) != 0 ) {
+        return -EINVAL;
+    }
+
+    if ( ( size % port->sector_size ) != 0 ) {
+        return -EINVAL;
+    }
+
+    if ( ( position + size ) > port->capacity ) {
+        return -EINVAL;
+    }
+
+    data = ( uint8_t* )buffer;
+
+    LOCK( port->lock );
+
+    while ( size > 0 ) {
+        size_t to_read = MIN( size, 65536 );
+
+        error = pata_cdrom_do_read( port, data, position, to_read );
+
+        if ( error < 0 ) {
+            return error;
+        }
+
+        data += to_read;
+        position += to_read;
+    }
+
+    UNLOCK( port->lock );
+
+    return 0;
 }
 
 static device_calls_t pata_cdrom_calls = {
