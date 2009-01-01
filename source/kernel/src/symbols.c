@@ -25,6 +25,8 @@
 #include <semaphore.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
+#include <vfs/filesystem.h>
+#include <vfs/vfs.h>
 #include <lib/string.h>
 
 #include <arch/atomic.h>
@@ -69,6 +71,9 @@ static kernel_symbol_t symbols[] = {
 
     /* VFS calls */
     { "create_device_node", ( ptr_t )create_device_node },
+    { "register_filesystem", ( ptr_t )register_filesystem },
+    { "open", ( ptr_t )open },
+    { "pread", ( ptr_t )pread },
 
     /* Semaphore functions */
     { "create_semaphore", ( ptr_t )create_semaphore },
@@ -85,8 +90,11 @@ static kernel_symbol_t symbols[] = {
     /* Memory & string functions */
     { "memcpy", ( ptr_t )memcpy },
     { "memmove", ( ptr_t )memmove },
+    { "memcmp", ( ptr_t )memcmp },
     { "memset", ( ptr_t )memset },
     { "strcmp", ( ptr_t )strcmp },
+    { "strncmp", ( ptr_t )strncmp },
+    { "strchr", ( ptr_t )strchr },
     { "strlen", ( ptr_t )strlen },
     { "snprintf", ( ptr_t )snprintf },
 

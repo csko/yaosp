@@ -374,6 +374,10 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
     return 0;
 }
 
+int mount( const char* device, const char* dir, const char* filesystem ) {
+    return do_mount( true, device, dir, filesystem );
+}
+
 int init_vfs( void ) {
     int error;
 

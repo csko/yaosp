@@ -26,7 +26,7 @@
 #define NAME_MAX 255
 
 typedef struct dirent {
-    ino_t inode;
+    ino_t inode_number;
     char name[ NAME_MAX + 1 ];
 } dirent_t;
 
@@ -52,6 +52,7 @@ int open( const char* path, int flags );
 int pread( int fd, void* buffer, size_t count, off_t offset );
 int getdents( int fd, dirent_t* entry );
 int mkdir( const char* path, int permissions );
+int mount( const char* device, const char* dir, const char* filesystem );
 
 int init_vfs( void );
 

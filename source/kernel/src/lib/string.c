@@ -88,6 +88,24 @@ void* memmove( void* dest, const void* src, size_t n ) {
 }
 #endif // ARCH_HAVE_MEMMOVE
 
+#ifndef ARCH_HAVE_MEMCMP
+int memcmp( const void* s1, const void* s2, size_t n ) {
+    int res = 0;
+    const unsigned char* tmp1 = ( const unsigned char* )s1;
+    const unsigned char* tmp2 = ( const unsigned char* )s2;
+
+    for ( ; n > 0; n-- ) {
+        res = *tmp1 - *tmp2;
+
+        if ( res != 0 ) {
+            break;
+        }
+    }
+
+    return res;
+}
+#endif // ARCH_HAVE_MEMCMP
+
 #ifndef ARCH_HAVE_MEMCPY
 void* memcpy( void* d, const void* s, size_t n ) {
     char* dest;
