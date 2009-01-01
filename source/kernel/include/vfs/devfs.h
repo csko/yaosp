@@ -38,6 +38,7 @@ typedef struct devfs_node {
     ino_t inode_number;
 
     device_calls_t* calls;
+    void* cookie;
 
     struct devfs_node* parent;
     struct devfs_node* next_sibling;

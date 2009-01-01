@@ -152,16 +152,42 @@ static int devfs_open_directory( devfs_node_t* node, int mode, void** cookie ) {
 }
 
 static int devfs_open( void* fs_cookie, void* _node, int mode, void** file_cookie ) {
+    int error;
     devfs_node_t* node;
 
     node = ( devfs_node_t* )_node;
 
     if ( node->is_directory ) {
-        return devfs_open_directory( node, mode, file_cookie );
+        error = devfs_open_directory( node, mode, file_cookie );
+    } else {
+        error = node->calls->open( node->cookie, 0, file_cookie );
     }
 
-    return -ENOSYS;
+    return error;
+}
 
+static int devfs_read( void* fs_cookie, void* _node, void* file_cookie, void* buffer, off_t pos, size_t size ) {
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    if ( node->is_directory ) {
+        return -EISDIR;
+    }
+
+    return node->calls->read( node->cookie, file_cookie, buffer, pos, size );
+}
+
+static int devfs_write( void* fs_cookie, void* _node, void* file_cookie, const void* buffer, off_t pos, size_t size ) {
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    if ( node->is_directory ) {
+        return -EISDIR;
+    }
+
+    return node->calls->write( node->cookie, file_cookie, buffer, pos, size );
 }
 
 static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie, struct dirent* entry ) {
@@ -265,6 +291,7 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
     }
 
     node->calls = calls;
+    node->cookie = cookie;
 
     return 0;
 }
@@ -279,8 +306,8 @@ static filesystem_calls_t devfs_calls = {
     .open = devfs_open,
     .close = NULL,
     .free_cookie = NULL,
-    .read = NULL,
-    .write = NULL,
+    .read = devfs_read,
+    .write = devfs_write,
     .read_directory = devfs_read_directory,
     .mkdir = NULL
 };

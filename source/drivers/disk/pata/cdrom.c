@@ -146,6 +146,7 @@ static int pata_cdrom_ioctl( void* node, void* cookie, uint32_t command, void* a
 static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t position, size_t size ) {
     int error;
     uint8_t* data;
+    size_t saved_size;
     pata_port_t* port;
 
     port = ( pata_port_t* )node;
@@ -163,6 +164,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
     }
 
     data = ( uint8_t* )buffer;
+    saved_size = size;
 
     LOCK( port->lock );
 
@@ -182,7 +184,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
 
     UNLOCK( port->lock );
 
-    return 0;
+    return saved_size;
 }
 
 static device_calls_t pata_cdrom_calls = {

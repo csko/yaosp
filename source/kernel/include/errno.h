@@ -27,5 +27,6 @@
 #define ENOENT 6
 #define EEXIST 7
 #define EBUSY  8
+#define EISDIR 9
 
 #endif // _ERRNO_H_
