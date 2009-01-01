@@ -177,6 +177,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
 
         data += to_read;
         position += to_read;
+        size -= to_read;
     }
 
     UNLOCK( port->lock );
