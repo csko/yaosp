@@ -1,6 +1,6 @@
 /* Kernel symbol table
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,6 +23,7 @@
 #include <time.h>
 #include <thread.h>
 #include <mm/kmalloc.h>
+#include <vfs/devfs.h>
 #include <lib/string.h>
 
 #include <arch/atomic.h>
@@ -63,6 +64,9 @@ static kernel_symbol_t symbols[] = {
     { "unregister_bus_driver", ( ptr_t )unregister_bus_driver },
     { "get_bus_driver", ( ptr_t )get_bus_driver },
 
+    /* VFS calls */
+    { "create_device_node", ( ptr_t )create_device_node },
+
     /* Time functions */
     { "get_system_time", ( ptr_t )get_system_time },
 
@@ -75,6 +79,7 @@ static kernel_symbol_t symbols[] = {
     { "memset", ( ptr_t )memset },
     { "strcmp", ( ptr_t )strcmp },
     { "strlen", ( ptr_t )strlen },
+    { "snprintf", ( ptr_t )snprintf },
 
     /* Misc functions */
     { "__umoddi3", ( ptr_t )__umoddi3 },

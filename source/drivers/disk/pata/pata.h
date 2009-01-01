@@ -144,7 +144,10 @@ typedef struct pata_identify_info {
 
 typedef struct pata_port {
     bool present;
+
+    int channel;
     bool is_slave;
+
     bool is_atapi;
     uint16_t cmd_base;
     uint16_t ctrl_base;
@@ -194,5 +197,10 @@ int pata_port_atapi_read( pata_port_t* port, void* buffer, uint64_t offset, size
 
 void pata_port_read_pio( pata_port_t* port, void* buffer, size_t word_count );
 void pata_port_write_pio( pata_port_t* port, void* buffer, size_t word_count );
+
+/* Disk and CDROM functions */
+
+int pata_create_ata_device_node( pata_port_t* port );
+int pata_create_atapi_device_node( pata_port_t* port );
 
 #endif // _PATA_H_

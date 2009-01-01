@@ -26,6 +26,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>port.c</item>
         <item>command.c</item>
         <item>pio.c</item>
+        <item>disk.c</item>
+        <item>cdrom.c</item>
     </array>
 
     <target name="clean">

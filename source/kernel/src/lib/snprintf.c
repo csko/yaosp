@@ -1,6 +1,6 @@
 /* snprintf implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <types.h>
 #include <lib/printf.h>
 
 typedef struct snprintf_buffer {
@@ -45,7 +46,7 @@ int snprintf( char* str, size_t size, const char* format, ... ) {
     buffer.position = 0;
 
     va_start( args, format );
-    do_printf( snprintf_helper, ( void* )buffer, format, args );
+    do_printf( snprintf_helper, ( void* )&buffer, format, args );
     va_end( args );
 
     str[ buffer.position ] = 0;

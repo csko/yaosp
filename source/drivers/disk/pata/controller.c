@@ -1,6 +1,6 @@
 /* Parallel AT Attachment driver
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -258,6 +258,7 @@ int pata_initialize_controller( pata_controller_t* controller ) {
 
             port->present = true;
 
+            port->channel = chan;
             port->is_slave = ( ( port_num % 2 ) != 0 );
 
             port->cmd_base = command_ports[ chan * controller->ports_per_channel + port_num ];
@@ -330,7 +331,7 @@ int pata_initialize_controller( pata_controller_t* controller ) {
         }
     }
 
-    /* Display port informations */
+    /* Display port informations and create the device nodes */
 
     for ( chan = 0; chan < controller->channels; chan++ ) {
         for ( port_num = 0; port_num < controller->ports_per_channel; port_num++ ) {
@@ -347,8 +348,16 @@ int pata_initialize_controller( pata_controller_t* controller ) {
 
                 kprintf( "PATA: Model: %s\n", port->model_name );
 
-                if ( !port->is_atapi ) {
+                if ( port->is_atapi ) {
+                    error = pata_create_atapi_device_node( port );
+                } else {
                     kprintf( "PATA: Capacity: %d Mb\n", ( uint32_t )( port->capacity / 1000000 ) );
+
+                    error = pata_create_ata_device_node( port );
+                }
+
+                if ( error < 0 ) {
+                    return error;
                 }
             }
         }

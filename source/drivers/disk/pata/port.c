@@ -151,23 +151,3 @@ int pata_port_identify( pata_port_t* port ) {
 
     return 0;
 }
-
-int pata_configure_ata_port( pata_port_t* port ) {
-    port->use_lba = ( port->identify_info.lba_sectors != 0 );
-    port->use_lba48 = ( ( port->identify_info.command_set_2 & 0x400 ) != 0 );
-
-    if ( port->use_lba48 ) {
-        port->capacity = ( uint64_t )port->identify_info.lba_capacity_48 * 512;
-    } else if ( port->use_lba ) {
-        port->capacity = ( uint64_t )port->identify_info.lba_sectors * 512;
-    } else {
-        /* TODO: CHS support */
-        return -1;
-    }
-
-    return 0;
-}
-
-int pata_configure_atapi_port( pata_port_t* port ) {
-    return 0;
-}
