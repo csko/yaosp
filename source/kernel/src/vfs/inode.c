@@ -28,6 +28,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
     int error;
     inode_t* inode;
     inode_cache_t* cache;
+    void* tmp_fs_node;
 
     cache = &mount_point->inode_cache;
 
@@ -97,11 +98,9 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
             cache->free_inode_count++;
         }
 
-        if ( inode != NULL ) {
-            kfree( inode );
-        }
-
         UNLOCK( cache->lock );
+
+        kfree( inode );
 
         return NULL;
     }
@@ -119,14 +118,17 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
         if ( cache->free_inode_count < cache->max_free_inode_count ) {
             inode->next_free = cache->free_inodes;
             cache->free_inodes = inode;
+            inode = NULL;
             cache->free_inode_count++;
         }
 
-        if ( inode != NULL ) {
-            kfree( inode );
-        }
+        tmp_fs_node = inode->fs_node;
 
         UNLOCK( cache->lock );
+
+        mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
+
+        kfree( inode );
 
         return NULL;
     }
