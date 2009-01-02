@@ -1,6 +1,7 @@
 /* Virtual file system
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -144,7 +145,7 @@ static int do_open( bool kernel, const char* path, int flags ) {
 
         if ( file->inode == NULL ) {
             delete_file( file );
-            return error;
+            return -ENOINO;
         }
 
         /* Follow the mount point */

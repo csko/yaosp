@@ -1,6 +1,7 @@
 /* Error number definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -28,5 +29,6 @@
 #define EEXIST 7
 #define EBUSY  8
 #define EISDIR 9
+#define ENOINO 10
 
 #endif // _ERRNO_H_

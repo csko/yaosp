@@ -1,6 +1,7 @@
 /* Inode related functions
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -36,7 +37,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
 
     inode = ( inode_t* )hashtable_get( &cache->inode_table, ( const void* )&inode_number );
 
-    /* If it is found increment the reference counter and
+    /* If it is found, increment the reference counter and
        return it to the caller */
 
     if ( inode != NULL ) {
@@ -96,11 +97,11 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
             cache->free_inode_count++;
         }
 
-        UNLOCK( cache->lock );
-
         if ( inode != NULL ) {
             kfree( inode );
         }
+
+        UNLOCK( cache->lock );
 
         return NULL;
     }
@@ -114,7 +115,16 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
     error = hashtable_add( &mount_point->inode_cache.inode_table, ( void* )inode );
 
     if ( error < 0 ) {
-        /* TODO: cleanup! */
+
+        if ( cache->free_inode_count < cache->max_free_inode_count ) {
+            inode->next_free = cache->free_inodes;
+            cache->free_inodes = inode;
+            cache->free_inode_count++;
+        }
+
+        if ( inode != NULL ) {
+            kfree( inode );
+        }
 
         UNLOCK( cache->lock );
 
