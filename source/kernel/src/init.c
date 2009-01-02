@@ -21,6 +21,7 @@
 #include <bootmodule.h>
 #include <module.h>
 #include <vfs/vfs.h>
+#include <lib/string.h>
 
 static void load_bootmodules( void ) {
     int i;
@@ -56,6 +57,50 @@ static void load_bootmodules( void ) {
     }
 }
 
+static void mount_root_filesystem( void ) {
+    int dir;
+    int error;
+    dirent_t entry;
+    char path[ 255 ];
+
+    error = mkdir( "/yaosp", 0 );
+
+    if ( error < 0 ) {
+        panic( "Failed to mount root filesystem: failed to create mount point!\n" );
+    }
+
+    dir = open( "/device/disk", 0 );
+
+    if ( dir < 0 ) {
+        panic( "Failed to mount root filesystem: no disk(s) available!\n" );
+    }
+
+    error = -1;
+
+    while ( getdents( dir, &entry ) == 1 ) {
+        if ( ( strcmp( entry.name, "." ) == 0 ) ||
+             ( strcmp( entry.name, ".." ) == 0 ) ) {
+            continue;
+        }
+
+        snprintf( path, sizeof( path ), "/device/disk/%s", entry.name );
+
+        error = mount( path, "/yaosp", "iso9660" );
+
+        if ( error >= 0 ) {
+            break;
+        }
+    }
+
+    /* TODO: close the directory */
+
+    if ( error < 0 ) {
+        panic( "Failed to mount root filesystem!\n" );
+    }
+
+    kprintf( "Root filesystem mounted!\n" );
+}
+
 int init_thread( void* arg ) {
     kprintf( "Init thread started!\n" );
 
@@ -64,6 +109,7 @@ int init_thread( void* arg ) {
     kprintf( "done\n" );
 
     load_bootmodules();
+    mount_root_filesystem();
 
     return 0;
 }

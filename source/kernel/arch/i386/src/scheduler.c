@@ -24,8 +24,6 @@
 #include <arch/cpu.h>
 #include <arch/mm/paging.h>
 
-extern thread_t* current;
-
 void switch_to_thread( register_t esp );
 
 int schedule( registers_t* regs ) {
