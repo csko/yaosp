@@ -35,7 +35,7 @@
 static int thread_id_counter = 0;
 static hashtable_t thread_table;
 
-static thread_t* allocate_thread( const char* name, process_t* process ) {
+thread_t* allocate_thread( const char* name, process_t* process ) {
     int error;
     thread_t* thread;
 
@@ -78,6 +78,27 @@ static thread_t* allocate_thread( const char* name, process_t* process ) {
     reset_thread_quantum( thread );
 
     return thread;
+}
+
+void destroy_thread( thread_t* thread ) {
+    arch_destroy_thread( thread );
+    free_pages( thread->kernel_stack, KERNEL_STACK_PAGES );
+    kfree( thread->name );
+    kfree( thread );
+}
+
+int insert_thread( thread_t* thread ) {
+    do {
+        thread->id = thread_id_counter++;
+
+        if ( thread_id_counter < 0 ) {
+            thread_id_counter = 0;
+        }
+    } while ( hashtable_get( &thread_table, ( const void* )thread->id ) != NULL );
+
+    hashtable_add( &thread_table, ( hashitem_t* )thread );
+
+    return 0;
 }
 
 void thread_exit( int exit_code ) {
@@ -129,8 +150,7 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
     error = arch_create_kernel_thread( thread, ( void* )entry, arg );
 
     if ( error < 0 ) {
-        /* TODO: free the allocated thread structure */
-
+        destroy_thread( thread );
         return error;
     }
 
@@ -138,19 +158,15 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
 
     spinlock_disable( &scheduler_lock );
 
-    do {
-        thread->id = thread_id_counter++;
+    error = insert_thread( thread );
 
-        if ( thread_id_counter < 0 ) {
-            thread_id_counter = 0;
-        }
-    } while ( hashtable_get( &thread_table, ( const void* )thread->id ) != NULL );
-
-    hashtable_add( &thread_table, ( hashitem_t* )thread );
+    if ( error >= 0 ) {
+        error = thread->id;
+    }
 
     spinunlock_enable( &scheduler_lock );
 
-    return thread->id;
+    return error;
 }
 
 int sleep_thread( uint64_t microsecs ) {

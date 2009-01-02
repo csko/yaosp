@@ -26,15 +26,6 @@
 
 typedef int region_id;
 
-typedef struct region {
-    hashitem_t hash;
-
-    region_id id;
-    const char* name;
-    ptr_t start;
-    ptr_t size;
-} region_t;
-
 typedef enum alloc_type {
     ALLOC_NONE,
     ALLOC_PAGES,
@@ -44,8 +35,19 @@ typedef enum alloc_type {
 typedef enum region_flags {
     REGION_READ = ( 1 << 0 ),
     REGION_WRITE = ( 1 << 1 ),
-    REGION_KERNEL = ( 1 << 2 )
+    REGION_KERNEL = ( 1 << 2 ),
+    REGION_REMAPPED = ( 1 << 3 )
 } region_flags_t;
+
+typedef struct region {
+    hashitem_t hash;
+
+    region_id id;
+    const char* name;
+    region_flags_t flags;
+    ptr_t start;
+    ptr_t size;
+} region_t;
 
 struct memory_context;
 

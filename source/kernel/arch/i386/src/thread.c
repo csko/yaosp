@@ -43,6 +43,10 @@ int arch_allocate_thread( thread_t* thread ) {
     return 0;
 }
 
+void arch_destroy_thread( thread_t* thread ) {
+    kfree( thread->arch_data );
+}
+
 int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg ) {
     register_t* stack;
     registers_t* regs;

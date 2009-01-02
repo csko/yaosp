@@ -1,6 +1,6 @@
-/* Architecture specific thread functions
+/* System calls
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,18 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_THREAD_H_
-#define _ARCH_THREAD_H_
+#ifndef _SYSCALL_H_
+#define _SYSCALL_H_
 
-#include <thread.h>
+#include <types.h>
 
-typedef struct i386_thread {
-    register_t esp;
-} i386_thread_t;
+#define SYSCALL_SAVE_STACK 0x01
 
-int arch_allocate_thread( thread_t* thread );
-void arch_destroy_thread( thread_t* thread );
+typedef struct system_call_entry {
+    char* name;
+    void* function;
+    uint32_t flags;
+} system_call_entry_t;
 
-int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg );
+typedef int system_call_t( uint32_t param1, uint32_t param2, uint32_t param3, uint32_t param4, uint32_t param5 );
 
-#endif // _ARCH_THREAD_H_
+int handle_system_call( uint32_t number, uint32_t* parameters, void* stack );
+
+#endif // _SYSCALL_H_

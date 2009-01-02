@@ -1,6 +1,6 @@
-/* Architecture specific thread functions
+/* Fork implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,18 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_THREAD_H_
-#define _ARCH_THREAD_H_
+#ifndef _FORK_H_
+#define _FORK_H_
 
-#include <thread.h>
+int sys_fork( void );
 
-typedef struct i386_thread {
-    register_t esp;
-} i386_thread_t;
-
-int arch_allocate_thread( thread_t* thread );
-void arch_destroy_thread( thread_t* thread );
-
-int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg );
-
-#endif // _ARCH_THREAD_H_
+#endif // _FORK_H_

@@ -1,6 +1,6 @@
 /* Memory context handling code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,11 +18,13 @@
 
 #include <errno.h>
 #include <macros.h>
+#include <kernel.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
 #include <arch/mm/config.h>
+#include <arch/mm/context.h>
 
 #define REGION_STEP_SIZE 32
 
@@ -162,4 +164,71 @@ bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t si
     *address = start;
 
     return true;
+}
+
+memory_context_t* memory_context_clone( memory_context_t* old_context ) {
+    int i;
+    int error;
+    memory_context_t* new_context;
+
+    /* Allocate a new memory context */
+
+    new_context = ( memory_context_t* )kmalloc( sizeof( memory_context_t ) );
+
+    if ( new_context == NULL ) {
+        return NULL;
+    }
+
+    memset( new_context, 0, sizeof( memory_context_t ) );
+
+    /* Initialize the architecture dependent part of the memory context */
+
+    error = arch_init_memory_context( new_context );
+
+    if ( error < 0 ) {
+        kfree( new_context );
+        return NULL;
+    }
+
+    for ( i = 0; i < old_context->region_count; i++ ) {
+        region_t* region;
+        region_t* new_region;
+
+        region = old_context->regions[ i ];
+
+        if ( region->flags & REGION_KERNEL ) {
+            new_region = ( region_t* )kmalloc( sizeof( region_t ) );
+
+            if ( new_region == NULL ) {
+                return NULL;
+            }
+
+            new_region->name = strdup( region->name );
+
+            if ( new_region->name == NULL ) {
+                kfree( new_region );
+                return NULL;
+            }
+
+            new_region->flags = region->flags;
+            new_region->start = region->start;
+            new_region->size = region->size;
+
+            error = arch_clone_memory_region( old_context, region, new_context, new_region );
+
+            if ( error < 0 ) {
+                return NULL;
+            }
+
+            error = memory_context_insert_region( new_context, new_region );
+
+            if ( error < 0 ) {
+                return NULL;
+            }
+        } else {
+            panic( "Tried to clone non-kernel memory region\n" );
+        }
+    }
+  
+    return new_context;
 }

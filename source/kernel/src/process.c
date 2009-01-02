@@ -28,7 +28,7 @@
 static int process_id_counter = 0;
 static hashtable_t process_table;
 
-static process_t* allocate_process( char* name ) {
+process_t* allocate_process( char* name ) {
     process_t* process;
 
     process = ( process_t* )kmalloc( sizeof( process_t ) );
@@ -48,6 +48,20 @@ static process_t* allocate_process( char* name ) {
     }
 
     return process;
+}
+
+int insert_process( process_t* process ) {
+    do {
+        process->id = process_id_counter++;
+
+        if ( process_id_counter < 0 ) {
+            process_id_counter = 0;
+        }
+    } while ( hashtable_get( &process_table, ( const void* )process->id ) != NULL );
+
+    hashtable_add( &process_table, ( hashitem_t* )process );
+
+    return 0;
 }
 
 process_t* get_process_by_id( process_id id ) {
@@ -96,12 +110,15 @@ int init_processes( void ) {
         return -ENOMEM;
     }
 
-    process->id = process_id_counter++;
     process->memory_context = &kernel_memory_context;
     process->semaphore_context = &kernel_semaphore_context;
     process->io_context = &kernel_io_context;
 
-    hashtable_add( &process_table, ( hashitem_t* )process );
+    error = insert_process( process );
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     return 0;
 }

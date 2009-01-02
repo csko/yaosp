@@ -22,14 +22,11 @@
 #include <types.h>
 
 #include <arch/mm/config.h>
+#include <arch/mm/context.h>
 
 #define PRESENT 0x1
 #define WRITE   0x2
 #define USER    0x4
-
-typedef struct i386_memory_context {
-    uint32_t* page_directory;
-} i386_memory_context_t;
 
 static inline uint32_t* page_directory_entry( i386_memory_context_t* context, ptr_t address ) {
   return &( context->page_directory[ address >> PGDIR_SHIFT ] );
@@ -38,6 +35,13 @@ static inline uint32_t* page_directory_entry( i386_memory_context_t* context, pt
 static inline uint32_t* page_table_entry( uint32_t table, ptr_t address ) {
   return &( ( ( uint32_t* )( table & PAGE_MASK ) )[ ( address / PAGE_SIZE ) & 1023 ] );
 }
+
+int clone_kernel_region(
+    i386_memory_context_t* old_arch_context,
+    region_t* old_region,
+    i386_memory_context_t* new_arch_context,
+    region_t* new_region
+);
 
 int init_paging( void );
 

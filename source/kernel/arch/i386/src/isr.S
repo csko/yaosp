@@ -101,3 +101,5 @@ ISR(44,irq_handler)
 ISR(45,irq_handler)
 ISR(46,irq_handler)
 ISR(47,irq_handler)
+
+ISR(128,system_call_entry)

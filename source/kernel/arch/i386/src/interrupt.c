@@ -62,6 +62,8 @@ extern void isr45( void );
 extern void isr46( void );
 extern void isr47( void );
 
+extern void isr128( void );
+
 idt_descriptor_t idt[ IDT_ENTRIES ];
 
 static uint8_t master_mask = 0xFF;
@@ -152,6 +154,8 @@ int init_interrupts( void ) {
     set_interrupt_gate( 45, isr45 );
     set_interrupt_gate( 46, isr46 );
     set_interrupt_gate( 47, isr47 );
+
+    set_trap_gate( 0x80, isr128 );
 
     idtp.limit = ( sizeof( idt_descriptor_t ) * IDT_ENTRIES ) - 1;
     idtp.base = ( uint32_t )&idt;

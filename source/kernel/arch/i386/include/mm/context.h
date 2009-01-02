@@ -1,6 +1,6 @@
-/* Architecture specific thread functions
+/* Memory context handling code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,18 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_THREAD_H_
-#define _ARCH_THREAD_H_
+#ifndef _ARCH_MM_CONTEXT_H_
+#define _ARCH_MM_CONTEXT_H_
 
-#include <thread.h>
+#include <types.h>
 
-typedef struct i386_thread {
-    register_t esp;
-} i386_thread_t;
+typedef struct i386_memory_context {
+    uint32_t* page_directory;
+} i386_memory_context_t;
 
-int arch_allocate_thread( thread_t* thread );
-void arch_destroy_thread( thread_t* thread );
+int arch_init_memory_context( memory_context_t* context );
 
-int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg );
+int arch_clone_memory_region(
+    memory_context_t* old_context,
+    region_t* old_region,
+    memory_context_t* new_context,
+    region_t* new_region
+);
 
-#endif // _ARCH_THREAD_H_
+#endif // _ARCH_MM_CONTEXT_H_

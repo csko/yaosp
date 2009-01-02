@@ -128,6 +128,7 @@ region_id create_region(
         return -ENOMEM;
     }
 
+    region->flags = flags;
     region->start = address;
     region->size = size;
 

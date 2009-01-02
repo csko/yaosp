@@ -20,7 +20,6 @@
 #include <console.h>
 #include <bootmodule.h>
 #include <module.h>
-
 #include <vfs/vfs.h>
 
 static void load_bootmodules( void ) {

@@ -104,6 +104,38 @@ static int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtu
     return 0;
 }
 
+int clone_kernel_region(
+    i386_memory_context_t* old_arch_context,
+    region_t* old_region,
+    i386_memory_context_t* new_arch_context,
+    region_t* new_region
+) {
+    int error;
+    uint32_t addr;
+    uint32_t* old_pgd_entry;
+    uint32_t* old_pt_entry;
+    uint32_t* new_pgd_entry;
+    uint32_t* new_pt_entry;
+
+    error = map_region_page_tables( new_arch_context, new_region->start, new_region->size );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    for ( addr = old_region->start; addr < old_region->start + old_region->size; addr += PAGE_SIZE ) {
+        old_pgd_entry = page_directory_entry( old_arch_context, addr );
+        old_pt_entry = page_table_entry( *old_pgd_entry, addr );
+
+        new_pgd_entry = page_directory_entry( new_arch_context, addr );
+        new_pt_entry = page_table_entry( *new_pgd_entry, addr );
+
+        *new_pt_entry = *old_pt_entry;
+    }
+
+    return 0;
+}
+
 int arch_create_region_pages( memory_context_t* context, region_t* region, alloc_type_t alloc_method ) {
     int error;
     i386_memory_context_t* arch_context;
@@ -188,6 +220,7 @@ int init_paging( void ) {
 
     region->start = 0;
     region->size = 512 * 1024 * 1024;
+    region->flags = REGION_READ | REGION_WRITE | REGION_KERNEL;
 
     error = region_insert( context, region );
 

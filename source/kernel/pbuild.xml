@@ -43,8 +43,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/scheduler.c</item>
         <item>arch/i386/src/apic.c</item>
         <item>arch/i386/src/elf32.c</item>
+        <item>arch/i386/src/syscall.c</item>
+        <item>arch/i386/src/fork.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
+        <item>arch/i386/src/mm/context.c</item>
     </array>
 
     <array name="files">
@@ -62,6 +65,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/waitqueue.c</item>
         <item>src/semaphore.c</item>
         <item>src/devices.c</item>
+        <item>src/syscall.c</item>
+        <item>src/fork.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

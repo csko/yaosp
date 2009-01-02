@@ -1,6 +1,6 @@
 /* Memory context definition
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -55,5 +55,13 @@ int memory_context_insert_region( memory_context_t* context, region_t* region );
  * @return On success true is returned
  */
 bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address );
+
+/**
+ * Clones an existing memory context.
+ *
+ * @param old_context The old memory context that will be cloned
+ * @return The cloned memory context
+ */
+memory_context_t* memory_context_clone( memory_context_t* old_context );
 
 #endif // _MM_CONTEXT_H_

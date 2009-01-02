@@ -37,6 +37,9 @@ typedef struct process {
     io_context_t* io_context;
 } process_t;
 
+process_t* allocate_process( char* name );
+int insert_process( process_t* process );
+
 process_t* get_process_by_id( process_id id );
 
 int init_processes( void );
