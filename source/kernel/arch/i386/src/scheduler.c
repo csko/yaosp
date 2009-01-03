@@ -29,6 +29,7 @@ void switch_to_thread( register_t esp );
 int schedule( registers_t* regs ) {
     thread_t* next;
     thread_t* current;
+    i386_cpu_t* arch_cpu;
     i386_thread_t* arch_thread;
     i386_memory_context_t* arch_mem_context;
 
@@ -56,10 +57,13 @@ int schedule( registers_t* regs ) {
     get_processor()->current_thread = next;
     next->state = THREAD_RUNNING;
 
+    arch_cpu = ( i386_cpu_t* )get_processor()->arch_data;
+
     /* Set the new memory context if needed */
 
     if ( ( current == NULL ) || ( current->process != next->process ) ) {
         set_cr3( ( uint32_t )arch_mem_context->page_directory );
+        arch_cpu->tss.cr3 = ( register_t )arch_mem_context->page_directory;
     }
 
     /* Unlock the scheduler spinlock. The iret instruction in

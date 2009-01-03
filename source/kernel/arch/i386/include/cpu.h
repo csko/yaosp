@@ -32,6 +32,7 @@ typedef struct i386_cpu {
     int family;
     int model;
     int features;
+    tss_t tss;
 } i386_cpu_t;
 
 typedef struct i386_feature {
@@ -50,6 +51,9 @@ enum {
 
 extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 extern i386_feature_t i386_features[];
+
+register_t get_cr2( void );
+register_t get_cr3( void );
 
 /**
  * Sets the value of the CR3 register in the processor.

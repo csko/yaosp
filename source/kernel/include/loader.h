@@ -1,6 +1,6 @@
-/* Page fault handler
+/* Application loader
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,20 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _LOADER_H_
+#define _LOADER_H_
+
 #include <types.h>
-#include <console.h>
 
-#include <arch/cpu.h>
-#include <arch/interrupt.h>
+typedef bool check_application_t( int fd );
+typedef int load_application_t( int fd );
 
-void dump_registers( registers_t* regs );
+typedef struct application_loader {
+    const char* name;
 
-void handle_page_fault( registers_t* regs ) {
-    kprintf( "Page fault!\n" );
-    dump_registers( regs );
-    kprintf( "CR2=%x\n", get_cr2() );
-    kprintf( "CR3=%x\n", get_cr3() );
+    check_application_t* check;
+    load_application_t* load;
 
-    disable_interrupts();
-    halt_loop();
-}
+    struct application_loader* next;
+} application_loader_t;
+
+int sys_execve( char* path, char** argv, char** envp );
+
+int register_application_loader( application_loader_t* loader );
+
+int init_application_loader( void );
+
+#endif // _LOADER_H_

@@ -4,7 +4,7 @@
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
 
-static void dump_registers( registers_t* regs ) {
+void dump_registers( registers_t* regs ) {
     kprintf( "Error code: %d\n", regs->error_code );
     kprintf( "EAX=%x EBX=%x ECX=%x EDX=%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx );
     kprintf( "ESI=%x EDI=%x\n", regs->esi, regs->edi );

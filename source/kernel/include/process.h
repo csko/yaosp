@@ -35,6 +35,8 @@ typedef struct process {
     memory_context_t* memory_context;
     semaphore_context_t* semaphore_context;
     io_context_t* io_context;
+
+    void* loader_data;
 } process_t;
 
 process_t* allocate_process( char* name );

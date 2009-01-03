@@ -339,6 +339,7 @@ int init_root_filesystem( void ) {
     kernel_io_context.root_directory = get_inode( mount_point, root_node->inode_number );
 
     if ( kernel_io_context.root_directory == NULL ) {
+        /* TODO: remove the mount point */
         destroy_hashtable( &rootfs_node_table );
         rootfs_delete_node( root_node );
         delete_mount_point( mount_point );

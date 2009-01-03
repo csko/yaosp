@@ -21,12 +21,19 @@
 #include <errno.h>
 #include <fork.h>
 #include <smp.h>
+#include <loader.h>
 
 static system_call_entry_t system_call_table[] = {
     /* 0 */
     {
         .name = "fork",
         .function = sys_fork,
+        .flags = SYSCALL_SAVE_STACK
+    },
+    /* 1 */
+    {
+        .name = "execve",
+        .function = sys_execve,
         .flags = SYSCALL_SAVE_STACK
     }
 };

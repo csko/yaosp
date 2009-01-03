@@ -23,6 +23,7 @@
 #include <lib/string.h>
 
 #include <arch/cpu.h>
+#include <arch/gdt.h>
 
 i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 
@@ -67,7 +68,7 @@ int detect_cpu( void ) {
     /* Clear the processor structures */
 
     memset( processor_table, 0, sizeof( cpu_t ) * MAX_CPU_COUNT );
-    memset( arch_processor_table, 0, sizeof( i386_cpu_t ) * MAX_CPU_COUNT );
+    //memset( arch_processor_table, 0, sizeof( i386_cpu_t ) * MAX_CPU_COUNT );
 
     if ( !cpuid_supported() ) {
         return -EINVAL;
@@ -148,6 +149,14 @@ int detect_cpu( void ) {
     }
 
     kprintf( "\n" );
+
+    /* TODO: Later move this to the SMP code */
+
+    __asm__ __volatile__(
+        "ltr %%ax\n"
+        :
+        : "a" ( GDT_ENTRIES * 8 )
+    );
 
     for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
         memcpy( processor_table[ i ].name, name, sizeof( name ) );

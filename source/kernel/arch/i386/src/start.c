@@ -126,7 +126,8 @@ void arch_start( multiboot_header_t* header ) {
 
 int arch_late_init( void ) {
     init_pit();
-    init_elf32_loader();
+    init_elf32_module_loader();
+    init_elf32_application_loader();
 
     return 0;
 }

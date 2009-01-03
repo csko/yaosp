@@ -20,15 +20,16 @@
 #ifndef _ERRNO_H_
 #define _ERRNO_H_
 
-#define ENOMEM 1
-#define EINVAL 2
-#define EIO    3
-#define ETIME  4
-#define ENOSYS 5
-#define ENOENT 6
-#define EEXIST 7
-#define EBUSY  8
-#define EISDIR 9
-#define ENOINO 10
+#define ENOMEM  1
+#define EINVAL  2
+#define EIO     3
+#define ETIME   4
+#define ENOSYS  5
+#define ENOENT  6
+#define EEXIST  7
+#define EBUSY   8
+#define EISDIR  9
+#define ENOINO  10
+#define ENOEXEC 11
 
 #endif // _ERRNO_H_

@@ -28,10 +28,17 @@
 
 static i386_memory_context_t i386_kernel_memory_context;
 
-static int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size ) {
+static int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel ) {
     void* p;
     ptr_t addr;
     uint32_t* pgd_entry;
+    uint32_t flags;
+
+    flags = PRESENT | WRITE;
+
+    if ( !kernel ) {
+        flags |= USER;
+    }
 
     for ( addr = start; addr < ( start + size ); addr += PGDIR_SIZE ) {
         pgd_entry = page_directory_entry( arch_context, addr );
@@ -45,45 +52,70 @@ static int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t st
 
             memsetl( p, 0, PAGE_SIZE / 4 );
 
-            *pgd_entry = ( ptr_t )p | PRESENT | WRITE;
+            *pgd_entry = ( ptr_t )p | flags;
         }
     }
 
     return 0;
 }
 
-static int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t physical, uint32_t size ) {
+static int map_region_pages(
+    i386_memory_context_t* arch_context,
+    ptr_t virtual,
+    ptr_t physical,
+    uint32_t size,
+    bool kernel
+) {
     int error;
     ptr_t addr;
     uint32_t* pgd_entry;
     uint32_t* pt_entry;
+    uint32_t flags;
 
-    error = map_region_page_tables( arch_context, virtual, size );
+    error = map_region_page_tables( arch_context, virtual, size, kernel );
 
     if ( error < 0 ) {
         return error;
+    }
+
+    flags = PRESENT | WRITE;
+
+    if ( !kernel ) {
+        flags |= USER;
     }
 
     for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE, physical += PAGE_SIZE ) {
         pgd_entry = page_directory_entry( arch_context, addr );
         pt_entry = page_table_entry( *pgd_entry, addr );
 
-        *pt_entry = physical | PRESENT | WRITE;
+        *pt_entry = physical | flags;
     }
 
     return 0;
 }
 
-static int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size ) {
+static int create_region_pages(
+    i386_memory_context_t* arch_context,
+    ptr_t virtual,
+    uint32_t size,
+    bool kernel
+) {
     int error;
     ptr_t addr;
     uint32_t* pgd_entry;
     uint32_t* pt_entry;
+    uint32_t flags;
 
-    error = map_region_page_tables( arch_context, virtual, size );
+    error = map_region_page_tables( arch_context, virtual, size, kernel );
 
     if ( error < 0 ) {
         return error;
+    }
+
+    flags = PRESENT | WRITE;
+
+    if ( !kernel ) {
+        flags |= USER;
     }
 
     for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
@@ -98,7 +130,7 @@ static int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtu
             return -ENOMEM;
         }
 
-        *pt_entry = ( uint32_t )p | PRESENT | WRITE;
+        *pt_entry = ( ptr_t )p | flags;
     }
 
     return 0;
@@ -117,7 +149,12 @@ int clone_kernel_region(
     uint32_t* new_pgd_entry;
     uint32_t* new_pt_entry;
 
-    error = map_region_page_tables( new_arch_context, new_region->start, new_region->size );
+    error = map_region_page_tables(
+        new_arch_context,
+        new_region->start,
+        new_region->size,
+        ( old_region->flags & REGION_KERNEL ) != 0
+    );
 
     if ( error < 0 ) {
         return error;
@@ -146,7 +183,12 @@ int arch_create_region_pages( memory_context_t* context, region_t* region, alloc
 
     switch ( ( int )alloc_method ) {
         case ALLOC_PAGES :
-            error = create_region_pages( arch_context, region->start, region->size );
+            error = create_region_pages(
+                arch_context,
+                region->start,
+                region->size,
+                ( region->flags & REGION_KERNEL ) != 0
+            );
 
             if ( error < 0 ) {
                 return error;
@@ -163,7 +205,13 @@ int arch_create_region_pages( memory_context_t* context, region_t* region, alloc
                 return -ENOMEM;
             }
 
-            error = map_region_pages( arch_context, region->start, ( ptr_t )p, region->size );
+            error = map_region_pages(
+                arch_context,
+                region->start,
+                ( ptr_t )p,
+                region->size,
+                ( region->flags & REGION_KERNEL ) != 0
+            );
 
             if ( error < 0 ) {
                 return error;
@@ -210,7 +258,7 @@ int init_paging( void ) {
 
     /* Map the first 512 Mb to the kernel */
 
-    map_region_pages( arch_context, 0, 0, 512 * 1024 * 1024 );
+    map_region_pages( arch_context, 0, 0, 512 * 1024 * 1024, true );
 
     region = allocate_region( "kernel" );
 

@@ -27,6 +27,7 @@
 #ifndef __ASSEMBLER__
 
 #include <types.h>
+#include <config.h>
 
 #define GDT_ENTRIES 5
 
@@ -48,7 +49,7 @@ typedef struct gdt {
     uint32_t base;
 } __attribute__(( packed )) gdt_t;
 
-extern gdt_descriptor_t gdt[ GDT_ENTRIES ];
+extern gdt_descriptor_t gdt[ GDT_ENTRIES + MAX_CPU_COUNT ];
 
 void reload_segment_descriptors( void );
 

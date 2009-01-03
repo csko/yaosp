@@ -42,7 +42,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/pit.c</item>
         <item>arch/i386/src/scheduler.c</item>
         <item>arch/i386/src/apic.c</item>
-        <item>arch/i386/src/elf32.c</item>
+        <item>arch/i386/src/elf32_module.c</item>
+        <item>arch/i386/src/elf32_application.c</item>
         <item>arch/i386/src/syscall.c</item>
         <item>arch/i386/src/fork.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
@@ -67,6 +68,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/devices.c</item>
         <item>src/syscall.c</item>
         <item>src/fork.c</item>
+        <item>src/loader.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

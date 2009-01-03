@@ -159,6 +159,24 @@ typedef struct elf_module {
     region_id data_region;
 } elf_module_t;
 
-int init_elf32_loader( void );
+typedef struct elf_application {
+    uint32_t section_count;
+    elf_section_header_t* sections;
+
+    char* strings;
+
+    uint32_t symbol_count;
+    my_elf_symbol_t* symbols;
+
+    uint32_t reloc_count;
+    elf_reloc_t* relocs;
+
+    uint32_t text_address;
+    region_id text_region;
+    region_id data_region;
+} elf_application_t;
+
+int init_elf32_module_loader( void );
+int init_elf32_application_loader( void );
 
 #endif // _ARCH_ELF32_H_

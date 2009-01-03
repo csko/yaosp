@@ -54,4 +54,45 @@ typedef struct registers {
     register_t ss;
 } registers_t;
 
+typedef struct tss {
+    unsigned short prev_task;
+    unsigned short reserved1;
+    register_t esp0;
+    unsigned short ss0;
+    unsigned short reserved2;
+    register_t esp1;
+    unsigned short ss1;
+    unsigned short reserved3;
+    register_t esp2;
+    unsigned short ss2;
+    unsigned short reserved4;
+    register_t cr3;
+    register_t eip;
+    register_t eflags;
+    register_t eax;
+    register_t ecx;
+    register_t edx;
+    register_t ebx;
+    register_t esp;
+    register_t ebp;
+    register_t esi;
+    register_t edi;
+    unsigned short es;
+    unsigned short reserved5;
+    unsigned short cs;
+    unsigned short reserved6;
+    unsigned short ss;
+    unsigned short reserved7;
+    unsigned short ds;
+    unsigned short reserved8;
+    unsigned short fs;
+    unsigned short reserved9;
+    unsigned short gs;
+    unsigned short reserved10;
+    unsigned short ldt_segment;
+    unsigned short reserved11;
+    unsigned short trace;
+    unsigned short io_bitmap;
+} __attribute__(( packed )) tss_t;
+
 #endif // _ARCH_TYPES_H_

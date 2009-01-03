@@ -1,6 +1,6 @@
-/* Page fault handler
+/* Application loader
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,20 +16,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <types.h>
-#include <console.h>
+#ifndef _ARCH_LOADER_H_
+#define _ARCH_LOADER_H_
 
-#include <arch/cpu.h>
-#include <arch/interrupt.h>
+int execve( const char* path, char** argv, char** envp ) {
+    int result;
 
-void dump_registers( registers_t* regs );
+    __asm__ __volatile__(
+        "int $0x80\n"
+        : "=a" ( result )
+        : "0" ( 1 ), "b" ( path ), "c" ( argv ), "d" ( envp )
+    );
 
-void handle_page_fault( registers_t* regs ) {
-    kprintf( "Page fault!\n" );
-    dump_registers( regs );
-    kprintf( "CR2=%x\n", get_cr2() );
-    kprintf( "CR3=%x\n", get_cr3() );
-
-    disable_interrupts();
-    halt_loop();
+    return result;
 }
+
+#endif // _ARCH_LOADER_H_

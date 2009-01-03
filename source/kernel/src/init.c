@@ -20,8 +20,12 @@
 #include <console.h>
 #include <bootmodule.h>
 #include <module.h>
+#include <loader.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
+
+#include <arch/fork.h>
+#include <arch/loader.h>
 
 static void load_bootmodules( void ) {
     int i;
@@ -110,6 +114,12 @@ int init_thread( void* arg ) {
 
     load_bootmodules();
     mount_root_filesystem();
+
+    if ( fork() == 0 ) {
+        if ( execve( "/yaosp/SYSTEM/INIT", NULL, NULL ) != 0 ) {
+            panic( "Failed to execute init process!\n" );
+        }
+    }
 
     return 0;
 }

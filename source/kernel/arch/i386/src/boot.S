@@ -19,6 +19,7 @@
 #include <multiboot.h>
 
 .global _start
+.global _kernel_stack_top
 
 .section .multiboot_header
 

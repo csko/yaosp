@@ -26,6 +26,8 @@
 .global disable_interrupts
 .global enable_interrupts
 .global reload_segment_descriptors
+.global get_cr2
+.global get_cr3
 .global set_cr3
 .global flush_tlb
 .global halt_loop
@@ -75,6 +77,20 @@ reload_segment_descriptors:
 1:
     ret
 .size reload_segment_descriptors,.-reload_segment_descriptors
+
+/* register_t get_cr2( void ) */
+
+get_cr2:
+    movl %cr2, %eax
+    ret
+.size get_cr2,.-get_cr2
+
+/* register_t get_cr3( void ) */
+
+get_cr3:
+    movl %cr3, %eax
+    ret
+.size get_cr3,.-get_cr3
 
 /* void set_cr3( uint32_t cr3 ) */
 
