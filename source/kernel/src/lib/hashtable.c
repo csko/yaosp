@@ -89,7 +89,7 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
     hashitem_t* item;
     const void* other_key;
 
-    hash = table->hash_func( key ) & table->size;
+    hash = table->hash_func( key ) % table->size;
     
     prev = NULL;
     item = table->items[ hash ];
