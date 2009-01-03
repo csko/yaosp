@@ -65,9 +65,17 @@ static int execve( char* path, char** argv, char** envp ) {
 
     error = loader->load( fd );
 
-    close( fd );
+    /* TODO: This causes a weird page-fault, so we have to investigate it! */
+    //close(fd);
 
     if ( error < 0 ) {
+        return error;
+    }
+
+    error = loader->execute();
+
+    if ( error < 0 ) {
+        /* TODO: unload the executable */
         return error;
     }
 

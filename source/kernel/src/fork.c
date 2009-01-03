@@ -52,6 +52,14 @@ int sys_fork( void ) {
         return -ENOMEM;
     }
 
+    /* Clone the I/O context */
+
+    new_process->io_context = io_context_clone( this_process->io_context );
+
+    if ( new_process->io_context == NULL ) {
+        return -ENOMEM;
+    }
+
     new_thread = allocate_thread( this_thread->name, new_process );
 
     if ( new_thread == NULL ) {

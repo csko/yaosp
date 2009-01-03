@@ -62,6 +62,8 @@ thread_t* allocate_thread( const char* name, process_t* process ) {
         return NULL;
     }
 
+    thread->kernel_stack_end = ( uint8_t* )thread->kernel_stack + ( KERNEL_STACK_PAGES * PAGE_SIZE );
+
     error = arch_allocate_thread( thread );
 
     if ( error < 0 ) {

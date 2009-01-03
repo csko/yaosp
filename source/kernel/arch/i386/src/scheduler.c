@@ -59,6 +59,8 @@ int schedule( registers_t* regs ) {
 
     arch_cpu = ( i386_cpu_t* )get_processor()->arch_data;
 
+    arch_cpu->tss.esp0 = ( register_t )( ( uint8_t* )next->kernel_stack_end - sizeof( register_t ) );
+
     /* Set the new memory context if needed */
 
     if ( ( current == NULL ) || ( current->process != next->process ) ) {

@@ -491,19 +491,33 @@ static int elf32_application_load( int fd ) {
         return stack_region;
     }
 
+    elf_application->entry_address = header.entry;
+    elf_application->stack_end = ( register_t )( ( uint8_t* )stack_address + 5 * PAGE_SIZE - sizeof( register_t ) );
+
     current_process()->loader_data = ( void* )elf_application;
+
+    return 0;
+}
+
+int elf32_application_execute( void ) {
+    thread_t* thread;
+    registers_t* regs;
+    elf_application_t* elf_application;
 
     /* Change the registers on the stack pushed by the syscall
        entry to return to the userspace */
 
-    registers_t* regs = ( registers_t* )( current_thread()->syscall_stack );
+    thread = current_thread();
+    elf_application = ( elf_application_t* )thread->process->loader_data;
+
+    regs = ( registers_t* )( thread->syscall_stack );
 
     regs->cs = USER_CS | 3;
     regs->ds = USER_DS | 3;
     regs->es = USER_DS | 3;
     regs->fs = USER_DS | 3;
-    regs->eip = header.entry;
-    regs->esp = ( register_t )( ( uint8_t* )stack_address + 5 * PAGE_SIZE );
+    regs->eip = elf_application->entry_address;
+    regs->esp = elf_application->stack_end;
     regs->ss = USER_DS | 3;
 
     return 0;
@@ -512,7 +526,8 @@ static int elf32_application_load( int fd ) {
 static application_loader_t elf32_application_loader = {
     .name = "ELF32",
     .check = elf32_application_check,
-    .load = elf32_application_load
+    .load = elf32_application_load,
+    .execute = elf32_application_execute
 };
 
 int init_elf32_application_loader( void ) {

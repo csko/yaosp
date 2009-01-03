@@ -23,12 +23,14 @@
 
 typedef bool check_application_t( int fd );
 typedef int load_application_t( int fd );
+typedef int execute_application_t( void );
 
 typedef struct application_loader {
     const char* name;
 
     check_application_t* check;
     load_application_t* load;
+    execute_application_t* execute;
 
     struct application_loader* next;
 } application_loader_t;

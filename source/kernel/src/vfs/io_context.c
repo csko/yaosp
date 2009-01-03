@@ -96,6 +96,28 @@ void io_context_put_file( io_context_t* io_context, file_t* file ) {
     }
 }
 
+io_context_t* io_context_clone( io_context_t* old_io_context ) {
+    int error;
+    io_context_t* new_io_context;
+
+    new_io_context = ( io_context_t* )kmalloc( sizeof( io_context_t ) );
+
+    if ( new_io_context == NULL ) {
+        return NULL;
+    }
+
+    error = init_io_context( new_io_context );
+
+    if ( error < 0 ) {
+        kfree( new_io_context );
+        return NULL;
+    }
+
+    /* TODO: clone stuffs */
+
+    return new_io_context;
+}
+
 static void* file_key( hashitem_t* item ) {
     file_t* file;
 
