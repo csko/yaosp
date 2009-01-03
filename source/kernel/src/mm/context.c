@@ -1,6 +1,7 @@
 /* Memory context handling code
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -51,9 +52,7 @@ int memory_context_insert_region( memory_context_t* context, region_t* region ) 
             memcpy( new_regions, context->regions, sizeof( region_t* ) * context->region_count );
         }
 
-        if ( context->regions != NULL ) {
-            kfree( context->regions );
-        }
+        kfree( context->regions );
 
         context->regions = new_regions;
         context->max_regions = new_max;

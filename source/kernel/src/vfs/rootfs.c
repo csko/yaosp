@@ -1,6 +1,7 @@
 /* Root file system
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -316,13 +317,13 @@ int init_root_filesystem( void ) {
         4 /* max free inodes */
     );
 
-    mount_point->fs_data = NULL;
-
     if ( mount_point == NULL ) {
         destroy_hashtable( &rootfs_node_table );
         rootfs_delete_node( root_node );
         return -ENOMEM;
     }
+
+    mount_point->fs_data = NULL;
 
     error = insert_mount_point( mount_point );
 
@@ -338,9 +339,9 @@ int init_root_filesystem( void ) {
     kernel_io_context.root_directory = get_inode( mount_point, root_node->inode_number );
 
     if ( kernel_io_context.root_directory == NULL ) {
-        /* TODO: remove&destroy mount point */
         destroy_hashtable( &rootfs_node_table );
         rootfs_delete_node( root_node );
+        delete_mount_point( mount_point );
         return -EINVAL;
     }
 

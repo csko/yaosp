@@ -1,6 +1,7 @@
 # Python build system
 #
 # Copyright (c) 2008 Zoltan Kovacs
+# Copyright (c) 2009 Kornel Csernai
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -16,6 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import os
+import sys
 import xml.sax
 import subprocess
 import definitions
@@ -151,17 +153,24 @@ class GccWork( Work ) :
                 
         # Build the command
 
+        # TODO: Some systems might require the compiler to be called with an absolute path
+        # This could be determined by a configure file later.
+#        command = [ "/usr/bin/gcc" ] + real_flags + real_inputs + real_includes
         command = [ "gcc" ] + real_flags + real_inputs + real_includes
         command += real_defines
         command += [ "-o", context.handle_everything( self.output ) ]
 
-        # Execute a new GCC process
-
         # Debug
-        # print command
+#        print command
 
-        process = subprocess.Popen( command )
-        process.wait()
+        # Get the return code of the process
+        retcode = subprocess.call( command )
+        # If the return code is not 0, the build process must stop
+        if retcode != 0 :
+            print "Process returned with return code %d" % retcode
+            print "Build stopped."
+            sys.exit( retcode )
+
 
 class LdWork( Work ) :
     def __init__( self ) :
@@ -189,6 +198,8 @@ class LdWork( Work ) :
 
         # Build the command
 
+        # TODO: Some systems might require the linker to be called with an absolute path
+        # This could be determined by a configure file later.
         command = [ "ld" ]
 
         if self.linker_script != None :
@@ -199,8 +210,13 @@ class LdWork( Work ) :
 
         # Execute a new LD process
 
-        process = subprocess.Popen( command )
-        process.wait()
+        # Get the return code of the process
+        retcode = subprocess.call( command )
+        # If the return code is not 0, the build process must stop
+        if retcode != 0 :
+            print "Process returned with return code %d" % retcode
+            print "Build stopped."
+            sys.exit( retcode )
 
 class MakeDirectory( Work ) :
     def __init__( self ) :
@@ -303,6 +319,7 @@ class ExecWork( Work ) :
     def execute( self, context ) :
         command = [ self.executable ] + self.args
 
+        # TODO: Do we need return value checking here?
         process = subprocess.Popen( command )
         process.wait()
 
