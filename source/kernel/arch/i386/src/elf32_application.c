@@ -296,7 +296,7 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
     uint32_t data_end;
     uint32_t data_size;
     uint32_t data_offset;
-    //void* data_address;
+    void* data_address;
 
     uint32_t bss_end;
     uint32_t data_size_with_bss;
@@ -340,6 +340,8 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
         return -EINVAL;
     }
 
+    //kprintf( "%d %d\n", text_found, data_found );
+
     text_offset -= ( text_start & ~PAGE_MASK );
     text_start &= PAGE_MASK;
     text_size = text_end - text_start + 1;
@@ -361,48 +363,47 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
         return elf_application->text_region;
     }
 
-#if 0
-    elf_module->data_region = create_region(
-        "rw",
-        PAGE_ALIGN( data_size_with_bss ),
-        REGION_READ | REGION_WRITE | REGION_KERNEL,
-        ALLOC_PAGES,
-        &data_address
-    );
+    /* Copy text in */
 
-    if ( elf_module->data_region < 0 ) {
-        /* TODO: delete text region */
-        return elf_module->data_region;
-    }
-#endif
-
-    /* Copy text and data in */
-
-    if ( pread(
-        fd,
-        text_address,
-        text_size,
-        text_offset
-    ) != text_size ) {
+    if ( pread( fd, text_address, text_size, text_offset ) != text_size ) {
         /* TODO: delete text & data regions */
         return -EIO;
     }
 
-#if 0
-    if ( read_module_data(
-        reader,
-        data_address,
-        data_offset,
-        data_size
-    ) != data_size ) {
-        /* TODO: delete text & data regions */
-        return -EIO;
+    if ( data_found > 0 ) {
+        uint32_t bss_size;
+
+        elf_application->data_region = create_region(
+            "rw",
+            PAGE_ALIGN( data_size_with_bss ),
+            REGION_READ | REGION_WRITE,
+            ALLOC_PAGES,
+            &data_address
+        );
+
+        if ( elf_application->data_region < 0 ) {
+            /* TODO: delete text region */
+            return elf_application->data_region;
+        }
+
+        if ( data_size > 0 ) {
+            if ( pread(
+                fd,
+                data_address,
+                data_size,
+                data_offset
+            ) != data_size ) {
+                /* TODO: delete text & data regions */
+                return -EIO;
+            }
+        }
+
+        bss_size = data_size_with_bss - data_size;
+
+        if ( bss_size > 0 ) {
+            memset( ( char* )data_address + data_size, 0, bss_size );
+        }
     }
-
-    memset( ( char* )data_address + data_size, 0, data_size_with_bss - data_size );
-
-    elf_module->text_address = ( uint32_t )text_address;
-#endif
 
     return 0;
 }

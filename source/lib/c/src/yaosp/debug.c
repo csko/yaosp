@@ -19,5 +19,9 @@
 #include <yaosp/syscall.h>
 
 int dbprintf( const char* format, ... ) {
-    return syscall2( 2, ( unsigned int )format, ( unsigned int )&format[1] );
+    return syscall2(
+        2,
+        ( unsigned int )format,
+        ( unsigned int )( ( ( char** )( &format ) ) + 1 )
+    );
 }
