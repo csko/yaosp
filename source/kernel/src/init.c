@@ -96,7 +96,7 @@ static void mount_root_filesystem( void ) {
         }
     }
 
-    /* TODO: close the directory */
+    close( dir );
 
     if ( error < 0 ) {
         panic( "Failed to mount root filesystem!\n" );

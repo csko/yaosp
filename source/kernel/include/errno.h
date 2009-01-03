@@ -31,5 +31,6 @@
 #define EISDIR  9
 #define ENOINO  10
 #define ENOEXEC 11
+#define EBADF   12
 
 #endif // _ERRNO_H_

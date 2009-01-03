@@ -168,7 +168,6 @@ static int do_open( bool kernel, const char* path, int flags ) {
         );
 
         if ( error < 0 ) {
-            put_inode( file->inode );
             delete_file( file );
             return error;
         }
@@ -177,7 +176,6 @@ static int do_open( bool kernel, const char* path, int flags ) {
     error = io_context_insert_file( io_context, file );
 
     if ( error < 0 ) {
-        put_inode( file->inode );
         delete_file( file );
         return error;
     }
@@ -187,6 +185,34 @@ static int do_open( bool kernel, const char* path, int flags ) {
 
 int open( const char* path, int flags ) {
     return do_open( true, path, flags );
+}
+
+static int do_close( bool kernel, int fd ) {
+    file_t* file;
+    io_context_t* io_context;
+
+    /* Decide which I/O context to use */
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    io_context_put_file( io_context, file ); /* this is for io_contetx_get_file() */
+    io_context_put_file( io_context, file ); /* this will close the file */
+
+    return 0;
+}
+
+int close( int fd ) {
+    return do_close( true, fd );
 }
 
 static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offset ) {
@@ -218,6 +244,8 @@ static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offs
     } else {
         error = -ENOSYS;
     }
+
+    io_context_put_file( io_context, file );
 
     return error;
 }
@@ -251,6 +279,8 @@ static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
         file->cookie,
         entry
     );
+
+    io_context_put_file( io_context, file );
 
     return error;
 }

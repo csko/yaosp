@@ -57,11 +57,15 @@ static int execve( char* path, char** argv, char** envp ) {
     loader = find_application_loader( fd );
 
     if ( loader == NULL ) {
-        /* TODO: close the file */
+        close( fd );
         return -ENOEXEC;
     }
 
+    /* Load the executable with the selected loader */
+
     error = loader->load( fd );
+
+    close( fd );
 
     if ( error < 0 ) {
         return error;

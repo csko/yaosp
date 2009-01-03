@@ -22,6 +22,7 @@
 .global atomic_set
 .global atomic_inc
 .global atomic_dec
+.global atomic_dec_and_test
 .global atomic_swap
 
 /* int atomic_get( atomic_t* atomic ); */
@@ -41,7 +42,7 @@ atomic_set:
     ret
 .size atomic_set,.-atomic_set
 
-/* int atomic_inc( atomic_t* atomic ); */
+/* void atomic_inc( atomic_t* atomic ); */
 
 atomic_inc:
     movl 4(%esp), %edx
@@ -50,7 +51,7 @@ atomic_inc:
     ret
 .size atomic_inc,.-atomic_inc
 
-/* int atomic_dec( atomic_t* atomic ); */
+/* void atomic_dec( atomic_t* atomic ); */
 
 atomic_dec:
     movl 4(%esp), %edx
@@ -58,6 +59,17 @@ atomic_dec:
     decl (%edx)
     ret
 .size atomic_dec,.-atomic_dec
+
+/* bool atomic_dec_and_test( atomic_t* atomic ); */
+
+atomic_dec_and_test:
+    movl 4(%esp), %edx
+    movl $0, %eax
+    lock
+    decl (%edx)
+    setz %al
+    ret
+.size atomic_dec_and_test,.-atomic_dec_and_test
 
 /* int atomic_swap( atomic_t* atomic, int value ); */
 

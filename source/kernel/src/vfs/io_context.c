@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <vfs/io_context.h>
 #include <lib/string.h>
@@ -31,14 +32,23 @@ file_t* create_file( void ) {
 
     memset( file, 0, sizeof( file_t ) );
 
+    atomic_set( &file->ref_count, 0 );
+
     return file;
 }
 
 void delete_file( file_t* file ) {
+    if ( file->inode != NULL ) {
+        put_inode( file->inode );
+        file->inode = NULL;
+    }
+
     kfree( file );
 }
 
 int io_context_insert_file( io_context_t* io_context, file_t* file ) {
+    atomic_set( &file->ref_count, 1 );
+
     LOCK( io_context->lock );
 
     do {
@@ -65,7 +75,25 @@ file_t* io_context_get_file( io_context_t* io_context, int fd ) {
 
     UNLOCK( io_context->lock );
 
+    if ( file != NULL ) {
+        atomic_inc( &file->ref_count );
+    }
+
     return file;
+}
+
+void io_context_put_file( io_context_t* io_context, file_t* file ) {
+    ASSERT( file != NULL );
+
+    if ( atomic_dec_and_test( &file->ref_count ) ) {
+        LOCK( io_context->lock );
+
+        hashtable_remove( &io_context->file_table, ( const void* )file->fd );
+
+        UNLOCK( io_context->lock );
+
+        delete_file( file );
+    }
 }
 
 static void* file_key( hashitem_t* item ) {

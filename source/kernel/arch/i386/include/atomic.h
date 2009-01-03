@@ -59,6 +59,7 @@ void atomic_inc( atomic_t* atomic );
  * @param atomic The pointer to the atomic structure
  */
 void atomic_dec( atomic_t* atomic );
+bool atomic_dec_and_test( atomic_t* atomic );
 
 /**
  * Atomically swaps the value stored in the atomic structure

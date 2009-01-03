@@ -36,6 +36,7 @@ typedef struct file {
     inode_t* inode;
     file_type_t type;
     void* cookie;
+    atomic_t ref_count;
 } file_t;
 
 typedef struct io_context {
@@ -52,6 +53,7 @@ void delete_file( file_t* file );
 
 int io_context_insert_file( io_context_t* io_context, file_t* file );
 file_t* io_context_get_file( io_context_t* io_context, int fd );
+void io_context_put_file( io_context_t* io_context, file_t* file );
 
 int init_io_context( io_context_t* io_context );
 
