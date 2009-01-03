@@ -1,4 +1,4 @@
-/* Init application
+/* Entry point of the C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/debug.h>
+extern int main( int argc, char** argv, char** envp );
 
-int main( int argc, char** argv ) {
-    dbprintf( "Hello World from userspace!\n" );
-
-    return 0;
+void __libc_start_main( void ) {
+  main( 0, 0, 0 );
 }

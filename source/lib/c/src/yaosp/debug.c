@@ -1,4 +1,4 @@
-/* Init application
+/* Debug functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/debug.h>
+#include <yaosp/syscall.h>
 
-int main( int argc, char** argv ) {
-    dbprintf( "Hello World from userspace!\n" );
-
-    return 0;
+int dbprintf( const char* format, ... ) {
+    return syscall2( 2, ( unsigned int )format, ( unsigned int )&format[1] );
 }

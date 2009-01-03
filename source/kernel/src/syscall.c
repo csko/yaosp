@@ -22,6 +22,7 @@
 #include <fork.h>
 #include <smp.h>
 #include <loader.h>
+#include <kernel.h>
 
 static system_call_entry_t system_call_table[] = {
     /* 0 */
@@ -35,6 +36,12 @@ static system_call_entry_t system_call_table[] = {
         .name = "execve",
         .function = sys_execve,
         .flags = SYSCALL_SAVE_STACK
+    },
+    /* 2 */
+    {
+        .name = "dbprintf",
+        .function = sys_dbprintf,
+        .flags = 0
     }
 };
 

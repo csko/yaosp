@@ -1,4 +1,4 @@
-/* Init application
+/* Debug functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/debug.h>
+#ifndef _YAOSP_DEBUG_H_
+#define _YAOSP_DEBUG_H_
 
-int main( int argc, char** argv ) {
-    dbprintf( "Hello World from userspace!\n" );
+/**
+ * Writes a string to the kernel debug console.
+ *
+ * @param format A printf like format string
+ * @return On success 0 is returned
+ */
+int dbprintf( const char* format, ... );
 
-    return 0;
-}
+#endif // _YAOSP_DEBUG_H_

@@ -317,7 +317,12 @@ class ExecWork( Work ) :
         self.args.append( arg )
 
     def execute( self, context ) :
-        command = [ self.executable ] + self.args
+        real_args = []
+
+        for arg in self.args :
+            real_args += context.replace_wildcards( arg )
+
+        command = [ self.executable ] + real_args
 
         # TODO: Do we need return value checking here?
         process = subprocess.Popen( command )

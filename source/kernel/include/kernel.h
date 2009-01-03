@@ -22,6 +22,8 @@
 #define panic( format, arg... ) \
     handle_panic( __FILE__, __LINE__, format, ##arg )
 
+int sys_dbprintf( const char* format, char** parameters );
+
 void handle_panic( const char* file, int line, const char* format, ... );
 
 int init_thread( void* arg );

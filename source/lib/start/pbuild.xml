@@ -20,8 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <array name="files">
-        <item>init.c</item>
+    <array name="files_i386">
+        <item>arch/i386/start.S</item>
     </array>
 
     <target name="clean">
@@ -36,14 +36,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling init application</echo>
+        <echo>Compiling startup library</echo>
 
-        <for var="i" array="${files}">
+        <for var="i" array="${files_i386}">
             <echo>-> ${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-m32</flag>
@@ -54,24 +53,17 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo>Linking init application</echo>
-        <echo>-> objs/init</echo>
+        <echo>Linking startup library</echo>
+        <echo>-> objs/libstart.a</echo>
 
-        <gcc>
-            <input>objs/*.o</input>
-            <input>../../lib/start/objs/libstart.a</input>
-            <input>../../lib/c/objs/libc.a</input>
-            <output>objs/init</output>
-            <flag>-m32</flag>
-            <flag>-Xlinker</flag>
-            <flag>--script=../../../scripts/i386_app.lnk</flag>
-            <flag>-nostartfiles</flag>
-            <flag>-nodefaultlibs</flag>
-        </gcc>
+        <exec executable="ar">
+            <arg>-rc</arg>
+            <arg>objs/libstart.a</arg>
+            <arg>objs/start.o</arg>
+        </exec>
     </target>
 
     <target name="install">
-        <copy from="objs/init" to="../../../build/system/init"/>
     </target>
 
     <target name="all">

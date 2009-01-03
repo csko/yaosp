@@ -1,4 +1,4 @@
-/* Init application
+/* i386 architecture specific system call functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/debug.h>
+.global syscall1
+.global syscall2
 
-int main( int argc, char** argv ) {
-    dbprintf( "Hello World from userspace!\n" );
+syscall1:
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %ebx
+    movl 8(%ebp), %eax
+    movl 12(%ebp), %ebx
+    int $0x80
+    popl %ebx
+    popl %ebp
+    ret
 
-    return 0;
-}
+syscall2:
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %ebx
+    movl 8(%ebp), %eax
+    movl 12(%ebp), %ebx
+    movl 16(%ebp), %ecx
+    int $0x80
+    popl %ebx
+    popl %ebp
+    ret

@@ -26,9 +26,30 @@
 #include <devices.h>
 #include <loader.h>
 #include <lib/stdarg.h>
+#include <lib/string.h>
 
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
+
+int sys_dbprintf( const char* format, char** parameters ) {
+    char buf[ 256 ];
+
+    snprintf(
+        buf,
+        sizeof( buf ),
+        format,
+        parameters[ 0 ],
+        parameters[ 1 ],
+        parameters[ 2 ],
+        parameters[ 3 ],
+        parameters[ 4 ],
+        parameters[ 5 ]
+    );
+
+    kprintf( "%s", buf );
+
+    return 0;
+}
 
 void handle_panic( const char* file, int line, const char* format, ... ) {
     va_list args;

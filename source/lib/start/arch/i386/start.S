@@ -1,4 +1,4 @@
-/* Init application
+/* i386 entry point of user applications
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/debug.h>
+.global _start
 
-int main( int argc, char** argv ) {
-    dbprintf( "Hello World from userspace!\n" );
-
-    return 0;
-}
+_start:
+    call __libc_start_main
+1:
+    jmp 1b

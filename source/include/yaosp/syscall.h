@@ -1,4 +1,4 @@
-/* Init application
+/* System calls
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/debug.h>
+#ifndef _YAOSP_SYSCALL_H_
+#define _YAOSP_SYSCALL_H_
 
-int main( int argc, char** argv ) {
-    dbprintf( "Hello World from userspace!\n" );
+int syscall1( int number, unsigned int param1 );
+int syscall2( int number, unsigned int param1, unsigned int param2 );
 
-    return 0;
-}
+#endif // _YAOSP_SYSCALL_H_

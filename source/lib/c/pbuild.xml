@@ -20,23 +20,46 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <array name="files_i386">
+        <item>arch/i386/syscall.S</item>
+    </array>
+
     <array name="files">
-        <item>init.c</item>
+        <item>src/start.c</item>
+        <item>src/yaosp/debug.c</item>
     </array>
 
     <target name="clean">
+        <delete>objs/arch/*</delete>
+        <rmdir>objs/arch</rmdir>
         <delete>objs/*</delete>
         <rmdir>objs</rmdir>
     </target>
 
     <target name="prepare" type="private">
         <mkdir>objs</mkdir>
+        <mkdir>objs/arch</mkdir>
     </target>
 
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling init application</echo>
+        <echo>Compiling C library</echo>
+
+        <for var="i" array="${files_i386}">
+            <echo>-> ${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/arch/filename(${i}).o</output>
+                <flag>-c</flag>
+                <flag>-O2</flag>
+                <flag>-m32</flag>
+                <flag>-Wall</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-fno-builtin</flag>
+            </gcc>
+        </for>
 
         <for var="i" array="${files}">
             <echo>-> ${i}</echo>
@@ -54,24 +77,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo>Linking init application</echo>
-        <echo>-> objs/init</echo>
+        <echo>Linking C library</echo>
+        <echo>-> objs/libc.a</echo>
 
-        <gcc>
-            <input>objs/*.o</input>
-            <input>../../lib/start/objs/libstart.a</input>
-            <input>../../lib/c/objs/libc.a</input>
-            <output>objs/init</output>
-            <flag>-m32</flag>
-            <flag>-Xlinker</flag>
-            <flag>--script=../../../scripts/i386_app.lnk</flag>
-            <flag>-nostartfiles</flag>
-            <flag>-nodefaultlibs</flag>
-        </gcc>
+        <exec executable="ar">
+            <arg>-rc</arg>
+            <arg>objs/libc.a</arg>
+            <arg>objs/*.o</arg>
+            <arg>objs/arch/*.o</arg>
+        </exec>
     </target>
 
     <target name="install">
-        <copy from="objs/init" to="../../../build/system/init"/>
     </target>
 
     <target name="all">
