@@ -16,7 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yaosp/debug.h>
+
 void abort( void ) {
+    dbprintf( "Abort called!\n" );
+
     while ( 1 ) ;
     /* TODO */
 }

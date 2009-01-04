@@ -81,6 +81,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-nostdlib</flag>
                 <flag>-fno-builtin</flag>
                 <define key="HAVE_MMAP">0</define>
+                <define key="USE_LOCKS">1</define>
+                <define key="YAOSP"/>
             </gcc>
         </for>
 

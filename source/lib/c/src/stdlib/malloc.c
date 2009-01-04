@@ -1387,7 +1387,21 @@ static int win32munmap(void* ptr, size_t size) {
     unique mparams values are initialized only once.
 */
 
-#ifndef WIN32
+#if defined( YAOSP )
+#include <yaosp/semaphore.h>
+#define MLOCK_T semaphore_id
+#define INITIAL_LOCK(l)     *l = create_semaphore("malloc_lock",SEMAPHORE_BINARY,0,1); \
+                            if ( (*l) < 0 ) abort();
+#define ACQUIRE_LOCK(l)     lock_semaphore(*l,1,INFINITE_TIMEOUT)
+#define RELEASE_LOCK(l)     unlock_semaphore(*l,1)
+
+#if HAVE_MORECORE
+static MLOCK_T morecore_mutex;
+#endif /* HAVE_MORECORE */
+
+static MLOCK_T magic_init_mutex;
+
+#elif !defined( WIN32 )
 /* By default use posix locks */
 #include <pthread.h>
 #define MLOCK_T pthread_mutex_t
@@ -4790,6 +4804,26 @@ int mspace_mallopt(int param_number, int value) {
 }
 
 #endif /* MSPACES */
+
+#if defined( YAOSP )
+int init_malloc( void ) {
+#ifdef HAVE_MORECORE
+    morecore_mutex = create_semaphore( "malloc_morecore", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( morecore_mutex < 0 ) {
+        return morecore_mutex;
+    }
+#endif /* HAVE_MORECORE */
+
+    magic_init_mutex = create_semaphore( "malloc_magic_init", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( magic_init_mutex ) {
+        return magic_init_mutex;
+    }
+
+    return 0;
+}
+#endif /* YAOSP */
 
 /* -------------------- Alternative MORECORE functions ------------------- */
 
