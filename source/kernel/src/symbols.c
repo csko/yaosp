@@ -1,6 +1,7 @@
 /* Kernel symbol table
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -33,6 +34,7 @@
 #include <arch/atomic.h>
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
+#include <irq.h>
 
 extern void __moddi3( void );
 extern void __divdi3( void );
@@ -64,6 +66,7 @@ static kernel_symbol_t symbols[] = {
     /* Interrupt manipulation */
     { "disable_interrupts", ( ptr_t )disable_interrupts },
     { "enable_interrupts", ( ptr_t )enable_interrupts },
+    { "request_irq", ( ptr_t )request_irq },
 
     /* Device management */
     { "register_bus_driver", ( ptr_t )register_bus_driver },
