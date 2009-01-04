@@ -23,6 +23,7 @@ void* sys_sbrk( int increment ) {
     void* pbreak;
     process_t* process;
 
+    pbreak = ( void* )-1;
     process = current_process();
 
     LOCK( process->lock );
@@ -31,16 +32,12 @@ void* sys_sbrk( int increment ) {
         /* Return the current location of the process break */
 
         if ( process->heap_region < 0 ) {
-            if ( !memory_context_find_unmapped_region( process->memory_context, PAGE_SIZE, false, ( ptr_t* )&pbreak ) ) {
-                pbreak = ( void* )-1;
-            }
+            memory_context_find_unmapped_region( process->memory_context, PAGE_SIZE, false, ( ptr_t* )&pbreak );
         } else {
             region_info_t region_info;
 
             if ( get_region_info( process->heap_region, &region_info ) == 0 ) {
                 pbreak = ( void* )( region_info.start + region_info.size );
-            } else {
-                pbreak = ( void* )-1;
             }
         }
     } else if ( increment < 0 ) {
@@ -48,27 +45,17 @@ void* sys_sbrk( int increment ) {
 
         increment = -PAGE_ALIGN(-increment);
 
-        if ( process->heap_region < 0 ) {
-            pbreak = ( void* )-1;
-        } else {
+        if ( process->heap_region >= 0 ) {
             region_info_t region_info;
 
-            if ( get_region_info( process->heap_region, &region_info ) < 0 ) {
-                pbreak = ( void* )-1;
-            } else {
-                if ( -increment > region_info.size ) {
-                    pbreak = ( void* )-1;
-                } else if ( -increment == region_info.size ) {
+            if ( get_region_info( process->heap_region, &region_info ) == 0 ) {
+                if ( -increment == region_info.size ) {
                     if ( delete_region( process->heap_region ) == 0 ) {
                         pbreak = ( void* )( region_info.start + region_info.size );
                         process->heap_region = -1;
-                    } else {
-                        pbreak = ( void* )-1;
                     }
-                } else {
-                    if ( resize_region( process->heap_region, region_info.size + increment ) < 0 ) {
-                        pbreak = ( void* )-1;
-                    } else {
+                } else if ( -increment < region_info.size ) {
+                    if ( resize_region( process->heap_region, region_info.size + increment ) == 0 ) {
                         pbreak = ( void* )( region_info.start + region_info.size );
                     }
                 }
@@ -87,19 +74,11 @@ void* sys_sbrk( int increment ) {
                 ALLOC_PAGES,
                 &pbreak
             );
-
-            if ( process->heap_region < 0 ) {
-                pbreak = ( void* )-1;
-            }
         } else {
             region_info_t region_info;
 
-            if ( get_region_info( process->heap_region, &region_info ) < 0 ) {
-                pbreak = ( void* )-1;
-            } else {
-                if ( resize_region( process->heap_region, region_info.size + increment ) < 0 ) {
-                    pbreak = ( void* )-1;
-                } else {
+            if ( get_region_info( process->heap_region, &region_info ) == 0 ) {
+                if ( resize_region( process->heap_region, region_info.size + increment ) == 0 ) {
                     pbreak = ( void* )( region_info.start + region_info.size );
                 }
             }
