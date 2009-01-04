@@ -1,4 +1,4 @@
-/* Entry point of the C library
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-extern int main( int argc, char** argv, char** envp );
+#include <string.h>
 
-int errno;
+void* memset( void* s, int c, size_t n ) {
+    char* _src;
 
-void __libc_start_main( void ) {
-  main( 0, 0, 0 );
+    _src = ( char* )s;
+
+    while ( n-- ) {
+        *_src++ = c;
+    }
+
+    return s;
 }

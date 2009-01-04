@@ -1,4 +1,4 @@
-/* Entry point of the C library
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-extern int main( int argc, char** argv, char** envp );
+#ifndef _STDLIB_H_
+#define _STDLIB_H_
 
-int errno;
+#include <stddef.h>
 
-void __libc_start_main( void ) {
-  main( 0, 0, 0 );
-}
+void* calloc( size_t nmemb, size_t size );
+void* malloc( size_t size );
+void free( void* ptr );
+void* realloc( void* ptr, size_t size );
+
+void abort( void );
+
+#endif // _STDLIB_H_

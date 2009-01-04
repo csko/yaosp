@@ -1,4 +1,4 @@
-/* Entry point of the C library
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-extern int main( int argc, char** argv, char** envp );
+#ifndef _STDDEF_H_
+#define _STDDEF_H_
 
-int errno;
+typedef unsigned int size_t;
 
-void __libc_start_main( void ) {
-  main( 0, 0, 0 );
-}
+#endif // _STDDEF_H_

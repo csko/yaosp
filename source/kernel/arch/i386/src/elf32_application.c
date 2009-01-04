@@ -293,7 +293,7 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
 
     bool data_found = false;
     uint32_t data_start;
-    uint32_t data_end;
+    uint32_t data_end = 0;
     uint32_t data_size;
     uint32_t data_offset;
     void* data_address;
@@ -340,8 +340,6 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
         return -EINVAL;
     }
 
-    //kprintf( "%d %d\n", text_found, data_found );
-
     text_offset -= ( text_start & ~PAGE_MASK );
     text_start &= PAGE_MASK;
     text_size = text_end - text_start + 1;
@@ -386,7 +384,7 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
             return elf_application->data_region;
         }
 
-        if ( data_size > 0 ) {
+        if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
             if ( pread(
                 fd,
                 data_address,
@@ -398,7 +396,11 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
             }
         }
 
-        bss_size = data_size_with_bss - data_size;
+        if ( data_end != 0 )  {
+            bss_size = data_size_with_bss - data_size;
+        } else {
+            bss_size = data_size_with_bss;
+        }
 
         if ( bss_size > 0 ) {
             memset( ( char* )data_address + data_size, 0, bss_size );
