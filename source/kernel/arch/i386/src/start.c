@@ -102,7 +102,7 @@ void arch_start( multiboot_header_t* header ) {
     /* Initialize memory region manager */
 
     kprintf( "Initializing region manager ... " );
-    init_regions();
+    preinit_regions();
     kprintf( "done\n" );
 
     /* Initialize paging */

@@ -28,7 +28,7 @@
 
 static i386_memory_context_t i386_kernel_memory_context;
 
-static int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel ) {
+int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel ) {
     void* p;
     ptr_t addr;
     uint32_t* pgd_entry;
@@ -59,13 +59,7 @@ static int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t st
     return 0;
 }
 
-static int map_region_pages(
-    i386_memory_context_t* arch_context,
-    ptr_t virtual,
-    ptr_t physical,
-    uint32_t size,
-    bool kernel
-) {
+int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t physical, uint32_t size, bool kernel ) {
     int error;
     ptr_t addr;
     uint32_t* pgd_entry;
@@ -94,12 +88,7 @@ static int map_region_pages(
     return 0;
 }
 
-static int create_region_pages(
-    i386_memory_context_t* arch_context,
-    ptr_t virtual,
-    uint32_t size,
-    bool kernel
-) {
+int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel ) {
     int error;
     ptr_t addr;
     uint32_t* pgd_entry;
@@ -131,6 +120,71 @@ static int create_region_pages(
         }
 
         *pt_entry = ( ptr_t )p | flags;
+    }
+
+    return 0;
+}
+
+int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size ) {
+    int i;
+    bool free;
+    ptr_t addr;
+    uint32_t* pgd_entry;
+    uint32_t* page_table;
+
+    for ( addr = virtual; addr < ( virtual + size ); addr += PGDIR_SIZE ) {
+        pgd_entry = page_directory_entry( arch_context, addr );
+        page_table = ( uint32_t* )*pgd_entry;
+
+        free = true;
+
+        for ( i = 0; i < 1024; i++ ) {
+            if ( page_table[ i ] != 0 ) {
+                free = false;
+                break;
+            }
+        }
+
+        if ( free ) {
+            free_pages( ( void* )page_table, 1 );
+            *pgd_entry = 0;
+        }
+    }
+
+    return 0;
+}
+
+int free_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size ) {
+    ptr_t addr;
+    uint32_t* pgd_entry;
+    uint32_t* pt_entry;
+
+    for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
+        pgd_entry = page_directory_entry( arch_context, addr );
+        pt_entry = page_table_entry( *pgd_entry, addr );
+
+        free_pages( ( void* )*pt_entry, 1 );
+        *pt_entry = 0;
+    }
+
+    return 0;
+}
+
+int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size ) {
+    ptr_t addr;
+    uint32_t* pgd_entry;
+    uint32_t* pt_entry;
+
+    pgd_entry = page_directory_entry( arch_context, virtual );
+    pt_entry = page_table_entry( *pgd_entry, virtual );
+
+    free_pages( ( void* )*pt_entry, size / PAGE_SIZE );
+
+    for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
+        pgd_entry = page_directory_entry( arch_context, addr );
+        pt_entry = page_table_entry( *pgd_entry, addr );
+
+        *pt_entry = 0;
     }
 
     return 0;
@@ -169,61 +223,6 @@ int clone_kernel_region(
 
         *new_pt_entry = *old_pt_entry;
     }
-
-    return 0;
-}
-
-int arch_create_region_pages( memory_context_t* context, region_t* region, alloc_type_t alloc_method ) {
-    int error;
-    i386_memory_context_t* arch_context;
-
-    arch_context = ( i386_memory_context_t* )context->arch_data;
-
-    /* Create the physical pages for the memory region */
-
-    switch ( ( int )alloc_method ) {
-        case ALLOC_PAGES :
-            error = create_region_pages(
-                arch_context,
-                region->start,
-                region->size,
-                ( region->flags & REGION_KERNEL ) != 0
-            );
-
-            if ( error < 0 ) {
-                return error;
-            }
-
-            break;
-
-        case ALLOC_CONTIGUOUS : {
-            void* p;
-
-            p = alloc_pages( region->size / PAGE_SIZE );
-
-            if ( p == NULL ) {
-                return -ENOMEM;
-            }
-
-            error = map_region_pages(
-                arch_context,
-                region->start,
-                ( ptr_t )p,
-                region->size,
-                ( region->flags & REGION_KERNEL ) != 0
-            );
-
-            if ( error < 0 ) {
-                return error;
-            }
-
-            break;
-        }
-    }
-
-    /* Invalidate TLB */
-
-    flush_tlb();
 
     return 0;
 }

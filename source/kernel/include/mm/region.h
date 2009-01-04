@@ -28,6 +28,7 @@ typedef int region_id;
 
 typedef enum alloc_type {
     ALLOC_NONE,
+    ALLOC_LAZY,
     ALLOC_PAGES,
     ALLOC_CONTIGUOUS
 } alloc_type_t;
@@ -45,17 +46,22 @@ typedef struct region {
     region_id id;
     const char* name;
     region_flags_t flags;
+    alloc_type_t alloc_method;
     ptr_t start;
     ptr_t size;
 } region_t;
 
-struct memory_context;
+typedef struct region_info {
+    ptr_t start;
+    ptr_t size;
+} region_info_t;
 
-int arch_create_region_pages( struct memory_context* context, region_t* region, alloc_type_t alloc_method );
+struct memory_context;
 
 region_t* allocate_region( const char* name );
 
 int region_insert( struct memory_context* context, region_t* region );
+int region_remove( struct memory_context* context, region_t* region );
 
 /**
  * Creates a new memory region.
@@ -76,6 +82,33 @@ region_id create_region(
     void** _address
 );
 
+/**
+ * Deletes a memory region.
+ *
+ * @param id The id of the region to delete
+ * @return On success 0 is returned
+ */
+int delete_region( region_id id );
+
+/**
+ * Resizes a memory region.
+ *
+ * @param id The id of the memory region to resize
+ * @param new_size The new size of the memory region
+ * @return On success 0 is returned
+ */
+int resize_region( region_id id, uint32_t new_size );
+
+/**
+ * Gets information about a memory region.
+ *
+ * @param id The id of the region to get information from
+ * @param info A pointer to a region info structure to store informations
+ * @return On success 0 is returned
+ */
+int get_region_info( region_id id, region_info_t* info );
+
+int preinit_regions( void );
 int init_regions( void );
 
 #endif // _MM_REGION_H_

@@ -49,6 +49,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
+        <item>arch/i386/src/mm/region.c</item>
     </array>
 
     <array name="files">
@@ -73,6 +74,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>
         <item>src/mm/region.c</item>
+        <item>src/mm/sbrk.c</item>
         <item>src/vfs/vfs.c</item>
         <item>src/vfs/rootfs.c</item>
         <item>src/vfs/devfs.c</item>

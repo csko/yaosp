@@ -67,6 +67,7 @@ void kernel_main( void ) {
     int error;
 
     init_semaphores();
+    init_regions();
     init_devices();
     init_module_loader();
     init_application_loader();

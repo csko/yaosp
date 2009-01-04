@@ -1,6 +1,6 @@
-/* Process implementation
+/* Memory region handling
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,37 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROCESS_H_
-#define _PROCESS_H_
+#ifndef _ARCH_MM_REGION_H_
+#define _ARCH_MM_REGION_H_
 
-#include <semaphore.h>
 #include <mm/context.h>
 #include <mm/region.h>
-#include <vfs/io_context.h>
-#include <lib/hashtable.h>
 
-typedef int process_id;
+int arch_create_region_pages( struct memory_context* context, region_t* region );
+int arch_delete_region_pages( struct memory_context* context, region_t* region );
+int arch_resize_region( struct memory_context* context, region_t* region, uint32_t new_size );
 
-typedef struct process {
-    hashitem_t hash;
-
-    process_id id;
-    char* name;
-
-    memory_context_t* memory_context;
-    semaphore_context_t* semaphore_context;
-    io_context_t* io_context;
-
-    region_id heap_region;
-
-    void* loader_data;
-} process_t;
-
-process_t* allocate_process( char* name );
-int insert_process( process_t* process );
-
-process_t* get_process_by_id( process_id id );
-
-int init_processes( void );
-
-#endif // _PROCESS_H_
+#endif // _ARCH_MM_REGION_H_

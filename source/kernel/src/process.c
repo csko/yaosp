@@ -39,13 +39,15 @@ process_t* allocate_process( char* name ) {
 
     memset( process, 0, sizeof( process_t ) );
 
-    process->id = -1;
     process->name = strdup( name );
 
     if ( process->name == NULL ) {
         kfree( process );
         return NULL;
     }
+
+    process->id = -1;
+    process->heap_region = -1;
 
     return process;
 }

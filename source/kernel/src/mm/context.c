@@ -78,6 +78,34 @@ int memory_context_insert_region( memory_context_t* context, region_t* region ) 
     return 0;
 }
 
+int memory_context_remove_region( memory_context_t* context, region_t* region ) {
+    int i;
+    int regions_to_move;
+    bool found = false;
+
+    for ( i = 0; i < context->region_count; i++ ) {
+        if ( context->regions[ i ] == region ) {
+            found = true;
+            break;
+        }
+    }
+
+    if ( !found ) {
+        return -EINVAL;
+    }
+
+    regions_to_move = context->region_count - i;
+
+    if ( regions_to_move > 0 ) {
+        memmove( &context->regions[ i ], &context->regions[ i + 1 ], sizeof( region_t* ) * regions_to_move );
+    }
+
+    context->regions[ context->region_count - 1 ] = NULL;
+    context->region_count--;
+
+    return 0;
+}
+
 bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address ) {
     int i;
     ptr_t start;
@@ -163,6 +191,40 @@ bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t si
     *address = start;
 
     return true;
+}
+
+bool memory_context_can_resize_region( memory_context_t* context, region_t* region, uint32_t new_size ) {
+    int i;
+    bool found = false;
+
+    for ( i = 0; i < context->region_count; i++ ) {
+        if ( context->regions[ i ] == region ) {
+            found = true;
+            break;
+        }
+    }
+
+    if ( !found ) {
+        return false;
+    }
+
+    if ( i == context->region_count - 1 ) {
+        ptr_t end_address;
+
+        if ( region->flags & REGION_KERNEL ) {
+            end_address = LAST_KERNEL_ADDRESS;
+        } else {
+            end_address = LAST_USER_ADDRESS;
+        }
+
+        if ( ( region->start + new_size - 1 ) > end_address ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    return ( ( region->start + new_size - 1 ) < context->regions[ i + 1 ]->start );
 }
 
 memory_context_t* memory_context_clone( memory_context_t* old_context ) {

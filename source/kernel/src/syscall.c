@@ -23,6 +23,7 @@
 #include <smp.h>
 #include <loader.h>
 #include <kernel.h>
+#include <mm/userspace.h>
 
 static system_call_entry_t system_call_table[] = {
     /* 0 */
@@ -41,6 +42,12 @@ static system_call_entry_t system_call_table[] = {
     {
         .name = "dbprintf",
         .function = sys_dbprintf,
+        .flags = 0
+    },
+    /* 3 */
+    {
+        .name = "sbrk",
+        .function = sys_sbrk,
         .flags = 0
     }
 };

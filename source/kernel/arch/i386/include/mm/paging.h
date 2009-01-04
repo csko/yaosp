@@ -36,6 +36,13 @@ static inline uint32_t* page_table_entry( uint32_t table, ptr_t address ) {
   return &( ( ( uint32_t* )( table & PAGE_MASK ) )[ ( address / PAGE_SIZE ) & 1023 ] );
 }
 
+int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel );
+int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t physical, uint32_t size, bool kernel );
+int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel );
+int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
+int free_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
+int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
+
 int clone_kernel_region(
     i386_memory_context_t* old_arch_context,
     region_t* old_region,
