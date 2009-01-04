@@ -32,6 +32,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/memcpy.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/yaosp/debug.c</item>
+        <item>src/yaosp/semaphore.c</item>
     </array>
 
     <target name="clean">

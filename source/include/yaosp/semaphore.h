@@ -1,4 +1,4 @@
-/* yaosp C library
+/* Semaphore functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,14 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_TYPES_H_
-#define _SYS_TYPES_H_
+#ifndef _YAOSP_SEMAPHORE_H_
+#define _YAOSP_SEMAPHORE_H_
 
-#include <stddef.h>
+#include <sys/types.h>
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long int uint64_t;
+typedef int semaphore_id;
 
-#endif // _SYS_TYPES_H_
+typedef enum semaphore_type {
+    SEMAPHORE_BINARY,
+    SEMAPHORE_COUNTING
+} semaphore_type_t;
+
+typedef enum semaphore_flags {
+    SEMAPHORE_GLOBAL = ( 1 << 0 ),
+    SEMAPHORE_RECURSIVE = ( 1 << 1 )
+} semaphore_flags_t;
+
+semaphore_id create_semaphore( const char* name, semaphore_type_t type, semaphore_flags_t flags, int count );
+int delete_semaphore( semaphore_id id );
+int lock_semaphore( semaphore_id id, int count, uint64_t timeout );
+int unlock_semaphore( semaphore_id id, int count );
+
+#endif // _YAOSP_SEMAPHORE_H_

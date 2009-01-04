@@ -130,6 +130,10 @@ semaphore_id create_semaphore( const char* name, semaphore_type_t type, uint32_t
     return do_create_semaphore( true, name, type, flags, count );
 }
 
+semaphore_id sys_create_semaphore( const char* name, semaphore_type_t type, uint32_t flags, int count ) {
+    return do_create_semaphore( false, name, type, flags, count );
+}
+
 static int do_delete_semaphore( bool kernel, semaphore_id id ) {
     semaphore_t* semaphore;
     semaphore_context_t* context;
@@ -169,6 +173,10 @@ static int do_delete_semaphore( bool kernel, semaphore_id id ) {
 
 int delete_semaphore( semaphore_id id ) {
     return do_delete_semaphore( true, id );
+}
+
+int sys_delete_semaphore( semaphore_id id ) {
+    return do_delete_semaphore( false, id );
 }
 
 static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t timeout ) {
@@ -327,8 +335,16 @@ int lock_semaphore( semaphore_id id, int count, uint64_t timeout ) {
     return do_lock_semaphore( true, id, count, timeout );
 }
 
+int sys_lock_semaphore( semaphore_id id, int count, uint64_t* timeout ) {
+    return do_lock_semaphore( false, id, count, *timeout );
+}
+
 int unlock_semaphore( semaphore_id id, int count ) {
     return do_unlock_semaphore( true, id, count );
+}
+
+int sys_unlock_semaphore( semaphore_id id, int count ) {
+    return do_unlock_semaphore( false, id, count );
 }
 
 static void* semaphore_key( hashitem_t* item ) {
@@ -375,6 +391,28 @@ int init_semaphore_context( semaphore_context_t* context ) {
     }
 
     return 0;
+}
+
+semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context ) {
+    int error;
+    semaphore_context_t* new_context;
+
+    new_context = ( semaphore_context_t* )kmalloc( sizeof( semaphore_context_t ) );
+
+    if ( new_context == NULL ) {
+        return NULL;
+    }
+
+    error = init_semaphore_context( new_context );
+
+    if ( error < 0 ) {
+        kfree( new_context );
+        return NULL;
+    }
+
+    /* TODO: clone semaphores */
+
+    return new_context;
 }
 
 int init_semaphores( void ) {

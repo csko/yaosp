@@ -17,7 +17,8 @@
  */
 
 #include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
 void* sbrk( int increment ) {
-    return ( void* )syscall1( 3, increment );
+    return ( void* )syscall1( SYS_sbrk, increment );
 }

@@ -23,33 +23,18 @@
 #include <smp.h>
 #include <loader.h>
 #include <kernel.h>
+#include <semaphore.h>
 #include <mm/userspace.h>
 
 static system_call_entry_t system_call_table[] = {
-    /* 0 */
-    {
-        .name = "fork",
-        .function = sys_fork,
-        .flags = SYSCALL_SAVE_STACK
-    },
-    /* 1 */
-    {
-        .name = "execve",
-        .function = sys_execve,
-        .flags = SYSCALL_SAVE_STACK
-    },
-    /* 2 */
-    {
-        .name = "dbprintf",
-        .function = sys_dbprintf,
-        .flags = 0
-    },
-    /* 3 */
-    {
-        .name = "sbrk",
-        .function = sys_sbrk,
-        .flags = 0
-    }
+    { "fork", sys_fork, SYSCALL_SAVE_STACK },
+    { "execve", sys_execve, SYSCALL_SAVE_STACK },
+    { "dbprintf", sys_dbprintf, 0 },
+    { "sbrk", sys_sbrk, 0 },
+    { "create_semaphore", sys_create_semaphore, 0 },
+    { "delete_semaphore", sys_delete_semaphore, 0 },
+    { "lock_semaphore", sys_lock_semaphore, 0 },
+    { "unlock_semaphore", sys_unlock_semaphore, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

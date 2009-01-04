@@ -16,8 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+.section .text
+
 .global syscall1
 .global syscall2
+.global syscall3
+.global syscall4
+.global syscall5
 
 syscall1:
     pushl %ebp
@@ -38,6 +43,54 @@ syscall2:
     movl 12(%ebp), %ebx
     movl 16(%ebp), %ecx
     int $0x80
+    popl %ebx
+    popl %ebp
+    ret
+
+syscall3:
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %ebx
+    movl 8(%ebp), %eax
+    movl 12(%ebp), %ebx
+    movl 16(%ebp), %ecx
+    movl 20(%ebp), %edx
+    int $0x80
+    popl %ebx
+    popl %ebp
+    ret
+
+syscall4:
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %ebx
+    pushl %esi
+    movl 8(%ebp), %eax
+    movl 12(%ebp), %ebx
+    movl 16(%ebp), %ecx
+    movl 20(%ebp), %edx
+    movl 24(%ebp), %esi
+    int $0x80
+    popl %esi
+    popl %ebx
+    popl %ebp
+    ret
+
+syscall5:
+    pushl %ebp
+    movl %esp, %ebp
+    pushl %ebx
+    pushl %esi
+    pushl %edi
+    movl 8(%ebp), %eax
+    movl 12(%ebp), %ebx
+    movl 16(%ebp), %ecx
+    movl 20(%ebp), %edx
+    movl 24(%ebp), %esi
+    movl 28(%ebp), %edi
+    int $0x80
+    popl %edi
+    popl %esi
     popl %ebx
     popl %ebp
     ret

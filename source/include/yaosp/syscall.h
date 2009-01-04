@@ -19,7 +19,12 @@
 #ifndef _YAOSP_SYSCALL_H_
 #define _YAOSP_SYSCALL_H_
 
-int syscall1( int number, unsigned int param1 );
-int syscall2( int number, unsigned int param1, unsigned int param2 );
+#include <sys/types.h>
+
+int syscall1( int number, uint32_t p1 );
+int syscall2( int number, uint32_t p1, uint32_t p2 );
+int syscall3( int number, uint32_t p1, uint32_t p2, uint32_t p3 );
+int syscall4( int number, uint32_t p1, uint32_t p2, uint32_t p3, uint32_t p4 );
+int syscall5( int number, uint32_t p1, uint32_t p2, uint32_t p3, uint32_t p4, uint32_t p5 );
 
 #endif // _YAOSP_SYSCALL_H_

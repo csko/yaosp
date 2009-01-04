@@ -170,6 +170,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </ld>
     </target>
 
+    <target name="generate_syscall_table">
+        <exec executable="python">
+            <arg>../../scripts/syscall_table_generator/syscall_table_generator.py</arg>
+            <arg>src/syscall.c</arg>
+            <arg>../include/yaosp/syscall_table.h</arg>
+        </exec>
+    </target>
+
     <target name="install">
         <copy from="objs/kernel" to="../../build/system/kernel"/>
     </target>
@@ -177,6 +185,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="all">
         <call target="clean"/>
         <call target="compile"/>
+        <call target="generate_syscall_table"/>
         <call target="install"/>
         <call target="test" directory="tst"/>
     </target>

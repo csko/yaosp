@@ -73,11 +73,16 @@ extern semaphore_context_t kernel_semaphore_context;
  */
 semaphore_id create_semaphore( const char* name, semaphore_type_t type, uint32_t flags, int count );
 int delete_semaphore( semaphore_id id );
-
 int lock_semaphore( semaphore_id id, int count, uint64_t timeout );
 int unlock_semaphore( semaphore_id id, int count );
 
+semaphore_id sys_create_semaphore( const char* name, semaphore_type_t type, uint32_t flags, int count );
+int sys_delete_semaphore( semaphore_id id );
+int sys_lock_semaphore( semaphore_id id, int count, uint64_t* timeout );
+int sys_unlock_semaphore( semaphore_id id, int count );
+
 int init_semaphore_context( semaphore_context_t* context );
+semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context );
 
 int init_semaphores( void );
 

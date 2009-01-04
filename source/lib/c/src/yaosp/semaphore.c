@@ -1,4 +1,4 @@
-/* Debug functions
+/* Semaphore functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,11 +18,38 @@
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
+#include <yaosp/semaphore.h>
 
-int dbprintf( const char* format, ... ) {
+semaphore_id create_semaphore( const char* name, semaphore_type_t type, semaphore_flags_t flags, int count ) {
+    return syscall4(
+        SYS_create_semaphore,
+        ( uint32_t )name,
+        ( uint32_t )type,
+        ( uint32_t )flags,
+        count
+    );
+}
+
+int delete_semaphore( semaphore_id id ) {
+    return syscall1(
+        SYS_delete_semaphore,
+        id
+    );
+}
+
+int lock_semaphore( semaphore_id id, int count, uint64_t timeout ) {
+    return syscall3(
+        SYS_lock_semaphore,
+        id,
+        count,
+        ( uint32_t )&timeout
+    );
+}
+
+int unlock_semaphore( semaphore_id id, int count ) {
     return syscall2(
-        SYS_dbprintf,
-        ( unsigned int )format,
-        ( unsigned int )( ( ( char** )( &format ) ) + 1 )
+        SYS_unlock_semaphore,
+        id,
+        count
     );
 }
