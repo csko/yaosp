@@ -32,6 +32,7 @@ typedef struct process {
 
     process_id id;
     char* name;
+    semaphore_id lock;
 
     memory_context_t* memory_context;
     semaphore_context_t* semaphore_context;

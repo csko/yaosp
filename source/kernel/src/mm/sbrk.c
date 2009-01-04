@@ -25,7 +25,7 @@ void* sys_sbrk( int increment ) {
 
     process = current_process();
 
-    kprintf( "heap=%d inc=%d\n", process->heap_region, increment );
+    LOCK( process->lock );
 
     if ( increment == 0 ) {
         /* Return the current location of the process break */
@@ -105,6 +105,8 @@ void* sys_sbrk( int increment ) {
             }
         }
     }
+
+    UNLOCK( process->lock );
 
     return pbreak;
 }

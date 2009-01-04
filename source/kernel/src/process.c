@@ -46,6 +46,14 @@ process_t* allocate_process( char* name ) {
         return NULL;
     }
 
+    process->lock = create_semaphore( "process lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( process->lock < 0 ) {
+        kfree( process->name );
+        kfree( process );
+        return NULL;
+    }
+
     process->id = -1;
     process->heap_region = -1;
 
