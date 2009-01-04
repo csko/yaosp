@@ -41,7 +41,7 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
 
     /* Open the device */
 
-    fd = open( _device, 0 );
+    fd = open( _device, O_RDONLY );
 
     if ( fd < 0 ) {
         return fd;
@@ -502,6 +502,7 @@ static filesystem_calls_t iso9660_calls = {
     .read = iso9660_read,
     .write = NULL,
     .read_directory = iso9660_read_directory,
+    .create = NULL,
     .mkdir = NULL
 };
 

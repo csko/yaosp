@@ -23,6 +23,11 @@
 #include <vfs/filesystem.h>
 #include <vfs/io_context.h>
 
+#define O_RDONLY 0x01
+#define O_WRONLY 0x02
+#define O_RDWR   0x04
+#define O_CREAT  0x08
+
 #define NAME_MAX 255
 
 typedef struct dirent {

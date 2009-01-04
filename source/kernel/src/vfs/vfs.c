@@ -74,38 +74,8 @@ int insert_mount_point( mount_point_t* mount_point ) {
     return 0;
 }
 
-static int do_open( bool kernel, const char* path, int flags ) {
+static int do_open_helper1( file_t* file, inode_t* parent, char* name, int length ) {
     int error;
-    char* name;
-    int length;
-    file_t* file;
-    inode_t* parent;
-    io_context_t* io_context;
-
-    /* Decide which I/O context to use */
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
-
-    /* Lookup the parent of the inode we want to open */
-
-    error = lookup_parent_inode( io_context, path, &name, &length, &parent );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    /* Create a new file */
-
-    file = create_file();
-
-    if ( file == NULL ) {
-        put_inode( parent );
-        return -ENOMEM;
-    }
 
     if ( ( length == 0 ) ||
          ( ( length == 1 ) && ( name[ 0 ] == '.' ) ) ) {
@@ -118,7 +88,6 @@ static int do_open( bool kernel, const char* path, int flags ) {
 
         if ( error < 0 ) {
             delete_file( file );
-            put_inode( parent );
             return error;
         }
 
@@ -133,8 +102,6 @@ static int do_open( bool kernel, const char* path, int flags ) {
             length,
             &child_inode
         );
-
-        put_inode( parent );
 
         if ( error < 0 ) {
             delete_file( file );
@@ -172,6 +139,82 @@ static int do_open( bool kernel, const char* path, int flags ) {
             return error;
         }
     }
+
+    return 0;
+}
+
+static int do_open_helper2( file_t* file, inode_t* parent, char* name, int length ) {
+    int error;
+    ino_t inode_number;
+
+    if ( parent->mount_point->fs_calls->create == NULL ) {
+        return -ENOSYS;
+    }
+
+    error = parent->mount_point->fs_calls->create(
+        parent->mount_point->fs_data,
+        parent->fs_node,
+        name,
+        length,
+        0,
+        0,
+        &inode_number,
+        &file->cookie
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    file->inode = get_inode( parent->mount_point, inode_number );
+
+    if ( file->inode == NULL ) {
+        return -ENOINO;
+    }
+
+    return 0;
+}
+
+static int do_open( bool kernel, const char* path, int flags ) {
+    int error;
+    char* name;
+    int length;
+    file_t* file;
+    inode_t* parent;
+    io_context_t* io_context;
+
+    /* Decide which I/O context to use */
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    /* Lookup the parent of the inode we want to open */
+
+    error = lookup_parent_inode( io_context, path, &name, &length, &parent );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Create a new file */
+
+    file = create_file();
+
+    if ( file == NULL ) {
+        put_inode( parent );
+        return -ENOMEM;
+    }
+
+    error = do_open_helper1( file, parent, name, length );
+
+    if ( ( error == -ENOENT ) && ( ( flags & O_CREAT ) != 0 ) ) {
+        error = do_open_helper2( file, parent, name, length );
+    }
+
+    put_inode( parent );
 
     error = io_context_insert_file( io_context, file );
 

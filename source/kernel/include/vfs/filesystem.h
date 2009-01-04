@@ -38,6 +38,7 @@ typedef struct filesystem_calls {
     int ( *read )( void* fs_cookie, void* node, void* file_cookie, void* buffer, off_t pos, size_t size );
     int ( *write )( void* fs_cookie, void* node, void* file_cookie, const void* buffer, off_t pos, size_t size );
     int ( *read_directory )( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
+    int ( *create )( void* fs_cookie, void* node, const char* name, int name_len, int mode, int permissions, ino_t* inode, void** file_cookie );
     int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_len, int permissions );
 } filesystem_calls_t;
 

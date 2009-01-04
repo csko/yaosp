@@ -74,6 +74,8 @@ static kernel_symbol_t symbols[] = {
     { "register_filesystem", ( ptr_t )register_filesystem },
     { "open", ( ptr_t )open },
     { "pread", ( ptr_t )pread },
+    { "mkdir", ( ptr_t )mkdir },
+    { "mount", ( ptr_t )mount },
 
     /* Semaphore functions */
     { "create_semaphore", ( ptr_t )create_semaphore },

@@ -73,7 +73,7 @@ static void mount_root_filesystem( void ) {
         panic( "Failed to mount root filesystem: failed to create mount point!\n" );
     }
 
-    dir = open( "/device/disk", 0 );
+    dir = open( "/device/disk", O_RDONLY );
 
     if ( dir < 0 ) {
         panic( "Failed to mount root filesystem: no disk(s) available!\n" );

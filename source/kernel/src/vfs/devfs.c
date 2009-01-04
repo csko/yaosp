@@ -347,6 +347,7 @@ static filesystem_calls_t devfs_calls = {
     .read = devfs_read,
     .write = devfs_write,
     .read_directory = devfs_read_directory,
+    .create = NULL,
     .mkdir = devfs_mkdir
 };
 
