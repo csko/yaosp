@@ -114,6 +114,28 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
     return -EINVAL;
 }
 
+int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data ) {
+    int i;
+    int result;
+    hashitem_t* item;
+
+    for ( i = 0; i < table->size; i++ ) {
+        item = table->items[ i ];
+
+        while ( item != NULL ) {
+            result = callback( item, data );
+
+            if ( result < 0 ) {
+                return result;
+            }
+
+            item = item->next;
+        }
+    }
+
+    return 0;
+}
+
 uint32_t hash_number( uint8_t* data, size_t length ) {
     size_t i;
     uint32_t hash;

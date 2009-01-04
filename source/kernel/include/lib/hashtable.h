@@ -38,6 +38,8 @@ typedef struct hashtable {
     compare_function_t* compare_func;
 } hashtable_t;
 
+typedef int hashtable_iter_callback_t( hashitem_t* item, void* data );
+
 int init_hashtable(
     hashtable_t* table,
     uint32_t size,
@@ -50,6 +52,8 @@ void destroy_hashtable( hashtable_t* table );
 int hashtable_add( hashtable_t* table, hashitem_t* item );
 hashitem_t* hashtable_get( hashtable_t* table, const void* key );
 int hashtable_remove( hashtable_t* table, const void* key );
+
+int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data );
 
 /* Common hash functions */
 

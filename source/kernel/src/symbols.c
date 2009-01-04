@@ -28,6 +28,7 @@
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
+#include <lib/hashtable.h>
 
 #include <arch/atomic.h>
 #include <arch/spinlock.h>
@@ -99,6 +100,15 @@ static kernel_symbol_t symbols[] = {
     { "strchr", ( ptr_t )strchr },
     { "strlen", ( ptr_t )strlen },
     { "snprintf", ( ptr_t )snprintf },
+
+    /* Hashtable functions */
+    { "init_hashtable", ( ptr_t )init_hashtable },
+    { "hashtable_add", ( ptr_t )hashtable_add },
+    { "hashtable_get", ( ptr_t )hashtable_get },
+    { "hashtable_remove", ( ptr_t )hashtable_remove },
+    { "hashtable_iterate", ( ptr_t )hashtable_iterate },
+    { "hash_number", ( ptr_t )hash_number },
+    { "hash_string", ( ptr_t )hash_string },
 
     /* Misc functions */
     { "__moddi3", ( ptr_t )__moddi3 },
