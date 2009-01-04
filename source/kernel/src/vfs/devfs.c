@@ -298,6 +298,42 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
     return 0;
 }
 
+static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_len, int permissions ) {
+    int error;
+    ino_t dummy;
+    devfs_node_t* node;
+    devfs_node_t* new_node;
+
+    /* Check if this name already exists */
+
+    error = devfs_lookup_inode( fs_cookie, _node, name, name_len, &dummy );
+
+    if ( error == 0 ) {
+        return -EEXIST;
+    }
+
+    node = ( devfs_node_t* )_node;
+
+    if ( !node->is_directory ) {
+        return -EINVAL;
+    }
+
+    /* Create the new node */
+
+    new_node = devfs_create_node(
+        node,
+        name,
+        name_len,
+        true
+    );
+
+    if ( new_node == NULL ) {
+        return -ENOMEM;
+    }
+
+    return 0;
+}
+
 static filesystem_calls_t devfs_calls = {
     .probe = NULL,
     .mount = devfs_mount,
@@ -311,7 +347,7 @@ static filesystem_calls_t devfs_calls = {
     .read = devfs_read,
     .write = devfs_write,
     .read_directory = devfs_read_directory,
-    .mkdir = NULL
+    .mkdir = devfs_mkdir
 };
 
 static void* devfs_node_key( hashitem_t* item ) {
