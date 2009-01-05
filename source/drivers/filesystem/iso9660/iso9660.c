@@ -503,7 +503,8 @@ static filesystem_calls_t iso9660_calls = {
     .write = NULL,
     .read_directory = iso9660_read_directory,
     .create = NULL,
-    .mkdir = NULL
+    .mkdir = NULL,
+    .isatty = NULL
 };
 
 int init_module( void ) {

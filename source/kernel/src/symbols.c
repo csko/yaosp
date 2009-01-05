@@ -102,6 +102,9 @@ static kernel_symbol_t symbols[] = {
     { "strncmp", ( ptr_t )strncmp },
     { "strchr", ( ptr_t )strchr },
     { "strlen", ( ptr_t )strlen },
+    { "strncpy", ( ptr_t )strncpy },
+    { "strdup", ( ptr_t )strdup },
+    { "strndup", ( ptr_t )strndup },
     { "snprintf", ( ptr_t )snprintf },
 
     /* Hashtable functions */

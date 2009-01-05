@@ -87,7 +87,6 @@ static int do_open_helper1( file_t* file, inode_t* parent, char* name, int lengt
         );
 
         if ( error < 0 ) {
-            delete_file( file );
             return error;
         }
 
@@ -104,14 +103,12 @@ static int do_open_helper1( file_t* file, inode_t* parent, char* name, int lengt
         );
 
         if ( error < 0 ) {
-            delete_file( file );
             return error;
         }
 
         file->inode = get_inode( parent->mount_point, child_inode );
 
         if ( file->inode == NULL ) {
-            delete_file( file );
             return -ENOINO;
         }
 
@@ -135,7 +132,6 @@ static int do_open_helper1( file_t* file, inode_t* parent, char* name, int lengt
         );
 
         if ( error < 0 ) {
-            delete_file( file );
             return error;
         }
     }
@@ -215,6 +211,11 @@ static int do_open( bool kernel, const char* path, int flags ) {
     }
 
     put_inode( parent );
+
+    if ( error < 0 ) {
+        delete_file( file );
+        return error;
+    }
 
     error = io_context_insert_file( io_context, file );
 
@@ -311,17 +312,21 @@ static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
     file = io_context_get_file( io_context, fd );
 
     if ( file == NULL ) {
-        return -EINVAL; /* TODO: right error code? */
+        return -EBADF;
     }
 
     /* TODO: check file type */
 
-    error = file->inode->mount_point->fs_calls->read_directory(
-        file->inode->mount_point->fs_data,
-        file->inode->fs_node,
-        file->cookie,
-        entry
-    );
+    if ( file->inode->mount_point->fs_calls->read_directory == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = file->inode->mount_point->fs_calls->read_directory(
+            file->inode->mount_point->fs_data,
+            file->inode->fs_node,
+            file->cookie,
+            entry
+        );
+    }
 
     io_context_put_file( io_context, file );
 

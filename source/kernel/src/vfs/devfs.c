@@ -348,7 +348,8 @@ static filesystem_calls_t devfs_calls = {
     .write = devfs_write,
     .read_directory = devfs_read_directory,
     .create = NULL,
-    .mkdir = devfs_mkdir
+    .mkdir = devfs_mkdir,
+    .isatty = NULL
 };
 
 static void* devfs_node_key( hashitem_t* item ) {
