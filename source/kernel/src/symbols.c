@@ -78,6 +78,7 @@ static kernel_symbol_t symbols[] = {
     { "register_filesystem", ( ptr_t )register_filesystem },
     { "open", ( ptr_t )open },
     { "pread", ( ptr_t )pread },
+    { "pwrite", ( ptr_t )pwrite },
     { "mkdir", ( ptr_t )mkdir },
     { "mount", ( ptr_t )mount },
 
@@ -90,8 +91,14 @@ static kernel_symbol_t symbols[] = {
     /* Time functions */
     { "get_system_time", ( ptr_t )get_system_time },
 
+    /* Console functions */
+    { "console_set_screen", ( ptr_t )console_set_screen },
+    { "console_switch_screen", ( ptr_t )console_switch_screen },
+
     /* Thread functions */
+    { "create_kernel_thread", ( ptr_t )create_kernel_thread },
     { "sleep_thread", ( ptr_t )sleep_thread },
+    { "wake_up_thread", ( ptr_t )wake_up_thread },
 
     /* Memory & string functions */
     { "memcpy", ( ptr_t )memcpy },

@@ -56,6 +56,7 @@ int insert_mount_point( mount_point_t* mount_point );
 int open( const char* path, int flags );
 int close( int fd );
 int pread( int fd, void* buffer, size_t count, off_t offset );
+int pwrite( int fd, const void* buffer, size_t count, off_t offset );
 int getdents( int fd, dirent_t* entry );
 int mkdir( const char* path, int permissions );
 int mount( const char* device, const char* dir, const char* filesystem );

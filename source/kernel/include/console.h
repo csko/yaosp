@@ -51,6 +51,7 @@ typedef struct console {
  * @return On success 0 is returned
  */
 int console_set_screen( console_t* console );
+int console_switch_screen( console_t* new_console, console_t** old_console );
 
 int kprintf( const char* format, ... );
 int kvprintf( const char* format, va_list args );

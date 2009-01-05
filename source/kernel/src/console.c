@@ -27,7 +27,23 @@ static console_t* screen = NULL;
 static spinlock_t console_lock = INIT_SPINLOCK;
 
 int console_set_screen( console_t* console ) {
+    spinlock_disable( &console_lock );
+
     screen = console;
+
+    spinunlock_enable( &console_lock );
+
+    return 0;
+}
+
+int console_switch_screen( console_t* new_console, console_t** old_console ) {
+    spinlock_disable( &console_lock );
+
+    *old_console = screen;
+    screen = new_console;
+
+    spinunlock_enable( &console_lock );
+
     return 0;
 }
 

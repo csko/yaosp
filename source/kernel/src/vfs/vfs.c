@@ -273,7 +273,7 @@ static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offs
     file = io_context_get_file( io_context, fd );
 
     if ( file == NULL ) {
-        return -EINVAL; /* TODO: right error code? */
+        return -EBADF;
     }
 
     if ( file->inode->mount_point->fs_calls->read != NULL ) {
@@ -296,6 +296,45 @@ static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offs
 
 int pread( int fd, void* buffer, size_t count, off_t offset ) {
     return do_pread( true, fd, buffer, count, offset );
+}
+
+static int do_pwrite( bool kernel, int fd, const void* buffer, size_t count, off_t offset ) {
+    int error;
+    file_t* file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    if ( file->inode->mount_point->fs_calls->write != NULL ) {
+        error = file->inode->mount_point->fs_calls->write(
+            file->inode->mount_point->fs_data,
+            file->inode->fs_node,
+            file->cookie,
+            buffer,
+            offset,
+            count
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    io_context_put_file( io_context, file );
+
+    return error;
+}
+
+int pwrite( int fd, const void* buffer, size_t count, off_t offset ) {
+    return do_pwrite( true, fd, buffer, count, offset );
 }
 
 static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
