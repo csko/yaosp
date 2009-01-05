@@ -18,10 +18,10 @@
 
 #ifndef _PS2KBD_H_
 #define _PS2KBD_H_
+
 #include <irq.h>
 
 int init_module( void );
 int destroy_module( void );
-static int ps2_keyboard_handler( int irq, void* data, registers_t* regs );
 
 #endif // _PS2KBD_H_

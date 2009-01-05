@@ -22,6 +22,16 @@
 
 #include "ps2kbd.h"
 
+static int ps2_keyboard_handler( int irq, void* data, registers_t* regs ) {
+    int scancode = inb ( 0x60 );
+
+    /* TODO: Handle scancode, handle LEDs, use a buffer, etc. */
+
+    kprintf ( "PS2KBD: [0x%x]\n", scancode );
+
+    return 0;
+}
+
 int init_module( void ) {
     int error;
 
@@ -33,24 +43,10 @@ int init_module( void ) {
     }
 
     kprintf ( "PS2KBD: Keyboard initialized.\n" );
+
     return 0;
 }
 
 int destroy_module( void ) {
     return 0;
-}
-
-static int ps2_keyboard_handler( int irq, void* data, registers_t* regs ) {
-
-    int scancode = inb ( 0x60 );
-
-    /* TODO: Handle scancode, handle LEDs, use a buffer, etc. */
-
-    kprintf ( "PS2KBD: [0x%x]\n", scancode );
-
-    /* Acknowledge the IRQ */
-    outb ( 0x20, 0x20 );
-
-    return 0;
-
 }
