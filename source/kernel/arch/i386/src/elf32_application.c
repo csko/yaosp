@@ -1,6 +1,6 @@
 /* 32bit ELF application loader
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -36,20 +36,7 @@ static bool elf32_application_check( int fd ) {
         return false;
     }
 
-    if ( ( header.ident[ ID_MAGIC0 ] != ELF32_MAGIC0 ) ||
-         ( header.ident[ ID_MAGIC1 ] != ELF32_MAGIC1 ) ||
-         ( header.ident[ ID_MAGIC2 ] != ELF32_MAGIC2 ) ||
-         ( header.ident[ ID_MAGIC3 ] != ELF32_MAGIC3 ) ) {
-        return false;
-    }
-
-    if ( header.ident[ ID_CLASS ] != ELF_CLASS_32 ) {
-        return false;
-    }
-
-    /* TODO: check other stuffs, such as endian and machine */
-
-    return true;
+    return elf32_check(&header);
 }
 
 static int elf32_parse_dynsym_section(

@@ -1,6 +1,7 @@
 /* 32bit ELF format handling
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -47,6 +48,14 @@ enum {
 
 enum {
     ELF_CLASS_32 = 1
+};
+
+enum {
+    ELF_DATA_2_LSB = 1
+};
+
+enum {
+    ELF_EM_386 = 3
 };
 
 enum {
@@ -181,5 +190,7 @@ typedef struct elf_application {
 
 int init_elf32_module_loader( void );
 int init_elf32_application_loader( void );
+
+bool elf32_check( elf_header_t* header );
 
 #endif // _ARCH_ELF32_H_

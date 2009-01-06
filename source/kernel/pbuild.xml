@@ -3,6 +3,7 @@
 This file is part of the yaosp build system
 
 Copyright (c) 2008 Zoltan Kovacs
+Copyright (c) 2009 Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -42,6 +43,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/pit.c</item>
         <item>arch/i386/src/scheduler.c</item>
         <item>arch/i386/src/apic.c</item>
+        <item>arch/i386/src/elf32.c</item>
         <item>arch/i386/src/elf32_module.c</item>
         <item>arch/i386/src/elf32_application.c</item>
         <item>arch/i386/src/syscall.c</item>
