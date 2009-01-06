@@ -19,8 +19,7 @@
 #ifndef _PS2KBD_H_
 #define _PS2KBD_H_
 
-#include <irq.h>
-#define PS2KBD_BUFSIZE 0x4000
+#define PS2KBD_BUFSIZE 0x1000
 
 int init_module( void );
 int destroy_module( void );
