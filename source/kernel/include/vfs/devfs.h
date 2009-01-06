@@ -22,12 +22,16 @@
 #include <vfs/inode.h>
 #include <lib/hashtable.h>
 
+struct select_request;
+
 typedef struct device_calls {
     int ( *open )( void* node, uint32_t flags, void** cookie );
     int ( *close )( void* node, void* cookie );
     int ( *ioctl )( void* node, void* cookie, uint32_t command, void* args, bool from_kernel );
     int ( *read )( void* node, void* cookie, void* buffer, off_t position, size_t size );
     int ( *write )( void* node, void* cookie, const void* buffer, off_t position, size_t size );
+    int ( *add_select_request )( void* node, void* cookie, struct select_request* request );
+    int ( *remove_select_request )( void* node, void* cookie, struct select_request* request );
 } device_calls_t;
 
 typedef struct devfs_node {

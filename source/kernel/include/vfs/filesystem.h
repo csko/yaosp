@@ -24,6 +24,7 @@
 #include <lib/hashtable.h>
 
 struct dirent;
+struct select_request;
 
 typedef struct filesystem_calls {
     bool ( *probe )( const char* device );
@@ -41,6 +42,8 @@ typedef struct filesystem_calls {
     int ( *create )( void* fs_cookie, void* node, const char* name, int name_len, int mode, int permissions, ino_t* inode_num, void** file_cookie );
     int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_len, int permissions );
     int ( *isatty )( void* fs_cookie, void* node );
+    int ( *add_select_request )( void* fs_cookie, void* node, void* file_cookie, struct select_request* request );
+    int ( *remove_select_request )( void* fs_cookie, void* node, void* file_cookie, struct select_request* request );
 } filesystem_calls_t;
 
 typedef struct filesystem_descriptor {

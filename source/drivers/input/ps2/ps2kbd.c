@@ -50,6 +50,10 @@ static int ps2_keyboard_handler( int irq, void* data, registers_t* regs ) {
 }
 
 static int ps2kbd_open( void* node, uint32_t flags, void** cookie ) {
+    readpos = 0;
+    writepos = 0;
+    size = 0;
+
     return 0;
 }
 

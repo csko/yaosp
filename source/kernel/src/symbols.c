@@ -77,10 +77,12 @@ static kernel_symbol_t symbols[] = {
     { "create_device_node", ( ptr_t )create_device_node },
     { "register_filesystem", ( ptr_t )register_filesystem },
     { "open", ( ptr_t )open },
+    { "close", ( ptr_t )close },
     { "pread", ( ptr_t )pread },
     { "pwrite", ( ptr_t )pwrite },
     { "mkdir", ( ptr_t )mkdir },
     { "mount", ( ptr_t )mount },
+    { "select", ( ptr_t )select },
 
     /* Semaphore functions */
     { "create_semaphore", ( ptr_t )create_semaphore },
@@ -124,6 +126,7 @@ static kernel_symbol_t symbols[] = {
     { "hash_string", ( ptr_t )hash_string },
 
     /* Misc functions */
+    { "handle_panic", ( ptr_t )handle_panic },
     { "__moddi3", ( ptr_t )__moddi3 },
     { "__divdi3", ( ptr_t )__divdi3 },
     { "__umoddi3", ( ptr_t )__umoddi3 },

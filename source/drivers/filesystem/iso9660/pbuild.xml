@@ -48,6 +48,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-O2</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
+                <flag>-Wshadow</flag>
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
                 <flag>-fno-builtin</flag>

@@ -160,7 +160,30 @@ static int devfs_open( void* fs_cookie, void* _node, int mode, void** file_cooki
     if ( node->is_directory ) {
         error = devfs_open_directory( node, mode, file_cookie );
     } else {
-        error = node->calls->open( node->cookie, 0, file_cookie );
+        if ( node->calls->open == NULL ) {
+            error = 0;
+        } else {
+            error = node->calls->open( node->cookie, 0, file_cookie );
+        }
+    }
+
+    return error;
+}
+
+static int devfs_close( void* fs_cookie, void* _node, void* file_cookie ) {
+    int error;
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    if ( node->is_directory ) {
+        error = 0;
+    } else {
+        if ( node->calls->close == NULL ) {
+            error = 0;
+        } else {
+            error = node->calls->close( node->cookie, file_cookie );
+        }
     }
 
     return error;
@@ -334,6 +357,52 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
     return 0;
 }
 
+static int devfs_add_select_request( void* fs_cookie, void* _node, void* file_cookie, select_request_t* request ) {
+    int error;
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    if ( node->is_directory ) {
+        return -EISDIR;
+    }
+
+    if ( node->calls->add_select_request == NULL ) {
+        switch ( ( int )request->type ) {
+            case SELECT_READ :
+            case SELECT_WRITE :
+                request->ready = true;
+                UNLOCK( request->sync );
+                break;
+        }
+
+        error = 0;
+    } else {
+        error = node->calls->add_select_request( node->cookie, file_cookie, request );
+    }
+
+    return error;
+}
+
+static int devfs_remove_select_request( void* fs_cookie, void* _node, void* file_cookie, select_request_t* request ) {
+    int error;
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    if ( node->is_directory ) {
+        return -EISDIR;
+    }
+
+    if ( node->calls->remove_select_request == NULL ) {
+        error = 0;
+    } else {
+        error = node->calls->remove_select_request( node->cookie, file_cookie, request );
+    }
+
+    return error;
+}
+
 static filesystem_calls_t devfs_calls = {
     .probe = NULL,
     .mount = devfs_mount,
@@ -342,14 +411,16 @@ static filesystem_calls_t devfs_calls = {
     .write_inode = devfs_write_inode,
     .lookup_inode = devfs_lookup_inode,
     .open = devfs_open,
-    .close = NULL,
+    .close = devfs_close,
     .free_cookie = NULL,
     .read = devfs_read,
     .write = devfs_write,
     .read_directory = devfs_read_directory,
     .create = NULL,
     .mkdir = devfs_mkdir,
-    .isatty = NULL
+    .isatty = NULL,
+    .add_select_request = devfs_add_select_request,
+    .remove_select_request = devfs_remove_select_request
 };
 
 static void* devfs_node_key( hashitem_t* item ) {

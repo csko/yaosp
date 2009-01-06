@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <smp.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <vfs/rootfs.h>
@@ -494,6 +495,198 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
 
 int mount( const char* device, const char* dir, const char* filesystem ) {
     return do_mount( true, device, dir, filesystem );
+}
+
+int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout ) {
+    int i;
+    int error;
+    io_context_t* io_context;
+
+    int req_count;
+    int ready_count;
+    file_t** files;
+    semaphore_id sync;
+    select_request_t* requests;
+
+    if ( count <= 0 ) {
+        return -EINVAL;
+    }
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    requests = ( select_request_t* )kmalloc( sizeof( select_request_t ) * count * 3 );
+
+    if ( requests == NULL ) {
+        return -ENOMEM;
+    }
+
+    files = ( file_t** )kmalloc( sizeof( file_t* ) * count );
+
+    if ( files == NULL ) {
+        kfree( requests );
+        return -ENOMEM;
+    }
+
+    sync = create_semaphore( "select sync", SEMAPHORE_COUNTING, 0, 0 );
+
+    if ( sync < 0 ) {
+        kfree( files );
+        kfree( requests );
+        return sync;
+    }
+
+    req_count = 0;
+
+    for ( i = 0; i < count; i++ ) {
+        bool present = false;
+
+        if ( ( readfds != NULL ) && ( FD_ISSET( i, readfds ) ) ) {
+            present = true;
+            requests[ req_count ].sync = sync;
+            requests[ req_count ].ready = false;
+            requests[ req_count ].type = SELECT_READ;
+            requests[ req_count ].fd = i;
+            req_count++;
+        }
+        if ( ( writefds != NULL ) && ( FD_ISSET( i, writefds ) ) ) {
+            present = true;
+            requests[ req_count ].sync = sync;
+            requests[ req_count ].ready = false;
+            requests[ req_count ].type = SELECT_WRITE;
+            requests[ req_count ].fd = i;
+            req_count++;
+        }
+        if ( ( exceptfds != NULL ) && ( FD_ISSET( i, exceptfds ) ) ) {
+            present = true;
+            requests[ req_count ].sync = sync;
+            requests[ req_count ].ready = false;
+            requests[ req_count ].type = SELECT_EXCEPT;
+            requests[ req_count ].fd = i;
+            req_count++;
+        }
+
+        if ( !present ) {
+            files[ i ] = NULL;
+            continue;
+        }
+
+        files[ i ] = io_context_get_file( io_context, i );
+
+        if ( files[ i ] == NULL ) {
+            /* TODO: cleanup */
+            return -EBADF;
+        }
+    }
+
+    /* Add select requests */
+
+    for ( i = 0; i < req_count; i++ ) {
+        file_t* file;
+
+        file = files[ requests[ i ].fd ];
+
+        if ( file->inode->mount_point->fs_calls->add_select_request == NULL ) {
+            switch ( ( int )requests[ i ].type ) {
+                case SELECT_READ :
+                case SELECT_WRITE :
+                    requests[ i ].ready = true;
+                    UNLOCK( requests[ i ].sync );
+                    break;
+            }
+
+            error = 0;
+        } else {
+            error = file->inode->mount_point->fs_calls->add_select_request(
+                file->inode->mount_point->fs_data,
+                file->inode->fs_node,
+                file->cookie,
+                &requests[ i ]
+            );
+        }
+
+        if ( error < 0 ) {
+            /* TODO: cleanup */
+            return error;
+        }
+    }
+
+    LOCK( sync );
+
+    if ( readfds != NULL ) {
+        FD_ZERO( readfds );
+    }
+
+    if ( writefds != NULL ) {
+        FD_ZERO( writefds );
+    }
+
+    if ( exceptfds != NULL ) {
+        FD_ZERO( exceptfds );
+    }
+
+    ready_count = 0;
+
+    for ( i = 0; i < req_count; i++ ) {
+        file_t* file;
+
+        file = files[ requests[ i ].fd ];
+
+        /* Remove the select request */
+
+        if ( file->inode->mount_point->fs_calls->remove_select_request != NULL ) {
+            file->inode->mount_point->fs_calls->remove_select_request(
+                file->inode->mount_point->fs_data,
+                file->inode->fs_node,
+                file->cookie,
+                &requests[ i ]
+            );
+        }
+
+        /* Check if this request is ready */
+
+        if ( requests[ i ].ready ) {
+            ready_count++;
+
+            switch ( ( int )requests[ i ].type ) {
+                case SELECT_READ :
+                    FD_SET( requests[ i ].fd, readfds );
+                    break;
+
+                case SELECT_WRITE :
+                    FD_SET( requests[ i ].fd, writefds );
+                    break;
+
+                case SELECT_EXCEPT :
+                    FD_SET( requests[ i ].fd, exceptfds );
+                    break;
+            }
+        }
+    }
+
+    /* Put the file handles */
+
+    for ( i = 0; i < count; i++ ) {
+        if ( files[ i ] != NULL ) {
+            io_context_put_file( io_context, files[ i ] );
+        }
+    }
+
+    /* Free allocated resources */
+
+    delete_semaphore( sync );
+
+    kfree( files );
+    kfree( requests );
+
+    return ready_count;
+}
+
+int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout ) {
+    return do_select( true, count, readfds, writefds, exceptfds, timeout );
 }
 
 int init_vfs( void ) {

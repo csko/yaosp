@@ -190,7 +190,7 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
     UNLOCK( io_context->lock );
 
     while ( true ) {
-        int length;
+        int name_len;
         ino_t inode_number;
         inode_t* inode;
 
@@ -200,13 +200,13 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
             break;
         }
 
-        length = sep - path;
+        name_len = sep - path;
 
         error = parent->mount_point->fs_calls->lookup_inode(
             parent->mount_point->fs_data,
             parent->fs_node,
             path,
-            length,
+            name_len,
             &inode_number
         );
 

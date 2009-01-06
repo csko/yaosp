@@ -192,7 +192,9 @@ static device_calls_t pata_cdrom_calls = {
     .close = pata_cdrom_close,
     .ioctl = pata_cdrom_ioctl,
     .read = pata_cdrom_read,
-    .write = NULL
+    .write = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
 };
 
 int pata_create_atapi_device_node( pata_port_t* port ) {

@@ -19,25 +19,28 @@
 #ifndef _CONSOLE_H_
 #define _CONSOLE_H_
 
+#include <types.h>
 #include <lib/stdarg.h>
 
 struct console;
 
+typedef void console_init_t( struct console* console );
 typedef void console_clear_t( struct console* console );
 typedef void console_putchar_t( struct console* console, char c );
 typedef void console_gotoxy_t( struct console* console, int x, int y );
 
 typedef struct console_operations {
+    console_init_t* init;
     console_clear_t* clear;
     console_putchar_t* putchar;
     console_gotoxy_t* gotoxy;
 } console_operations_t;
 
 typedef struct console {
-    int x;
-    int y;
-    int width;
-    int height;
+    int32_t x;
+    int32_t y;
+    int32_t width;
+    int32_t height;
     console_operations_t* ops;
 } console_t;
 
@@ -52,6 +55,8 @@ typedef struct console {
  */
 int console_set_screen( console_t* console );
 int console_switch_screen( console_t* new_console, console_t** old_console );
+
+int console_set_debug( console_t* console );
 
 int kprintf( const char* format, ... );
 int kvprintf( const char* format, va_list args );

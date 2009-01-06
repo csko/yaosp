@@ -224,7 +224,7 @@ try_again:
         waitnode_t waitnode;
         waitnode_t sleepnode;
 
-        if ( wakeup_time <= get_system_time() ) {
+        if ( ( timeout != INFINITE_TIMEOUT ) && ( wakeup_time <= get_system_time() ) ) {
             spinunlock_enable( &context->lock );
 
             return -ETIME;

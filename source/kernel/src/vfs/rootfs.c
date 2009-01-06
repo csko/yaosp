@@ -257,7 +257,9 @@ static filesystem_calls_t rootfs_calls = {
     .read_directory = rootfs_read_directory,
     .create = NULL,
     .mkdir = rootfs_mkdir,
-    .isatty = NULL
+    .isatty = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
 };
 
 static void* rootfs_node_key( hashitem_t* item ) {

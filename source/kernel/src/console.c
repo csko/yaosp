@@ -1,6 +1,6 @@
 /* Console handling functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,9 +24,14 @@
 #include <arch/spinlock.h>
 
 static console_t* screen = NULL;
+static console_t* debug = NULL;
 static spinlock_t console_lock = INIT_SPINLOCK;
 
 int console_set_screen( console_t* console ) {
+    if ( ( console != NULL ) && ( console->ops->init != NULL ) ) {
+        console->ops->init( console );
+    }
+
     spinlock_disable( &console_lock );
 
     screen = console;
@@ -37,6 +42,10 @@ int console_set_screen( console_t* console ) {
 }
 
 int console_switch_screen( console_t* new_console, console_t** old_console ) {
+    if ( ( new_console != NULL ) && ( new_console->ops->init != NULL ) ) {
+        new_console->ops->init( new_console );
+    }
+
     spinlock_disable( &console_lock );
 
     *old_console = screen;
@@ -47,9 +56,27 @@ int console_switch_screen( console_t* new_console, console_t** old_console ) {
     return 0;
 }
 
+int console_set_debug( console_t* console ) {
+    if ( ( console != NULL ) && ( console->ops->init != NULL ) ) {
+        console->ops->init( console );
+    }
+
+    spinlock_disable( &console_lock );
+
+    debug = console;
+
+    spinunlock_enable( &console_lock );
+
+    return 0;
+}
+
 static int kprintf_helper( void* data, char c ) {
     if ( screen != NULL ) {
         screen->ops->putchar( screen, c );
+    }
+
+    if ( debug != NULL ) {
+        debug->ops->putchar( debug, c );
     }
 
     return 0;

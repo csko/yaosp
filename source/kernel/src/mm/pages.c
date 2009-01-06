@@ -37,7 +37,7 @@
  * |     E      |
  * |     R      |
  * |   SPACE    |
- * |------------| <- end of memory region
+ * |------------| <- end of memory
  */
 
 #include <types.h>
@@ -67,7 +67,7 @@ void* alloc_pages( uint32_t count ) {
     void* p = NULL;
     ptr_t i;
     ptr_t region_start = 0;
-    uint32_t free_pages = 0;
+    uint32_t cur_free_pages = 0;
 
     spinlock_disable( &pages_lock );
 
@@ -75,12 +75,12 @@ void* alloc_pages( uint32_t count ) {
         if ( atomic_get( &memory_pages[ i ].ref ) == 0 ) {
             if ( region_start == 0 ) {
                 region_start = i;
-                free_pages = 1;
+                cur_free_pages = 1;
             } else {
-                free_pages++;
+                cur_free_pages++;
             }
 
-            if ( free_pages == count ) {
+            if ( cur_free_pages == count ) {
                 uint32_t j;
                 page_t* tmp = &memory_pages[ region_start ];
 

@@ -90,8 +90,6 @@ static void screen_putchar( console_t* console, char c ) {
     /* Check if we filled the last line of the screen */
 
     if ( console->y == console->height ) {
-        uint16_t* p;
-
         console->y--;
 
         /* Scroll the lines up */
@@ -132,6 +130,7 @@ static void screen_gotoxy( console_t* console, int x, int y ) {
 }
  
 static console_operations_t screen_ops = {
+    .init = NULL,
     .clear = screen_clear,
     .putchar = screen_putchar,
     .gotoxy = screen_gotoxy
@@ -145,11 +144,42 @@ static console_t screen = {
     .ops = &screen_ops
 };
 
+static void debug_init( console_t* debug ) {
+    outb( 0x00, 0x3F8 + 1 );
+    outb( 0x80, 0x3F8 + 3 );
+    outb( 0x03, 0x3F8 );
+    outb( 0x00, 0x3F8 + 1 );
+    outb( 0x03, 0x3F8 + 3 );
+    outb( 0xC7, 0x3F8 + 2 );
+    outb( 0x0B, 0x3F8 + 4 );
+}
+
+static void debug_putchar( console_t* debug, char c ) {
+    while ( ( inb( 0x3F8 + 5 ) & 0x20 ) == 0 ) ;
+    outb( c, 0x3F8 );
+}
+
+static console_operations_t debug_ops = {
+    .init = debug_init,
+    .clear = NULL,
+    .putchar = debug_putchar,
+    .gotoxy = NULL
+};
+
+static console_t debug = {
+    .x = 0,
+    .y = 0,
+    .width = 0,
+    .height = 0,
+    .ops = &debug_ops
+};
+
 int init_screen( void ) {
     video_memory = ( uint16_t* )0xB8000;
 
     screen_clear( &screen );
     console_set_screen( &screen );
+    console_set_debug( &debug );
 
     return 0;
 }
