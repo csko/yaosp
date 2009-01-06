@@ -57,7 +57,7 @@ static int ps2kbd_close( void* node, void* cookie ) {
     return 0;
 }
 
-static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, size_t size ) {
+static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, size_t _size ) {
     int ret;
     uint8_t* data;
 
@@ -73,10 +73,13 @@ static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, 
 
     /* Buffer is not empty, there is something to be read */
 
-    *data = ps2kbd_buffer[readpos];
-    readpos = (readpos + 1) % PS2KBD_BUFSIZE;
-    size--;
-    ret++;
+    while ( ( size > 0 ) && ( _size > 0 ) ) {
+        *data++ = ps2kbd_buffer[readpos];
+        readpos = (readpos + 1) % PS2KBD_BUFSIZE;
+        size--;
+        _size--;
+        ret++;
+    }
 
     spinunlock_enable( &ps2kbd_lock );
 
