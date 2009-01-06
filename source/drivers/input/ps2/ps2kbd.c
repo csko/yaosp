@@ -58,7 +58,7 @@ static int ps2kbd_close( void* node, void* cookie ) {
 }
 
 static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, size_t _size ) {
-    int ret;
+    int ret = 0;
     uint8_t* data;
 
     data = ( uint8_t* )buffer;
