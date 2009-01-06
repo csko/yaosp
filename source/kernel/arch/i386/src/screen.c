@@ -133,7 +133,8 @@ static console_operations_t screen_ops = {
     .init = NULL,
     .clear = screen_clear,
     .putchar = screen_putchar,
-    .gotoxy = screen_gotoxy
+    .gotoxy = screen_gotoxy,
+    .flush = NULL
 };
 
 static console_t screen = {
@@ -163,7 +164,8 @@ static console_operations_t debug_ops = {
     .init = debug_init,
     .clear = NULL,
     .putchar = debug_putchar,
-    .gotoxy = NULL
+    .gotoxy = NULL,
+    .flush = NULL
 };
 
 static console_t debug = {

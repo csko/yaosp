@@ -87,9 +87,21 @@ int kprintf( const char* format, ... ) {
 
     spinlock_disable( &console_lock );
 
+    /* Print the text */
+
     va_start( args, format );
     do_printf( kprintf_helper, NULL, format, args );
     va_end( args );
+
+    /* Flush the consoles */
+
+    if ( ( screen != NULL ) && ( screen->ops->flush != NULL ) ) {
+        screen->ops->flush( screen );
+    }
+
+    if ( ( debug != NULL ) && ( debug->ops->flush != NULL ) ) {
+        debug->ops->flush( debug );
+    }
 
     spinunlock_enable( &console_lock );
 
@@ -99,7 +111,19 @@ int kprintf( const char* format, ... ) {
 int kvprintf( const char* format, va_list args ) {
     spinlock_disable( &console_lock );
 
+    /* Print the text */
+
     do_printf( kprintf_helper, NULL, format, args );
+
+    /* Flush the consoles */
+
+    if ( ( screen != NULL ) && ( screen->ops->flush != NULL ) ) {
+        screen->ops->flush( screen );
+    }
+
+    if ( ( debug != NULL ) && ( debug->ops->flush != NULL ) ) {
+        debug->ops->flush( debug );
+    }
 
     spinunlock_enable( &console_lock );
 

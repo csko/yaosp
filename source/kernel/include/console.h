@@ -28,12 +28,14 @@ typedef void console_init_t( struct console* console );
 typedef void console_clear_t( struct console* console );
 typedef void console_putchar_t( struct console* console, char c );
 typedef void console_gotoxy_t( struct console* console, int x, int y );
+typedef void console_flush_t( struct console* console );
 
 typedef struct console_operations {
     console_init_t* init;
     console_clear_t* clear;
     console_putchar_t* putchar;
     console_gotoxy_t* gotoxy;
+    console_flush_t* flush;
 } console_operations_t;
 
 typedef struct console {
