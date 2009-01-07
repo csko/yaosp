@@ -4,4 +4,3 @@ module /system/pci
 module /system/pata
 module /system/iso9660
 module /system/ps2kbd
-module /system/terminal

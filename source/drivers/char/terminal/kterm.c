@@ -70,18 +70,32 @@ static console_t kterm_console = {
 };
 
 static int kterm_flusher_thread( void* arg ) {
+    bool more_data = false;
+    int cnt;
+    char tmp[ 128 ];
+
     while ( 1 ) {
-        LOCK( kterm_sync );
+        if ( !more_data ) {
+            LOCK( kterm_sync );
+        }
 
         spinlock_disable( &kterm_lock );
 
-        while ( size > 0 ) {
-            pwrite( kterm_tty, &kterm_buffer[ read_pos ], 1, 0 );
+        cnt = 0;
+
+        while ( ( size > 0 ) && ( cnt < sizeof( tmp ) ) ) {
+            tmp[ cnt++ ] = kterm_buffer[ read_pos ];
             read_pos = ( read_pos + 1 ) % KTERM_BUFSIZE;
             size--;
         }
 
+        more_data = ( size > 0 );
+
         spinunlock_enable( &kterm_lock );
+
+        if ( cnt > 0 ) {
+            pwrite( kterm_tty, tmp, cnt, 0 );
+        }
     }
 
     return 0;
@@ -136,6 +150,10 @@ int init_kernel_terminal( void ) {
     /* Set our conosle as the screen */
 
     console_set_screen( &kterm_console );
+
+    /* Make the kernel terminal the active */
+
+    terminal_switch_to( MAX_TERMINAL_COUNT - 1 );
 
     return 0;
 }

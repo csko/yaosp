@@ -31,7 +31,7 @@
 
 semaphore_id lock;
 thread_id read_thread;
-terminal_t* active_terminal;
+terminal_t* active_terminal = NULL;
 terminal_t* terminals[ MAX_TERMINAL_COUNT ];
 
 static console_t* screen;
@@ -53,6 +53,129 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
     }
 
     UNLOCK( lock );
+
+    return 0;
+}
+
+int terminal_switch_to( int index ) {
+    int i;
+    int j;
+    int scr_line;
+    term_buffer_item_t* line;
+
+    if ( ( index < 0 ) || ( index >= MAX_TERMINAL_COUNT ) ) {
+        return -EINVAL;
+    }
+
+    LOCK( lock );
+
+    active_terminal = terminals[ index ];
+
+    /* Clear the screen */
+
+    screen->ops->clear( screen );
+
+    /* Put the terminal buffer to the screen */
+
+    scr_line = screen->height - 1;
+
+    for ( i = active_terminal->line_count - 1; ( i >= 0 ) && ( scr_line >= 0 ); i--, scr_line-- ) {
+        screen->ops->gotoxy( screen, 0, scr_line );
+
+        line = &active_terminal->lines[ i ];
+
+        for ( j = 0; j < line->size; j++ ) {
+            screen->ops->putchar( screen, line->buffer[ j ] );
+        }
+    }
+
+    UNLOCK( lock );
+
+    return 0;
+}
+
+static int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
+    bool done;
+
+    /* Check if we can insert to the last line */
+
+    if ( ( terminal->line_count > 0 ) &&
+         ( ( terminal->lines[ terminal->line_count - 1 ].flags & TERM_BUFFER_LINE_END ) == 0 ) &&
+         ( terminal->lines[ terminal->line_count - 1 ].size < TERMINAL_WIDTH ) ) {
+        term_buffer_item_t* last_line;
+
+        done = false;
+        last_line = &terminal->lines[ terminal->line_count - 1 ];
+
+        while ( ( size > 0 ) && ( last_line->size < TERMINAL_WIDTH ) && ( !done ) ) {
+            switch ( *buf ) {
+                case '\n' :
+                    last_line->flags |= TERM_BUFFER_LINE_END;
+                    done = true;
+                    break;
+
+                default :
+                    last_line->buffer[ last_line->size++ ] = *buf;
+                    break;
+            }
+
+            buf++;
+            size--;
+        }
+
+        last_line->buffer[ last_line->size ] = 0;
+    }
+
+    /* Create new line(s) for the rest of the data */
+
+    while ( size > 0 ) {
+        term_buffer_item_t* last_line;
+        term_buffer_item_t* tmp_lines;
+
+        tmp_lines = ( term_buffer_item_t* )kmalloc( sizeof( term_buffer_item_t ) * ( terminal->line_count + 1 ) );
+
+        if ( tmp_lines == NULL ) {
+            return -ENOMEM;
+        }
+
+        if ( terminal->line_count > 0 ) {
+            memcpy( tmp_lines, terminal->lines, sizeof( term_buffer_item_t ) * terminal->line_count );
+        }
+
+        kfree( terminal->lines );
+        terminal->lines = tmp_lines;
+        terminal->line_count++;
+        last_line = &terminal->lines[ terminal->line_count - 1 ];
+
+        last_line->size = 0;
+        last_line->flags = 0;
+        last_line->buffer = ( char* )kmalloc( TERMINAL_WIDTH + 1 );
+
+        if ( last_line->buffer == NULL ) {
+            return -ENOMEM;
+        }
+
+        done = false;
+
+        while ( ( size > 0 ) && ( last_line->size < TERMINAL_WIDTH ) && ( !done ) ) {
+            switch ( *buf ) {
+                case '\n' :
+                    last_line->flags |= TERM_BUFFER_LINE_END;
+                    done = true;
+                    break;
+
+                default :
+                    last_line->buffer[ last_line->size ] = *buf;
+                    last_line->size++;
+                    break;
+            }
+
+            buf++;
+            size--;
+        }
+
+        last_line->buffer[ last_line->size ] = 0;
+    }
 
     return 0;
 }
@@ -90,11 +213,17 @@ static int terminal_read_thread( void* arg ) {
                 size = pread( terminals[ i ]->master_pty, buffer, sizeof( buffer ), 0 );
 
                 if ( size > 0 ) {
-                    //if ( active_terminal == terminals[ i ] ) {
+                    LOCK( lock );
+
+                    terminal_buffer_insert( terminals[ i ], buffer, size );
+
+                    if ( active_terminal == terminals[ i ] ) {
                         for ( j = 0; j < size; j++ ) {
                             screen->ops->putchar( screen, buffer[ j ] );
                         }
-                    //}
+                    }
+
+                    UNLOCK( lock );
                 }
             }
         }
@@ -123,6 +252,8 @@ int init_terminals( void ) {
         }
 
         terminals[ i ]->flags = TERMINAL_ACCEPTS_USER_INPUT;
+        terminals[ i ]->line_count = 0;
+        terminals[ i ]->lines = NULL;
     }
 
     read_thread = create_kernel_thread( "terminal read", terminal_read_thread, NULL );

@@ -21,6 +21,7 @@
 #include <vfs/vfs.h>
 
 #include "../input.h"
+#include "../terminal.h"
 
 static int device;
 static thread_id thread;
@@ -43,12 +44,32 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
         key = keyboard_normal_map[ scancode ];
     }
 
-    if ( key != 0 ) {
-        terminal_handle_event(
-            scancode & 0x80 ? E_KEY_RELEASED : E_KEY_PRESSED,
-            key,
-            0
-        );
+    switch ( key ) {
+        case KEY_F1 :
+        case KEY_F2 :
+        case KEY_F3 :
+        case KEY_F4 :
+        case KEY_F5 :
+        case KEY_F6 : {
+            int term_index;
+
+            term_index = ( key >> 8 ) - 1;
+
+            terminal_switch_to( term_index );
+
+            break;
+        }
+
+        default :
+            if ( key != 0 ) {
+                terminal_handle_event(
+                    scancode & 0x80 ? E_KEY_RELEASED : E_KEY_PRESSED,
+                    key,
+                    0
+                );
+            }
+
+            break;
     }
 
 done:
