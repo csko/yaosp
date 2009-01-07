@@ -32,6 +32,6 @@
 /**
  * The size of the kernel stack for threads.
  */
-#define KERNEL_STACK_SIZE ( 16 * 1024 )
+#define KERNEL_STACK_SIZE ( 32 * 1024 )
 
 #endif // _CONFIG_H_

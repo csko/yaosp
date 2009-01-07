@@ -1,6 +1,6 @@
 /* Page fault handler
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,6 +18,7 @@
 
 #include <types.h>
 #include <console.h>
+#include <smp.h>
 
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
@@ -25,10 +26,18 @@
 void dump_registers( registers_t* regs );
 
 void handle_page_fault( registers_t* regs ) {
+    thread_t* thread;
+
     kprintf( "Page fault!\n" );
     dump_registers( regs );
     kprintf( "CR2=%x\n", get_cr2() );
     kprintf( "CR3=%x\n", get_cr3() );
+
+    thread = current_thread();
+
+    if ( thread != NULL ) {
+        kprintf( "Current thread: %s\n", thread->name );
+    }
 
     disable_interrupts();
     halt_loop();

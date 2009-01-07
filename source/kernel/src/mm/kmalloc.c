@@ -203,6 +203,8 @@ void kfree( void* p ) {
          ( chunk->prev->type == CHUNK_FREE ) ) {
         kmalloc_chunk_t* prev_chunk = chunk->prev;
 
+        ASSERT( chunk->prev->magic == KMALLOC_CHUNK_MAGIC );
+
         chunk->magic = 0;
 
         prev_chunk->size += chunk->size;
@@ -210,6 +212,10 @@ void kfree( void* p ) {
 
         prev_chunk->next = chunk->next;
         chunk = prev_chunk;
+
+        if ( chunk->next != NULL ) {
+            chunk->next->prev = chunk;
+        }
     }
 
     /* merge with the next chunk if it is free */
@@ -218,12 +224,18 @@ void kfree( void* p ) {
          ( chunk->next->type == CHUNK_FREE ) ) {
         kmalloc_chunk_t* next_chunk = chunk->next;
 
+        ASSERT( next_chunk->magic == KMALLOC_CHUNK_MAGIC );
+
         next_chunk->magic = 0;
 
         chunk->size += next_chunk->size;
         chunk->size += sizeof( kmalloc_chunk_t );
 
         chunk->next = next_chunk->next;
+
+        if ( chunk->next != NULL ) {
+            chunk->next->prev = chunk;
+        }
     }
 
     /* update the biggest free chunk size in the current block */

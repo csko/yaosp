@@ -437,6 +437,28 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
         symbol = &elf_module->symbols[ ELF32_R_SYM( reloc->info ) ];
 
         switch ( ELF32_R_TYPE( reloc->info ) ) {
+            case R_386_32 : {
+                bool found;
+                ptr_t address;
+
+                found = elf32_module_find_symbol(
+                    elf_module,
+                    symbol->name,
+                    STT_OBJECT,
+                    &address
+                );
+
+                if ( !found ) {
+                    kprintf( "ELF32(R_386_32): Symbol %s not found!\n", symbol->name );
+                    return -EINVAL;
+                }
+
+                target = ( uint32_t* )( elf_module->text_address + reloc->offset );
+                *target = *target + ( uint32_t )address;
+
+                break;
+            }
+
             case R_386_GLOB_DATA : {
                 bool found;
                 ptr_t address;
@@ -449,7 +471,7 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                 );
 
                 if ( !found ) {
-                    kprintf( "ELF32: Symbol %s not found!\n", symbol->name );
+                    kprintf( "ELF32(R_386_GLOB_DATA): Symbol %s not found!\n", symbol->name );
                     return -EINVAL;
                 }
 
@@ -481,7 +503,7 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                     if ( !found ) {
                         /* No luck :( */
 
-                        kprintf( "ELF32: Symbol %s not found!\n", symbol->name );
+                        kprintf( "ELF32(R_386_JMP_SLOT): Symbol %s not found!\n", symbol->name );
                         return -EINVAL;
                     }
                 }

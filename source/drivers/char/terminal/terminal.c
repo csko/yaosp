@@ -143,6 +143,7 @@ static int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
         }
 
         kfree( terminal->lines );
+
         terminal->lines = tmp_lines;
         terminal->line_count++;
         last_line = &terminal->lines[ terminal->line_count - 1 ];

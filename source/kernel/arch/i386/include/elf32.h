@@ -86,6 +86,7 @@ enum {
 };
 
 enum {
+    R_386_32 = 1,
     R_386_GLOB_DATA = 6,
     R_386_JMP_SLOT = 7,
     R_386_RELATIVE = 8
