@@ -129,3 +129,33 @@ int kvprintf( const char* format, va_list args ) {
 
     return 0;
 }
+
+static int dprintf_helper( void* data, char c ) {
+    if ( debug != NULL ) {
+        debug->ops->putchar( debug, c );
+    }
+
+    return 0;
+}
+
+int dprintf( const char* format, ... ) {
+    va_list args;
+
+    spinlock_disable( &console_lock );
+
+    /* Print the text */
+
+    va_start( args, format );
+    do_printf( dprintf_helper, NULL, format, args );
+    va_end( args );
+
+    /* Flush the debug console */
+
+    if ( ( debug != NULL ) && ( debug->ops->flush != NULL ) ) {
+        debug->ops->flush( debug );
+    }
+
+    spinunlock_enable( &console_lock );
+
+    return 0;
+}

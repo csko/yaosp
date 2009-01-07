@@ -63,4 +63,6 @@ int console_set_debug( console_t* console );
 int kprintf( const char* format, ... );
 int kvprintf( const char* format, va_list args );
 
+int dprintf( const char* format, ... );
+
 #endif // _CONSOLE_H_

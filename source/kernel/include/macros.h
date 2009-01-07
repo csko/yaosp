@@ -28,7 +28,7 @@
 
 #define ASSERT(exp) \
     if ( !( exp ) ) { \
-        panic( "Assertation (%s) failed at: %s:%d\n", \
+        panic( "Assertion (%s) failed at: %s:%d\n", \
             #exp, __FILE__, __LINE__ \
         ); \
     }

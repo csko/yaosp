@@ -55,6 +55,14 @@ static size_t bm_get_size( void* private ) {
     return bootmodule->size;
 }
 
+static char* bm_get_name( void* private ) {
+    bootmodule_t* bootmodule;
+
+    bootmodule = ( bootmodule_t* )private;
+
+    return bootmodule->name;
+}
+
 module_reader_t* get_bootmodule_reader( int index ) {
     module_reader_t* reader;
 
@@ -71,6 +79,7 @@ module_reader_t* get_bootmodule_reader( int index ) {
     reader->private = &bootmodules[ index ];
     reader->read = bm_read_module;
     reader->get_size = bm_get_size;
+    reader->get_name = bm_get_name;
 
     return reader;
 }

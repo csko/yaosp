@@ -115,6 +115,9 @@ int init_thread( void* arg ) {
     load_bootmodules();
     mount_root_filesystem();
 
+    int i;
+    while ( 1 ) { kprintf( "blablabla i=%d\n", i++ ); if ( i % 5 == 0 ) sleep_thread(500000);}
+
     if ( fork() == 0 ) {
         if ( execve( "/yaosp/SYSTEM/INIT", NULL, NULL ) != 0 ) {
             panic( "Failed to execute init process!\n" );

@@ -1,6 +1,6 @@
 /* Module loader and manager
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -56,7 +56,10 @@ size_t get_module_size( module_reader_t* reader ) {
     return reader->get_size( reader->private );
 }
 
-//module_id load_module_from_bootmodule( bootmodule_t* bootmodule ) {
+char* get_module_name( module_reader_t* reader ) {
+    return reader->get_name( reader->private );
+}
+
 module_id load_module( module_reader_t* reader ) {
     int error;
     module_t* module;

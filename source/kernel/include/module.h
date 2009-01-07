@@ -1,6 +1,6 @@
 /* Module loader and manager
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -45,11 +45,13 @@ typedef struct module {
 
 typedef int read_module_t( void* private, void* data, off_t offset, int size );
 typedef size_t get_module_size_t( void* private );
+typedef char* get_module_name_t( void* private );
 
 typedef struct module_reader {
     void* private;
     read_module_t* read;
     get_module_size_t* get_size;
+    get_module_name_t* get_name;
 } module_reader_t;
 
 /* Module loader definitions */
@@ -71,6 +73,7 @@ module_t* create_module( const char* name );
 
 int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int size );
 size_t get_module_size( module_reader_t* reader );
+char* get_module_name( module_reader_t* reader );
 
 module_id load_module( module_reader_t* reader );
 int initialize_module( module_id id );

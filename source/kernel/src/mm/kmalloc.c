@@ -1,6 +1,6 @@
 /* Memory allocator
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <console.h>
 #include <kernel.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/string.h>
@@ -68,6 +69,8 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
     while ( ( chunk != NULL ) &&
             ( ( chunk->type != CHUNK_FREE ) ||
               ( chunk->size < size ) ) ) {
+        ASSERT( chunk->magic == KMALLOC_CHUNK_MAGIC );
+
         chunk = chunk->next;
     }
 
@@ -110,6 +113,8 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
     block->biggest_free = 0;
 
     while ( chunk != NULL ) {
+        ASSERT( chunk->magic == KMALLOC_CHUNK_MAGIC );
+
         if ( ( chunk->type == CHUNK_FREE ) &&
              ( chunk->size > block->biggest_free ) ) {
             block->biggest_free = chunk->size;
@@ -124,7 +129,6 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
 void* kmalloc( uint32_t size ) {
     void* p;
     uint32_t min_size;
-    uint32_t min_pages;
     kmalloc_block_t* block;
 
     spinlock_disable( &kmalloc_lock );

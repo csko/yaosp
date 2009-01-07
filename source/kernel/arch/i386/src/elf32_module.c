@@ -1,6 +1,6 @@
 /* 32bit ELF module loader
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -278,6 +278,7 @@ static int elf32_parse_section_headers( module_reader_t* reader, elf_module_t* e
 
 static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module ) {
     uint32_t i;
+    char region_name[ 64 ];
     elf_section_header_t* section_header;
 
     bool text_found = false;
@@ -345,8 +346,10 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
     data_size = data_end - data_start + 1;
     data_size_with_bss = bss_end - data_start + 1;
 
+    snprintf( region_name, sizeof( region_name ), "%s_ro", get_module_name( reader ) );
+
     elf_module->text_region = create_region(
-        "ro",
+        region_name,
         PAGE_ALIGN( text_size ),
         REGION_READ | REGION_KERNEL,
         ALLOC_PAGES,
@@ -357,8 +360,10 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
         return elf_module->text_region;
     }
 
+    snprintf( region_name, sizeof( region_name ), "%s_rw", get_module_name( reader ) );
+
     elf_module->data_region = create_region(
-        "rw",
+        region_name,
         PAGE_ALIGN( data_size_with_bss ),
         REGION_READ | REGION_WRITE | REGION_KERNEL,
         ALLOC_PAGES,
@@ -366,7 +371,8 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
     );
 
     if ( elf_module->data_region < 0 ) {
-        /* TODO: delete text region */
+        delete_region( elf_module->text_region );
+        elf_module->text_region = -1;
         return elf_module->data_region;
     }
 
@@ -378,7 +384,10 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
         text_offset,
         text_size
     ) != text_size ) {
-        /* TODO: delete text & data regions */
+        delete_region( elf_module->text_region );
+        elf_module->text_region = -1;
+        delete_region( elf_module->data_region );
+        elf_module->data_region = -1;
         return -EIO;
     }
 
@@ -388,7 +397,10 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
         data_offset,
         data_size
     ) != data_size ) {
-        /* TODO: delete text & data regions */
+        delete_region( elf_module->text_region );
+        elf_module->text_region = -1;
+        delete_region( elf_module->data_region );
+        elf_module->data_region = -1;
         return -EIO;
     }
 
@@ -583,7 +595,7 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
     }
 
     module = create_module(
-        "elf_module" /* TODO */
+        get_module_name( reader )
     );
 
     if ( module == NULL ) {
