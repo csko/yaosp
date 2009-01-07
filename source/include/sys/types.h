@@ -28,4 +28,6 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long int uint64_t;
 
+typedef int pid_t;
+
 #endif // _SYS_TYPES_H_

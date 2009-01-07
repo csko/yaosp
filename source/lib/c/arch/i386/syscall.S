@@ -18,11 +18,21 @@
 
 .section .text
 
+.global syscall0
 .global syscall1
 .global syscall2
 .global syscall3
 .global syscall4
 .global syscall5
+
+syscall0:
+    pushl %ebp
+    movl %esp, %ebp
+    movl 8(%ebp), %eax
+    int $0x80
+    popl %ebp
+    ret
+.size syscall0,.-syscall0
 
 syscall1:
     pushl %ebp
@@ -34,6 +44,7 @@ syscall1:
     popl %ebx
     popl %ebp
     ret
+.size syscall1,.-syscall1
 
 syscall2:
     pushl %ebp
@@ -46,6 +57,7 @@ syscall2:
     popl %ebx
     popl %ebp
     ret
+.size syscall2,.-syscall2
 
 syscall3:
     pushl %ebp
@@ -59,6 +71,7 @@ syscall3:
     popl %ebx
     popl %ebp
     ret
+.size syscall3,.-syscall3
 
 syscall4:
     pushl %ebp
@@ -75,6 +88,7 @@ syscall4:
     popl %ebx
     popl %ebp
     ret
+.size syscall4,.-syscall4
 
 syscall5:
     pushl %ebp
@@ -94,3 +108,4 @@ syscall5:
     popl %ebx
     popl %ebp
     ret
+.size syscall5,.-syscall5

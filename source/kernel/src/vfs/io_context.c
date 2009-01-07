@@ -55,7 +55,7 @@ int io_context_insert_file( io_context_t* io_context, file_t* file ) {
         file->fd = io_context->fd_counter++;
 
         if ( io_context->fd_counter < 0 ) {
-            io_context->fd_counter = 0;
+            io_context->fd_counter = 3;
         }
     } while ( hashtable_get( &io_context->file_table, ( const void* )file->fd ) != NULL );
 
@@ -147,7 +147,7 @@ int init_io_context( io_context_t* io_context ) {
         file_compare
     );
 
-    io_context->fd_counter = 0;
+    io_context->fd_counter = 3;
 
     /* Create the I/O context lock */
 

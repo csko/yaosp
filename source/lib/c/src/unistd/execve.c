@@ -1,4 +1,4 @@
-/* Terminal driver
+/* Execve function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,37 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _TERMINAL_TERMINAL_H_
-#define _TERMINAL_TERMINAL_H_
+#include <unistd.h>
 
-#include <types.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define MAX_TERMINAL_COUNT 6
-
-#define TERMINAL_WIDTH 80
-#define TERMINAL_HEIGHT 25
-#define TERMINAL_MAX_LINES 200
-
-#define TERMINAL_ACCEPTS_USER_INPUT 0x01
-
-#define TERM_BUFFER_LINE_END 0x01
-
-typedef struct term_buffer_item {
-    char* buffer;
-    size_t size;
-    int flags;
-} term_buffer_item_t;
-
-typedef struct terminal {
-    int master_pty;
-    int flags;
-
-    int line_count;
-    term_buffer_item_t* lines;
-} terminal_t;
-
-extern terminal_t* terminals[ MAX_TERMINAL_COUNT ];
-
-int terminal_switch_to( int index );
-
-#endif // _TERMINAL_TERMINAL_H_
+int execve( const char* filename, char* const argv[], char* const envp[] ) {
+    return syscall3( SYS_execve, ( int )filename, ( int )argv, ( int )envp );
+}

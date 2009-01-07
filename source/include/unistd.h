@@ -19,6 +19,11 @@
 #ifndef _UNISTD_H_
 #define _UNISTD_H_
 
+#include <sys/types.h>
+
+pid_t fork( void );
+int execve( const char* filename, char* const argv[], char* const envp[] );
+
 void* sbrk( int increment );
 
 #endif // _UNISTD_H_

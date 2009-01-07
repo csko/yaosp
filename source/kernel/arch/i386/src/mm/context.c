@@ -71,7 +71,7 @@ int arch_clone_memory_region(
     if ( old_region->flags & REGION_KERNEL ) {
         error = clone_kernel_region( old_arch_context, old_region, new_arch_context, new_region );
     } else {
-        panic( "Tried to clone non-kernel region\n" );
+        error = clone_user_region( old_arch_context, old_region, new_arch_context, new_region );
     }
 
     return 0;

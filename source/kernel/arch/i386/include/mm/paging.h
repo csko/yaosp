@@ -50,6 +50,13 @@ int clone_kernel_region(
     region_t* new_region
 );
 
+int clone_user_region(
+    i386_memory_context_t* old_arch_context,
+    region_t* old_region,
+    i386_memory_context_t* new_arch_context,
+    region_t* new_region
+);
+
 int init_paging( void );
 
 #endif // _ARCH_MM_PAGING_H_

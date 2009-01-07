@@ -16,10 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <unistd.h>
 #include <yaosp/debug.h>
 
 int main( int argc, char** argv ) {
+    int error;
+
     dbprintf( "Hello World from userspace!\n" );
+
+    if ( fork() == 0 ) {
+        dbprintf( "Executing shell!\n" );
+        error = execve( "/yaosp/SYSTEM/SHELL", 0, 0 );
+        dbprintf( "Execve returned: %d\n", error );
+        while ( 1 ) ;
+    }
 
     return 0;
 }

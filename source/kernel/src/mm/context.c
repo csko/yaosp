@@ -257,39 +257,59 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
 
         region = old_context->regions[ i ];
 
-        if ( region->flags & REGION_KERNEL ) {
-            new_region = ( region_t* )kmalloc( sizeof( region_t ) );
+        new_region = ( region_t* )kmalloc( sizeof( region_t ) );
 
-            if ( new_region == NULL ) {
-                return NULL;
-            }
+        if ( new_region == NULL ) {
+            return NULL;
+        }
 
-            new_region->name = strdup( region->name );
+        new_region->name = strdup( region->name );
 
-            if ( new_region->name == NULL ) {
-                kfree( new_region );
-                return NULL;
-            }
+        if ( new_region->name == NULL ) {
+            kfree( new_region );
+            return NULL;
+        }
 
-            new_region->flags = region->flags;
-            new_region->start = region->start;
-            new_region->size = region->size;
+        new_region->flags = region->flags;
+        new_region->start = region->start;
+        new_region->size = region->size;
 
-            error = arch_clone_memory_region( old_context, region, new_context, new_region );
+        error = arch_clone_memory_region( old_context, region, new_context, new_region );
 
-            if ( error < 0 ) {
-                return NULL;
-            }
+        if ( error < 0 ) {
+            return NULL;
+        }
 
-            error = memory_context_insert_region( new_context, new_region );
+        error = region_insert( new_context, new_region );
 
-            if ( error < 0 ) {
-                return NULL;
-            }
-        } else {
-            panic( "Tried to clone non-kernel memory region\n" );
+        if ( error < 0 ) {
+            return NULL;
         }
     }
   
     return new_context;
+}
+
+int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
+    int start = 0;
+    bool done = false;
+
+    /* NOTE: The current code here makes an assumption that user
+            regions are always after any other kernel region! */
+
+again:
+    if ( user_only ) {
+        for ( ; start < context->region_count; start++ ) {
+            if ( ( context->regions[ start ]->flags & REGION_KERNEL ) == 0 ) {
+                break;
+            }
+        }
+    }
+
+    for ( ; start < context->region_count; start++ ) {
+        delete_region( context->regions[ start ]->id );
+        goto again;
+    }
+
+    return 0;
 }

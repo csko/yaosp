@@ -84,4 +84,15 @@ bool memory_context_can_resize_region( memory_context_t* context, region_t* regi
  */
 memory_context_t* memory_context_clone( memory_context_t* old_context );
 
+/**
+ * Deletes all regions from the specified memory context. If the
+ * user_only parameter is true then the kernel regions won't be
+ * deleted.
+ *
+ * @param context The memory context to delete regions from
+ * @param user_only If true only user regions will be deleted
+ * @return On success 0 is returned
+ */
+int memory_context_delete_regions( memory_context_t* context, bool user_only );
+
 #endif // _MM_CONTEXT_H_

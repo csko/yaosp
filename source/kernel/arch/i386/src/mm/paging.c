@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <types.h>
+#include <kernel.h>
 #include <mm/context.h>
 #include <mm/pages.h>
 #include <mm/region.h>
@@ -207,7 +208,7 @@ int clone_kernel_region(
         new_arch_context,
         new_region->start,
         new_region->size,
-        ( old_region->flags & REGION_KERNEL ) != 0
+        true
     );
 
     if ( error < 0 ) {
@@ -222,6 +223,90 @@ int clone_kernel_region(
         new_pt_entry = page_table_entry( *new_pgd_entry, addr );
 
         *new_pt_entry = *old_pt_entry;
+    }
+
+    return 0;
+}
+
+int clone_user_region(
+    i386_memory_context_t* old_arch_context,
+    region_t* old_region,
+    i386_memory_context_t* new_arch_context,
+    region_t* new_region
+) {
+    void* p;
+    int error;
+    uint32_t addr;
+    uint32_t* old_pgd_entry;
+    uint32_t* old_pt_entry;
+    uint32_t* new_pgd_entry;
+    uint32_t* new_pt_entry;
+
+    error = map_region_page_tables(
+        new_arch_context,
+        new_region->start,
+        new_region->size,
+        false
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    switch ( ( int )old_region->alloc_method ) {
+        case ALLOC_PAGES :
+            for ( addr = old_region->start; addr < old_region->start + old_region->size; addr += PAGE_SIZE ) {
+                old_pgd_entry = page_directory_entry( old_arch_context, addr );
+                old_pt_entry = page_table_entry( *old_pgd_entry, addr );
+
+                new_pgd_entry = page_directory_entry( new_arch_context, addr );
+                new_pt_entry = page_table_entry( *new_pgd_entry, addr );
+
+                p = alloc_pages( 1 );
+
+                if ( p == NULL ) {
+                    return -ENOMEM;
+                }
+
+                memcpy( p, ( void* )( *old_pt_entry & PAGE_MASK ), PAGE_SIZE );
+
+                *new_pt_entry = ( uint32_t )p | ( *old_pt_entry & ( PAGE_SIZE - 1 ) );
+            }
+
+            break;
+
+        case ALLOC_CONTIGUOUS : {
+            uint8_t* tmp;
+
+            p = alloc_pages( old_region->size / PAGE_SIZE );
+
+            if ( p == NULL ) {
+                return -ENOMEM;
+            }
+
+            old_pgd_entry = page_directory_entry( old_arch_context, old_region->start );
+            old_pt_entry = page_table_entry( *old_pgd_entry, old_region->start );
+
+            memcpy( p, ( void* )( *old_pt_entry & PAGE_MASK ), old_region->size );
+
+            tmp = ( uint8_t* )p;
+
+            for ( addr = old_region->start; addr < old_region->start + old_region->size; addr += PAGE_SIZE, tmp += PAGE_SIZE ) {
+                old_pgd_entry = page_directory_entry( old_arch_context, addr );
+                old_pt_entry = page_table_entry( *old_pgd_entry, addr );
+
+                new_pgd_entry = page_directory_entry( new_arch_context, addr );
+                new_pt_entry = page_table_entry( *new_pgd_entry, addr );
+
+                *new_pt_entry = *tmp | ( *old_pt_entry & ( PAGE_SIZE - 1 ) );
+            }
+
+            break;
+        }
+
+        default :
+            panic( "Not yet implemented!\n" );
+            break;
     }
 
     return 0;

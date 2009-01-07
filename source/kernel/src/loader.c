@@ -19,6 +19,8 @@
 #include <loader.h>
 #include <errno.h>
 #include <console.h>
+#include <smp.h>
+#include <mm/context.h>
 #include <vfs/vfs.h>
 
 static application_loader_t* loaders;
@@ -60,6 +62,8 @@ static int execve( char* path, char** argv, char** envp ) {
         close( fd );
         return -ENOEXEC;
     }
+
+    memory_context_delete_regions( current_process()->memory_context, true );
 
     /* Load the executable with the selected loader */
 

@@ -21,6 +21,7 @@
 
 #include <sys/types.h>
 
+int syscall0( int number );
 int syscall1( int number, uint32_t p1 );
 int syscall2( int number, uint32_t p1, uint32_t p2 );
 int syscall3( int number, uint32_t p1, uint32_t p2, uint32_t p3 );

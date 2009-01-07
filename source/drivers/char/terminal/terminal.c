@@ -76,7 +76,7 @@ int terminal_switch_to( int index ) {
 
     /* Put the terminal buffer to the screen */
 
-    i = MAX( 0, active_terminal->line_count - 25 );
+    i = MAX( 0, active_terminal->line_count - TERMINAL_HEIGHT );
 
     for ( ; i < active_terminal->line_count; i++ ) {
         line = &active_terminal->lines[ i ];
