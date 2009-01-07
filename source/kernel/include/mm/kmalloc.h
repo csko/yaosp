@@ -21,8 +21,17 @@
 
 #include <types.h>
 
-#define KMALLOC_BLOCK_SIZE          32
-#define KMALLOC_ROOT_SIZE          128
+/**
+ * Minimum block size that should be allocated when a new
+ * block is created by kmalloc. This value has to be page
+ * aligned.
+ */
+#define KMALLOC_BLOCK_SIZE      131072
+/**
+ * The size of the root block that is allocated during the
+ * kernel initialization. This value has to be page aligned.
+ */
+#define KMALLOC_ROOT_SIZE       524288
 
 #define KMALLOC_BLOCK_MAGIC 0xCAFEBABE
 #define KMALLOC_CHUNK_MAGIC 0xDEADBEEF

@@ -41,7 +41,7 @@ static kmalloc_block_t* __kmalloc_create_block( uint32_t pages ) {
     }
 
     block->magic = KMALLOC_BLOCK_MAGIC;
-    block->pages = KMALLOC_ROOT_SIZE;
+    block->pages = pages;
     block->next = NULL;
     block->first_chunk = ( kmalloc_chunk_t* )( block + 1 );
 
@@ -141,14 +141,13 @@ void* kmalloc( uint32_t size ) {
 
     /* create a new block */
 
-    min_size = size + sizeof( kmalloc_block_t ) + sizeof( kmalloc_chunk_t );
-    min_pages = PAGE_ALIGN( min_size ) / PAGE_SIZE;
+    min_size = PAGE_ALIGN( size + sizeof( kmalloc_block_t ) + sizeof( kmalloc_chunk_t ) );
 
-    if ( min_pages < KMALLOC_BLOCK_SIZE ) {
-        min_pages = KMALLOC_BLOCK_SIZE;
+    if ( min_size < KMALLOC_BLOCK_SIZE ) {
+        min_size = KMALLOC_BLOCK_SIZE;
     }
 
-    block = __kmalloc_create_block( KMALLOC_BLOCK_SIZE );
+    block = __kmalloc_create_block( min_size / PAGE_SIZE );
 
     if ( block == NULL ) {
         return NULL;
@@ -176,17 +175,17 @@ void kfree( void* p ) {
         return;
     }
 
-    spinlock_disable( &kmalloc_lock );
-
     chunk = ( kmalloc_chunk_t* )( ( uint8_t* )p - sizeof( kmalloc_chunk_t ) );
 
+    spinlock_disable( &kmalloc_lock );
+
     if ( chunk->magic != KMALLOC_CHUNK_MAGIC ) {
-        panic( "kfree(): Tried to free an invalid memory region!\n" );
+        panic( "kfree(): Tried to free an invalid memory region! (%x)\n", p );
         goto out;
     }
 
     if ( chunk->type != CHUNK_ALLOCATED ) {
-        panic( "kfree(): Tried to free a non-allocated memory region!\n" );
+        panic( "kfree(): Tried to free a non-allocated memory region! (%x)\n", p );
         goto out;
     }
 
@@ -234,7 +233,7 @@ out:
 }
 
 int init_kmalloc( void ) {
-    root = __kmalloc_create_block( KMALLOC_ROOT_SIZE );
+    root = __kmalloc_create_block( KMALLOC_ROOT_SIZE / PAGE_SIZE );
 
     if ( root == NULL ) {
         return -ENOMEM;
