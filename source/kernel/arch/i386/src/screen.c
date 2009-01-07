@@ -181,7 +181,7 @@ int init_screen( void ) {
 
     screen_clear( &screen );
     console_set_screen( &screen );
-    console_set_debug( &debug );
+    //console_set_debug( &debug );
 
     return 0;
 }

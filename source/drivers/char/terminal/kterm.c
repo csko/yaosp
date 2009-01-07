@@ -27,7 +27,7 @@
 #include "kterm.h"
 #include "terminal.h"
 
-#define KTERM_BUFSIZE 4096
+#define KTERM_BUFSIZE 32768
 
 static int kterm_tty;
 

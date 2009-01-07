@@ -60,7 +60,6 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
 int terminal_switch_to( int index ) {
     int i;
     int j;
-    int scr_line;
     term_buffer_item_t* line;
 
     if ( ( index < 0 ) || ( index >= MAX_TERMINAL_COUNT ) ) {
@@ -77,15 +76,18 @@ int terminal_switch_to( int index ) {
 
     /* Put the terminal buffer to the screen */
 
-    scr_line = screen->height - 1;
+    i = MAX( 0, active_terminal->line_count - 25 );
 
-    for ( i = active_terminal->line_count - 1; ( i >= 0 ) && ( scr_line >= 0 ); i--, scr_line-- ) {
-        screen->ops->gotoxy( screen, 0, scr_line );
-
+    for ( ; i < active_terminal->line_count; i++ ) {
         line = &active_terminal->lines[ i ];
 
         for ( j = 0; j < line->size; j++ ) {
             screen->ops->putchar( screen, line->buffer[ j ] );
+        }
+
+        if ( ( line->size < TERMINAL_WIDTH ) &&
+             ( line->flags & TERM_BUFFER_LINE_END ) ) {
+            screen->ops->putchar( screen, '\n' );
         }
     }
 
@@ -129,32 +131,27 @@ static int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
     /* Create new line(s) for the rest of the data */
 
     while ( size > 0 ) {
+        char* buffer;
         term_buffer_item_t* last_line;
-        term_buffer_item_t* tmp_lines;
 
-        tmp_lines = ( term_buffer_item_t* )kmalloc( sizeof( term_buffer_item_t ) * ( terminal->line_count + 1 ) );
+        if ( terminal->line_count == TERMINAL_MAX_LINES ) {
+            buffer = terminal->lines[ 0 ].buffer;
+            memmove( terminal->lines, &terminal->lines[ 1 ], sizeof( term_buffer_item_t ) * ( TERMINAL_MAX_LINES - 1 ) );
+        } else {
+            terminal->line_count++;
 
-        if ( tmp_lines == NULL ) {
-            return -ENOMEM;
+            buffer = ( char* )kmalloc( TERMINAL_WIDTH + 1 );
+
+            if ( buffer == NULL ) {
+                return -ENOMEM;
+            }
         }
 
-        if ( terminal->line_count > 0 ) {
-            memcpy( tmp_lines, terminal->lines, sizeof( term_buffer_item_t ) * terminal->line_count );
-        }
-
-        kfree( terminal->lines );
-
-        terminal->lines = tmp_lines;
-        terminal->line_count++;
         last_line = &terminal->lines[ terminal->line_count - 1 ];
 
         last_line->size = 0;
         last_line->flags = 0;
-        last_line->buffer = ( char* )kmalloc( TERMINAL_WIDTH + 1 );
-
-        if ( last_line->buffer == NULL ) {
-            return -ENOMEM;
-        }
+        last_line->buffer = buffer;
 
         done = false;
 
@@ -252,9 +249,16 @@ int init_terminals( void ) {
             return terminals[ i ]->master_pty;
         }
 
+        terminals[ i ]->lines = ( term_buffer_item_t* )kmalloc( sizeof( term_buffer_item_t ) * TERMINAL_MAX_LINES );
+
+        if ( terminals[ i ]->lines == NULL ) {
+            return -ENOMEM;
+        }
+
+        memset( terminals[ i ]->lines, 0, sizeof( term_buffer_item_t ) * TERMINAL_MAX_LINES );
+
         terminals[ i ]->flags = TERMINAL_ACCEPTS_USER_INPUT;
         terminals[ i ]->line_count = 0;
-        terminals[ i ]->lines = NULL;
     }
 
     read_thread = create_kernel_thread( "terminal read", terminal_read_thread, NULL );

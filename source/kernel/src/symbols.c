@@ -24,6 +24,7 @@
 #include <time.h>
 #include <thread.h>
 #include <semaphore.h>
+#include <irq.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
@@ -34,7 +35,6 @@
 #include <arch/atomic.h>
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
-#include <irq.h>
 
 extern void __moddi3( void );
 extern void __divdi3( void );
