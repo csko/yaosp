@@ -37,6 +37,7 @@ static system_call_entry_t system_call_table[] = {
     { "lock_semaphore", sys_lock_semaphore, 0 },
     { "unlock_semaphore", sys_unlock_semaphore, 0 },
     { "open", sys_open, 0 },
+    { "read", sys_read, 0 },
     { "write", sys_write, 0 },
     { "dup2", sys_dup2, 0 }
 };

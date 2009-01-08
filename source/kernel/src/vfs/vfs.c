@@ -303,6 +303,10 @@ int pread( int fd, void* buffer, size_t count, off_t offset ) {
     return do_pread( true, fd, buffer, count, offset );
 }
 
+int sys_read( int fd, void* buffer, size_t count ) {
+    return do_pread( false, fd, buffer, count, 0 );
+}
+
 static int do_pwrite( bool kernel, int fd, const void* buffer, size_t count, off_t offset ) {
     int error;
     file_t* file;

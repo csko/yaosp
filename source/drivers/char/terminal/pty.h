@@ -50,6 +50,8 @@ typedef struct pty_node {
 
     select_request_t* read_requests;
     select_request_t* write_requests;
+
+    int line_size;
 } pty_node_t;
 
 typedef struct pty_lookup_data {

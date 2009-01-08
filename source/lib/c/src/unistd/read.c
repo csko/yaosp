@@ -1,4 +1,4 @@
-/* yaosp C library
+/* Read function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STDIO_H_
-#define _STDIO_H_
+#include <unistd.h>
 
-#define FILE_CAN_READ  0x01
-#define FILE_CAN_WRITE 0x02
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-typedef struct FILE {
-    int fd;
-    int flags;
-} FILE;
-
-extern FILE* stdin;
-extern FILE* stdout;
-extern FILE* stderr;
-
-int fgetc( FILE* stream );
-int fputc( int c, FILE* stream );
-int fputs( const char* s, FILE* stream );
-
-#endif // _STDIO_H_
+ssize_t read( int fd, void* buf, size_t count ) {
+    return syscall3( SYS_read, fd, ( int )buf, count );
+}

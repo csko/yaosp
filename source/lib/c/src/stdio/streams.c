@@ -1,4 +1,4 @@
-/* yaosp C library
+/* stdin/stdout/stderr stream definitions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STDIO_H_
-#define _STDIO_H_
+#include <stdio.h>
 
-#define FILE_CAN_READ  0x01
-#define FILE_CAN_WRITE 0x02
+static FILE _stdin = {
+    .fd = 0,
+    .flags = FILE_CAN_READ
+};
 
-typedef struct FILE {
-    int fd;
-    int flags;
-} FILE;
+static FILE _stdout = {
+    .fd = 1,
+    .flags = FILE_CAN_WRITE
+};
 
-extern FILE* stdin;
-extern FILE* stdout;
-extern FILE* stderr;
+static FILE _stderr = {
+    .fd = 2,
+    .flags = FILE_CAN_WRITE
+};
 
-int fgetc( FILE* stream );
-int fputc( int c, FILE* stream );
-int fputs( const char* s, FILE* stream );
-
-#endif // _STDIO_H_
+FILE* stdin = &_stdin;
+FILE* stdout = &_stdout;
+FILE* stderr = &_stderr;

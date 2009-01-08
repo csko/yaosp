@@ -73,6 +73,18 @@ static void screen_putchar( console_t* console, char c ) {
 
             break;
 
+        case '\b' :
+            if ( console->x == 0 ) {
+                if ( console->y > 0 ) {
+                    console->y--;
+                    console->x = console->width - 1;
+                }
+            } else {
+                console->x--;
+            }
+
+            break;
+
         default :
             *p++ = ( 7 << 8 ) | c;
             console->x++; 

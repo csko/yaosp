@@ -1,4 +1,4 @@
-/* Shell application
+/* Fgetc function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -19,47 +19,16 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <yaosp/debug.h>
+int fgetc( FILE* stream ) {
+    char c;
 
-static char line[ 255 ];
-
-static void get_line( void ) {
-    int c;
-    int pos = 0;
-    int done = 0;
-
-    while ( !done ) {
-        c = fgetc( stdin );
-
-        switch ( c ) {
-            case '\n' :
-                done = 1;
-                break;
-
-            case '\b' :
-                if ( pos > 0 ) {
-                    pos--;
-                }
-
-                break;
-
-            default :
-                if ( pos < 254 ) {
-                    line[ pos++ ] = c;
-                }
-
-                break;
-        }
+    if ( ( stream->flags & FILE_CAN_READ ) == 0 ) {
+        return -1;
     }
 
-    line[ pos ] = 0;
-}
-
-int main( int argc, char** argv ) {
-    while ( 1 ) {
-        fputs( "> ", stdout );
-        get_line();
+    if ( read( stream->fd, &c, 1 ) != 1 ) {
+        return -1;
     }
 
-    return 0;
+    return ( int )c;
 }

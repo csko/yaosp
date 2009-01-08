@@ -287,8 +287,6 @@ static int pty_do_write( pty_node_t* node, const void* buffer, size_t size ) {
     written = 0;
     data = ( uint8_t* )buffer;
 
-    LOCK( node->lock );
-
     while ( size > 0 ) {
         while ( node->size == node->buffer_size ) {
             UNLOCK( node->lock );
@@ -317,13 +315,64 @@ static int pty_do_write( pty_node_t* node, const void* buffer, size_t size ) {
         request = request->next;
     }
 
-    UNLOCK( node->lock );
-
     /* Tell possibly waiting readers that we have data */
 
     UNLOCK( node->read_queue );
 
     return written;
+}
+
+static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t size, bool count_line_size ) {
+    size_t i;
+    char* buf;
+
+    buf = ( char* )buffer;
+
+    LOCK( master->lock );
+
+    for ( i = 0; i < size; i++, buf++ ) {
+        switch ( *buf ) {
+            case '\b' :
+                if ( master->line_size > 0 ) {
+                    master->line_size--;
+                    pty_do_write( master, "\b \b", 3 );
+                }
+
+                break;
+
+            case '\n' :
+                pty_do_write( master, buf, 1 );
+
+                if ( count_line_size ) {
+                    master->line_size = 0;
+                }
+
+                break;
+
+            default :
+                pty_do_write( master, buf, 1 );
+
+                if ( count_line_size ) {
+                    master->line_size++;
+                }
+
+                break;
+        }
+    }
+
+    UNLOCK( master->lock );
+
+    return size;
+}
+
+static int pty_do_write_slave( pty_node_t* slave, const void* buffer, size_t size ) {
+    LOCK( slave->lock );
+    pty_do_write( slave, buffer, size );
+    UNLOCK( slave->lock );
+
+    pty_do_write_master( slave->partner, buffer, size, true );
+
+    return size;
 }
 
 static int pty_write( void* fs_cookie, void* _node, void* file_cookie, const void* buffer, off_t pos, size_t size ) {
@@ -335,7 +384,11 @@ static int pty_write( void* fs_cookie, void* _node, void* file_cookie, const voi
 
     node = ( pty_node_t* )_node;
 
-    return pty_do_write( node->partner, buffer, size );
+    if ( pty_is_master( node ) ) {
+        return pty_do_write_slave( node->partner, buffer, size );
+    } else {
+        return pty_do_write_master( node->partner, buffer, size, false );
+    }
 }
 
 static int pty_read_dir_helper( hashitem_t* item, void* _data ) {
