@@ -52,24 +52,66 @@ const unsigned short int monthdays[13] =
 const unsigned short int monthdays2[13] =
 { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
+const unsigned short int sumofdays[ 60 ] =
+{ 0, 366, 731, 1096, 1461, 1827, 2192, 2557, 2922, 3288, 3653, 4018, 4383, 4749,
+  5114, 5479, 5844, 6210, 6575, 6940, 7305, 7671, 8036, 8401, 8766, 9132, 9497,
+  9862, 10227, 10593, 10958, 11323, 11688, 12054, 12419, 12784, 13149, 13515,
+  13880, 14245, 14610, 14976, 15341, 15706, 16071, 16437, 16802, 17167, 17532,
+  17898, 18263, 18628, 18993, 19359, 19724, 20089, 20454, 20820, 21185, 21550 };
+
 uint64_t timestamp(tm_t* time) {
     return daysdiff(time->year, time->mon, time->mday) * SECONDS_PER_DAY +
-          time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MIN + time->sec;
+          time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MINUTE + time->sec;
 }
 
-tm_t gettime( int* timeval ) {
+tm_t gettime( uint64_t timeval ) {
     tm_t ret;
+    int i;
 
-    /* TODO */
+    ret.sec = timeval % SECONDS_PER_MINUTE;
+    timeval /= SECONDS_PER_MINUTE;
+    ret.min = timeval % MINUTES_PER_HOUR;
+    timeval /= MINUTES_PER_HOUR;
+    ret.hour = timeval % HOURS_PER_DAY;
+    timeval /= HOURS_PER_DAY;
 
-    ret.sec = 0;
-    ret.min = 0;
-    ret.hour = 0;
-    ret.mday = 0;
+    /* 1970(Epoch) is a leap year, and every 4th year too.
+       2000 is also a leap year, because its divisible by 400.
+       timeval now holds the difference of whole days.
+       1 Jan 1970 was a Thursday. */
+
+    ret.wday = (4 + timeval) % 7;
+
+    ret.year = EPOCH;
+    for(i=0; i<60; i++){
+        if(sumofdays[i] > timeval){
+            ret.year = EPOCH + i - 1;
+            timeval -= sumofdays[i-1];
+            break;
+        }
+    }
+    ret.yday = timeval;
+
     ret.mon = 0;
-    ret.year = 0;
-    ret.wday = 0;
-    ret.yday = 0;
+    if(ret.year % 4 == 0){
+        for(i=0; i<12; i++){
+            if(monthdays2[i] > timeval){
+                ret.mon = i-1;
+                timeval -= monthdays2[i-1];
+                break;
+            }
+        }
+    }else{
+        for(i=0; i<12; i++){
+            if(monthdays[i] > timeval){
+                ret.mon = i-1;
+                timeval -= monthdays[i-1];
+                break;
+            }
+        }
+    }
+
+    ret.mday = timeval + 1;
     ret.isdst = -1;
 
     return ret;
@@ -98,12 +140,10 @@ int daysdiff(int year, int month, int day){
 }
 
 int dayofweek(int year, int month, int day){
-
     /* The UNIX Epoch(1 Jan 1970) was a Thursday */
     return (4 + daysdiff(year, month, day)) % 7;
 }
 
-/* TODO: recursive formats are buggy, fix them */
 size_t strftime(char* s, size_t max, const char* format,
                        const tm_t* tm){
     size_t ret = 0;
@@ -121,6 +161,7 @@ size_t strftime(char* s, size_t max, const char* format,
                 if(*format != '%'){
                     if(ret < max){
                         s[ret++] = *format;
+                        s[ret] = '\0';
                     } else {
                         s[ret] = '\0';
                         return 0;
@@ -133,6 +174,7 @@ size_t strftime(char* s, size_t max, const char* format,
                 if(*format == '%'){
                     if(ret < max){
                         s[ret++] = '%';
+                        s[ret] = '\0';
                     } else {
                         s[ret] = '\0';
                         return 0;
@@ -219,7 +261,7 @@ size_t strftime(char* s, size_t max, const char* format,
                         APPEND(tmp);
                         break;
                     case 'm':
-                        snprintf(tmp, max, "%02d", tm->mon);
+                        snprintf(tmp, max, "%02d", tm->mon + 1);
                         APPEND(tmp);
                         break;
                     case 'M':

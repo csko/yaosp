@@ -22,7 +22,9 @@
 
 #define SECONDS_PER_DAY 86400
 #define SECONDS_PER_HOUR 3600
-#define SECONDS_PER_MIN 60
+#define SECONDS_PER_MINUTE 60
+#define MINUTES_PER_HOUR 60
+#define HOURS_PER_DAY 24
 
 #define STRFT_ALTFORM 0x01
 
@@ -46,12 +48,14 @@ extern const char* sday_names[ 7 ];
 /* The number of days that come before each month */
 extern const unsigned short int monthdays[ 13 ]; /* Common year */
 extern const unsigned short int monthdays2[ 13 ]; /* Leap year */
+/* The number of days passed in N years after 1970 or any leap year */
+extern const unsigned short int sumofdays[ 60 ];
 
 /* Converts a broken-down time to UNIX timestamp */
 uint64_t timestamp(tm_t* time);
 
 /* Converts a UNIX timestamp to a broken-down time */
-tm_t gettime(int* time);
+tm_t gettime(uint64_t time);
 
 /* Returns the day of the week, 0=Sunday */
 int dayofweek(int year, int month, int day);
