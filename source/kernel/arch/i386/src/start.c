@@ -1,6 +1,7 @@
 /* C entry point of the i386 architecture
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -126,6 +127,7 @@ void arch_start( multiboot_header_t* header ) {
 
 int arch_late_init( void ) {
     init_pit();
+    init_system_time();
     init_elf32_module_loader();
     init_elf32_application_loader();
 

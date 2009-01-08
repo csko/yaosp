@@ -1,6 +1,7 @@
 /* Programmable interval timer
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +20,7 @@
 #ifndef _ARCH_PIT_H_
 #define _ARCH_PIT_H_
 
+int init_system_time( void );
 int init_pit( void );
 
 #endif // _ARCH_PIT_H_

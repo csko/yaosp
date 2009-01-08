@@ -22,6 +22,7 @@
 #include <arch/io.h>
 #include <arch/spinlock.h>
 #include <arch/hwtime.h>
+#include <lib/time.h> /* dayofweek */
 
 #define BCDTOBIN(val) ( ( ( val ) & 0x0f ) + ( ( val ) >> 4 ) * 10 )
 #define BINTOBCD(val) ( ( ( ( val ) / 10 ) << 4 ) + ( val ) % 10 )
@@ -73,30 +74,28 @@ void gethwclock( tm_t* tm ) {
 
     /* Month */
     outb( 0x08, RTCADDR );
-    tm->mon = inb( RTCDATA );
+    tm->mon = inb( RTCDATA ) - 1;
 
     /* Year */
     outb( 0x09, RTCADDR );
     tm->year = inb( RTCDATA );
 
-    /* TODO: wday, isDST */
-    tm->isdst = 0;
-    tm->wday = 0;
-    tm->yday = 0;
-
     spinunlock_enable( &datetime_lock );
 
     if(!(settings & 0x04)){ /* See if we have to convert the values */
         tm->year = BCDTOBIN(tm->year);
-        tm->year += 2000;
         tm->mon = BCDTOBIN(tm->mon);
         tm->mday = BCDTOBIN(tm->mday);
-        tm->wday = 0;
         tm->hour = BCDTOBIN(tm->hour);
         tm->min = BCDTOBIN(tm->min);
         tm->sec = BCDTOBIN(tm->sec);
-        tm->isdst = 0;
     }
+    tm->year += 2000;
+
+    /* TODO: isDST */
+    tm->isdst = -1;
+    tm->yday = ((tm -> year % 4 == 0) ? monthdays2[tm->mon] : monthdays[tm->mon]) + tm->mday - 1;
+    tm->wday = dayofweek(tm->year, tm->mon, tm->mday);
 
     /* TODO: see other settings, for example 24-hour clock */
 }

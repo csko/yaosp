@@ -1,6 +1,7 @@
 /* Programmable Interval Timer
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,11 +20,13 @@
 #include <irq.h>
 #include <console.h>
 #include <scheduler.h>
+#include <lib/time.h>
 
 #include <arch/pit.h>
 #include <arch/io.h>
 #include <arch/interrupt.h>
 #include <arch/spinlock.h>
+#include <arch/hwtime.h>
 
 static uint64_t system_time = 0;
 static spinlock_t time_lock = INIT_SPINLOCK;
@@ -61,6 +64,20 @@ uint64_t get_system_time( void ) {
     spinunlock_enable( &time_lock );
 
     return now;
+}
+
+int init_system_time( void ) {
+    tm_t now;
+
+    gethwclock( &now );
+
+    spinlock_disable( &time_lock );
+
+    system_time = 1000000 * timestamp( &now );
+
+    spinunlock_enable( &time_lock );
+
+    return 0;
 }
 
 int init_pit( void ) {

@@ -42,13 +42,19 @@ const char* day_names[ 7 ] = { "Sunday", "Monday",
                                "Thursday", "Friday",
                                "Saturday" };
 
-char* sday_names[ 7 ] = { "Sun", "Mon", "Tue",
-                          "Wed", "Thu", "Fri",
-                          "Sat" };
+const char* sday_names[ 7 ] = { "Sun", "Mon", "Tue",
+                                "Wed", "Thu", "Fri",
+                                "Sat" };
 
-int timestamp(tm_t* timeval) {
-    /* TODO */
-    return 0;
+const unsigned short int monthdays[13] =
+{ 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+
+const unsigned short int monthdays2[13] =
+{ 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
+
+uint64_t timestamp(tm_t* time) {
+    return daysdiff(time->year, time->mon, time->mday) * SECONDS_PER_DAY +
+          time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MIN + time->sec;
 }
 
 tm_t gettime( int* timeval ) {
@@ -64,9 +70,37 @@ tm_t gettime( int* timeval ) {
     ret.year = 0;
     ret.wday = 0;
     ret.yday = 0;
-    ret.isdst = 0;
+    ret.isdst = -1;
 
     return ret;
+}
+
+int daysdiff(int year, int month, int day){
+    int i, days = 0;
+
+    for(i = EPOCH; i<year; i++){
+        if(i % 4 == 0){ /* If it is a leap year */
+            days += 366;
+        }else{
+            days += 365;
+        }
+    }
+
+    if(year % 4 == 0){
+        days += monthdays2[month];
+    }else{
+        days += monthdays[month];
+    }
+
+    days += day - 1;
+
+    return days;
+}
+
+int dayofweek(int year, int month, int day){
+
+    /* The UNIX Epoch(1 Jan 1970) was a Thursday */
+    return (4 + daysdiff(year, month, day)) % 7;
 }
 
 /* TODO: recursive formats are buggy, fix them */
@@ -172,7 +206,9 @@ size_t strftime(char* s, size_t max, const char* format,
                         APPEND(tmp);
                         break;
                     case 'j':
-                        /* day of the year, 001-366 */
+                        /* Day of the year, 001-366 */
+                        snprintf(tmp, max, "%03d", tm->yday + 1);
+                        APPEND(tmp);
                         break;
                     case 'k':
                         snprintf(tmp, max, "%2d", tm->hour);
@@ -231,7 +267,9 @@ size_t strftime(char* s, size_t max, const char* format,
                         APPEND(tmp);
                         break;
                     case 'u':
-                        /* wday, 1-7, monday=1 */
+                        /* Day of the week, 1-7, Monday=1 */
+                        snprintf(tmp, max, "%d", 1 + (tm->wday + 6 ) % 7);
+                        APPEND(tmp);
                         break;
                     case 'U':
 /* The week number of the current year as a decimal number, range 00 to 53, starting with the first  Sunday  as
@@ -243,7 +281,9 @@ size_t strftime(char* s, size_t max, const char* format,
     also %U and %W. */
                         break;
                     case 'w':
-                        /* day of the week, 0-6, sunday=0 */
+                        /* Day of the week, 0-6, Sunday=0 */
+                        snprintf(tmp, max, "%d", tm->wday);
+                        APPEND(tmp);
                         break;
                     case 'W':
 /* The  week  number of the current year as a decimal number, range 00 to 53, starting with the first Monday as
