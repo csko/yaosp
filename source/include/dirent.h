@@ -16,30 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
+#ifndef _DIRENT_H_
+#define _DIRENT_H_
 
-#include <sys/types.h>
+#include <unistd.h>
 
-#define NAME_MAX 255
+typedef struct DIR {
+    int fd;
+    struct dirent entry;
+} DIR;
 
-struct dirent {
-    ino_t inode_number;
-    char name[ NAME_MAX + 1 ];
-};
+DIR* opendir( const char* name );
+struct dirent* readdir( DIR* dir );
+int closedir( DIR* dir );
 
-void _exit( int status );
-
-pid_t fork( void );
-int execve( const char* filename, char* const argv[], char* const envp[] );
-
-void* sbrk( int increment );
-
-int dup2( int old_fd, int new_fd );
-
-ssize_t read( int fd, void* buf, size_t count );
-ssize_t write( int fd, const void* buf, size_t count );
-
-int getdents( int fd, struct dirent* entry, unsigned int count );
-
-#endif // _UNISTD_H_
+#endif // _DIRENT_H_

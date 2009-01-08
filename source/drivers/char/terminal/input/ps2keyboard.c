@@ -23,15 +23,24 @@
 #include "../input.h"
 #include "../terminal.h"
 
+enum {
+    L_SHIFT = 1,
+    R_SHIFT = 2,
+};
+
 static int device;
 static thread_id thread;
+
+static uint32_t qualifiers = 0;
 
 static uint8_t last_scancode = 0;
 
 extern uint16_t keyboard_normal_map[];
+extern uint16_t keyboard_shifted_map[];
 extern uint16_t keyboard_escaped_map[];
 
 static void ps2_keyboard_handle( uint8_t scancode ) {
+    bool up;
     uint16_t key;
 
     if ( scancode == 0xE0 ) {
@@ -40,11 +49,17 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
 
     if ( last_scancode == 0xE0 ) {
         key = keyboard_escaped_map[ scancode ];
+    } else if ( ( qualifiers & ( L_SHIFT | R_SHIFT ) ) != 0 ) {
+        key = keyboard_shifted_map[ scancode ];
     } else {
         key = keyboard_normal_map[ scancode ];
     }
 
+    up = ( ( scancode & 0x80 ) != 0 );
+
     switch ( key ) {
+        case KEY_L_SHIFT : if ( up ) qualifiers &= ~L_SHIFT; else qualifiers |= L_SHIFT; break;
+        case KEY_R_SHIFT : if ( up ) qualifiers &= ~R_SHIFT; else qualifiers |= R_SHIFT; break;
         case KEY_F1 :
         case KEY_F2 :
         case KEY_F3 :
@@ -61,9 +76,9 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
         }
 
         default :
-            if ( key != 0 ) {
+            if ( ( key != 0 ) && ( ( key & 0xFF00 ) == 0 ) ) {
                 terminal_handle_event(
-                    scancode & 0x80 ? E_KEY_RELEASED : E_KEY_PRESSED,
+                    up ? E_KEY_RELEASED : E_KEY_PRESSED,
                     key,
                     0
                 );

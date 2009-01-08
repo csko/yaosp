@@ -1,4 +1,4 @@
-/* yaosp C library
+/* opendir function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,30 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
+#include <dirent.h>
+#include <stdlib.h>
+#include <fcntl.h>
 
-#include <sys/types.h>
+DIR* opendir( const char* name ) {
+    DIR* dir;
 
-#define NAME_MAX 255
+    dir = ( DIR* )malloc( sizeof( DIR ) );
 
-struct dirent {
-    ino_t inode_number;
-    char name[ NAME_MAX + 1 ];
-};
+    if ( dir == NULL ) {
+        return NULL;
+    }
 
-void _exit( int status );
+    dir->fd = open( name, 0 /* O_RDONLY */ );
 
-pid_t fork( void );
-int execve( const char* filename, char* const argv[], char* const envp[] );
+    if ( dir->fd < 0 ) {
+        free( dir );
+        return NULL;
+    }
 
-void* sbrk( int increment );
-
-int dup2( int old_fd, int new_fd );
-
-ssize_t read( int fd, void* buf, size_t count );
-ssize_t write( int fd, const void* buf, size_t count );
-
-int getdents( int fd, struct dirent* entry, unsigned int count );
-
-#endif // _UNISTD_H_
+    return dir;
+}

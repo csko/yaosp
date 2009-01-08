@@ -748,6 +748,10 @@ int sys_dup2( int old_fd, int new_fd ) {
     return do_dup2( false, old_fd, new_fd );
 }
 
+int sys_getdents( int fd, dirent_t* entry, unsigned int count ) {
+    return do_getdents( false, fd, entry );
+}
+
 int init_vfs( void ) {
     int error;
 

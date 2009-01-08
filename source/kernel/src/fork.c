@@ -90,7 +90,7 @@ int sys_fork( void ) {
     insert_thread( new_thread );
     add_thread_to_ready( new_thread );
 
-    error = new_thread->id;
+    error = new_process->id;
 
     spinunlock_enable( &scheduler_lock );
 

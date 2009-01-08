@@ -41,12 +41,17 @@ typedef struct process {
     region_id heap_region;
 
     void* loader_data;
+
+    semaphore_id waiters;
 } process_t;
 
 process_t* allocate_process( char* name );
 int insert_process( process_t* process );
 
 process_t* get_process_by_id( process_id id );
+
+int sys_exit( int exit_code );
+int sys_waitpid( process_id pid, int* status, int options );
 
 int init_processes( void );
 

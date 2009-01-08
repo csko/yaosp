@@ -21,13 +21,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>shell.c</item>
+        <item>ls.c</item>
     </array>
 
     <target name="clean">
         <delete>objs/*</delete>
         <rmdir>objs</rmdir>
-        <call target="clean" directory="external_commands"/>
     </target>
 
     <target name="prepare" type="private">
@@ -37,14 +36,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling shell application</echo>
+        <echo>Compiling ls shell command</echo>
 
         <for var="i" array="${files}">
             <echo>-> ${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../include</include>
+                <include>../../../../include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-m32</flag>
@@ -55,30 +54,29 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo>Linking shell application</echo>
-        <echo>-> objs/shell</echo>
+        <echo>Linking ls shell command</echo>
+        <echo>-> objs/ls</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../lib/start/objs/libstart.a</input>
-            <input>../../lib/c/objs/libc.a</input>
-            <output>objs/shell</output>
+            <input>../../../../lib/start/objs/libstart.a</input>
+            <input>../../../../lib/c/objs/libc.a</input>
+            <output>objs/ls</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
-            <flag>--script=../../../scripts/i386_app.lnk</flag>
+            <flag>--script=../../../../../scripts/i386_app.lnk</flag>
             <flag>-nostartfiles</flag>
             <flag>-nodefaultlibs</flag>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/shell" to="../../../build/system/shell"/>
+        <copy from="objs/ls" to="../../../../../build/system/ls"/>
     </target>
 
     <target name="all">
         <call target="clean"/>
         <call target="compile"/>
         <call target="install"/>
-        <call target="all" directory="external_commands"/>
     </target>
 </build>

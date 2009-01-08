@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/wait.h>
 
 #include <yaosp/debug.h>
 
@@ -61,6 +62,9 @@ static char* get_line( void ) {
 int main( int argc, char** argv ) {
     char* line;
     char* args;
+    pid_t child;
+
+    fputs( "Welcome to the yaosp shell!\n\n", stdout );
 
     while ( 1 ) {
         fputs( "> ", stdout );
@@ -73,7 +77,9 @@ int main( int argc, char** argv ) {
             *args++ = 0;
         }
 
-        if ( fork() == 0 ) {
+        child = fork();
+
+        if ( child == 0 ) {
             int error;
 
             error = execve( line, NULL, NULL );
@@ -84,7 +90,9 @@ int main( int argc, char** argv ) {
                 fputs( "\n", stdout );
             }
 
-            while(1);
+            _exit( error );
+        } else {
+            waitpid( child, NULL, 0 );
         }
     }
 

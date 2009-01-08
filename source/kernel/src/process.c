@@ -19,6 +19,8 @@
 #include <process.h>
 #include <errno.h>
 #include <semaphore.h>
+#include <smp.h>
+#include <scheduler.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
 #include <vfs/vfs.h>
@@ -34,7 +36,7 @@ process_t* allocate_process( char* name ) {
     process = ( process_t* )kmalloc( sizeof( process_t ) );
 
     if ( process == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     memset( process, 0, sizeof( process_t ) );
@@ -42,22 +44,37 @@ process_t* allocate_process( char* name ) {
     process->name = strdup( name );
 
     if ( process->name == NULL ) {
-        kfree( process );
-        return NULL;
+        goto error2;
     }
 
     process->lock = create_semaphore( "process lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( process->lock < 0 ) {
-        kfree( process->name );
-        kfree( process );
-        return NULL;
+        goto error3;
+    }
+
+    process->waiters = create_semaphore( "proc exit waiters", SEMAPHORE_COUNTING, 0, 0 );
+
+    if ( process->waiters < 0 ) {
+        goto error4;
     }
 
     process->id = -1;
     process->heap_region = -1;
 
     return process;
+
+error4:
+    delete_semaphore( process->lock );
+
+error3:
+    kfree( process->name );
+
+error2:
+    kfree( process );
+
+error1:
+    return NULL;
 }
 
 int insert_process( process_t* process ) {
@@ -76,6 +93,40 @@ int insert_process( process_t* process ) {
 
 process_t* get_process_by_id( process_id id ) {
     return ( process_t* )hashtable_get( &process_table, ( const void* )id );
+}
+
+int sys_exit( int exit_code ) {
+    process_t* process;
+
+    process = current_process();
+
+    /* Delete the waiters semaphore. This will release all
+       waiter as well */
+
+    delete_semaphore( process->waiters );
+    process->waiters = -1;
+
+    thread_exit( exit_code );
+
+    return 0;
+}
+
+int sys_waitpid( process_id pid, int* status, int options ) {
+    process_t* process;
+
+    spinlock_disable( &scheduler_lock );
+
+    process = get_process_by_id( pid );
+
+    spinunlock_enable( &scheduler_lock );
+
+    if ( process == NULL ) {
+        return -EINVAL;
+    }
+
+    LOCK( process->waiters );
+
+    return 0;
 }
 
 static void* process_key( hashitem_t* item ) {

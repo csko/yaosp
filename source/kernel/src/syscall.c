@@ -39,7 +39,10 @@ static system_call_entry_t system_call_table[] = {
     { "open", sys_open, 0 },
     { "read", sys_read, 0 },
     { "write", sys_write, 0 },
-    { "dup2", sys_dup2, 0 }
+    { "dup2", sys_dup2, 0 },
+    { "getdents", sys_getdents, 0 },
+    { "exit", sys_exit, 0 },
+    { "waitpid", sys_waitpid, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

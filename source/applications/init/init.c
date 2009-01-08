@@ -18,6 +18,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+
 #include <yaosp/debug.h>
 
 int main( int argc, char** argv ) {
@@ -40,7 +41,8 @@ int main( int argc, char** argv ) {
 
         error = execve( "/yaosp/SYSTEM/SHELL", 0, 0 );
         dbprintf( "Execve returned: %d\n", error );
-        while ( 1 ) ;
+
+        _exit( -1 );
     }
 
     return 0;

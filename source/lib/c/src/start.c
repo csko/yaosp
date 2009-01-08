@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <unistd.h>
+
 #include <yaosp/debug.h>
 
 extern int init_malloc( void );
@@ -23,15 +25,17 @@ extern int main( int argc, char** argv, char** envp );
 
 int errno;
 
-int __libc_start_main( void ) {
+void __libc_start_main( void ) {
     int error;
 
     error = init_malloc();
 
     if ( error < 0 ) {
         dbprintf( "Failed to initialize malloc!\n" );
-        return error;
+        return;
     }
 
-    return main( 0, 0, 0 );
+    error = main( 0, 0, 0 );
+
+    _exit( error );
 }

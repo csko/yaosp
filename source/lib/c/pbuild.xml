@@ -26,6 +26,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <array name="files">
         <item>src/start.c</item>
+        <item>src/opendir.c</item>
+        <item>src/readdir.c</item>
+        <item>src/closedir.c</item>
         <item>src/stdlib/malloc.c</item>
         <item>src/stdlib/abort.c</item>
         <item>src/string/memset.c</item>
@@ -37,11 +40,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/dup2.c</item>
         <item>src/unistd/write.c</item>
         <item>src/unistd/read.c</item>
+        <item>src/unistd/exit.c</item>
+        <item>src/unistd/getdents.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/fgetc.c</item>
         <item>src/stdio/fputc.c</item>
         <item>src/stdio/fputs.c</item>
+        <item>src/sys/waitpid.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
     </array>

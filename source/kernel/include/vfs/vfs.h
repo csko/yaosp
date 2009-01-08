@@ -103,6 +103,7 @@ int sys_open( const char* path, int flags );
 int sys_read( int fd, void* buffer, size_t count );
 int sys_write( int fd, const void* buffer, size_t count );
 int sys_dup2( int old_fd, int new_fd );
+int sys_getdents( int fd, dirent_t* entry, unsigned int count );
 
 int init_vfs( void );
 
