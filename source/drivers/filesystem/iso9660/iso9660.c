@@ -267,7 +267,7 @@ static int iso9660_free_cookie( void* fs_cookie, void* _node, void* file_cookie 
 static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* _buffer, off_t pos, size_t size ) {
     char* buffer;
     size_t saved_size;
-    off_t current_pos = 0;
+    off_t current_pos = pos;
     iso9660_cookie_t* cookie;
     iso9660_inode_t* node;
 
