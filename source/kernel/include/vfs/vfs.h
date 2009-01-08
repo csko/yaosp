@@ -99,6 +99,8 @@ int mkdir( const char* path, int permissions );
 int mount( const char* device, const char* dir, const char* filesystem );
 int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout );
 
+int sys_open( const char* path, int flags );
+
 int init_vfs( void );
 
 #endif // _VFS_VFS_H_

@@ -229,7 +229,6 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
             parent = inode;
         } else {
             parent = inode->mount;
-
             atomic_inc( &parent->ref_count );
             put_inode( inode );
         }

@@ -34,25 +34,10 @@ typedef struct tm {
     int isdst;  /* Daylight saving [-1/0/1] */
 } tm_t ;
 
-/* TODO: move these to a header file where date formatting/conversion functions are */
-static const char* month_names[12] = {"January", "February", "March",
-                                      "April", "May", "June",
-                                      "July", "August", "September",
-                                      "October", "November", "December" };
-
-static const char* smonth_names[12] = {"Jan", "Feb", "Mar",
-                                       "Apr", "May", "Jun",
-                                       "Jul", "Aug", "Sep",
-                                       "Oct", "Nov", "Dec" };
-
-static const char* day_names[7] = { "Sunday", "Monday",
-                                    "Tuesday", "Wednesday",
-                                    "Thursday", "Friday",
-                                    "Saturday" };
-
-static char* sday_names[7] = { "Sun", "Mon", "Tue",
-                               "Wed", "Thu", "Fri",
-                               "Sat" };
+extern const char* month_names[ 12 ];
+extern const char* smonth_names[ 12 ];
+extern const char* day_names[ 7 ];
+extern char* sday_names[ 7 ];
 
 /* Converts a broken-down time to UNIX timestamp */
 int timestamp(tm_t* time);

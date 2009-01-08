@@ -292,7 +292,6 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
 
 int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
     int start = 0;
-    bool done = false;
 
     /* NOTE: The current code here makes an assumption that user
             regions are always after any other kernel region! */

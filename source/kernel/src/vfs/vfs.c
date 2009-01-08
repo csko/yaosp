@@ -232,6 +232,10 @@ int open( const char* path, int flags ) {
     return do_open( true, path, flags );
 }
 
+int sys_open( const char* path, int flags ) {
+    return do_open( false, path, flags );
+}
+
 static int do_close( bool kernel, int fd ) {
     file_t* file;
     io_context_t* io_context;

@@ -33,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>
+        <item>src/fcntl/open.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
     </array>

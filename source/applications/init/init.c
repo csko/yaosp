@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <fcntl.h>
 #include <unistd.h>
 #include <yaosp/debug.h>
 
@@ -25,7 +26,14 @@ int main( int argc, char** argv ) {
     dbprintf( "Hello World from userspace!\n" );
 
     if ( fork() == 0 ) {
+        int slave_tty;
+
         dbprintf( "Executing shell!\n" );
+
+        slave_tty = open( "/device/pty/tty1", 0 );
+
+        dbprintf( "Slave tty: %d\n", slave_tty );
+        
         error = execve( "/yaosp/SYSTEM/SHELL", 0, 0 );
         dbprintf( "Execve returned: %d\n", error );
         while ( 1 ) ;

@@ -25,6 +25,7 @@
 #include <kernel.h>
 #include <semaphore.h>
 #include <mm/userspace.h>
+#include <vfs/vfs.h>
 
 static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK },
@@ -34,7 +35,8 @@ static system_call_entry_t system_call_table[] = {
     { "create_semaphore", sys_create_semaphore, 0 },
     { "delete_semaphore", sys_delete_semaphore, 0 },
     { "lock_semaphore", sys_lock_semaphore, 0 },
-    { "unlock_semaphore", sys_unlock_semaphore, 0 }
+    { "unlock_semaphore", sys_unlock_semaphore, 0 },
+    { "open", sys_open, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

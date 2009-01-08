@@ -1,6 +1,7 @@
 /* Date and time handling
  *
  * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -15,6 +16,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 #include <lib/string.h>
 #include <lib/time.h>
 
@@ -25,14 +27,45 @@
         } \
         strcat(s, (const char*) str);
 
+const char* month_names[ 12 ] = { "January", "February", "March",
+                                  "April", "May", "June",
+                                  "July", "August", "September",
+                                  "October", "November", "December" };
+
+const char* smonth_names[ 12 ] = { "Jan", "Feb", "Mar",
+                                   "Apr", "May", "Jun",
+                                   "Jul", "Aug", "Sep",
+                                   "Oct", "Nov", "Dec" };
+
+const char* day_names[ 7 ] = { "Sunday", "Monday",
+                               "Tuesday", "Wednesday",
+                               "Thursday", "Friday",
+                               "Saturday" };
+
+char* sday_names[ 7 ] = { "Sun", "Mon", "Tue",
+                          "Wed", "Thu", "Fri",
+                          "Sat" };
+
 int timestamp(tm_t* timeval) {
     /* TODO */
     return 0;
 }
 
-tm_t gettime(int* timeval) {
-    /* TODO */
+tm_t gettime( int* timeval ) {
     tm_t ret;
+
+    /* TODO */
+
+    ret.sec = 0;
+    ret.min = 0;
+    ret.hour = 0;
+    ret.mday = 0;
+    ret.mon = 0;
+    ret.year = 0;
+    ret.wday = 0;
+    ret.yday = 0;
+    ret.isdst = 0;
+
     return ret;
 }
 

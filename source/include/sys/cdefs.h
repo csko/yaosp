@@ -1,6 +1,6 @@
-/* Date and time handling
+/* yaosp C library
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,27 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _HWTIME_H_
-#define _HWTIME_H_
+#ifndef _SYS_CDEFS_H_
+#define _SYS_CDEFS_H_
 
-#include <lib/time.h>
+#define __nonnull(params) __attribute__((__nonnull__ params))
 
-#define RTCADDR 0x70
-#define RTCDATA 0x71
-
-/**
- * Gets the current hardware time from RTC
- *
- * @param tm The structure where the hardware time will be stored
- */
-void gethwclock( tm_t* tm );
-
-/**
- * Sets the current hardware time
- *
- * @param tm The time to set the hardware clock to
- * @return On success 0 is returned
- */
-int sethwclock( const tm_t* tm );
-
-#endif // _HWTIME_H_
+#endif // _SYS_CDEFS_H_

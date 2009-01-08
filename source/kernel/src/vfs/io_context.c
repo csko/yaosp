@@ -113,6 +113,12 @@ io_context_t* io_context_clone( io_context_t* old_io_context ) {
         return NULL;
     }
 
+    new_io_context->root_directory = old_io_context->root_directory;
+    atomic_inc( &new_io_context->root_directory->ref_count );
+
+    new_io_context->current_directory = old_io_context->current_directory;
+    atomic_inc( &new_io_context->current_directory->ref_count );
+
     /* TODO: clone stuffs */
 
     return new_io_context;
