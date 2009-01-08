@@ -92,20 +92,17 @@ tm_t gettime( uint64_t timeval ) {
     }
     ret.yday = timeval;
 
-    ret.mon = 0;
     if(ret.year % 4 == 0){
-        for(i=0; i<12; i++){
-            if(monthdays2[i] > timeval){
-                ret.mon = i-1;
-                timeval -= monthdays2[i-1];
+        for(ret.mon = 0; ret.mon < 12; ret.mon++){
+            if(monthdays2[ret.mon] > timeval){
+                timeval -= monthdays2[--ret.mon];
                 break;
             }
         }
     }else{
-        for(i=0; i<12; i++){
-            if(monthdays[i] > timeval){
-                ret.mon = i-1;
-                timeval -= monthdays[i-1];
+        for(ret.mon = 0; ret.mon < 12; ret.mon++){
+            if(monthdays[ret.mon] > timeval){
+                timeval -= monthdays[--ret.mon];
                 break;
             }
         }
