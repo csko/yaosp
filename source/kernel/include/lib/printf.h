@@ -19,6 +19,7 @@
 
 #ifndef _PRINTF_H_
 #define _PRINTF_H_
+
 #define PRINTF_LEFT     0x01
 #define PRINTF_CAPITAL  0x02
 #define PRINTF_SIGNED   0x04

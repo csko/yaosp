@@ -1,4 +1,4 @@
-/* ls shell command
+/* strchr function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,24 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <dirent.h>
+#include <string.h>
 
-int main( int argc, char** argv ) {
-    DIR* dir;
-    struct dirent* entry;
-
-    dir = opendir( "." );
-
-    if ( dir == NULL ) {
-        return -1;
-    }
-
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        printf( "%s\n", entry->name );
-    }
-
-    closedir( dir );
-
-    return 0;
+size_t strlen( const char* str ) {
+    size_t r = 0;
+    for( ; *str++; r++ ) { }
+    return r;
 }

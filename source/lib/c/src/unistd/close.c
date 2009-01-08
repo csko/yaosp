@@ -1,4 +1,4 @@
-/* ls shell command
+/* close function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,24 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <dirent.h>
+#include <unistd.h>
 
-int main( int argc, char** argv ) {
-    DIR* dir;
-    struct dirent* entry;
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-    dir = opendir( "." );
-
-    if ( dir == NULL ) {
-        return -1;
-    }
-
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        printf( "%s\n", entry->name );
-    }
-
-    closedir( dir );
-
-    return 0;
+int close( int fd ) {
+    return syscall1( SYS_close, fd );
 }

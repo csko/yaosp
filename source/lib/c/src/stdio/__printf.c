@@ -1,6 +1,7 @@
-/* printf() like function for the kernel
+/* printf implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,11 +17,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <types.h>
-#include <lib/printf.h>
-#include <lib/string.h>
+#include <string.h>
 
-int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args ) {
+#include "__printf.h"
+
+int __printf( printf_helper_t* helper, void* data, const char* format, va_list args ) {
     int state, radix, ret;
     unsigned char *where, buf[PRINTF_BUFLEN];
     unsigned int flags, given_wd, actual_wd;

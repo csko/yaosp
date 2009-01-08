@@ -35,6 +35,7 @@ int execve( const char* filename, char* const argv[], char* const envp[] );
 
 void* sbrk( int increment );
 
+int close( int fd );
 int dup2( int old_fd, int new_fd );
 
 ssize_t read( int fd, void* buf, size_t count );

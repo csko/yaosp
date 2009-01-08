@@ -19,7 +19,7 @@
 #ifndef _STDIO_H_
 #define _STDIO_H_
 
-#include <stdio.h>
+#include <stddef.h>
 
 #define FILE_CAN_READ  0x01
 #define FILE_CAN_WRITE 0x02
@@ -32,6 +32,9 @@ typedef struct FILE {
 extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
+
+int printf( const char* format, ... );
+int snprintf( char* str, size_t size, const char* format, ... );
 
 int fgetc( FILE* stream );
 int fputc( int c, FILE* stream );

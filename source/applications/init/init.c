@@ -18,31 +18,39 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <yaosp/debug.h>
 
 int main( int argc, char** argv ) {
-    int error;
+    int i;
 
-    dbprintf( "Hello World from userspace!\n" );
+    for ( i = 0; i < 5; i++ ) {
+        if ( fork() == 0 ) {
+            int error;
+            int slave_tty;
+            char tty_path[ 128 ];
 
-    if ( fork() == 0 ) {
-        int slave_tty;
+            dbprintf( "Executing shell #%d!\n", i );
 
-        dbprintf( "Executing shell!\n" );
+            snprintf( tty_path, sizeof( tty_path ), "/device/pty/tty%d", i );
 
-        slave_tty = open( "/device/pty/tty0", 0 );
+            slave_tty = open( tty_path, 0 /* O_RDWR */ );
 
-        dbprintf( "Slave tty: %d\n", slave_tty );
+            if ( slave_tty < 0 ) {
+                dbprintf( "Failed to open tty: %s\n", tty_path );
+                _exit( -1 );
+            }
 
-        dup2( slave_tty, 0 );
-        dup2( slave_tty, 1 );
-        dup2( slave_tty, 2 );
+            dup2( slave_tty, 0 );
+            dup2( slave_tty, 1 );
+            dup2( slave_tty, 2 );
 
-        error = execve( "/yaosp/SYSTEM/SHELL", 0, 0 );
-        dbprintf( "Execve returned: %d\n", error );
+            error = execve( "/yaosp/SYSTEM/SHELL", NULL, NULL );
+            dbprintf( "Failed to execute shell: %d\n", error );
 
-        _exit( -1 );
+            _exit( -1 );
+        }
     }
 
     return 0;

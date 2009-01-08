@@ -24,6 +24,7 @@
 void* memset( void* s, int c, size_t n );
 void* memcpy( void* d, const void* s, size_t n );
 
+size_t strlen( const char* str );
 char* strchr( const char* s, int c );
 
 #endif // _STRING_H_

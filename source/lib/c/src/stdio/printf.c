@@ -1,4 +1,4 @@
-/* ls shell command
+/* printf function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -17,23 +17,21 @@
  */
 
 #include <stdio.h>
-#include <dirent.h>
 
-int main( int argc, char** argv ) {
-    DIR* dir;
-    struct dirent* entry;
+#include "__printf.h"
 
-    dir = opendir( "." );
-
-    if ( dir == NULL ) {
-        return -1;
-    }
-
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        printf( "%s\n", entry->name );
-    }
-
-    closedir( dir );
-
+static int printf_helper( void* data, char c ) {
+    fputc( c, stdout );
     return 0;
+}
+
+int printf( const char* format, ... ) {
+    int ret;
+    va_list args;
+
+    va_start( args, format );
+    ret = __printf( printf_helper, NULL, format, args );
+    va_end( args );
+
+    return ret;
 }

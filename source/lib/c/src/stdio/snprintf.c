@@ -1,4 +1,4 @@
-/* ls shell command
+/* snprintf function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -17,23 +17,41 @@
  */
 
 #include <stdio.h>
-#include <dirent.h>
 
-int main( int argc, char** argv ) {
-    DIR* dir;
-    struct dirent* entry;
+#include "__printf.h"
 
-    dir = opendir( "." );
+typedef struct snprintf_buffer {
+    size_t position;
+    size_t size;
+    char* buffer;
+} snprintf_buffer_t;
 
-    if ( dir == NULL ) {
-        return -1;
+static int snprintf_helper( void* data, char c ) {
+    snprintf_buffer_t* buffer;
+
+    buffer = ( snprintf_buffer_t* )data;
+
+    if ( buffer->position < ( buffer->size - 1 ) ) {
+        buffer->buffer[ buffer->position++ ] = c;
     }
-
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        printf( "%s\n", entry->name );
-    }
-
-    closedir( dir );
 
     return 0;
+}
+
+int snprintf( char* str, size_t size, const char* format, ... ) {
+    int ret;
+    va_list args;
+    snprintf_buffer_t data;
+
+    data.position = 0;
+    data.size = size;
+    data.buffer = str;
+
+    va_start( args, format );
+    ret = __printf( snprintf_helper, &data, format, args );
+    va_end( args );
+
+    str[ data.position ] = 0;
+
+    return ret;
 }

@@ -264,6 +264,10 @@ int close( int fd ) {
     return do_close( true, fd );
 }
 
+int sys_close( int fd ) {
+    return do_close( false, fd );
+}
+
 static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offset ) {
     int error;
     file_t* file;

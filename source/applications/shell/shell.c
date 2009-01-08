@@ -85,9 +85,7 @@ int main( int argc, char** argv ) {
             error = execve( line, NULL, NULL );
 
             if ( error < 0 ) {
-                fputs( "Failed to execute: ", stdout );
-                fputs( line, stdout );
-                fputs( "\n", stdout );
+                printf( "Failed to execute: %s\n", line );
             }
 
             _exit( error );

@@ -1,6 +1,6 @@
-/* ls shell command
+/* Variable argument list handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,24 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <dirent.h>
+#ifndef _STDARG_H_
+#define _STDARG_H_
 
-int main( int argc, char** argv ) {
-    DIR* dir;
-    struct dirent* entry;
+typedef __builtin_va_list va_list;
 
-    dir = opendir( "." );
+#define va_start(a,b) __builtin_va_start(a,b)
+#define va_end(a)     __builtin_va_end(a)
+#define va_arg(a,b)   __builtin_va_arg(a,b)
 
-    if ( dir == NULL ) {
-        return -1;
-    }
-
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        printf( "%s\n", entry->name );
-    }
-
-    closedir( dir );
-
-    return 0;
-}
+#endif // _STDARG_H_

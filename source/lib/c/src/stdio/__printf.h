@@ -1,6 +1,7 @@
-/* ls shell command
+/* printf implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,24 +17,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <dirent.h>
+#ifndef __PRINTF_H_
+#define __PRINTF_H_
 
-int main( int argc, char** argv ) {
-    DIR* dir;
-    struct dirent* entry;
+#include <stdarg.h>
 
-    dir = opendir( "." );
+#define PRINTF_LEFT     0x01
+#define PRINTF_CAPITAL  0x02
+#define PRINTF_SIGNED   0x04
+#define PRINTF_LONG     0x08
+#define PRINTF_SHORT    0x10
+#define PRINTF_NEEDSIGN 0x20
+#define PRINTF_LZERO    0x40
+#define PRINTF_NEEDPLUS 0x80
 
-    if ( dir == NULL ) {
-        return -1;
-    }
+#define PRINTF_BUFLEN   32
 
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        printf( "%s\n", entry->name );
-    }
+typedef int printf_helper_t( void* data, char c );
 
-    closedir( dir );
+int __printf( printf_helper_t* helper, void* data, const char* format, va_list args );
 
-    return 0;
-}
+#endif // _PRINTF_H_

@@ -34,6 +34,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
         <item>src/string/strchr.c</item>
+        <item>src/string/strlen.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>
@@ -42,11 +43,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/read.c</item>
         <item>src/unistd/exit.c</item>
         <item>src/unistd/getdents.c</item>
+        <item>src/unistd/close.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/fgetc.c</item>
         <item>src/stdio/fputc.c</item>
         <item>src/stdio/fputs.c</item>
+        <item>src/stdio/__printf.c</item>
+        <item>src/stdio/printf.c</item>
+        <item>src/stdio/snprintf.c</item>
         <item>src/sys/waitpid.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
