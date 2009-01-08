@@ -21,8 +21,11 @@
 
 #define RTCADDR 0x70
 #define RTCDATA 0x71
+
 /* Gets the current hardware time from RTC */
 tm_t gethwclock();
+
 /* Sets the current hardware time */
 int sethwclock(const tm_t* tm);
+
 #endif // _HWTIME_H_

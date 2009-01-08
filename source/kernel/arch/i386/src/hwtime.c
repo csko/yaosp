@@ -23,14 +23,6 @@
 #define BCDTOBIN(val) ( ( ( val ) & 0x0f ) + ( ( val ) >> 4 ) * 10 )
 #define BINTOBCD(val) ( ( ( ( val ) / 10 ) << 4 ) + ( val ) % 10 )
 
-#define APPEND( str ) \
-        ret += strlen(str); \
-        if(ret > max){ \
-            return 0; \
-        } \
-        strcat(s, (const char*) str);
-
-
 static spinlock_t datetime_lock = INIT_SPINLOCK;
 
 tm_t gethwclock() {

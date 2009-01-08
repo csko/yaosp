@@ -27,6 +27,7 @@
 #define PRINTF_NEEDSIGN 0x20
 #define PRINTF_LZERO    0x40
 #define PRINTF_NEEDPLUS 0x80
+
 #define PRINTF_BUFLEN   32
 
 #include <lib/stdarg.h>
