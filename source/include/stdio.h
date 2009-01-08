@@ -19,6 +19,8 @@
 #ifndef _STDIO_H_
 #define _STDIO_H_
 
+#include <stdio.h>
+
 #define FILE_CAN_READ  0x01
 #define FILE_CAN_WRITE 0x02
 

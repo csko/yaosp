@@ -1,4 +1,4 @@
-/* yaosp C library
+/* strchr function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,18 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STDDEF_H_
-#define _STDDEF_H_
+#include <string.h>
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void*)0)
-#endif
-#endif // NULL
+char* strchr( const char* s, int c ) {
+  for ( ; *s != ( char )c; s++ ) {
+    if ( *s == 0 ) {
+      return NULL;
+    }
+  }
 
-typedef unsigned int size_t;
-typedef int ssize_t;
-
-#endif // _STDDEF_H_
+  return ( char* )s;
+}

@@ -18,12 +18,13 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <yaosp/debug.h>
 
-static char line[ 255 ];
+static char line_buf[ 255 ];
 
-static void get_line( void ) {
+static char* get_line( void ) {
     int c;
     int pos = 0;
     int done = 0;
@@ -45,20 +46,46 @@ static void get_line( void ) {
 
             default :
                 if ( pos < 254 ) {
-                    line[ pos++ ] = c;
+                    line_buf[ pos++ ] = c;
                 }
 
                 break;
         }
     }
 
-    line[ pos ] = 0;
+    line_buf[ pos ] = 0;
+
+    return line_buf;
 }
 
 int main( int argc, char** argv ) {
+    char* line;
+    char* args;
+
     while ( 1 ) {
         fputs( "> ", stdout );
-        get_line();
+
+        line = get_line();
+
+        args = strchr( line, ' ' );
+
+        if ( args != NULL ) {
+            *args++ = 0;
+        }
+
+        if ( fork() == 0 ) {
+            int error;
+
+            error = execve( line, NULL, NULL );
+
+            if ( error < 0 ) {
+                fputs( "Failed to execute: ", stdout );
+                fputs( line, stdout );
+                fputs( "\n", stdout );
+            }
+
+            while(1);
+        }
     }
 
     return 0;

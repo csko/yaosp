@@ -119,6 +119,34 @@ void io_context_put_file( io_context_t* io_context, file_t* file ) {
     }
 }
 
+int io_context_file_clone_iterator( hashitem_t* item, void* data ) {
+    int error;
+    file_t* old_file;
+    file_t* new_file;
+
+    old_file = ( file_t* )item;
+
+    new_file = create_file();
+
+    if ( new_file == NULL ) {
+        return 0;
+    }
+
+    new_file->type = old_file->type;
+    new_file->inode = old_file->inode;
+    new_file->cookie = old_file->cookie;
+
+    atomic_inc( &new_file->inode->ref_count );
+
+    error = io_context_insert_file_with_fd( ( io_context_t* )data, new_file, old_file->fd );
+
+    if ( error < 0 ) {
+        delete_file( new_file );
+    }
+
+    return 0;
+}
+
 io_context_t* io_context_clone( io_context_t* old_io_context ) {
     int error;
     io_context_t* new_io_context;
@@ -136,13 +164,25 @@ io_context_t* io_context_clone( io_context_t* old_io_context ) {
         return NULL;
     }
 
+    LOCK( old_io_context->lock );
+
+    /* Clone root and current working directory */
+
     new_io_context->root_directory = old_io_context->root_directory;
     atomic_inc( &new_io_context->root_directory->ref_count );
 
     new_io_context->current_directory = old_io_context->current_directory;
     atomic_inc( &new_io_context->current_directory->ref_count );
 
-    /* TODO: clone stuffs */
+    /* Clone file handles */
+
+    hashtable_iterate(
+        &old_io_context->file_table,
+        io_context_file_clone_iterator,
+        ( void* )new_io_context
+    );
+
+    UNLOCK( old_io_context->lock );
 
     return new_io_context;
 }
