@@ -34,4 +34,9 @@
  */
 #define KERNEL_STACK_SIZE ( 32 * 1024 )
 
+/**
+ * The default size of the user stack for threads.
+ */
+#define USER_STACK_SIZE ( 32 * 1024 )
+
 #endif // _CONFIG_H_

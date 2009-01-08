@@ -182,9 +182,7 @@ typedef struct elf_application {
     elf_reloc_t* relocs;
 
     register_t entry_address;
-    register_t stack_end;
 
-    uint32_t text_address;
     region_id text_region;
     region_id data_region;
 } elf_application_t;

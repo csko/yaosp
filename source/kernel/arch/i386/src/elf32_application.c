@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <console.h>
 #include <smp.h>
+#include <config.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
@@ -28,6 +29,8 @@
 #include <arch/gdt.h>
 
 #include <arch/mm/paging.h>
+
+#define USER_STACK_PAGES ( USER_STACK_SIZE / PAGE_SIZE )
 
 static bool elf32_application_check( int fd ) {
     elf_header_t header;
@@ -399,6 +402,7 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
 
 static int elf32_application_load( int fd ) {
     int error;
+    void* stack_address;
     elf_header_t header;
     elf_application_t* elf_application;
 
@@ -467,11 +471,9 @@ static int elf32_application_load( int fd ) {
 
     /* Allocate userspace stack for the thread */
 
-    void* stack_address;
-
     region_id stack_region = create_region(
         "stack",
-        5 * PAGE_SIZE,
+        USER_STACK_PAGES * PAGE_SIZE,
         REGION_READ | REGION_WRITE,
         ALLOC_PAGES,
         &stack_address
@@ -482,8 +484,8 @@ static int elf32_application_load( int fd ) {
     }
 
     elf_application->entry_address = header.entry;
-    elf_application->stack_end = ( register_t )( ( uint8_t* )stack_address + 5 * PAGE_SIZE - sizeof( register_t ) );
 
+    current_thread()->user_stack_end = ( void* )( ( uint8_t* )stack_address + USER_STACK_PAGES * PAGE_SIZE );
     current_process()->loader_data = ( void* )elf_application;
 
     return 0;
@@ -507,7 +509,7 @@ int elf32_application_execute( void ) {
     regs->es = USER_DS | 3;
     regs->fs = USER_DS | 3;
     regs->eip = elf_application->entry_address;
-    regs->esp = elf_application->stack_end;
+    regs->esp = ( register_t )( ( uint8_t* )thread->user_stack_end - sizeof( register_t ) );
     regs->ss = USER_DS | 3;
 
     return 0;

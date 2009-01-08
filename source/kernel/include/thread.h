@@ -58,6 +58,7 @@ typedef struct thread {
 
     void* kernel_stack;
     void* kernel_stack_end;
+    void* user_stack_end;
     void* syscall_stack;
 
     void* arch_data;
