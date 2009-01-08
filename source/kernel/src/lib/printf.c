@@ -48,13 +48,19 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
                     break;
                 }
                 if(*format == '-'){ /* Left justify */
+                    flags &= ~PRINTF_LZERO; /* '-' overrides '0' */
                     if(flags & PRINTF_LEFT) /* %-- is not allowed */
                         state = flags = given_wd = 0;
                     else
                         flags |= PRINTF_LEFT;
+                    break;
+                }
+                if(*format == '+'){ /* Always have sign */
+                    flags |= PRINTF_NEEDPLUS;
+                    break;
                 }
                 state++;
-                if(*format == '0'){ /* Left padding with '0' */
+                if(*format == '0' && !(flags & PRINTF_LEFT)){ /* Left padding with '0' */
                     flags |= PRINTF_LZERO;
                     format++;
                 }
@@ -62,6 +68,7 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
             case 2:
                 if(*format >= '0' && *format <= '9'){
                     given_wd = 10 * given_wd + (*format - '0');
+                    break;
                 }
                 state++;
             case 3:
@@ -87,6 +94,7 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
                     case 'x':
                     case 'p':
                     case 'n':
+/*                        flags &= ~PRINTF_SIGNED; */
                         radix = 16;
                         goto PRINTF_DO_NUM;
                     case 'd':
@@ -101,7 +109,7 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
 PRINTF_DO_NUM:
                         if(flags & PRINTF_LONG){
                             num = va_arg(args, unsigned long);
-        				}else if(flags & PRINTF_SHORT){
+                        }else if(flags & PRINTF_SHORT){
                             if(flags & PRINTF_SIGNED)
 						        num = va_arg(args, int);
                             else
@@ -142,12 +150,16 @@ PRINTF_DO_NUM:
                         where = va_arg(args, unsigned char *);
 PRINTF_OUT:
 				        actual_wd = strlen((char *)where);
-                        if(flags & PRINTF_NEEDSIGN)
+                        if(flags & PRINTF_NEEDSIGN || flags & PRINTF_NEEDPLUS)
                             actual_wd++;
-                        if((flags & (PRINTF_NEEDSIGN | PRINTF_LZERO)) ==	(PRINTF_NEEDSIGN | PRINTF_LZERO)) {
+                        if((flags & (PRINTF_NEEDSIGN | PRINTF_LZERO)) == (PRINTF_NEEDSIGN | PRINTF_LZERO)) {
                             helper( data, '-' );
                             ret++;
+                        }else if(flags & PRINTF_NEEDPLUS && !(flags & PRINTF_NEEDSIGN)) {
+                            helper( data, '+' );
+                            ret++;
                         }
+
 PRINTF_OUT2:
                         if((flags & PRINTF_LEFT) == 0){
                             while(given_wd > actual_wd){

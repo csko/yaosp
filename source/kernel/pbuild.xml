@@ -52,6 +52,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
         <item>arch/i386/src/mm/region.c</item>
+        <item>arch/i386/src/hwtime.c</item>
     </array>
 
     <array name="files">
@@ -88,6 +89,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/lib/hashtable.c</item>
         <item>src/lib/udivmoddi4.c</item>
         <item>src/lib/snprintf.c</item>
+        <item>src/lib/time.c</item>
     </array>
 
     <target name="clean">

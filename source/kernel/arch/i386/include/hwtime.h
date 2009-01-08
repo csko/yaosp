@@ -1,6 +1,5 @@
-/* printf() like function for the kernel
+/* Date and time handling
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,23 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#ifndef _HWTIME_H_
+#define _HWTIME_H_
+#include <lib/time.h>
 
-#ifndef _PRINTF_H_
-#define _PRINTF_H_
-#define PRINTF_LEFT     0x01
-#define PRINTF_CAPITAL  0x02
-#define PRINTF_SIGNED   0x04
-#define PRINTF_LONG     0x08
-#define PRINTF_SHORT    0x10
-#define PRINTF_NEEDSIGN 0x20
-#define PRINTF_LZERO    0x40
-#define PRINTF_NEEDPLUS 0x80
-#define PRINTF_BUFLEN   32
-
-#include <lib/stdarg.h>
-
-typedef int printf_helper_t( void* data, char c );
-
-int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args );
-
-#endif // _PRINTF_H_
+#define RTCADDR 0x70
+#define RTCDATA 0x71
+/* Gets the current hardware time from RTC */
+tm_t gethwclock();
+/* Sets the current hardware time */
+int sethwclock(const tm_t* tm);
+#endif // _HWTIME_H_

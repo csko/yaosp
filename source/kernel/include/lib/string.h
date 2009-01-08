@@ -1,6 +1,7 @@
 /* Memory and string manipulator functions
  *
  * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -37,7 +38,9 @@ char* strrchr( const char* s, int c );
 char* strncpy( char* d, const char* s, size_t c );
 char* strdup( const char* s );
 char* strndup( const char* s, size_t length );
-
+char* strcat(char *dest, const char *src);
+char* strncat(char *dest, const char *src, size_t n);
+              
 int snprintf( char* str, size_t size, const char* format, ... );
 
 #endif // _LIB_STRING_H_

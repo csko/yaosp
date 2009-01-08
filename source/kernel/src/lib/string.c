@@ -1,6 +1,7 @@
 /* Memory and string manipulator functions
  *
  * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -243,3 +244,30 @@ char* strndup( const char* s, size_t length ) {
     return s2;
 }
 #endif // ARCH_HAVE_STRNDUP
+
+#ifndef ARCH_HAVE_STRCAT
+char* strcat( char *dest, const char *src ) {
+    size_t dest_len = strlen(dest);
+    size_t i;
+
+    for (i = 0 ; src[i] != '\0' ; i++)
+        dest[dest_len + i] = src[i];
+
+    dest[dest_len + i] = '\0';
+    return dest;
+}
+#endif // ARCH_HAVE_STRCAT
+
+#ifndef ARCH_HAVE_STRNCAT
+char* strncat( char *dest, const char *src, size_t n ) {
+    size_t dest_len = strlen(dest);
+    size_t i;
+
+    for (i = 0 ; i < n && src[i] != '\0' ; i++)
+        dest[dest_len + i] = src[i];
+
+    dest[dest_len + i] = '\0';
+
+    return dest;
+}
+#endif // ARCH_HAVE_STRNCAT

@@ -4,7 +4,7 @@
     </target>
 
     <target name="printf_test">
-        <echo>Compiling printf test ...</echo>
+        <echo>Compiling printf test</echo>
 
         <gcc>
             <input>../src/lib/printf.c</input>
@@ -27,7 +27,7 @@
             <output>test_printf</output>
         </gcc>
 
-        <echo>Running printf test ...</echo>
+        <echo>Running printf test</echo>
 
         <exec executable="./test_printf"/>
 
