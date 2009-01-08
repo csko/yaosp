@@ -1,6 +1,6 @@
 /* Virtual file system
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -340,6 +340,10 @@ static int do_pwrite( bool kernel, int fd, const void* buffer, size_t count, off
 
 int pwrite( int fd, const void* buffer, size_t count, off_t offset ) {
     return do_pwrite( true, fd, buffer, count, offset );
+}
+
+int sys_write( int fd, const void* buffer, size_t count ) {
+    return do_pwrite( false, fd, buffer, count, 0 );
 }
 
 static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
@@ -691,6 +695,53 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
 
 int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout ) {
     return do_select( true, count, readfds, writefds, exceptfds, timeout );
+}
+
+static int do_dup2( bool kernel, int old_fd, int new_fd ) {
+    int error;
+    file_t* old_file;
+    file_t* new_file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    old_file = io_context_get_file( io_context, old_fd );
+
+    if ( old_file == NULL ) {
+        return -EBADF;
+    }
+
+    new_file = create_file();
+
+    if ( new_file == NULL ) {
+        io_context_put_file( io_context, old_file );
+        return -ENOMEM;
+    }
+
+    new_file->type = old_file->type;
+    new_file->inode = old_file->inode;
+    new_file->cookie = old_file->cookie;
+
+    io_context_put_file( io_context, old_file );
+
+    atomic_inc( &new_file->inode->ref_count );
+
+    error = io_context_insert_file_with_fd( io_context, new_file, new_fd );
+
+    if ( error < 0 ) {
+        delete_file( new_file );
+        return error;
+    }
+
+    return 0;
+}
+
+int sys_dup2( int old_fd, int new_fd ) {
+    return do_dup2( false, old_fd, new_fd );
 }
 
 int init_vfs( void ) {

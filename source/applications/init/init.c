@@ -30,10 +30,14 @@ int main( int argc, char** argv ) {
 
         dbprintf( "Executing shell!\n" );
 
-        slave_tty = open( "/device/pty/tty1", 0 );
+        slave_tty = open( "/device/pty/tty0", 0 );
 
         dbprintf( "Slave tty: %d\n", slave_tty );
-        
+
+        dup2( slave_tty, 0 );
+        dup2( slave_tty, 1 );
+        dup2( slave_tty, 2 );
+
         error = execve( "/yaosp/SYSTEM/SHELL", 0, 0 );
         dbprintf( "Execve returned: %d\n", error );
         while ( 1 ) ;

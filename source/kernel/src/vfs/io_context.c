@@ -1,6 +1,6 @@
 /* I/O context
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -17,6 +17,7 @@
  */
 
 #include <macros.h>
+#include <errno.h>
 #include <mm/kmalloc.h>
 #include <vfs/io_context.h>
 #include <lib/string.h>
@@ -64,6 +65,28 @@ int io_context_insert_file( io_context_t* io_context, file_t* file ) {
     UNLOCK( io_context->lock );
 
     return 0;
+}
+
+int io_context_insert_file_with_fd( io_context_t* io_context, file_t* file, int fd ) {
+    int error = 0;
+
+    atomic_set( &file->ref_count, 1 );
+
+    LOCK( io_context->lock );
+
+    if ( hashtable_get( &io_context->file_table, ( const void* )fd ) != NULL ) {
+        error = -EEXIST;
+    }
+
+    if ( error == 0 ) {
+        file->fd = fd;
+
+        hashtable_add( &io_context->file_table, ( hashitem_t* )file );
+    }
+
+    UNLOCK( io_context->lock );
+
+    return error;
 }
 
 file_t* io_context_get_file( io_context_t* io_context, int fd ) {

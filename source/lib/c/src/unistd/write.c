@@ -1,4 +1,4 @@
-/* Shell application
+/* Write function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -17,10 +17,10 @@
  */
 
 #include <unistd.h>
-#include <yaosp/debug.h>
 
-int main( int argc, char** argv ) {
-    write( 1, "Hello from shell", 16 );
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-    return 0;
+ssize_t write( int fd, const void* buf, size_t count ) {
+    return syscall3( SYS_write, fd, ( int )buf, count );
 }

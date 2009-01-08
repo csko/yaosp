@@ -52,6 +52,7 @@ file_t* create_file( void );
 void delete_file( file_t* file );
 
 int io_context_insert_file( io_context_t* io_context, file_t* file );
+int io_context_insert_file_with_fd( io_context_t* io_context, file_t* file, int fd );
 file_t* io_context_get_file( io_context_t* io_context, int fd );
 void io_context_put_file( io_context_t* io_context, file_t* file );
 

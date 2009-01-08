@@ -1,4 +1,4 @@
-/* Shell application
+/* Dup2 function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -17,10 +17,10 @@
  */
 
 #include <unistd.h>
-#include <yaosp/debug.h>
 
-int main( int argc, char** argv ) {
-    write( 1, "Hello from shell", 16 );
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-    return 0;
+int dup2( int old_fd, int new_fd ) {
+    return syscall2( SYS_dup2, old_fd, new_fd );
 }

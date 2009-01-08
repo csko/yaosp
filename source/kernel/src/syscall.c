@@ -36,7 +36,9 @@ static system_call_entry_t system_call_table[] = {
     { "delete_semaphore", sys_delete_semaphore, 0 },
     { "lock_semaphore", sys_lock_semaphore, 0 },
     { "unlock_semaphore", sys_unlock_semaphore, 0 },
-    { "open", sys_open, 0 }
+    { "open", sys_open, 0 },
+    { "write", sys_write, 0 },
+    { "dup2", sys_dup2, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {
