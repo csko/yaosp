@@ -88,14 +88,17 @@ int main( int argc, char** argv ) {
         child_argv[ 0 ] = line;
         arg_count = 1;
 
-        while ( ( arg_count < ( MAX_ARGV - 2 ) ) &&
-                ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
-            child_argv[ arg_count++ ] = arg;
-            *arg++ = 0;
-            args = arg;
+        if ( args != NULL ) {
+            while ( ( arg_count < ( MAX_ARGV - 2 ) ) &&
+                    ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
+                child_argv[ arg_count++ ] = arg;
+                *arg++ = 0;
+                args = arg;
+            }
+
+            child_argv[ arg_count++ ] = args;
         }
 
-        child_argv[ arg_count++ ] = args;
         child_argv[ arg_count ] = NULL;
 
         /* Create a new process and execute the application */
