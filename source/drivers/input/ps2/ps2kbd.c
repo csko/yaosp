@@ -28,6 +28,7 @@ static uint8_t ps2kbd_buffer[PS2KBD_BUFSIZE];
 static int readpos = 0;
 static int writepos = 0;
 static int size = 0;
+static unsigned short kbd_status = 0; /* LEDs */
 
 static semaphore_id sync;
 static spinlock_t ps2kbd_lock = INIT_SPINLOCK;
@@ -90,10 +91,32 @@ static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, 
     return ret;
 }
 
+
+static void ps2kbd_ack(){
+    while( ! ( inb( 0x60 ) == 0xFA ) );
+}
+
+
+/* This function sets the LEDs */
+static int ps2kbd_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ){
+    /* Only the 3 least significant bits are used, the rest must be 0 */
+    kbd_status ^= (int) command & 0x07;
+
+    while( inb(0x64) & 0x04);
+    outb( 0xED, 0x60); /* LED update command */
+
+    ps2kbd_ack();
+
+    while( inb( 0x64 ) & 0x04 );
+    outb( kbd_status, 0x60 ); /* New LED status */
+
+    return 0;
+}
+
 static device_calls_t ps2kbd_calls = {
     .open = ps2kbd_open,
     .close = ps2kbd_close,
-    .ioctl = NULL,
+    .ioctl = ps2kbd_ioctl,
     .read = ps2kbd_read,
     .write = NULL
 };

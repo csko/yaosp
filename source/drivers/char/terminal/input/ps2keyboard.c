@@ -19,18 +19,25 @@
 #include <thread.h>
 #include <console.h>
 #include <vfs/vfs.h>
+#include <arch/io.h> /* Remove this along with kernel_reboot! */
+#include <arch/interrupt.h>/* Remove this along with kernel_reboot! */
 
 #include "../input.h"
 #include "../terminal.h"
+#include "../../../input/ps2/ps2kbd.h"
 
 enum {
     L_SHIFT = 1,
     R_SHIFT = 2,
+    CAPSLOCK_ON = 4,
+    SCRLOCK_ON = 8,
+    NUMLOCK_ON = 16
 };
 
 static int device;
 static thread_id thread;
 
+/* TODO: Should every VT have its own qualifiers instead? */
 static uint32_t qualifiers = 0;
 
 static uint8_t last_scancode = 0;
@@ -38,6 +45,36 @@ static uint8_t last_scancode = 0;
 extern uint16_t keyboard_normal_map[];
 extern uint16_t keyboard_shifted_map[];
 extern uint16_t keyboard_escaped_map[];
+
+static void toggle_capslock(){
+    qualifiers ^= CAPSLOCK_ON;
+//    ioctl( device, CAPSLOCK_TOGGLE, NULL);
+}
+
+static void toggle_numlock(){
+    qualifiers ^= NUMLOCK_ON;
+//    ioctl( device, NUMLOCK_TOGGLE, NULL);
+}
+
+static void toggle_scrlock(){
+    qualifiers ^= SCRLOCK_ON;
+//    ioctl( device, SCRLOCK_TOGGLE, NULL );
+}
+
+/* TODO: This is a temporary place for this function.
+   We need to handle this better later on.
+   Also, kill processes, unmount filesystems, and do the rest of the cleanups */
+static void kernel_reboot(){
+    int i;
+
+    disable_interrupts();
+    /* Flush keyboard */
+    for( ; (( i = inb( 0x64 ) ) & 0x01) != 0 && (i & 0x02) != 0 ; );
+    /* CPU RESET */
+    outb( 0xFE, 0x64 );
+    asm("hlt");
+    for( ; ; );
+}
 
 static void ps2_keyboard_handle( uint8_t scancode ) {
     bool up;
@@ -49,7 +86,7 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
 
     if ( last_scancode == 0xE0 ) {
         key = keyboard_escaped_map[ scancode ];
-    } else if ( ( qualifiers & ( L_SHIFT | R_SHIFT ) ) != 0 ) {
+    } else if ( ( qualifiers & ( L_SHIFT | R_SHIFT | CAPSLOCK_ON ) ) != 0 ) {
         key = keyboard_shifted_map[ scancode ];
     } else {
         key = keyboard_normal_map[ scancode ];
@@ -60,6 +97,11 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
     switch ( key ) {
         case KEY_L_SHIFT : if ( up ) qualifiers &= ~L_SHIFT; else qualifiers |= L_SHIFT; break;
         case KEY_R_SHIFT : if ( up ) qualifiers &= ~R_SHIFT; else qualifiers |= R_SHIFT; break;
+        case KEY_CAPSLOCK : if ( !up ) toggle_capslock(); break;
+        case KEY_NUMLOCK : if ( !up ) toggle_numlock(); break;
+        case KEY_SCRLOCK : if ( !up ) toggle_scrlock(); break;
+        /* Reboot on SHIFT-DEL, for now. */
+        case KEY_DELETE : if ( qualifiers & ( L_SHIFT ) ) kernel_reboot(); break;
         case KEY_F1 :
         case KEY_F2 :
         case KEY_F3 :

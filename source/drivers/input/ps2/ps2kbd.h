@@ -20,6 +20,9 @@
 #define _PS2KBD_H_
 
 #define PS2KBD_BUFSIZE 0x1000
+#define SCRLOCK_TOGGLE  0x01
+#define NUMLOCK_TOGGLE  0x02
+#define CAPSLOCK_TOGGLE 0x04
 
 int init_module( void );
 int destroy_module( void );
