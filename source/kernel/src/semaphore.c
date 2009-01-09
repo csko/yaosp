@@ -230,7 +230,7 @@ try_again:
             return -ETIME;
         }
 
-        spinlock_disable( &scheduler_lock );
+        spinlock( &scheduler_lock );
 
         thread = current_thread();
 
@@ -247,7 +247,7 @@ try_again:
 
         thread->state = THREAD_WAITING;
 
-        spinunlock_enable( &scheduler_lock );
+        spinunlock( &scheduler_lock );
         spinunlock_enable( &context->lock );
 
         sched_preempt();
@@ -255,11 +255,11 @@ try_again:
         spinlock_disable( &context->lock );
 
         if ( timeout != INFINITE_TIMEOUT ) {
-            spinlock_disable( &scheduler_lock );
+            spinlock( &scheduler_lock );
 
             waitqueue_remove_node( &sleep_queue, &sleepnode );
 
-            spinunlock_enable( &scheduler_lock );
+            spinunlock( &scheduler_lock );
         }
 
         semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
@@ -320,11 +320,11 @@ static int do_unlock_semaphore( bool kernel, semaphore_id id, int count ) {
 
     semaphore->count += count;
 
-    spinlock_disable( &scheduler_lock );
+    spinlock( &scheduler_lock );
 
     waitqueue_wake_up_head( &semaphore->waiters, count );
 
-    spinunlock_enable( &scheduler_lock );
+    spinunlock( &scheduler_lock );
 
     spinunlock_enable( &context->lock );
 
