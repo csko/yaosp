@@ -36,7 +36,7 @@ static semaphore_id sync;
 static spinlock_t ps2kbd_lock = INIT_SPINLOCK;
 
 static int ps2_keyboard_handler( int irq, void* data, registers_t* regs ) {
-    uint8_t scancode = inb( 0x60 );
+    uint8_t scancode = inb( PS2KBD_PORT_KBD );
 
     spinlock_disable( &ps2kbd_lock );
 
@@ -53,8 +53,8 @@ static int ps2_keyboard_handler( int irq, void* data, registers_t* regs ) {
 }
 
 static void ps2_keyboard_flush( void ) {
-    while ( inb( 0x64 ) & 0x01 ) {
-        inb( 0x60 );
+    while ( inb( PS2KBD_PORT_CONT ) & 0x01 ) {
+        inb( PS2KBD_PORT_KBD );
     }
 }
 
@@ -101,7 +101,11 @@ static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, 
 
 
 static void ps2kbd_ack( void ) {
-    while( ! ( inb( 0x60 ) == 0xFA ) ) ;
+    while( ! ( inb( PS2KBD_PORT_KBD ) == 0xFA ) ) ;
+}
+
+static void ps2kbd_wait( void ) {
+    while( inb( PS2KBD_PORT_CONT ) & (0x02 | 0x01) ) ;
 }
 
 static int ps2kbd_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
@@ -115,13 +119,13 @@ static int ps2kbd_ioctl( void* node, void* cookie, uint32_t command, void* args,
 
             kbd_status ^= ( ( uint8_t )to_toggle & 0x07 );
 
-            while( inb( 0x64 ) & 0x04 ) ;
-            outb( 0xED, 0x60 ); /* LED update command */
+            ps2kbd_wait();
+            outb( PS2KBD_CMD_LED, PS2KBD_PORT_KBD ); /* LED update command */
 
             ps2kbd_ack();
 
-            while( inb( 0x64 ) & 0x04 ) ;
-            outb( kbd_status, 0x60 ); /* New LED status */
+            ps2kbd_wait();
+            outb( kbd_status, PS2KBD_PORT_KBD ); /* New LED status */
 
             break;
         }
@@ -146,6 +150,32 @@ int init_module( void ) {
     int error;
 
     ps2_keyboard_flush();
+
+    /* TODO: Detect if hardware is present, cable plugged in, etc */
+
+    /* Test the controller */
+    ps2kbd_wait();
+    outb( PS2KBD_CMD_STEST, PS2KBD_PORT_CONT );
+    error = inb( PS2KBD_PORT_KBD );
+
+    if ( error != 0x55 ) {
+        kprintf( "PS2KBD: Hardware error (%d => 0x%x).\n", PS2KBD_CMD_STEST, error );
+        return -EHW;
+    }
+
+    /* Test the interface */
+    ps2kbd_wait();
+    outb( PS2KBD_CMD_KTEST, PS2KBD_PORT_CONT );
+    error = inb( PS2KBD_PORT_KBD );
+
+    if ( error != 0x00 ) {
+        kprintf( "PS2KBD: Hardware error (%d => 0x%x).\n", PS2KBD_CMD_KTEST, error );
+        return -EHW;
+    }
+
+    /* Enable keyboard */
+    ps2kbd_wait();
+    outb( PS2KBD_CMD_ENABLE, PS2KBD_PORT_CONT );
 
     error = request_irq( 1, ps2_keyboard_handler, NULL );
 

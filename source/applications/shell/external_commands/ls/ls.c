@@ -1,6 +1,6 @@
 /* ls shell command
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,13 +19,16 @@
 #include <stdio.h>
 #include <dirent.h>
 
-int main( int argc, char** argv ) {
+char* argv0 = NULL;
+
+int do_ls( char* dirname ) {
     DIR* dir;
     struct dirent* entry;
 
-    dir = opendir( "." );
+    dir = opendir( dirname );
 
     if ( dir == NULL ) {
+        printf( "%s: cannot access %s: No such file or directory\n", argv0 );
         return -1;
     }
 
@@ -36,4 +39,27 @@ int main( int argc, char** argv ) {
     closedir( dir );
 
     return 0;
+}
+
+int main( int argc, char** argv ) {
+    int i;
+    int ret = 0;
+
+    if ( argc > 0 ) {
+        argv0 = argv[0];
+    }
+
+    if( argc > 1 ) {
+        for ( i = 1; i < argc; i++){
+            if( do_ls( argv[i] ) < 0 ){
+                ret = 1;
+            }
+        }
+    } else {
+        if( do_ls( "." ) < 0 ) {
+            ret = 1;
+        }
+    }
+
+    return ret;
 }

@@ -1,4 +1,4 @@
-/* strchr function
+/* strlen function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *

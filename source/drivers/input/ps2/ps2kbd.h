@@ -25,6 +25,16 @@
 #define LED_NUMLOCK  0x02
 #define LED_CAPSLOCK 0x04
 
+/* Ports used */
+#define PS2KBD_PORT_KBD  0x60
+#define PS2KBD_PORT_CONT 0x64
+
+/* Commands on port 0x64 */
+#define PS2KBD_CMD_STEST   0xAA /* Self test */
+#define PS2KBD_CMD_KTEST   0xAB /* KBD test */
+#define PS2KBD_CMD_ENABLE  0xAE /* Enable */
+#define PS2KBD_CMD_LED     0xED /* LEDs */
+
 int init_module( void );
 int destroy_module( void );
 
