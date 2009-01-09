@@ -59,10 +59,16 @@ static char* get_line( void ) {
     return line_buf;
 }
 
+#define MAX_ARGV 32
+
 int main( int argc, char** argv ) {
     char* line;
     char* args;
     pid_t child;
+
+    char* arg;
+    int arg_count;
+    char** child_argv[ MAX_ARGV ];
 
     fputs( "Welcome to the yaosp shell!\n\n", stdout );
 
@@ -77,12 +83,29 @@ int main( int argc, char** argv ) {
             *args++ = 0;
         }
 
+        /* Build the arg list */
+
+        child_argv[ 0 ] = line;
+        arg_count = 1;
+
+        while ( ( arg_count < ( MAX_ARGV - 2 ) ) &&
+                ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
+            child_argv[ arg_count++ ] = arg;
+            *arg++ = 0;
+            args = arg;
+        }
+
+        child_argv[ arg_count++ ] = args;
+        child_argv[ arg_count ] = NULL;
+
+        /* Create a new process and execute the application */
+
         child = fork();
 
         if ( child == 0 ) {
             int error;
 
-            error = execve( line, NULL, NULL );
+            error = execve( line, child_argv, NULL );
 
             if ( error < 0 ) {
                 printf( "Failed to execute: %s\n", line );
