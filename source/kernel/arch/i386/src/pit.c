@@ -44,10 +44,10 @@ static int pit_irq( int irq, void* data, registers_t* regs ) {
 
     waitqueue_wake_up( &sleep_queue, system_time );
 
-    /* We have to ack this IRQ here because we'll call
-       the scheduler that won't return here. */
+    /* The PIT irq was acked and masked by the interrupt handler.
+       We have to re-enable it here to let it fire next time. */
 
-    arch_ack_irq( irq );
+    arch_enable_irq( irq );
 
     schedule( regs );
 

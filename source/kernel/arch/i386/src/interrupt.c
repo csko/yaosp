@@ -103,12 +103,19 @@ void arch_enable_irq( int irq ) {
     }
 }
 
-void arch_ack_irq( int irq ) {
-    if ( irq & 8 ) {
-        outb( 0x20, PIC_SLAVE_CMD );
-    }
-
-    outb( 0x20, PIC_MASTER_CMD );
+void arch_mask_and_ack_irq( int irq ) {
+  if ( irq & 8 ) {
+    slave_mask |= ( 1 << ( irq - 8 ) );
+    inb( PIC_SLAVE_IMR );
+    outb( slave_mask, PIC_SLAVE_IMR );
+    outb( 0x60 + ( irq & 7 ), PIC_SLAVE_CMD );
+    outb( 0x60 + PIC_CASCADE_IR, PIC_MASTER_CMD );
+  } else {
+    master_mask |= ( 1 << irq );
+    inb( PIC_MASTER_IMR );
+    outb( master_mask, PIC_MASTER_IMR );
+    outb( 0x60 + irq, PIC_MASTER_CMD );
+  }
 }
 
 void irq_handler( registers_t* regs ) {
@@ -116,9 +123,9 @@ void irq_handler( registers_t* regs ) {
 
     irq = regs->int_number - 0x20;
 
+    arch_mask_and_ack_irq( irq );
     do_handle_irq( irq, regs );
-
-    arch_ack_irq( irq );
+    arch_enable_irq( irq );
 }
 
 int init_interrupts( void ) {
