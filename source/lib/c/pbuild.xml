@@ -31,10 +31,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/closedir.c</item>
         <item>src/stdlib/malloc.c</item>
         <item>src/stdlib/abort.c</item>
+        <item>src/stdlib/getenv.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
         <item>src/string/strchr.c</item>
         <item>src/string/strlen.c</item>
+        <item>src/string/strcmp.c</item>
+        <item>src/string/strncmp.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>

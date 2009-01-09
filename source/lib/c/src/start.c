@@ -20,18 +20,31 @@
 
 #include <yaosp/debug.h>
 
+#define MAX_ENV_COUNT 256
+
 extern int init_malloc( void );
 extern int main( int argc, char** argv, char** envp );
 
 int errno;
 
+char* environ[ MAX_ENV_COUNT ];
+
 void __libc_start_main( char** argv, char** envp ) {
+    int i;
     int argc;
     int error;
 
     /* Count the number of arguments */
 
     for ( argc = 0; argv[ argc ] != NULL; argc++ ) ;
+
+    /* Store the env array */
+
+    for ( i = 0; envp[ i ] != NULL; i++ ) {
+        environ[ i ] = envp[ i ];
+    }
+
+    environ[ i ] = NULL;
 
     /* Initialize the memory allocator */
 
