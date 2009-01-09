@@ -68,7 +68,7 @@ int main( int argc, char** argv ) {
 
     char* arg;
     int arg_count;
-    char** child_argv[ MAX_ARGV ];
+    char* child_argv[ MAX_ARGV ];
 
     fputs( "Welcome to the yaosp shell!\n\n", stdout );
 
