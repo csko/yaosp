@@ -25,8 +25,15 @@ extern int main( int argc, char** argv, char** envp );
 
 int errno;
 
-void __libc_start_main( void ) {
+void __libc_start_main( char** argv, char** envp ) {
+    int argc;
     int error;
+
+    /* Count the number of arguments */
+
+    for ( argc = 0; argv[ argc ] != NULL; argc++ ) ;
+
+    /* Initialize the memory allocator */
 
     error = init_malloc();
 
@@ -35,7 +42,11 @@ void __libc_start_main( void ) {
         return;
     }
 
-    error = main( 0, 0, 0 );
+    /* Call the main function of the application */
+
+    error = main( argc, argv, envp );
+
+    /* Exit the process */
 
     _exit( error );
 }

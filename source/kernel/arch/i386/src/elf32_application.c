@@ -509,7 +509,7 @@ int elf32_application_execute( void ) {
     regs->es = USER_DS | 3;
     regs->fs = USER_DS | 3;
     regs->eip = elf_application->entry_address;
-    regs->esp = ( register_t )( ( uint8_t* )thread->user_stack_end - sizeof( register_t ) );
+    regs->esp = ( register_t )thread->user_stack_end;
     regs->ss = USER_DS | 3;
 
     return 0;
