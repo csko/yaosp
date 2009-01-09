@@ -24,16 +24,19 @@
 
 int main( int argc, char** argv ) {
     int i;
+    pid_t child;
 
     for ( i = 0; i < 5; i++ ) {
-        if ( fork() == 0 ) {
+        child = fork();
+
+        if ( child == 0 ) {
             int error;
             int slave_tty;
             char tty_path[ 128 ];
 
-            dbprintf( "Executing shell #%d!\n", i );
-
             snprintf( tty_path, sizeof( tty_path ), "/device/pty/tty%d", i );
+
+            dbprintf( "Executing shell #%d! (tty=%s)\n", i, tty_path );
 
             slave_tty = open( tty_path, 0 /* O_RDWR */ );
 
@@ -50,6 +53,10 @@ int main( int argc, char** argv ) {
             dbprintf( "Failed to execute shell: %d\n", error );
 
             _exit( -1 );
+        } else if ( child > 0 ) {
+            dbprintf( "Child process for shell #%d is %d\n", i, child );
+        } else {
+            dbprintf( "Failed to create child process for shell #%d (error=%d)\n", i, child );
         }
     }
 
