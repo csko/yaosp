@@ -20,8 +20,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-
-#include <yaosp/debug.h>
+#include <stdio.h>
 
 extern char* environ[];
 
@@ -56,5 +55,4 @@ int execvp( const char* filename, char* const argv[] ) {
     } while ( separator != NULL );
 
     return -1;
-
 }

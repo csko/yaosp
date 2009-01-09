@@ -77,17 +77,34 @@ int main( int argc, char** argv ) {
     while ( 1 ) {
         fputs( "> ", stdout );
 
+        /* Read in a line */
+
         line = get_line();
-        
+
+        /* Skip whitespaces at the beginning of the line */
+
+        while ( ( *line != 0 ) && ( *line == ' ' ) ) {
+            line++;
+        }
+
+        /* Don't try to execute zero length lines */
+
+        if ( line[ 0 ] == 0 ) {
+            continue;
+        }
+
         if ( strcmp( line, "quit" ) == 0 || strcmp( line, "exit" ) == 0
              || line == NULL ) {
             break;
         }
 
+        /* Parse arguments */
+
         args = line;
         arg_count = 0;
+
         if ( args != NULL ) {
-            while ( ( arg_count < ( MAX_ARGV - 2 ) ) &&
+            while ( ( arg_count < ( MAX_ARGV - 1 ) ) &&
                     ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
                 child_argv[ arg_count++ ] = args;
                 *arg++ = 0;
@@ -106,11 +123,15 @@ int main( int argc, char** argv ) {
         if ( child == 0 ) {
             int error;
 
+            /* Try to execute the command */
+
             error = execvp( line, child_argv );
 
             if ( error < 0 ) {
                 printf( "Failed to execute: %s\n", line );
             }
+
+            /* Execvp failed, exit from the child process */
 
             _exit( error );
         } else {
