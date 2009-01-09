@@ -50,6 +50,12 @@ static int ps2_keyboard_handler( int irq, void* data, registers_t* regs ) {
     return 0;
 }
 
+static void ps2_keyboard_flush( void ) {
+    while ( inb( 0x64 ) & 0x01 ) {
+        inb( 0x60 );
+    }
+}
+
 static int ps2kbd_open( void* node, uint32_t flags, void** cookie ) {
     readpos = 0;
     writepos = 0;
@@ -124,7 +130,9 @@ static device_calls_t ps2kbd_calls = {
 int init_module( void ) {
     int error;
 
-    error = request_irq(1, ps2_keyboard_handler, NULL);
+    ps2_keyboard_flush();
+
+    error = request_irq( 1, ps2_keyboard_handler, NULL );
 
     if ( error < 0 ) {
         kprintf( "PS2KBD: Failed to request IRQ for keyboard.\n" );
@@ -132,18 +140,20 @@ int init_module( void ) {
     }
 
     sync = create_semaphore( "PS/2 keyboard sync", SEMAPHORE_COUNTING, 0, 0 );
+
     if ( sync < 0 ) {
-        kprintf ( "PS2KBD: Failed to create a semaphore.\n" );
+        kprintf( "PS2KBD: Failed to create a semaphore.\n" );
         return sync;
     }    
 
     error = create_device_node( "input/ps2kbd", &ps2kbd_calls, NULL );
+
     if ( error < 0 ) {
-        kprintf ( "PS2KBD: Failed to register device.\n" );
+        kprintf( "PS2KBD: Failed to register device.\n" );
         return error;
     }
 
-    kprintf ( "PS2KBD: Keyboard initialized.\n" );
+    kprintf( "PS2KBD: Keyboard initialized.\n" );
 
     return 0;
 }
