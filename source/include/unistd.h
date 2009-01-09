@@ -28,6 +28,7 @@ struct dirent {
     char name[ NAME_MAX + 1 ];
 };
 
+void exit( int status );
 void _exit( int status );
 
 pid_t fork( void );

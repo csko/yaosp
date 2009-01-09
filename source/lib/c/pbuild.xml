@@ -57,6 +57,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/fputs.c</item>
         <item>src/stdio/__printf.c</item>
         <item>src/stdio/printf.c</item>
+        <item>src/stdio/fprintf.c</item>
         <item>src/stdio/snprintf.c</item>
         <item>src/sys/waitpid.c</item>
         <item>src/yaosp/debug.c</item>

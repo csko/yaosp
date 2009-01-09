@@ -1,4 +1,4 @@
-/* exit function
+/* fprintf function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,15 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <unistd.h>
+#include <stdio.h>
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
+#include "__printf.h"
 
-void _exit( int status ) {
-    syscall1( SYS_exit, status );
+static int fprintf_helper( void* data, char c ) {
+    fputc( c, ( FILE* )data );
+    return 0;
 }
 
-void exit( int status ) {
-    _exit( status );
+int fprintf( FILE* stream, const char* format, ... ) {
+    int ret;
+    va_list args;
+
+    va_start( args, format );
+    ret = __printf( fprintf_helper, ( void* )stream, format, args );
+    va_end( args );
+
+    return ret;
 }

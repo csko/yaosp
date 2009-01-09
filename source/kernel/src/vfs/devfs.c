@@ -120,12 +120,26 @@ static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name,
     devfs_node_t* parent;
 
     parent = ( devfs_node_t* )_parent;
+
+    /* First check for ".." */
+
+    if ( ( name_len == 2 ) && ( strcmp( name, ".." ) == 0 ) ) {
+        if ( parent->parent == NULL ) {
+            return -EINVAL;
+        }
+
+        *inode_num = parent->parent->inode_number;
+
+        return 0;
+    }
+
     node = parent->first_child;
 
     while ( node != NULL ) {
         if ( ( strlen( node->name ) == name_len ) &&
              ( strncmp( node->name, name, name_len ) == 0 ) ) {
             *inode_num = node->inode_number;
+
             return 0;
         }
 

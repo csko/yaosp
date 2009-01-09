@@ -1,4 +1,4 @@
-/* exit function
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,15 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <unistd.h>
+#ifndef _LIMITS_H_
+#define _LIMITS_H_
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
+#define CHAR_BITS 8
 
-void _exit( int status ) {
-    syscall1( SYS_exit, status );
-}
+#define UCHAR_MAX 255
 
-void exit( int status ) {
-    _exit( status );
-}
+#endif // _LIMITS_H_

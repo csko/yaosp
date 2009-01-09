@@ -1,4 +1,4 @@
-/* exit function
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,15 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _ASSERT_H_
+#define _ASSERT_H_
+
 #include <unistd.h>
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
+#ifdef NDEBUG
+#define assert(expr)
+#else
+#define assert(expr) \
+    if ( !(expr) ) { \
+        abort(); \
+    }
+#endif // NDEBUG
 
-void _exit( int status ) {
-    syscall1( SYS_exit, status );
-}
-
-void exit( int status ) {
-    _exit( status );
-}
+#endif // _ASSERT_H_
