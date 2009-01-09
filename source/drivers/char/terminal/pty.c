@@ -596,6 +596,7 @@ static filesystem_calls_t pty_calls = {
     .free_cookie = pty_free_cookie,
     .read = pty_read,
     .write = pty_write,
+    .ioctl = NULL,
     .read_directory = pty_read_directory,
     .create = pty_create,
     .mkdir = NULL,

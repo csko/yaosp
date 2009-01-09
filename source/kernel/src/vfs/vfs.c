@@ -354,6 +354,45 @@ int sys_write( int fd, const void* buffer, size_t count ) {
     return do_pwrite( false, fd, buffer, count, 0 );
 }
 
+static int do_ioctl( bool kernel, int fd, int command, void* buffer ) {
+    int error;
+    file_t* file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    if ( file->inode->mount_point->fs_calls->ioctl != NULL ) {
+        error = file->inode->mount_point->fs_calls->ioctl(
+            file->inode->mount_point->fs_data,
+            file->inode->fs_node,
+            file->cookie,
+            command,
+            buffer,
+            kernel
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    io_context_put_file( io_context, file );
+
+    return error;
+}
+
+int ioctl( int fd, int command, void* buffer ) {
+    return do_ioctl( true, fd, command, buffer );
+}
+
 static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
     int error;
     file_t* file;

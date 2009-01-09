@@ -1,6 +1,6 @@
-/* Miscellaneous kernel functions
+/* Terminal driver
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,22 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _IOCTL_H_
+#define _IOCTL_H_
 
-#define panic( format, arg... ) \
-    handle_panic( __FILE__, __LINE__, format, ##arg )
+#define IOCTL_PS2KBD_TOGGLE_LEDS 0x01
 
-int sys_dbprintf( const char* format, char** parameters );
-
-void handle_panic( const char* file, int line, const char* format, ... );
-
-int init_thread( void* arg );
-
-void reboot( void );
-void shutdown( void );
-
-int arch_late_init( void );
-void kernel_main( void );
-
-#endif // _KERNEL_H_
+#endif // _IOCTL_H_

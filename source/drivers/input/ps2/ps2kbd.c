@@ -18,6 +18,8 @@
 
 #include <irq.h>
 #include <console.h>
+#include <errno.h>
+#include <ioctl.h>
 #include <vfs/devfs.h>
 
 #include <arch/io.h>
@@ -28,7 +30,7 @@ static uint8_t ps2kbd_buffer[PS2KBD_BUFSIZE];
 static int readpos = 0;
 static int writepos = 0;
 static int size = 0;
-static unsigned short kbd_status = 0; /* LEDs */
+static uint8_t kbd_status = 0; /* LEDs */
 
 static semaphore_id sync;
 static spinlock_t ps2kbd_lock = INIT_SPINLOCK;
@@ -98,25 +100,38 @@ static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, 
 }
 
 
-static void ps2kbd_ack(){
-    while( ! ( inb( 0x60 ) == 0xFA ) );
+static void ps2kbd_ack( void ) {
+    while( ! ( inb( 0x60 ) == 0xFA ) ) ;
 }
 
+static int ps2kbd_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
+    int error = 0;
 
-/* This function sets the LEDs */
-static int ps2kbd_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ){
-    /* Only the 3 least significant bits are used, the rest must be 0 */
-    kbd_status ^= (int) command & 0x07;
+    switch ( command ) {
+        case IOCTL_PS2KBD_TOGGLE_LEDS : {
+            int to_toggle = ( int )args;
 
-    while( inb(0x64) & 0x04);
-    outb( 0xED, 0x60); /* LED update command */
+            /* Only the 3 least significant bits are used, the rest must be 0 */
 
-    ps2kbd_ack();
+            kbd_status ^= ( ( uint8_t )to_toggle & 0x07 );
 
-    while( inb( 0x64 ) & 0x04 );
-    outb( kbd_status, 0x60 ); /* New LED status */
+            while( inb( 0x64 ) & 0x04 ) ;
+            outb( 0xED, 0x60 ); /* LED update command */
 
-    return 0;
+            ps2kbd_ack();
+
+            while( inb( 0x64 ) & 0x04 ) ;
+            outb( kbd_status, 0x60 ); /* New LED status */
+
+            break;
+        }
+
+        default :
+            error = -ENOSYS;
+            break;
+    }
+
+    return error;
 }
 
 static device_calls_t ps2kbd_calls = {

@@ -501,6 +501,7 @@ static filesystem_calls_t iso9660_calls = {
     .free_cookie = iso9660_free_cookie,
     .read = iso9660_read,
     .write = NULL,
+    .ioctl = NULL,
     .read_directory = iso9660_read_directory,
     .create = NULL,
     .mkdir = NULL,

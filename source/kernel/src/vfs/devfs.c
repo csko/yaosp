@@ -198,7 +198,11 @@ static int devfs_read( void* fs_cookie, void* _node, void* file_cookie, void* bu
         return -EISDIR;
     }
 
-    return node->calls->read( node->cookie, file_cookie, buffer, pos, size );
+    if ( node->calls->read == NULL ) {
+        return -ENOSYS;
+    } else {
+        return node->calls->read( node->cookie, file_cookie, buffer, pos, size );
+    }
 }
 
 static int devfs_write( void* fs_cookie, void* _node, void* file_cookie, const void* buffer, off_t pos, size_t size ) {
@@ -210,7 +214,27 @@ static int devfs_write( void* fs_cookie, void* _node, void* file_cookie, const v
         return -EISDIR;
     }
 
-    return node->calls->write( node->cookie, file_cookie, buffer, pos, size );
+    if ( node->calls->write == NULL ) {
+        return -ENOSYS;
+    } else {
+        return node->calls->write( node->cookie, file_cookie, buffer, pos, size );
+    }
+}
+
+static int devfs_ioctl( void* fs_cookie, void* _node, void* file_cookie, int command, void* buffer, bool from_kernel ) {
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    if ( node->is_directory ) {
+        return -EISDIR;
+    }
+
+    if ( node->calls->ioctl == NULL ) {
+        return -ENOSYS;
+    } else {
+        return node->calls->ioctl( node->cookie, file_cookie, command, buffer, from_kernel );
+    }
 }
 
 static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie, struct dirent* entry ) {
@@ -415,6 +439,7 @@ static filesystem_calls_t devfs_calls = {
     .free_cookie = NULL,
     .read = devfs_read,
     .write = devfs_write,
+    .ioctl = devfs_ioctl,
     .read_directory = devfs_read_directory,
     .create = NULL,
     .mkdir = devfs_mkdir,

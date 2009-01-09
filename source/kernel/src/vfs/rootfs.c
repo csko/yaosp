@@ -254,6 +254,7 @@ static filesystem_calls_t rootfs_calls = {
     .free_cookie = rootfs_free_cookie,
     .read = NULL,
     .write = NULL,
+    .ioctl = NULL,
     .read_directory = rootfs_read_directory,
     .create = NULL,
     .mkdir = rootfs_mkdir,

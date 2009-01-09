@@ -18,9 +18,9 @@
 
 #include <thread.h>
 #include <console.h>
+#include <kernel.h>
+#include <ioctl.h>
 #include <vfs/vfs.h>
-#include <arch/io.h> /* Remove this along with kernel_reboot! */
-#include <arch/interrupt.h>/* Remove this along with kernel_reboot! */
 
 #include "../input.h"
 #include "../terminal.h"
@@ -29,9 +29,9 @@
 enum {
     L_SHIFT = 1,
     R_SHIFT = 2,
-    CAPSLOCK_ON = 4,
-    SCRLOCK_ON = 8,
-    NUMLOCK_ON = 16
+    CAPSLOCK = 4,
+    SCRLOCK = 8,
+    NUMLOCK = 16
 };
 
 static int device;
@@ -46,34 +46,19 @@ extern uint16_t keyboard_normal_map[];
 extern uint16_t keyboard_shifted_map[];
 extern uint16_t keyboard_escaped_map[];
 
-static void toggle_capslock(){
-    qualifiers ^= CAPSLOCK_ON;
-//    ioctl( device, CAPSLOCK_TOGGLE, NULL);
+static void toggle_capslock( void ) {
+    qualifiers ^= CAPSLOCK;
+    ioctl( device, IOCTL_PS2KBD_TOGGLE_LEDS, ( void* )LED_CAPSLOCK );
 }
 
-static void toggle_numlock(){
-    qualifiers ^= NUMLOCK_ON;
-//    ioctl( device, NUMLOCK_TOGGLE, NULL);
+static void toggle_numlock( void ) {
+    qualifiers ^= NUMLOCK;
+    ioctl( device, IOCTL_PS2KBD_TOGGLE_LEDS, ( void* )LED_NUMLOCK );
 }
 
-static void toggle_scrlock(){
-    qualifiers ^= SCRLOCK_ON;
-//    ioctl( device, SCRLOCK_TOGGLE, NULL );
-}
-
-/* TODO: This is a temporary place for this function.
-   We need to handle this better later on.
-   Also, kill processes, unmount filesystems, and do the rest of the cleanups */
-static void kernel_reboot(){
-    int i;
-
-    disable_interrupts();
-    /* Flush keyboard */
-    for( ; (( i = inb( 0x64 ) ) & 0x01) != 0 && (i & 0x02) != 0 ; );
-    /* CPU RESET */
-    outb( 0xFE, 0x64 );
-    asm("hlt");
-    for( ; ; );
+static void toggle_scrlock( void ) {
+    qualifiers ^= SCRLOCK;
+    ioctl( device, IOCTL_PS2KBD_TOGGLE_LEDS, ( void* )LED_SCRLOCK );
 }
 
 static void ps2_keyboard_handle( uint8_t scancode ) {
@@ -86,8 +71,18 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
 
     if ( last_scancode == 0xE0 ) {
         key = keyboard_escaped_map[ scancode ];
-    } else if ( ( qualifiers & ( L_SHIFT | R_SHIFT | CAPSLOCK_ON ) ) != 0 ) {
-        key = keyboard_shifted_map[ scancode ];
+    } else if ( ( qualifiers & ( L_SHIFT | R_SHIFT ) ) != 0 ) {
+        if ( qualifiers & CAPSLOCK ) {
+            key = keyboard_normal_map[ scancode ];
+        } else {
+            key = keyboard_shifted_map[ scancode ];
+        }
+    } else if ( ( qualifiers & ( CAPSLOCK ) ) != 0 ) {
+        if ( qualifiers & ( L_SHIFT | R_SHIFT ) ) {
+            key = keyboard_normal_map[ scancode ];
+        } else {
+            key = keyboard_shifted_map[ scancode ];
+        }
     } else {
         key = keyboard_normal_map[ scancode ];
     }
@@ -101,7 +96,7 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
         case KEY_NUMLOCK : if ( !up ) toggle_numlock(); break;
         case KEY_SCRLOCK : if ( !up ) toggle_scrlock(); break;
         /* Reboot on SHIFT-DEL, for now. */
-        case KEY_DELETE : if ( qualifiers & ( L_SHIFT ) ) kernel_reboot(); break;
+        case KEY_DELETE : if ( qualifiers & ( L_SHIFT ) ) reboot(); break;
         case KEY_F1 :
         case KEY_F2 :
         case KEY_F3 :

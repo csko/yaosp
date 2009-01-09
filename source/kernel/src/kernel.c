@@ -31,6 +31,9 @@
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
 
+extern void arch_reboot( void );
+extern void arch_shutdown( void );
+
 int sys_dbprintf( const char* format, char** parameters ) {
     char buf[ 256 ];
 
@@ -61,6 +64,14 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
 
     disable_interrupts();
     halt_loop();
+}
+
+void reboot( void ) {
+    arch_reboot();
+}
+
+void shutdown( void ) {
+    arch_shutdown();
 }
 
 void kernel_main( void ) {
