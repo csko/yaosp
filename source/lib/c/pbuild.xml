@@ -38,6 +38,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strlen.c</item>
         <item>src/string/strcmp.c</item>
         <item>src/string/strncmp.c</item>
+        <item>src/string/strdup.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>

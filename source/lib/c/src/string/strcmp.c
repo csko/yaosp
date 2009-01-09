@@ -21,7 +21,7 @@
 int strcmp( const char* s1, const char* s2 ) {
     int result;
 
-    while ( true ) {
+    while ( 1 ) {
         result = *s1 - *s2++;
 
         if ( ( result != 0 ) || ( *s1++ == 0 ) ) {

@@ -1,4 +1,4 @@
-/* yaosp C library
+/* strdup function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,18 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STDLIB_H_
-#define _STDLIB_H_
+#include <stdlib.h>
+#include <string.h>
 
-#include <stddef.h>
+char* strdup( const char* s ) {
+    char* s2;
+    size_t length;
 
-char* getenv( const char* name );
+    length = strlen( s );
+    s2 = ( char* )malloc( length + 1 );
 
-void* calloc( size_t nmemb, size_t size );
-void* malloc( size_t size );
-void free( void* ptr );
-void* realloc( void* ptr, size_t size );
+    if ( s2 == NULL ) {
+        return NULL;
+    }
 
-void abort( void );
+    memcpy( s2, s, length + 1 );
 
-#endif // _STDLIB_H_
+    return s2;
+}
