@@ -31,7 +31,9 @@ struct dirent {
 void _exit( int status );
 
 pid_t fork( void );
+
 int execve( const char* filename, char* const argv[], char* const envp[] );
+int execvp( const char* filename, char* const argv[] );
 
 void* sbrk( int increment );
 

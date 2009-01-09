@@ -108,7 +108,7 @@ int main( int argc, char** argv ) {
         if ( child == 0 ) {
             int error;
 
-            error = execve( line, child_argv, NULL );
+            error = execvp( line, child_argv );
 
             if ( error < 0 ) {
                 printf( "Failed to execute: %s\n", line );
