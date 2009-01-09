@@ -91,7 +91,7 @@ int main( int argc, char** argv ) {
         if ( args != NULL ) {
             while ( ( arg_count < ( MAX_ARGV - 2 ) ) &&
                     ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
-                child_argv[ arg_count++ ] = arg;
+                child_argv[ arg_count++ ] = args;
                 *arg++ = 0;
                 args = arg;
             }
