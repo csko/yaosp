@@ -23,6 +23,7 @@
 
 #define FILE_CAN_READ  0x01
 #define FILE_CAN_WRITE 0x02
+#define EOF 0xFFFFFFFF
 
 typedef struct FILE {
     int fd;

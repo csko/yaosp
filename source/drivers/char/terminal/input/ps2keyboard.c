@@ -31,7 +31,11 @@ enum {
     R_SHIFT = 2,
     CAPSLOCK = 4,
     SCRLOCK = 8,
-    NUMLOCK = 16
+    NUMLOCK = 16,
+    L_CTRL = 32,
+    R_CTRL = 64,
+    L_ALT = 128,
+    R_ALT = 256,
 };
 
 static int device;
@@ -92,11 +96,16 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
     switch ( key ) {
         case KEY_L_SHIFT : if ( up ) qualifiers &= ~L_SHIFT; else qualifiers |= L_SHIFT; break;
         case KEY_R_SHIFT : if ( up ) qualifiers &= ~R_SHIFT; else qualifiers |= R_SHIFT; break;
+        case KEY_L_CTRL : if ( up ) qualifiers &= ~L_CTRL; else qualifiers |= L_CTRL; break;
+        case KEY_R_CTRL : if ( up ) qualifiers &= ~R_CTRL; else qualifiers |= R_CTRL; break;
+        case KEY_L_ALT : if ( up ) qualifiers &= ~L_ALT; else qualifiers |= L_ALT; break;
+        case KEY_R_ALT : if ( up ) qualifiers &= ~R_ALT; else qualifiers |= R_ALT; break;
         case KEY_CAPSLOCK : if ( !up ) toggle_capslock(); break;
         case KEY_NUMLOCK : if ( !up ) toggle_numlock(); break;
         case KEY_SCRLOCK : if ( !up ) toggle_scrlock(); break;
-        /* Reboot on SHIFT-DEL, for now. */
-        case KEY_DELETE : if ( qualifiers & ( L_SHIFT ) ) reboot(); break;
+        /* Reboot on CTRL-ALT-DEL, for now. */
+        case KEY_DELETE : if ( qualifiers & ( L_ALT | R_ALT) &&
+                               qualifiers & ( L_CTRL | R_CTRL) ) reboot(); break;
         case KEY_F1 :
         case KEY_F2 :
         case KEY_F3 :

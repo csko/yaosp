@@ -1,6 +1,6 @@
 /* Fgetc function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,11 +23,11 @@ int fgetc( FILE* stream ) {
     char c;
 
     if ( ( stream->flags & FILE_CAN_READ ) == 0 ) {
-        return -1;
+        return EOF;
     }
 
     if ( read( stream->fd, &c, 1 ) != 1 ) {
-        return -1;
+        return EOF;
     }
 
     return ( int )c;

@@ -1,6 +1,6 @@
 /* Shell application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -34,6 +34,8 @@ static char* get_line( void ) {
         c = fgetc( stdin );
 
         switch ( c ) {
+            case EOF:
+                return NULL;
             case '\n' :
                 done = 1;
                 break;
@@ -76,18 +78,14 @@ int main( int argc, char** argv ) {
         fputs( "> ", stdout );
 
         line = get_line();
-
-        args = strchr( line, ' ' );
-
-        if ( args != NULL ) {
-            *args++ = 0;
+        
+        if ( strcmp( line, "quit" ) == 0 || strcmp( line, "exit" ) == 0
+             || line == NULL ) {
+            break;
         }
 
-        /* Build the arg list */
-
-        child_argv[ 0 ] = line;
-        arg_count = 1;
-
+        args = line;
+        arg_count = 0;
         if ( args != NULL ) {
             while ( ( arg_count < ( MAX_ARGV - 2 ) ) &&
                     ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
