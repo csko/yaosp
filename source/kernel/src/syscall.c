@@ -42,6 +42,7 @@ static system_call_entry_t system_call_table[] = {
     { "write", sys_write, 0 },
     { "dup2", sys_dup2, 0 },
     { "getdents", sys_getdents, 0 },
+    { "fchdir", sys_fchdir, 0 },
     { "exit", sys_exit, 0 },
     { "waitpid", sys_waitpid, 0 }
 };

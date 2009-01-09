@@ -1,4 +1,4 @@
-/* yaosp C library
+/* Change directory command
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,34 +16,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _UNISTD_H_
-#define _UNISTD_H_
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-#include <sys/types.h>
+#include "../command.h"
 
-#define NAME_MAX 255
+static int cd_command_function( int argc, char** argv ) {
+    int fd;
 
-struct dirent {
-    ino_t inode_number;
-    char name[ NAME_MAX + 1 ];
+    if ( argc != 2 ) {
+        printf( "Usage: cd directory\n" );
+        return -1;
+    }
+
+    fd = open( argv[ 1 ], 0 /* O_RDONLY */ );
+
+    if ( fd < 0 ) {
+        printf( "cd: Invalid directory: %s\n", argv[ 1 ] );
+        return -1;
+    }
+
+    fchdir( fd );
+
+    close( fd );
+
+    return 0;
+}
+
+builtin_command_t cd_command = {
+    .name = "cd",
+    .command = cd_command_function
 };
-
-void _exit( int status );
-
-pid_t fork( void );
-
-int execve( const char* filename, char* const argv[], char* const envp[] );
-int execvp( const char* filename, char* const argv[] );
-
-void* sbrk( int increment );
-
-int close( int fd );
-int dup2( int old_fd, int new_fd );
-
-ssize_t read( int fd, void* buf, size_t count );
-ssize_t write( int fd, const void* buf, size_t count );
-
-int fchdir( int fd );
-int getdents( int fd, struct dirent* entry, unsigned int count );
-
-#endif // _UNISTD_H_

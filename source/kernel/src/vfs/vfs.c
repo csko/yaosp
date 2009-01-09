@@ -470,6 +470,43 @@ int mkdir( const char* path, int permissions ) {
     return do_mkdir( true, path, permissions );
 }
 
+static int do_fchdir( bool kernel, int fd ) {
+    file_t* file;
+    inode_t* tmp;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    /* TODO: check if this is really a directory */
+
+    LOCK( io_context->lock );
+
+    tmp = io_context->current_directory;
+    io_context->current_directory = file->inode;
+
+    atomic_inc( &io_context->current_directory->ref_count );
+
+    UNLOCK( io_context->lock );
+
+    put_inode( tmp );
+
+    return 0;
+}
+
+int sys_fchdir( int fd ) {
+    return do_fchdir( false, fd );
+}
+
 int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {
     int error;
     inode_t* dir_inode;

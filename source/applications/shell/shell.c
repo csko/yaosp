@@ -23,6 +23,13 @@
 
 #include <yaosp/debug.h>
 
+#include "command.h"
+
+static builtin_command_t* builtin_commands[] = {
+    &cd_command,
+    NULL
+};
+
 static char line_buf[ 255 ];
 
 static char* get_line( void ) {
@@ -36,6 +43,7 @@ static char* get_line( void ) {
         switch ( c ) {
             case EOF:
                 return NULL;
+
             case '\n' :
                 done = 1;
                 break;
@@ -64,6 +72,8 @@ static char* get_line( void ) {
 #define MAX_ARGV 32
 
 int main( int argc, char** argv ) {
+    int i;
+    int done;
     char* line;
     char* args;
     pid_t child;
@@ -115,6 +125,22 @@ int main( int argc, char** argv ) {
         }
 
         child_argv[ arg_count ] = NULL;
+
+        /* First try to run it as a builtin command */
+
+        done = 0;
+
+        for ( i = 0; builtin_commands[ i ] != NULL; i++ ) {
+            if ( strcmp( builtin_commands[ i ]->name, child_argv[ 0 ] ) == 0 ) {
+                builtin_commands[ i ]->command( arg_count, child_argv );
+                done = 1;
+                break;
+            }
+        }
+
+        if ( done ) {
+            continue;
+        }
 
         /* Create a new process and execute the application */
 

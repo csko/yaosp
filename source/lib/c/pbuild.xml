@@ -49,6 +49,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/getdents.c</item>
         <item>src/unistd/close.c</item>
         <item>src/unistd/execvp.c</item>
+        <item>src/unistd/fchdir.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/fgetc.c</item>
