@@ -63,6 +63,9 @@ int dayofweek(int year, int month, int day);
 /* Returns the number of days since the epoch */
 int daysdiff(int year, int month, int day);
 
+/* Gets the system uptime in seconds */
+uint64_t uptime( void );
+
 /* Formats a broken-down time, uses the first at most m chars of s */
 size_t strftime(char *s, size_t max, const char *format,
                        const tm_t *tm);

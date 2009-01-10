@@ -21,6 +21,8 @@
 #define _ARCH_PIT_H_
 
 int init_system_time( void );
+uint64_t get_system_time( void );
+uint64_t get_boot_time( void );
 int init_pit( void );
 
 #endif // _ARCH_PIT_H_

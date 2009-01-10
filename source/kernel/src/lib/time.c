@@ -90,7 +90,7 @@ tm_t gettime( uint64_t timeval ) {
             break;
         }
     }
-    ret.yday = timeval;
+    ret.yday = (int) timeval;
 
     if(ret.year % 4 == 0){
         for(ret.mon = 0; ret.mon < 12; ret.mon++){
@@ -108,7 +108,7 @@ tm_t gettime( uint64_t timeval ) {
         }
     }
 
-    ret.mday = timeval + 1;
+    ret.mday = (int) timeval + 1;
     ret.isdst = -1;
 
     return ret;
@@ -139,6 +139,10 @@ int daysdiff(int year, int month, int day){
 int dayofweek(int year, int month, int day){
     /* The UNIX Epoch(1 Jan 1970) was a Thursday */
     return (4 + daysdiff(year, month, day)) % 7;
+}
+
+uint64_t uptime( void ) {
+    return get_system_time() - get_boot_time();
 }
 
 size_t strftime(char* s, size_t max, const char* format,
@@ -205,7 +209,7 @@ size_t strftime(char* s, size_t max, const char* format,
                         break;
                     case 'c':
                         /* The preferred date and time representation for the current locale. */
-                        strftime(tmp, max-ret, "%a %b %e %H:%M:%S", tm);
+                        strftime(tmp, max-ret, "%a %b %e %H:%M:%S %Z %Y", tm);
                         APPEND(tmp);
                         break;
                     case 'C':
@@ -330,9 +334,13 @@ size_t strftime(char* s, size_t max, const char* format,
                         break;
                     case 'x':
                         /* The preferred date representation for the current locale without the time. */
+                        strftime(tmp, max-ret, "%a %b %e %Z %Y", tm);
+                        APPEND(tmp);
                         break;
                     case 'X':
                         /* The preferred time representation for the current locale without the date. */
+                        strftime(tmp, max-ret, "%H:%M:%S", tm);
+                        APPEND(tmp);
                         break;
                     case 'y':
                         /* The year as a decimal number without a century (range 00 to 99). */

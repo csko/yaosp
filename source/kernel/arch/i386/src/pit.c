@@ -29,6 +29,7 @@
 #include <arch/hwtime.h>
 
 static uint64_t system_time = 0;
+static uint64_t boot_time = 0;
 static spinlock_t time_lock = INIT_SPINLOCK;
 
 static int pit_irq( int irq, void* data, registers_t* regs ) {
@@ -66,14 +67,21 @@ uint64_t get_system_time( void ) {
     return now;
 }
 
+uint64_t get_boot_time( void ) {
+    return boot_time;
+}
+
 int init_system_time( void ) {
     tm_t now;
+    uint64_t i;
 
     gethwclock( &now );
+    i = 1000000 * timestamp( &now );
 
     spinlock_disable( &time_lock );
 
-    system_time = 1000000 * timestamp( &now );
+    system_time = i;
+    boot_time = i;
 
     spinunlock_enable( &time_lock );
 

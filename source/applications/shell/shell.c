@@ -36,6 +36,7 @@ static char* get_line( void ) {
     int c;
     int pos = 0;
     int done = 0;
+    int newline = 0; /* TODO: bool type */
 
     while ( !done ) {
         c = fgetc( stdin );
@@ -44,8 +45,16 @@ static char* get_line( void ) {
             case EOF:
                 return NULL;
 
+            case '\\':
+                newline = 1;
+                break;
+
             case '\n' :
-                done = 1;
+                if ( newline == 0 ) {
+                    done = 1;
+                } else {
+                    newline = 0;
+                }
                 break;
 
             case '\b' :
