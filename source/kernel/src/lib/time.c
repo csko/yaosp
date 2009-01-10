@@ -19,6 +19,7 @@
 
 #include <lib/string.h>
 #include <lib/time.h>
+#include <arch/pit.h>
 
 #define APPEND( str ) \
         ret += strlen(str); \

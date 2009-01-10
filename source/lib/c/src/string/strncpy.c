@@ -1,4 +1,4 @@
-/* fprintf function
+/* strncpy function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
