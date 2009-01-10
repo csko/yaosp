@@ -22,7 +22,6 @@
 #include <types.h>
 #include <waitqueue.h>
 #include <lib/hashtable.h>
-
 #include <arch/spinlock.h>
 
 #define INFINITE_TIMEOUT 18446744073709551615ULL

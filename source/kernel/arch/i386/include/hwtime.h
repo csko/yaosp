@@ -19,7 +19,7 @@
 #ifndef _HWTIME_H_
 #define _HWTIME_H_
 
-#include <lib/time.h>
+#include <time.h>
 
 #define RTCADDR 0x70
 #define RTCDATA 0x71

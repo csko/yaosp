@@ -1,6 +1,6 @@
 /* Type definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,7 @@
 
 #include <arch/types.h>
 
+#define INFINITE_TIMEOUT 18446744073709551615ULL
 #define NULL ( ( void* )0 )
 
 #define true ( 1 )
