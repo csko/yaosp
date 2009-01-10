@@ -65,7 +65,7 @@ uint64_t timestamp(tm_t* time) {
           time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MINUTE + time->sec;
 }
 
-tm_t gettime( uint64_t timeval ) {
+tm_t gettime( time_t timeval ) {
     tm_t ret;
     int i;
 

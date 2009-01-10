@@ -17,6 +17,7 @@
  */
 #ifndef _LIBTIME_H_
 #define _LIBTIME_H_
+#include <time.h> /* Time structures */
 
 #define EPOCH 1970 // Counting only time elapsed since 1 Jan 1970
 
@@ -27,18 +28,6 @@
 #define HOURS_PER_DAY 24
 
 #define STRFT_ALTFORM 0x01
-
-typedef struct tm {
-    int sec;    /* Seconds. [0-60] (1 leap second) */
-    int min;    /* Minutes. [0-59] */
-    int hour;   /* Hours.   [0-23] */
-    int mday;   /* Day.     [1-31] */
-    int mon;    /* Month.   [0-11] */
-    int year;   /* Year [1970; ...] */
-    int wday;   /* Day of week. [0-6], 0=Sunday */
-    int yday;   /* Days in year. [0-365] */
-    int isdst;  /* Daylight saving [-1/0/1] */
-} tm_t ;
 
 /* Names and short names for months and days of week */
 extern const char* month_names[ 12 ];
@@ -55,7 +44,7 @@ extern const unsigned short int sumofdays[ 60 ];
 uint64_t timestamp(tm_t* time);
 
 /* Converts a UNIX timestamp to a broken-down time */
-tm_t gettime(uint64_t time);
+tm_t gettime(time_t time);
 
 /* Returns the day of the week, 0=Sunday */
 int dayofweek(int year, int month, int day);

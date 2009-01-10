@@ -21,11 +21,11 @@
 
 #include <types.h>
 #include <waitqueue.h>
-#include <time.h>
 #include <lib/hashtable.h>
 
 #include <arch/spinlock.h>
 
+#define INFINITE_TIMEOUT 18446744073709551615ULL
 #define LOCK(sem) lock_semaphore( sem, 1, INFINITE_TIMEOUT )
 #define UNLOCK(sem) unlock_semaphore( sem, 1 )
 

@@ -92,10 +92,11 @@ void gethwclock( tm_t* tm ) {
     }
     tm->year += 2000;
 
+    /* Day of week, TODO: get it from CMOS */
+    tm->wday = dayofweek(tm->year, tm->mon, tm->mday);
     /* TODO: isDST */
     tm->isdst = -1;
     tm->yday = ((tm -> year % 4 == 0) ? monthdays2[tm->mon] : monthdays[tm->mon]) + tm->mday - 1;
-    tm->wday = dayofweek(tm->year, tm->mon, tm->mday);
 
     /* TODO: see other settings, for example 24-hour clock */
 }

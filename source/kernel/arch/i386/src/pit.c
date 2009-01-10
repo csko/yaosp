@@ -20,7 +20,8 @@
 #include <irq.h>
 #include <console.h>
 #include <scheduler.h>
-#include <lib/time.h>
+#include <time.h>
+#include <lib/time.h> /* timestamp() */
 
 #include <arch/pit.h>
 #include <arch/io.h>

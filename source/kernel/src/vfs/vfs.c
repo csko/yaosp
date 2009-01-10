@@ -630,7 +630,7 @@ int mount( const char* device, const char* dir, const char* filesystem ) {
     return do_mount( true, device, dir, filesystem );
 }
 
-int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout ) {
+int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
     int i;
     int error;
     io_context_t* io_context;
@@ -818,7 +818,7 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
     return ready_count;
 }
 
-int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout ) {
+int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
     return do_select( true, count, readfds, writefds, exceptfds, timeout );
 }
 

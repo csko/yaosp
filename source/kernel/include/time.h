@@ -1,6 +1,6 @@
 /* Time management
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,13 +21,43 @@
 
 #include <types.h>
 
-#define INFINITE_TIMEOUT 18446744073709551615ULL
+#define time_t uint64_t
+#define suseconds_t int
+
+typedef struct timeval {
+    time_t      tv_sec;    /* Seconds */
+    suseconds_t tv_usec;   /* Microseconds */
+} timeval_t ;
+
+typedef struct timezone {
+    int tz_minuteswest;
+    int tz_dsttime;
+} timezone_t;
+
+typedef struct tm {
+    int sec;    /* Seconds. [0-60] (1 leap second) */
+    int min;    /* Minutes. [0-59] */
+    int hour;   /* Hours.   [0-23] */
+    int mday;   /* Day.     [1-31] */
+    int mon;    /* Month.   [0-11] */
+    int year;   /* Year [1970; ...] */
+    int wday;   /* Day of week. [0-6], 0=Sunday */
+    int yday;   /* Days in year. [0-365] */
+    int isdst;  /* Daylight saving [-1/0/1] */
+} tm_t ;
 
 /**
- * Returns the time in microseconds since the system boot.
+ * Returns the time in microseconds not counting the leap ones since the Epoch
  *
  * @return The system time in microseconds
  */
 uint64_t get_system_time( void );
+
+/* TODO */
+int sys_time(int* tloc);
+int sys_stime(int* tptr);
+int sys_gettimeofday(timeval_t* tv, timezone_t* tz);
+int sys_settimeofday(timeval_t* tv, timezone_t* tz);
+/* int sys_adjtimex(timex_t* txc_p); */
 
 #endif // _TIME_H_
