@@ -1,6 +1,6 @@
-/* time function
+/* yaosp C library
  *
- * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,19 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <sys/time.h>
+#ifndef _SIGNAL_H_
+#define _SIGNAL_H_
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
+#define SIG_ERR ((sighandler_t)-1) /* Error return.  */
+#define SIG_DFL ((sighandler_t)0) /* Default action.  */
+#define SIG_IGN ((sighandler_t)1) /* Ignore signal.  */
 
-time_t time( time_t *t ) {
-    time_t tmp;
+typedef void ( *sighandler_t )( int );
 
-    syscall1( SYS_time, ( int )&tmp );
+sighandler_t signal( int signum, sighandler_t handler );
 
-    if ( t != NULL ) {
-        *t = tmp;
-    }
-
-    return tmp;
-}
+#endif // _SIGNAL_H_

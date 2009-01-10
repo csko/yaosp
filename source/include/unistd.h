@@ -43,9 +43,14 @@ int dup2( int old_fd, int new_fd );
 
 ssize_t read( int fd, void* buf, size_t count );
 ssize_t write( int fd, const void* buf, size_t count );
+off_t lseek( int fd, off_t offset, int whence );
 
 int isatty( int fd );
 int fchdir( int fd );
 int getdents( int fd, struct dirent* entry, unsigned int count );
+
+int unlink( const char* pathname );
+ssize_t readlink( const char* path, char* buf, size_t bufsiz );
+char* getcwd( char* buf, size_t size );
 
 #endif // _UNISTD_H_

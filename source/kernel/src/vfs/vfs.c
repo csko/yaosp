@@ -584,6 +584,47 @@ int sys_stat( const char* path, struct stat* stat ) {
     return do_stat( false, path, stat );
 }
 
+static int do_fstat( bool kernel, int fd, struct stat* stat ) {
+    int error;
+    file_t* file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    if ( file->inode->mount_point->fs_calls->read_stat == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = file->inode->mount_point->fs_calls->read_stat(
+            file->inode->mount_point->fs_data,
+            file->inode->fs_node,
+            stat
+        );
+    }
+
+    io_context_put_file( io_context, file );
+
+    return error;
+}
+
+int sys_fstat( int fd, struct stat* stat ) {
+    return do_fstat( false, fd, stat );
+}
+
+int sys_lseek( int fd, off_t* offset, int whence, off_t* result ) {
+    /* TODO */
+    return 0;
+}
+
 int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {
     int error;
     inode_t* dir_inode;

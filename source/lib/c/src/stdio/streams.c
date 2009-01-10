@@ -24,7 +24,7 @@ static char __stderr_buffer[ _IO_BUFSIZE ];
 
 static FILE _stdin = {
     .fd = 0,
-    .flags = __FILE_CAN_READ,
+    .flags = __FILE_CAN_READ | __FILE_DONTFREEBUF | __FILE_BUFLINEWISE | __FILE_BUFINPUT,
     .buffer = __stdin_buffer,
     .buffer_pos = 0,
     .buffer_size = _IO_BUFSIZE,
@@ -35,7 +35,7 @@ static FILE _stdin = {
 
 static FILE _stdout = {
     .fd = 1,
-    .flags = __FILE_CAN_WRITE | __FILE_BUFLINEWISE,
+    .flags = __FILE_CAN_WRITE | __FILE_BUFLINEWISE | __FILE_DONTFREEBUF,
     .buffer = __stdout_buffer,
     .buffer_pos = 0,
     .buffer_size = _IO_BUFSIZE,
@@ -46,7 +46,7 @@ static FILE _stdout = {
 
 static FILE _stderr = {
     .fd = 2,
-    .flags = __FILE_CAN_WRITE,
+    .flags = __FILE_CAN_WRITE | __FILE_DONTFREEBUF | __FILE_NOBUF,
     .buffer = __stderr_buffer,
     .buffer_pos = 0,
     .buffer_size = _IO_BUFSIZE,

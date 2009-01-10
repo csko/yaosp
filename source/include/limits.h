@@ -45,6 +45,11 @@
 #define CHAR_MAX     SCHAR_MAX
 #endif
 
+#define SHRT_MIN      (-32768)
+#define SHRT_MAX      32767
+
+#define USHRT_MAX     65535
+
 #define INT_MIN         (-1 - INT_MAX)
 #define INT_MAX         (__INT_MAX__)
 #define UINT_MAX        (INT_MAX * 2U + 1U)

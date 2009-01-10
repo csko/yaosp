@@ -1,4 +1,4 @@
-/* yaosp C library
+/* strerror function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ERRNO_H_
-#define _ERRNO_H_
+#include <string.h>
 
-#define ENOMEM  1
-#define EINVAL  2
-#define EIO     3
-#define ETIME   4
-#define ENOSYS  5
-#define ENOENT  6
-#define EEXIST  7
-#define EBUSY   8
-#define EISDIR  9
-#define ENOINO  10
-#define ENOEXEC 11
-#define EBADF   12
-#define EHW     13
-#define ERANGE  14
-#define ENXIO   15
-#define EDOM    16
+static char* error_strings[] = {
+    "Out of memory",
+    "I/O operation failed",
+    "Request timed out",
+    "Operation not supported",
+    "No such file or directory",
+    "Already exists",
+    "Recource busy",
+    "This is a directory",
+    "Inode not found",
+    "Not an executable",
+    "Bad file descriptor",
+    "Hardware error",
+    "Out of range"
+};
 
-extern int errno;
+char* strerror( int errnum ) {
+    if ( errnum < 0 ) {
+        errnum = -errnum;
+    }
 
-#endif // _ERRNO_H_
+    errnum--;
+
+    if ( ( errnum < 0 ) ||
+         ( errnum >= ( sizeof( error_strings ) / sizeof( error_strings[ 0 ] ) ) ) ) {
+        return NULL;
+    }
+
+    return error_strings[ errnum ];
+}

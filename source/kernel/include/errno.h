@@ -32,6 +32,9 @@
 #define ENOINO  10
 #define ENOEXEC 11
 #define EBADF   12
-#define EHW   13
+#define EHW     13
+#define ERANGE  14
+#define ENXIO   15
+#define EDOM    16
 
 #endif // _ERRNO_H_

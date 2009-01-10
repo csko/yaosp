@@ -169,7 +169,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
     LOCK( port->lock );
 
     while ( size > 0 ) {
-        size_t to_read = MIN( size, 65536 );
+        size_t to_read = MIN( size, 32768 );
 
         error = pata_cdrom_do_read( port, data, position, to_read );
 

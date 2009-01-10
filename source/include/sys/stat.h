@@ -53,5 +53,6 @@ struct stat {
 };
 
 int stat( const char* path, struct stat* stat );
+int fstat( int fd, struct stat* stat );
 
 #endif // _SYS_STAT_H_

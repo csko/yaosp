@@ -35,7 +35,12 @@ int strcmp( const char* s1, const char* s2 );
 int strncmp( const char* s1, const char* s2, size_t c );
 char* strcpy( char* d, const char* s );
 char* strncpy( char* d, const char* s, size_t c );
+char* strcat( char* d, const char* s );
+char* strncat( char* d, const char* s, size_t c );
+char* strpbrk( const char* s, const char* accept );
 
 char* strdup( const char* s );
+
+char* strerror( int errnum );
 
 #endif // _STRING_H_

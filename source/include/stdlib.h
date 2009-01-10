@@ -21,6 +21,12 @@
 
 #include <stddef.h>
 
+#define EXIT_FAILURE 1
+#define EXIT_SUCCESS 0
+
+int abs( int j );
+long labs( long j );
+
 char* getenv( const char* name );
 
 void* calloc( size_t nmemb, size_t size );
@@ -34,5 +40,8 @@ long int atoi( const char* s );
 
 long int strtol( const char* nptr, char** endptr, int base );
 unsigned long int strtoul( const char* nptr, char** endptr, int base );
+double strtod( const char* s, char** endptr );
+
+void qsort( void* base, size_t nmemb, size_t size, int (*compar)(const void*,const void*) );
 
 #endif // _STDLIB_H_

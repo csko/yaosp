@@ -1,6 +1,6 @@
-/* time function
+/* signal function
  *
- * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,19 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <sys/time.h>
+#include <signal.h>
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
-
-time_t time( time_t *t ) {
-    time_t tmp;
-
-    syscall1( SYS_time, ( int )&tmp );
-
-    if ( t != NULL ) {
-        *t = tmp;
-    }
-
-    return tmp;
+sighandler_t signal( int signum, sighandler_t handler ) {
+    return SIG_DFL;
 }

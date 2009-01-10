@@ -1,6 +1,6 @@
-/* time function
+/* strcat function
  *
- * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,19 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <sys/time.h>
+#include <string.h>
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
+char* strcat( char* d, const char* s ) {
+  char* tmp = d;
 
-time_t time( time_t *t ) {
-    time_t tmp;
+  while ( *d ) d++;
+  while ( ( *d++ = *s++ ) != 0 ) ;
 
-    syscall1( SYS_time, ( int )&tmp );
-
-    if ( t != NULL ) {
-        *t = tmp;
-    }
-
-    return tmp;
+  return tmp;
 }

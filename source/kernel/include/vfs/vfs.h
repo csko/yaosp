@@ -30,8 +30,10 @@
 
 #define O_RDONLY 0x01
 #define O_WRONLY 0x02
-#define O_RDWR   0x04
-#define O_CREAT  0x08
+#define O_RDWR   0x03
+#define O_CREAT  0x04
+#define O_TRUNC  0x08
+#define O_APPEND 0x10
 
 #define NAME_MAX 255
 
@@ -134,6 +136,8 @@ int sys_isatty( int fd );
 int sys_getdents( int fd, dirent_t* entry, unsigned int count );
 int sys_fchdir( int fd );
 int sys_stat( const char* path, struct stat* stat );
+int sys_fstat( int fd, struct stat* stat );
+int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
 
 int init_vfs( void );
 

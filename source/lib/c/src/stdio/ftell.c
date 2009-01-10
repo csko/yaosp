@@ -1,6 +1,6 @@
-/* time function
+/* ftell function
  *
- * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,19 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <sys/time.h>
+#include <stdio.h>
+#include <unistd.h>
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
+long ftell( FILE* stream ) {
+    off_t l;
 
-time_t time( time_t *t ) {
-    time_t tmp;
-
-    syscall1( SYS_time, ( int )&tmp );
-
-    if ( t != NULL ) {
-        *t = tmp;
+    if ( stream->flags & ( __FILE_EOF | __FILE_ERROR ) ) {
+        return -1;
     }
 
-    return tmp;
+    l = lseek( stream->fd, 0, SEEK_CUR );
+
+    if ( l == -1 ) {
+        return -1;
+    }
+
+    if ( stream->flags & __FILE_BUFINPUT ) {
+        return l - ( stream->buffer_data_size - stream->buffer_pos ) - stream->has_ungotten;
+    } else {
+        return l + stream->buffer_pos;
+    }
 }

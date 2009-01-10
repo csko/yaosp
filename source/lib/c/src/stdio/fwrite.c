@@ -1,4 +1,4 @@
-/* fputc function
+/* fwrite function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,42 +18,48 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
 
-int fputc( int c, FILE* stream ) {
-    /* Check if we can write to the stream */
+size_t fwrite( const void* ptr, size_t size, size_t nmemb, FILE* stream ) {
+    ssize_t res;
+    unsigned long len=size * nmemb;
+    long i;
 
     if ( ( stream->flags & __FILE_CAN_WRITE ) == 0 ) {
         stream->flags |= __FILE_ERROR;
-        return EOF;
-    }
-
-    /* Make sure we have free space in the buffer */
-
-    if ( stream->buffer_pos >= stream->buffer_size - 1 ) {
-        if ( fflush( stream ) ) {
-            stream->flags |= __FILE_ERROR;
-            return EOF;
-        }
-    }
-
-    if ( stream->flags & __FILE_NOBUF ) {
-        if ( write( stream->fd, &c, 1 ) != 1 ) {
-            stream->flags |= __FILE_ERROR;
-            return EOF;
-        }
-
         return 0;
     }
 
-    stream->buffer[ stream->buffer_pos++ ] = c;
-
-    if ( ( ( stream->flags & __FILE_BUFLINEWISE ) && ( c == '\n' ) ) ||
-         ( stream->flags & __FILE_NOBUF ) ) {
-        if ( fflush( stream ) ) {
-            stream->flags |= __FILE_ERROR;
-            return EOF;
-        }
+    if ( ( nmemb == 0 ) ||
+         ( ( len / nmemb ) != size ) ) {
+        return 0;
     }
 
-    return 0;
+    if ( ( len > stream->buffer_size ) || ( stream->flags & __FILE_NOBUF ) ) {
+        if ( fflush( stream ) ) {
+            return 0;
+        }
+
+        res = write( stream->fd, ptr, len );
+    } else {
+        register const unsigned char* c = ptr;
+
+        for ( i = len; i > 0; --i, ++c ) {
+            if ( fputc( *c, stream ) ) {
+                res = len - i;
+                goto abort;
+            }
+        }
+
+        res = len;
+    }
+
+    if ( res < 0 ) {
+        stream->flags |= __FILE_ERROR;
+        return 0;
+    }
+
+abort:
+    return size ? res / size : 0;
 }

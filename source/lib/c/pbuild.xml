@@ -35,6 +35,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/strtol.c</item>
         <item>src/stdlib/strtoul.c</item>
         <item>src/stdlib/atoi.c</item>
+        <item>src/stdlib/qsort.c</item>
+        <item>src/stdlib/abs.c</item>
+        <item>src/stdlib/labs.c</item>
+        <item>src/stdlib/strtod.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
         <item>src/string/memcmp.c</item>
@@ -49,6 +53,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strcpy.c</item>
         <item>src/string/strncpy.c</item>
         <item>src/string/strstr.c</item>
+        <item>src/string/strerror.c</item>
+        <item>src/string/strcat.c</item>
+        <item>src/string/strncat.c</item>
+        <item>src/string/strpbrk.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>
@@ -61,6 +69,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/execvp.c</item>
         <item>src/unistd/fchdir.c</item>
         <item>src/unistd/isatty.c</item>
+        <item>src/unistd/lseek.c</item>
+        <item>src/unistd/unlink.c</item>
+        <item>src/unistd/readlink.c</item>
+        <item>src/unistd/getcwd.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/ferror.c</item>
@@ -73,13 +85,26 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/printf.c</item>
         <item>src/stdio/fprintf.c</item>
         <item>src/stdio/snprintf.c</item>
+        <item>src/stdio/sprintf.c</item>
         <item>src/stdio/fileno.c</item>
         <item>src/stdio/feof.c</item>
         <item>src/stdio/fflush.c</item>
         <item>src/stdio/ungetc.c</item>
         <item>src/stdio/clearerr.c</item>
+        <item>src/stdio/fopen.c</item>
+        <item>src/stdio/fclose.c</item>
+        <item>src/stdio/putc.c</item>
+        <item>src/stdio/setvbuf.c</item>
+        <item>src/stdio/fseek.c</item>
+        <item>src/stdio/ftell.c</item>
+        <item>src/stdio/fread.c</item>
+        <item>src/stdio/fwrite.c</item>
+        <item>src/stdio/vfprintf.c</item>
+        <item>src/stdio/vsnprintf.c</item>
+        <item>src/stdio/rewind.c</item>
         <item>src/sys/waitpid.c</item>
         <item>src/sys/stat.c</item>
+        <item>src/sys/fstat.c</item>
         <item>src/sys/time.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
@@ -90,6 +115,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/isspace.c</item>
         <item>src/ctype/tolower.c</item>
         <item>src/ctype/toupper.c</item>
+        <item>src/signal/signal.c</item>
+        <item>src/locale/localeconv.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
     </array>
