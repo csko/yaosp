@@ -251,6 +251,22 @@ static int devfs_ioctl( void* fs_cookie, void* _node, void* file_cookie, int com
     }
 }
 
+static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    stat->st_ino = node->inode_number;
+    stat->st_mode = 0;
+    stat->st_size = 0;
+
+    if ( node->is_directory ) {
+        stat->st_mode |= S_IFDIR;
+    }
+
+    return 0;
+}
+
 static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie, struct dirent* entry ) {
     int current;
     devfs_node_t* node;
@@ -454,6 +470,7 @@ static filesystem_calls_t devfs_calls = {
     .read = devfs_read,
     .write = devfs_write,
     .ioctl = devfs_ioctl,
+    .read_stat = devfs_read_stat,
     .read_directory = devfs_read_directory,
     .create = NULL,
     .mkdir = devfs_mkdir,

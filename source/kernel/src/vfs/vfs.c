@@ -548,6 +548,42 @@ int sys_fchdir( int fd ) {
     return do_fchdir( false, fd );
 }
 
+static int do_stat( bool kernel, const char* path, struct stat* stat ) {
+    int error;
+    inode_t* inode;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, path, &inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( inode->mount_point->fs_calls->read_stat == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = inode->mount_point->fs_calls->read_stat(
+            inode->mount_point->fs_data,
+            inode->fs_node,
+            stat
+        );
+    }
+
+    put_inode( inode );
+
+    return error;
+}
+
+int sys_stat( const char* path, struct stat* stat ) {
+    return do_stat( false, path, stat );
+}
+
 int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {
     int error;
     inode_t* dir_inode;

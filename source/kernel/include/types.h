@@ -38,5 +38,12 @@ typedef unsigned int uint32_t;
 typedef int bool;
 typedef unsigned int size_t;
 typedef int64_t off_t;
+typedef int dev_t;
+typedef int mode_t;
+typedef int nlink_t;
+typedef int uid_t;
+typedef int gid_t;
+typedef int blksize_t;
+typedef int64_t blkcnt_t;
 
 #endif // _TYPES_H_

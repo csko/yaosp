@@ -98,6 +98,7 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
 
     cookie->fd = fd;
     cookie->root_inode_number = POSITION_TO_INODE(root_entry->location_le,0);
+    cookie->root_inode.inode_number = cookie->root_inode_number;
     cookie->root_inode.flags = root_entry->flags;
     cookie->root_inode.start_block = root_entry->location_le;
     cookie->root_inode.length = root_entry->length_le;
@@ -161,6 +162,7 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
             return -ENOMEM;
         }
 
+        inode->inode_number = inode_num;
         inode->flags = iso_dir->flags;
         inode->start_block = iso_dir->location_le;
         inode->length = iso_dir->length_le;
@@ -386,6 +388,28 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     return saved_size;
 }
 
+static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
+    iso9660_inode_t* node;
+
+    node = ( iso9660_inode_t* )_node;
+
+    stat->st_ino = node->inode_number;
+    stat->st_mode = 0;
+    stat->st_size = node->length;
+    stat->st_blksize = 2048;
+    stat->st_blocks = node->length / 2048;
+
+    if ( ( node->length % 2048 ) != 0 ) {
+        stat->st_blocks++;
+    }
+
+    if ( node->flags & ISO9660_FLAG_DIRECTORY ) {
+        stat->st_mode |= S_IFDIR;
+    }
+
+    return 0;
+}
+
 static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
     iso9660_directory_entry_t* iso_entry;
 
@@ -502,6 +526,7 @@ static filesystem_calls_t iso9660_calls = {
     .read = iso9660_read,
     .write = NULL,
     .ioctl = NULL,
+    .read_stat = iso9660_read_stat,
     .read_directory = iso9660_read_directory,
     .create = NULL,
     .mkdir = NULL,

@@ -170,6 +170,22 @@ static int rootfs_free_cookie( void* fs_cookie, void* node, void* file_cookie ) 
     return 0;
 }
 
+static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
+    rootfs_node_t* node;
+
+    node = ( rootfs_node_t* )_node;
+
+    stat->st_ino = node->inode_number;
+    stat->st_mode = 0;
+    stat->st_size = 0;
+
+    if ( node->is_directory ) {
+        stat->st_mode |= S_IFDIR;
+    }
+
+    return 0;
+}
+
 static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cookie, struct dirent* entry ) {
     int current;
     rootfs_node_t* node;
@@ -255,6 +271,7 @@ static filesystem_calls_t rootfs_calls = {
     .read = NULL,
     .write = NULL,
     .ioctl = NULL,
+    .read_stat = rootfs_read_stat,
     .read_directory = rootfs_read_directory,
     .create = NULL,
     .mkdir = rootfs_mkdir,

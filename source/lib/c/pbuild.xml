@@ -79,6 +79,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/ungetc.c</item>
         <item>src/stdio/clearerr.c</item>
         <item>src/sys/waitpid.c</item>
+        <item>src/sys/stat.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
         <item>src/ctype/islower.c</item>

@@ -49,6 +49,14 @@
 #define FD_ISSET(fd,set) \
     ((set)->fds[fd/32] & (1<<(fd%32)))
 
+/* stat definitions */
+
+#define S_IFIFO 0x1000
+#define S_IFCHR 0x2000
+#define S_IFDIR 0x4000
+#define S_IFBLK 0x6000
+#define S_IFREG 0x8000
+
 typedef struct dirent {
     ino_t inode_number;
     char name[ NAME_MAX + 1 ];
@@ -80,6 +88,22 @@ typedef struct fd_set {
     uint32_t fds[ 1024 / 32 ];
 } fd_set;
 
+struct stat {
+    dev_t st_dev;
+    ino_t st_ino;
+    mode_t st_mode;
+    nlink_t st_nlink;
+    uid_t st_uid;
+    gid_t st_gid;
+    dev_t st_rdev;
+    off_t st_size;
+    blksize_t st_blksize;
+    blkcnt_t st_blocks;
+    time_t st_atime;
+    time_t st_mtime;
+    time_t st_ctime;
+};
+
 extern io_context_t kernel_io_context;
 
 mount_point_t* create_mount_point(
@@ -109,6 +133,7 @@ int sys_dup2( int old_fd, int new_fd );
 int sys_isatty( int fd );
 int sys_getdents( int fd, dirent_t* entry, unsigned int count );
 int sys_fchdir( int fd );
+int sys_stat( const char* path, struct stat* stat );
 
 int init_vfs( void );
 

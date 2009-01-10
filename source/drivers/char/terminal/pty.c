@@ -411,7 +411,23 @@ static int pty_read_dir_helper( hashitem_t* item, void* _data ) {
 
     return 0;
 }
-    
+
+static int pty_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
+    pty_node_t* node;
+
+    node = ( pty_node_t* )_node;
+
+    stat->st_ino = node->inode_number;
+    stat->st_mode = 0;
+    stat->st_size = 0;
+
+    if ( node == &root_inode ) {
+        stat->st_mode |= S_IFDIR;
+    }
+
+    return 0;
+}
+
 static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry ) {
     int error;
     pty_dir_cookie_t* cookie;
@@ -601,6 +617,7 @@ static filesystem_calls_t pty_calls = {
     .read = pty_read,
     .write = pty_write,
     .ioctl = NULL,
+    .read_stat = pty_read_stat,
     .read_directory = pty_read_directory,
     .create = pty_create,
     .mkdir = NULL,

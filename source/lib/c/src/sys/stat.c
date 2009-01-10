@@ -1,4 +1,4 @@
-/* yaosp C library
+/* stat function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,32 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_TYPES_H_
-#define _SYS_TYPES_H_
+#include <sys/stat.h>
 
-#include <stddef.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define INFINITE_TIMEOUT 18446744073709551615ULL
-
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-typedef signed long long int int64_t;
-
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long long int uint64_t;
-
-typedef int pid_t;
-typedef int64_t ino_t;
-typedef int64_t off_t;
-typedef int dev_t;
-typedef int mode_t;
-typedef int nlink_t;
-typedef int uid_t;
-typedef int gid_t;
-typedef int blksize_t;
-typedef int64_t blkcnt_t;
-
-#endif // _SYS_TYPES_H_
+int stat( const char* path, struct stat* stat ) {
+    return syscall2( SYS_stat, ( int )path, ( int )stat );
+}

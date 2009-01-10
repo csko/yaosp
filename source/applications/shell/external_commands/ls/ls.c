@@ -18,12 +18,17 @@
 
 #include <stdio.h>
 #include <dirent.h>
+#include <string.h>
+#include <sys/stat.h>
 
 char* argv0 = NULL;
 
 int do_ls( char* dirname ) {
     DIR* dir;
     struct dirent* entry;
+
+    struct stat entry_stat;
+    char full_path[ 256 ];
 
     dir = opendir( dirname );
 
@@ -33,7 +38,21 @@ int do_ls( char* dirname ) {
     }
 
     while ( ( entry = readdir( dir ) ) != NULL ) {
-        printf( "%s\n", entry->name );
+        if ( strcmp( dirname, "/" ) == 0 ) {
+            snprintf( full_path, sizeof( full_path ), "/%s", entry->name );
+        } else {
+            snprintf( full_path, sizeof( full_path ), "%s/%s", dirname, entry->name );
+        }
+
+        if ( stat( full_path, &entry_stat ) != 0 ) {
+            continue;
+        }
+
+        if ( S_ISDIR( entry_stat.st_mode ) ) {
+            printf( "directory %s\n", entry->name );
+        } else {
+            printf( "%9u %s\n", ( unsigned int )entry_stat.st_size, entry->name );
+        }
     }
 
     closedir( dir );

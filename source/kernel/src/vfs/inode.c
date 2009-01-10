@@ -202,6 +202,11 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
 
         name_len = sep - path;
 
+        if ( ( name_len == 0 ) ||
+             ( ( name_len == 1 ) && ( path[ 0 ] == '.' ) ) ) {
+            goto next;
+        }
+
         error = parent->mount_point->fs_calls->lookup_inode(
             parent->mount_point->fs_data,
             parent->fs_node,
@@ -233,6 +238,7 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
             put_inode( inode );
         }
 
+next:
         path = sep + 1;
     }
 

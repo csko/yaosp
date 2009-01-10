@@ -67,6 +67,7 @@ typedef struct iso9660_volume_descriptor {
 } __attribute__(( packed )) iso9660_volume_descriptor_t;
 
 typedef struct iso9660_inode {
+    ino_t inode_number;
     uint8_t flags;
     uint32_t start_block;
     uint32_t length;

@@ -18,6 +18,7 @@
 
 #ifndef _TIME_H_
 #define _TIME_H_
+
 #include <sys/types.h>
 
 #define time_t uint64_t
@@ -32,7 +33,6 @@ typedef struct timezone {
     int tz_minuteswest;
     int tz_dsttime;
 } timezone_t ;
-        
 
 typedef struct tm {
     int sec;    /* Seconds. [0-60] (1 leap second) */
