@@ -1,4 +1,4 @@
-/* yaosp C library
+/* strstr function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#include <string.h>
 
-#include <stddef.h>
+char* strstr( const char* s1, const char* s2 ) {
+    int l1, l2;
 
-void* memset( void* s, int c, size_t n );
-void* memcpy( void* d, const void* s, size_t n );
-int memcmp( const void* p1, const void* p2, size_t c );
+    l2 = strlen( s2 );
 
-size_t strlen( const char* str );
-char* strchr( const char* s, int c );
-char* strstr( const char* s1, const char* s2 );
-int strcmp( const char* s1, const char* s2 );
-int strncmp( const char* s1, const char* s2, size_t c );
-char* strcpy( char* d, const char* s );
-char* strncpy( char* d, const char* s, size_t c );
+    if ( !l2 ) {
+        return ( char * )s1;
+    }
 
-char* strdup( const char* s );
+    l1 = strlen( s1 );
 
-#endif // _STRING_H_
+    while ( l1 >= l2 ) {
+        l1--;
+
+        if ( !memcmp( s1, s2, l2 ) ) {
+            return ( char * )s1;
+        }
+
+        s1++;
+    }
+
+    return NULL;
+}

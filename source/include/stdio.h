@@ -34,12 +34,19 @@ extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
 
+int ferror( FILE* stream );
+int fileno( FILE* stream );
+
 int printf( const char* format, ... );
 int fprintf( FILE* stream, const char* format, ... );
 
+int sprintf( char* str, const char* format, ... );
 int snprintf( char* str, size_t size, const char* format, ... );
 
 int fgetc( FILE* stream );
+int getc( FILE* stream );
+
+char* fgets( char* s, int size, FILE* stream );
 int fputc( int c, FILE* stream );
 int fputs( const char* s, FILE* stream );
 

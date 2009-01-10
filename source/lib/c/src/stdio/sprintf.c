@@ -1,4 +1,4 @@
-/* yaosp C library
+/* sprintf function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,38 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#include <stdio.h>
 
-#include <stddef.h>
+#include "__printf.h"
 
-void* memset( void* s, int c, size_t n );
-void* memcpy( void* d, const void* s, size_t n );
-int memcmp( const void* p1, const void* p2, size_t c );
+typedef struct sprintf_buffer {
+    size_t position;
+    char* buffer;
+} sprintf_buffer_t;
 
-size_t strlen( const char* str );
-char* strchr( const char* s, int c );
-char* strstr( const char* s1, const char* s2 );
-int strcmp( const char* s1, const char* s2 );
-int strncmp( const char* s1, const char* s2, size_t c );
-char* strcpy( char* d, const char* s );
-char* strncpy( char* d, const char* s, size_t c );
+static int sprintf_helper( void* data, char c ) {
+    sprintf_buffer_t* buffer;
 
-char* strdup( const char* s );
+    buffer = ( sprintf_buffer_t* )data;
 
-#endif // _STRING_H_
+    buffer->buffer[ buffer->position++ ] = c;
+
+    return 0;
+}
+
+int sprintf( char* str, const char* format, ... ) {
+    int ret;
+    va_list args;
+    sprintf_buffer_t data;
+
+    data.position = 0;
+    data.buffer = str;
+
+    va_start( args, format );
+    ret = __printf( sprintf_helper, &data, format, args );
+    va_end( args );
+
+    str[ data.position ] = 0;
+
+    return ret;
+}

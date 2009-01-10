@@ -34,11 +34,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/getenv.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
+        <item>src/string/memcmp.c</item>
         <item>src/string/strchr.c</item>
         <item>src/string/strlen.c</item>
         <item>src/string/strcmp.c</item>
         <item>src/string/strncmp.c</item>
         <item>src/string/strdup.c</item>
+        <item>src/string/strcpy.c</item>
+        <item>src/string/strncpy.c</item>
+        <item>src/string/strstr.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>
@@ -52,14 +56,26 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/fchdir.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
+        <item>src/stdio/ferror.c</item>
         <item>src/stdio/fgetc.c</item>
+        <item>src/stdio/getc.c</item>
+        <item>src/stdio/fgets.c</item>
         <item>src/stdio/fputc.c</item>
         <item>src/stdio/fputs.c</item>
         <item>src/stdio/__printf.c</item>
         <item>src/stdio/printf.c</item>
         <item>src/stdio/fprintf.c</item>
         <item>src/stdio/snprintf.c</item>
+        <item>src/stdio/fileno.c</item>
         <item>src/sys/waitpid.c</item>
+        <item>src/ctype/isalpha.c</item>
+        <item>src/ctype/isupper.c</item>
+        <item>src/ctype/islower.c</item>
+        <item>src/ctype/isdigit.c</item>
+        <item>src/ctype/isxdigit.c</item>
+        <item>src/ctype/isalnum.c</item>
+        <item>src/ctype/tolower.c</item>
+        <item>src/ctype/toupper.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
     </array>

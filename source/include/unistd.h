@@ -44,6 +44,7 @@ int dup2( int old_fd, int new_fd );
 ssize_t read( int fd, void* buf, size_t count );
 ssize_t write( int fd, const void* buf, size_t count );
 
+int isatty( int fd );
 int fchdir( int fd );
 int getdents( int fd, struct dirent* entry, unsigned int count );
 

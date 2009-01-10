@@ -1,4 +1,4 @@
-/* yaosp C library
+/* isxdigit function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#include <ctype.h>
 
-#include <stddef.h>
-
-void* memset( void* s, int c, size_t n );
-void* memcpy( void* d, const void* s, size_t n );
-int memcmp( const void* p1, const void* p2, size_t c );
-
-size_t strlen( const char* str );
-char* strchr( const char* s, int c );
-char* strstr( const char* s1, const char* s2 );
-int strcmp( const char* s1, const char* s2 );
-int strncmp( const char* s1, const char* s2, size_t c );
-char* strcpy( char* d, const char* s );
-char* strncpy( char* d, const char* s, size_t c );
-
-char* strdup( const char* s );
-
-#endif // _STRING_H_
+int isxdigit( int c ) {
+    return ( ( ( c >= '0' ) && ( c <= '9' ) ) ||
+             ( ( c >= 'a' ) && ( c <= 'f' ) ) ||
+             ( ( c >= 'A' ) && ( c <= 'F' ) ) );
+}

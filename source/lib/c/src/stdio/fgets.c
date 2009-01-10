@@ -1,4 +1,4 @@
-/* yaosp C library
+/* fgets function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STRING_H_
-#define _STRING_H_
+#include <stdio.h>
 
-#include <stddef.h>
+char* fgets( char* s, int size, FILE* stream ) {
+    char* orig = s;
+    int l;
 
-void* memset( void* s, int c, size_t n );
-void* memcpy( void* d, const void* s, size_t n );
-int memcmp( const void* p1, const void* p2, size_t c );
+    for ( l = size; l > 1; ) {
+        register int c = fgetc( stream );
 
-size_t strlen( const char* str );
-char* strchr( const char* s, int c );
-char* strstr( const char* s1, const char* s2 );
-int strcmp( const char* s1, const char* s2 );
-int strncmp( const char* s1, const char* s2, size_t c );
-char* strcpy( char* d, const char* s );
-char* strncpy( char* d, const char* s, size_t c );
+        if ( c == EOF ) {
+            break;
+        }
 
-char* strdup( const char* s );
+        *s = c;
+        ++s;
+        --l;
 
-#endif // _STRING_H_
+        if ( c == '\n' ) {
+            break;
+        }
+    }
+
+    if ( ( l == size ) || ( ferror( stream ) ) ) {
+        return 0;
+    }
+
+    *s = 0;
+
+    return orig;
+}

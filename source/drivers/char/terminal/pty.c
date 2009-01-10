@@ -489,7 +489,11 @@ static int pty_create( void* fs_cookie, void* node, const char* name, int name_l
 }
 
 static int pty_isatty( void* fs_cookie, void* node ) {
-    return ( node != ( void* )&root_inode );
+    if ( node == ( void* )&root_inode ) {
+        return 0;
+    }
+
+    return 1;
 }
 
 static int pty_add_select_request( void* fs_cookie, void* _node, void* file_cookie, select_request_t* request ) {
