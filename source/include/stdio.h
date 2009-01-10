@@ -21,21 +21,41 @@
 
 #include <stddef.h>
 
-#define FILE_CAN_READ  0x01
-#define FILE_CAN_WRITE 0x02
+#define __FILE_CAN_READ    0x01
+#define __FILE_CAN_WRITE   0x02
+#define __FILE_ERROR       0x04
+#define __FILE_EOF         0x08
+#define __FILE_BUFLINEWISE 0x10
+
 #define EOF 0xFFFFFFFF
+
+#define _IO_BUFSIZE 2048
+
+#ifndef BUFSIZ
+#define BUFSIZ _IO_BUFSIZE
+#endif // BUFSIZ
 
 typedef struct FILE {
     int fd;
     int flags;
+    char* buffer;
+    unsigned int buffer_pos;
+    unsigned int buffer_size;
+    unsigned int buffer_data_size;
+    int has_ungotten;
+    int unget_buffer;
 } FILE;
 
 extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
 
+int feof( FILE* stream );
 int ferror( FILE* stream );
 int fileno( FILE* stream );
+int fflush( FILE* stream );
+
+int ungetc( int c, FILE* stream );
 
 int printf( const char* format, ... );
 int fprintf( FILE* stream, const char* format, ... );

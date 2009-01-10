@@ -94,7 +94,7 @@ int main( int argc, char** argv, char** envp ) {
     fputs( "Welcome to the yaosp shell!\n\n", stdout );
 
     while ( 1 ) {
-        fputs( "> ", stdout );
+        printf( "> " );
 
         /* Read in a line */
 

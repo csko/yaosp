@@ -67,6 +67,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/fprintf.c</item>
         <item>src/stdio/snprintf.c</item>
         <item>src/stdio/fileno.c</item>
+        <item>src/stdio/feof.c</item>
+        <item>src/stdio/fflush.c</item>
+        <item>src/stdio/ungetc.c</item>
         <item>src/sys/waitpid.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>

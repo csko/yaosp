@@ -19,6 +19,5 @@
 #include <stdio.h>
 
 int ferror( FILE* stream ) {
-    /* TODO */
-    return 0;
+    return ( stream->flags & __FILE_ERROR );
 }

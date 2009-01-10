@@ -1,4 +1,4 @@
-/* Fputs function
+/* fflush function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -19,12 +19,17 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int fputs( const char* s, FILE* stream ) {
-    while ( *s ) {
-        fputc( *s++, stream );
-    }
+int fflush( FILE* stream ) {
+    if ( stream->flags & __FILE_CAN_WRITE ) {
+        if ( stream->buffer_pos > 0 ) {
+            if ( write( stream->fd, stream->buffer, stream->buffer_pos ) != stream->buffer_pos ) {
+                stream->flags |= __FILE_ERROR;
+                return -1;
+            }
 
-    fflush( stream );
+            stream->buffer_pos = 0;
+        }
+    }
 
     return 0;
 }

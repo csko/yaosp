@@ -1,4 +1,4 @@
-/* Fgetc function
+/* fgetc function
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
@@ -20,15 +20,46 @@
 #include <unistd.h>
 
 int fgetc( FILE* stream ) {
-    char c;
+    /* Check if we can read from the stream */
 
-    if ( ( stream->flags & FILE_CAN_READ ) == 0 ) {
+    if ( ( stream->flags & __FILE_CAN_READ ) == 0 ) {
+        stream->flags |= __FILE_ERROR;
         return EOF;
     }
 
-    if ( read( stream->fd, &c, 1 ) != 1 ) {
+    /* Check the unget buffer */
+
+    if ( stream->has_ungotten ) {
+        stream->has_ungotten = 0;
+        return stream->unget_buffer;
+    }
+
+    /* Check the end of the file */
+
+    if ( feof( stream ) ) {
         return EOF;
     }
 
-    return ( int )c;
+    /* Fill the buffer if it's empty */
+
+    if ( stream->buffer_pos >= stream->buffer_data_size ) {
+        ssize_t length;
+
+        length = read( stream->fd, stream->buffer, stream->buffer_size );
+
+        if ( length == 0 ) {
+            stream->flags |= __FILE_EOF;
+            return EOF;
+        } else if ( length < 0 ) {
+            stream->flags |= __FILE_ERROR;
+            return EOF;
+        }
+
+        stream->buffer_pos = 0;
+        stream->buffer_data_size = length;
+    }
+
+    /* Get one character from the buffer */
+
+    return stream->buffer[ stream->buffer_pos++ ];
 }

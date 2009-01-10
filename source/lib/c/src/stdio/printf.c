@@ -33,5 +33,7 @@ int printf( const char* format, ... ) {
     ret = __printf( printf_helper, NULL, format, args );
     va_end( args );
 
+    fflush( stdout );
+
     return ret;
 }

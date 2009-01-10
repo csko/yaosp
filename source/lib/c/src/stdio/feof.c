@@ -1,4 +1,4 @@
-/* Fputs function
+/* ferror function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -17,14 +17,11 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 
-int fputs( const char* s, FILE* stream ) {
-    while ( *s ) {
-        fputc( *s++, stream );
+int feof( FILE* stream ) {
+    if ( stream->has_ungotten ) {
+        return 0;
     }
 
-    fflush( stream );
-
-    return 0;
+    return ( stream->flags & __FILE_EOF );
 }

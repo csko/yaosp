@@ -1,4 +1,4 @@
-/* Fputs function
+/* ungetc function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -15,16 +15,18 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
 #include <stdio.h>
-#include <unistd.h>
 
-int fputs( const char* s, FILE* stream ) {
-    while ( *s ) {
-        fputc( *s++, stream );
+int ungetc( int c, FILE* stream ) {
+    if ( ( stream->has_ungotten ) ||
+         ( c < 0 ) ||
+         ( c > 255 ) ) {
+        return EOF;
     }
 
-    fflush( stream );
+    stream->has_ungotten = 1;
+    stream->unget_buffer = ( unsigned char )c;
+    stream->flags &= ~( __FILE_EOF | __FILE_ERROR );
 
-    return 0;
+    return c;
 }
