@@ -16,11 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <sys/stat.h>
+#include <sys/time.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
-int time( int *t ){
-    return syscall1( SYS_time, (int) t);
+time_t time( time_t *t ){
+    return syscall1( SYS_time, (int) &t);
 }
