@@ -1,4 +1,4 @@
-/* yaosp C library
+/* strrchr function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,17 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ASSERT_H_
-#define _ASSERT_H_
+#include <string.h>
 
-#include <unistd.h>
+char* strrchr( const char* s, int c ) {
+  const char* end = s + strlen( s );
 
-#ifdef NDEBUG
-#define assert(expr) ((void)0)
-#else
-#define assert(expr) \
-    ((expr) ? ((void)0) : abort())
+  do {
+    if ( *end == ( char )c ) {
+      return ( char * )end;
+    }
+  } while ( --end >= s );
 
-#endif // NDEBUG
-
-#endif // _ASSERT_H_
+  return NULL;
+}

@@ -32,10 +32,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/malloc.c</item>
         <item>src/stdlib/abort.c</item>
         <item>src/stdlib/getenv.c</item>
+        <item>src/stdlib/strtol.c</item>
+        <item>src/stdlib/strtoul.c</item>
+        <item>src/stdlib/atoi.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
         <item>src/string/memcmp.c</item>
+        <item>src/string/memmove.c</item>
+        <item>src/string/memchr.c</item>
         <item>src/string/strchr.c</item>
+        <item>src/string/strrchr.c</item>
         <item>src/string/strlen.c</item>
         <item>src/string/strcmp.c</item>
         <item>src/string/strncmp.c</item>
@@ -54,6 +60,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/close.c</item>
         <item>src/unistd/execvp.c</item>
         <item>src/unistd/fchdir.c</item>
+        <item>src/unistd/isatty.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/ferror.c</item>
@@ -70,6 +77,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/feof.c</item>
         <item>src/stdio/fflush.c</item>
         <item>src/stdio/ungetc.c</item>
+        <item>src/stdio/clearerr.c</item>
         <item>src/sys/waitpid.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
@@ -77,6 +85,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/isdigit.c</item>
         <item>src/ctype/isxdigit.c</item>
         <item>src/ctype/isalnum.c</item>
+        <item>src/ctype/isspace.c</item>
         <item>src/ctype/tolower.c</item>
         <item>src/ctype/toupper.c</item>
         <item>src/yaosp/debug.c</item>

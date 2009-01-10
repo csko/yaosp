@@ -56,6 +56,7 @@ int fileno( FILE* stream );
 int fflush( FILE* stream );
 
 int ungetc( int c, FILE* stream );
+void clearerr( FILE* stream );
 
 int printf( const char* format, ... );
 int fprintf( FILE* stream, const char* format, ... );

@@ -30,4 +30,9 @@ void* realloc( void* ptr, size_t size );
 
 void abort( void );
 
+long int atoi( const char* s );
+
+long int strtol( const char* nptr, char** endptr, int base );
+unsigned long int strtoul( const char* nptr, char** endptr, int base );
+
 #endif // _STDLIB_H_

@@ -1,4 +1,4 @@
-/* yaosp C library
+/* atoi function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,17 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ASSERT_H_
-#define _ASSERT_H_
+#include <ctype.h>
+#include <stdlib.h>
 
-#include <unistd.h>
+long int atoi( const char* s ) {
+    long int v = 0;
+    int sign = 0;
 
-#ifdef NDEBUG
-#define assert(expr) ((void)0)
-#else
-#define assert(expr) \
-    ((expr) ? ((void)0) : abort())
+    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
+        ++s;
+    }
 
-#endif // NDEBUG
+    switch ( *s ) {
+        case '-' : sign = -1;
+        case '+' : ++s;
+    }
 
-#endif // _ASSERT_H_
+    while ( ( unsigned int )( *s - '0' ) < 10u ) {
+        v = v * 10 + *s - '0';
+        ++s;
+    }
+
+    return sign ? -v : v;
+}

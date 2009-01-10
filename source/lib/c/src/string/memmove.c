@@ -1,4 +1,4 @@
-/* yaosp C library
+/* memmove function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,17 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ASSERT_H_
-#define _ASSERT_H_
+#include <string.h>
 
-#include <unistd.h>
+void* memmove( void* dest, const void* src, size_t n ) {
+    char* _dest;
+    char* _src;
 
-#ifdef NDEBUG
-#define assert(expr) ((void)0)
-#else
-#define assert(expr) \
-    ((expr) ? ((void)0) : abort())
+    if ( dest < src ) {
+        _dest = ( char* )dest;
+        _src = ( char* )src;
 
-#endif // NDEBUG
+        while ( n-- ) {
+            *_dest++ = *_src++;
+        }
+    } else {
+        _dest = ( char* )dest + n;
+        _src = ( char* )src + n;
 
-#endif // _ASSERT_H_
+        while ( n-- ) {
+            *--_dest = *--_src;
+        }
+    }
+
+    return dest;
+}
