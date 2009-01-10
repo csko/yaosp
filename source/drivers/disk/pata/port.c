@@ -19,10 +19,10 @@
 #include <types.h>
 #include <console.h>
 #include <thread.h>
-#include <time.h>
 #include <errno.h>
 
 #include <arch/io.h>
+#include <arch/pit.h> /* get_system_time() */
 
 #include "pata.h"
 

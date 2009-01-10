@@ -23,12 +23,12 @@
 #include <scheduler.h>
 #include <smp.h>
 #include <waitqueue.h>
-#include <time.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
 
+#include <arch/pit.h> /* get_system_time() */
 #include <arch/thread.h>
 #include <arch/spinlock.h>
 

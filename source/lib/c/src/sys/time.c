@@ -1,6 +1,5 @@
-/* Programmable interval timer
+/* time function
  *
- * Copyright (c) 2008 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,17 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_PIT_H_
-#define _ARCH_PIT_H_
+#include <sys/stat.h>
 
-int init_system_time( void );
-/**
- * Returns the time in microseconds not counting the leap ones since the Epoch
- *
- * @return The system time in microseconds
- */
-uint64_t get_system_time( void );
-uint64_t get_boot_time( void );
-int init_pit( void );
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#endif // _ARCH_PIT_H_
+int time( int *t ){
+    return syscall1( SYS_time, (int) t);
+}

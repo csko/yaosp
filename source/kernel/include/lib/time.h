@@ -29,11 +29,6 @@
 
 #define STRFT_ALTFORM 0x01
 
-/* Names and short names for months and days of week */
-extern const char* month_names[ 12 ];
-extern const char* smonth_names[ 12 ];
-extern const char* day_names[ 7 ];
-extern const char* sday_names[ 7 ];
 /* The number of days that come before each month */
 extern const unsigned short int monthdays[ 13 ]; /* Common year */
 extern const unsigned short int monthdays2[ 13 ]; /* Leap year */
@@ -55,7 +50,4 @@ int daysdiff(int year, int month, int day);
 /* Gets the system uptime in seconds */
 uint64_t uptime( void );
 
-/* Formats a broken-down time, uses the first at most m chars of s */
-size_t strftime(char *s, size_t max, const char *format,
-                       const tm_t *tm);
 #endif // _LIBTIME_H_

@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <console.h>
 #include <devices.h>
-#include <time.h>
 #include <thread.h>
 #include <semaphore.h>
 #include <irq.h>
@@ -35,6 +34,7 @@
 #include <arch/atomic.h>
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
+#include <arch/pit.h>
 
 extern void __moddi3( void );
 extern void __divdi3( void );

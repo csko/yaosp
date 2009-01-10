@@ -21,7 +21,8 @@
 #include <console.h>
 #include <smp.h>
 #include <kernel.h>
-#include <time.h>
+
+#include <arch/pit.h> /* get_system_time() */
 
 thread_t* first_ready;
 thread_t* last_ready;

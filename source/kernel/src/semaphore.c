@@ -22,9 +22,10 @@
 #include <smp.h>
 #include <errno.h>
 #include <scheduler.h>
-#include <time.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
+
+#include <arch/pit.h> /* get_system_time() */
 
 #define GLOBAL ( 1 << 24 )
 #define ID_MASK 0x00FFFFFF

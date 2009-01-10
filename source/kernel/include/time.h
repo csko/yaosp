@@ -46,18 +46,18 @@ typedef struct tm {
     int isdst;  /* Daylight saving [-1/0/1] */
 } tm_t ;
 
-/**
- * Returns the time in microseconds not counting the leap ones since the Epoch
- *
- * @return The system time in microseconds
- */
-uint64_t get_system_time( void );
-
-/* TODO */
 int sys_time(int* tloc);
 int sys_stime(int* tptr);
 int sys_gettimeofday(timeval_t* tv, timezone_t* tz);
 int sys_settimeofday(timeval_t* tv, timezone_t* tz);
 /* int sys_adjtimex(timex_t* txc_p); */
 
+/* Names and short names for months and days of week used by strftime */
+extern const char* month_names[ 12 ];
+extern const char* smonth_names[ 12 ];
+extern const char* day_names[ 7 ];
+extern const char* sday_names[ 7 ];
+
+size_t strftime(char* s, size_t max, const char* format,
+                       const tm_t* tm);
 #endif // _TIME_H_
