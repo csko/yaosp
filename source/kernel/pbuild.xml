@@ -84,6 +84,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/vfs/inode.c</item>
         <item>src/vfs/io_context.c</item>
         <item>src/vfs/filesystem.c</item>
+    </array>
+
+    <array name="files_lib">
         <item>src/lib/string.c</item>
         <item>src/lib/printf.c</item>
         <item>src/lib/hashtable.c</item>
@@ -95,6 +98,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="clean">
         <delete>objs/arch/*</delete>
         <rmdir>objs/arch</rmdir>
+        <delete>objs/lib/*</delete>
+        <rmdir>objs/lib</rmdir>
         <delete>objs/*</delete>
         <rmdir>objs</rmdir>
         <delete>include/arch</delete>
@@ -102,6 +107,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="prepare" type="private">
         <mkdir>objs</mkdir>
+        <mkdir>objs/lib</mkdir>
         <mkdir>objs/arch</mkdir>
         <symlink from="../arch/i386/include" to="include/arch"/>
     </target>
@@ -165,11 +171,29 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <for var="i" array="${files_lib}">
+            <echo>-> ${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/lib/filename(${i}).o</output>
+                <include>./include</include>
+                <flag>-c</flag>
+                <flag>-O2</flag>
+                <flag>-m32</flag>
+                <flag>-Wall</flag>
+                <flag>-Wshadow</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-fno-builtin</flag>
+            </gcc>
+        </for>
+
         <echo>Linking kernel binary</echo>
         <echo>-> objs/kernel</echo>
 
         <ld>
             <input>objs/*.o</input>
+            <input>objs/lib/*.o</input>
             <input>objs/arch/*.o</input>
             <output>objs/kernel</output>
             <linkerscript>arch/i386/linker.ld</linkerscript>
