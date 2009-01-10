@@ -1,6 +1,6 @@
 /* Change directory command
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -22,19 +22,21 @@
 
 #include "../command.h"
 
-static int cd_command_function( int argc, char** argv ) {
+static int cd_command_function( int argc, char** argv, char** envp ) {
     int fd;
 
+    /* TODO: When no arguments given, cd to the $HOME dir */
     if ( argc != 2 ) {
-        printf( "Usage: cd directory\n" );
-        return -1;
+        printf( "%s: usage: %s directory\n", argv[ 0 ], argv[ 0 ] );
+        return 1;
     }
 
+    /* TODO: Use $CDPATH */
     fd = open( argv[ 1 ], 0 /* O_RDONLY */ );
 
     if ( fd < 0 ) {
-        printf( "cd: Invalid directory: %s\n", argv[ 1 ] );
-        return -1;
+        printf( "%s: Invalid directory: %s\n", argv[ 0 ], argv[ 1 ] );
+        return 1;
     }
 
     fchdir( fd );

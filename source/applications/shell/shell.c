@@ -71,7 +71,7 @@ static char* get_line( void ) {
 
 #define MAX_ARGV 32
 
-int main( int argc, char** argv ) {
+int main( int argc, char** argv, char** envp ) {
     int i;
     int done;
     char* line;
@@ -132,7 +132,7 @@ int main( int argc, char** argv ) {
 
         for ( i = 0; builtin_commands[ i ] != NULL; i++ ) {
             if ( strcmp( builtin_commands[ i ]->name, child_argv[ 0 ] ) == 0 ) {
-                builtin_commands[ i ]->command( arg_count, child_argv );
+                builtin_commands[ i ]->command( arg_count, child_argv, envp );
                 done = 1;
                 break;
             }

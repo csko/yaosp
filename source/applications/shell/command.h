@@ -1,6 +1,6 @@
 /* Shell command definition
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,7 +19,7 @@
 #ifndef _COMMAND_H_
 #define _COMMAND_H_
 
-typedef int command_function_t( int argc, char** argv );
+typedef int command_function_t( int argc, char** argv, char** envp );
 
 typedef struct builtin_command {
     const char* name;

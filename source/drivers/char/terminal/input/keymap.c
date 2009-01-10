@@ -1,6 +1,6 @@
 /* Terminal driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -37,11 +37,11 @@ uint16_t keyboard_normal_map[ 128 ] = {
 };
 
 uint16_t keyboard_shifted_map[ 128 ] = {
-    /* 0-9 */ 0, KEY_ESCAPE, '!', '"', 0xA3, '$', '%', '^', '&', '*',
+    /* 0-9 */ 0, KEY_ESCAPE, '!', '@', '#', '$', '%', '^', '&', '*',
     /* 10-19 */ '(', ')', '_', '+', KEY_BACKSPACE, KEY_TAB, 'Q', 'W', 'E', 'R',
     /* 20-29 */ 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', KEY_ENTER, KEY_L_CTRL,
     /* 30-39 */ 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',
-    /* 40-49 */ '@', '~', KEY_L_SHIFT, '~', 'Z', 'X', 'C', 'V', 'B', 'N',
+    /* 40-49 */ '"', '~', KEY_L_SHIFT, '|', 'Z', 'X', 'C', 'V', 'B', 'N',
     /* 50-59 */ 'M', '<', '>', '?', KEY_R_SHIFT, '*', KEY_L_ALT, ' ', KEY_CAPSLOCK, KEY_F1,
     /* 60-69 */ KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK,
     /* 70-79 */ KEY_SCRLOCK, '7', '8', '9', '-', '4', '5', '6', '+', '1',
