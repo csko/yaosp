@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -22,18 +22,23 @@
 #include <time.h>
 #include <sys/types.h>
 
-#define S_IFMT  0xF000
+/* TODO: Might need to change these */
+#define S_IFMT   0x0F000
 
-#define S_IFIFO 0x1000
-#define S_IFCHR 0x2000
-#define S_IFDIR 0x4000
-#define S_IFBLK 0x6000
-#define S_IFREG 0x8000
+#define S_IFSOCK 0x14000
+#define S_IFLNK  0x12000
+#define S_IFREG  0x10000
+#define S_IFBLK  0x06000
+#define S_IFDIR  0x04000
+#define S_IFCHR  0x02000
+#define S_IFIFO  0x01000
 
+#define S_ISSOCK(m)  (((m) & S_IFMT) == S_IFSOCK)
+#define S_ISLNK(m)  (((m) & S_IFMT) == S_IFLNK)
 #define S_ISREG(m)  (((m) & S_IFMT) == S_IFREG)
+#define S_ISBLK(m)  (((m) & S_IFMT) == S_IFBLK)
 #define S_ISDIR(m)  (((m) & S_IFMT) == S_IFDIR)
 #define S_ISCHR(m)  (((m) & S_IFMT) == S_IFCHR)
-#define S_ISBLK(m)  (((m) & S_IFMT) == S_IFBLK)
 #define S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
 
 struct stat {

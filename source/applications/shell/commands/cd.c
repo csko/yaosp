@@ -35,7 +35,7 @@ static int cd_command_function( int argc, char** argv, char** envp ) {
     fd = open( argv[ 1 ], 0 /* O_RDONLY */ );
 
     if ( fd < 0 ) {
-        printf( "%s: Invalid directory: %s\n", argv[ 0 ], argv[ 1 ] );
+        fprintf( stderr, "%s: Invalid directory: %s\n", argv[ 0 ], argv[ 1 ] );
         return 1;
     }
 

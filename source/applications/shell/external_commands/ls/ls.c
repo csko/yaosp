@@ -33,7 +33,7 @@ int do_ls( char* dirname ) {
     dir = opendir( dirname );
 
     if ( dir == NULL ) {
-        printf( "%s: cannot access %s: No such file or directory\n", argv0, dirname);
+        fprintf( stderr, "%s: cannot access %s: No such file or directory\n", argv0, dirname);
         return -1;
     }
 

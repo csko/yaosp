@@ -52,12 +52,14 @@
     ((set)->fds[fd/32] & (1<<(fd%32)))
 
 /* stat definitions */
-
-#define S_IFIFO 0x1000
-#define S_IFCHR 0x2000
-#define S_IFDIR 0x4000
-#define S_IFBLK 0x6000
-#define S_IFREG 0x8000
+/* TODO: Might need to change these */
+#define S_IFSOCK 0x14000
+#define S_IFLNK  0x12000
+#define S_IFREG  0x10000
+#define S_IFBLK  0x06000
+#define S_IFDIR  0x04000
+#define S_IFCHR  0x02000
+#define S_IFIFO  0x01000
 
 typedef struct dirent {
     ino_t inode_number;
