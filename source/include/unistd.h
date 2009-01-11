@@ -24,7 +24,7 @@
 #define NAME_MAX 255
 
 struct dirent {
-    ino_t inode_number;
+    ino_t inode;
     char name[ NAME_MAX + 1 ];
 };
 
