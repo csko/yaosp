@@ -1,6 +1,6 @@
 /* Thread implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,6 +23,8 @@
 #include <scheduler.h>
 #include <smp.h>
 #include <waitqueue.h>
+#include <macros.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
@@ -31,6 +33,7 @@
 #include <arch/pit.h> /* get_system_time() */
 #include <arch/thread.h>
 #include <arch/spinlock.h>
+#include <arch/interrupt.h>
 
 static int thread_id_counter = 0;
 static hashtable_t thread_table;
@@ -90,6 +93,8 @@ void destroy_thread( thread_t* thread ) {
 }
 
 int insert_thread( thread_t* thread ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     do {
         thread->id = thread_id_counter++;
 
@@ -175,6 +180,8 @@ int sleep_thread( uint64_t microsecs ) {
     thread_t* thread;
     waitnode_t node;
 
+    ASSERT( !is_interrupts_disabled() );
+
     node.wakeup_time = get_system_time() + microsecs;
 
     spinlock_disable( &scheduler_lock );
@@ -218,6 +225,7 @@ int wake_up_thread( thread_id id ) {
 }
 
 thread_t* get_thread_by_id( thread_id id ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
     return ( thread_t* )hashtable_get( &thread_table, ( const void* )id );
 }
 

@@ -57,3 +57,7 @@ void spinunlock_enable( spinlock_t* lock ) {
         enable_interrupts();
     }
 }
+
+bool spinlock_is_locked( spinlock_t* lock ) {
+    return ( atomic_get( &lock->locked ) == 1 );
+}

@@ -74,6 +74,7 @@ semaphore_id create_semaphore( const char* name, semaphore_type_t type, uint32_t
 int delete_semaphore( semaphore_id id );
 int lock_semaphore( semaphore_id id, int count, uint64_t timeout );
 int unlock_semaphore( semaphore_id id, int count );
+bool is_semaphore_locked( semaphore_id id );
 
 semaphore_id sys_create_semaphore( const char* name, semaphore_type_t type, uint32_t flags, int count );
 int sys_delete_semaphore( semaphore_id id );

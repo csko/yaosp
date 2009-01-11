@@ -1,6 +1,6 @@
 /* Process implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,7 @@
 #include <semaphore.h>
 #include <smp.h>
 #include <scheduler.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
 #include <vfs/vfs.h>
@@ -78,6 +79,8 @@ error1:
 }
 
 int insert_process( process_t* process ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     do {
         process->id = process_id_counter++;
 
@@ -92,6 +95,7 @@ int insert_process( process_t* process ) {
 }
 
 process_t* get_process_by_id( process_id id ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
     return ( process_t* )hashtable_get( &process_table, ( const void* )id );
 }
 
@@ -175,7 +179,9 @@ int init_processes( void ) {
     process->semaphore_context = &kernel_semaphore_context;
     process->io_context = &kernel_io_context;
 
+    spinlock_disable( &scheduler_lock );
     error = insert_process( process );
+    spinunlock_enable( &scheduler_lock );
 
     if ( error < 0 ) {
         return error;

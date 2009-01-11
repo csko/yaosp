@@ -22,10 +22,12 @@
 #include <smp.h>
 #include <errno.h>
 #include <scheduler.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
 #include <arch/pit.h> /* get_system_time() */
+#include <arch/interrupt.h>
 
 #define GLOBAL ( 1 << 24 )
 #define ID_MASK 0x00FFFFFF
@@ -184,6 +186,8 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
     uint64_t wakeup_time;
     semaphore_t* semaphore;
     semaphore_context_t* context;
+
+    ASSERT( !is_interrupts_disabled() );
 
     /* Check if semaphore ID is valid */
 
@@ -346,6 +350,48 @@ int unlock_semaphore( semaphore_id id, int count ) {
 
 int sys_unlock_semaphore( semaphore_id id, int count ) {
     return do_unlock_semaphore( false, id, count );
+}
+
+static bool do_is_semaphore_locked( bool kernel, semaphore_id id ) {
+    bool result;
+    semaphore_t* semaphore;
+    semaphore_context_t* context;
+
+    /* Check if semaphore is valid */
+
+    if ( id < 0 ) {
+        return false;
+    }
+
+    /* Decide which context to use */
+
+    if ( id & GLOBAL ) {
+        context = &global_semaphore_context;
+    } else if ( kernel ) {
+        context = &kernel_semaphore_context;
+    } else {
+        context = current_process()->semaphore_context;
+    }
+
+    spinlock_disable( &context->lock );
+
+    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
+
+    if ( semaphore == NULL ) {
+        spinunlock_enable( &context->lock );
+
+        return false;
+    }
+
+    result = ( semaphore->count == 0 );
+
+    spinunlock_enable( &context->lock );
+
+    return result;
+}
+
+bool is_semaphore_locked( semaphore_id id ) {
+    return do_is_semaphore_locked( true, id );
 }
 
 static void* semaphore_key( hashitem_t* item ) {

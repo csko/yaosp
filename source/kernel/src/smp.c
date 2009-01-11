@@ -1,6 +1,6 @@
 /* Symmetric multi-processing
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,6 +20,7 @@
 #include <types.h>
 #include <thread.h>
 #include <errno.h>
+#include <scheduler.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -62,7 +63,11 @@ int init_smp_late( void ) {
             return id;
         }
 
+        spinlock_disable( &scheduler_lock );
+
         processor_table[ i ].idle_thread = get_thread_by_id( id );
+
+        spinunlock_enable( &scheduler_lock );
 
         if ( processor_table[ i ].idle_thread == NULL ) {
             return -EINVAL;

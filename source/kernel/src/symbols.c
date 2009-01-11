@@ -45,6 +45,7 @@ static kernel_symbol_t symbols[] = {
     /* Console output */
     { "kprintf", ( ptr_t )kprintf },
     { "kvprintf", ( ptr_t )kvprintf },
+    { "dprintf", ( ptr_t )dprintf },
 
     /* Memory management */
     { "kmalloc", ( ptr_t )kmalloc },

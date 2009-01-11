@@ -61,4 +61,12 @@ void spinlock_disable( spinlock_t* lock );
  */
 void spinunlock_enable( spinlock_t* lock );
 
+/**
+ * Checks is the specified spinlock is locked or not.
+ *
+ * @param lock The spinlock to check
+ * @return True is returned if the specified spinlock is locked
+ */
+bool spinlock_is_locked( spinlock_t* lock );
+
 #endif // _ARCH_SPINLOCK_H_

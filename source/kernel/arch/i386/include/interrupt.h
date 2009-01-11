@@ -30,14 +30,21 @@
  * @return True is returned if interrupts were enabled before this call
  */
 bool disable_interrupts( void );
+
 /**
  * This is used to enable interrupts on the current processor.
  */
 void enable_interrupts( void );
 
+/**
+ * Checks if interrupts are disabled or not.
+ *
+ * @return Returns true if interrupts are disabled
+ */
+bool is_interrupts_disabled( void );
+
 void arch_disable_irq( int irq );
 void arch_enable_irq( int irq );
-void arch_ack_irq( int irq );
 
 /**
  * This is used during the kernel initialization to setup the

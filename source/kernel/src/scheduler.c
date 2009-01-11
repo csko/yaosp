@@ -1,6 +1,6 @@
 /* Scheduler
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,7 @@
 #include <console.h>
 #include <smp.h>
 #include <kernel.h>
+#include <macros.h>
 
 #include <arch/pit.h> /* get_system_time() */
 
@@ -34,6 +35,8 @@ waitqueue_t sleep_queue;
 spinlock_t scheduler_lock = INIT_SPINLOCK;
 
 int add_thread_to_ready( thread_t* thread ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     thread->state = THREAD_READY;
     thread->queue_next = NULL;
 
@@ -49,6 +52,8 @@ int add_thread_to_ready( thread_t* thread ) {
 }
 
 int add_thread_to_expired( thread_t* thread ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     thread->state = THREAD_READY;
     thread->queue_next = NULL;
 

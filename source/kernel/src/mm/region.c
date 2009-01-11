@@ -21,6 +21,7 @@
 #include <smp.h>
 #include <kernel.h>
 #include <semaphore.h>
+#include <macros.h>
 #include <mm/region.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
@@ -86,6 +87,8 @@ int region_insert( memory_context_t* context, region_t* region ) {
 }
 
 int region_remove( memory_context_t* context, region_t* region ) {
+    ASSERT( is_semaphore_locked( region_lock ) );
+
     hashtable_remove( &region_table, ( const void* )region->id );
     memory_context_remove_region( context, region );
 

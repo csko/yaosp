@@ -36,5 +36,6 @@
 #define ERANGE  14
 #define ENXIO   15
 #define EDOM    16
+#define ENODEV  17
 
 #endif // _ERRNO_H_

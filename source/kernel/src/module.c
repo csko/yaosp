@@ -19,6 +19,7 @@
 #include <module.h>
 #include <console.h>
 #include <errno.h>
+#include <semaphore.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -26,6 +27,7 @@ module_loader_t* module_loader;
 
 static int module_id_counter = 0;
 static hashtable_t module_table;
+static semaphore_id module_lock;
 
 module_t* create_module( const char* name ) {
     module_t* module;
@@ -96,19 +98,29 @@ module_id load_module( module_reader_t* reader ) {
 
     /* Insert the new module to the table */
 
+    LOCK( module_lock );
+
     do {
         module->id = module_id_counter++;
     } while ( hashtable_get( &module_table, ( const void* )module->id ) != NULL );
 
+    error = module->id;
+
     hashtable_add( &module_table, ( void* )module );
 
-    return module->id;
+    UNLOCK( module_lock );
+
+    return error;
 }
 
 int initialize_module( module_id id ) {
     module_t* module;
 
+    LOCK( module_lock );
+
     module = ( module_t* )hashtable_get( &module_table, ( const void* )id );
+
+    UNLOCK( module_lock );
 
     if ( module == NULL ) {
         return -EINVAL;
@@ -155,6 +167,13 @@ int init_module_loader( void ) {
 
     if ( error < 0 ) {
         return error;
+    }
+
+    module_lock = create_semaphore( "module lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( module_lock < 0 ) {
+        destroy_hashtable( &module_table );
+        return module_lock;
     }
 
     return 0;

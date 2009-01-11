@@ -647,10 +647,6 @@ int sys_lseek( int fd, off_t* offset, int whence, off_t* result ) {
 }
 
 static int do_getcwd( bool kernel, char* buf, size_t size ) {
-    int error;
-    inode_t* inode;
-    inode_t* parent;
-    ino_t inode_number;
     io_context_t* io_context;
 
     if ( kernel ) {

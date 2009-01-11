@@ -25,6 +25,7 @@
 .global set_eflags
 .global disable_interrupts
 .global enable_interrupts
+.global is_interrupts_disabled
 .global reload_segment_descriptors
 .global get_cr2
 .global get_cr3
@@ -64,6 +65,16 @@ enable_interrupts:
     sti
     ret
 .size enable_interrupts,.-enable_interrupts
+
+/* bool is_interrupts_disabled( void ) */
+
+is_interrupts_disabled:
+    pushfl
+    popl %eax
+    negl %eax
+    andl $EFLAG_IF, %eax
+    ret
+.size is_interrupts_disabled,.-is_interrupts_disabled
 
 /* void reload_segment_descriptors( void ) */
 

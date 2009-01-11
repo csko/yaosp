@@ -28,8 +28,11 @@
 
 #define ASSERT(exp) \
     if ( !( exp ) ) { \
-        panic( "Assertion (%s) failed at: %s:%d\n", \
-            #exp, __FILE__, __LINE__ \
+        panic( "Assertion (%s) failed at: %s:%d\nComing from: %x %x %x", \
+            #exp, __FILE__, __LINE__, \
+            __builtin_return_address(0), \
+            __builtin_return_address(1), \
+            __builtin_return_address(2) \
         ); \
     }
 

@@ -56,13 +56,15 @@ int sys_dbprintf( const char* format, char** parameters ) {
 
 void handle_panic( const char* file, int line, const char* format, ... ) {
     va_list args;
+
+    disable_interrupts();
+
     kprintf( "Panic at %s:%d: ", file, line );
 
     va_start( args, format );
     kvprintf( format, args );
     va_end( args );
 
-    disable_interrupts();
     halt_loop();
 }
 
