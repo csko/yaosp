@@ -1,6 +1,6 @@
 /* Hashtable implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -73,7 +73,7 @@ static void hashtable_resize( hashtable_t* table, uint32_t new_size ) {
             tmp = item;
             item = item->next;
 
-            key = table->key_func( item );
+            key = table->key_func( tmp );
             hash = table->hash_func( key ) % new_size;
 
             tmp->next = new_items[ hash ];
@@ -99,11 +99,9 @@ int hashtable_add( hashtable_t* table, hashitem_t* item ) {
 
     table->item_count++;
 
-#if 0
     if ( table->item_count >= table->size ) {
         hashtable_resize( table, table->size * 2 );
     }
-#endif
 
     return 0;
 }
