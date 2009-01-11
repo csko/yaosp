@@ -438,6 +438,12 @@ static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
         );
     }
 
+    if ( ( strcmp( entry->name, ".." ) == 0 ) &&
+         ( entry->inode_number == file->inode->mount_point->root_inode_number ) &&
+         ( file->inode->mount_point->mount_inode != NULL ) ) {
+        entry->inode_number = file->inode->mount_point->mount_inode->inode_number;
+    }
+
     io_context_put_file( io_context, file );
 
     return error;

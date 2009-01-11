@@ -39,9 +39,9 @@ int do_ls( char* dirname ) {
 
     while ( ( entry = readdir( dir ) ) != NULL ) {
         if ( strcmp( dirname, "/" ) == 0 ) {
-            snprintf( full_path, sizeof( full_path ), "/%s", entry->name );
+            snprintf( full_path, sizeof( full_path ), "/%s", entry->d_name );
         } else {
-            snprintf( full_path, sizeof( full_path ), "%s/%s", dirname, entry->name );
+            snprintf( full_path, sizeof( full_path ), "%s/%s", dirname, entry->d_name );
         }
 
         if ( stat( full_path, &entry_stat ) != 0 ) {
@@ -49,9 +49,9 @@ int do_ls( char* dirname ) {
         }
 
         if ( S_ISDIR( entry_stat.st_mode ) ) {
-            printf( "directory %s\n", entry->name );
+            printf( "directory %s\n", entry->d_name );
         } else {
-            printf( "%9u %s\n", ( unsigned int )entry_stat.st_size, entry->name );
+            printf( "%9u %s\n", ( unsigned int )entry_stat.st_size, entry->d_name );
         }
     }
 
