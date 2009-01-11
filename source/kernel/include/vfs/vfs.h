@@ -142,6 +142,7 @@ int sys_fchdir( int fd );
 int sys_stat( const char* path, struct stat* stat );
 int sys_fstat( int fd, struct stat* stat );
 int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
+int sys_getcwd( char* buf, size_t size );
 
 int init_vfs( void );
 

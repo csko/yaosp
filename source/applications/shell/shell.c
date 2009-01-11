@@ -86,6 +86,7 @@ int main( int argc, char** argv, char** envp ) {
     char* line;
     char* args;
     pid_t child;
+    char cwd[ 256 ];
 
     char* arg;
     int arg_count;
@@ -94,7 +95,9 @@ int main( int argc, char** argv, char** envp ) {
     fputs( "Welcome to the yaosp shell!\n\n", stdout );
 
     while ( 1 ) {
-        printf( "> " );
+        getcwd( cwd, sizeof( cwd ) );
+
+        printf( "%s> ", cwd );
 
         /* Read in a line */
 

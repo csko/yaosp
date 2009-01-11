@@ -16,11 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
 #include <unistd.h>
 
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
+
 char* getcwd( char* buf, size_t size ) {
-    /* TODO */
-    snprintf( buf, size, "/" );
+    if ( syscall2( SYS_getcwd, ( int )buf, size ) < 0 ) {
+        return NULL;
+    }
+
     return buf;
 }
