@@ -25,7 +25,7 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
     unsigned char *where, buf[PRINTF_BUFLEN];
     unsigned int flags, given_wd, actual_wd;
     state = flags = given_wd = ret = 0;
-    long num;
+    long long num;
 
     for ( ; *format != 0; format++ ) {
         switch(state){
@@ -76,7 +76,13 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
                     break;
                 }
                 if(*format == 'l'){
-                    flags |= PRINTF_LONG;
+                    /* Peek the next character */
+                    if(*(++format) == 'l'){ /* 64 bit long long */
+                        flags |= PRINTF_LONGLONG;
+                    }else{
+                        flags |= PRINTF_LONG;
+                        --format;
+                    }
                     break;
                 }
                 if(*format == 'h'){
@@ -109,6 +115,8 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
 PRINTF_DO_NUM:
                         if(flags & PRINTF_LONG){
                             num = va_arg(args, unsigned long);
+                        }else if(flags & PRINTF_LONGLONG){
+                            num = va_arg(args, unsigned long long);
                         }else if(flags & PRINTF_SHORT){
                             if(flags & PRINTF_SIGNED)
                                 num = va_arg(args, int);
@@ -127,8 +135,8 @@ PRINTF_DO_NUM:
                             }
                         }
                         do { /* Convert the number to the radix */
-                            unsigned long temp;
-                            temp = (unsigned long)num % radix;
+                            unsigned long long temp;
+                            temp = (unsigned long long)num % radix;
                             where--;
                             if(temp < 10)
                                 *where = temp + '0';
@@ -136,7 +144,7 @@ PRINTF_DO_NUM:
                                 *where = temp - 10 + 'A';
                             else
                                 *where = temp - 10 + 'a';
-                            num = (unsigned long)num / radix;
+                            num = (unsigned long long)num / radix;
                         } while(num != 0);
                         goto PRINTF_OUT;
                     case 'c':

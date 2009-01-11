@@ -1,7 +1,6 @@
-/* printf implementation
+/* printf() like function for the kernel
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
- * Copyright (c) 2008 Kornel Csernai
+ * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -17,16 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <string.h>
+#include <types.h>
+#include <lib/printf.h>
+#include <lib/string.h>
 
-#include "__printf.h"
-
-int __printf( printf_helper_t* helper, void* data, const char* format, va_list args ) {
+int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args ) {
     int state, radix, ret;
     unsigned char *where, buf[PRINTF_BUFLEN];
     unsigned int flags, given_wd, actual_wd;
     state = flags = given_wd = ret = 0;
-    long num;
+    long long num;
 
     for ( ; *format != 0; format++ ) {
         switch(state){
@@ -77,7 +76,13 @@ int __printf( printf_helper_t* helper, void* data, const char* format, va_list a
                     break;
                 }
                 if(*format == 'l'){
-                    flags |= PRINTF_LONG;
+                    /* Peek the next character */
+                    if(*(++format) == 'l'){ /* 64 bit long long */
+                        flags |= PRINTF_LONGLONG;
+                    }else{
+                        flags |= PRINTF_LONG;
+                        --format;
+                    }
                     break;
                 }
                 if(*format == 'h'){
@@ -110,6 +115,8 @@ int __printf( printf_helper_t* helper, void* data, const char* format, va_list a
 PRINTF_DO_NUM:
                         if(flags & PRINTF_LONG){
                             num = va_arg(args, unsigned long);
+                        }else if(flags & PRINTF_LONGLONG){
+                            num = va_arg(args, unsigned long long);
                         }else if(flags & PRINTF_SHORT){
                             if(flags & PRINTF_SIGNED)
                                 num = va_arg(args, int);
@@ -128,8 +135,8 @@ PRINTF_DO_NUM:
                             }
                         }
                         do { /* Convert the number to the radix */
-                            unsigned long temp;
-                            temp = (unsigned long)num % radix;
+                            unsigned long long temp;
+                            temp = (unsigned long long)num % radix;
                             where--;
                             if(temp < 10)
                                 *where = temp + '0';
@@ -137,7 +144,7 @@ PRINTF_DO_NUM:
                                 *where = temp - 10 + 'A';
                             else
                                 *where = temp - 10 + 'a';
-                            num = (unsigned long)num / radix;
+                            num = (unsigned long long)num / radix;
                         } while(num != 0);
                         goto PRINTF_OUT;
                     case 'c':
