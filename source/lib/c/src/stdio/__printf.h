@@ -32,10 +32,10 @@
 
 #define PRINTF_BUFLEN   32
 
-#include <lib/stdarg.h>
+#include <stdarg.h>
 
 typedef int printf_helper_t( void* data, char c );
 
-int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args );
+int __printf( printf_helper_t* helper, void* data, const char* format, va_list args );
 
 #endif // _PRINTF_H_
