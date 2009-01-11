@@ -29,6 +29,7 @@
 
 static ino_t pty_inode_counter = 1;
 static hashtable_t pty_node_table;
+static semaphore_id pty_lock;
 
 static pty_node_t root_inode = { .inode_number = PTY_ROOT_INODE };
 
@@ -123,7 +124,11 @@ static int pty_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
         return 0;
     }
 
+    LOCK( pty_lock );
+
     node = ( pty_node_t* )hashtable_get( &pty_node_table, ( const void* )&inode_num );
+
+    UNLOCK( pty_lock );
 
     if ( node == NULL ) {
         return -ENOINO;
@@ -163,7 +168,11 @@ static int pty_lookup_inode( void* fs_cookie, void* parent, const char* name, in
     data.length = name_len;
     data.inode_number = inode_num;
 
+    LOCK( pty_lock );
+
     error = hashtable_iterate( &pty_node_table, pty_lookup_helper, ( void* )&data );
+
+    UNLOCK( pty_lock );
 
     if ( error == 0 ) {
         return -ENOENT;
@@ -391,6 +400,22 @@ static int pty_write( void* fs_cookie, void* _node, void* file_cookie, const voi
     }
 }
 
+static int pty_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
+    pty_node_t* node;
+
+    node = ( pty_node_t* )_node;
+
+    stat->st_ino = node->inode_number;
+    stat->st_mode = 0;
+    stat->st_size = 0;
+
+    if ( node == &root_inode ) {
+        stat->st_mode |= S_IFDIR;
+    }
+
+    return 0;
+}
+
 static int pty_read_dir_helper( hashitem_t* item, void* _data ) {
     pty_node_t* node;
     pty_read_dir_data_t* data;
@@ -412,22 +437,6 @@ static int pty_read_dir_helper( hashitem_t* item, void* _data ) {
     return 0;
 }
 
-static int pty_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
-    pty_node_t* node;
-
-    node = ( pty_node_t* )_node;
-
-    stat->st_ino = node->inode_number;
-    stat->st_mode = 0;
-    stat->st_size = 0;
-
-    if ( node == &root_inode ) {
-        stat->st_mode |= S_IFDIR;
-    }
-
-    return 0;
-}
-
 static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry ) {
     int error;
     pty_dir_cookie_t* cookie;
@@ -443,7 +452,11 @@ static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, s
     data.required = cookie->current;
     data.entry = entry;
 
+    LOCK( pty_lock );
+
     error = hashtable_iterate( &pty_node_table, pty_read_dir_helper, ( void* )&data );
+
+    UNLOCK( pty_lock );
 
     if ( error == 0 ) {
         return 0;
@@ -496,8 +509,12 @@ static int pty_create( void* fs_cookie, void* node, const char* name, int name_l
     master->partner = slave;
     slave->partner = master;
 
+    LOCK( pty_lock );
+
     pty_insert_node( master );
     pty_insert_node( slave );
+
+    UNLOCK( pty_lock );
 
     *inode_num = master->inode_number;
 
@@ -660,14 +677,29 @@ int init_pty_filesystem( void ) {
     );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
+    }
+
+    pty_lock = create_semaphore( "PTY lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( pty_lock < 0 ) {
+        goto error2;
     }
 
     error = register_filesystem( "pty", &pty_calls );
 
     if ( error < 0 ) {
-        return error;
+        goto error3;
     }
 
     return 0;
+
+error3:
+    delete_semaphore( pty_lock );
+
+error2:
+    destroy_hashtable( &pty_node_table );
+
+error1:
+    return error;
 }

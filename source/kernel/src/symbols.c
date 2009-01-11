@@ -119,6 +119,7 @@ static kernel_symbol_t symbols[] = {
 
     /* Hashtable functions */
     { "init_hashtable", ( ptr_t )init_hashtable },
+    { "destroy_hashtable", ( ptr_t )destroy_hashtable },
     { "hashtable_add", ( ptr_t )hashtable_add },
     { "hashtable_get", ( ptr_t )hashtable_get },
     { "hashtable_remove", ( ptr_t )hashtable_remove },
