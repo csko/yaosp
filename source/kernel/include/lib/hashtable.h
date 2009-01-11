@@ -31,6 +31,7 @@ typedef bool compare_function_t( const void* key1, const void* key2 );
 
 typedef struct hashtable {
     uint32_t size;
+    uint32_t item_count;
     hashitem_t** items;
 
     key_function_t* key_func;

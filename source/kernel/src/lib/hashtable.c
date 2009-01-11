@@ -37,6 +37,7 @@ int init_hashtable(
     memset( table->items, 0, sizeof( hashitem_t* ) * size );
 
     table->size = size;
+    table->item_count = 0;
     table->key_func = key_func;
     table->hash_func = hash_func;
     table->compare_func = compare_func;
@@ -49,6 +50,43 @@ void destroy_hashtable( hashtable_t* table ) {
     table->items = NULL;
 }
 
+static void hashtable_resize( hashtable_t* table, uint32_t new_size ) {
+    uint32_t i;
+    uint32_t hash;
+    const void* key;
+    hashitem_t* tmp;
+    hashitem_t* item;
+    hashitem_t** new_items;
+
+    new_items = ( hashitem_t** )kmalloc( sizeof( hashitem_t* ) * new_size );
+
+    if ( new_items == NULL ) {
+        return;
+    }
+
+    memset( new_items, 0, sizeof( hashitem_t* ) * new_size );
+
+    for ( i = 0; i < table->size; i++ ) {
+        item = table->items[ i ];
+
+        while ( item != NULL ) {
+            tmp = item;
+            item = item->next;
+
+            key = table->key_func( item );
+            hash = table->hash_func( key ) % new_size;
+
+            tmp->next = new_items[ hash ];
+            new_items[ hash ] = tmp;
+        }
+    }
+
+    kfree( table->items );
+
+    table->items = new_items;
+    table->size = new_size;
+}
+
 int hashtable_add( hashtable_t* table, hashitem_t* item ) {
     uint32_t hash;
     const void* key;
@@ -58,6 +96,14 @@ int hashtable_add( hashtable_t* table, hashitem_t* item ) {
 
     item->next = table->items[ hash ];
     table->items[ hash ] = item;
+
+    table->item_count++;
+
+#if 0
+    if ( table->item_count >= table->size ) {
+        hashtable_resize( table, table->size * 2 );
+    }
+#endif
 
     return 0;
 }
@@ -104,6 +150,8 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
                 prev->next = item->next;
             }
 
+            table->item_count--;
+
             return 0;
         }
 
@@ -115,8 +163,8 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
 }
 
 int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data ) {
-    int i;
     int result;
+    uint32_t i;
     hashitem_t* item;
 
     for ( i = 0; i < table->size; i++ ) {
