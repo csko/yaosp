@@ -59,5 +59,6 @@ void io_context_put_file( io_context_t* io_context, file_t* file );
 io_context_t* io_context_clone( io_context_t* old_io_context );
 
 int init_io_context( io_context_t* io_context );
+void destroy_io_context( io_context_t* io_context );
 
 #endif // _VFS_IO_CONTEXT_H_

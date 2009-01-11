@@ -977,7 +977,7 @@ int init_vfs( void ) {
     error = init_io_context( &kernel_io_context );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     /* Initialize filesystem manager */
@@ -985,8 +985,7 @@ int init_vfs( void ) {
     error = init_filesystems();
 
     if ( error < 0 ) {
-        /* TODO: cleanup */
-        return error;
+        goto error2;
     }
 
     /* Initialize the root filesystem */
@@ -994,8 +993,7 @@ int init_vfs( void ) {
     error = init_root_filesystem();
 
     if ( error < 0 ) {
-        /* TODO: free io context stuffs */
-        return error;
+        goto error2;
     }
 
     /* Initialize and mount the device filesystem */
@@ -1003,15 +1001,13 @@ int init_vfs( void ) {
     error = init_devfs();
 
     if ( error < 0 ) {
-        /* TODO: cleanup */
-        return error;
+        goto error2;
     }
 
     error = mkdir( "/device", 0 );
 
     if ( error < 0 ) {
-        /* TODO: cleanup */
-        return error;
+        goto error2;
     }
 
     error = do_mount( true, "", "/device", "devfs" );
@@ -1021,4 +1017,10 @@ int init_vfs( void ) {
     }
 
     return 0;
+
+error2:
+    destroy_io_context( &kernel_io_context );
+
+error1:
+    return error;
 }

@@ -1,6 +1,6 @@
 /* Filesystem management
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -73,6 +73,11 @@ int register_filesystem( const char* name, filesystem_calls_t* calls ) {
 
     UNLOCK( filesystem_lock );
 
+    if ( error < 0 ) {
+        kfree( fs_desc->name );
+        kfree( fs_desc );
+    }
+
     return error;
 }
 
@@ -106,6 +111,7 @@ int init_filesystems( void ) {
     filesystem_lock = create_semaphore( "filesystem lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( filesystem_lock < 0 ) {
+        destroy_hashtable( &filesystem_table );
         return filesystem_lock;
     }
 

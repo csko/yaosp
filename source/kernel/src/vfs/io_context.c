@@ -223,8 +223,19 @@ int init_io_context( io_context_t* io_context ) {
     io_context->lock = create_semaphore( "I/O context lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( io_context->lock < 0 ) {
+        destroy_hashtable( &io_context->file_table );
         return io_context->lock;
     }
 
     return 0;
+}
+
+static int destroy_file_callback( hashitem_t* item, void* data ) {
+    delete_file( ( file_t* )item );
+    return 0;
+}
+
+void destroy_io_context( io_context_t* io_context ) {
+    hashtable_iterate( &io_context->file_table, destroy_file_callback, NULL );
+    delete_semaphore( io_context->lock );
 }

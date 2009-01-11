@@ -1,6 +1,6 @@
 /* Inode related functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -114,6 +114,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
     error = hashtable_add( &mount_point->inode_cache.inode_table, ( void* )inode );
 
     if ( error < 0 ) {
+        tmp_fs_node = inode->fs_node;
 
         if ( cache->free_inode_count < cache->max_free_inode_count ) {
             inode->next_free = cache->free_inodes;
@@ -122,11 +123,11 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
             cache->free_inode_count++;
         }
 
-        tmp_fs_node = inode->fs_node;
-
         UNLOCK( cache->lock );
 
-        mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
+        if ( mount_point->fs_calls->write_inode != NULL ) {
+            mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
+        }
 
         kfree( inode );
 
@@ -139,7 +140,36 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
 }
 
 int put_inode( inode_t* inode ) {
-    /* TODO */
+    void* tmp_fs_node;
+    inode_cache_t* cache;
+    mount_point_t* mount_point;
+
+    mount_point = inode->mount_point;
+    cache = &mount_point->inode_cache;
+
+    if ( atomic_dec_and_test( &inode->ref_count ) ) {
+        tmp_fs_node = inode->fs_node;
+
+        LOCK( cache->lock );
+
+        hashtable_remove( &cache->inode_table, ( const void* )&inode->inode_number );
+
+        if ( cache->free_inode_count < cache->max_free_inode_count ) {
+            inode->next_free = cache->free_inodes;
+            cache->free_inodes = inode;
+            inode = NULL;
+            cache->free_inode_count++;
+        }
+
+        UNLOCK( cache->lock );
+
+        if ( mount_point->fs_calls->write_inode != NULL ) {
+            mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
+        }
+
+        kfree( inode );
+    }
+
     return 0;
 }
 
@@ -319,7 +349,7 @@ int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, i
     cache->lock = create_semaphore( "inode_cache_lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( cache->lock < 0 ) {
-        /* TODO: delete the hashtable */
+        destroy_hashtable( &cache->inode_table );
         return cache->lock;
     }
 
@@ -333,8 +363,18 @@ int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, i
         inode = ( inode_t* )kmalloc( sizeof( inode_t ) );
 
         if ( inode == NULL ) {
-            /* TODO: delete the hashtable */
+            inode_t* tmp;
+
+            while ( cache->free_inodes != NULL ) {
+                tmp = cache->free_inodes;
+                cache->free_inodes = tmp->next_free;
+
+                kfree( tmp );
+            }
+
+            destroy_hashtable( &cache->inode_table );
             delete_semaphore( cache->lock );
+
             return -ENOMEM;
         }
 
