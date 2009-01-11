@@ -123,7 +123,7 @@ static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name,
 
     /* First check for ".." */
 
-    if ( ( name_len == 2 ) && ( strcmp( name, ".." ) == 0 ) ) {
+    if ( ( name_len == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
         if ( parent->parent == NULL ) {
             return -EINVAL;
         }

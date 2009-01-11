@@ -121,6 +121,18 @@ static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
     parent = ( rootfs_node_t* )_parent;
     node = parent->first_child;
 
+    /* First check for ".." */
+
+    if ( ( name_len == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
+        if ( parent->parent == NULL ) {
+            return -EINVAL;
+        }
+
+        *inode_num = parent->parent->inode_number;
+
+        return 0;
+    }
+
     while ( node != NULL ) {
         if ( ( strlen( node->name ) == name_len ) &&
              ( strncmp( node->name, name, name_len ) == 0 ) ) {
@@ -346,6 +358,8 @@ int init_root_filesystem( void ) {
     }
 
     mount_point->fs_data = NULL;
+    mount_point->root_inode_number = root_node->inode_number;
+    mount_point->mount_inode = NULL;
 
     error = insert_mount_point( mount_point );
 

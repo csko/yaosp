@@ -67,6 +67,8 @@ typedef struct dirent {
 typedef struct mount_point {
     inode_cache_t inode_cache;
     filesystem_calls_t* fs_calls;
+    ino_t root_inode_number;
+    inode_t* mount_inode;
     void* fs_data;
     struct mount_point* next;
 } mount_point_t;

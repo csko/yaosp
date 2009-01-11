@@ -163,6 +163,10 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
         return -EINVAL;
     }
 
+    if ( size == 0 ) {
+        return 0;
+    }
+
     data = ( uint8_t* )buffer;
     saved_size = size;
 

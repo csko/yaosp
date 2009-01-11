@@ -93,7 +93,24 @@ static int do_open_helper1( file_t* file, inode_t* parent, char* name, int lengt
 
         file->inode = parent;
     } else {
+        inode_t* tmp;
         ino_t child_inode;
+
+        if ( ( length == 2 ) &&
+             ( strncmp( name, "..", 2 ) == 0 ) &&
+             ( parent->inode_number == parent->mount_point->root_inode_number ) ) {
+            tmp = parent;
+
+            parent = parent->mount_point->mount_inode;
+
+            put_inode( tmp );
+
+            if ( parent == NULL ) {
+                return -EINVAL;
+            }
+
+            atomic_inc( &parent->ref_count );
+        }
 
         error = parent->mount_point->fs_calls->lookup_inode(
             parent->mount_point->fs_data,
@@ -116,8 +133,6 @@ static int do_open_helper1( file_t* file, inode_t* parent, char* name, int lengt
         /* Follow the mount point */
 
         if ( file->inode->mount != NULL ) {
-            inode_t* tmp;
-
             tmp = file->inode;
             file->inode = tmp->mount;
 
@@ -692,7 +707,11 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
         return -ENOMEM;
     }
 
-    put_inode( dir_inode );
+    mount_point->root_inode_number = dir_inode->mount->inode_number;
+    mount_point->mount_inode = dir_inode;
+
+    /* NOTE: We don't have to call put_inode() on dir_inode because
+             the mount point will own the reference to it */
 
     error = insert_mount_point( mount_point );
 
