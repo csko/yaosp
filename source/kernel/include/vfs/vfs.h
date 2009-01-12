@@ -53,13 +53,13 @@
 
 /* stat definitions */
 /* TODO: Might need to change these */
-#define S_IFSOCK 0x14000
-#define S_IFLNK  0x12000
-#define S_IFREG  0x10000
-#define S_IFBLK  0x06000
-#define S_IFDIR  0x04000
-#define S_IFCHR  0x02000
-#define S_IFIFO  0x01000
+#define S_IFSOCK 0x140000
+#define S_IFLNK  0x120000
+#define S_IFREG  0x100000
+#define S_IFBLK  0x060000
+#define S_IFDIR  0x040000
+#define S_IFCHR  0x020000
+#define S_IFIFO  0x010000
 
 typedef struct dirent {
     ino_t inode_number;

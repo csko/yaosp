@@ -29,6 +29,8 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
+#include "deviceid.h"
+
 typedef bool pci_access_check_t( void );
 typedef int pci_access_read_t( int bus, int dev, int func, int offset, int size, uint32_t* data );
 typedef int pci_access_write_t( int bus, int dev, int func, int offset, int size, uint32_t data );
@@ -381,7 +383,24 @@ static int pci_scan_device( int bus, int dev, int func ) {
         device->class_base = class_base;
 
         if ( pci_device_count < MAX_PCI_DEVICES ) {
-            kprintf( "PCI: %d:%d:%d 0x%x:0x%x\n", bus, dev, func, vendor_id, device_id );
+            int index = get_vendor( vendor_id );
+            char* vendor_name;
+            char* device_name;
+
+            if ( index == -1 ) {
+                vendor_name = "Unknown vendor";
+                device_name = "Unknown device";
+            } else {
+                vendor_name = pci_device_id_list[index].name;
+                device_name = get_device_name( device_id, index );
+                if ( device_name == NULL ) {
+                    device_name = "Unknown device";
+                }
+            }
+            /* TODO: Determine revision, subsystem */
+
+            kprintf( "PCI: %d:%d:%d 0x%x:0x%x %s %s\n", bus, dev, func, vendor_id,
+                     device_id, vendor_name, device_name );
 
             pci_devices[ pci_device_count++ ] = device;
         } else {
