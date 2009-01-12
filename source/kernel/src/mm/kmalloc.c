@@ -154,6 +154,8 @@ void* kmalloc( uint32_t size ) {
     block = __kmalloc_create_block( min_size / PAGE_SIZE );
 
     if ( block == NULL ) {
+        spinunlock_enable( &kmalloc_lock );
+
         return NULL;
     }
 
