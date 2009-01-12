@@ -46,6 +46,8 @@ typedef struct tm {
     int isdst;  /* Daylight saving [-1/0/1] */
 } tm_t ;
 
+time_t time(time_t* tloc);
+
 size_t strftime(char *s, size_t max, const char *format,
                 const struct tm *tm);
 
