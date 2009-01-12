@@ -79,7 +79,7 @@ semaphore_id do_create_semaphore( bool kernel, const char* name, semaphore_type_
     error = init_waitqueue( &semaphore->waiters );
 
     if ( error < 0 ) {
-        /* TODO: free the semaphore */
+        free_semaphore( semaphore );
         return error;
     }
 
@@ -118,9 +118,9 @@ semaphore_id do_create_semaphore( bool kernel, const char* name, semaphore_type_
 
     hashtable_add( &context->semaphore_table, ( hashitem_t* )semaphore );
 
-    spinunlock_enable( &context->lock );
-
     id = semaphore->id;
+
+    spinunlock_enable( &context->lock );
 
     if ( flags & SEMAPHORE_GLOBAL ) {
         id |= GLOBAL;
@@ -149,6 +149,8 @@ static int do_delete_semaphore( bool kernel, semaphore_id id ) {
         context = current_process()->semaphore_context;
     }
 
+    /* First we remove the semaphore from the context */
+
     spinlock_disable( &context->lock );
 
     semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
@@ -163,11 +165,15 @@ static int do_delete_semaphore( bool kernel, semaphore_id id ) {
 
     spinunlock_enable( &context->lock );
 
+    /* Wake up threads waiting for this semaphore */
+
     spinlock_disable( &scheduler_lock );
 
     waitqueue_wake_up_all( &semaphore->waiters );
 
     spinunlock_enable( &scheduler_lock );
+
+    /* Free the resources allocated by the semaphore */
 
     free_semaphore( semaphore );
 
