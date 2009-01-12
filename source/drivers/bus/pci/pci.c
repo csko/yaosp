@@ -45,7 +45,7 @@ typedef struct pci_access {
 } pci_access_t;
 
 static pci_access_t* pci_access;
-static spinlock_t pci_lock = INIT_SPINLOCK;
+static spinlock_t pci_lock = INIT_SPINLOCK( "PCI" );
 
 static int pci_device_count = 0;
 static pci_device_t* pci_devices[ MAX_PCI_DEVICES ];

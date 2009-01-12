@@ -59,7 +59,7 @@ uint32_t memory_page_count;
 
 ptr_t first_free_page_index;
 
-static spinlock_t pages_lock = INIT_SPINLOCK;
+static spinlock_t pages_lock = INIT_SPINLOCK( "Page allocator" );
 
 extern int __kernel_end;
 

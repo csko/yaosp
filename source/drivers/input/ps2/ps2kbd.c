@@ -33,7 +33,7 @@ static int size = 0;
 static uint8_t kbd_status = 0; /* LEDs */
 
 static semaphore_id sync;
-static spinlock_t ps2kbd_lock = INIT_SPINLOCK;
+static spinlock_t ps2kbd_lock = INIT_SPINLOCK( "PS/2 keyboard" );
 
 static int ps2_keyboard_handler( int irq, void* data, registers_t* regs ) {
     uint8_t scancode = inb( PS2KBD_PORT_KBD );

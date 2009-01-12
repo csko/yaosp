@@ -108,6 +108,7 @@ void kernel_main( void ) {
     }
 
     init_smp_late();
+    init_thread_cleaner();
 
     /* Create the init thread */
 

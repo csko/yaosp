@@ -30,7 +30,7 @@
 
 static uint64_t system_time = 0;
 static uint64_t boot_time = 0;
-static spinlock_t time_lock = INIT_SPINLOCK;
+static spinlock_t time_lock = INIT_SPINLOCK( "PIT" );
 
 static int pit_irq( int irq, void* data, registers_t* regs ) {
     /* Increment the system time */

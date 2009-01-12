@@ -27,7 +27,7 @@
 #define BCDTOBIN(val) ( ( ( val ) & 0x0f ) + ( ( val ) >> 4 ) * 10 )
 #define BINTOBCD(val) ( ( ( ( val ) / 10 ) << 4 ) + ( val ) % 10 )
 
-static spinlock_t datetime_lock = INIT_SPINLOCK;
+static spinlock_t datetime_lock = INIT_SPINLOCK( "datetime" );
 
 void gethwclock( tm_t* tm ) {
     uint8_t portdata;

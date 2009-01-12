@@ -31,7 +31,7 @@ atomic_get:
     movl 4(%esp), %edx
     movl (%edx), %eax
     ret
-.size atomic_get,.-atomci_get
+.size atomic_get,.-atomic_get
 
 /* int atomic_set( atomic_t* atomic, int value ); */
 

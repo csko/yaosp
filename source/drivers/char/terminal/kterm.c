@@ -36,7 +36,7 @@ static size_t read_pos;
 static size_t write_pos;
 static char kterm_buffer[ KTERM_BUFSIZE ];
 static semaphore_id kterm_sync;
-static spinlock_t kterm_lock = INIT_SPINLOCK;
+static spinlock_t kterm_lock = INIT_SPINLOCK( "kernel terminal" );
 static thread_id kterm_flusher;
 
 static void kterm_putchar( console_t* console, char c ) {

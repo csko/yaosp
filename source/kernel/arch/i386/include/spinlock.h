@@ -24,13 +24,14 @@
 #include <arch/atomic.h>
 
 typedef struct spinlock {
+    const char* name;
     atomic_t locked;
     bool enable_interrupts;
 } spinlock_t;
 
-#define INIT_SPINLOCK { ATOMIC_INIT(0), false }
+#define INIT_SPINLOCK(name) { name, ATOMIC_INIT(0), false }
 
-int init_spinlock( spinlock_t* lock );
+int init_spinlock( spinlock_t* lock, const char* name );
 
 /**
  * Locks a spinlock.

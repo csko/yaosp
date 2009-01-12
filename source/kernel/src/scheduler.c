@@ -32,7 +32,7 @@ thread_t* first_expired;
 thread_t* last_expired;
 
 waitqueue_t sleep_queue;
-spinlock_t scheduler_lock = INIT_SPINLOCK;
+spinlock_t scheduler_lock = INIT_SPINLOCK( "scheduler" );
 
 int add_thread_to_ready( thread_t* thread ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );

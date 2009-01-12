@@ -25,7 +25,7 @@
 
 static console_t* screen = NULL;
 static console_t* debug = NULL;
-static spinlock_t console_lock = INIT_SPINLOCK;
+static spinlock_t console_lock = INIT_SPINLOCK( "console" );
 
 int console_set_screen( console_t* console ) {
     if ( ( console != NULL ) && ( console->ops->init != NULL ) ) {
@@ -156,6 +156,24 @@ int dprintf( const char* format, ... ) {
     }
 
     spinunlock_enable( &console_lock );
+
+    return 0;
+}
+
+int dprintf_unlocked( const char* format, ... ) {
+    va_list args;
+
+    /* Print the text */
+
+    va_start( args, format );
+    do_printf( dprintf_helper, NULL, format, args );
+    va_end( args );
+
+    /* Flush the debug console */
+
+    if ( ( debug != NULL ) && ( debug->ops->flush != NULL ) ) {
+        debug->ops->flush( debug );
+    }
 
     return 0;
 }

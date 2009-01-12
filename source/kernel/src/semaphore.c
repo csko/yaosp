@@ -415,7 +415,7 @@ int init_semaphore_context( semaphore_context_t* context ) {
 
     /* Initialize the spinlock */
 
-    error = init_spinlock( &context->lock );
+    error = init_spinlock( &context->lock, "Semaphore context" );
 
     if ( error < 0 ) {
         return error;

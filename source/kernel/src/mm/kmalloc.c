@@ -28,7 +28,7 @@
 #include <arch/spinlock.h>
 #include <arch/mm/config.h>
 
-static spinlock_t kmalloc_lock = INIT_SPINLOCK;
+static spinlock_t kmalloc_lock = INIT_SPINLOCK( "kmalloc" );
 static kmalloc_block_t* root = NULL;
 
 static kmalloc_block_t* __kmalloc_create_block( uint32_t pages ) {

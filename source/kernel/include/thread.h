@@ -98,5 +98,6 @@ int wake_up_thread( thread_id id );
 thread_t* get_thread_by_id( thread_id id );
 
 int init_threads( void );
+int init_thread_cleaner( void );
 
 #endif // _THREAD_H_
