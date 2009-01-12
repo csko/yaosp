@@ -27,16 +27,11 @@
 #define MINUTES_PER_HOUR 60
 #define HOURS_PER_DAY 24
 
-#define STRFT_ALTFORM 0x01
-
 /* The number of days that come before each month */
 extern const unsigned short int monthdays[ 13 ]; /* Common year */
 extern const unsigned short int monthdays2[ 13 ]; /* Leap year */
 /* The number of days passed in N years after 1970 or any leap year */
 extern const unsigned short int sumofdays[ 60 ];
-
-/* Converts a broken-down time to UNIX timestamp */
-uint64_t timestamp(tm_t* time);
 
 /* Converts a UNIX timestamp to a broken-down time */
 tm_t gettime(time_t time);

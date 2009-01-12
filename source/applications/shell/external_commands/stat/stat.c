@@ -18,13 +18,15 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 
 int do_stat( char* file ) {
     struct stat st;
     char device_id[15];
     char* type;
-//    char buf[40];
+    char buf[sizeof( "DDD MMM DD HH:MM:SS ZZZ YYYY" ) + 1];
+    tm_t* timeval;
 
     if ( stat( file, &st ) != 0 ) {
         return -1;
@@ -54,12 +56,27 @@ int do_stat( char* file ) {
     snprintf( device_id, sizeof( device_id ), "%xh/%dd", st.st_dev, st.st_dev );
     printf( "Device: %s Inode: %-11lld Links: %d\n", device_id, st.st_ino, st.st_nlink );
     printf( "Access: none               Uid: none               Gid: none\n" );
-//    strftime( buf, sizeof( buf ), "%c" &st.st_atime );
-    printf( "Access: %llu\n", st.st_atime );
-//    strftime( buf, sizeof( buf ), "%c" &st.st_mtime );
-    printf( "Modify: %llu\n", st.st_mtime );
-//    strftime( buf, sizeof( buf ), "%c" &st.st_ctime );
-    printf( "Change: %llu\n", st.st_ctime );
+
+    timeval = gmtime((const time_t*) &st.st_atime);
+    if(timeval != NULL) {
+        strftime( buf, sizeof( buf ), "%c", timeval );
+        printf( "Access: %s\n", buf );
+    }
+//    printf( "Access: %llu\n", st.st_atime );
+
+    timeval = gmtime((const time_t*) &st.st_mtime);
+    if(timeval != NULL) {
+        strftime( buf, sizeof( buf ), "%c", timeval );
+        printf( "Modify: %s\n", buf );
+    }
+//    printf( "Modify: %llu\n", st.st_mtime );
+
+    timeval = gmtime((const time_t*) &st.st_ctime);
+    if(timeval != NULL) {
+        strftime( buf, sizeof( buf ), "%c", timeval );
+        printf( "Change: %s\n", buf );
+    }
+//    printf( "Change: %llu\n", st.st_ctime );
 
     return 0;
 }

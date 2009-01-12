@@ -34,11 +34,6 @@ const unsigned short int sumofdays[ 60 ] =
   13880, 14245, 14610, 14976, 15341, 15706, 16071, 16437, 16802, 17167, 17532,
   17898, 18263, 18628, 18993, 19359, 19724, 20089, 20454, 20820, 21185, 21550 };
 
-uint64_t timestamp(tm_t* time) {
-    return daysdiff(time->year, time->mon, time->mday) * SECONDS_PER_DAY +
-          time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MINUTE + time->sec;
-}
-
 tm_t gettime( time_t timeval ) {
     tm_t ret;
     int i;

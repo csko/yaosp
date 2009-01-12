@@ -21,7 +21,6 @@
 #include <console.h>
 #include <scheduler.h>
 #include <time.h>
-#include <lib/time.h> /* timestamp() */
 
 #include <arch/pit.h>
 #include <arch/io.h>
@@ -79,7 +78,7 @@ int init_system_time( void ) {
     uint64_t i;
 
     gethwclock( &now );
-    i = 1000000 * timestamp( &now );
+    i = 1000000 * mktime( &now );
 
     spinlock_disable( &time_lock );
 

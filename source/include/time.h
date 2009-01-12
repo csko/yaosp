@@ -46,6 +46,13 @@ typedef struct tm {
     int isdst;  /* Daylight saving [-1/0/1] */
 } tm_t ;
 
-time_t time(time_t* tloc);
+size_t strftime(char *s, size_t max, const char *format,
+                const struct tm *tm);
+
+/* Converts a broken-down time to UNIX timestamp */
+time_t mktime(tm_t* tloc);
+
+tm_t* gmtime(const time_t* timep);
+tm_t* gmtime_r(const time_t* timep, tm_t* result);
 
 #endif // _TIME_H_

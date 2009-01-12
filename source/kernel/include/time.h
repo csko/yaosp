@@ -59,5 +59,12 @@ extern const char* day_names[ 7 ];
 extern const char* sday_names[ 7 ];
 
 size_t strftime(char* s, size_t max, const char* format,
-                       const tm_t* tm);
+                const tm_t* tm);
+
+/* Converts a broken-down time to UNIX timestamp */
+time_t mktime(tm_t* tm);
+
+tm_t* gmtime(const time_t* timep);
+tm_t* gmtime_r(const time_t* timep, tm_t* result);
+
 #endif // _TIME_H_

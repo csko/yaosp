@@ -1,7 +1,6 @@
-/* Date and time handling
+/* yaosp C library
  *
  * Copyright (c) 2009 Kornel Csernai
- * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -17,11 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <lib/string.h>
-#include <lib/time.h>
+#include <string.h>
+#include <stdio.h>
 #include <time.h>
-
-#include <arch/pit.h> /* get_system_time() */
 
 #define APPEND( str ) \
         ret += strlen(str); \
@@ -50,29 +47,6 @@ const char* day_names[ 7 ] = { "Sunday", "Monday",
 const char* sday_names[ 7 ] = { "Sun", "Mon", "Tue",
                                 "Wed", "Thu", "Fri",
                                 "Sat" };
-
-int sys_time(int* tloc) {
-    int ret = (int) (get_system_time() / 1000000);
-    if(tloc != NULL) {
-        *tloc = ret;
-    }
-    return ret;
-}
-
-int sys_stime(int* tptr) {
-    /* TODO */
-    return 0;
-}
-
-int sys_gettimeofday(timeval_t* tv, timezone_t* tz) {
-    /* TODO */
-    return 0;
-}
-
-int sys_settimeofday(timeval_t* tv, timezone_t* tz) {
-    /* TODO */
-    return 0;
-}
 
 size_t strftime(char* s, size_t max, const char* format,
                 const tm_t* tm){
@@ -298,17 +272,4 @@ size_t strftime(char* s, size_t max, const char* format,
     s[ret] = '\0';
 
     return ret;
-}
-
-time_t mktime(tm_t* time) {
-    return daysdiff(time->year, time->mon, time->mday) * SECONDS_PER_DAY +
-           time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MINUTE + time->sec;
-}
-
-tm_t* gmtime(const time_t* timep) {
-    return NULL;
-}
-
-tm_t* gmtime_r(const time_t* timep, tm_t* result) {
-    return NULL;
 }

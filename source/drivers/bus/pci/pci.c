@@ -391,8 +391,8 @@ static int pci_scan_device( int bus, int dev, int func ) {
                 vendor_name = "Unknown vendor";
                 device_name = "Unknown device";
             } else {
-                vendor_name = pci_device_id_list[index].name;
-                device_name = get_device_name( device_id, index );
+                vendor_name = (char*) pci_device_id_list[index].name;
+                device_name = (char*) get_device_name( device_id, index );
                 if ( device_name == NULL ) {
                     device_name = "Unknown device";
                 }
