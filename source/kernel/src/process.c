@@ -78,6 +78,13 @@ error1:
     return NULL;
 }
 
+void destroy_process( process_t* process ) {
+    delete_semaphore( process->lock );
+    delete_semaphore( process->waiters );
+    kfree( process->name );
+    kfree( process );
+}
+
 int insert_process( process_t* process ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
 
@@ -92,6 +99,12 @@ int insert_process( process_t* process ) {
     hashtable_add( &process_table, ( hashitem_t* )process );
 
     return 0;
+}
+
+void remove_process( process_t* process ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
+    hashtable_remove( &process_table, ( const void* )process->id );
 }
 
 process_t* get_process_by_id( process_id id ) {

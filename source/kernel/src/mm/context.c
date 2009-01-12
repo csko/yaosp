@@ -251,6 +251,8 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
         return NULL;
     }
 
+    /* Go throught regions and clone each one */
+
     for ( i = 0; i < old_context->region_count; i++ ) {
         region_t* region;
         region_t* new_region;

@@ -40,7 +40,8 @@ int sys_fork( void ) {
     new_process = allocate_process( this_process->name );
 
     if ( new_process == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error1;
     }
 
     /* Clone the memory context of the old process */
@@ -48,8 +49,8 @@ int sys_fork( void ) {
     new_process->memory_context = memory_context_clone( this_process->memory_context );
 
     if ( new_process->memory_context == NULL ) {
-        /* TODO: delete the process */
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error2;
     }
 
     /* Clone the I/O context */
@@ -57,7 +58,8 @@ int sys_fork( void ) {
     new_process->io_context = io_context_clone( this_process->io_context );
 
     if ( new_process->io_context == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error3;
     }
 
     /* Clone the semaphore context */
@@ -65,34 +67,64 @@ int sys_fork( void ) {
     new_process->semaphore_context = semaphore_context_clone( this_process->semaphore_context );
 
     if ( new_process->semaphore_context == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error4;
     }
 
     new_thread = allocate_thread( this_thread->name, new_process );
 
     if ( new_thread == NULL ) {
-        /* TODO: cleanup */
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error5;
     }
 
     error = arch_do_fork( this_thread, new_thread );
 
     if ( error < 0 ) {
-        /* TODO: cleanup */
-        return error;
+        goto error6;
     }
 
     /* Insert the new process and thread */
 
     spinlock_disable( &scheduler_lock );
 
-    insert_process( new_process );
-    insert_thread( new_thread );
-    add_thread_to_ready( new_thread );
+    error = insert_process( new_process );
 
-    error = new_process->id;
+    if ( error >= 0 ) {
+        error = insert_thread( new_thread );
+
+        if ( error >= 0 ) {
+            add_thread_to_ready( new_thread );
+
+            error = new_process->id;
+        } else {
+            remove_process( new_process );
+        }
+    }
 
     spinunlock_enable( &scheduler_lock );
 
+    if ( error < 0 ) {
+        goto error6;
+    }
+
+    return error;
+
+error6:
+    /* TODO: destroy thread */
+
+error5:
+    /* TODO: destroy semaphore context */
+
+error4:
+    /* TODO: detroy I/O context */
+
+error3:
+    /* TODO: destroy memory context */
+
+error2:
+    destroy_process( new_process );
+
+error1:
     return error;
 }

@@ -46,7 +46,9 @@ typedef struct process {
 } process_t;
 
 process_t* allocate_process( char* name );
+void destroy_process( process_t* process );
 int insert_process( process_t* process );
+void remove_process( process_t* process );
 
 process_t* get_process_by_id( process_id id );
 
