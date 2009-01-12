@@ -60,6 +60,8 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
         inode = cache->free_inodes;
         cache->free_inodes = inode->next_free;
         cache->free_inode_count--;
+
+        ASSERT( cache->free_inode_count >= 0 );
     } else {
         inode = ( inode_t* )kmalloc( sizeof( inode_t ) );
 
@@ -75,8 +77,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
     inode->inode_number = inode_number;
     inode->mount_point = mount_point;
     inode->mount = NULL;
-
-    UNLOCK( cache->lock );
+    atomic_set( &inode->ref_count, 1 );
 
     /* Read the inode from the filesystem */
 
@@ -86,8 +87,6 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
         ( void** )&inode->fs_node
     );
 
-    LOCK( cache->lock );
-
     /* In the case of an error we free the inode and
        return NULL */
 
@@ -96,6 +95,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
             inode->next_free = cache->free_inodes;
             cache->free_inodes = inode;
             cache->free_inode_count++;
+            inode = NULL;
         }
 
         UNLOCK( cache->lock );
@@ -105,13 +105,9 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
         return NULL;
     }
 
-    /* This is a new inode so the reference count should be 1 */
-
-    atomic_set( &inode->ref_count, 1 );
-
     /* Insert to the inode table */
 
-    error = hashtable_add( &mount_point->inode_cache.inode_table, ( void* )inode );
+    error = hashtable_add( &cache->inode_table, ( void* )inode );
 
     if ( error < 0 ) {
         tmp_fs_node = inode->fs_node;
@@ -119,8 +115,8 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
         if ( cache->free_inode_count < cache->max_free_inode_count ) {
             inode->next_free = cache->free_inodes;
             cache->free_inodes = inode;
-            inode = NULL;
             cache->free_inode_count++;
+            inode = NULL;
         }
 
         UNLOCK( cache->lock );
@@ -144,6 +140,8 @@ int put_inode( inode_t* inode ) {
     inode_cache_t* cache;
     mount_point_t* mount_point;
 
+    ASSERT( atomic_get( &inode->ref_count ) > 0 );
+
     mount_point = inode->mount_point;
     cache = &mount_point->inode_cache;
 
@@ -157,8 +155,8 @@ int put_inode( inode_t* inode ) {
         if ( cache->free_inode_count < cache->max_free_inode_count ) {
             inode->next_free = cache->free_inodes;
             cache->free_inodes = inode;
-            inode = NULL;
             cache->free_inode_count++;
+            inode = NULL;
         }
 
         UNLOCK( cache->lock );
@@ -255,7 +253,7 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
         put_inode( parent );
 
         if ( inode == NULL ) {
-            return -1;
+            return -ENOMEM;
         }
 
         /* Follow possible mount point */
@@ -302,6 +300,7 @@ int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode )
     );
 
     if ( error < 0 ) {
+        put_inode( parent );
         return error;
     }
 
