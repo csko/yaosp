@@ -65,6 +65,14 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
     kvprintf( format, args );
     va_end( args );
 
+    kprintf(
+        "Coming from: %x %x %x %x\n",
+        __builtin_return_address( 0 ),
+        __builtin_return_address( 1 ),
+        __builtin_return_address( 2 ),
+        __builtin_return_address( 3 )
+    );
+
     halt_loop();
 }
 

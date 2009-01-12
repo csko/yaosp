@@ -185,12 +185,10 @@ void kfree( void* p ) {
 
     if ( chunk->magic != KMALLOC_CHUNK_MAGIC ) {
         panic( "kfree(): Tried to free an invalid memory region! (%x)\n", p );
-        goto out;
     }
 
     if ( chunk->type != CHUNK_ALLOCATED ) {
         panic( "kfree(): Tried to free a non-allocated memory region! (%x)\n", p );
-        goto out;
     }
 
     /* make the current chunk free */
