@@ -198,11 +198,12 @@ int clone_kernel_region(
     region_t* new_region
 ) {
     int error;
-    uint32_t addr;
-    uint32_t* old_pgd_entry;
-    uint32_t* old_pt_entry;
-    uint32_t* new_pgd_entry;
-    uint32_t* new_pt_entry;
+    uint32_t i;
+    uint32_t count;
+    uint32_t pt_index;
+    uint32_t pd_index;
+    register uint32_t* old_pt;
+    register uint32_t* new_pt;
 
     error = map_region_page_tables(
         new_arch_context,
@@ -215,14 +216,113 @@ int clone_kernel_region(
         return error;
     }
 
-    for ( addr = old_region->start; addr < old_region->start + old_region->size; addr += PAGE_SIZE ) {
-        old_pgd_entry = page_directory_entry( old_arch_context, addr );
-        old_pt_entry = page_table_entry( *old_pgd_entry, addr );
+    count = old_region->size / PAGE_SIZE;
+    pd_index = old_region->start >> PGDIR_SHIFT;
+    pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
+    old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+    new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
 
-        new_pgd_entry = page_directory_entry( new_arch_context, addr );
-        new_pt_entry = page_table_entry( *new_pgd_entry, addr );
+    for ( i = 0; i < count; i++ ) {
+        new_pt[ pt_index ] = old_pt[ pt_index ];
 
-        *new_pt_entry = *old_pt_entry;
+        if ( ++pt_index == 1024 ) {
+            pt_index = 0;
+            pd_index++;
+
+            old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+            new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        }
+    }
+
+    return 0;
+}
+
+static int clone_user_region_pages( 
+    i386_memory_context_t* old_arch_context,
+    region_t* old_region,
+    i386_memory_context_t* new_arch_context,
+    region_t* new_region
+) {
+    void* p;
+    uint32_t i;
+    uint32_t count;
+    uint32_t pt_index;
+    uint32_t pd_index;
+    uint32_t old_pt_entry;
+    register uint32_t* old_pt;
+    register uint32_t* new_pt;
+
+    count = old_region->size / PAGE_SIZE;
+    pd_index = old_region->start >> PGDIR_SHIFT;
+    pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
+    old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+    new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+
+    for ( i = 0; i < count; i++ ) {
+        p = alloc_pages( 1 );
+
+        if ( p == NULL ) {
+            return -ENOMEM;
+        }
+
+        old_pt_entry = old_pt[ pt_index ];
+
+        memcpy( p, ( void* )( old_pt_entry & PAGE_MASK ), PAGE_SIZE );
+
+        new_pt[ pt_index ] = ( uint32_t )p | ( old_pt_entry & ~PAGE_MASK );
+
+        if ( ++pt_index == 1024 ) {
+            pt_index = 0;
+            pd_index++;
+
+            old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+            new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        }
+    }
+
+    return 0;
+}
+
+static int clone_user_region_contiguous( 
+    i386_memory_context_t* old_arch_context,
+    region_t* old_region,
+    i386_memory_context_t* new_arch_context,
+    region_t* new_region
+) {
+    int i;
+    void* p;
+    uint8_t* tmp;
+    uint32_t count;
+    uint32_t pt_index;
+    uint32_t pd_index;
+    register uint32_t* old_pt;
+    register uint32_t* new_pt;
+
+    count = old_region->size / PAGE_SIZE;
+
+    p = alloc_pages( count );
+
+    if ( p == NULL ) {
+        return -ENOMEM;
+    }
+
+    pd_index = old_region->start >> PGDIR_SHIFT;
+    pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
+    old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+    new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+
+    memcpy( p, ( void* )( old_pt[ pt_index ] & PAGE_MASK ), old_region->size );
+
+    for ( i = 0; i < count; i++, tmp += PAGE_SIZE ) {
+        new_pt[ pt_index ] = ( uint32_t )tmp | ( old_pt[ pt_index ] & ~PAGE_MASK );
+
+        if ( ++pt_index == 1024 ) {
+            pt_index = 0;
+            pd_index++;
+
+            old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+            new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        }
     }
 
     return 0;
@@ -234,13 +334,7 @@ int clone_user_region(
     i386_memory_context_t* new_arch_context,
     region_t* new_region
 ) {
-    void* p;
     int error;
-    uint32_t addr;
-    uint32_t* old_pgd_entry;
-    uint32_t* old_pt_entry;
-    uint32_t* new_pgd_entry;
-    uint32_t* new_pt_entry;
 
     error = map_region_page_tables(
         new_arch_context,
@@ -255,50 +349,19 @@ int clone_user_region(
 
     switch ( ( int )old_region->alloc_method ) {
         case ALLOC_PAGES :
-            for ( addr = old_region->start; addr < old_region->start + old_region->size; addr += PAGE_SIZE ) {
-                old_pgd_entry = page_directory_entry( old_arch_context, addr );
-                old_pt_entry = page_table_entry( *old_pgd_entry, addr );
+            error = clone_user_region_pages( old_arch_context, old_region, new_arch_context, new_region );
 
-                new_pgd_entry = page_directory_entry( new_arch_context, addr );
-                new_pt_entry = page_table_entry( *new_pgd_entry, addr );
-
-                p = alloc_pages( 1 );
-
-                if ( p == NULL ) {
-                    return -ENOMEM;
-                }
-
-                memcpy( p, ( void* )( *old_pt_entry & PAGE_MASK ), PAGE_SIZE );
-
-                *new_pt_entry = ( uint32_t )p | ( *old_pt_entry & ( PAGE_SIZE - 1 ) );
+            if ( error < 0 ) {
+                return error;
             }
 
             break;
 
         case ALLOC_CONTIGUOUS : {
-            uint8_t* tmp;
+            error = clone_user_region_contiguous( old_arch_context, old_region, new_arch_context, new_region );
 
-            p = alloc_pages( old_region->size / PAGE_SIZE );
-
-            if ( p == NULL ) {
-                return -ENOMEM;
-            }
-
-            old_pgd_entry = page_directory_entry( old_arch_context, old_region->start );
-            old_pt_entry = page_table_entry( *old_pgd_entry, old_region->start );
-
-            memcpy( p, ( void* )( *old_pt_entry & PAGE_MASK ), old_region->size );
-
-            tmp = ( uint8_t* )p;
-
-            for ( addr = old_region->start; addr < old_region->start + old_region->size; addr += PAGE_SIZE, tmp += PAGE_SIZE ) {
-                old_pgd_entry = page_directory_entry( old_arch_context, addr );
-                old_pt_entry = page_table_entry( *old_pgd_entry, addr );
-
-                new_pgd_entry = page_directory_entry( new_arch_context, addr );
-                new_pt_entry = page_table_entry( *new_pgd_entry, addr );
-
-                *new_pt_entry = *tmp | ( *old_pt_entry & ( PAGE_SIZE - 1 ) );
+            if ( error < 0 ) {
+                return error;
             }
 
             break;
