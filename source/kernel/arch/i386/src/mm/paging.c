@@ -62,10 +62,14 @@ int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, ui
 
 int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t physical, uint32_t size, bool kernel ) {
     int error;
-    ptr_t addr;
-    uint32_t* pgd_entry;
-    uint32_t* pt_entry;
+    uint32_t i;
     uint32_t flags;
+    uint32_t count;
+    uint32_t pd_index;
+    uint32_t pt_index;
+    uint32_t* pt;
+
+    /* Create the page tables if required */
 
     error = map_region_page_tables( arch_context, virtual, size, kernel );
 
@@ -73,17 +77,32 @@ int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t 
         return error;
     }
 
+    /* Decide which flags to use for the pages */
+
     flags = PRESENT | WRITE;
 
     if ( !kernel ) {
         flags |= USER;
     }
 
-    for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE, physical += PAGE_SIZE ) {
-        pgd_entry = page_directory_entry( arch_context, addr );
-        pt_entry = page_table_entry( *pgd_entry, addr );
+    /* Do the page mapping */
 
-        *pt_entry = physical | flags;
+    count = size / PAGE_SIZE;
+    pd_index = virtual >> PGDIR_SHIFT;
+    pt_index = ( virtual >> PAGE_SHIFT ) & 1023;
+    pt = ( uint32_t* )( arch_context->page_directory[ pd_index ] & PAGE_MASK );
+
+    for ( i = 0; i < count; i++, physical += PAGE_SIZE ) {
+        pt[ pt_index ] = ( uint32_t )physical | flags;
+
+        if ( pt_index == 1023 ) {
+            pt_index = 0;
+            pd_index++;
+
+            pt = ( uint32_t* )( arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        } else {
+            pt_index++;
+        }
     }
 
     return 0;
@@ -225,12 +244,14 @@ int clone_kernel_region(
     for ( i = 0; i < count; i++ ) {
         new_pt[ pt_index ] = old_pt[ pt_index ];
 
-        if ( ++pt_index == 1024 ) {
+        if ( pt_index == 1023 ) {
             pt_index = 0;
             pd_index++;
 
             old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
             new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        } else {
+            pt_index++;
         }
     }
 
@@ -271,12 +292,14 @@ static int clone_user_region_pages(
 
         new_pt[ pt_index ] = ( uint32_t )p | ( old_pt_entry & ~PAGE_MASK );
 
-        if ( ++pt_index == 1024 ) {
+        if ( pt_index == 1023 ) {
             pt_index = 0;
             pd_index++;
 
             old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
             new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        } else {
+            pt_index++;
         }
     }
 
@@ -316,12 +339,14 @@ static int clone_user_region_contiguous(
     for ( i = 0; i < count; i++, tmp += PAGE_SIZE ) {
         new_pt[ pt_index ] = ( uint32_t )tmp | ( old_pt[ pt_index ] & ~PAGE_MASK );
 
-        if ( ++pt_index == 1024 ) {
+        if ( pt_index == 1023 ) {
             pt_index = 0;
             pd_index++;
 
             old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
             new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        } else {
+            pt_index++;
         }
     }
 
