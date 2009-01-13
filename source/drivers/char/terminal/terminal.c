@@ -98,41 +98,41 @@ int terminal_switch_to( int index ) {
 
 static int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
     bool done;
+    term_buffer_item_t* last_line;
 
     /* Check if we can insert to the last line */
 
-    if ( ( terminal->line_count > 0 ) &&
-         ( ( terminal->lines[ terminal->line_count - 1 ].flags & TERM_BUFFER_LINE_END ) == 0 ) &&
-         ( terminal->lines[ terminal->line_count - 1 ].size < TERMINAL_WIDTH ) ) {
-        term_buffer_item_t* last_line;
-
-        done = false;
+    if ( terminal->line_count > 0 ) {
         last_line = &terminal->lines[ terminal->line_count - 1 ];
 
-        while ( ( size > 0 ) && ( last_line->size < TERMINAL_WIDTH ) && ( !done ) ) {
-            switch ( *buf ) {
-                case '\n' :
-                    last_line->flags |= TERM_BUFFER_LINE_END;
-                    done = true;
-                    break;
+        if ( ( ( last_line->flags & TERM_BUFFER_LINE_END ) == 0 ) &&
+             ( last_line->size < TERMINAL_WIDTH ) ) {
+            done = false;
 
-                default :
-                    last_line->buffer[ last_line->size++ ] = *buf;
-                    break;
+            while ( ( size > 0 ) && ( last_line->size < TERMINAL_WIDTH ) && ( !done ) ) {
+                switch ( *buf ) {
+                    case '\n' :
+                        last_line->flags |= TERM_BUFFER_LINE_END;
+                        done = true;
+                        break;
+
+                    default :
+                        last_line->buffer[ last_line->size++ ] = *buf;
+                        break;
+                }
+
+                buf++;
+                size--;
             }
 
-            buf++;
-            size--;
+            last_line->buffer[ last_line->size ] = 0;
         }
-
-        last_line->buffer[ last_line->size ] = 0;
     }
 
     /* Create new line(s) for the rest of the data */
 
     while ( size > 0 ) {
         char* buffer;
-        term_buffer_item_t* last_line;
 
         if ( terminal->line_count == TERMINAL_MAX_LINES ) {
             buffer = terminal->lines[ 0 ].buffer;
