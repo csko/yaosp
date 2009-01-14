@@ -39,7 +39,8 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
                 arch_context,
                 region->start,
                 region->size,
-                ( region->flags & REGION_KERNEL ) != 0
+                ( region->flags & REGION_KERNEL ) != 0,
+                ( region->flags & REGION_WRITE ) != 0
             );
 
             if ( error < 0 ) {
@@ -62,7 +63,8 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
                 region->start,
                 ( ptr_t )p,
                 region->size,
-                ( region->flags & REGION_KERNEL ) != 0
+                ( region->flags & REGION_KERNEL ) != 0,
+                ( region->flags & REGION_WRITE ) != 0
             );
 
             if ( error < 0 ) {
@@ -132,7 +134,8 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
                     arch_context,
                     region->start + region->size,
                     new_size - region->size,
-                    ( region->flags & REGION_KERNEL ) != 0
+                    ( region->flags & REGION_KERNEL ) != 0,
+                    ( region->flags & REGION_WRITE ) != 0
                 );
 
                 if ( error < 0 ) {

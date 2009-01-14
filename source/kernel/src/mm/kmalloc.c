@@ -244,7 +244,6 @@ void kfree( void* p ) {
         chunk->block->biggest_free = chunk->size;
     }
 
-out:
     spinunlock_enable( &kmalloc_lock );
 }
 

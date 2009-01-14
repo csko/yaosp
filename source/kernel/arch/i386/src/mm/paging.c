@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <types.h>
 #include <kernel.h>
+#include <macros.h>
 #include <mm/context.h>
 #include <mm/pages.h>
 #include <mm/region.h>
@@ -28,6 +29,8 @@
 #include <arch/mm/paging.h>
 
 static i386_memory_context_t i386_kernel_memory_context;
+
+extern int __text_end;
 
 int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel ) {
     void* p;
@@ -60,7 +63,14 @@ int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, ui
     return 0;
 }
 
-int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t physical, uint32_t size, bool kernel ) {
+int map_region_pages(
+    i386_memory_context_t* arch_context,
+    ptr_t virtual,
+    ptr_t physical,
+    uint32_t size,
+    bool kernel,
+    bool write
+) {
     int error;
     uint32_t i;
     uint32_t flags;
@@ -79,10 +89,14 @@ int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t 
 
     /* Decide which flags to use for the pages */
 
-    flags = PRESENT | WRITE;
+    flags = PRESENT;
 
     if ( !kernel ) {
         flags |= USER;
+    }
+
+    if ( write ) {
+        flags |= WRITE;
     }
 
     /* Do the page mapping */
@@ -108,7 +122,7 @@ int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t 
     return 0;
 }
 
-int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel ) {
+int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel, bool write ) {
     int error;
     ptr_t addr;
     uint32_t* pgd_entry;
@@ -121,10 +135,14 @@ int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uin
         return error;
     }
 
-    flags = PRESENT | WRITE;
+    flags = PRESENT;
 
     if ( !kernel ) {
         flags |= USER;
+    }
+
+    if ( write ) {
+        flags |= WRITE;
     }
 
     for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
@@ -400,9 +418,36 @@ int clone_user_region(
     return 0;
 }
 
-int init_paging( void ) {
+static int create_initial_region( const char* name, uint32_t start, uint32_t size, bool writable ) {
     int error;
     region_t* region;
+
+    region = allocate_region( name );
+
+    if ( region == NULL ) {
+        return -ENOMEM;
+    }
+
+    region->start = start;
+    region->size = size;
+    region->flags = REGION_READ | REGION_KERNEL;
+
+    if ( writable ) {
+        region->flags |= REGION_WRITE;
+    }
+
+    error = region_insert( &kernel_memory_context, region );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+int init_paging( void ) {
+    int error;
+    uint32_t text_size;
     register_t dummy;
     memory_context_t* context;
     i386_memory_context_t* arch_context;
@@ -430,19 +475,52 @@ int init_paging( void ) {
 
     /* Map the first 512 Mb to the kernel */
 
-    map_region_pages( arch_context, 0, 0, 512 * 1024 * 1024, true );
+    text_size = ( uint32_t )&__text_end - 0x100000;
+    ASSERT( ( text_size % PAGE_SIZE ) == 0 );
 
-    region = allocate_region( "kernel" );
+    map_region_pages(
+        arch_context,
+        0,
+        0,
+        1 * 1024 * 1024,
+        true,
+        true
+    );
+    map_region_pages(
+        arch_context,
+        1 * 1024 * 1024,
+        1 * 1024 * 1024,
+        text_size,
+        true,
+        false
+    );
+    map_region_pages(
+        arch_context,
+        1 * 1024 * 1024 + text_size,
+        1 * 1024 * 1024 + text_size,
+        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + text_size ),
+        true,
+        true
+    );
 
-    if ( region == NULL ) {
-        return -ENOMEM;
+    error = create_initial_region( "1mb", 0, 1 * 1024 * 1024, true );
+
+    if ( error < 0 ) {
+        return error;
     }
 
-    region->start = 0;
-    region->size = 512 * 1024 * 1024;
-    region->flags = REGION_READ | REGION_WRITE | REGION_KERNEL;
+    error = create_initial_region( "kernel_ro", 1 * 1024 * 1024, text_size, false );
 
-    error = region_insert( context, region );
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = create_initial_region(
+        "kernel_rw",
+        1 * 1024 * 1024 + text_size,
+        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + text_size ),
+        true
+    );
 
     if ( error < 0 ) {
         return error;

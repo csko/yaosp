@@ -37,8 +37,15 @@ static inline uint32_t* page_table_entry( uint32_t table, ptr_t address ) {
 }
 
 int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel );
-int map_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, ptr_t physical, uint32_t size, bool kernel );
-int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel );
+int map_region_pages(
+    i386_memory_context_t* arch_context,
+    ptr_t virtual,
+    ptr_t physical,
+    uint32_t size,
+    bool kernel,
+    bool write
+);
+int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel, bool write );
 int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 int free_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
