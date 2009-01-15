@@ -57,7 +57,7 @@ int sys_dbprintf( const char* format, char** parameters ) {
 void handle_panic( const char* file, int line, const char* format, ... ) {
     va_list args;
 
-    disable_interrupts();
+    //disable_interrupts();
 
     kprintf( "Panic at %s:%d: ", file, line );
 
@@ -65,6 +65,7 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
     kvprintf( format, args );
     va_end( args );
 
+#if 0
     kprintf(
         "Coming from: %x %x %x %x %x\n",
         __builtin_return_address( 0 ),
@@ -73,6 +74,7 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
         __builtin_return_address( 3 ),
         __builtin_return_address( 4 )
     );
+#endif
 
     halt_loop();
 }

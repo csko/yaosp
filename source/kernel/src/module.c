@@ -63,7 +63,8 @@ char* get_module_name( module_reader_t* reader ) {
 }
 
 module_id load_module( module_reader_t* reader ) {
-    int error;
+    int id;
+    bool found;
     module_t* module;
 
     if ( module_loader == NULL ) {
@@ -80,20 +81,20 @@ module_id load_module( module_reader_t* reader ) {
         return -EINVAL;
     }
 
-    error = module_loader->get_symbol( module, "init_module", ( ptr_t* )&module->init );
+    found = module_loader->get_symbol( module, "init_module", ( ptr_t* )&module->init );
 
-    if ( error < 0 ) {
+    if ( !found ) {
         module_loader->free( module );
         /* TODO: delete the module */
-        return error;
+        return -EINVAL;
     }
 
-    error = module_loader->get_symbol( module, "destroy_module", ( ptr_t* )&module->destroy );
+    found = module_loader->get_symbol( module, "destroy_module", ( ptr_t* )&module->destroy );
 
-    if ( error < 0 ) {
+    if ( !found ) {
         module_loader->free( module );
         /* TODO: delete the module */
-        return error;
+        return -EINVAL;
     }
 
     /* Insert the new module to the table */
@@ -104,13 +105,13 @@ module_id load_module( module_reader_t* reader ) {
         module->id = module_id_counter++;
     } while ( hashtable_get( &module_table, ( const void* )module->id ) != NULL );
 
-    error = module->id;
+    id = module->id;
 
     hashtable_add( &module_table, ( void* )module );
 
     UNLOCK( module_lock );
 
-    return error;
+    return id;
 }
 
 int initialize_module( module_id id ) {
