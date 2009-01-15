@@ -34,6 +34,7 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
 
 static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
     int fd;
+    int error;
     char* block;
     iso9660_cookie_t* cookie;
     iso9660_volume_descriptor_t* root;
@@ -44,7 +45,8 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
     fd = open( _device, O_RDONLY );
 
     if ( fd < 0 ) {
-        return fd;
+        error = fd;
+        goto error1;
     }
 
     /* Allocate memory for a block */
@@ -52,8 +54,8 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
     block = ( char* )kmalloc( 2048 );
 
     if ( block == NULL ) {
-        /* TODO: close */
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error2;
     }
 
     /* Read the block from the device where the iso9660
@@ -61,9 +63,8 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
 
     if ( pread( fd, block, 2048, 0x8000 ) != 2048 ) {
         kprintf( "ISO9660: Failed to read root block\n" );
-        /* TODO: close */
-        kfree( block );
-        return -EIO;
+        error = -EIO;
+        goto error3;
     }
 
     /* Check if this is a valid iso9660 filesystem */
@@ -72,15 +73,13 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
 
     if ( memcmp( root->identifier, "CD001", 5 ) != 0 ) {
         kprintf( "ISO9660: Not a valid filesystem!\n" );
-        /* TODO: close */
-        kfree( block );
-        return -EINVAL;
+        error = -EINVAL;
+        goto error3;
     }
 
     if ( root->type != ISO9660_VD_PRIMARY ) {
-        /* TODO: close */
-        kfree( block );
-        return -EINVAL;
+        error = -EINVAL;
+        goto error3;
     }
 
     /* Create the cookie for the filesystem and parse the
@@ -91,9 +90,8 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
     cookie = ( iso9660_cookie_t* )kmalloc( sizeof( iso9660_cookie_t ) );
 
     if ( cookie == NULL ) {
-        /* TODO: close */
-        kfree( block );
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error3;
     }
 
     cookie->fd = fd;
@@ -113,6 +111,15 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
     *root_inode_num = cookie->root_inode_number;
 
     return 0;
+
+error3:
+    kfree( block );
+
+error2:
+    close( fd );
+
+error1:
+    return error;
 }
 
 static int iso9660_unmount( void* fs_cookie ) {
