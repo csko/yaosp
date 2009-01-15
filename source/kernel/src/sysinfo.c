@@ -1,6 +1,6 @@
-/* Common macro definitions
+/* System information handling
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,21 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _MACROS_H_
-#define _MACROS_H_
+#include <sysinfo.h>
+#include <scheduler.h>
+#include <process.h>
+#include <thread.h>
+#include <mm/pages.h>
 
-#include <kernel.h>
+int sys_get_system_info( system_info_t* system_info ) {
+    system_info->total_page_count = get_total_page_count();
+    system_info->free_page_count = get_free_page_count();
 
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MAX(a,b) ((a)<(b)?(b):(a))
+    spinlock_disable( &scheduler_lock );
 
-#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
+    system_info->process_count = get_process_count();
+    system_info->thread_count = get_thread_count();
 
-#define ASSERT(exp) \
-    if ( !( exp ) ) { \
-        panic( "Assertion (%s) failed at: %s:%d\n", \
-            #exp, __FILE__, __LINE__ \
-        ); \
-    }
+    spinunlock_enable( &scheduler_lock );
 
-#endif // _MACROS_H_
+    return 0;
+}

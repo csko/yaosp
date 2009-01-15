@@ -50,6 +50,7 @@ void destroy_process( process_t* process );
 int insert_process( process_t* process );
 void remove_process( process_t* process );
 
+uint32_t get_process_count( void );
 process_t* get_process_by_id( process_id id );
 
 int sys_exit( int exit_code );

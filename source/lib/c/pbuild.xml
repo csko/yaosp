@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build default="all">
     <array name="files_i386">
         <item>arch/i386/syscall.S</item>
+        <item>arch/i386/getpagesize.c</item>
     </array>
 
     <array name="files">
@@ -124,6 +125,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/locale/localeconv.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
+        <item>src/yaosp/sysinfo.c</item>
     </array>
 
     <target name="clean">
@@ -148,6 +150,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc>
                 <input>${i}</input>
                 <output>objs/arch/filename(${i}).o</output>
+                <include>../../include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-m32</flag>

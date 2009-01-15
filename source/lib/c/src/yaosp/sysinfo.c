@@ -1,6 +1,6 @@
-/* Common macro definitions
+/* System information handling
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,21 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _MACROS_H_
-#define _MACROS_H_
+#include <yaosp/sysinfo.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#include <kernel.h>
-
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MAX(a,b) ((a)<(b)?(b):(a))
-
-#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
-
-#define ASSERT(exp) \
-    if ( !( exp ) ) { \
-        panic( "Assertion (%s) failed at: %s:%d\n", \
-            #exp, __FILE__, __LINE__ \
-        ); \
-    }
-
-#endif // _MACROS_H_
+int get_system_info( system_info_t* system_info ) {
+    return syscall1( SYS_get_system_info, ( int )system_info );
+}

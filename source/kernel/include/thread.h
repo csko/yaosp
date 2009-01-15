@@ -87,6 +87,13 @@ int sleep_thread( uint64_t microsecs );
 int wake_up_thread( thread_id id );
 
 /**
+ * Returnes the total number of created threads.
+ *
+ * @return The total number of threads
+ */
+uint32_t get_thread_count( void );
+
+/**
  * Returns the thread associated with the given ID.
  * You have to call this method with a locked scheduler!
  *

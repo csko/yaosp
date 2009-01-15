@@ -59,6 +59,13 @@ void free_pages( void* address, uint32_t count );
 int get_free_page_count( void );
 
 /**
+ * Returns the total number of available physical memory pages
+ *
+ * @return The total number of memory pages
+ */
+int get_total_page_count( void );
+
+/**
  * Initializes the page allocator subsystem according to
  * the multiboot structure created by the bootloader.
  *

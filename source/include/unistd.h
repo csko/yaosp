@@ -53,4 +53,6 @@ int unlink( const char* pathname );
 ssize_t readlink( const char* path, char* buf, size_t bufsiz );
 char* getcwd( char* buf, size_t size );
 
+int getpagesize( void );
+
 #endif // _UNISTD_H_

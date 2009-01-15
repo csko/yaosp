@@ -1,6 +1,6 @@
-/* Common macro definitions
+/* System information definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,21 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _MACROS_H_
-#define _MACROS_H_
+#ifndef _YAOSP_SYSINFO_H_
+#define _YAOSP_SYSINFO_H_
 
-#include <kernel.h>
+#include <sys/types.h>
 
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#define MAX(a,b) ((a)<(b)?(b):(a))
+typedef struct system_info {
+    /* Memory information */
 
-#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
+    uint32_t free_page_count;
+    uint32_t total_page_count;
 
-#define ASSERT(exp) \
-    if ( !( exp ) ) { \
-        panic( "Assertion (%s) failed at: %s:%d\n", \
-            #exp, __FILE__, __LINE__ \
-        ); \
-    }
+    /* Process & thread information */
 
-#endif // _MACROS_H_
+    uint32_t process_count;
+    uint32_t thread_count;
+} system_info_t;
+
+int get_system_info( system_info_t* system_info );
+
+#endif // _SYSINFO_H_

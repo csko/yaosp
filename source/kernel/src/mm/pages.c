@@ -138,6 +138,10 @@ int get_free_page_count( void ) {
     return atomic_get( &free_page_count );
 }
 
+int get_total_page_count( void ) {
+    return ( int )memory_page_count;
+}
+
 int init_page_allocator( multiboot_header_t* header ) {
     ptr_t i;
     ptr_t first_free_page;

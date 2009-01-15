@@ -182,6 +182,10 @@ int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, 
     return 0;
 }
 
+uint32_t hashtable_get_item_count( hashtable_t* table ) {
+    return table->item_count;
+}
+
 uint32_t hash_number( uint8_t* data, size_t length ) {
     size_t i;
     uint32_t hash;

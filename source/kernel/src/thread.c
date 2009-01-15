@@ -244,6 +244,11 @@ int wake_up_thread( thread_id id ) {
     return error;
 }
 
+uint32_t get_thread_count( void ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    return hashtable_get_item_count( &thread_table );
+}
+
 thread_t* get_thread_by_id( thread_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
     return ( thread_t* )hashtable_get( &thread_table, ( const void* )id );

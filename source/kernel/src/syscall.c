@@ -24,9 +24,10 @@
 #include <loader.h>
 #include <kernel.h>
 #include <semaphore.h>
+#include <time.h>
+#include <sysinfo.h>
 #include <mm/userspace.h>
 #include <vfs/vfs.h>
-#include <time.h>
 
 static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK },
@@ -51,7 +52,8 @@ static system_call_entry_t system_call_table[] = {
     { "getcwd", sys_getcwd, 0 },
     { "exit", sys_exit, 0 },
     { "waitpid", sys_waitpid, 0 },
-    { "time", sys_time, 0 }
+    { "time", sys_time, 0 },
+    { "get_system_info", sys_get_system_info, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

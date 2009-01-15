@@ -56,6 +56,8 @@ int hashtable_remove( hashtable_t* table, const void* key );
 
 int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data );
 
+uint32_t hashtable_get_item_count( hashtable_t* table );
+
 /* Common hash functions */
 
 uint32_t hash_number( uint8_t* data, size_t length );

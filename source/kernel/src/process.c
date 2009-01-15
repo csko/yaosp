@@ -107,6 +107,11 @@ void remove_process( process_t* process ) {
     hashtable_remove( &process_table, ( const void* )process->id );
 }
 
+uint32_t get_process_count( void ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    return hashtable_get_item_count( &process_table );
+}
+
 process_t* get_process_by_id( process_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
     return ( process_t* )hashtable_get( &process_table, ( const void* )id );
