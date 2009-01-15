@@ -23,6 +23,10 @@
 int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
     waitnode_t* current;
 
+    /* Insert the new node as the first or before the first node if the
+       waitqueue is empty or the wakeup time of the new node is less than
+       the wakeup time of the first node */
+
     if ( ( queue->first_node == NULL ) || ( node->wakeup_time < queue->first_node->wakeup_time ) ) {
         node->prev = NULL;
         node->next = queue->first_node;
@@ -30,15 +34,18 @@ int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
         queue->first_node = node;
 
         if ( node->next != NULL ) {
+            ASSERT( queue->last_node != NULL );
             node->next->prev = node;
         } else {
             ASSERT( queue->last_node == NULL );
-
             queue->last_node = node;
         }
 
         return 0;
     }
+
+    /* We have to insert to a non-trivial position so loop throught the nodes
+       and find the appropriate position for the new node */
 
     current = queue->first_node;
 
@@ -55,6 +62,8 @@ int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
         node = node->next;
     }
 
+    /* If we get here we have to insert the new node to the end of the queue */
+
     ASSERT( current == queue->last_node );
 
     node->prev = current;
@@ -67,6 +76,8 @@ int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
 }
 
 int waitqueue_add_node_tail( waitqueue_t* queue, waitnode_t* node ) {
+    /* If the queue is empty simply make this the first node */
+
     if ( queue->first_node == NULL ) {
         ASSERT( queue->last_node == NULL );
 
@@ -79,6 +90,12 @@ int waitqueue_add_node_tail( waitqueue_t* queue, waitnode_t* node ) {
         return 0;
     }
 
+    /* The queue is not empty so make the new node the last one */
+
+    ASSERT( queue->last_node != NULL );
+
+    node->next = NULL;
+
     node->prev = queue->last_node;
     queue->last_node->next = node;
 
@@ -90,10 +107,12 @@ int waitqueue_add_node_tail( waitqueue_t* queue, waitnode_t* node ) {
 int waitqueue_remove_node( waitqueue_t* queue, waitnode_t* node ) {
     if ( queue->first_node == node ) {
         queue->first_node = node->next;
+        ASSERT( node->prev == NULL );
     }
 
     if ( queue->last_node == node ) {
         queue->last_node = node->prev;
+        ASSERT( node->next == NULL );
     }
 
     if ( node->next != NULL ) {
