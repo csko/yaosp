@@ -207,7 +207,7 @@ static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* nam
 
     while ( iso9660_read_directory( fs_cookie, parent, &fake_dir_cookie, &entry ) == 1 ) {
         if ( ( strlen( entry.name ) == name_len ) &&
-             ( strncmp( entry.name, name, name_len ) == 0 ) ) {
+             ( strncasecmp( entry.name, name, name_len ) == 0 ) ) {
             *inode_num = entry.inode_number;
             return 0;
         }

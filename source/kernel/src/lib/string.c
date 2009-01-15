@@ -1,7 +1,6 @@
 /* Memory and string manipulator functions
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2008, 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +18,7 @@
 
 #include <mm/kmalloc.h>
 #include <lib/string.h>
+#include <lib/ctype.h>
 
 #include <arch/lib/string.h>
 
@@ -165,7 +165,46 @@ int strncmp( const char* s1, const char* s2, size_t c ) {
 }
 #endif // ARCH_HAVE_STRNCMP
 
-#ifndef HAVE_ARCH_STRCHR
+#ifndef ARCH_HAVE_STRCASECMP
+int strcasecmp( const char* s1, const char* s2 ) {
+    int result;
+
+    while ( true ) {
+        result = toupper( *s1 ) - toupper( *s2 );
+
+        if ( ( result != 0 ) || ( *s1 ==  0 ) ) {
+            break;
+        };
+
+        s1++;
+        s2++;
+    }
+
+    return result;
+}
+#endif // ARCH_HAVE_STRCASECMP
+
+#ifndef ARCH_HAVE_STRNCASECMP
+int strncasecmp( const char* s1, const char* s2, size_t c ) {
+    int result = 0;
+
+    while ( c ) {
+        result = toupper( *s1 ) - toupper( *s2 );
+
+        if ( ( result != 0 ) || ( *s1 == 0 ) ) {
+            break;
+        }
+
+        s1++;
+        s2++;
+        c--;
+    }
+
+    return result;
+}
+#endif // ARCH_HAVE_STRNCASECMP
+
+#ifndef ARCH_HAVE_STRCHR
 char* strchr( const char* s, int c ) {
   for ( ; *s != ( char )c; s++ ) {
     if ( *s == 0 ) {
@@ -175,9 +214,9 @@ char* strchr( const char* s, int c ) {
 
   return ( char* )s;
 }
-#endif // HAVE_ARCH_STRCHR
+#endif // ARCH_HAVE_STRCHR
 
-#ifndef HAVE_ARCH_STRRCHR
+#ifndef ARCH_HAVE_STRRCHR
 char* strrchr( const char* s, int c ) {
   const char* e = s + strlen( s );
 
@@ -189,9 +228,9 @@ char* strrchr( const char* s, int c ) {
 
   return NULL;
 }
-#endif // HAVE_ARCH_STRRCHR
+#endif // ARCH_HAVE_STRRCHR
 
-#ifndef HAVE_ARCH_STRNCPY
+#ifndef ARCH_HAVE_STRNCPY
 char* strncpy( char* d, const char* s, size_t c ) {
   char* tmp = d;
 
@@ -201,7 +240,7 @@ char* strncpy( char* d, const char* s, size_t c ) {
 
   return tmp;
 }
-#endif // HAVE_ARCH_STRNCPY
+#endif // ARCH_HAVE_STRNCPY
 
 #ifndef ARCH_HAVE_STRDUP
 char* strdup( const char* s ) {

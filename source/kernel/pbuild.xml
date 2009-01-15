@@ -95,6 +95,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/lib/udivmoddi4.c</item>
         <item>src/lib/snprintf.c</item>
         <item>src/lib/time.c</item>
+        <item>src/lib/ctype.c</item>
     </array>
 
     <target name="clean">
