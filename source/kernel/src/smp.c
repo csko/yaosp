@@ -24,8 +24,11 @@
 #include <lib/string.h>
 
 #include <arch/cpu.h>
+#include <arch/atomic.h>
 
 cpu_t processor_table[ MAX_CPU_COUNT ];
+
+static atomic_t active_processor_count = ATOMIC_INIT(0);
 
 process_t* current_process( void ) {
     return get_processor()->current_thread->process;
@@ -39,7 +42,13 @@ thread_t* idle_thread( void ) {
     return get_processor()->idle_thread;
 }
 
+int get_active_processor_count( void ) {
+    return atomic_get( &active_processor_count );
+}
+
 int init_smp( void ) {
+    atomic_inc( &active_processor_count );
+
     /* Make the boot CPU available */
 
     processor_table[ 0 ].present = true;

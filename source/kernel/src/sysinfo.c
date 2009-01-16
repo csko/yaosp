@@ -20,11 +20,13 @@
 #include <scheduler.h>
 #include <process.h>
 #include <thread.h>
+#include <smp.h>
 #include <mm/pages.h>
 
 int sys_get_system_info( system_info_t* system_info ) {
     system_info->total_page_count = get_total_page_count();
     system_info->free_page_count = get_free_page_count();
+    system_info->active_processor_count = get_active_processor_count();
 
     spinlock_disable( &scheduler_lock );
 

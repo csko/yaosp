@@ -41,6 +41,8 @@ process_t* current_process( void );
 thread_t* current_thread( void );
 thread_t* idle_thread( void );
 
+int get_active_processor_count( void );
+
 int init_smp( void );
 int init_smp_late( void );
 

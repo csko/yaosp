@@ -31,6 +31,10 @@ typedef struct system_info {
 
     uint32_t process_count;
     uint32_t thread_count;
+
+    /* Processor information */
+
+    uint32_t active_processor_count;
 } system_info_t;
 
 int get_system_info( system_info_t* system_info );

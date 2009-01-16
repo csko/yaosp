@@ -263,6 +263,11 @@ class CallTarget( Work ) :
             context = ctx.BuildContext()
             handler = hndlr.BuildHandler( context )
 
+            if not os.path.isfile( "pbuild.xml" ) :
+                print "pbuild.xml not found in " + os.getcwd()
+                print "Build stopped."
+                sys.exit( 1 );
+
             xml_parser = xml.sax.make_parser()
             xml_parser.setContentHandler( handler )
             xml_parser.parse( "pbuild.xml" )
