@@ -1,6 +1,6 @@
 /* Thread implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <config.h>
+#include <mm/region.h>
 #include <lib/hashtable.h>
 
 #include <arch/mm/config.h>
@@ -59,6 +60,7 @@ typedef struct thread {
     void* kernel_stack;
     void* kernel_stack_end;
     void* user_stack_end;
+    region_id user_stack_region;
     void* syscall_stack;
 
     void* arch_data;

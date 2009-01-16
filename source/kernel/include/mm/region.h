@@ -1,6 +1,6 @@
 /* Memory region handling
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -44,11 +44,12 @@ typedef struct region {
     hashitem_t hash;
 
     region_id id;
-    const char* name;
+    char* name;
     region_flags_t flags;
     alloc_type_t alloc_method;
     ptr_t start;
     ptr_t size;
+    struct memory_context* context;
 } region_t;
 
 typedef struct region_info {
@@ -59,12 +60,14 @@ typedef struct region_info {
 struct memory_context;
 
 region_t* allocate_region( const char* name );
+void destroy_region( region_t* region );
 
 int region_insert( struct memory_context* context, region_t* region );
 int region_remove( struct memory_context* context, region_t* region );
 
 /**
- * Creates a new memory region.
+ * Creates a new memory region in the memory context of the
+ * current process.
  *
  * @param name The name of the new memory region
  * @param size The size of the new memory region (has to be page aligned)

@@ -1,6 +1,6 @@
 /* Semaphore implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -71,9 +71,40 @@ extern semaphore_context_t kernel_semaphore_context;
  * @return On success a non-negative semaphore ID is returned
  */
 semaphore_id create_semaphore( const char* name, semaphore_type_t type, uint32_t flags, int count );
+
+/**
+ * Deletes a previously created semaphore.
+ *
+ * @param id The id of the semaphore to delete
+ * @return On succes 0 is returned
+ */
 int delete_semaphore( semaphore_id id );
+
+/**
+ * Locks a semaphore.
+ *
+ * @param id The id of the semaphore to lock
+ * @param count How many times the semaphore should be locked
+ * @param timeout The timeout for the lock operation
+ * @return On success 0 is returned
+ */
 int lock_semaphore( semaphore_id id, int count, uint64_t timeout );
+
+/**
+ * Unlocks a semaphore.
+ *
+ * @param id The id of the semaphore to unlock
+ * @param count How many times the semaphore should be unlocked
+ * @return On success 0 is returned
+ */
 int unlock_semaphore( semaphore_id id, int count );
+
+/**
+ * Checks if the specified semaphore is locked or not.
+ *
+ * @param id The id of the semaphore to check
+ * @return Returns true if the semaphore is locked
+ */
 bool is_semaphore_locked( semaphore_id id );
 
 semaphore_id sys_create_semaphore( const char* name, semaphore_type_t type, uint32_t flags, int count );

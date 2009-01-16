@@ -27,8 +27,10 @@
 
 int arch_create_region_pages( memory_context_t* context, region_t* region ) {
     int error;
+    bool do_tlb_flush;
     i386_memory_context_t* arch_context;
 
+    do_tlb_flush = true;
     arch_context = ( i386_memory_context_t* )context->arch_data;
 
     /* Create the physical pages for the memory region */
@@ -73,11 +75,21 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
 
             break;
         }
+
+        case ALLOC_LAZY :
+            panic( "Lazy page allocation not yet supported!\n" );
+            break;
+
+        default :
+            do_tlb_flush = false;
+            break;
     }
 
-    /* Invalidate TLB */
+    /* Invalidate the TLB if we changed anything that requires it */
 
-    flush_tlb();
+    if ( do_tlb_flush ) {
+        flush_tlb();
+    }
 
     return 0;
 }
@@ -87,11 +99,8 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
 
     arch_context = ( i386_memory_context_t* )context->arch_data;
 
-    if ( region->flags & REGION_REMAPPED ) {
-        switch ( region->alloc_method ) {
-            case ALLOC_NONE :
-                break;
-
+    if ( ( region->flags & REGION_REMAPPED ) == 0 ) {
+        switch ( ( int )region->alloc_method ) {
             case ALLOC_LAZY :
                 panic( "Freeing lazy allocated region not yet implemented!\n" );
                 break;

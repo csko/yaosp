@@ -83,6 +83,8 @@ thread_t* allocate_thread( const char* name, process_t* process ) {
     thread->id = -1;
     thread->state = THREAD_READY;
     thread->process = process;
+    thread->user_stack_end = NULL;
+    thread->user_stack_region = -1;
 
     reset_thread_quantum( thread );
 
@@ -90,8 +92,23 @@ thread_t* allocate_thread( const char* name, process_t* process ) {
 }
 
 void destroy_thread( thread_t* thread ) {
+    /* Destroy the architecture dependent part of the thread */
+
     arch_destroy_thread( thread );
+
+    /* Delete the userspace stack region */
+
+    if ( thread->user_stack_region >= 0 ) {
+        delete_region( thread->user_stack_region );
+        thread->user_stack_region = -1;
+    }
+
+    /* Free the kernel stack */
+
     free_pages( thread->kernel_stack, KERNEL_STACK_PAGES );
+
+    /* Free other resources allocated by the thread */
+
     kfree( thread->name );
     kfree( thread );
 }
@@ -319,10 +336,7 @@ static int thread_cleaner_entry( void* arg ) {
 
         /* Free the resources allocated by this thread */
 
-        arch_destroy_thread( thread );
-        free_pages( thread->kernel_stack, KERNEL_STACK_PAGES );
-        kfree( thread->name );
-        kfree( thread );
+        destroy_thread( thread );
     }
 
     return 0;

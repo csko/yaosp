@@ -30,8 +30,6 @@
 
 #include <arch/mm/paging.h>
 
-#define USER_STACK_PAGES ( USER_STACK_SIZE / PAGE_SIZE )
-
 static bool elf32_application_check( int fd ) {
     elf_header_t header;
 
@@ -402,7 +400,6 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
 
 static int elf32_application_load( int fd ) {
     int error;
-    void* stack_address;
     elf_header_t header;
     elf_application_t* elf_application;
 
@@ -469,23 +466,8 @@ static int elf32_application_load( int fd ) {
         return error;
     }
 
-    /* Allocate userspace stack for the thread */
-
-    region_id stack_region = create_region(
-        "stack",
-        USER_STACK_PAGES * PAGE_SIZE,
-        REGION_READ | REGION_WRITE,
-        ALLOC_PAGES,
-        &stack_address
-    );
-
-    if ( stack_region < 0 ) {
-        return stack_region;
-    }
-
     elf_application->entry_address = header.entry;
 
-    current_thread()->user_stack_end = ( void* )( ( uint8_t* )stack_address + USER_STACK_PAGES * PAGE_SIZE );
     current_process()->loader_data = ( void* )elf_application;
 
     return 0;

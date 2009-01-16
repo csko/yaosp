@@ -123,17 +123,24 @@ int map_region_pages(
 }
 
 int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel, bool write ) {
+    void* p;
     int error;
-    ptr_t addr;
-    uint32_t* pgd_entry;
-    uint32_t* pt_entry;
+    uint32_t i;
+    uint32_t count;
     uint32_t flags;
+    uint32_t pd_index;
+    uint32_t pt_index;
+    uint32_t* pt;
+
+    /* Map the page tables if required */
 
     error = map_region_page_tables( arch_context, virtual, size, kernel );
 
     if ( error < 0 ) {
         return error;
     }
+
+    /* Decide what flags to use for the pages */
 
     flags = PRESENT;
 
@@ -145,19 +152,28 @@ int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uin
         flags |= WRITE;
     }
 
-    for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
-        void* p;
+    count = size / PAGE_SIZE;
+    pd_index = virtual >> PGDIR_SHIFT;
+    pt_index = ( virtual >> PAGE_SHIFT ) & 1023;
+    pt = ( uint32_t* )( arch_context->page_directory[ pd_index ] & PAGE_MASK );
 
-        pgd_entry = page_directory_entry( arch_context, addr );
-        pt_entry = page_table_entry( *pgd_entry, addr );
-
+    for ( i = 0; i < count; i++ ) {
         p = alloc_pages( 1 );
 
         if ( p == NULL ) {
             return -ENOMEM;
         }
 
-        *pt_entry = ( ptr_t )p | flags;
+        pt[ pt_index ] = ( uint32_t )p | flags;
+
+        if ( pt_index == 1023 ) {
+            pt_index = 0;
+            pd_index++;
+
+            pt = ( uint32_t* )( arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        } else {
+            pt_index++;
+        }
     }
 
     return 0;
@@ -172,7 +188,7 @@ int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual,
 
     for ( addr = virtual; addr < ( virtual + size ); addr += PGDIR_SIZE ) {
         pgd_entry = page_directory_entry( arch_context, addr );
-        page_table = ( uint32_t* )*pgd_entry;
+        page_table = ( uint32_t* )( *pgd_entry & PAGE_MASK );
 
         free = true;
 
@@ -185,6 +201,7 @@ int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual,
 
         if ( free ) {
             free_pages( ( void* )page_table, 1 );
+
             *pgd_entry = 0;
         }
     }
@@ -201,7 +218,8 @@ int free_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint3
         pgd_entry = page_directory_entry( arch_context, addr );
         pt_entry = page_table_entry( *pgd_entry, addr );
 
-        free_pages( ( void* )*pt_entry, 1 );
+        free_pages( ( void* )( *pt_entry & PAGE_MASK ), 1 );
+
         *pt_entry = 0;
     }
 
@@ -216,7 +234,7 @@ int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t vir
     pgd_entry = page_directory_entry( arch_context, virtual );
     pt_entry = page_table_entry( *pgd_entry, virtual );
 
-    free_pages( ( void* )*pt_entry, size / PAGE_SIZE );
+    free_pages( ( void* )( *pt_entry & PAGE_MASK ), size / PAGE_SIZE );
 
     for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
         pgd_entry = page_directory_entry( arch_context, addr );
@@ -431,6 +449,8 @@ static int create_initial_region( const char* name, uint32_t start, uint32_t siz
     region->start = start;
     region->size = size;
     region->flags = REGION_READ | REGION_KERNEL;
+    region->alloc_method = ALLOC_CONTIGUOUS;
+    region->context = &kernel_memory_context;
 
     if ( writable ) {
         region->flags |= REGION_WRITE;

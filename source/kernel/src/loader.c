@@ -24,6 +24,8 @@
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 
+#define USER_STACK_PAGES ( USER_STACK_SIZE / PAGE_SIZE )
+
 static application_loader_t* loaders;
 
 static application_loader_t* find_application_loader( int fd ) {
@@ -120,6 +122,8 @@ static int execve( char* path, char** argv, char** envp ) {
     int fd;
     int error;
     uint8_t* stack;
+    thread_t* thread;
+    void* stack_address;
     application_loader_t* loader;
 
     int argc;
@@ -146,6 +150,8 @@ static int execve( char* path, char** argv, char** envp ) {
         return -ENOEXEC;
     }
 
+    thread = current_thread();
+
     /* Clone the argv and envp */
 
     error = clone_param_array( argv, &cloned_argv, &argc );
@@ -166,7 +172,7 @@ static int execve( char* path, char** argv, char** envp ) {
     user_argv = ( char** )kmalloc( sizeof( char* ) * ( argc + 1 ) );
     user_envv = ( char** )kmalloc( sizeof( char* ) * ( envc + 1 ) );
 
-    memory_context_delete_regions( current_process()->memory_context, true );
+    memory_context_delete_regions( thread->process->memory_context, true );
 
     /* Load the executable with the selected loader */
 
@@ -178,9 +184,23 @@ static int execve( char* path, char** argv, char** envp ) {
         return error;
     }
 
+    /* Create stack for the userspace thread */
+
+    thread->user_stack_region = create_region(
+        "stack",
+        USER_STACK_PAGES * PAGE_SIZE,
+        REGION_READ | REGION_WRITE,
+        ALLOC_PAGES,
+        &stack_address
+    );
+
+    if ( thread->user_stack_region < 0 ) {
+        return thread->user_stack_region;
+    }
+
     /* Copy argv and envp item values to the user */
 
-    stack = ( uint8_t* )current_thread()->user_stack_end;
+    stack = ( uint8_t* )stack_address;
 
     stack = copy_param_array_to_user( cloned_argv, user_argv, argc, stack );
     stack = copy_param_array_to_user( cloned_envv, user_envv, envc, stack );
@@ -210,7 +230,7 @@ static int execve( char* path, char** argv, char** envp ) {
 
     /* Save the modified stack pointer in the thread structure */
 
-    current_thread()->user_stack_end = ( void* )stack;
+    thread->user_stack_end = ( void* )stack;
 
     /* Start the executable */
 

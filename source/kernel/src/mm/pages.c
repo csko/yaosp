@@ -1,6 +1,6 @@
 /* Memory page allocator
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -44,6 +44,7 @@
 #include <kernel.h>
 #include <errno.h>
 #include <bootmodule.h>
+#include <macros.h>
 #include <mm/pages.h>
 #include <lib/string.h>
 
@@ -120,17 +121,13 @@ void free_pages( void* address, uint32_t count ) {
 
     spinlock_disable( &pages_lock );
 
-    if ( atomic_get( &tmp->ref ) == 0 ) {
-        panic( "free_pages(): Tried to free a non-allocated region!\n" );
-        goto out;
-    }
+    ASSERT( atomic_get( &tmp->ref ) > 0 );
 
     for ( i = 0; i < count; i++, tmp++ ) {
         atomic_set( &tmp->ref, 0 );
         atomic_inc( &free_page_count );
     }
 
-out:
     spinunlock_enable( &pages_lock );
 }
 

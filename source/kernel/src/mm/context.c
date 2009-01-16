@@ -20,16 +20,21 @@
 #include <errno.h>
 #include <macros.h>
 #include <kernel.h>
+#include <semaphore.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
 #include <arch/mm/config.h>
 #include <arch/mm/context.h>
+#include <arch/mm/region.h>
 
 #define REGION_STEP_SIZE 32
 
 memory_context_t kernel_memory_context;
+
+extern semaphore_id region_lock;
+extern hashtable_t region_table;
 
 int memory_context_insert_region( memory_context_t* context, region_t* region ) {
     int i;
@@ -293,24 +298,44 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
 }
 
 int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
-    int start = 0;
+    int i;
+    int new_size;
+    region_t* region;
 
-    /* NOTE: The current code here makes an assumption that user
-            regions are always after any other kernel region! */
+    i = 0;
 
-again:
+    LOCK( region_lock );
+
+    /* If we have to delete the user regions only first we skip
+       the kernel regions. */
+
     if ( user_only ) {
-        for ( ; start < context->region_count; start++ ) {
-            if ( ( context->regions[ start ]->flags & REGION_KERNEL ) == 0 ) {
+        for ( ; i < context->region_count; i++ ) {
+            if ( ( context->regions[ i ]->flags & REGION_KERNEL ) == 0 ) {
                 break;
             }
         }
     }
 
-    for ( ; start < context->region_count; start++ ) {
-        delete_region( context->regions[ start ]->id );
-        goto again;
+    new_size = i;
+
+    /* Delete the requested regions */
+
+    for ( ; i < context->region_count; i++ ) {
+        region = context->regions[ i ];
+
+        arch_delete_region_pages( context, region );
+        hashtable_remove( &region_table, ( const void* )region->id );
+        destroy_region( region );
+
+        context->regions[ i ] = NULL;
     }
+
+    /* Set the new size of memory regions in the context */
+
+    context->region_count = new_size;
+
+    UNLOCK( region_lock );
 
     return 0;
 }

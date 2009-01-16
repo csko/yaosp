@@ -1,6 +1,6 @@
 /* Memory region handling
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,19 +20,19 @@
 #include <errno.h>
 #include <smp.h>
 #include <kernel.h>
-#include <semaphore.h>
 #include <macros.h>
+#include <semaphore.h>
 #include <mm/region.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
-#include <lib/hashtable.h>
 #include <lib/string.h>
 
 #include <arch/mm/region.h>
 
+semaphore_id region_lock;
+hashtable_t region_table;
+
 static int region_id_counter = 0;
-static hashtable_t region_table;
-static semaphore_id region_lock = -1;
 
 region_t* allocate_region( const char* name ) {
     region_t* region;
@@ -53,6 +53,11 @@ region_t* allocate_region( const char* name ) {
     }
 
     return region;
+}
+
+void destroy_region( region_t* region ) {
+    kfree( region->name );
+    kfree( region );
 }
 
 int region_insert( memory_context_t* context, region_t* region ) {
@@ -110,7 +115,9 @@ region_id create_region(
 
     /* Do some sanity checking */
 
-    if ( ( size == 0 ) || ( ( size % PAGE_SIZE ) != 0 ) ) {
+    if ( ( size == 0 ) ||
+         ( ( size % PAGE_SIZE ) != 0 ) ||
+         ( ( ( flags & REGION_KERNEL ) != 0 ) && ( alloc_method == ALLOC_LAZY ) ) ) {
         return -EINVAL;
     }
 
@@ -133,6 +140,8 @@ region_id create_region(
         &address
     );
 
+    /* Not found? :( */
+
     if ( !found ) {
         UNLOCK( region_lock );
 
@@ -153,28 +162,16 @@ region_id create_region(
     region->alloc_method = alloc_method;
     region->start = address;
     region->size = size;
+    region->context = context;
 
-    /* Allocate memory pages for the newly created
-       region (if required) */
+    /* Allocate memory pages for the newly created region */
 
-    switch ( alloc_method ) {
-        case ALLOC_LAZY :
-            panic( "Lazy page allocation not yet supported!\n" );
-            error = -EINVAL;
-            break;
-
-        case ALLOC_PAGES :
-        case ALLOC_CONTIGUOUS :
-            error = arch_create_region_pages( context, region );
-            break;
-
-        case ALLOC_NONE :
-            error = 0;
-            break;
-    }
+    error = arch_create_region_pages( context, region );
 
     if ( error < 0 ) {
         UNLOCK( region_lock );
+
+        destroy_region( region );
 
         return error;
     }
@@ -184,7 +181,11 @@ region_id create_region(
     error = region_insert( context, region );
 
     if ( error < 0 ) {
+        arch_delete_region_pages( context, region );
+
         UNLOCK( region_lock );
+
+        destroy_region( region );
 
         return error;
     }
@@ -199,7 +200,6 @@ region_id create_region(
 
 int delete_region( region_id id ) {
     region_t* region;
-    memory_context_t* context;
 
     LOCK( region_lock );
 
@@ -211,14 +211,8 @@ int delete_region( region_id id ) {
         return -EINVAL;
     }
 
-    if ( region->flags & REGION_KERNEL ) {
-        context = &kernel_memory_context;
-    } else {
-        context = current_process()->memory_context;
-    }
-
-    arch_delete_region_pages( context, region );
-    region_remove( context, region );
+    arch_delete_region_pages( region->context, region );
+    region_remove( region->context, region );
 
     UNLOCK( region_lock );
 
@@ -244,11 +238,11 @@ int resize_region( region_id id, uint32_t new_size ) {
         return -EINVAL;
     }
 
-    if ( region->flags & REGION_KERNEL ) {
-        context = &kernel_memory_context;
-    } else {
-        context = current_process()->memory_context;
-    }
+    context = region->context;
+
+    /* If the new size of the region is bigger than the current we
+       have to check if we have free space after the region in the
+       memory context. */
 
     if ( new_size > region->size ) {
         if ( !memory_context_can_resize_region( context, region, new_size ) ) {
@@ -257,6 +251,8 @@ int resize_region( region_id id, uint32_t new_size ) {
             return -ENOMEM;
         }
     }
+
+    /* Let the architecture resize the region */
 
     error = arch_resize_region( context, region, new_size );
 
