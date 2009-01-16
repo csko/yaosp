@@ -1,6 +1,6 @@
 /* PCI bus handling
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,6 @@
 #include <arch/interrupt.h>
 
 #include "pci.h"
-#include "deviceid.h"
 
 typedef bool pci_access_check_t( void );
 typedef int pci_access_read_t( int bus, int dev, int func, int offset, int size, uint32_t* data );
@@ -384,26 +383,15 @@ static int pci_scan_device( int bus, int dev, int func ) {
         device->class_base = class_base;
 
         if ( pci_device_count < MAX_PCI_DEVICES ) {
-            int index = get_vendor( vendor_id );
-            char* vendor_name;
-            char* device_name;
-
-            if ( index == -1 ) {
-                vendor_name = "Unknown vendor";
-                device_name = "Unknown device";
-            } else {
-                vendor_name = (char*) pci_device_id_list[index].name;
-                device_name = (char*) get_device_name( device_id, index );
-                if ( device_name == NULL ) {
-                    device_name = "Unknown device";
-                }
-            }
             /* TODO: Determine revision, subsystem */
 
-            kprintf( "PCI: %d:%d:%d 0x%x:0x%x %s %s\n", bus, dev, func, vendor_id,
-                     device_id, vendor_name, device_name );
+            kprintf(
+                "PCI: %d:%d:%d 0x%x:0x%x\n", bus, dev, func, vendor_id, device_id
+            );
 
             pci_devices[ pci_device_count++ ] = device;
+
+            create_device_node_for_pci_device( device );
         } else {
             kprintf( "PCI: Too many devices!\n" );
         }

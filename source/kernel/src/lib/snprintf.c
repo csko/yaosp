@@ -38,6 +38,7 @@ static int snprintf_helper( void* data, char c ) {
 }
 
 int snprintf( char* str, size_t size, const char* format, ... ) {
+    int result;
     va_list args;
     snprintf_buffer_t buffer;
 
@@ -46,10 +47,10 @@ int snprintf( char* str, size_t size, const char* format, ... ) {
     buffer.position = 0;
 
     va_start( args, format );
-    do_printf( snprintf_helper, ( void* )&buffer, format, args );
+    result = do_printf( snprintf_helper, ( void* )&buffer, format, args );
     va_end( args );
 
     str[ buffer.position ] = 0;
 
-    return 0;
+    return result;
 }

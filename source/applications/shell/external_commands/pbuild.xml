@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>ls</item>
         <item>stat</item>
         <item>sysinfo</item>
+        <item>lspci</item>
     </array>
 
     <target name="all">

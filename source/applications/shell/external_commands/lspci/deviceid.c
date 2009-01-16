@@ -15,16 +15,19 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 /*
  * This list is based on Craig Hart's pcidevs.txt:
  * http://members.datafast.net.au/dft0802/downloads/pcidevs.txt
  */
 
-#include "deviceid.h" /* NULL */
+#include <stddef.h>
+
+#include "deviceid.h"
 
 /* TODO: optimize these functions */
 
-int get_vendor( int id ){
+int get_vendor( int id ) {
     int i;
     pci_device_id_t* dev;
 

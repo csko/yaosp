@@ -156,6 +156,9 @@ PRINTF_DO_NUM:
                     case 's':
                         flags &= ~PRINTF_LZERO;
                         where = va_arg(args, unsigned char *);
+                        if ( where == NULL ) {
+                            where = ( unsigned char* )"<NULL>";
+                        }
 PRINTF_OUT:
                         actual_wd = strlen((char *)where);
                         if(flags & PRINTF_NEEDSIGN || flags & PRINTF_NEEDPLUS)

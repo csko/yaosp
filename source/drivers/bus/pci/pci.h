@@ -1,6 +1,6 @@
 /* PCI bus definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -101,5 +101,7 @@ typedef struct pci_bus {
     int ( *read_config )( pci_device_t* device, int offset, int size, uint32_t* data );
     int ( *write_config )( pci_device_t* device, int offset, int size, uint32_t data );
 } pci_bus_t;
+
+int create_device_node_for_pci_device( pci_device_t* pci_device );
 
 #endif // _PCI_H_

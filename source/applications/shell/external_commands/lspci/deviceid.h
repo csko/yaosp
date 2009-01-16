@@ -15,14 +15,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 /*
  * This list is based on Craig Hart's pcidevs.txt:
  * http://members.datafast.net.au/dft0802/downloads/pcidevs.txt
  */
+
 #ifndef _DEVICEID_H_
 #define _DEVICEID_H_
-
-#include <types.h> /* NULL */
 
 typedef struct pci_device_id {
     char type;

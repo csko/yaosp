@@ -2,8 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2008, 2009 Zoltan Kovacs
-Copyright (c) 2009 Kornel Csernai
+Copyright (c) 2009 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -22,8 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>pci.c</item>
-        <item>devices.c</item>
+        <item>lspci.c</item>
+        <item>deviceid.c</item>
     </array>
 
     <target name="clean">
@@ -38,41 +37,42 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling PCI busmanager</echo>
+        <echo>Compiling lspci shell command</echo>
 
         <for var="i" array="${files}">
             <echo>-> ${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../../kernel/include</include>
+                <include>../../../../include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
-                <flag>-Wshadow</flag>
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
                 <flag>-fno-builtin</flag>
-                <flag>-fPIC</flag>
             </gcc>
         </for>
 
-        <echo>Linking PCI busmanager</echo>
-        <echo>-> objs/pci</echo>
+        <echo>Linking lspci application</echo>
+        <echo>-> objs/lspci</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <output>objs/pci</output>
+            <input>../../../../lib/start/objs/libstart.a</input>
+            <input>../../../../lib/c/objs/libc.a</input>
+            <output>objs/lspci</output>
             <flag>-m32</flag>
-            <flag>-shared</flag>
+            <flag>-Xlinker</flag>
+            <flag>--script=../../../../../scripts/i386_app.lnk</flag>
             <flag>-nostartfiles</flag>
             <flag>-nodefaultlibs</flag>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/pci" to="../../../../build/system/module/bus/pci"/>
+        <copy from="objs/lspci" to="../../../../../build/application/lspci"/>
     </target>
 
     <target name="all">
