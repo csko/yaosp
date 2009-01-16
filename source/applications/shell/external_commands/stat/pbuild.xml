@@ -71,7 +71,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/stat" to="../../../../../build/system/stat"/>
+        <copy from="objs/stat" to="../../../../../build/application/stat"/>
     </target>
 
     <target name="all">

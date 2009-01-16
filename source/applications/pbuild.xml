@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -23,7 +23,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="subdirs">
         <item>init</item>
         <item>shell</item>
-        <item>sysinfo</item>
     </array>
 
     <target name="all">

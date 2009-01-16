@@ -3,6 +3,7 @@
 Top level build file
 
 Copyright (c) 2008 Zoltan Kovacs
+Copyright (c) 2009 Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -31,11 +32,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="clean_iso"/>
     </target>
 
+<!-- TODO: Make each module's pbuild.xml create and clean up these directories -->
     <target name="prepare_build" type="private">
         <mkdir>build</mkdir>
         <mkdir>build/boot</mkdir>
         <mkdir>build/boot/grub</mkdir>
         <mkdir>build/system</mkdir>
+        <mkdir>build/system/module</mkdir>
+        <mkdir>build/system/module/bus</mkdir>
+        <mkdir>build/system/module/char</mkdir>
+        <mkdir>build/system/module/disk</mkdir>
+        <mkdir>build/system/module/filesystem</mkdir>
+        <mkdir>build/system/module/input</mkdir>
+        <mkdir>build/application</mkdir>
     </target>
 
     <target name="compile_sources" type="private">

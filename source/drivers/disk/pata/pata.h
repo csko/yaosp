@@ -20,7 +20,7 @@
 #define _PATA_H_
 
 #include <types.h>
-#include <pci.h>
+#include "../../bus/pci/pci.h"
 #include <semaphore.h>
 
 /* Maximum number of ports per controller */

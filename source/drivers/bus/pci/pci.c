@@ -1,6 +1,7 @@
 /* PCI bus handling
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,7 +21,6 @@
 #include <errno.h>
 #include <console.h>
 #include <macros.h>
-#include <pci.h>
 #include <devices.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -29,6 +29,7 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
+#include "pci.h"
 #include "deviceid.h"
 
 typedef bool pci_access_check_t( void );

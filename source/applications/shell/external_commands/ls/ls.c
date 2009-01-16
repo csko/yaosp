@@ -23,12 +23,17 @@
 
 char* argv0 = NULL;
 
+static const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB" };
+
 int do_ls( char* dirname ) {
     DIR* dir;
     struct dirent* entry;
 
     struct stat entry_stat;
     char full_path[ 256 ];
+
+    int unit;
+    char size[ 10 ];
 
     dir = opendir( dirname );
 
@@ -51,7 +56,14 @@ int do_ls( char* dirname ) {
         if ( S_ISDIR( entry_stat.st_mode ) ) {
             printf( "directory %s\n", entry->d_name );
         } else {
-            printf( "%9u %s\n", ( unsigned int )entry_stat.st_size, entry->d_name );
+            unit = 0;
+            while ( entry_stat.st_size >= 1024 && unit < sizeof( units ) ) {
+                entry_stat.st_size /= 1024;
+                unit++;
+            }
+
+            snprintf( size, 10, "%lld %s", entry_stat.st_size, units[ unit ] );
+            printf( "%9s %s\n", size, entry->d_name );
         }
     }
 

@@ -35,7 +35,7 @@ int main( int argc, char** argv ) {
             char tty_path[ 128 ];
 
             char* argv[] = { "shell", NULL };
-            char* envv[] = { "PATH=/yaosp/SYSTEM", NULL };
+            char* envv[] = { "PATH=/yaosp/system:/yaosp/application", NULL };
 
             snprintf( tty_path, sizeof( tty_path ), "/device/pty/tty%d", i );
 
@@ -52,7 +52,7 @@ int main( int argc, char** argv ) {
             dup2( slave_tty, 1 );
             dup2( slave_tty, 2 );
 
-            error = execve( "/yaosp/SYSTEM/SHELL", argv, envv );
+            error = execve( "/yaosp/application/shell", argv, envv );
             dbprintf( "Failed to execute shell: %d\n", error );
 
             _exit( -1 );

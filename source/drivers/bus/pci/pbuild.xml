@@ -72,7 +72,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/pci" to="../../../../build/system/pci"/>
+        <copy from="objs/pci" to="../../../../build/system/module/bus/pci"/>
     </target>
 
     <target name="all">

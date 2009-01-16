@@ -1,6 +1,7 @@
 /* Init thread
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -116,7 +117,7 @@ int init_thread( void* arg ) {
     mount_root_filesystem();
 
     if ( fork() == 0 ) {
-        if ( execve( "/yaosp/SYSTEM/INIT", NULL, NULL ) != 0 ) {
+        if ( execve( "/yaosp/application/init", NULL, NULL ) != 0 ) {
             panic( "Failed to execute init process!\n" );
         }
     }
