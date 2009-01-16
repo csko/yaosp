@@ -256,6 +256,8 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
         return NULL;
     }
 
+    LOCK( region_lock );
+
     /* Go throught regions and clone each one */
 
     for ( i = 0; i < old_context->region_count; i++ ) {
@@ -264,37 +266,41 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
 
         region = old_context->regions[ i ];
 
-        new_region = ( region_t* )kmalloc( sizeof( region_t ) );
+        new_region = allocate_region( region->name );
 
         if ( new_region == NULL ) {
-            return NULL;
-        }
-
-        new_region->name = strdup( region->name );
-
-        if ( new_region->name == NULL ) {
-            kfree( new_region );
-            return NULL;
+            goto error;
         }
 
         new_region->flags = region->flags;
+        new_region->alloc_method = region->alloc_method;
         new_region->start = region->start;
         new_region->size = region->size;
+        new_region->context = new_context;
 
         error = arch_clone_memory_region( old_context, region, new_context, new_region );
 
         if ( error < 0 ) {
-            return NULL;
+            goto error;
         }
 
         error = region_insert( new_context, new_region );
 
         if ( error < 0 ) {
-            return NULL;
+            goto error;
         }
     }
   
+    UNLOCK( region_lock );
+
     return new_context;
+
+error:
+    /* TODO: cleanup! */
+
+    UNLOCK( region_lock );
+
+    return NULL;
 }
 
 int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
@@ -338,4 +344,11 @@ int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
     UNLOCK( region_lock );
 
     return 0;
+}
+
+void memory_context_destroy( memory_context_t* context ) {
+    arch_destroy_memory_context( context );
+
+    kfree( context->regions );
+    kfree( context );
 }

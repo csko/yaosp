@@ -232,10 +232,23 @@ int init_io_context( io_context_t* io_context ) {
 
 static int destroy_file_callback( hashitem_t* item, void* data ) {
     delete_file( ( file_t* )item );
+
     return 0;
 }
 
 void destroy_io_context( io_context_t* io_context ) {
+    /* Delete all files and the hashtable */
+
     hashtable_iterate( &io_context->file_table, destroy_file_callback, NULL );
+    destroy_hashtable( &io_context->file_table );
+
+    /* Put the inodes in the I/O context */
+
+    put_inode( io_context->root_directory );
+    put_inode( io_context->current_directory );
+
+    /* Delete the lock of the context */
+
     delete_semaphore( io_context->lock );
+    kfree( io_context );
 }

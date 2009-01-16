@@ -113,6 +113,7 @@ int sys_lock_semaphore( semaphore_id id, int count, uint64_t* timeout );
 int sys_unlock_semaphore( semaphore_id id, int count );
 
 int init_semaphore_context( semaphore_context_t* context );
+void destroy_semaphore_context( semaphore_context_t* context );
 semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context );
 
 int init_semaphores( void );

@@ -59,7 +59,7 @@ int sys_fork( void ) {
 
     if ( new_process->io_context == NULL ) {
         error = -ENOMEM;
-        goto error3;
+        goto error2;
     }
 
     /* Clone the semaphore context */
@@ -68,20 +68,20 @@ int sys_fork( void ) {
 
     if ( new_process->semaphore_context == NULL ) {
         error = -ENOMEM;
-        goto error4;
+        goto error2;
     }
 
     new_thread = allocate_thread( this_thread->name, new_process );
 
     if ( new_thread == NULL ) {
         error = -ENOMEM;
-        goto error5;
+        goto error2;
     }
 
     error = arch_do_fork( this_thread, new_thread );
 
     if ( error < 0 ) {
-        goto error6;
+        goto error3;
     }
 
     /* Insert the new process and thread */
@@ -97,30 +97,24 @@ int sys_fork( void ) {
             add_thread_to_ready( new_thread );
 
             error = new_process->id;
-        } else {
-            remove_process( new_process );
         }
     }
 
     spinunlock_enable( &scheduler_lock );
 
     if ( error < 0 ) {
-        goto error6;
+        goto error3;
     }
 
     return error;
 
-error6:
-    /* TODO: destroy thread */
-
-error5:
-    /* TODO: destroy semaphore context */
-
-error4:
-    /* TODO: detroy I/O context */
-
 error3:
-    /* TODO: destroy memory context */
+    /* NOTE: We don't have to destroy the process because
+             destroy_thread() will do it. */
+
+    destroy_thread( new_thread );
+
+    return error;
 
 error2:
     destroy_process( new_process );

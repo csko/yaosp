@@ -1,6 +1,6 @@
 /* Process implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,6 +25,8 @@
 #include <vfs/io_context.h>
 #include <lib/hashtable.h>
 
+#include <arch/atomic.h>
+
 typedef int process_id;
 
 typedef struct process {
@@ -33,6 +35,7 @@ typedef struct process {
     process_id id;
     char* name;
     semaphore_id lock;
+    atomic_t thread_count;
 
     memory_context_t* memory_context;
     semaphore_context_t* semaphore_context;

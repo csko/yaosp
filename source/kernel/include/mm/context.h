@@ -95,4 +95,6 @@ memory_context_t* memory_context_clone( memory_context_t* old_context );
  */
 int memory_context_delete_regions( memory_context_t* context, bool user_only );
 
+void memory_context_destroy( memory_context_t* context );
+
 #endif // _MM_CONTEXT_H_

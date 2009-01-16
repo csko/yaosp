@@ -62,6 +62,11 @@ process_t* allocate_process( char* name ) {
 
     process->id = -1;
     process->heap_region = -1;
+    process->memory_context = NULL;
+    process->io_context = NULL;
+    process->semaphore_context = NULL;
+
+    atomic_set( &process->thread_count, 0 );
 
     return process;
 
@@ -79,6 +84,30 @@ error1:
 }
 
 void destroy_process( process_t* process ) {
+    /* NOTE: We don't delete the heap region here because the call to
+             the memory_context_delete_regions() will do it for us! */
+
+    /* Destroy the memory context */
+
+    if ( process->memory_context != NULL ) {
+        memory_context_delete_regions( process->memory_context, false );
+        memory_context_destroy( process->memory_context );
+    }
+
+    /* Destroy the I/O context */
+
+    if ( process->io_context != NULL ) {
+        destroy_io_context( process->io_context );
+    }
+
+    /* Destroy the semaphore context */
+
+    if ( process->semaphore_context != NULL ) {
+        destroy_semaphore_context( process->semaphore_context );
+    }
+
+    /* Delete other resources allocated by the process */
+
     delete_semaphore( process->lock );
     delete_semaphore( process->waiters );
     kfree( process->name );

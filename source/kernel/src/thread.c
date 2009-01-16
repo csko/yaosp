@@ -86,6 +86,8 @@ thread_t* allocate_thread( const char* name, process_t* process ) {
     thread->user_stack_end = NULL;
     thread->user_stack_region = -1;
 
+    atomic_inc( &process->thread_count );
+
     reset_thread_quantum( thread );
 
     return thread;
@@ -106,6 +108,22 @@ void destroy_thread( thread_t* thread ) {
     /* Free the kernel stack */
 
     free_pages( thread->kernel_stack, KERNEL_STACK_PAGES );
+
+    /* Destroy the process as well if this is the last thread */
+
+    if ( atomic_dec_and_test( &thread->process->thread_count ) ) {
+        /* Remove the process from the hashtable */
+
+        spinlock_disable( &scheduler_lock );
+
+        remove_process( thread->process );
+
+        spinunlock_enable( &scheduler_lock );
+
+        /* Destroy the process */
+
+        destroy_process( thread->process );
+    }
 
     /* Free other resources allocated by the thread */
 

@@ -446,6 +446,12 @@ int init_semaphore_context( semaphore_context_t* context ) {
     return 0;
 }
 
+void destroy_semaphore_context( semaphore_context_t* context ) {
+    /* TODO: make the table empty */
+    destroy_hashtable( &context->semaphore_table );
+    kfree( context );
+}
+
 semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context ) {
     int error;
     semaphore_context_t* new_context;

@@ -246,6 +246,21 @@ int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t vir
     return 0;
 }
 
+int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size ) {
+    ptr_t addr;
+    uint32_t* pgd_entry;
+    uint32_t* pt_entry;
+
+    for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
+        pgd_entry = page_directory_entry( arch_context, addr );
+        pt_entry = page_table_entry( *pgd_entry, addr );
+
+        *pt_entry = 0;
+    }
+
+    return 0;
+}
+
 int clone_kernel_region(
     i386_memory_context_t* old_arch_context,
     region_t* old_region,
@@ -290,6 +305,8 @@ int clone_kernel_region(
             pt_index++;
         }
     }
+
+    new_region->flags |= REGION_REMAPPED;
 
     return 0;
 }
@@ -448,7 +465,7 @@ static int create_initial_region( const char* name, uint32_t start, uint32_t siz
 
     region->start = start;
     region->size = size;
-    region->flags = REGION_READ | REGION_KERNEL;
+    region->flags = REGION_READ | REGION_KERNEL | REGION_REMAPPED;
     region->alloc_method = ALLOC_CONTIGUOUS;
     region->context = &kernel_memory_context;
 

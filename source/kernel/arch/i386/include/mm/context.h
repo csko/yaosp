@@ -26,6 +26,7 @@ typedef struct i386_memory_context {
 } i386_memory_context_t;
 
 int arch_init_memory_context( memory_context_t* context );
+int arch_destroy_memory_context( memory_context_t* context );
 
 int arch_clone_memory_region(
     memory_context_t* old_context,

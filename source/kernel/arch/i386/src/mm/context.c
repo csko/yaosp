@@ -55,6 +55,17 @@ int arch_init_memory_context( memory_context_t* context ) {
     return 0;
 }
 
+int arch_destroy_memory_context( memory_context_t* context ) {
+    i386_memory_context_t* arch_context;
+
+    arch_context = ( i386_memory_context_t* )context->arch_data;
+
+    free_pages( ( void* )arch_context->page_directory, 1 );
+    kfree( arch_context );
+
+    return 0;
+}
+
 int arch_clone_memory_region(
     memory_context_t* old_context,
     region_t* old_region,

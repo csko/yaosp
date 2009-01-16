@@ -113,6 +113,8 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
                 free_region_pages_contiguous( arch_context, region->start, region->size );
                 break;
         }
+    } else {
+        free_region_pages_remapped( arch_context, region->start, region->size );
     }
 
     free_region_page_tables( arch_context, region->start, region->size );

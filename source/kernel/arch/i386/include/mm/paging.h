@@ -49,6 +49,7 @@ int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uin
 int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 int free_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
+int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 
 int clone_kernel_region(
     i386_memory_context_t* old_arch_context,
