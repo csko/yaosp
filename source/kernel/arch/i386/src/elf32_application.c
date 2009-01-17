@@ -391,7 +391,11 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
         }
 
         if ( bss_size > 0 ) {
-            memset( ( char* )data_address + data_size, 0, bss_size );
+            if ( data_end != 0 ) {
+                memset( ( char* )data_address + data_size, 0, bss_size );
+            } else {
+                memset( ( char* )data_address, 0, bss_size );
+            }
         }
     }
 
