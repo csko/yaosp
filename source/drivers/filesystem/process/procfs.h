@@ -38,4 +38,9 @@ typedef struct procfs_dir_cookie {
     int position;
 } procfs_dir_cookie_t;
 
+typedef struct procfs_thr_iter_data {
+    process_id proc_id;
+    procfs_node_t* proc_node;
+} procfs_thr_iter_data_t;
+
 #endif // _PROCFS_H_

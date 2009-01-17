@@ -67,6 +67,7 @@ typedef struct thread {
 } thread_t;
 
 typedef int thread_entry_t( void* arg );
+typedef int thread_iter_callback_t( thread_t* thread, void* data );
 
 thread_t* allocate_thread( const char* name, struct process* process );
 void destroy_thread( thread_t* thread );
@@ -106,6 +107,8 @@ uint32_t get_thread_count( void );
  *         otherwise NULL
  */
 thread_t* get_thread_by_id( thread_id id );
+
+int thread_table_iterate( thread_iter_callback_t* callback, void* data );
 
 int init_threads( void );
 int init_thread_cleaner( void );

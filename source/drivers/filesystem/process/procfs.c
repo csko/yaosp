@@ -121,19 +121,51 @@ static void procfs_delete_node( procfs_node_t* node, bool delete_children ) {
     kfree( node );
 }
 
+static int procfs_thread_callback( thread_t* thread, void* data ) {
+    char tmp[ 16 ];
+    procfs_node_t* thr_node;
+    procfs_thr_iter_data_t* thr_data;
+
+    thr_data = ( procfs_thr_iter_data_t* )data;
+
+    if ( thread->process->id != thr_data->proc_id ) {
+        return 0;
+    }
+
+    snprintf( tmp, sizeof( tmp ), "%d", thread->id );
+
+    thr_node = procfs_create_node( thr_data->proc_node, tmp, true );
+    thr_node->name_node = procfs_create_node_with_data( thr_node, "name", false, thread->name, strlen( thread->name ) );
+
+    return 0;
+}
+
 static int procfs_proc_callback( process_t* process, void* data ) {
     char tmp[ 16 ];
     procfs_node_t* proc_node;
+    bool* scan_threads;
+
+    scan_threads = ( bool* )data;
 
     snprintf( tmp, sizeof( tmp ), "%d", process->id );
 
     proc_node = procfs_create_node( procfs_root_node, tmp, true );
     proc_node->name_node = procfs_create_node_with_data( proc_node, "name", false, process->name, strlen( process->name ) );
 
+    if ( *scan_threads ) {
+        procfs_thr_iter_data_t thr_data;
+
+        thr_data.proc_id = process->id;
+        thr_data.proc_node = proc_node;
+
+        thread_table_iterate( procfs_thread_callback, ( void* )&thr_data );
+    }
+
     return 0;
 }
 
 static int procfs_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
+    bool scan_threads = true;
     procfs_root_node = procfs_create_node( NULL, "", true );
 
     if ( procfs_root_node == NULL ) {
@@ -144,7 +176,7 @@ static int procfs_mount( const char* device, uint32_t flags, void** fs_cookie, i
 
     lock_scheduler();
 
-    process_table_iterate( procfs_proc_callback, NULL );
+    process_table_iterate( procfs_proc_callback, ( void* )&scan_threads );
 
     unlock_scheduler();
 
@@ -352,10 +384,12 @@ static filesystem_calls_t procfs_calls = {
 };
 
 static int procfs_process_created( process_t* process ) {
+    bool scan_threads = false;
+
     LOCK( procfs_lock );
 
     lock_scheduler();
-    procfs_proc_callback( process, NULL );
+    procfs_proc_callback( process, ( void* )&scan_threads );
     unlock_scheduler();
 
     UNLOCK( procfs_lock );
@@ -447,10 +481,170 @@ static int procfs_process_renamed( process_t* process ) {
     return 0;
 }
 
+static int procfs_thread_created( thread_t* thread ) {
+    char tmp[ 16 ];
+    procfs_node_t* node;
+
+    snprintf( tmp, sizeof( tmp ), "%d", thread->process->id );
+
+    LOCK( procfs_lock );
+
+    node = procfs_root_node->first_child;
+
+    while ( node != NULL ) {
+        if ( strcmp( node->name, tmp ) == 0 ) {
+            break;
+        }
+
+        node = node->next_sibling;
+    }
+
+    if ( node == NULL ) {
+        goto out;
+    }
+
+    lock_scheduler();
+
+    procfs_thr_iter_data_t thr_data;
+
+    thr_data.proc_id = thread->process->id;
+    thr_data.proc_node = node;
+
+    procfs_thread_callback( thread, ( void* )&thr_data );
+
+    unlock_scheduler();
+
+out:
+    UNLOCK( procfs_lock );
+
+    return 0;
+}
+
+static int procfs_thread_destroyed( process_id proc_id, thread_id thr_id ) {
+    char tmp[ 16 ];
+    procfs_node_t* node;
+    procfs_node_t* prev;
+    procfs_node_t* parent;
+
+    snprintf( tmp, sizeof( tmp ), "%d", proc_id );
+
+    LOCK( procfs_lock );
+
+    node = procfs_root_node->first_child;
+
+    while ( node != NULL ) {
+        if ( strcmp( node->name, tmp ) == 0 ) {
+            break;
+        }
+
+        node = node->next_sibling;
+    }
+
+    if ( node == NULL ) {
+        goto out;
+    }
+
+    snprintf( tmp, sizeof( tmp ), "%d", thr_id );
+
+    prev = NULL;
+    parent = node;
+    node = node->first_child;
+
+    while ( node != NULL ) {
+        if ( strcmp( node->name, tmp ) == 0 ) {
+            if ( prev == NULL ) {
+                parent->first_child = node->next_sibling;
+            } else {
+                prev->next_sibling = node->next_sibling;
+            }
+
+            break;
+        }
+
+        prev = node;
+        node = node->next_sibling;
+    }
+
+    if ( node != NULL ) {
+        procfs_delete_node( node, true );
+    }
+
+out:
+    UNLOCK( procfs_lock );
+
+    return 0;
+}
+
+static int procfs_thread_renamed( thread_t* thread ) {
+    char tmp[ 16 ];
+    procfs_node_t* node;
+
+    snprintf( tmp, sizeof( tmp ), "%d", thread->process->id );
+
+    LOCK( procfs_lock );
+
+    node = procfs_root_node->first_child;
+
+    while ( node != NULL ) {
+        if ( strcmp( node->name, tmp ) == 0 ) {
+            break;
+        }
+
+        node = node->next_sibling;
+    }
+
+    if ( node == NULL ) {
+        goto out;
+    }
+
+    snprintf( tmp, sizeof( tmp ), "%d", thread->id );
+
+    node = node->first_child;
+
+    while ( node != NULL ) {
+        if ( strcmp( node->name, tmp ) == 0 ) {
+            size_t length;
+            char* new_data;
+            procfs_node_t* name_node;
+
+            name_node = node->name_node;
+
+            lock_scheduler();
+
+            length = strlen( thread->name );
+
+            new_data = ( char* )kmalloc( length );
+
+            if ( new_data != NULL ) {
+                kfree( name_node->data );
+
+                name_node->data = new_data;
+                name_node->data_size = length;
+
+                memcpy( new_data, thread->name, length );
+            }
+
+            unlock_scheduler();
+
+            break;
+        }
+
+        node = node->next_sibling;
+    }
+
+out:
+    UNLOCK( procfs_lock );
+
+    return 0;
+}
+
 static process_listener_t procfs_listener = {
     .process_created = procfs_process_created,
     .process_destroyed = procfs_process_destroyed,
-    .process_renamed = procfs_process_renamed
+    .process_renamed = procfs_process_renamed,
+    .thread_created = procfs_thread_created,
+    .thread_destroyed = procfs_thread_destroyed,
+    .thread_renamed = procfs_thread_renamed
 };
 
 static void* procfs_node_key( hashitem_t* item ) {

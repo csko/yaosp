@@ -108,6 +108,7 @@ static kernel_symbol_t symbols[] = {
     { "sleep_thread", ( ptr_t )sleep_thread },
     { "wake_up_thread", ( ptr_t )wake_up_thread },
     { "process_table_iterate", ( ptr_t )process_table_iterate },
+    { "thread_table_iterate", ( ptr_t )thread_table_iterate },
     { "set_process_listener", ( ptr_t )set_process_listener },
 
     /* Memory & string functions */

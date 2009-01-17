@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 static int read_proc_entry_node( char* dir, char* node, char* buffer, size_t size ) {
     int fd;
@@ -49,9 +50,26 @@ static int read_proc_entry_node( char* dir, char* node, char* buffer, size_t siz
     return 0;
 }
 
+static void do_ts( char* thread, char* tid ) {
+    int error;
+    char name[ 128 ];
+
+    error = read_proc_entry_node( thread, "name", name, sizeof( name ) );
+
+    if ( error < 0 ) {
+        return;
+    }
+
+    printf( "%4s %4s  `- %s\n", "", tid, name );
+}
+
 static void do_ps( char* process ) {
     int error;
     char name[ 128 ];
+    char path[ 128 ];
+    DIR* dir;
+    struct dirent* entry;
+    struct stat entry_stat;
 
     error = read_proc_entry_node( process, "name", name, sizeof( name ) );
 
@@ -59,7 +77,33 @@ static void do_ps( char* process ) {
         return;
     }
 
-    printf( "%4s %s\n", process, name );
+    printf( "%4s %4s %s\n", process, "-", name );
+
+    snprintf( path, sizeof( path ), "/proc/%s", process );
+
+    dir = opendir( path );
+
+    if ( dir == NULL ) {
+        return;
+    }
+
+    while ( ( entry = readdir( dir ) ) != NULL ) {
+        snprintf( path, sizeof( path ), "/proc/%s/%s", process, entry->d_name );
+
+        if ( stat( path, &entry_stat ) != 0 ) {
+            continue;
+        }
+
+        if ( !S_ISDIR( entry_stat.st_mode ) ) {
+            continue;
+        }
+
+        snprintf( path, sizeof( path ), "%s/%s", process, entry->d_name );
+
+        do_ts( path, entry->d_name );
+    }
+
+    closedir( dir );
 }
 
 int main( int argc, char** argv ) {
@@ -72,8 +116,7 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    printf( " pid name\n" );
-    printf( "-----------------------\n" );
+    printf( " pid  tid name\n" );
 
     while ( ( entry = readdir( dir ) ) != NULL ) {
         do_ps( entry->d_name );

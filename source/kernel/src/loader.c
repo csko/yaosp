@@ -187,10 +187,11 @@ static int execve( char* path, char** argv, char** envp ) {
 
     lock_scheduler();
     rename_process( thread->process, new_name );
-    rename_thread( thread, new_name );
+    rename_thread( thread, "main" );
     unlock_scheduler();
 
-    notify_process_listener( PROCESS_RENAMED, thread->process );
+    notify_process_listener( PROCESS_RENAMED, thread->process, NULL );
+    notify_process_listener( THREAD_RENAMED, NULL, thread );
 
     /* Empty the memory context of the process */
 

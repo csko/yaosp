@@ -123,7 +123,7 @@ void destroy_thread( thread_t* thread ) {
 
         /* Tell the system information that a process is died */
 
-        notify_process_listener( PROCESS_DESTROYED, thread->process );
+        notify_process_listener( PROCESS_DESTROYED, thread->process, NULL );
 
         /* Destroy the process */
 
@@ -250,6 +250,8 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
 
     spinunlock_enable( &scheduler_lock );
 
+    notify_process_listener( THREAD_CREATED, NULL, thread );
+
     return error;
 }
 
@@ -309,6 +311,12 @@ uint32_t get_thread_count( void ) {
 thread_t* get_thread_by_id( thread_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
     return ( thread_t* )hashtable_get( &thread_table, ( const void* )id );
+}
+
+int thread_table_iterate( thread_iter_callback_t* callback, void* data ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    hashtable_iterate( &thread_table, ( hashtable_iter_callback_t* )callback, data );
+    return 0;
 }
 
 static void* thread_key( hashitem_t* item ) {
@@ -373,6 +381,10 @@ static int thread_cleaner_entry( void* arg ) {
         if ( thread == NULL ) {
             continue;
         }
+
+        /* Tell the system information that the thread is died */
+
+        notify_process_listener( THREAD_DESTROYED, NULL, thread );
 
         /* Free the resources allocated by this thread */
 

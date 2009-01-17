@@ -30,7 +30,7 @@ int set_process_listener( process_listener_t* listener ) {
     return 0;
 }
 
-int notify_process_listener( proc_listener_event_t event, process_t* process ) {
+int notify_process_listener( proc_listener_event_t event, process_t* process, thread_t* thread ) {
     if ( process_listener == NULL ) {
         return 0;
     }
@@ -53,6 +53,27 @@ int notify_process_listener( proc_listener_event_t event, process_t* process ) {
         case PROCESS_RENAMED :
             if ( process_listener->process_renamed != NULL ) {
                 process_listener->process_renamed( process );
+            }
+
+            break;
+
+        case THREAD_CREATED :
+            if ( process_listener->thread_created != NULL ) {
+                process_listener->thread_created( thread );
+            }
+
+            break;
+
+        case THREAD_DESTROYED :
+            if ( process_listener->thread_destroyed != NULL ) {
+                process_listener->thread_destroyed( thread->process->id, thread->id );
+            }
+
+            break;
+
+        case THREAD_RENAMED :
+            if ( process_listener->thread_renamed != NULL ) {
+                process_listener->thread_renamed( thread );
             }
 
             break;
