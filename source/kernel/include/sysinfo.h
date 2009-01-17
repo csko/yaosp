@@ -20,6 +20,19 @@
 #define _SYSINFO_H_
 
 #include <types.h>
+#include <process.h>
+
+typedef enum proc_listener_event {
+    PROCESS_CREATED,
+    PROCESS_DESTROYED,
+    PROCESS_RENAMED
+} proc_listener_event_t;
+
+typedef struct process_listener {
+    int ( *process_created )( process_t* process );
+    int ( *process_destroyed )( process_id id );
+    int ( *process_renamed )( process_t* process );
+} process_listener_t;
 
 typedef struct system_info {
     /* Memory information */
@@ -36,6 +49,9 @@ typedef struct system_info {
 
     uint32_t active_processor_count;
 } system_info_t;
+
+int set_process_listener( process_listener_t* listener );
+int notify_process_listener( proc_listener_event_t event, process_t* process );
 
 int sys_get_system_info( system_info_t* system_info );
 

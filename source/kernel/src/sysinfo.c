@@ -23,6 +23,44 @@
 #include <smp.h>
 #include <mm/pages.h>
 
+static process_listener_t* process_listener = NULL;
+
+int set_process_listener( process_listener_t* listener ) {
+    process_listener = listener;
+    return 0;
+}
+
+int notify_process_listener( proc_listener_event_t event, process_t* process ) {
+    if ( process_listener == NULL ) {
+        return 0;
+    }
+
+    switch ( event ) {
+        case PROCESS_CREATED :
+            if ( process_listener->process_created != NULL ) {
+                process_listener->process_created( process );
+            }
+
+            break;
+
+        case PROCESS_DESTROYED :
+            if ( process_listener->process_destroyed != NULL ) {
+                process_listener->process_destroyed( process->id );
+            }
+
+            break;
+
+        case PROCESS_RENAMED :
+            if ( process_listener->process_renamed != NULL ) {
+                process_listener->process_renamed( process );
+            }
+
+            break;
+    }
+
+    return 0;
+}
+
 int sys_get_system_info( system_info_t* system_info ) {
     system_info->total_page_count = get_total_page_count();
     system_info->free_page_count = get_free_page_count();

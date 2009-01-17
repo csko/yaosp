@@ -20,6 +20,8 @@
 #include <errno.h>
 #include <console.h>
 #include <smp.h>
+#include <scheduler.h>
+#include <sysinfo.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
@@ -121,6 +123,7 @@ static uint8_t* copy_param_array_to_user( char** array, char** user_array, int c
 static int execve( char* path, char** argv, char** envp ) {
     int fd;
     int error;
+    char* new_name;
     uint8_t* stack;
     thread_t* thread;
     void* stack_address;
@@ -171,6 +174,25 @@ static int execve( char* path, char** argv, char** envp ) {
 
     user_argv = ( char** )kmalloc( sizeof( char* ) * ( argc + 1 ) );
     user_envv = ( char** )kmalloc( sizeof( char* ) * ( envc + 1 ) );
+
+    /* Rename the process and the thread */
+
+    new_name = strrchr( path, '/' );
+
+    if ( new_name == NULL ) {
+        new_name = path;
+    } else {
+        new_name++;
+    }
+
+    lock_scheduler();
+    rename_process( thread->process, new_name );
+    rename_thread( thread, new_name );
+    unlock_scheduler();
+
+    notify_process_listener( PROCESS_RENAMED, thread->process );
+
+    /* Empty the memory context of the process */
 
     memory_context_delete_regions( thread->process->memory_context, true );
 

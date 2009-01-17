@@ -1,6 +1,6 @@
-/* Scheduler
+/* Process filesystem implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,31 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SCHEDULER_H_
-#define _SCHEDULER_H_
+#ifndef _PROCFS_H_
+#define _PROCFS_H_
 
 #include <types.h>
-#include <thread.h>
-#include <waitqueue.h>
+#include <vfs/inode.h>
 
-#include <arch/spinlock.h>
+typedef struct procfs_node {
+    hashitem_t hash;
+    ino_t inode_number;
+    bool is_directory;
+    char* name;
+    char* data;
+    size_t data_size;
+    struct procfs_node* name_node;
+    struct procfs_node* next_sibling;
+    struct procfs_node* first_child;
+} procfs_node_t;
 
-extern waitqueue_t sleep_queue;
-extern spinlock_t scheduler_lock;
+typedef struct procfs_dir_cookie {
+    int position;
+} procfs_dir_cookie_t;
 
-int add_thread_to_ready( thread_t* thread );
-int add_thread_to_expired( thread_t* thread );
-
-void reset_thread_quantum( thread_t* thread );
-
-thread_t* do_schedule( void );
-int schedule( registers_t* regs );
-
-void lock_scheduler( void );
-void unlock_scheduler( void );
-
-void sched_preempt( void );
-
-int init_scheduler( void );
-
-#endif // _SCHEDULER_H_
+#endif // _PROCFS_H_

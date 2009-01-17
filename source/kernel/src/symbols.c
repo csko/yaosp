@@ -24,6 +24,9 @@
 #include <thread.h>
 #include <semaphore.h>
 #include <irq.h>
+#include <scheduler.h>
+#include <process.h>
+#include <sysinfo.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
@@ -46,6 +49,7 @@ static kernel_symbol_t symbols[] = {
     { "kprintf", ( ptr_t )kprintf },
     { "kvprintf", ( ptr_t )kvprintf },
     { "dprintf", ( ptr_t )dprintf },
+    { "dprintf_unlocked", ( ptr_t )dprintf_unlocked },
 
     /* Memory management */
     { "kmalloc", ( ptr_t )kmalloc },
@@ -99,10 +103,12 @@ static kernel_symbol_t symbols[] = {
     { "console_set_screen", ( ptr_t )console_set_screen },
     { "console_switch_screen", ( ptr_t )console_switch_screen },
 
-    /* Thread functions */
+    /* Process & thread functions */
     { "create_kernel_thread", ( ptr_t )create_kernel_thread },
     { "sleep_thread", ( ptr_t )sleep_thread },
     { "wake_up_thread", ( ptr_t )wake_up_thread },
+    { "process_table_iterate", ( ptr_t )process_table_iterate },
+    { "set_process_listener", ( ptr_t )set_process_listener },
 
     /* Memory & string functions */
     { "memcpy", ( ptr_t )memcpy },
@@ -134,6 +140,8 @@ static kernel_symbol_t symbols[] = {
     { "reboot", ( ptr_t )reboot },
     { "shutdown", ( ptr_t )shutdown },
     { "handle_panic", ( ptr_t )handle_panic },
+    { "lock_scheduler", ( ptr_t )lock_scheduler },
+    { "unlock_scheduler", ( ptr_t )unlock_scheduler },
     { "__moddi3", ( ptr_t )__moddi3 },
     { "__divdi3", ( ptr_t )__divdi3 },
     { "__umoddi3", ( ptr_t )__umoddi3 },

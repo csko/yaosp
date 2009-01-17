@@ -48,13 +48,17 @@ typedef struct process {
     semaphore_id waiters;
 } process_t;
 
+typedef int process_iter_callback_t( process_t* process, void* data );
+
 process_t* allocate_process( char* name );
 void destroy_process( process_t* process );
 int insert_process( process_t* process );
 void remove_process( process_t* process );
+int rename_process( process_t* process, char* new_name );
 
 uint32_t get_process_count( void );
 process_t* get_process_by_id( process_id id );
+int process_table_iterate( process_iter_callback_t* callback, void* data );
 
 int sys_exit( int exit_code );
 int sys_waitpid( process_id pid, int* status, int options );

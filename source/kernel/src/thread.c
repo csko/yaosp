@@ -25,6 +25,7 @@
 #include <waitqueue.h>
 #include <macros.h>
 #include <console.h>
+#include <sysinfo.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
@@ -120,6 +121,10 @@ void destroy_thread( thread_t* thread ) {
 
         spinunlock_enable( &scheduler_lock );
 
+        /* Tell the system information that a process is died */
+
+        notify_process_listener( PROCESS_DESTROYED, thread->process );
+
         /* Destroy the process */
 
         destroy_process( thread->process );
@@ -143,6 +148,23 @@ int insert_thread( thread_t* thread ) {
     } while ( hashtable_get( &thread_table, ( const void* )thread->id ) != NULL );
 
     hashtable_add( &thread_table, ( hashitem_t* )thread );
+
+    return 0;
+}
+
+int rename_thread( thread_t* thread, char* new_name ) {
+    char* name;
+
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
+    name = strdup( new_name );
+
+    if ( name == NULL ) {
+        return -ENOMEM;
+    }
+
+    kfree( thread->name );
+    thread->name = name;
 
     return 0;
 }
@@ -309,11 +331,11 @@ int init_threads( void ) {
     int error;
 
     error = init_hashtable(
-                &thread_table,
-                256,
-                thread_key,
-                thread_hash,
-                thread_compare
+        &thread_table,
+        256,
+        thread_key,
+        thread_hash,
+        thread_compare
     );
 
     if ( error < 0 ) {

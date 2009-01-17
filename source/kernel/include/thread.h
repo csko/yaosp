@@ -71,6 +71,7 @@ typedef int thread_entry_t( void* arg );
 thread_t* allocate_thread( const char* name, struct process* process );
 void destroy_thread( thread_t* thread );
 int insert_thread( thread_t* thread );
+int rename_thread( thread_t* thread, char* new_name );
 
 void thread_exit( int exit_code );
 void kernel_thread_exit( void );

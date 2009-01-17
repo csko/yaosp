@@ -35,13 +35,13 @@ int main( int argc, char** argv ) {
             char tty_path[ 128 ];
 
             char* argv[] = { "shell", NULL };
-            char* envv[] = { "PATH=/yaosp/system:/yaosp/application", NULL };
+            char* envv[] = { "PATH=/yaosp/application", NULL };
 
             snprintf( tty_path, sizeof( tty_path ), "/device/pty/tty%d", i );
 
             dbprintf( "Executing shell #%d! (tty=%s)\n", i, tty_path );
 
-            slave_tty = open( tty_path, 0 /* O_RDWR */ );
+            slave_tty = open( tty_path, O_RDWR );
 
             if ( slave_tty < 0 ) {
                 dbprintf( "Failed to open tty: %s\n", tty_path );

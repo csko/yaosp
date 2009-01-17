@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <thread.h>
 #include <scheduler.h>
+#include <sysinfo.h>
 #include <mm/context.h>
 
 #include <arch/fork.h>
@@ -105,6 +106,8 @@ int sys_fork( void ) {
     if ( error < 0 ) {
         goto error3;
     }
+
+    notify_process_listener( PROCESS_CREATED, new_process );
 
     return error;
 

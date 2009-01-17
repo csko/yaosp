@@ -218,7 +218,6 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
     while ( child != NULL ) {
         if ( current == cookie->position ) {
             entry->inode_number = child->inode_number;
-
             strncpy( entry->name, child->name, NAME_MAX );
             entry->name[ NAME_MAX ] = 0;
 

@@ -64,6 +64,10 @@ static char* get_line( void ) {
 
                 break;
 
+            case '\t' :
+            case 27 :
+                break;
+
             default :
                 if ( pos < 254 ) {
                     line_buf[ pos++ ] = c;

@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build>
     <array name="subdirs">
         <item>iso9660</item>
+        <item>process</item>
     </array>
 
     <target name="all">

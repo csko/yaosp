@@ -132,8 +132,24 @@ int insert_process( process_t* process ) {
 
 void remove_process( process_t* process ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
-
     hashtable_remove( &process_table, ( const void* )process->id );
+}
+
+int rename_process( process_t* process, char* new_name ) {
+    char* name;
+
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
+    name = strdup( new_name );
+
+    if ( name == NULL ) {
+        return -ENOMEM;
+    }
+
+    kfree( process->name );
+    process->name = name;
+
+    return 0;
 }
 
 uint32_t get_process_count( void ) {
@@ -144,6 +160,12 @@ uint32_t get_process_count( void ) {
 process_t* get_process_by_id( process_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
     return ( process_t* )hashtable_get( &process_table, ( const void* )id );
+}
+
+int process_table_iterate( process_iter_callback_t* callback, void* data ) {
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    hashtable_iterate( &process_table, ( hashtable_iter_callback_t* )callback, data );
+    return 0;
 }
 
 int sys_exit( int exit_code ) {
@@ -203,11 +225,11 @@ int init_processes( void ) {
     /* Initialize the process hashtable */
 
     error = init_hashtable(
-                &process_table,
-                256,
-                process_key,
-                process_hash,
-                process_compare
+        &process_table,
+        128,
+        process_key,
+        process_hash,
+        process_compare
     );
 
     if ( error < 0 ) {
