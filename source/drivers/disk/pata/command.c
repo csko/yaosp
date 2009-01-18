@@ -168,7 +168,7 @@ int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read,
 
     /* Wait for BUSY flag to clear */
 
-    error = pata_port_wait( port, 0, PATA_STATUS_BUSY, true, 1000000 );
+    error = pata_port_wait( port, 0, PATA_STATUS_BUSY, true, 10000000 );
 
     if ( error < 0 ) {
         return error;

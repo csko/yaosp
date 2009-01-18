@@ -178,6 +178,8 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
         error = pata_cdrom_do_read( port, data, position, to_read );
 
         if ( error < 0 ) {
+            UNLOCK( port->lock );
+
             return error;
         }
 

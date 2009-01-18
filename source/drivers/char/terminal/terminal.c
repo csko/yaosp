@@ -68,6 +68,14 @@ int terminal_switch_to( int index ) {
 
     LOCK( lock );
 
+    /* Make sure we're switching to another terminal */
+
+    if ( terminals[ index ] == active_terminal ) {
+        UNLOCK( lock );
+
+        return 0;
+    }
+
     active_terminal = terminals[ index ];
 
     /* Clear the screen */
