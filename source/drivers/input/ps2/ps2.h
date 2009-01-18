@@ -27,6 +27,7 @@
 
 #define PS2_CMD_RCTR 0x20
 #define PS2_CMD_WCTR 0x60
+#define PS2_CMD_TEST 0xAA
 
 #define PS2_STATUS_IBF 0x02
 #define PS2_STATUS_OBF 0x01
@@ -36,6 +37,8 @@
 #define PS2_CTR_KBDDIS 0x10
 #define PS2_CTR_AUXDIS 0x20
 #define PS2_CTR_XLATE  0x40
+
+#define PS2_RET_CTL_TEST 0x55
 
 #define PS2_WAIT_TIMEOUT 10000
 #define PS2_KBD_BUFSIZE   4096

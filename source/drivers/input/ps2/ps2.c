@@ -137,8 +137,32 @@ void ps2_unlock( void ) {
     spinunlock_enable( &ps2_spinlock );
 }
 
+static int ps2_controller_test( void ) {
+    int error;
+    uint8_t data;
+
+    error = ps2_read_command( PS2_CMD_TEST, &data );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( data != PS2_RET_CTL_TEST ) {
+        kprintf( "PS2: Contorller selftest failed!\n" );
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
 int init_module( void ) {
     int error;
+
+    error = ps2_controller_test();
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     error = ps2_init_keyboard();
 
