@@ -55,6 +55,7 @@ typedef struct inode_cache {
 inode_t* get_inode( struct mount_point* mount_point, ino_t inode_number );
 int put_inode( inode_t* inode );
 
+int do_lookup_inode( inode_t* parent, const char* name, int name_length, bool follow_mount, inode_t** result );
 int lookup_parent_inode( struct io_context* io_context, const char* path, char** name, int* length, inode_t** _parent );
 int lookup_inode( struct io_context* io_context, const char* path, inode_t** _inode );
 

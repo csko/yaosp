@@ -95,59 +95,13 @@ static int do_open_helper1( file_t* file, inode_t* parent, char* name, int lengt
 
         atomic_inc( &parent->ref_count );
     } else {
-        inode_t* tmp;
-        ino_t child_inode;
-        bool parent_changed = false;
-
-        if ( ( length == 2 ) &&
-             ( strncmp( name, "..", 2 ) == 0 ) &&
-             ( parent->inode_number == parent->mount_point->root_inode_number ) ) {
-            parent = parent->mount_point->mount_inode;
-
-            if ( parent == NULL ) {
-                return -EINVAL;
-            }
-
-            atomic_inc( &parent->ref_count );
-
-            parent_changed = true;
-        }
-
-        error = parent->mount_point->fs_calls->lookup_inode(
-            parent->mount_point->fs_data,
-            parent->fs_node,
-            name,
-            length,
-            &child_inode
-        );
+        error = do_lookup_inode( parent, name, length, true, &file->inode );
 
         if ( error < 0 ) {
-            if ( parent_changed ) {
-                put_inode( parent );
-            }
-
             return error;
         }
 
-        file->inode = get_inode( parent->mount_point, child_inode );
-
-        if ( parent_changed ) {
-            put_inode( parent );
-        }
-
-        if ( file->inode == NULL ) {
-            return -ENOINO;
-        }
-
-        /* Follow the mount point */
-
-        if ( file->inode->mount != NULL ) {
-            tmp = file->inode;
-            file->inode = tmp->mount;
-
-            atomic_inc( &file->inode->ref_count );
-            put_inode( tmp );
-        }
+        ASSERT( file->inode != NULL );
 
         error = file->inode->mount_point->fs_calls->open(
             file->inode->mount_point->fs_data,

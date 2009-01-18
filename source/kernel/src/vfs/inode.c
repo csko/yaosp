@@ -193,6 +193,61 @@ static bool inode_compare( const void* key1, const void* key2 ) {
     return ( *inode_num_1 == *inode_num_2 );
 }
 
+int do_lookup_inode( inode_t* parent, const char* name, int name_length, bool follow_mount, inode_t** result ) {
+    int error;
+    inode_t* inode;
+    ino_t inode_number;
+    bool parent_changed;
+
+    parent_changed = false;
+
+    if ( ( name_length == 2 ) &&
+         ( strncmp( name, "..", 2 ) == 0 ) &&
+         ( parent->inode_number == parent->mount_point->root_inode_number ) ) {
+        parent = parent->mount_point->mount_inode;
+        parent_changed = true;
+
+        atomic_inc( &parent->ref_count );
+    }
+
+    error = parent->mount_point->fs_calls->lookup_inode(
+        parent->mount_point->fs_data,
+        parent->fs_node,
+        name,
+        name_length,
+        &inode_number
+    );
+
+    if ( error < 0 ) {    
+        goto out;
+    }
+
+    inode = get_inode( parent->mount_point, inode_number );
+
+    if ( inode == NULL ) {
+        error = -ENOINO;
+    } else {
+        if ( ( follow_mount ) && ( inode->mount != NULL ) ) {
+            inode_t* tmp;
+
+            tmp = inode;
+            inode = inode->mount;
+            atomic_inc( &inode->ref_count );
+
+            put_inode( tmp );
+        }
+    }
+
+    *result = inode;
+
+out:
+    if ( parent_changed ) {
+        put_inode( parent );
+    }
+
+    return error;
+}
+
 int lookup_parent_inode( io_context_t* io_context, const char* path, char** name, int* length, inode_t** _parent ) {
     int error;
     char* sep;
@@ -218,8 +273,7 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
     UNLOCK( io_context->lock );
 
     while ( true ) {
-        int name_len;
-        ino_t inode_number;
+        int name_length;
         inode_t* inode;
 
         sep = strchr( path, '/' );
@@ -228,43 +282,24 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
             break;
         }
 
-        name_len = sep - path;
+        name_length = sep - path;
 
-        if ( ( name_len == 0 ) ||
-             ( ( name_len == 1 ) && ( path[ 0 ] == '.' ) ) ) {
+        if ( ( name_length == 0 ) ||
+             ( ( name_length == 1 ) && ( path[ 0 ] == '.' ) ) ) {
             goto next;
         }
 
-        error = parent->mount_point->fs_calls->lookup_inode(
-            parent->mount_point->fs_data,
-            parent->fs_node,
-            path,
-            name_len,
-            &inode_number
-        );
-
-        if ( error < 0 ) {    
-            put_inode( parent );
-            return error;
-        }
-
-        inode = get_inode( parent->mount_point, inode_number );
+        error = do_lookup_inode( parent, path, name_length, true, &inode );
 
         put_inode( parent );
 
-        if ( inode == NULL ) {
-            return -ENOMEM;
+        if ( error < 0 ) {
+            return error;
         }
 
-        /* Follow possible mount point */
+        ASSERT( inode != NULL );
 
-        if ( inode->mount == NULL ) {
-            parent = inode;
-        } else {
-            parent = inode->mount;
-            atomic_inc( &parent->ref_count );
-            put_inode( inode );
-        }
+        parent = inode;
 
 next:
         path = sep + 1;
@@ -282,7 +317,6 @@ int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode )
     char* name;
     int length;
     inode_t* inode;
-    ino_t inode_number;
     inode_t* parent;
 
     error = lookup_parent_inode( io_context, path, &name, &length, &parent );
@@ -291,35 +325,17 @@ int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode )
         return error;
     }
 
-    error = parent->mount_point->fs_calls->lookup_inode(
-        parent->mount_point->fs_data,
-        parent->fs_node,
-        name,
-        length,
-        &inode_number
-    );
-
-    if ( error < 0 ) {
-        put_inode( parent );
-        return error;
-    }
-
-    inode = get_inode( parent->mount_point, inode_number );
+    error = do_lookup_inode( parent, name, length, true, &inode );
 
     put_inode( parent );
 
-    if ( inode == NULL ) {
-        return -ENOMEM;
+    if ( error < 0 ) {
+        return error;
     }
 
-    if ( inode->mount == NULL ) {
-        *_inode = inode;
-    } else {
-        atomic_inc( &inode->mount->ref_count );
-        *_inode = inode->mount;
+    ASSERT( inode != NULL );
 
-        put_inode( inode );
-    }
+    *_inode = inode;
 
     return 0;
 }
