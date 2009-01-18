@@ -62,7 +62,7 @@ int do_ls( char* dirname ) {
                 unit++;
             }
 
-            snprintf( size, 10, "%lld %s", entry_stat.st_size, units[ unit ] );
+            snprintf( size, 10, "%lld %2s", entry_stat.st_size, units[ unit ] );
             printf( "%9s %s\n", size, entry->d_name );
         }
     }

@@ -1,6 +1,6 @@
 /* Process filesystem implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -696,13 +696,13 @@ int init_module( void ) {
         return error;
     }
 
-    error = mkdir( "/proc", 0 );
+    error = mkdir( "/process", 0 );
 
     if ( error < 0 ) {
         return error;
     }
 
-    error = mount( "", "/proc", "procfs" );
+    error = mount( "", "/process", "procfs" );
 
     if ( error < 0 ) {
         return error;

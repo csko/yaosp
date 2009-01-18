@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>sysinfo</item>
         <item>lspci</item>
         <item>ps</item>
+        <item>date</item>
     </array>
 
     <target name="all">

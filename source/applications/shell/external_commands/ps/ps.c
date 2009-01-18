@@ -1,6 +1,6 @@
 /* ps shell command
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -29,7 +29,7 @@ static int read_proc_entry_node( char* dir, char* node, char* buffer, size_t siz
     int data;
     char path[ 64 ];
 
-    snprintf( path, sizeof( path ), "/proc/%s/%s", dir, node );
+    snprintf( path, sizeof( path ), "/process/%s/%s", dir, node );
 
     fd = open( path, O_RDONLY );
 
@@ -79,7 +79,7 @@ static void do_ps( char* process ) {
 
     printf( "%4s %4s %s\n", process, "-", name );
 
-    snprintf( path, sizeof( path ), "/proc/%s", process );
+    snprintf( path, sizeof( path ), "/process/%s", process );
 
     dir = opendir( path );
 
@@ -88,7 +88,7 @@ static void do_ps( char* process ) {
     }
 
     while ( ( entry = readdir( dir ) ) != NULL ) {
-        snprintf( path, sizeof( path ), "/proc/%s/%s", process, entry->d_name );
+        snprintf( path, sizeof( path ), "/process/%s/%s", process, entry->d_name );
 
         if ( stat( path, &entry_stat ) != 0 ) {
             continue;
@@ -110,13 +110,14 @@ int main( int argc, char** argv ) {
     DIR* dir;
     struct dirent* entry;
 
-    dir = opendir( "/proc" );
+    dir = opendir( "/process" );
 
     if ( dir == NULL ) {
+        fprintf (stderr, "%s: Failed to open /process!\n", argv[0] );
         return EXIT_FAILURE;
     }
 
-    printf( " pid  tid name\n" );
+    printf( " PID  TID NAME\n" );
 
     while ( ( entry = readdir( dir ) ) != NULL ) {
         do_ps( entry->d_name );

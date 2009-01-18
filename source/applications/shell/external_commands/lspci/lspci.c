@@ -1,6 +1,6 @@
 /* PCI device lister
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -104,7 +104,7 @@ int main( int argc, char** argv ) {
     dir = opendir( "/device/pci" );
 
     if ( dir == NULL ) {
-        printf( "%s: Failed to open /device/pci!\n", argv0 );
+        fprintf( stderr, "%s: Failed to open /device/pci!\n", argv0 );
         return EXIT_FAILURE;
     }
 
