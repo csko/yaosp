@@ -1,6 +1,6 @@
 /* Programmable interval timer
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,14 @@
 #ifndef _ARCH_PIT_H_
 #define _ARCH_PIT_H_
 
-int init_system_time( void );
+#define PIT_MODE 0x43
+#define PIT_CH0  0x40
+
+#define PIT_TICKS_PER_SEC 1193182
+
+int pit_read_timer( void );
+void pit_wait_wrap( void );
+
 /**
  * Returns the time in microseconds not counting the leap ones since the Epoch
  *
@@ -28,6 +35,9 @@ int init_system_time( void );
  */
 uint64_t get_system_time( void );
 uint64_t get_boot_time( void );
+
+int init_system_time( void );
+
 int init_pit( void );
 
 #endif // _ARCH_PIT_H_

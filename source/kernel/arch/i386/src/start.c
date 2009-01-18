@@ -1,6 +1,6 @@
 /* C entry point of the i386 architecture
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,6 +63,10 @@ void arch_start( multiboot_header_t* header ) {
     kprintf( "Initializing interrupts ... " );
     init_interrupts();
     kprintf( "done\n" );
+
+    /* Calibrate the boot CPU speed */
+
+    cpu_calibrate_speed();
 
     /* Initializing bootmodules */
 

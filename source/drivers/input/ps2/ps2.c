@@ -158,6 +158,8 @@ static int ps2_controller_test( void ) {
 int init_module( void ) {
     int error;
 
+    ps2_flush_buffer();
+
     error = ps2_controller_test();
 
     if ( error < 0 ) {

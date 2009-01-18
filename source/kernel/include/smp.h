@@ -28,6 +28,7 @@ typedef struct cpu {
 
     bool present;
     volatile bool running;
+    uint64_t core_speed;
 
     thread_t* current_thread;
     thread_t* idle_thread;

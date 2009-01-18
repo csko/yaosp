@@ -1,6 +1,6 @@
 /* Processor detection code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,6 +24,8 @@
 
 #include <arch/cpu.h>
 #include <arch/gdt.h>
+#include <arch/pit.h>
+#include <arch/io.h>
 
 i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 
@@ -166,6 +168,33 @@ int detect_cpu( void ) {
         arch_processor_table[ i ].model = model;
         arch_processor_table[ i ].features = features;
     }
+
+    return 0;
+}
+
+int cpu_calibrate_speed( void ) {
+    uint64_t start;
+    uint64_t end;
+    cpu_t* processor;
+
+    processor = get_processor();
+
+    outb( 0x34, PIT_MODE );
+    outb( 0xFF, PIT_CH0 );
+    outb( 0xFF, PIT_CH0 );
+
+    pit_wait_wrap();
+    start = rdtsc();
+    pit_wait_wrap();
+    end = rdtsc();
+
+    processor->core_speed = ( uint64_t )PIT_TICKS_PER_SEC * ( end - start ) / 0xFFFF;
+
+    kprintf( "CPU %d runs at %u MHz.\n", get_processor_id(), ( uint32_t )( processor->core_speed / 1000000 ) );
+
+    outb( 0x34, PIT_MODE );
+    outb( 0x00, PIT_CH0 );
+    outb( 0x00, PIT_CH0 );
 
     return 0;
 }

@@ -52,6 +52,17 @@ enum {
 extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 extern i386_feature_t i386_features[];
 
+static inline uint64_t rdtsc( void ) {
+    uint64_t value;
+
+    __asm__ __volatile__(
+        "rdtsc\n"
+        : "=A" ( value )
+    );
+
+    return value;
+}
+
 register_t get_cr2( void );
 register_t get_cr3( void );
 
@@ -92,6 +103,13 @@ void set_eflags( register_t eflags );
  * @return On success 0 is returned
  */
 int detect_cpu( void );
+
+/**
+ * Calibrates the speed of the current CPU.
+ *
+ * @return On success 0 is returned
+ */
+int cpu_calibrate_speed( void );
 
 #endif // __ASSELBLER__
 

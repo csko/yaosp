@@ -1,6 +1,6 @@
 /* Programmable Interval Timer
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -57,6 +57,32 @@ static int pit_irq( int irq, void* data, registers_t* regs ) {
     return 0;
 }
 
+int pit_read_timer( void ) {
+    int count;
+
+    outb( 0, PIT_MODE );
+    count = inb( PIT_CH0 );
+    count |= ( inb( PIT_CH0 ) << 8 );
+
+    return count;
+}
+
+void pit_wait_wrap( void ) {
+    int delta;
+    uint32_t prev = 0;
+    uint32_t current = pit_read_timer();
+
+    for ( ;; ) {
+        prev = current;
+        current = pit_read_timer();
+        delta = current - prev;
+
+        if ( delta > 300 ) {
+            break;
+        }
+    }
+}
+
 uint64_t get_system_time( void ) {
     uint64_t now;
 
@@ -91,16 +117,23 @@ int init_system_time( void ) {
 }
 
 int init_pit( void ) {
+    int error;
     uint32_t base;
 
     /* Set frequency (1000Hz) */
 
-    base = 1193182L / 1000;
-    outb( 0x36, 0x43 );
-    outb( base & 0xFF, 0x40 );
-    outb( base >> 8, 0x40 );
+    base = PIT_TICKS_PER_SEC / 1000;
+    outb( 0x36, PIT_MODE );
+    outb( base & 0xFF, PIT_CH0 );
+    outb( base >> 8, PIT_CH0 );
 
     /* Request the PIT irq */
 
-    return request_irq( 0, pit_irq, NULL );
+    error = request_irq( 0, pit_irq, NULL );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
 }
