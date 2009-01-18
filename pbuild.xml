@@ -51,7 +51,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="all" directory="source"/>
     </target>
 
-    <target name="create_iso" type="private">
+    <target name="create_iso">
         <copy from="scripts/grub/menu.lst" to="build/boot/grub/menu.lst"/>
         <copy from="scripts/grub/stage2_eltorito" to="build/boot/grub/stage2_eltorito"/>
 

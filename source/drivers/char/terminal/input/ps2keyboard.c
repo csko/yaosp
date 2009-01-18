@@ -24,7 +24,7 @@
 
 #include "../input.h"
 #include "../terminal.h"
-#include "../../../input/ps2/ps2kbd.h"
+#include "../../../input/ps2/ps2.h"
 
 enum {
     L_SHIFT = 1,

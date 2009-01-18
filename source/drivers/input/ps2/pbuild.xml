@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Kornel Csernai
+Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>ps2kbd.c</item>
+        <item>ps2.c</item>
+        <item>kbd.c</item>
     </array>
 
     <target name="clean">
