@@ -56,6 +56,7 @@ int sys_dbprintf( const char* format, char** parameters ) {
 
 void handle_panic( const char* file, int line, const char* format, ... ) {
     va_list args;
+    thread_t* thread;
 
     //disable_interrupts();
 
@@ -64,6 +65,12 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
     va_start( args, format );
     kvprintf( format, args );
     va_end( args );
+
+    thread = current_thread();
+
+    if ( thread != NULL ) {
+        kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
+    }
 
 #if 0
     kprintf(

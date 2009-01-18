@@ -36,7 +36,7 @@ void handle_page_fault( registers_t* regs ) {
     thread = current_thread();
 
     if ( thread != NULL ) {
-        kprintf( "Current thread: %s\n", thread->name );
+        kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
     }
 
     disable_interrupts();

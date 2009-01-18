@@ -119,11 +119,11 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
             inode = NULL;
         }
 
-        UNLOCK( cache->lock );
-
         if ( mount_point->fs_calls->write_inode != NULL ) {
             mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
         }
+
+        UNLOCK( cache->lock );
 
         kfree( inode );
 
@@ -159,11 +159,11 @@ int put_inode( inode_t* inode ) {
             inode = NULL;
         }
 
-        UNLOCK( cache->lock );
-
         if ( mount_point->fs_calls->write_inode != NULL ) {
             mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
         }
+
+        UNLOCK( cache->lock );
 
         kfree( inode );
     }
