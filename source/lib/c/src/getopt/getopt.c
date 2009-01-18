@@ -17,13 +17,13 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
-#include <getopt.h>
-#include <getopt_int.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h> /* NULL */
+
+#include <getopt.h>
+#include "getopt_int.h"
 
 # ifdef USE_NONOPTION_FLAGS
 #  define SWAP_FLAGS(ch1, ch2) \

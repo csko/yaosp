@@ -104,11 +104,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/vfprintf.c</item>
         <item>src/stdio/vsnprintf.c</item>
         <item>src/stdio/rewind.c</item>
+        <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>
         <item>src/time/gmtime.c</item>
         <item>src/time/gmtime_r.c</item>
         <item>src/getopt/getopt.c</item>
+        <item>src/getopt/getopt_long.c</item>
+        <item>src/getopt/getopt_long_only.c</item>
         <item>src/sys/waitpid.c</item>
         <item>src/sys/stat.c</item>
         <item>src/sys/fstat.c</item>

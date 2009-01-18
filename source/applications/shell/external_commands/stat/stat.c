@@ -26,9 +26,10 @@ int do_stat( char* file ) {
     char device_id[15];
     char* type;
     char buf[sizeof( "DDD MMM DD HH:MM:SS ZZZ YYYY" ) + 1];
-    tm_t* timeval;
+    tm_t timeval;
 
     if ( stat( file, &st ) != 0 ) {
+        /* TODO */
         return -1;
     }
 
@@ -57,26 +58,20 @@ int do_stat( char* file ) {
     printf( "Device: %s Inode: %-11lld Links: %d\n", device_id, st.st_ino, st.st_nlink );
     printf( "Access: none               Uid: none               Gid: none\n" );
 
-    timeval = gmtime((const time_t*) &st.st_atime);
-    if(timeval != NULL) {
-        strftime( buf, sizeof( buf ), "%c", timeval );
+    if(gmtime_r((const time_t*) &st.st_atime, &timeval) != NULL) {
+        strftime( buf, sizeof( buf ), "%c", &timeval );
         printf( "Access: %s\n", buf );
     }
-//    printf( "Access: %llu\n", st.st_atime );
 
-    timeval = gmtime((const time_t*) &st.st_mtime);
-    if(timeval != NULL) {
-        strftime( buf, sizeof( buf ), "%c", timeval );
+    if(gmtime_r((const time_t*) &st.st_mtime, &timeval) != NULL) {
+        strftime( buf, sizeof( buf ), "%c", &timeval );
         printf( "Modify: %s\n", buf );
     }
-//    printf( "Modify: %llu\n", st.st_mtime );
 
-    timeval = gmtime((const time_t*) &st.st_ctime);
-    if(timeval != NULL) {
-        strftime( buf, sizeof( buf ), "%c", timeval );
+    if(gmtime_r((const time_t*) &st.st_ctime, &timeval) != NULL) {
+        strftime( buf, sizeof( buf ), "%c", &timeval );
         printf( "Change: %s\n", buf );
     }
-//    printf( "Change: %llu\n", st.st_ctime );
 
     return 0;
 }

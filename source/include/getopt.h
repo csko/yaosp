@@ -18,16 +18,17 @@
 #ifndef _GETOPT_H_
 #define _GETOPT_H_
 
-#define GETOPT_NO_ARG   0
-#define GETOPT_REQ_ARG  1
-#define GETOPT_OPT_ARG  2
-
 typedef struct option {
     const char *name;
     int has_arg;
     int* flag;
     int val;
 } option_t ;
+
+#define no_argument         0
+#define required_argument   1
+#define optional_argument   2
+
 
 extern char *optarg;
 extern int optind, opterr, optopt;
