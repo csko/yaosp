@@ -1,6 +1,6 @@
 /* Error number definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -37,5 +37,8 @@
 #define ENXIO   15
 #define EDOM    16
 #define ENODEV  17
+#define EINTR   18
+#define ENOTTY  19
+#define EPERM   20
 
 #endif // _ERRNO_H_

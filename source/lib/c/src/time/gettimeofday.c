@@ -1,4 +1,4 @@
-/* yaosp C library
+/* gettimeofday function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,27 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_SELECT_H_
-#define _SYS_SELECT_H_
+#include <sys/time.h>
 
-#include <sys/types.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define FD_ZERO(set) \
-    memset( (set)->fds, 0, 1024 / 32 );
+int gettimeofday( struct timeval* tv, struct timezone* tz ) {
+    int ret;
+    uint64_t time;
 
-#define FD_CLR(fd,set) \
-    (set)->fds[fd/32] &= ~(1<<(fd%32));
+    ret = syscall1( SYS_get_system_time, ( int )&time );
 
-#define FD_SET(fd,set) \
-    (set)->fds[fd/32] |= (1<<(fd%32));
+    if ( ret >= 0 ) {
+        if ( tv != NULL ) {
+            tv->tv_sec = time / 1000000;
+            tv->tv_usec = time % 1000000;
+        }
+    }
 
-#define FD_ISSET(fd,set) \
-    ((set)->fds[fd/32] & (1<<(fd%32)))
-
-typedef struct fd_set {
-    uint32_t fds[ 1024 / 32 ];
-} fd_set;
-
-int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout );
-
-#endif // _SYS_SELECT_H_
+    return ret;
+}

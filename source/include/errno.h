@@ -35,6 +35,10 @@
 #define ERANGE  14
 #define ENXIO   15
 #define EDOM    16
+#define ENODEV  17
+#define EINTR   18
+#define ENOTTY  19
+#define EPERM   20
 
 extern int errno;
 

@@ -1,6 +1,7 @@
 /* Time management
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -48,8 +49,8 @@ typedef struct tm {
 
 int sys_time(int* tloc);
 int sys_stime(int* tptr);
-int sys_gettimeofday(timeval_t* tv, timezone_t* tz);
-int sys_settimeofday(timeval_t* tv, timezone_t* tz);
+int sys_get_system_time( uint64_t* time );
+
 /* int sys_adjtimex(timex_t* txc_p); */
 
 /* Names and short names for months and days of week used by strftime */

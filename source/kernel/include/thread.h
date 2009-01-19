@@ -110,6 +110,8 @@ thread_t* get_thread_by_id( thread_id id );
 
 int thread_table_iterate( thread_iter_callback_t* callback, void* data );
 
+int sys_sleep_thread( uint64_t* microsecs );
+
 int init_threads( void );
 int init_thread_cleaner( void );
 

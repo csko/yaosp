@@ -96,4 +96,6 @@ int fputs( const char* s, FILE* stream );
 #define setbuf(stream,buf) setvbuf(stream,buf,buf?_IOFBF:_IONBF,BUFSIZ)
 int setvbuf( FILE* stream, char* buf, int flags, size_t size );
 
+void perror( const char* s );
+
 #endif // _STDIO_H_

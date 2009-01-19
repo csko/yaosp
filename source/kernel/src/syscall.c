@@ -26,6 +26,7 @@
 #include <semaphore.h>
 #include <time.h>
 #include <sysinfo.h>
+#include <thread.h>
 #include <mm/userspace.h>
 #include <vfs/vfs.h>
 
@@ -52,7 +53,9 @@ static system_call_entry_t system_call_table[] = {
     { "exit", sys_exit, 0 },
     { "waitpid", sys_waitpid, 0 },
     { "time", sys_time, 0 },
-    { "get_system_info", sys_get_system_info, 0 }
+    { "get_system_time", sys_get_system_time, 0 },
+    { "get_system_info", sys_get_system_info, 0 },
+    { "sleep_thread", sys_sleep_thread, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

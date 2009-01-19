@@ -51,25 +51,24 @@ const char* sday_names[ 7 ] = { "Sun", "Mon", "Tue",
                                 "Wed", "Thu", "Fri",
                                 "Sat" };
 
-int sys_time(int* tloc) {
-    int ret = (int) (get_system_time() / 1000000);
+int sys_time( int* tloc ) {
+    int ret;
+
+    ret = ( int )( get_system_time() / 1000000 );
+
     if(tloc != NULL) {
         *tloc = ret;
     }
+
     return ret;
 }
 
+int sys_get_system_time( uint64_t* time ) {
+    *time = get_system_time();
+    return 0;
+}
+
 int sys_stime(int* tptr) {
-    /* TODO */
-    return 0;
-}
-
-int sys_gettimeofday(timeval_t* tv, timezone_t* tz) {
-    /* TODO */
-    return 0;
-}
-
-int sys_settimeofday(timeval_t* tv, timezone_t* tz) {
     /* TODO */
     return 0;
 }

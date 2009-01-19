@@ -53,10 +53,13 @@ int isatty( int fd );
 int fchdir( int fd );
 int getdents( int fd, struct dirent* entry, unsigned int count );
 
+int access( const char* pathname, int mode );
 int unlink( const char* pathname );
 ssize_t readlink( const char* path, char* buf, size_t bufsiz );
 char* getcwd( char* buf, size_t size );
 
 int getpagesize( void );
+
+unsigned int sleep( unsigned int seconds );
 
 #endif // _UNISTD_H_

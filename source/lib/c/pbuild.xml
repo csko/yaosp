@@ -75,6 +75,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/unlink.c</item>
         <item>src/unistd/readlink.c</item>
         <item>src/unistd/getcwd.c</item>
+        <item>src/unistd/sleep.c</item>
+        <item>src/unistd/access.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/ferror.c</item>
@@ -104,11 +106,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/vfprintf.c</item>
         <item>src/stdio/vsnprintf.c</item>
         <item>src/stdio/rewind.c</item>
+        <item>src/stdio/perror.c</item>
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>
         <item>src/time/gmtime.c</item>
         <item>src/time/gmtime_r.c</item>
+        <item>src/time/gettimeofday.c</item>
         <item>src/getopt/getopt.c</item>
         <item>src/getopt/getopt_long.c</item>
         <item>src/getopt/getopt_long_only.c</item>
@@ -123,8 +127,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/isxdigit.c</item>
         <item>src/ctype/isalnum.c</item>
         <item>src/ctype/isspace.c</item>
+        <item>src/ctype/isprint.c</item>
+        <item>src/ctype/iscntrl.c</item>
         <item>src/ctype/tolower.c</item>
         <item>src/ctype/toupper.c</item>
+        <item>src/ctype/isgraph.c</item>
         <item>src/signal/signal.c</item>
         <item>src/locale/localeconv.c</item>
         <item>src/yaosp/debug.c</item>

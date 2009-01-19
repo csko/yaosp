@@ -283,6 +283,10 @@ int sleep_thread( uint64_t microsecs ) {
     return 0;
 }
 
+int sys_sleep_thread( uint64_t* microsecs ) {
+    return sleep_thread( *microsecs );
+}
+
 int wake_up_thread( thread_id id ) {
     int error;
     thread_t* thread;
