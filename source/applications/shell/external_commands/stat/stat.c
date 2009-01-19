@@ -21,6 +21,8 @@
 #include <time.h>
 #include <sys/stat.h>
 
+char* argv0;
+
 int do_stat( char* file ) {
     struct stat st;
     char device_id[15];
@@ -29,7 +31,8 @@ int do_stat( char* file ) {
     tm_t timeval;
 
     if ( stat( file, &st ) != 0 ) {
-        /* TODO */
+        /* TODO: use return value */
+        fprintf( stderr, "%s: cannot stat `%s': No such file or directory\n", argv0, file );
         return -1;
     }
 
@@ -79,6 +82,8 @@ int do_stat( char* file ) {
 int main( int argc, char** argv ) {
     int i;
     int ret = 0;
+
+    argv0 = argv[0];
 
     if( argc > 1 ) {
         for ( i = 1; i < argc; i++){
