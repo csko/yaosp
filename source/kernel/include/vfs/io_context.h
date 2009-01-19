@@ -33,6 +33,7 @@ typedef struct file {
     hashitem_t hash;
 
     int fd;
+    off_t position;
     inode_t* inode;
     file_type_t type;
     void* cookie;
