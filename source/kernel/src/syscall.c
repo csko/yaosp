@@ -49,7 +49,6 @@ static system_call_entry_t system_call_table[] = {
     { "stat", sys_stat, 0 },
     { "fstat", sys_fstat, 0 },
     { "lseek", sys_lseek, 0 },
-    { "getcwd", sys_getcwd, 0 },
     { "exit", sys_exit, 0 },
     { "waitpid", sys_waitpid, 0 },
     { "time", sys_time, 0 },

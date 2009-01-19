@@ -19,9 +19,13 @@
 #ifndef _UNISTD_H_
 #define _UNISTD_H_
 
+#include <string.h>
 #include <sys/types.h>
 
 #define NAME_MAX 255
+
+#define _D_EXACT_NAMLEN(d) (strlen((d)->d_name))
+#define _D_ALLOC_NAMLEN(d) (NAME_MAX+1)
 
 struct dirent {
     ino_t d_ino;

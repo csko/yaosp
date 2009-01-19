@@ -559,6 +559,8 @@ static int do_stat( bool kernel, const char* path, struct stat* stat ) {
         );
     }
 
+    stat->st_dev = ( dev_t )inode->mount_point;
+
     put_inode( inode );
 
     return error;
@@ -607,29 +609,6 @@ int sys_fstat( int fd, struct stat* stat ) {
 int sys_lseek( int fd, off_t* offset, int whence, off_t* result ) {
     /* TODO */
     return 0;
-}
-
-static int do_getcwd( bool kernel, char* buf, size_t size ) {
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
-
-    if ( io_context->current_directory->inode_number == io_context->root_directory->inode_number ) {
-        snprintf( buf, size, "/" );
-    } else {
-        /* TODO */
-        buf[ 0 ] = 0;
-    }
-
-    return 0;
-}
-
-int sys_getcwd( char* buf, size_t size ) {
-    return do_getcwd( false, buf, size );
 }
 
 int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {

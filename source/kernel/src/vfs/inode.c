@@ -325,7 +325,15 @@ int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode )
         return error;
     }
 
-    error = do_lookup_inode( parent, name, length, true, &inode );
+    if ( ( length == 0 ) ||
+         ( ( length == 1 ) && ( name[ 0 ] == '.' ) ) ) {
+        inode = parent;
+        error = 0;
+
+        atomic_inc( &inode->ref_count );
+    } else {
+        error = do_lookup_inode( parent, name, length, true, &inode );
+    }
 
     put_inode( parent );
 
