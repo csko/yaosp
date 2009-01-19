@@ -30,6 +30,7 @@ typedef struct procfs_node {
     char* data;
     size_t data_size;
     struct procfs_node* name_node;
+    struct procfs_node* parent;
     struct procfs_node* next_sibling;
     struct procfs_node* first_child;
 } procfs_node_t;

@@ -74,6 +74,7 @@ semaphore_id do_create_semaphore( bool kernel, const char* name, semaphore_type_
     if ( semaphore == NULL ) {
         return -ENOMEM;
     }
+
     /* Initialize other parts of the semaphore */
 
     error = init_waitqueue( &semaphore->waiters );

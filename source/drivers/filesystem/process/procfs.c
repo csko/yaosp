@@ -66,6 +66,8 @@ static procfs_node_t* procfs_create_node( procfs_node_t* parent, char* name, boo
 
     hashtable_add( &procfs_inode_table, ( hashitem_t* )node );
 
+    node->parent = parent;
+
     if ( parent != NULL ) {
         node->next_sibling = parent->first_child;
         parent->first_child = node;
@@ -214,6 +216,15 @@ static int procfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
     parent = ( procfs_node_t* )_parent;
 
     LOCK( procfs_lock );
+
+    if ( ( name_len == 2 ) &&
+         ( strncmp( name, "..", 2 ) == 0 ) ) {
+        *inode_num = parent->parent->inode_number;
+
+        UNLOCK( procfs_lock );
+
+        return 0;
+    }
 
     node = parent->first_child;
 
