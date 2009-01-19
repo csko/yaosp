@@ -157,7 +157,7 @@ int terminal_switch_to( int index ) {
     return 0;
 }
 
-static int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
+int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
     bool done;
     term_buffer_item_t* last_line;
 

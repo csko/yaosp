@@ -66,4 +66,6 @@ int kvprintf( const char* format, va_list args );
 int dprintf( const char* format, ... );
 int dprintf_unlocked( const char* format, ... );
 
+int kernel_console_read( char* buffer, int size );
+
 #endif // _CONSOLE_H_

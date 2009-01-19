@@ -50,5 +50,6 @@ extern terminal_t* terminals[ MAX_TERMINAL_COUNT ];
 
 int terminal_scroll( int offset );
 int terminal_switch_to( int index );
+int terminal_buffer_insert( terminal_t* terminal, char* buf, int size );
 
 #endif // _TERMINAL_TERMINAL_H_

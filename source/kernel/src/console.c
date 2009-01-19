@@ -18,10 +18,18 @@
 
 #include <types.h>
 #include <console.h>
+#include <macros.h>
 #include <lib/stdarg.h>
 #include <lib/printf.h>
 
 #include <arch/spinlock.h>
+
+#define KERNEL_CONSOLE_SIZE 32768
+
+static int kernel_read_pos = 0;
+static int kernel_write_pos = 0;
+static int kernel_console_size = 0;
+static char kernel_console[ KERNEL_CONSOLE_SIZE ];
 
 static console_t* screen = NULL;
 static console_t* debug = NULL;
@@ -77,6 +85,13 @@ static int kprintf_helper( void* data, char c ) {
 
     if ( debug != NULL ) {
         debug->ops->putchar( debug, c );
+    }
+
+    if ( kernel_console_size < KERNEL_CONSOLE_SIZE ) {
+        kernel_console[ kernel_write_pos ] = c;
+
+        kernel_write_pos = ( kernel_write_pos + 1 ) % KERNEL_CONSOLE_SIZE;
+        kernel_console_size++;
     }
 
     return 0;
@@ -176,4 +191,26 @@ int dprintf_unlocked( const char* format, ... ) {
     }
 
     return 0;
+}
+
+int kernel_console_read( char* buffer, int size ) {
+    int ret;
+    int to_read;
+
+    spinlock_disable( &console_lock );
+
+    to_read = MIN( kernel_console_size, size );
+    ret = to_read;
+
+    while ( to_read > 0 ) {
+        *buffer++ = kernel_console[ kernel_read_pos ];
+
+        kernel_read_pos = ( kernel_read_pos + 1 ) % KERNEL_CONSOLE_SIZE;
+        kernel_console_size--;
+        to_read--;
+    }
+
+    spinunlock_enable( &console_lock );
+
+    return ret;
 }

@@ -50,6 +50,7 @@ static kernel_symbol_t symbols[] = {
     { "kvprintf", ( ptr_t )kvprintf },
     { "dprintf", ( ptr_t )dprintf },
     { "dprintf_unlocked", ( ptr_t )dprintf_unlocked },
+    { "kernel_console_read", ( ptr_t )kernel_console_read },
 
     /* Memory management */
     { "kmalloc", ( ptr_t )kmalloc },

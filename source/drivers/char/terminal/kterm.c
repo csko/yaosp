@@ -102,7 +102,8 @@ static int kterm_flusher_thread( void* arg ) {
 }
 
 int init_kernel_terminal( void ) {
-    char path[ 128 ];
+    int data;
+    char buf[ 256 ];
     terminal_t* kterm;
 
     /* Use the last virtual terminal as the kernel output */
@@ -113,9 +114,9 @@ int init_kernel_terminal( void ) {
 
     /* Open the slave side of the pseudo terminal */
 
-    snprintf( path, sizeof( path ), "/device/pty/tty%d", MAX_TERMINAL_COUNT - 1 );
+    snprintf( buf, sizeof( buf ), "/device/pty/tty%d", MAX_TERMINAL_COUNT - 1 );
 
-    kterm_tty = open( path, O_WRONLY );
+    kterm_tty = open( buf, O_WRONLY );
 
     if ( kterm_tty < 0 ) {
         kprintf( "Terminal: Failed to open slave tty for kernel!\n" );
@@ -150,6 +151,12 @@ int init_kernel_terminal( void ) {
     /* Set our conosle as the screen */
 
     console_set_screen( &kterm_console );
+
+    /* Copy the buffered kernel output to the terminal buffer */
+
+    while ( ( data = kernel_console_read( buf, sizeof( buf ) ) ) > 0 ) {
+        terminal_buffer_insert( kterm, buf, data );
+    }
 
     /* Make the kernel terminal the active */
 
