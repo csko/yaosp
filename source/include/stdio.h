@@ -92,6 +92,7 @@ char* fgets( char* s, int size, FILE* stream );
 int fputc( int c, FILE* stream );
 int putc( int c, FILE* stream );
 int fputs( const char* s, FILE* stream );
+#define putchar(c) putc(c,stdout)
 
 #define setbuf(stream,buf) setvbuf(stream,buf,buf?_IOFBF:_IONBF,BUFSIZ)
 int setvbuf( FILE* stream, char* buf, int flags, size_t size );

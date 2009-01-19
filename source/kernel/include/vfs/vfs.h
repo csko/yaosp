@@ -137,11 +137,15 @@ int sys_read( int fd, void* buffer, size_t count );
 int sys_write( int fd, const void* buffer, size_t count );
 int sys_dup2( int old_fd, int new_fd );
 int sys_isatty( int fd );
+int sys_ioctl( int fd, int command, void* buffer );
 int sys_getdents( int fd, dirent_t* entry, unsigned int count );
+int sys_chdir( const char* path );
 int sys_fchdir( int fd );
 int sys_stat( const char* path, struct stat* stat );
 int sys_fstat( int fd, struct stat* stat );
 int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
+int sys_mkdir( const char* path, int permissions );
+int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 
 int init_vfs( void );
 

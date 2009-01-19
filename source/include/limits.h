@@ -58,6 +58,10 @@
 #define LONG_MAX        ((__LONG_MAX__) + 0L)
 #define ULONG_MAX       (LONG_MAX * 2UL + 1UL)
 
+#define LLONG_MAX 9223372036854775807LL
+#define LLONG_MIN (-LLONG_MAX - 1LL)
+#define ULLONG_MAX 18446744073709551615ULL
+
 #define PATH_MAX 256
 
 #endif // _LIMITS_H_

@@ -77,6 +77,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/getcwd.c</item>
         <item>src/unistd/sleep.c</item>
         <item>src/unistd/access.c</item>
+        <item>src/unistd/chdir.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/ferror.c</item>
@@ -120,6 +121,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/stat.c</item>
         <item>src/sys/fstat.c</item>
         <item>src/sys/time.c</item>
+        <item>src/sys/mkdir.c</item>
+        <item>src/sys/ioctl.c</item>
+        <item>src/sys/select.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
         <item>src/ctype/islower.c</item>
@@ -134,6 +138,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/isgraph.c</item>
         <item>src/signal/signal.c</item>
         <item>src/locale/localeconv.c</item>
+        <item>src/termios/tcflush.c</item>
+        <item>src/termios/tcgetattr.c</item>
+        <item>src/termios/tcsetattr.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
         <item>src/yaosp/sysinfo.c</item>

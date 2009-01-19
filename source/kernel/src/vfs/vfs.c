@@ -410,6 +410,10 @@ int ioctl( int fd, int command, void* buffer ) {
     return do_ioctl( true, fd, command, buffer );
 }
 
+int sys_ioctl( int fd, int command, void* buffer ) {
+    return do_ioctl( false, fd, command, buffer );
+}
+
 static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
     int error;
     file_t* file;
@@ -534,6 +538,10 @@ int mkdir( const char* path, int permissions ) {
     return do_mkdir( true, path, permissions );
 }
 
+int sys_mkdir( const char* path, int permissions ) {
+    return do_mkdir( false, path, permissions );
+}
+
 static int do_fchdir( bool kernel, int fd ) {
     file_t* file;
     inode_t* tmp;
@@ -565,6 +573,23 @@ static int do_fchdir( bool kernel, int fd ) {
     put_inode( tmp );
 
     return 0;
+}
+
+int sys_chdir( const char* path ) {
+    int fd;
+    int error;
+
+    fd = sys_open( path, O_RDONLY );
+
+    if ( fd < 0 ) {
+        return fd;
+    }
+
+    error = sys_fchdir( fd );
+
+    sys_close( fd );
+
+    return error;
 }
 
 int sys_fchdir( int fd ) {
@@ -926,6 +951,10 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
 
 int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
     return do_select( true, count, readfds, writefds, exceptfds, timeout );
+}
+
+int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
+    return do_select( false, count, readfds, writefds, exceptfds, timeout );
 }
 
 static int do_dup2( bool kernel, int old_fd, int new_fd ) {

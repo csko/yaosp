@@ -173,7 +173,13 @@
 #define TIOCSETD        0x5423
 #define TIOCGETD        0x5424
 
+#define cfgetispeed(tio)      ((tio)->c_ispeed)
+#define cfgetospeed(tio)      ((tio)->c_ospeed)
+#define cfsetispeed(tio, spd) ((tio)->c_ispeed = (spd))
+#define cfsetospeed(tio, spd) ((tio)->c_ospeed = (spd))
+
 typedef unsigned char cc_t;
+typedef unsigned int speed_t;
 typedef unsigned int tcflag_t;
 
 struct termios {
@@ -183,13 +189,17 @@ struct termios {
     tcflag_t c_lflag;
     cc_t c_line;
     cc_t c_cc[ NCCS ];
+    speed_t c_ispeed;
+    speed_t c_ospeed;
 };
 
 struct winsize {
-  unsigned short ws_row;
-  unsigned short ws_col;
-  unsigned short ws_xpixel;
-  unsigned short ws_ypixel;
+    unsigned short ws_row;
+    unsigned short ws_col;
 };
+
+int tcflush( int fd, int queue_selector );
+int tcgetattr( int fd, struct termios* tio );
+int tcsetattr( int fd, int optional_actions, const struct termios* tio );
 
 #endif // _TERMIOS_H_

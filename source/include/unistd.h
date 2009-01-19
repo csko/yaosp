@@ -50,6 +50,7 @@ ssize_t write( int fd, const void* buf, size_t count );
 off_t lseek( int fd, off_t offset, int whence );
 
 int isatty( int fd );
+int chdir( const char* path );
 int fchdir( int fd );
 int getdents( int fd, struct dirent* entry, unsigned int count );
 
