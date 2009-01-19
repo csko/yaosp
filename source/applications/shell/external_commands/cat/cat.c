@@ -24,7 +24,7 @@
 #define BUFLEN 4096
 
 char* argv0;
-char buffer[BUFLEN];
+char buffer[BUFLEN+1];
 
 /* Simple cat function */
 int do_cat( char* file ) {
@@ -38,6 +38,7 @@ int do_cat( char* file ) {
     }
 
     handle = open(file, O_RDONLY);
+
     if(handle < 0){
         /* TODO: use errno */
         fprintf( stderr, "%s: %s: Cannot open file.\n", argv0, file );
@@ -46,13 +47,22 @@ int do_cat( char* file ) {
 
     for(;;){
         last_read = read(handle, buffer, BUFLEN);
+
+        if ( last_read <= 0 ) {
+            break;
+        }
+
+        buffer[last_read] = 0;
+
         printf("%s", buffer);
-        if(last_read != BUFLEN){
+
+        if ( last_read != BUFLEN ) {
             break;
         }
     }
 
     close(handle);
+
     return 0;
 }
 
