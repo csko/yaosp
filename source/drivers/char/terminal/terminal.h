@@ -43,10 +43,12 @@ typedef struct terminal {
 
     int line_count;
     term_buffer_item_t* lines;
+    int start_line;
 } terminal_t;
 
 extern terminal_t* terminals[ MAX_TERMINAL_COUNT ];
 
+int terminal_scroll( int offset );
 int terminal_switch_to( int index );
 
 #endif // _TERMINAL_TERMINAL_H_

@@ -40,16 +40,92 @@ static terminal_input_t* input_drivers[] = {
     &ps2_keyboard
 };
 
+static void terminal_do_full_update( void ) {
+    int i;
+    int j;
+    int lines;
+    term_buffer_item_t* line;
+
+    /* Clear the screen */
+
+    screen->ops->clear( screen );
+
+    /* Put the terminal buffer to the screen */
+
+    lines = 0;
+
+    for ( i = active_terminal->start_line; i < active_terminal->line_count; i++ ) {
+        line = &active_terminal->lines[ i ];
+
+        for ( j = 0; j < line->size; j++ ) {
+            screen->ops->putchar( screen, line->buffer[ j ] );
+        }
+
+        if ( ++lines == TERMINAL_HEIGHT ) {
+            break;
+        }
+
+        if ( ( line->size < TERMINAL_WIDTH ) &&
+             ( line->flags & TERM_BUFFER_LINE_END ) ) {
+            screen->ops->putchar( screen, '\n' );
+        }
+    }
+}
+
 int terminal_handle_event( event_type_t event, int param1, int param2 ) {
     LOCK( lock );
 
     switch ( ( int )event ) {
-        case E_KEY_PRESSED :
+        case E_KEY_PRESSED : {
+            int tmp;
+
+            /* Scroll the terminal to the bottom */
+
+            tmp = MAX( 0, active_terminal->line_count - TERMINAL_HEIGHT );
+
+            if ( active_terminal->start_line != tmp ) {
+                active_terminal->start_line = tmp;
+
+                terminal_do_full_update();
+            }
+
+            /* Write the new character to the terminal */
+
             if ( active_terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) {
                 pwrite( active_terminal->master_pty, &param1, 1, 0 );
             }
 
             break;
+        }
+    }
+
+    UNLOCK( lock );
+
+    return 0;
+}
+
+int terminal_scroll( int offset ) {
+    int tmp;
+    int new_start_line;
+
+    LOCK( lock );
+
+    new_start_line = active_terminal->start_line + offset;
+
+    if ( new_start_line < 0 ) {
+        new_start_line = 0;
+    }
+
+    tmp = MAX( 0, active_terminal->line_count - TERMINAL_HEIGHT );
+
+    if ( new_start_line > tmp ) {
+        new_start_line = tmp;
+    }
+
+    if ( active_terminal->start_line != new_start_line ) {
+        active_terminal->start_line = new_start_line;
+
+        terminal_do_full_update();
     }
 
     UNLOCK( lock );
@@ -58,10 +134,6 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
 }
 
 int terminal_switch_to( int index ) {
-    int i;
-    int j;
-    term_buffer_item_t* line;
-
     if ( ( index < 0 ) || ( index >= MAX_TERMINAL_COUNT ) ) {
         return -EINVAL;
     }
@@ -78,26 +150,7 @@ int terminal_switch_to( int index ) {
 
     active_terminal = terminals[ index ];
 
-    /* Clear the screen */
-
-    screen->ops->clear( screen );
-
-    /* Put the terminal buffer to the screen */
-
-    i = MAX( 0, active_terminal->line_count - TERMINAL_HEIGHT );
-
-    for ( ; i < active_terminal->line_count; i++ ) {
-        line = &active_terminal->lines[ i ];
-
-        for ( j = 0; j < line->size; j++ ) {
-            screen->ops->putchar( screen, line->buffer[ j ] );
-        }
-
-        if ( ( line->size < TERMINAL_WIDTH ) &&
-             ( line->flags & TERM_BUFFER_LINE_END ) ) {
-            screen->ops->putchar( screen, '\n' );
-        }
-    }
+    terminal_do_full_update();
 
     UNLOCK( lock );
 
@@ -122,6 +175,11 @@ static int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
                     case '\n' :
                         last_line->flags |= TERM_BUFFER_LINE_END;
                         done = true;
+
+                        if ( terminal->line_count >= TERMINAL_HEIGHT ) {
+                            terminal->start_line++;
+                        }
+
                         break;
 
                     default :
@@ -168,6 +226,11 @@ static int terminal_buffer_insert( terminal_t* terminal, char* buf, int size ) {
                 case '\n' :
                     last_line->flags |= TERM_BUFFER_LINE_END;
                     done = true;
+
+                    if ( terminal->line_count >= TERMINAL_HEIGHT ) {
+                        terminal->start_line++;
+                    }
+
                     break;
 
                 default :
@@ -267,6 +330,7 @@ int init_terminals( void ) {
 
         terminals[ i ]->flags = TERMINAL_ACCEPTS_USER_INPUT;
         terminals[ i ]->line_count = 0;
+        terminals[ i ]->start_line = 0;
     }
 
     read_thread = create_kernel_thread( "terminal read", terminal_read_thread, NULL );
