@@ -33,6 +33,7 @@
 #include <vfs/vfs.h>
 #include <lib/string.h>
 #include <lib/hashtable.h>
+#include <lib/ctype.h>
 
 #include <arch/atomic.h>
 #include <arch/spinlock.h>
@@ -120,14 +121,13 @@ static kernel_symbol_t symbols[] = {
     { "memset", ( ptr_t )memset },
     { "strcmp", ( ptr_t )strcmp },
     { "strncmp", ( ptr_t )strncmp },
-    { "strcasecmp", ( ptr_t )strcasecmp },
-    { "strncasecmp", ( ptr_t )strncasecmp },
     { "strchr", ( ptr_t )strchr },
     { "strlen", ( ptr_t )strlen },
     { "strncpy", ( ptr_t )strncpy },
     { "strdup", ( ptr_t )strdup },
     { "strndup", ( ptr_t )strndup },
     { "snprintf", ( ptr_t )snprintf },
+    { "tolower", ( ptr_t )tolower },
 
     /* Hashtable functions */
     { "init_hashtable", ( ptr_t )init_hashtable },
