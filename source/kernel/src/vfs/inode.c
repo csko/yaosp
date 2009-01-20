@@ -140,17 +140,21 @@ int put_inode( inode_t* inode ) {
     inode_cache_t* cache;
     mount_point_t* mount_point;
 
-    ASSERT( atomic_get( &inode->ref_count ) > 0 );
-
     mount_point = inode->mount_point;
     cache = &mount_point->inode_cache;
+
+    LOCK( cache->lock );
+
+    ASSERT( atomic_get( &inode->ref_count ) > 0 );
 
     if ( atomic_dec_and_test( &inode->ref_count ) ) {
         tmp_fs_node = inode->fs_node;
 
-        LOCK( cache->lock );
+        /* Remove the inode from the cache table */
 
         hashtable_remove( &cache->inode_table, ( const void* )&inode->inode_number );
+
+        /* Add the inode to the free list if it's not full */
 
         if ( cache->free_inode_count < cache->max_free_inode_count ) {
             inode->next_free = cache->free_inodes;
@@ -159,14 +163,18 @@ int put_inode( inode_t* inode ) {
             inode = NULL;
         }
 
+        /* Free the inode */
+
+        kfree( inode );
+
+        /* Write the inode */
+
         if ( mount_point->fs_calls->write_inode != NULL ) {
             mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
         }
-
-        UNLOCK( cache->lock );
-
-        kfree( inode );
     }
+
+    UNLOCK( cache->lock );
 
     return 0;
 }

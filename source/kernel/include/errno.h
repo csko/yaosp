@@ -40,5 +40,6 @@
 #define EINTR   18
 #define ENOTTY  19
 #define EPERM   20
+#define EROFS   21
 
 #endif // _ERRNO_H_
