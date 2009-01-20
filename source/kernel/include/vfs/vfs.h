@@ -52,7 +52,6 @@
     ((set)->fds[fd/32] & (1<<(fd%32)))
 
 /* stat definitions */
-/* TODO: Might need to change these */
 #define S_IFSOCK 0x140000
 #define S_IFLNK  0x120000
 #define S_IFREG  0x100000

@@ -1,6 +1,6 @@
 /* ISO9660 filesystem driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,6 +23,7 @@
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
+#include <time.h>
 
 #include "iso9660.h"
 
@@ -173,6 +174,29 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
         inode->flags = iso_dir->flags;
         inode->start_block = iso_dir->location_le;
         inode->length = iso_dir->length_le;
+        /* datetime is made up of:
+        0 number of years since 1900
+        1 month, 1=January, 2=February, ...
+        2 day of month, ranging 1 to 31
+        3 hour, ranging 0 to 23
+        4 minute, ranging 0 to 59
+        5 second, ranging 0 to 59
+        6 offset from Greenwich Mean Time, in 15-minute intervals,
+          as a twos complement signed number, positive for time
+          zones east of Greenwich, and negative for time zones
+          west of Greenwich
+        */
+
+        tm_t tm;
+        tm.year = 1900 + iso_dir->datetime[ 0 ];
+        tm.mon = iso_dir->datetime[ 1 ] - 1;
+        tm.mday = iso_dir->datetime[ 2 ];
+        tm.hour = iso_dir->datetime[ 3 ];
+        tm.min = iso_dir->datetime[ 4 ];
+        tm.sec = iso_dir->datetime[ 5 ];
+        /* TODO: Timezone */
+
+        inode->created = mktime(&tm);
 
         kfree( block );
 
@@ -410,6 +434,7 @@ static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) 
     stat->st_size = node->length;
     stat->st_blksize = 2048;
     stat->st_blocks = node->length / 2048;
+    stat->st_atime = stat->st_ctime = stat->st_mtime = node->created;
 
     if ( ( node->length % 2048 ) != 0 ) {
         stat->st_blocks++;

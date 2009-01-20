@@ -1,6 +1,6 @@
 /* ISO9660 filesystem driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -71,6 +71,7 @@ typedef struct iso9660_inode {
     uint8_t flags;
     uint32_t start_block;
     uint32_t length;
+    time_t created;
 } iso9660_inode_t;
 
 typedef struct iso9660_cookie {

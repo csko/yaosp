@@ -99,6 +99,7 @@ static kernel_symbol_t symbols[] = {
 
     /* Time functions */
     { "get_system_time", ( ptr_t )get_system_time },
+    { "mktime", ( ptr_t )mktime },
 
     /* Console functions */
     { "console_set_screen", ( ptr_t )console_set_screen },
