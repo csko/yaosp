@@ -29,6 +29,8 @@
 #include <arch/elf32.h>
 #include <arch/mm/config.h>
 
+static bool elf32_module_get_symbol( module_t* module, const char* symbol_name, ptr_t* symbol_addr );
+
 static bool elf32_module_check( module_reader_t* reader ) {
     elf_header_t header;
 
@@ -45,7 +47,7 @@ static bool elf32_module_check( module_reader_t* reader ) {
         return false;
     }
 
-    return elf32_check(&header);
+    return elf32_check( &header );
 }
 
 static int elf32_parse_dynsym_section(
@@ -533,9 +535,8 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
     return 0;
 }
 
-static module_t* elf32_module_load( module_reader_t* reader ) {
+static int elf32_module_load( module_t* module, module_reader_t* reader ) {
     int error;
-    module_t* module;
     elf_module_t* elf_module;
     elf_header_t header;
 
@@ -545,13 +546,13 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
         0,
         sizeof( elf_header_t )
     ) != sizeof( elf_header_t ) ) {
-        return NULL;
+        return -EIO;
     }
 
     elf_module = ( elf_module_t* )kmalloc( sizeof( elf_module_t ) );
 
     if ( elf_module == NULL ) {
-        return NULL;
+        return -ENOMEM;
     }
 
     memset( elf_module, 0, sizeof( elf_module_t ) );
@@ -559,7 +560,7 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
     if ( header.shentsize != sizeof( elf_section_header_t ) ) {
         kprintf( "ELF32: Invalid section header size!\n" );
         kfree( elf_module );
-        return NULL;
+        return -EINVAL;
     }
 
     /* Load section headers from the ELF file */
@@ -572,7 +573,7 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
 
     if ( elf_module->sections == NULL ) {
         kfree( elf_module );
-        return NULL;
+        return -ENOMEM;
     }
 
     if ( read_module_data(
@@ -583,7 +584,7 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
     ) != sizeof( elf_section_header_t ) * elf_module->section_count ) {
         kfree( elf_module->sections );
         kfree( elf_module );
-        return NULL;
+        return -EIO;
     }
 
     /* Parse section headers */
@@ -593,7 +594,7 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
     if ( error < 0 ) {
         kfree( elf_module->sections );
         kfree( elf_module );
-        return NULL;
+        return error;
     }
 
     /* Map the ELF image to the kernel memory */
@@ -604,7 +605,7 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
         /* TODO: free other stuffs */
         kfree( elf_module->sections );
         kfree( elf_module );
-        return NULL;
+        return error;
     }
 
     /* Relocate the ELF module */
@@ -613,20 +614,65 @@ static module_t* elf32_module_load( module_reader_t* reader ) {
 
     if ( error < 0 ) {
         /* TODO: cleanup */
-        return NULL;
-    }
-
-    module = create_module(
-        get_module_name( reader )
-    );
-
-    if ( module == NULL ) {
-        return NULL;
+        return error;
     }
 
     module->loader_data = ( void* )elf_module;
 
-    return module;
+    return 0;
+}
+
+static int elf32_module_load_dependency_table( module_t* module, char* symbol, char*** dep_table, size_t* dep_count ) {
+    bool found;
+    char** module_dep_table;
+
+    found = elf32_module_get_symbol( module, symbol, ( ptr_t* )&module_dep_table );
+
+    if ( found ) {
+        int count;
+
+        for ( count = 0; module_dep_table[ count ] != NULL; count++ ) { }
+
+        *dep_count = count;
+        *dep_table = module_dep_table;
+    } else {
+        *dep_count = 0;
+        *dep_table = NULL;
+    }
+
+    return 0;
+}
+
+int elf32_module_get_dependencies( module_t* module, module_dependencies_t* deps ) {
+    int error;
+
+    /* Load required dependency table */
+
+    error = elf32_module_load_dependency_table(
+        module,
+        "__module_dependencies",
+        &deps->dep_table,
+        &deps->dep_count
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Load optional dependency table */
+
+    error = elf32_module_load_dependency_table(
+        module,
+        "__module_optional_dependencies",
+        &deps->optional_dep_table,
+        &deps->optional_dep_count
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
 }
 
 static int elf32_module_free( module_t* module ) {
@@ -653,8 +699,9 @@ static bool elf32_module_get_symbol( module_t* module, const char* symbol_name, 
 
 static module_loader_t elf32_module_loader = {
     .name = "ELF32",
-    .check = elf32_module_check,
-    .load = elf32_module_load,
+    .check_module = elf32_module_check,
+    .get_dependencies = elf32_module_get_dependencies,
+    .load_module = elf32_module_load,
     .free = elf32_module_free,
     .get_symbol = elf32_module_get_symbol
 };

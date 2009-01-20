@@ -22,18 +22,33 @@
 #include <types.h>
 #include <lib/hashtable.h>
 
-/* Module definitions */
+#define MODULE_DEPENDENCIES(...) \
+    const char* __attribute__(( used )) __module_dependencies[] = { \
+        __VA_ARGS__, \
+        NULL \
+    }
 
-typedef int module_id;
+#define MODULE_OPTIONAL_DEPENDENCIES(...) \
+    const char* __attribute__(( used )) __module_optional_dependencies[] = { \
+        __VA_ARGS__, \
+        NULL \
+    }
+
+/* Module definitions */
 
 typedef int init_module_t( void );
 typedef int destroy_module_t( void );
 
+typedef enum module_status {
+    MODULE_LOADING,
+    MODULE_LOADED
+} module_status_t;
+
 typedef struct module {
     hashitem_t hash;
 
-    module_id id;
     char* name;
+    module_status_t status;
 
     init_module_t* init;
     destroy_module_t* destroy;
@@ -54,29 +69,35 @@ typedef struct module_reader {
     get_module_name_t* get_name;
 } module_reader_t;
 
+typedef struct module_dependencies {
+    size_t dep_count;
+    char** dep_table;
+    size_t optional_dep_count;
+    char** optional_dep_table;
+} module_dependencies_t;
+
 /* Module loader definitions */
 
 typedef bool check_module_t( module_reader_t* reader );
-typedef module_t* load_module_t( module_reader_t* reader );
+typedef int load_module_t( module_t* module, module_reader_t* reader );
+typedef int get_module_dependencies_t( module_t* module, module_dependencies_t* deps );
 typedef int free_module_t( module_t* module );
 typedef bool get_module_symbol_t( module_t* module, const char* symbol_name, ptr_t* symbol_addr );
 
 typedef struct module_loader {
     const char* name;
-    check_module_t* check;
-    load_module_t* load;
+    check_module_t* check_module;
+    load_module_t* load_module;
+    get_module_dependencies_t* get_dependencies;
     free_module_t* free;
     get_module_symbol_t* get_symbol;
 } module_loader_t;
-
-module_t* create_module( const char* name );
 
 int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int size );
 size_t get_module_size( module_reader_t* reader );
 char* get_module_name( module_reader_t* reader );
 
-module_id load_module( module_reader_t* reader );
-int initialize_module( module_id id );
+int load_module( const char* name );
 
 void set_module_loader( module_loader_t* loader );
 

@@ -130,6 +130,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-c</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
+                <flag>-Werror</flag>
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
                 <flag>-fno-builtin</flag>
@@ -148,6 +149,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-O2</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
+                <flag>-Werror</flag>
                 <flag>-Wshadow</flag>
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
@@ -167,6 +169,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-O2</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
+                <flag>-Werror</flag>
                 <flag>-Wshadow</flag>
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
@@ -184,6 +187,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-O2</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
+                <flag>-Werror</flag>
                 <flag>-Wshadow</flag>
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>

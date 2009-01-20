@@ -1,6 +1,6 @@
 /* Parallel AT Attachment driver
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -17,6 +17,7 @@
  */
 
 #include <console.h>
+#include <module.h>
 
 #include "pata.h"
 
@@ -59,3 +60,5 @@ int init_module( void ) {
 int destroy_module( void ) {
     return 0;
 }
+
+MODULE_DEPENDENCIES( "pci" );

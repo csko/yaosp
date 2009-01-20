@@ -31,33 +31,20 @@
 static void load_bootmodules( void ) {
     int i;
     int error;
-    module_id id;
     int module_count;
-    module_reader_t* reader;
+    bootmodule_t* bootmodule;
 
     module_count = get_bootmodule_count();
 
     for ( i = 0; i < module_count; i++ ) {
-        reader = get_bootmodule_reader( i );
+        bootmodule = get_bootmodule_at( i );
 
-        if ( reader == NULL ) {
-            continue;
-        }
+        kprintf( "Loading module: %s\n", bootmodule->name );
 
-        id = load_module( reader );
-
-        put_bootmodule_reader( reader );
-
-        if ( id < 0 ) {
-            kprintf( "Failed to load bootmodule at %d\n", i );
-            continue;
-        }
-
-        error = initialize_module( id );
+        error = load_module( bootmodule->name );
 
         if ( error < 0 ) {
-            kprintf( "Failed to load module: %d\n", id );
-            /* TODO: unload the module */
+            kprintf( "Failed to load module: %s\n", bootmodule->name );
         }
     }
 }

@@ -41,5 +41,6 @@
 #define ENOTTY  19
 #define EPERM   20
 #define EROFS   21
+#define ELOOP   22
 
 #endif // _ERRNO_H_

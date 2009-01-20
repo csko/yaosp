@@ -20,16 +20,18 @@
 #include <console.h>
 #include <errno.h>
 #include <semaphore.h>
+#include <bootmodule.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
 module_loader_t* module_loader;
 
-static int module_id_counter = 0;
 static hashtable_t module_table;
 static semaphore_id module_lock;
 
-module_t* create_module( const char* name ) {
+static int do_load_module( const char* name );
+
+static module_t* create_module( const char* name ) {
     module_t* module;
 
     module = ( module_t* )kmalloc( sizeof( module_t ) );
@@ -50,6 +52,11 @@ module_t* create_module( const char* name ) {
     return module;
 }
 
+static void destroy_module( module_t* module ) {
+    kfree( module->name );
+    kfree( module );
+}
+
 int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int size ) {
     return reader->read( reader->private, buffer, offset, size );
 }
@@ -62,79 +69,189 @@ char* get_module_name( module_reader_t* reader ) {
     return reader->get_name( reader->private );
 }
 
-module_id load_module( module_reader_t* reader ) {
-    int id;
+static int do_load_module_dependencies( module_t* module, char** dependencies, size_t count ) {
+    int i;
+    int error;
+
+    for ( i = 0; i < count; i++ ) {
+        error = do_load_module( dependencies[ i ] );
+
+        if ( error == -ELOOP ) {
+            kprintf(
+                "Detected a loop in module dependencies while loading %s module!\n",
+                dependencies[ i ]
+            );
+        }
+
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+
+    return 0;
+}
+
+static int do_load_module( const char* name ) {
+    int i;
+    int error;
     bool found;
     module_t* module;
+    bootmodule_t* bootmodule;
+    module_reader_t* reader;
+    bool is_bootmodule;
+    module_dependencies_t module_deps;
 
-    if ( module_loader == NULL ) {
-        return -EINVAL;
+    reader = NULL;
+    is_bootmodule = false;
+
+    /* Try bootmodules first */
+
+    for ( i = 0; i < get_bootmodule_count(); i++ ) {
+        bootmodule = get_bootmodule_at( i );
+
+        if ( strcmp( bootmodule->name, name ) == 0 ) {
+            reader = get_bootmodule_reader( i );
+            is_bootmodule = true;
+            break;
+        }
     }
 
-    if ( !module_loader->check( reader ) ) {
-        return -EINVAL;
+    /* Try to load the module from a simple file */
+
+    /* TODO */
+
+    if ( reader == NULL ) {
+        error = -ENOENT;
+
+        goto error1;
     }
 
-    module = module_loader->load( reader );
+    if ( !module_loader->check_module( reader ) ) {
+        error = -EINVAL;
+
+        goto error2;
+    }
+
+    LOCK( module_lock );
+
+    module = ( module_t* )hashtable_get( &module_table, ( const void* )name );
+
+    if ( module != NULL ) {
+        switch ( module->status ) {
+            case MODULE_LOADING :
+                error = -ELOOP;
+                break;
+
+            default :
+                error = 0;
+                break;
+        }
+
+        UNLOCK( module_lock );
+
+        goto error2;
+    }
+
+    module = create_module( name );
 
     if ( module == NULL ) {
-        return -EINVAL;
+        UNLOCK( module_lock );
+
+        error = -ENOMEM;
+
+        goto error2;
+    }
+
+    module->status = MODULE_LOADING;
+
+    hashtable_add( &module_table, ( hashitem_t* )module );
+
+    UNLOCK( module_lock );
+
+    /* Load the module */
+
+    error = module_loader->load_module( module, reader );
+
+    if ( error < 0 ) {
+        goto error3;
     }
 
     found = module_loader->get_symbol( module, "init_module", ( ptr_t* )&module->init );
 
     if ( !found ) {
-        module_loader->free( module );
-        /* TODO: delete the module */
-        return -EINVAL;
+        goto error4;
     }
 
     found = module_loader->get_symbol( module, "destroy_module", ( ptr_t* )&module->destroy );
 
     if ( !found ) {
-        module_loader->free( module );
-        /* TODO: delete the module */
-        return -EINVAL;
+        goto error4;
     }
 
-    /* Insert the new module to the table */
+    /* Load the dependencies */
+
+    error = module_loader->get_dependencies( module, &module_deps );
+
+    if ( error < 0 ) {
+        goto error4;
+    }
+
+    error = do_load_module_dependencies(
+        module,
+        module_deps.dep_table,
+        module_deps.dep_count
+    );
+
+    if ( error < 0 ) {
+        goto error4;
+    }
+
+    do_load_module_dependencies(
+        module,
+        module_deps.optional_dep_table,
+        module_deps.optional_dep_count
+    );
+
+    error = module->init();
+
+    if ( error < 0 ) {
+        goto error4;
+    }
 
     LOCK( module_lock );
 
-    do {
-        module->id = module_id_counter++;
-    } while ( hashtable_get( &module_table, ( const void* )module->id ) != NULL );
-
-    id = module->id;
-
-    hashtable_add( &module_table, ( void* )module );
+    module->status = MODULE_LOADED;
 
     UNLOCK( module_lock );
 
-    return id;
+    return 0;
+
+error4:
+    /* TODO: unload the module */
+
+error3:
+    LOCK( module_lock );
+    hashtable_remove( &module_table, ( const void* )name );
+    UNLOCK( module_lock );
+
+    destroy_module( module );
+
+error2:
+    if ( is_bootmodule ) {
+        put_bootmodule_reader( reader );
+    }
+
+error1:
+    return error;
 }
 
-int initialize_module( module_id id ) {
-    module_t* module;
-
-    LOCK( module_lock );
-
-    module = ( module_t* )hashtable_get( &module_table, ( const void* )id );
-
-    UNLOCK( module_lock );
-
-    if ( module == NULL ) {
-        return -EINVAL;
-    }
-
-    kprintf( "Initializing module: %d\n", id );
-
-    return module->init();
+int load_module( const char* name ) {
+    return do_load_module( name );
 }
 
 void set_module_loader( module_loader_t* loader ) {
     module_loader = loader;
-    kprintf( "Using %s module loader\n", module_loader->name );
+    kprintf( "Using %s module loader.\n", module_loader->name );
 }
 
 static void* module_key( hashitem_t* item ) {
@@ -142,15 +259,15 @@ static void* module_key( hashitem_t* item ) {
 
     module = ( module_t* )item;
 
-    return ( void* )module->id;
+    return ( void* )module->name;
 }
 
 static uint32_t module_hash( const void* key ) {
-    return ( uint32_t )key;
+    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
 }
 
 static bool module_compare( const void* key1, const void* key2 ) {
-    return ( key1 == key2 );
+    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
 }
 
 int init_module_loader( void ) {

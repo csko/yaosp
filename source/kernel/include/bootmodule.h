@@ -37,6 +37,7 @@ typedef struct bootmodule {
  * @return The number of bootmodules
  */
 int get_bootmodule_count( void );
+
 /**
  * Returns the bootmodule at the specified index.
  *

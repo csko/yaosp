@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <thread.h>
 #include <macros.h>
+#include <module.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
@@ -408,3 +409,5 @@ int init_module( void ) {
 int destroy_module( void ) {
     return 0;
 }
+
+MODULE_OPTIONAL_DEPENDENCIES( "ps2" );
