@@ -1,6 +1,6 @@
-/* Shell command definition
+/* Print working directory
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,17 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _COMMAND_H_
-#define _COMMAND_H_
+#include <stdio.h>
+#include <unistd.h>
 
-typedef int command_function_t( int argc, char** argv, char** envp );
+#include "../command.h"
 
-typedef struct builtin_command {
-    const char* name;
-    command_function_t* command;
-} builtin_command_t;
+static int pwd_command_function( int argc, char** argv, char** envp ) {
+    char buffer[ 256 ];
 
-extern builtin_command_t cd_command;
-extern builtin_command_t pwd_command;
+    if ( getcwd( buffer, sizeof( buffer ) ) == NULL ) {
+        printf( "%s: Failed to get CWD!\n", argv[ 0 ] );
+        return 1;
+    }
 
-#endif // _COMMAND_H_
+    printf( "%s\n", buffer );
+
+    return 0;
+}
+
+builtin_command_t pwd_command = {
+    .name = "pwd",
+    .command = pwd_command_function
+};

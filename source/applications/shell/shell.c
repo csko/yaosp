@@ -27,6 +27,7 @@
 
 static builtin_command_t* builtin_commands[] = {
     &cd_command,
+    &pwd_command,
     NULL
 };
 
