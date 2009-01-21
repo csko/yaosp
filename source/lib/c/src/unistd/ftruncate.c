@@ -1,4 +1,4 @@
-/* readlink function
+/* ftruncate function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,13 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
 #include <unistd.h>
 
 #include <yaosp/debug.h>
 
-ssize_t readlink( const char* path, char* buf, size_t bufsiz ) {
+int ftruncate( int fd, off_t length ) {
+    dbprintf( "ftruncate() called!\n" );
     /* TODO */
-    dbprintf( "readlink() called!\n" );
-    return snprintf( buf, bufsiz, "%s", path );
+    return -1;
 }

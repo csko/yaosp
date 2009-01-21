@@ -78,6 +78,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/sleep.c</item>
         <item>src/unistd/access.c</item>
         <item>src/unistd/chdir.c</item>
+        <item>src/unistd/ftruncate.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/ferror.c</item>
