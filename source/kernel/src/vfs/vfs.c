@@ -75,7 +75,7 @@ int insert_mount_point( mount_point_t* mount_point ) {
     return 0;
 }
 
-static int do_open_helper1( file_t* file, inode_t* parent, char* name, int length ) {
+static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t* parent, char* name, int length ) {
     int error;
 
     if ( ( length == 0 ) ||
@@ -95,7 +95,7 @@ static int do_open_helper1( file_t* file, inode_t* parent, char* name, int lengt
 
         atomic_inc( &parent->ref_count );
     } else {
-        error = do_lookup_inode( parent, name, length, true, &file->inode );
+        error = do_lookup_inode( io_context, parent, name, length, true, &file->inode );
 
         if ( error < 0 ) {
             return error;
@@ -183,7 +183,7 @@ static int do_open( bool kernel, const char* path, int flags ) {
         return -ENOMEM;
     }
 
-    error = do_open_helper1( file, parent, name, length );
+    error = do_open_helper1( io_context, file, parent, name, length );
 
     if ( ( error == -ENOENT ) && ( ( flags & O_CREAT ) != 0 ) ) {
         error = do_open_helper2( file, parent, name, length );

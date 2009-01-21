@@ -201,7 +201,7 @@ static bool inode_compare( const void* key1, const void* key2 ) {
     return ( *inode_num_1 == *inode_num_2 );
 }
 
-int do_lookup_inode( inode_t* parent, const char* name, int name_length, bool follow_mount, inode_t** result ) {
+int do_lookup_inode( io_context_t* io_context, inode_t* parent, const char* name, int name_length, bool follow_mount, inode_t** result ) {
     int error;
     inode_t* inode;
     ino_t inode_number;
@@ -212,10 +212,26 @@ int do_lookup_inode( inode_t* parent, const char* name, int name_length, bool fo
     if ( ( name_length == 2 ) &&
          ( strncmp( name, "..", 2 ) == 0 ) &&
          ( parent->inode_number == parent->mount_point->root_inode_number ) ) {
-        parent = parent->mount_point->mount_inode;
-        parent_changed = true;
+        bool is_root;
 
-        atomic_inc( &parent->ref_count );
+        LOCK( io_context->lock );
+
+        is_root = ( parent->inode_number == io_context->root_directory->inode_number );
+
+        UNLOCK( io_context->lock );
+
+        if ( is_root ) {
+            atomic_inc( &parent->ref_count );
+
+            *result = parent;
+
+            return 0;
+        } else {
+            parent = parent->mount_point->mount_inode;
+            parent_changed = true;
+
+            atomic_inc( &parent->ref_count );
+        }
     }
 
     error = parent->mount_point->fs_calls->lookup_inode(
@@ -297,7 +313,7 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
             goto next;
         }
 
-        error = do_lookup_inode( parent, path, name_length, true, &inode );
+        error = do_lookup_inode( io_context, parent, path, name_length, true, &inode );
 
         put_inode( parent );
 
@@ -340,7 +356,7 @@ int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode )
 
         atomic_inc( &inode->ref_count );
     } else {
-        error = do_lookup_inode( parent, name, length, true, &inode );
+        error = do_lookup_inode( io_context, parent, name, length, true, &inode );
     }
 
     put_inode( parent );
