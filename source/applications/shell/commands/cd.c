@@ -19,31 +19,73 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 
 #include "../command.h"
 
 static int cd_command_function( int argc, char** argv, char** envp ) {
     int fd;
+    int error;
+    struct stat st;
+    char* new_directory;
 
-    /* TODO: When no arguments given, cd to the $HOME dir */
-    if ( argc != 2 ) {
-        printf( "%s: usage: %s directory\n", argv[ 0 ], argv[ 0 ] );
-        return 1;
+    /* Decide the new directory */
+
+    if ( argc == 1 ) {
+        new_directory = getenv( "HOME" );
+
+        if ( new_directory == NULL ) {
+            fprintf( stderr, "%s: Home directory not known!\n", argv[ 0 ] );
+            goto error1;
+        }
+    } else {
+        new_directory = argv[ 1 ];
     }
 
     /* TODO: Use $CDPATH */
-    fd = open( argv[ 1 ], 0 /* O_RDONLY */ );
+
+    /* Open the directory */
+
+    fd = open( new_directory, O_RDONLY );
 
     if ( fd < 0 ) {
-        fprintf( stderr, "%s: Invalid directory: %s\n", argv[ 0 ], argv[ 1 ] );
-        return 1;
+        fprintf( stderr, "%s: Invalid directory: %s\n", argv[ 0 ], new_directory );
+        goto error1;
     }
 
-    fchdir( fd );
+    /* Make sure it is a directory */
+
+    error = fstat( fd, &st );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to stat %s\n", argv[ 0 ], new_directory );
+        goto error2;
+    }
+
+    if ( !S_ISDIR( st.st_mode ) ) {
+        fprintf( stderr, "%s: %s is not a directory!\n", argv[ 0 ], new_directory );
+        goto error2;
+    }
+
+    /* Change the current directory to the new one */
+
+    error = fchdir( fd );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to change current directory to %s\n", argv[ 0 ], new_directory );
+        goto error2;
+    }
 
     close( fd );
 
     return 0;
+
+error2:
+    close( fd );
+
+error1:
+    return 1;
 }
 
 builtin_command_t cd_command = {

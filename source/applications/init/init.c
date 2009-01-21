@@ -35,7 +35,11 @@ int main( int argc, char** argv ) {
             char tty_path[ 128 ];
 
             char* argv[] = { "shell", NULL };
-            char* envv[] = { "PATH=/yaosp/application", NULL };
+            char* envv[] = {
+                "PATH=/yaosp/application",
+                "HOME=/",
+                NULL
+            };
 
             snprintf( tty_path, sizeof( tty_path ), "/device/pty/tty%d", i );
 
