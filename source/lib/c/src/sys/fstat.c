@@ -16,11 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <sys/stat.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 int fstat( int fd, struct stat* stat ) {
-    return syscall2( SYS_fstat, fd, ( int )stat );
+    int error;
+
+    error = syscall2( SYS_fstat, fd, ( int )stat );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
 }

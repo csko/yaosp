@@ -18,7 +18,10 @@
 
 #include <unistd.h>
 
+#include <yaosp/debug.h>
+
 ssize_t readlink( const char* path, char* buf, size_t bufsiz ) {
     /* TODO */
+    dbprintf( "readlink() called!\n" );
     return -1;
 }

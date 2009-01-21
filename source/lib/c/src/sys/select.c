@@ -16,11 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <sys/select.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
-int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout ) {
-    return syscall5( SYS_select, fds, ( int )readfds, ( int )writefds, ( int )exceptfds, ( int )timeout );
+int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout ) {
+    int error;
+
+    error = syscall5(
+        SYS_select,
+        fds,
+        ( int )readfds,
+        ( int )writefds,
+        ( int )exceptfds,
+        ( int )timeout
+    );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return error;
 }

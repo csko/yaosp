@@ -1,4 +1,4 @@
-/* Dup2 function
+/* dup2 function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,11 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <unistd.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 int dup2( int old_fd, int new_fd ) {
-    return syscall2( SYS_dup2, old_fd, new_fd );
+    int error;
+
+    error = syscall2( SYS_dup2, old_fd, new_fd );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return error;
 }

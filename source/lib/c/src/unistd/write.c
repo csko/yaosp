@@ -1,4 +1,4 @@
-/* Write function
+/* write function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,11 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <unistd.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 ssize_t write( int fd, const void* buf, size_t count ) {
-    return syscall3( SYS_write, fd, ( int )buf, count );
+    int error;
+
+    error = syscall3( SYS_write, fd, ( int )buf, count );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return error;
 }

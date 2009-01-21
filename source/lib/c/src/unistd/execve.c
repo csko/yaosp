@@ -1,4 +1,4 @@
-/* Execve function
+/* execve function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,11 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <unistd.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 int execve( const char* filename, char* const argv[], char* const envp[] ) {
-    return syscall3( SYS_execve, ( int )filename, ( int )argv, ( int )envp );
+    int error;
+
+    error = syscall3( SYS_execve, ( int )filename, ( int )argv, ( int )envp );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
 }

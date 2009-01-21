@@ -1,6 +1,6 @@
 /* stime function
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,11 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <sys/time.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 int stime( time_t *t ) {
-    return syscall1( SYS_stime, ( int )t );
+    int error;
+
+    error = syscall1( SYS_stime, ( int )t );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
 }

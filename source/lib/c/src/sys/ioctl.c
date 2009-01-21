@@ -16,11 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <sys/ioctl.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 int ioctl( int fd, int request, ... ) {
-    return syscall3( SYS_ioctl, fd, request, *( ( ( ( int* )&request ) ) + 1 ) );
+    int error;
+
+    error = syscall3( SYS_ioctl, fd, request, *( ( ( ( int* )&request ) ) + 1 ) );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return error;
 }

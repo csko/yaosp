@@ -19,6 +19,7 @@
 #ifndef _SYS_SELECT_H_
 #define _SYS_SELECT_H_
 
+#include <sys/time.h>
 #include <sys/types.h>
 
 #define FD_ZERO(set) \
@@ -37,6 +38,6 @@ typedef struct fd_set {
     uint32_t fds[ 1024 / 32 ];
 } fd_set;
 
-int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, void* timeout );
+int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout );
 
 #endif // _SYS_SELECT_H_

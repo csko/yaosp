@@ -18,6 +18,10 @@
 
 #include <unistd.h>
 
+#include <yaosp/debug.h>
+
 int unlink( const char* pathname ) {
+    dbprintf( "unlink() called!\n" );
+    /* TODO */
     return -1;
 }

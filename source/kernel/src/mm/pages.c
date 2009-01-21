@@ -196,8 +196,8 @@ int init_page_allocator( multiboot_header_t* header ) {
        allocate from this region. */
 
     for ( i = 0; i < first_free_page; i += PAGE_SIZE ) {
-      atomic_inc( &memory_pages[ i ].ref );
-      atomic_dec( &free_page_count );
+        atomic_inc( &memory_pages[ i ].ref );
+        atomic_dec( &free_page_count );
     }
 
     return 0;

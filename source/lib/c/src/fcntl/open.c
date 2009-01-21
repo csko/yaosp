@@ -17,10 +17,20 @@
  */
 
 #include <fcntl.h>
+#include <errno.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 int open( const char* filename, int flags, ... ) {
-    return syscall2( SYS_open, ( int )filename, flags );
+    int error;
+
+    error = syscall2( SYS_open, ( int )filename, flags );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return error;
 }

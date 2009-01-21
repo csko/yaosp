@@ -16,11 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <unistd.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
 int fchdir( int fd ) {
-    return syscall1( SYS_fchdir, fd );
+    int error;
+
+    error = syscall1( SYS_fchdir, fd );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
 }

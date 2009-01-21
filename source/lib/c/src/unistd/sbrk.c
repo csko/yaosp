@@ -1,4 +1,4 @@
-/* Sbrk function
+/* sbrk function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *

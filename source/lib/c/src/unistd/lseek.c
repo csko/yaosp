@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <unistd.h>
 
 #include <yaosp/syscall.h>
@@ -28,7 +29,8 @@ off_t lseek( int fd, off_t offset, int whence ) {
     error = syscall4( SYS_lseek, fd, ( int )&offset, whence, ( int )&result );
 
     if ( error < 0 ) {
-        return error;
+        errno = -error;
+        return ( off_t )-1;
     }
 
     return result;
