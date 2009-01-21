@@ -20,6 +20,7 @@
 #include <lib/string.h>
 #include <lib/time.h>
 #include <time.h>
+#include <errno.h>
 
 #include <arch/pit.h> /* get_system_time() */
 
@@ -63,13 +64,19 @@ int sys_time( int* tloc ) {
     return ret;
 }
 
-int sys_get_system_time( uint64_t* time ) {
+int sys_get_system_time( time_t* time ) {
     *time = get_system_time();
     return 0;
 }
 
 int sys_stime(int* tptr) {
-    /* TODO */
+
+    if(tptr == NULL){
+        return -EINVAL;
+    }
+
+    set_system_time((time_t*) tptr);
+
     return 0;
 }
 
@@ -300,6 +307,9 @@ size_t strftime(char* s, size_t max, const char* format,
 }
 
 time_t mktime(tm_t* time) {
+    if(time->year > 2100){
+        return -1;
+    }
     return daysdiff(time->year, time->mon, time->mday) * SECONDS_PER_DAY +
            time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MINUTE + time->sec;
 }

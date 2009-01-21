@@ -95,6 +95,20 @@ uint64_t get_system_time( void ) {
     return now;
 }
 
+int set_system_time( time_t* newtime ) {
+    tm_t tm;
+
+    spinlock_disable( &time_lock );
+
+    system_time = *newtime;
+
+    spinunlock_enable( &time_lock );
+
+    sethwclock( gmtime_r( newtime, &tm ) );
+
+    return 0;
+}
+
 uint64_t get_boot_time( void ) {
     return boot_time;
 }

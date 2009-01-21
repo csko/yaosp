@@ -154,6 +154,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
                 <flag>-fno-builtin</flag>
+                <flag>-fno-strict-aliasing</flag>
             </gcc>
         </for>
 
@@ -174,6 +175,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
                 <flag>-fno-builtin</flag>
+                <flag>-fno-strict-aliasing</flag>
             </gcc>
         </for>
 

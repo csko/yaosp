@@ -18,7 +18,8 @@
 
 #include <time.h>
 
+tm_t ret;
+
 tm_t* gmtime(const time_t *timep) {
-    /* TODO */
-    return 0;
+    return gmtime_r(timep, &ret);
 }

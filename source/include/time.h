@@ -47,6 +47,7 @@ typedef struct tm {
 } tm_t ;
 
 time_t time(time_t* tloc);
+int stime(time_t* tptr);
 
 size_t strftime(char *s, size_t max, const char *format,
                 const struct tm *tm);

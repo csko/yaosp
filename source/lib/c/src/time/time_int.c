@@ -50,6 +50,7 @@ int _gmtime( time_t timeval, tm_t* ret ) {
 
     ret->wday = (4 + timeval) % 7;
 
+    /* TODO: return NULL when year does not fit. */
     ret->year = EPOCH;
     for(i=0; i<60; i++){
         if(sumofdays[i] > timeval){
@@ -79,7 +80,6 @@ int _gmtime( time_t timeval, tm_t* ret ) {
     ret->mday = (int) timeval + 1;
     ret->isdst = -1;
 
-    /* TODO: return -1 if year does not fit. */
     return 0;
 }
 

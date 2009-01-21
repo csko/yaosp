@@ -382,6 +382,7 @@ static int clone_user_region_contiguous(
         return -ENOMEM;
     }
 
+    tmp = ( uint8_t* )p;
     pd_index = old_region->start >> PGDIR_SHIFT;
     pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
     old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );

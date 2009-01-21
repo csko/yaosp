@@ -121,6 +121,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/stat.c</item>
         <item>src/sys/fstat.c</item>
         <item>src/sys/time.c</item>
+        <item>src/sys/stime.c</item>
         <item>src/sys/mkdir.c</item>
         <item>src/sys/ioctl.c</item>
         <item>src/sys/select.c</item>

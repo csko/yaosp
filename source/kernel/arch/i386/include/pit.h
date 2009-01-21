@@ -20,6 +20,8 @@
 #ifndef _ARCH_PIT_H_
 #define _ARCH_PIT_H_
 
+#include <time.h>
+
 #define PIT_MODE 0x43
 #define PIT_CH0  0x40
 
@@ -34,6 +36,7 @@ void pit_wait_wrap( void );
  * @return The system time in microseconds
  */
 uint64_t get_system_time( void );
+int set_system_time( time_t* newtime );
 uint64_t get_boot_time( void );
 
 int init_system_time( void );

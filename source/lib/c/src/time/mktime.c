@@ -17,8 +17,12 @@
  */
 
 #include <time.h>
+#include "time_int.h"
 
 time_t mktime(tm_t* tm) {
-    /* TODO */
-    return 0ULL;
+    if(tm->year > 2100){
+        return -1;
+    }
+    return daysdiff(tm->year, tm->mon, tm->mday) * SECONDS_PER_DAY +
+           tm->hour * SECONDS_PER_HOUR + tm->min * SECONDS_PER_MINUTE + tm->sec;
 }

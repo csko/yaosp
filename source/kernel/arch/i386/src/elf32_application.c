@@ -133,9 +133,9 @@ static int elf32_parse_dynamic_section(
     uint32_t dyn_count;
     elf_dynamic_t* dyns;
 
-    uint32_t rel_address;
+    uint32_t rel_address = 0;
     uint32_t rel_size = 0;
-    uint32_t pltrel_address;
+    uint32_t pltrel_address = 0;
     uint32_t pltrel_size = 0;
 
     dyns = ( elf_dynamic_t* )kmalloc( dynamic_section->size );
@@ -273,20 +273,20 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
     elf_section_header_t* section_header;
 
     bool text_found = false;
-    uint32_t text_start;
-    uint32_t text_end;
+    uint32_t text_start = 0;
+    uint32_t text_end = 0;
     uint32_t text_size;
-    uint32_t text_offset;
+    uint32_t text_offset = 0;
     void* text_address;
 
     bool data_found = false;
-    uint32_t data_start;
+    uint32_t data_start = 0;
     uint32_t data_end = 0;
     uint32_t data_size;
-    uint32_t data_offset;
+    uint32_t data_offset = 0;
     void* data_address;
 
-    uint32_t bss_end;
+    uint32_t bss_end = 0;
     uint32_t data_size_with_bss;
 
     for ( i = 0; i < elf_application->section_count; i++ ) {
