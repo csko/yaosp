@@ -175,6 +175,7 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
         inode->flags = iso_dir->flags;
         inode->start_block = iso_dir->location_le;
         inode->length = iso_dir->length_le;
+
         /* datetime is made up of:
         0 number of years since 1900
         1 month, 1=January, 2=February, ...
@@ -197,7 +198,7 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
         tm.sec = iso_dir->datetime[ 5 ];
         /* TODO: Timezone */
 
-        inode->created = mktime(&tm);
+        inode->created = mktime( &tm );
 
         kfree( block );
 
@@ -221,31 +222,123 @@ static int iso9660_write_inode( void* fs_cookie, void* node ) {
     return 0;
 }
 
-static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_len, ino_t* inode_num ) {
-    dirent_t entry;
-    iso9660_inode_t* parent;
-    iso9660_dir_cookie_t fake_dir_cookie;
+static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
+    iso9660_directory_entry_t* iso_entry;
+    int i;
 
-    parent = ( iso9660_inode_t* )_parent;
+    iso_entry = ( iso9660_directory_entry_t* )buffer;
 
-    /* Create a fake directory cookie. With this we can use
-       the iso9660_read_directory() call to loop through the
-       directory entries */
+    if ( ( iso_entry->name_length == 1 ) &&
+         ( ( ( char* )( iso_entry + 1 ) )[ 0 ] == 0 ) ) {
+        memcpy( entry->name, ".", 2 );
+    } else if ( ( iso_entry->name_length == 1 ) &&
+                ( ( ( char* )( iso_entry + 1 ) )[ 0 ] == 1 ) ) {
+        memcpy( entry->name, "..", 3 );
+    } else {
+        int length;
+        char* semicolon;
+        char* name;
 
-    fake_dir_cookie.start_block = parent->start_block;
-    fake_dir_cookie.current_block = fake_dir_cookie.start_block;
-    fake_dir_cookie.block_position = 0;
-    fake_dir_cookie.size = parent->length;
+        length = MIN( NAME_MAX, iso_entry->name_length );
 
-    while ( iso9660_read_directory( fs_cookie, parent, &fake_dir_cookie, &entry ) == 1 ) {
-        if ( ( strlen( entry.name ) == name_len ) &&
-             ( strncmp( entry.name, name, name_len ) == 0 ) ) {
-            *inode_num = entry.inode_number;
-            return 0;
+        name = ( char* )( iso_entry + 1 );
+        for(i = 0; i < length; i++ ){
+            entry->name[ i ] = tolower( name [ i ] );
+        }
+        entry->name[ length ] = 0;
+
+        /* Cut the semicolon from the end of the filename if exists */
+
+        semicolon = strchr( entry->name, ';' );
+
+        if ( semicolon != NULL ) {
+            *semicolon = 0;
+        }
+
+        /* Dunno why filenames are ended with a dot. At the moment
+           we just remove it, but we should really investigate this. */
+
+        if ( entry->name[ strlen( entry->name ) - 1 ] == '.' ) {
+            entry->name[ strlen( entry->name ) - 1 ] = 0;
         }
     }
 
-    return -ENOENT;
+    return iso_entry->record_length;
+}
+
+static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
+    int error;
+    char* block;
+    iso9660_inode_t* parent;
+    iso9660_cookie_t* iso_cookie;
+
+    uint32_t start_block;
+    uint32_t current_block;
+    uint32_t block_position;
+
+    struct dirent dir_entry;
+
+    parent = ( iso9660_inode_t* )_parent;
+    iso_cookie = ( iso9660_cookie_t* )fs_cookie;
+
+    block = ( char* )kmalloc( 2048 );
+
+    if ( block == NULL ) {
+        return -ENOMEM;
+    }
+
+    start_block = parent->start_block;
+    current_block = start_block;
+
+    error = 0;
+
+    while ( ( current_block - start_block ) * 2048 < parent->length ) {
+        if ( pread( iso_cookie->fd, block, 2048, current_block * 2048 ) != 2048 ) {
+            error = -EIO;
+            goto out;
+        }
+
+        block_position = 0;
+
+        while ( 1 ) {
+            int size;
+            iso9660_directory_entry_t* iso_dir_entry;
+
+            iso_dir_entry = ( iso9660_directory_entry_t* )( block + block_position );
+            size = iso9660_parse_directory_entry( block + block_position, &dir_entry );
+
+            if ( size == 0 ) {
+                break;
+            }
+
+            if ( ( strlen( dir_entry.name ) == name_length ) &&
+                 ( strncmp( dir_entry.name, name, name_length ) == 0 ) ) {
+                if ( ( name_length == 2 ) &&
+                     ( strncmp( name, "..", 2 ) == 0 ) ) {
+                    if ( iso_dir_entry->location_le == iso_cookie->root_inode.start_block ) {
+                        *inode_num = iso_cookie->root_inode_number;
+                    } else {
+                        *inode_num = POSITION_TO_INODE( iso_dir_entry->location_le, 0 );
+                    }
+                } else {
+                    *inode_num = POSITION_TO_INODE( current_block, block_position );
+                }
+
+                goto out;
+            }
+
+            block_position += size;
+        }
+
+        current_block++;
+    }
+
+    error = -ENOENT;
+
+out:
+    kfree( block );
+
+    return error;
 }
 
 static int iso9660_open_directory( iso9660_inode_t* node, void** _cookie ) {
@@ -430,7 +523,7 @@ static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) 
 
     node = ( iso9660_inode_t* )_node;
 
-    stat->st_ino = node->inode_number;
+    stat->st_ino = POSITION_TO_INODE( node->start_block, 0 );
     stat->st_mode = 0;
     stat->st_size = node->length;
     stat->st_blksize = 2048;
@@ -446,50 +539,6 @@ static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) 
     }
 
     return 0;
-}
-
-static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
-    iso9660_directory_entry_t* iso_entry;
-    int i;
-
-    iso_entry = ( iso9660_directory_entry_t* )buffer;
-
-    if ( ( iso_entry->name_length == 1 ) &&
-         ( ( ( char* )( iso_entry + 1 ) )[ 0 ] == 0 ) ) {
-        memcpy( entry->name, ".", 2 );
-    } else if ( ( iso_entry->name_length == 1 ) &&
-                ( ( ( char* )( iso_entry + 1 ) )[ 0 ] == 1 ) ) {
-        memcpy( entry->name, "..", 3 );
-    } else {
-        int length;
-        char* semicolon;
-        char* name;
-
-        length = MIN( NAME_MAX, iso_entry->name_length );
-
-        name = ( char* )( iso_entry + 1 );
-        for(i = 0; i < length; i++ ){
-            entry->name[ i ] = tolower( name [ i ] );
-        }
-        entry->name[ length ] = 0;
-
-        /* Cut the semicolon from the end of the filename if exists */
-
-        semicolon = strchr( entry->name, ';' );
-
-        if ( semicolon != NULL ) {
-            *semicolon = 0;
-        }
-
-        /* Dunno why filenames are ended with a dot. At the moment
-           we just remove it, but we should really investigate this. */
-
-        if ( entry->name[ strlen( entry->name ) - 1 ] == '.' ) {
-            entry->name[ strlen( entry->name ) - 1 ] = 0;
-        }
-    }
-
-    return iso_entry->record_length;
 }
 
 static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry ) {
@@ -549,16 +598,11 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
         return 0;
     }
 
-    entry->inode_number = POSITION_TO_INODE(dir_cookie->current_block, dir_cookie->block_position);
-
-    iso9660_inode_t* tmp_inode;
-    iso9660_read_inode( fs_cookie, entry->inode_number, ( void** )&tmp_inode );
-
-    if ( iso_cookie->root_inode.start_block == tmp_inode->start_block ) {
+    if ( dir_entry->location_le == iso_cookie->root_inode.start_block ) {
         entry->inode_number = iso_cookie->root_inode.inode_number;
+    } else {
+        entry->inode_number = POSITION_TO_INODE( dir_entry->location_le, 0 );
     }
-
-    iso9660_write_inode( fs_cookie, tmp_inode );
 
     dir_cookie->block_position += error;
 
