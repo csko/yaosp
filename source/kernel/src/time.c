@@ -64,8 +64,8 @@ int sys_time( int* tloc ) {
     return ret;
 }
 
-int sys_get_system_time( time_t* time ) {
-    *time = get_system_time();
+int sys_get_system_time( time_t* _time ) {
+    *_time = get_system_time();
     return 0;
 }
 
@@ -78,6 +78,19 @@ int sys_stime(int* tptr) {
     set_system_time((time_t*) tptr);
 
     return 0;
+}
+
+
+time_t time( time_t* tloc ) {
+    int ret;
+
+    ret = ( int )( get_system_time() / 1000000 );
+
+    if(tloc != NULL) {
+        *tloc = ret;
+    }
+
+    return ret;
 }
 
 size_t strftime(char* s, size_t max, const char* format,
@@ -306,12 +319,12 @@ size_t strftime(char* s, size_t max, const char* format,
     return ret;
 }
 
-time_t mktime(tm_t* time) {
-    if(time->year > 2100){
+time_t mktime(tm_t* _time) {
+    if(_time->year > 2100){
         return -1;
     }
-    return daysdiff(time->year, time->mon, time->mday) * SECONDS_PER_DAY +
-           time->hour * SECONDS_PER_HOUR + time->min * SECONDS_PER_MINUTE + time->sec;
+    return daysdiff(_time->year, _time->mon, _time->mday) * SECONDS_PER_DAY +
+           _time->hour * SECONDS_PER_HOUR + _time->min * SECONDS_PER_MINUTE + _time->sec;
 }
 
 tm_t* gmtime(const time_t* timep) {

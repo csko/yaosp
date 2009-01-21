@@ -1,6 +1,7 @@
 /* Device file system
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +22,7 @@
 
 #include <vfs/inode.h>
 #include <lib/hashtable.h>
+#include <time.h>
 
 struct select_request;
 
@@ -40,6 +42,9 @@ typedef struct devfs_node {
     char* name;
     bool is_directory;
     ino_t inode_number;
+    time_t atime;
+    time_t mtime;
+    time_t ctime;
 
     device_calls_t* calls;
     void* cookie;

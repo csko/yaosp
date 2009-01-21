@@ -102,6 +102,8 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
     cookie->root_inode.flags = root_entry->flags;
     cookie->root_inode.start_block = root_entry->location_le;
     cookie->root_inode.length = root_entry->length_le;
+    /* TODO: Maybe change this to the datetime field of the CD? */
+    cookie->root_inode.created = time( NULL );
 
     /* Free the allocated block memory */
 

@@ -1,6 +1,6 @@
 /* Process filesystem implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,11 +24,17 @@
 
 typedef struct procfs_node {
     hashitem_t hash;
+
     ino_t inode_number;
     bool is_directory;
+
     char* name;
     char* data;
     size_t data_size;
+    time_t atime;
+    time_t mtime;
+    time_t ctime;
+
     struct procfs_node* name_node;
     struct procfs_node* parent;
     struct procfs_node* next_sibling;

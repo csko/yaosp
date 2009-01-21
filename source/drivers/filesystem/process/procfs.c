@@ -28,6 +28,7 @@
 #include <vfs/vfs.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
+#include <time.h>
 
 #include "procfs.h"
 
@@ -72,6 +73,8 @@ static procfs_node_t* procfs_create_node( procfs_node_t* parent, char* name, boo
         node->next_sibling = parent->first_child;
         parent->first_child = node;
     }
+
+    node->atime = node->mtime = node->ctime = time( NULL );
 
     return node;
 }
@@ -328,6 +331,9 @@ static int procfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     stat->st_ino = node->inode_number;
     stat->st_size = node->data_size;
+    stat->st_atime = node->atime;
+    stat->st_mtime = node->mtime;
+    stat->st_ctime = node->ctime;
 
     if ( node->is_directory ) {
         stat->st_mode |= S_IFDIR;

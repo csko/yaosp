@@ -20,9 +20,9 @@
 #include "time_int.h"
 
 time_t mktime(tm_t* tm) {
-    if(tm->year > 2100){
+    if(tm->tm_year > 2100){
         return -1;
     }
-    return daysdiff(tm->year, tm->mon, tm->mday) * SECONDS_PER_DAY +
-           tm->hour * SECONDS_PER_HOUR + tm->min * SECONDS_PER_MINUTE + tm->sec;
+    return daysdiff(tm->tm_year, tm->tm_mon, tm->tm_mday) * SECONDS_PER_DAY +
+           tm->tm_hour * SECONDS_PER_HOUR + tm->tm_min * SECONDS_PER_MINUTE + tm->tm_sec;
 }

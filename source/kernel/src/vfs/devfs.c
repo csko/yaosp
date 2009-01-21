@@ -1,6 +1,7 @@
 /* Device file system
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -22,6 +23,7 @@
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
+#include <time.h>
 
 static ino_t devfs_inode_counter = 0;
 static hashtable_t devfs_node_table;
@@ -58,6 +60,7 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
     node->next_sibling = NULL;
     node->first_child = NULL;
     node->calls = NULL;
+    node->atime = node->mtime = node->ctime = time( NULL );
 
     if ( parent != NULL ) {
         node->next_sibling = parent->first_child;
@@ -259,6 +262,9 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     stat->st_ino = node->inode_number;
     stat->st_mode = 0;
     stat->st_size = 0;
+    stat->st_atime = node->atime;
+    stat->st_mtime = node->mtime;
+    stat->st_ctime = node->ctime;
 
     if ( node->is_directory ) {
         stat->st_mode |= S_IFDIR;
@@ -370,6 +376,7 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
 
     node->calls = calls;
     node->cookie = cookie;
+    node->atime = node->mtime = node->ctime = time( NULL );
 
     return 0;
 }

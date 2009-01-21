@@ -25,6 +25,7 @@
 #include <vfs/vfs.h>
 #include <lib/string.h>
 #include <lib/hashtable.h>
+#include <time.h>
 
 static ino_t rootfs_inode_counter = 0;
 static hashtable_t rootfs_node_table;
@@ -58,6 +59,7 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* nam
     node->parent = parent;
     node->next_sibling = NULL;
     node->first_child = NULL;
+    node->atime = node->mtime = node->ctime = time( NULL );
 
     if ( parent != NULL ) {
         node->next_sibling = parent->first_child;
@@ -190,6 +192,9 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     stat->st_ino = node->inode_number;
     stat->st_mode = 0;
     stat->st_size = 0;
+    stat->st_atime = node->atime;
+    stat->st_mtime = node->mtime;
+    stat->st_ctime = node->ctime;
 
     if ( node->is_directory ) {
         stat->st_mode |= S_IFDIR;

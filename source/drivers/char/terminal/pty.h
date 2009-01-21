@@ -1,6 +1,6 @@
 /* Terminal driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,6 +24,7 @@
 #include <vfs/inode.h>
 #include <vfs/vfs.h>
 #include <lib/hashtable.h>
+#include <time.h>
 
 #define PTY_ROOT_INODE 0
 
@@ -32,6 +33,10 @@ typedef struct pty_node {
 
     char* name;
     ino_t inode_number;
+    time_t atime;
+    time_t mtime;
+    time_t ctime;
+
 
     semaphore_id lock;
     semaphore_id read_queue;

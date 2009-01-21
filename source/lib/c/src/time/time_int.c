@@ -36,11 +36,11 @@ const unsigned short int sumofdays[ 60 ] =
 int _gmtime( time_t timeval, tm_t* ret ) {
     int i;
 
-    ret->sec = timeval % SECONDS_PER_MINUTE;
+    ret->tm_sec = timeval % SECONDS_PER_MINUTE;
     timeval /= SECONDS_PER_MINUTE;
-    ret->min = timeval % MINUTES_PER_HOUR;
+    ret->tm_min = timeval % MINUTES_PER_HOUR;
     timeval /= MINUTES_PER_HOUR;
-    ret->hour = timeval % HOURS_PER_DAY;
+    ret->tm_hour = timeval % HOURS_PER_DAY;
     timeval /= HOURS_PER_DAY;
 
     /* 1970(Epoch) is a leap year, and every 4th year too.
@@ -48,37 +48,37 @@ int _gmtime( time_t timeval, tm_t* ret ) {
        timeval now holds the difference of whole days.
        1 Jan 1970 was a Thursday. */
 
-    ret->wday = (4 + timeval) % 7;
+    ret->tm_wday = (4 + timeval) % 7;
 
     /* TODO: return NULL when year does not fit. */
-    ret->year = EPOCH;
+    ret->tm_year = EPOCH;
     for(i=0; i<60; i++){
         if(sumofdays[i] > timeval){
-            ret->year = EPOCH + i - 1;
+            ret->tm_year = EPOCH + i - 1;
             timeval -= sumofdays[i-1];
             break;
         }
     }
-    ret->yday = (int) timeval;
+    ret->tm_yday = (int) timeval;
 
-    if(ret->year % 4 == 0){
-        for(ret->mon = 0; ret->mon < 12; ret->mon++){
-            if(monthdays2[ret->mon] > timeval){
-                timeval -= monthdays2[--ret->mon];
+    if(ret->tm_year % 4 == 0){
+        for(ret->tm_mon = 0; ret->tm_mon < 12; ret->tm_mon++){
+            if(monthdays2[ret->tm_mon] > timeval){
+                timeval -= monthdays2[--ret->tm_mon];
                 break;
             }
         }
     }else{
-        for(ret->mon = 0; ret->mon < 12; ret->mon++){
-            if(monthdays[ret->mon] > timeval){
-                timeval -= monthdays[--ret->mon];
+        for(ret->tm_mon = 0; ret->tm_mon < 12; ret->tm_mon++){
+            if(monthdays[ret->tm_mon] > timeval){
+                timeval -= monthdays[--ret->tm_mon];
                 break;
             }
         }
     }
 
-    ret->mday = (int) timeval + 1;
-    ret->isdst = -1;
+    ret->tm_mday = (int) timeval + 1;
+    ret->tm_isdst = -1;
 
     return 0;
 }

@@ -98,17 +98,17 @@ size_t strftime(char* s, size_t max, const char* format,
             case 2:
                 switch(*format){
                     case 'a':
-                        APPEND(sday_names[tm->wday]);
+                        APPEND(sday_names[tm->tm_wday]);
                         break;
                     case 'A':
-                        APPEND(day_names[tm->wday]);
+                        APPEND(day_names[tm->tm_wday]);
                         break;
                     case 'h':
                     case 'b':
-                        APPEND(smonth_names[tm->mon]);
+                        APPEND(smonth_names[tm->tm_mon]);
                         break;
                     case 'B':
-                        APPEND(month_names[tm->mon]);
+                        APPEND(month_names[tm->tm_mon]);
                         break;
                     case 'c':
                         /* The preferred date and time representation for the current locale. */
@@ -116,11 +116,11 @@ size_t strftime(char* s, size_t max, const char* format,
                         APPEND(tmp);
                         break;
                     case 'C':
-                        snprintf(tmp, max, "%d", tm->year / 100);
+                        snprintf(tmp, max, "%d", tm->tm_year / 100);
                         APPEND(tmp);
                         break;
                     case 'd':
-                        snprintf(tmp, max, "%02d", tm->mday);
+                        snprintf(tmp, max, "%02d", tm->tm_mday);
                         APPEND(tmp);
                         break;
                     case 'D':
@@ -128,7 +128,7 @@ size_t strftime(char* s, size_t max, const char* format,
                         APPEND(tmp);
                         break;
                     case 'e':
-                        snprintf(tmp, max, "%2d", tm->mday);
+                        snprintf(tmp, max, "%2d", tm->tm_mday);
                         APPEND(tmp);
                         break;
                     case 'F':
@@ -144,46 +144,46 @@ size_t strftime(char* s, size_t max, const char* format,
                         /* Like %G, but without century, that is, with a 2-digit year (00-99). (TZ) */
                         break;
                     case 'H':
-                        snprintf(tmp, max, "%02d", tm->hour);
+                        snprintf(tmp, max, "%02d", tm->tm_hour);
                         APPEND(tmp);
                         break;
                     case 'I':
-                        snprintf(tmp, max, "%02d", tm->hour % 12);
+                        snprintf(tmp, max, "%02d", tm->tm_hour % 12);
                         APPEND(tmp);
                         break;
                     case 'j':
                         /* Day of the year, 001-366 */
-                        snprintf(tmp, max, "%03d", tm->yday + 1);
+                        snprintf(tmp, max, "%03d", tm->tm_yday + 1);
                         APPEND(tmp);
                         break;
                     case 'k':
-                        snprintf(tmp, max, "%2d", tm->hour);
+                        snprintf(tmp, max, "%2d", tm->tm_hour);
                         APPEND(tmp);
                         break;
                     case 'l':
-                        snprintf(tmp, max, "%2d", tm->hour % 12);
+                        snprintf(tmp, max, "%2d", tm->tm_hour % 12);
                         APPEND(tmp);
                         break;
                     case 'm':
-                        snprintf(tmp, max, "%02d", tm->mon + 1);
+                        snprintf(tmp, max, "%02d", tm->tm_mon + 1);
                         APPEND(tmp);
                         break;
                     case 'M':
-                        snprintf(tmp, max, "%02d", tm->min);
+                        snprintf(tmp, max, "%02d", tm->tm_min);
                         APPEND(tmp);
                         break;
                     case 'n':
                         APPEND("\n");
                         break;
                     case 'p':
-                        if(tm->hour >= 12){
+                        if(tm->tm_hour >= 12){
                             APPEND("PM");
                         }else{
                             APPEND("AM");
                         }
                         break;
                     case 'P':
-                        if(tm->hour >= 12){
+                        if(tm->tm_hour >= 12){
                             APPEND("pm");
                         }else{
                             APPEND("am");
@@ -202,7 +202,7 @@ size_t strftime(char* s, size_t max, const char* format,
                         APPEND(tmp);
                         break;
                     case 'S':
-                        snprintf(tmp, max, "%02d", tm->sec);
+                        snprintf(tmp, max, "%02d", tm->tm_sec);
                         APPEND(tmp);
                         break;
                     case 't':
@@ -214,7 +214,7 @@ size_t strftime(char* s, size_t max, const char* format,
                         break;
                     case 'u':
                         /* Day of the week, 1-7, Monday=1 */
-                        snprintf(tmp, max, "%d", 1 + (tm->wday + 6 ) % 7);
+                        snprintf(tmp, max, "%d", 1 + (tm->tm_wday + 6 ) % 7);
                         APPEND(tmp);
                         break;
                     case 'U':
@@ -228,7 +228,7 @@ size_t strftime(char* s, size_t max, const char* format,
                         break;
                     case 'w':
                         /* Day of the week, 0-6, Sunday=0 */
-                        snprintf(tmp, max, "%d", tm->wday);
+                        snprintf(tmp, max, "%d", tm->tm_wday);
                         APPEND(tmp);
                         break;
                     case 'W':
@@ -247,12 +247,12 @@ size_t strftime(char* s, size_t max, const char* format,
                         break;
                     case 'y':
                         /* The year as a decimal number without a century (range 00 to 99). */
-                        snprintf(tmp, max, "%02d", tm->year % 100);
+                        snprintf(tmp, max, "%02d", tm->tm_year % 100);
                         APPEND(tmp);
                         break;
                     case 'Y':
                         /* The year as a decimal number including the century. */
-                        snprintf(tmp, max, "%d", tm->year);
+                        snprintf(tmp, max, "%d", tm->tm_year);
                         APPEND(tmp);
                         break;
                     case 'z':

@@ -1,6 +1,6 @@
 /* Terminal driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -22,6 +22,7 @@
 #include <vfs/filesystem.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
+#include <time.h>
 
 #include "pty.h"
 
@@ -108,6 +109,7 @@ static int pty_insert_node( pty_node_t* node ) {
 
 static int pty_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
     *root_inode_num = PTY_ROOT_INODE;
+    root_inode.atime = root_inode.mtime = root_inode.ctime = time( NULL );
 
     return 0;
 }
@@ -408,6 +410,9 @@ static int pty_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     stat->st_ino = node->inode_number;
     stat->st_mode = 0;
     stat->st_size = 0;
+    stat->st_atime = node->atime;
+    stat->st_mtime = node->mtime;
+    stat->st_ctime = node->ctime;
 
     if ( node == &root_inode ) {
         stat->st_mode |= S_IFDIR;
@@ -467,7 +472,16 @@ static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, s
     return 1;
 }
 
-static int pty_create( void* fs_cookie, void* node, const char* name, int name_len, int mode, int permissions, ino_t* inode_num, void** file_cookie ) {
+static int pty_create(
+        void* fs_cookie,
+        void* node,
+        const char* name,
+        int name_len,
+        int mode,
+        int permissions,
+        ino_t* inode_num,
+        void** file_cookie
+) {
     int error;
     ino_t dummy;
     char* tty_name;
@@ -508,6 +522,8 @@ static int pty_create( void* fs_cookie, void* node, const char* name, int name_l
 
     master->partner = slave;
     slave->partner = master;
+    master->atime = master->mtime = master->ctime = slave->atime =
+            slave->mtime = slave->ctime = time( NULL );
 
     LOCK( pty_lock );
 
