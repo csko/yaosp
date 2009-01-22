@@ -33,10 +33,10 @@ typedef struct pty_node {
 
     char* name;
     ino_t inode_number;
+    mode_t mode;
     time_t atime;
     time_t mtime;
     time_t ctime;
-
 
     semaphore_id lock;
     semaphore_id read_queue;

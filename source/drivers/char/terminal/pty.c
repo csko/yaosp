@@ -32,54 +32,61 @@ static ino_t pty_inode_counter = 1;
 static hashtable_t pty_node_table;
 static semaphore_id pty_lock;
 
-static pty_node_t root_inode = { .inode_number = PTY_ROOT_INODE };
+static pty_node_t root_inode = {
+    .inode_number = PTY_ROOT_INODE,
+    .mode = S_IFDIR
+};
 
 static inline bool pty_is_master( pty_node_t* node ) {
     return ( node->name[ 0 ] == 'p' );
 }
 
-static pty_node_t* pty_create_node( const char* name, int name_len, size_t buffer_size ) {
+static pty_node_t* pty_create_node( const char* name, int name_length, size_t buffer_size, mode_t mode ) {
     pty_node_t* node;
 
     node = ( pty_node_t* )kmalloc( sizeof( pty_node_t ) );
 
     if ( node == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     memset( node, 0, sizeof( pty_node_t ) );
 
-    if ( name_len == -1 ) {
+    if ( name_length == -1 ) {
         node->name = strdup( name );
     } else {
-        node->name = strndup( name, name_len );
+        node->name = strndup( name, name_length );
     }
 
     if ( node->name == NULL ) {
-        kfree( node );
-        return NULL;
+        goto error2;
     }
 
     node->buffer = ( uint8_t* )kmalloc( buffer_size );
 
     if ( node->buffer == NULL ) {
-        kfree( node->name );
-        kfree( node );
-        return NULL;
+        goto error3;
     }
 
     node->lock = create_semaphore( "pty lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( node->lock < 0 ) {
-        kfree( node->buffer );
-        kfree( node->name );
-        kfree( node );
-        return NULL;
+        goto error4;
     }
 
     node->read_queue = create_semaphore( "pty read queue", SEMAPHORE_COUNTING, 0, 0 );
+
+    if ( node->read_queue < 0 ) {
+        goto error5;
+    }
+
     node->write_queue = create_semaphore( "pty write queue", SEMAPHORE_COUNTING, 0, 0 );
 
+    if ( node->write_queue < 0 ) {
+        goto error6;
+    }
+
+    node->mode = mode;
     node->open = false;
     node->buffer_size = buffer_size;
 
@@ -91,6 +98,24 @@ static pty_node_t* pty_create_node( const char* name, int name_len, size_t buffe
     node->write_requests = NULL;
 
     return node;
+
+error6:
+    delete_semaphore( node->read_queue );
+
+error5:
+    delete_semaphore( node->lock );
+
+error4:
+    kfree( node->buffer );
+
+error3:
+    kfree( node->name );
+
+error2:
+    kfree( node );
+
+error1:
+    return NULL;
 }
 
 static int pty_insert_node( pty_node_t* node ) {
@@ -408,15 +433,11 @@ static int pty_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     node = ( pty_node_t* )_node;
 
     stat->st_ino = node->inode_number;
-    stat->st_mode = 0;
     stat->st_size = 0;
+    stat->st_mode = node->mode;
     stat->st_atime = node->atime;
     stat->st_mtime = node->mtime;
     stat->st_ctime = node->ctime;
-
-    if ( node == &root_inode ) {
-        stat->st_mode |= S_IFDIR;
-    }
 
     return 0;
 }
@@ -473,14 +494,14 @@ static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, s
 }
 
 static int pty_create(
-        void* fs_cookie,
-        void* node,
-        const char* name,
-        int name_len,
-        int mode,
-        int permissions,
-        ino_t* inode_num,
-        void** file_cookie
+    void* fs_cookie,
+    void* node,
+    const char* name,
+    int name_len,
+    int mode,
+    int permissions,
+    ino_t* inode_num,
+    void** file_cookie
 ) {
     int error;
     ino_t dummy;
@@ -498,7 +519,7 @@ static int pty_create(
         return -EEXIST;
     }
 
-    master = pty_create_node( name, name_len, PTY_BUFSIZE );
+    master = pty_create_node( name, name_len, PTY_BUFSIZE, S_IFCHR );
 
     if ( master == NULL ) {
         return -ENOMEM;
@@ -512,7 +533,7 @@ static int pty_create(
 
     tty_name[ 0 ] = 't';
 
-    slave = pty_create_node( tty_name, -1, PTY_BUFSIZE );
+    slave = pty_create_node( tty_name, -1, PTY_BUFSIZE, S_IFCHR );
 
     kfree( tty_name );
 
@@ -522,8 +543,13 @@ static int pty_create(
 
     master->partner = slave;
     slave->partner = master;
-    master->atime = master->mtime = master->ctime = slave->atime =
-            slave->mtime = slave->ctime = time( NULL );
+
+    master->atime = time( NULL );
+    master->mtime = master->atime;
+    master->ctime = master->atime;
+    slave->atime = master->atime;
+    slave->mtime = master->atime;
+    slave->ctime = master->atime;
 
     LOCK( pty_lock );
 
