@@ -111,6 +111,16 @@ int resize_region( region_id id, uint32_t new_size );
  */
 int get_region_info( region_id id, region_info_t* info );
 
+region_id sys_create_region(
+    const char* name,
+    uint32_t size,
+    region_flags_t flags,
+    alloc_type_t alloc_method,
+    void** _address
+);
+
+int sys_delete_region( region_id id );
+
 int preinit_regions( void );
 int init_regions( void );
 

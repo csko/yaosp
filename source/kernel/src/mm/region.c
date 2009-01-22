@@ -198,7 +198,19 @@ region_id create_region(
     return error;
 }
 
-int delete_region( region_id id ) {
+region_id sys_create_region(
+    const char* name,
+    uint32_t size,
+    region_flags_t flags,
+    alloc_type_t alloc_method,
+    void** _address
+) {
+    flags &= ( REGION_READ | REGION_WRITE );
+
+    return create_region( name, size, flags, alloc_method, _address );
+}
+
+static int do_delete_region( region_id id, bool allow_kernel_region ) {
     region_t* region;
 
     LOCK( region_lock );
@@ -211,12 +223,26 @@ int delete_region( region_id id ) {
         return -EINVAL;
     }
 
+    if ( ( !allow_kernel_region ) && ( ( region->flags & REGION_KERNEL ) != 0 ) ) {
+        UNLOCK( region_lock );
+
+        return -EPERM;
+    }
+
     arch_delete_region_pages( region->context, region );
     region_remove( region->context, region );
 
     UNLOCK( region_lock );
 
     return 0;
+}
+
+int delete_region( region_id id ) {
+    return do_delete_region( id, true );
+}
+
+int sys_delete_region( region_id id ) {
+    return do_delete_region( id, false );
 }
 
 int resize_region( region_id id, uint32_t new_size ) {

@@ -146,6 +146,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
         <item>src/yaosp/sysinfo.c</item>
+        <item>src/yaosp/region.c</item>
     </array>
 
     <target name="clean">
