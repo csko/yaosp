@@ -58,8 +58,6 @@ void handle_device_not_available( registers_t* regs ) {
     arch_thread = ( i386_thread_t* )thread->arch_data;
     fpu_state = arch_thread->fpu_state;
 
-    kprintf( "%s() process=%s thread=%s\n", __FUNCTION__, thread->process->name, thread->name );
-
     spinlock_disable( &scheduler_lock );
 
     clear_task_switched();
