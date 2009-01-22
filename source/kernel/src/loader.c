@@ -224,6 +224,7 @@ static int execve( char* path, char** argv, char** envp ) {
     /* Copy argv and envp item values to the user */
 
     stack = ( uint8_t* )stack_address;
+    stack += ( USER_STACK_PAGES * PAGE_SIZE );
 
     stack = copy_param_array_to_user( cloned_argv, user_argv, argc, stack );
     stack = copy_param_array_to_user( cloned_envv, user_envv, envc, stack );
