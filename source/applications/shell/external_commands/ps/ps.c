@@ -244,8 +244,6 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    printf( " PID  TID NAME\n" );
-
     while ( ( entry = readdir( dir ) ) != NULL ) {
         if(do_ps( entry->d_name ) == -ENOMEM ){
             fprintf (stderr, "%s: Failed to allocate memory for process list!\n", argv[0] );
@@ -256,9 +254,13 @@ int main( int argc, char** argv ) {
         }
     }
 
+    closedir( dir );
+
     if(numprocs > 0){
         /* Sort the processes */
         qsort(procs, numprocs, sizeof(procs[0]), p_asc);
+
+        printf( " PID  TID NAME\n" );
 
         /* Print the processes */
         for(i = 0; i < numprocs; i++){
@@ -266,7 +268,6 @@ int main( int argc, char** argv ) {
         }
     }
 
-    closedir( dir );
     destroy_procs();
 
     return EXIT_SUCCESS;

@@ -23,6 +23,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="files_i386">
         <item>arch/i386/syscall.S</item>
         <item>arch/i386/getpagesize.c</item>
+        <item>arch/i386/math/e_exp.S</item>
+        <item>arch/i386/math/e_log.S</item>
+        <item>arch/i386/math/s_sin.S</item>
+        <item>arch/i386/math/s_cos.S</item>
+        <item>arch/i386/math/s_floor.S</item>
+        <item>arch/i386/math/s_ceil.S</item>
+        <item>arch/i386/math/s_frexp.S</item>
+        <item>arch/i386/math/s_fabs.S</item>
+        <item>arch/i386/math/e_fmod.S</item>
+        <item>arch/i386/math/e_atan2.S</item>
+        <item>arch/i386/math/e_hypot.S</item>
+        <item>arch/i386/math/e_pow.S</item>
+        <item>arch/i386/math/s_finite.S</item>
+        <item>arch/i386/math/s_scalbn.S</item>
     </array>
 
     <array name="files">
@@ -143,6 +157,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/termios/tcflush.c</item>
         <item>src/termios/tcgetattr.c</item>
         <item>src/termios/tcsetattr.c</item>
+        <item>src/math/s_ldexp.c</item>
+        <item>src/math/s_modf.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/semaphore.c</item>
         <item>src/yaosp/sysinfo.c</item>
