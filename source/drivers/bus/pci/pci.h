@@ -1,6 +1,7 @@
 /* PCI bus definitions
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,7 +26,7 @@
 #define PCI_DEVICE_ID      0x02 /* (2 byte) device id */
 #define PCI_COMMAND        0x04 /* (2 byte) command */
 #define PCI_STATUS         0x06 /* (2 byte) status */
-#define PCI_REVISION       0x08 /* (1 byte) revision id */
+#define PCI_REVISION_ID    0x08 /* (1 byte) revision id */
 #define PCI_CLASS_API      0x09 /* (1 byte) specific register interface type */
 #define PCI_CLASS_SUB      0x0A /* (1 byte) specific device function */
 #define PCI_CLASS_BASE     0x0B /* (1 byte) device type (display vs network, etc) */
@@ -34,6 +35,8 @@
 #define PCI_HEADER_TYPE    0x0E /* (1 byte) header type */
 #define PCI_BIST           0x0F /* (1 byte) built-in self-test */
 #define PCI_BASE_REGISTERS 0x10 /* base registers (size varies) */
+#define PCI_SUBSYS_VEND_ID 0x2C /* (2 byte) subsystem vendor id */
+#define PCI_SUBSYS_DEV_ID  0x2E /* (2 byte) subsystem id */
 
 #define PCI_HEADER_BRIDGE 0x01 /* PCI bridge */
 #define PCI_MULTIFUNCTION 0x80 /* multifunction device flag */
@@ -90,9 +93,12 @@ typedef struct pci_device {
 
     uint16_t vendor_id;
     uint16_t device_id;
+    uint8_t revision_id;
     uint8_t class_api;
     uint8_t class_sub;
     uint8_t class_base;
+    uint16_t subsystem_vendor_id;
+    uint16_t subsystem_device_id;
 } pci_device_t;
 
 typedef struct pci_bus {

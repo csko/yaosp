@@ -48,7 +48,8 @@ static int read_pci_entry_node( char* dir, char* node, char* buffer, size_t size
         return data;
     }
 
-    buffer[ data ] = 0;
+    /* Strip the newline at the end */
+    buffer[ data - 1 ] = 0;
 
     return 0;
 }
@@ -57,8 +58,16 @@ static void list_pci_entry( char* dir ) {
     int error;
     long vendor_id;
     long device_id;
-    char vendor[ 8 ];
-    char device[ 8 ];
+    char vendor[ 16 ];
+    char device[ 16 ];
+/*
+    TODO: Determine revision, subsystem vendor and subsystem device
+          Print them when in debug mode (-v etc.)
+
+    char revision[ 16 ];
+    char subsystem_vendor[ 16 ];
+    char subsystem_device[ 16 ];
+*/
     int index;
     char* vendor_name;
     char* device_name;

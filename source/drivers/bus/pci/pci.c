@@ -353,9 +353,12 @@ static int pci_scan_device( int bus, int dev, int func ) {
         pci_scan_bus( ( int )secondary );
     } else {
         uint32_t device_id;
+        uint32_t revision_id;
         uint32_t class_api;
         uint32_t class_sub;
         uint32_t class_base;
+        uint32_t subsystem_vendor_id;
+        uint32_t subsystem_device_id;
         pci_device_t* device;
 
         device = ( pci_device_t* )kmalloc( sizeof( pci_device_t ) );
@@ -371,22 +374,29 @@ static int pci_scan_device( int bus, int dev, int func ) {
         device->vendor_id = vendor_id;
 
         if ( ( pci_access->read( bus, dev, func, PCI_DEVICE_ID, 2, &device_id ) < 0 ) ||
+             ( pci_access->read( bus, dev, func, PCI_REVISION_ID, 1, &revision_id ) < 0 ) ||
              ( pci_access->read( bus, dev, func, PCI_CLASS_API, 1, &class_api ) < 0 ) ||
              ( pci_access->read( bus, dev, func, PCI_CLASS_SUB, 1, &class_sub ) < 0 ) ||
-             ( pci_access->read( bus, dev, func, PCI_CLASS_BASE, 1, &class_base ) < 0 ) ) {
+             ( pci_access->read( bus, dev, func, PCI_CLASS_BASE, 1, &class_base ) < 0 ) ||
+             ( pci_access->read( bus, dev, func, PCI_SUBSYS_VEND_ID, 2, &subsystem_vendor_id ) < 0 ) ||
+             ( pci_access->read( bus, dev, func, PCI_SUBSYS_DEV_ID, 2, &subsystem_device_id ) < 0 ) ) {
             return -1;
         }
 
         device->device_id = device_id;
+        device->revision_id = revision_id;
         device->class_api = class_api;
         device->class_sub = class_sub;
         device->class_base = class_base;
+        device->subsystem_vendor_id = subsystem_vendor_id;
+        device->subsystem_device_id = subsystem_device_id;
 
         if ( pci_device_count < MAX_PCI_DEVICES ) {
-            /* TODO: Determine revision, subsystem */
 
             kprintf(
-                "PCI: %d:%d:%d 0x%x:0x%x\n", bus, dev, func, vendor_id, device_id
+                "PCI: %d:%d:%d 0x%x:0x%x:0x%x 0x%x:0x%x\n",
+                bus, dev, func, vendor_id, device_id, revision_id,
+                subsystem_vendor_id, subsystem_device_id
             );
 
             pci_devices[ pci_device_count++ ] = device;

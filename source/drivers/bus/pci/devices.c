@@ -1,6 +1,6 @@
 /* PCI device handling under device filesystem
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -48,14 +48,14 @@ static pci_cookie_t* create_pci_cookie( size_t size ) {
 }
 
 static int vendor_open( void* node, uint32_t flags, void** _cookie ) {
-    char tmp[ 8 ];
+    char tmp[ 16 ];
     size_t length;
     pci_device_t* device;
     pci_cookie_t* cookie;
 
     device = ( pci_device_t* )node;
 
-    length = snprintf( tmp, sizeof( tmp ), "0x%X", device->vendor_id );
+    length = snprintf( tmp, sizeof( tmp ), "0x%X\n", device->vendor_id );
 
     cookie = create_pci_cookie( length );
 
@@ -104,14 +104,14 @@ static device_calls_t vendor_calls = {
 };
 
 static int device_open( void* node, uint32_t flags, void** _cookie ) {
-    char tmp[ 8 ];
+    char tmp[ 16 ];
     size_t length;
     pci_device_t* device;
     pci_cookie_t* cookie;
 
     device = ( pci_device_t* )node;
 
-    length = snprintf( tmp, sizeof( tmp ), "0x%X", device->device_id );
+    length = snprintf( tmp, sizeof( tmp ), "0x%X\n", device->device_id );
 
     cookie = create_pci_cookie( length );
 
@@ -126,17 +126,120 @@ static int device_open( void* node, uint32_t flags, void** _cookie ) {
     return 0;
 }
 
-static int device_close( void* node, void* cookie ) {
-    kfree( cookie );
-    return 0;
-}
-
-/* NOTE: We can use the same function for the read operation
+/* NOTE: We can use the same function for the read and close operations
          here because they use the same buffer for the cookie */
 
 static device_calls_t device_calls = {
     .open = device_open,
-    .close = device_close,
+    .close = vendor_close,
+    .ioctl = NULL,
+    .read = vendor_read,
+    .write = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
+};
+
+static int revision_open( void* node, uint32_t flags, void** _cookie ) {
+    char tmp[ 16 ];
+    size_t length;
+    pci_device_t* device;
+    pci_cookie_t* cookie;
+
+    device = ( pci_device_t* )node;
+
+    length = snprintf( tmp, sizeof( tmp ), "0x%X\n", device->revision_id );
+
+    cookie = create_pci_cookie( length );
+
+    if ( cookie == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy( cookie->buffer, tmp, length );
+
+    *_cookie = ( void* )cookie;
+
+    return 0;
+}
+
+/* NOTE: We can use the same function for the read and close operations
+         here because they use the same buffer for the cookie */
+
+static device_calls_t revision_calls = {
+    .open = revision_open,
+    .close = vendor_close,
+    .ioctl = NULL,
+    .read = vendor_read,
+    .write = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
+};
+
+static int subsystem_vendor_open( void* node, uint32_t flags, void** _cookie ) {
+    char tmp[ 16 ];
+    size_t length;
+    pci_device_t* device;
+    pci_cookie_t* cookie;
+
+    device = ( pci_device_t* )node;
+
+    length = snprintf( tmp, sizeof( tmp ), "0x%X\n", device->subsystem_vendor_id );
+
+    cookie = create_pci_cookie( length );
+
+    if ( cookie == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy( cookie->buffer, tmp, length );
+
+    *_cookie = ( void* )cookie;
+
+    return 0;
+}
+
+/* NOTE: We can use the same function for the read and close operations
+         here because they use the same buffer for the cookie */
+
+static device_calls_t subsystem_vendor_calls = {
+    .open = subsystem_vendor_open,
+    .close = vendor_close,
+    .ioctl = NULL,
+    .read = vendor_read,
+    .write = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
+};
+
+static int subsystem_device_open( void* node, uint32_t flags, void** _cookie ) {
+    char tmp[ 16 ];
+    size_t length;
+    pci_device_t* device;
+    pci_cookie_t* cookie;
+
+    device = ( pci_device_t* )node;
+
+    length = snprintf( tmp, sizeof( tmp ), "0x%X\n", device->subsystem_device_id );
+
+    cookie = create_pci_cookie( length );
+
+    if ( cookie == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy( cookie->buffer, tmp, length );
+
+    *_cookie = ( void* )cookie;
+
+    return 0;
+}
+
+/* NOTE: We can use the same function for the read and close operations
+         here because they use the same buffer for the cookie */
+
+static device_calls_t subsystem_device_calls = {
+    .open = subsystem_device_open,
+    .close = vendor_close,
     .ioctl = NULL,
     .read = vendor_read,
     .write = NULL,
@@ -177,6 +280,57 @@ int create_device_node_for_pci_device( pci_device_t* pci_device ) {
     );
 
     error = create_device_node( path, &device_calls, ( void* )pci_device );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Create the revision node */
+
+    snprintf(
+        path,
+        sizeof( path ),
+        "pci/%d:%d:%d/revision",
+        pci_device->bus,
+        pci_device->dev,
+        pci_device->func
+    );
+
+    error = create_device_node( path, &revision_calls, ( void* )pci_device );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Create the subsystem_vendor node */
+
+    snprintf(
+        path,
+        sizeof( path ),
+        "pci/%d:%d:%d/subsystem_vendor",
+        pci_device->bus,
+        pci_device->dev,
+        pci_device->func
+    );
+
+    error = create_device_node( path, &subsystem_vendor_calls, ( void* )pci_device );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Create the subsystem_device node */
+
+    snprintf(
+        path,
+        sizeof( path ),
+        "pci/%d:%d:%d/subsystem_device",
+        pci_device->bus,
+        pci_device->dev,
+        pci_device->func
+    );
+
+    error = create_device_node( path, &subsystem_device_calls, ( void* )pci_device );
 
     if ( error < 0 ) {
         return error;
