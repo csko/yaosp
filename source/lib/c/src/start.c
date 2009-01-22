@@ -40,7 +40,7 @@ void __libc_start_main( char** argv, char** envp ) {
 
     /* Store the env array */
 
-    for ( i = 0; envp[ i ] != NULL; i++ ) {
+    for ( i = 0; ( i < MAX_ENV_COUNT - 1 ) && ( envp[ i ] != NULL ); i++ ) {
         environ[ i ] = envp[ i ];
     }
 
