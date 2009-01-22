@@ -28,22 +28,43 @@
 #include <arch/mm/config.h>
 
 int arch_allocate_thread( thread_t* thread ) {
+    uint32_t tmp;
     i386_thread_t* arch_thread;
 
     arch_thread = ( i386_thread_t* )kmalloc( sizeof( i386_thread_t ) );
 
     if ( arch_thread == NULL ) {
-        return -ENOMEM;
+        goto error1;
     }
 
-    memset( arch_thread, 0, sizeof( arch_thread ) );
+    tmp = ( uint32_t )kmalloc( sizeof( fpu_state_t ) + 15 );
+
+    if ( tmp == 0 ) {
+        goto error2;
+    }
+
+    arch_thread->esp = 0;
+    arch_thread->flags = 0;
+    arch_thread->fpu_state_base = ( void* )tmp;
+    arch_thread->fpu_state = ( fpu_state_t* )( ( tmp + 15 ) & ~15 );
 
     thread->arch_data = ( void* )arch_thread;
 
     return 0;
+
+error2:
+    kfree( arch_thread );
+
+error1:
+    return -ENOMEM;
 }
 
 void arch_destroy_thread( thread_t* thread ) {
+    i386_thread_t* arch_thread;
+
+    arch_thread = ( i386_thread_t* )thread->arch_data;
+
+    kfree( arch_thread->fpu_state_base );
     kfree( thread->arch_data );
 }
 

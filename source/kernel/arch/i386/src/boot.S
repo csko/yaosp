@@ -52,6 +52,12 @@ _start:
     cmpl $MB_BOOTLOADER_MAGIC, %eax
     jne _multiboot_nok
 
+    /* Set math present and numeric error bits in CR0 */
+
+    movl %cr0, %eax
+    orl $0x22, %eax
+    movl %eax, %cr0
+
     /* Pass the pointer to the multiboot info and
        call the C entry function */
 

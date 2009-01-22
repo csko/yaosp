@@ -46,7 +46,16 @@ int schedule( registers_t* regs ) {
     if ( current != NULL ) {
         arch_thread = ( i386_thread_t* )current->arch_data;
 
+        /* Save the current ESP value */
+
         arch_thread->esp = ( register_t )regs;
+
+        /* Save the FPU state if it is dirty */
+
+        if ( arch_thread->flags & THREAD_FPU_DIRTY ) {
+            save_fpu_state( arch_thread->fpu_state );
+            arch_thread->flags &= ~THREAD_FPU_DIRTY;
+        }
     }
 
     /* Ask the scheduler to select the next thread to run */
@@ -69,6 +78,8 @@ int schedule( registers_t* regs ) {
         set_cr3( ( uint32_t )arch_mem_context->page_directory );
         arch_cpu->tss.cr3 = ( register_t )arch_mem_context->page_directory;
     }
+
+    set_task_switched();
 
     /* Unlock the scheduler spinlock. The iret instruction in
        switch_to_thread() will enable interrupts if required. */

@@ -30,6 +30,8 @@
 .global get_cr2
 .global get_cr3
 .global set_cr3
+.global clear_task_switched
+.global set_task_switched
 .global flush_tlb
 .global halt_loop
 
@@ -110,6 +112,22 @@ set_cr3:
     movl %eax, %cr3
     ret
 .size set_cr3,.-set_cr3
+
+/* void clear_task_switched( void ) */
+
+clear_task_switched:
+    clts
+    ret
+.size clear_task_switched,.-clear_task_switched
+
+/* void set_task_switched( void ) */
+
+set_task_switched:
+    movl %cr0, %eax
+    orl $0x8, %eax
+    movl %eax, %cr0
+    ret
+.size set_task_switched,.-set_task_switched
 
 /* void flush_tlb( void ) */
 

@@ -23,13 +23,30 @@
 #include <lib/string.h>
 
 #include <arch/thread.h>
+#include <arch/cpu.h>
 
 int arch_do_fork( thread_t* old_thread, thread_t* new_thread ) {
     registers_t* old_regs;
     registers_t* new_regs;
+    i386_thread_t* old_arch_thread;
     i386_thread_t* new_arch_thread;
 
     old_regs = ( registers_t* )old_thread->syscall_stack;
+
+    old_arch_thread = ( i386_thread_t* )old_thread->arch_data;
+    new_arch_thread = ( i386_thread_t* )new_thread->arch_data;
+
+    /* Clone the FPU state */
+
+    if ( old_arch_thread->flags & THREAD_FPU_USED ) {
+        if ( old_arch_thread->flags & THREAD_FPU_DIRTY ) {
+            save_fpu_state( old_arch_thread->fpu_state );
+            old_arch_thread->flags &= ~THREAD_FPU_DIRTY; 
+            set_task_switched();
+        }
+
+        memcpy( new_arch_thread->fpu_state, old_arch_thread->fpu_state, sizeof( fpu_state_t ) );
+    }
 
     /* Clone the registers on the stack */
 
@@ -44,7 +61,6 @@ int arch_do_fork( thread_t* old_thread, thread_t* new_thread ) {
 
     /* Set the ESP value of the new thread */
 
-    new_arch_thread = ( i386_thread_t* )new_thread->arch_data;
     new_arch_thread->esp = ( register_t )new_regs;
 
     return 0;

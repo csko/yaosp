@@ -1,6 +1,6 @@
-/* Architecture specific thread functions
+/* FPU state save and restore functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,28 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_THREAD_H_
-#define _ARCH_THREAD_H_
-
-#include <thread.h>
-
 #include <arch/fpu.h>
 
-enum {
-    THREAD_FPU_USED = 1,
-    THREAD_FPU_DIRTY = 2
-};
+void load_fpu_state( fpu_state_t* fpu_state ) {
+    __asm__ __volatile__(
+        "frstor %0\n"
+        :
+        : "m" ( fpu_state->fsave_data )
+    );
+}
 
-typedef struct i386_thread {
-    register_t esp;
-    uint32_t flags;
-    void* fpu_state_base;
-    fpu_state_t* fpu_state;
-} i386_thread_t;
-
-int arch_allocate_thread( thread_t* thread );
-void arch_destroy_thread( thread_t* thread );
-
-int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg );
-
-#endif // _ARCH_THREAD_H_
+void save_fpu_state( fpu_state_t* fpu_state ) {
+    __asm__ __volatile__(
+        "fnsave %0\n"
+        "fwait\n"
+        : "=m" ( fpu_state->fsave_data )
+    );
+}
