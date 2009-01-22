@@ -216,7 +216,8 @@ int do_lookup_inode( io_context_t* io_context, inode_t* parent, const char* name
 
         LOCK( io_context->lock );
 
-        is_root = ( parent->inode_number == io_context->root_directory->inode_number );
+        is_root = ( ( parent->inode_number == io_context->root_directory->inode_number ) &&
+                    ( parent->mount_point == io_context->root_directory->mount_point ) );
 
         UNLOCK( io_context->lock );
 
