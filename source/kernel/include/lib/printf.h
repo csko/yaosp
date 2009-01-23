@@ -29,6 +29,7 @@
 #define PRINTF_LZERO    0x40
 #define PRINTF_NEEDPLUS 0x80
 #define PRINTF_LONGLONG 0x100
+#define PRINTF_PRECIS   0x200
 
 #define PRINTF_BUFLEN   32
 

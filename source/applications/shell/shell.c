@@ -130,17 +130,14 @@ int main( int argc, char** argv, char** envp ) {
         args = line;
         arg_count = 0;
 
-        if ( args != NULL ) {
-            while ( ( arg_count < ( MAX_ARGV - 1 ) ) &&
-                    ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
-                child_argv[ arg_count++ ] = args;
-                *arg++ = 0;
-                args = arg;
-            }
-
+        while ( ( arg_count < ( MAX_ARGV - 1 ) ) &&
+                ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
             child_argv[ arg_count++ ] = args;
+            *arg++ = 0;
+            args = arg;
         }
 
+        child_argv[ arg_count++ ] = args;
         child_argv[ arg_count ] = NULL;
 
         /* First try to run it as a builtin command */

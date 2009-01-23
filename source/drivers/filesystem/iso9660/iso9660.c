@@ -192,12 +192,12 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
         */
 
         tm_t tm;
-        tm.year = 1900 + iso_dir->datetime[ 0 ];
-        tm.mon = iso_dir->datetime[ 1 ] - 1;
-        tm.mday = iso_dir->datetime[ 2 ];
-        tm.hour = iso_dir->datetime[ 3 ];
-        tm.min = iso_dir->datetime[ 4 ];
-        tm.sec = iso_dir->datetime[ 5 ];
+        tm.tm_year = 1900 + iso_dir->datetime[ 0 ];
+        tm.tm_mon = iso_dir->datetime[ 1 ] - 1;
+        tm.tm_mday = iso_dir->datetime[ 2 ];
+        tm.tm_hour = iso_dir->datetime[ 3 ];
+        tm.tm_min = iso_dir->datetime[ 4 ];
+        tm.tm_sec = iso_dir->datetime[ 5 ];
         /* TODO: Timezone */
 
         inode->created = mktime( &tm );

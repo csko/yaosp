@@ -22,7 +22,7 @@
 #include <arch/io.h>
 #include <arch/spinlock.h>
 #include <arch/hwtime.h>
-#include <lib/time.h> /* dayofweek */
+#include <lib/time.h>
 
 #define BCDTOBIN(val) ( ( ( val ) & 0x0f ) + ( ( val ) >> 4 ) * 10 )
 #define BINTOBCD(val) ( ( ( ( val ) / 10 ) << 4 ) + ( val ) % 10 )
@@ -56,47 +56,51 @@ void gethwclock( tm_t* tm ) {
     outb ( settings, RTCDATA );
 */
 
-    /* Seconds */
-    outb( 0x00, RTCADDR );
-    tm->sec = inb( RTCDATA );
-
-    /* Minutes */
-    outb( 0x02, RTCADDR );
-    tm->min = inb( RTCDATA );
-
-    /* Hours */
-    outb( 0x04, RTCADDR );
-    tm->hour = inb( RTCDATA );
-
-    /* Day of month */
-    outb( 0x07, RTCADDR );
-    tm->mday = inb( RTCDATA );
+    /* Year */
+    outb( 0x09, RTCADDR );
+    tm->tm_year = inb( RTCDATA );
 
     /* Month */
     outb( 0x08, RTCADDR );
-    tm->mon = inb( RTCDATA ) - 1;
+    tm->tm_mon = inb( RTCDATA ) - 1;
 
-    /* Year */
-    outb( 0x09, RTCADDR );
-    tm->year = inb( RTCDATA );
+    /* Day of month */
+    outb( 0x07, RTCADDR );
+    tm->tm_mday = inb( RTCDATA );
+
+    /* Day of week */
+    outb( 0x06, RTCADDR );
+    tm->tm_wday = inb( RTCDATA );
+
+    /* Hours */
+    outb( 0x04, RTCADDR );
+    tm->tm_hour = inb( RTCDATA );
+
+    /* Minutes */
+    outb( 0x02, RTCADDR );
+    tm->tm_min = inb( RTCDATA );
+
+    /* Seconds */
+    outb( 0x00, RTCADDR );
+    tm->tm_sec = inb( RTCDATA );
 
     spinunlock_enable( &datetime_lock );
 
     if(!(settings & 0x04)){ /* See if we have to convert the values */
-        tm->year = BCDTOBIN(tm->year);
-        tm->mon = BCDTOBIN(tm->mon);
-        tm->mday = BCDTOBIN(tm->mday);
-        tm->hour = BCDTOBIN(tm->hour);
-        tm->min = BCDTOBIN(tm->min);
-        tm->sec = BCDTOBIN(tm->sec);
+        tm->tm_year = BCDTOBIN(tm->tm_year);
+        tm->tm_mon = BCDTOBIN(tm->tm_mon);
+        tm->tm_mday = BCDTOBIN(tm->tm_mday);
+        tm->tm_wday = BCDTOBIN(tm->tm_wday);
+        tm->tm_hour = BCDTOBIN(tm->tm_hour);
+        tm->tm_min = BCDTOBIN(tm->tm_min);
+        tm->tm_sec = BCDTOBIN(tm->tm_sec);
     }
-    tm->year += 2000;
+    tm->tm_wday--;
+    tm->tm_year += 2000;
 
-    /* Day of week, TODO: get it from CMOS */
-    tm->wday = dayofweek(tm->year, tm->mon, tm->mday);
     /* TODO: isDST */
-    tm->isdst = -1;
-    tm->yday = ((tm -> year % 4 == 0) ? monthdays2[tm->mon] : monthdays[tm->mon]) + tm->mday - 1;
+    tm->tm_isdst = -1;
+    tm->tm_yday = ((tm->tm_year % 4 == 0) ? monthdays2[tm->tm_mon] : monthdays[tm->tm_mon]) + tm->tm_mday - 1;
 
     /* TODO: see other settings, for example 24-hour clock */
 }

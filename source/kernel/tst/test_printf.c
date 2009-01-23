@@ -113,6 +113,12 @@ int main( int argc, char** argv ) {
     DO_TEST( " ab", "%3s", "ab" )
     DO_TEST( "  ab", "%4s", "ab" )
     DO_TEST( "              ab", "%16s", "ab" )
+
+//    DO_TEST( "", "%.0s", "abcdefgh" )
+//    DO_TEST( "a", "%.1s", "abcdefgh" )
+//    DO_TEST( "ab", "%.2s", "abcdefgh" )
+//    DO_TEST( "abc", "%.3s", "abcdefgh" )
+
     DO_TEST( "%s", "%%s", "hello" )
 
     DO_TEST( "ff", "%x", 255 )

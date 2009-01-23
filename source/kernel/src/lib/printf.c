@@ -20,6 +20,8 @@
 #include <lib/printf.h>
 #include <lib/string.h>
 
+#define MIN(a,b) ( ( a ) < ( b ) ? (a) : (b) )
+
 int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args ) {
     int state, radix, ret;
     unsigned char *where, buf[PRINTF_BUFLEN];
@@ -58,6 +60,10 @@ int do_printf( printf_helper_t* helper, void* data, const char* format, va_list 
                 if(*format == '+'){ /* Always have sign */
                     flags |= PRINTF_NEEDPLUS;
                     break;
+                }
+                if(*format == '.'){ /* when used with %s, strips the string */
+                    flags |= PRINTF_PRECIS;
+                    format++;
                 }
                 state++;
                 if(*format == '0' && !(flags & PRINTF_LEFT)){ /* Left padding with '0' */
@@ -160,7 +166,17 @@ PRINTF_DO_NUM:
                             where = ( unsigned char* )"<NULL>";
                         }
 PRINTF_OUT:
-                        actual_wd = strlen((char *)where);
+/*
+                        where = (unsigned char*) strcpy((char*) buf, (const char*) where);
+                        if(flags & PRINTF_PRECIS){
+                            where[MIN(strlen((char *)where)-1, given_wd)] = '\0';
+                        }
+*/
+                        /* TODO: why is this not working on %.10s ? */
+                        actual_wd = (flags & PRINTF_PRECIS) ?
+                                    MIN(strlen((char *)where), given_wd) :
+                                    strlen((char *)where) ;
+
                         if(flags & PRINTF_NEEDSIGN || flags & PRINTF_NEEDPLUS)
                             actual_wd++;
                         if((flags & (PRINTF_NEEDSIGN | PRINTF_LZERO)) == (PRINTF_NEEDSIGN | PRINTF_LZERO)) {
