@@ -95,7 +95,7 @@ int memcmp( const void* s1, const void* s2, size_t n ) {
     const unsigned char* tmp1 = ( const unsigned char* )s1;
     const unsigned char* tmp2 = ( const unsigned char* )s2;
 
-    for ( ; n > 0; n-- ) {
+    for ( ; n > 0; n--, tmp1++, tmp2++ ) {
         res = *tmp1 - *tmp2;
 
         if ( res != 0 ) {
