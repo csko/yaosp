@@ -58,6 +58,13 @@ typedef struct multiboot_module {
     uint32_t reserved;
 } multiboot_module_t;
 
+typedef struct multiboot_mmap_entry {
+    uint32_t size;
+    uint64_t base;
+    uint64_t length;
+    uint32_t type;
+} multiboot_mmap_entry_t;
+
 #endif // __ASSEMBLER__
 
 #endif // _MULTIBOOT_H_

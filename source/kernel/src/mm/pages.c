@@ -143,6 +143,8 @@ int init_page_allocator( multiboot_header_t* header ) {
     ptr_t i;
     ptr_t first_free_page;
     int module_count;
+    uint32_t mmap_length;
+    multiboot_mmap_entry_t* mmap_entry;
 
     /* Check if we have memory information in the multiboot header */
 
@@ -198,6 +200,33 @@ int init_page_allocator( multiboot_header_t* header ) {
     for ( i = 0; i < first_free_page; i += PAGE_SIZE ) {
         atomic_inc( &memory_pages[ i ].ref );
         atomic_dec( &free_page_count );
+    }
+
+    /* Parse the memory map provided by the GRUB */
+
+    mmap_length = 0;
+    mmap_entry = ( multiboot_mmap_entry_t* )header->memory_map_address;
+
+    for ( ; mmap_length < header->memory_map_length;
+            mmap_length += ( mmap_entry->size + 4 ),
+            mmap_entry = ( multiboot_mmap_entry_t* )( ( uint8_t* )mmap_entry + mmap_entry->size + 4 ) ) {
+        if ( mmap_entry->type != 1 ) {
+            uint64_t real_base;
+            uint64_t real_length;
+
+            real_base = mmap_entry->base & PAGE_MASK;
+            real_length = PAGE_ALIGN( ( mmap_entry->base & ~PAGE_MASK ) + mmap_entry->length );
+
+            for ( i = real_base / PAGE_SIZE;
+                  ( i < ( ( real_base + real_length ) / PAGE_SIZE ) ) &&
+                  ( i < memory_page_count );
+                  i++ ) {
+                if ( atomic_get( &memory_pages[ i ].ref ) == 0 ) {
+                    atomic_inc( &memory_pages[ i ].ref );
+                    atomic_dec( &free_page_count );
+                }
+            }
+        }
     }
 
     return 0;
