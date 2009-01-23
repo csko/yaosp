@@ -1,4 +1,4 @@
-/* vfprintf function
+/* strtok function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,15 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include <string.h>
 
-#include "__printf.h"
+static char* strtok_pos;
 
-static int vfprintf_helper( void* data, char c ) {
-    fputc( c, ( FILE* )data );
-    return 0;
-}
-
-int vfprintf( FILE* stream, const char* format, va_list args ) {
-    return __printf( vfprintf_helper, ( void* )stream, format, args );
+char* strtok( char* s, const char* delim ) {
+    return strtok_r( s, delim, &strtok_pos );
 }

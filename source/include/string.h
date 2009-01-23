@@ -38,6 +38,10 @@ char* strncpy( char* d, const char* s, size_t c );
 char* strcat( char* d, const char* s );
 char* strncat( char* d, const char* s, size_t c );
 char* strpbrk( const char* s, const char* accept );
+size_t strspn( const char* s, const char* accept );
+size_t strcspn( const char* s, const char* reject );
+char* strtok_r( char* s, const char* delim, char** ptrptr );
+char* strtok( char* s, const char* delim );
 
 char* strdup( const char* s );
 

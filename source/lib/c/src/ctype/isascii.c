@@ -1,4 +1,4 @@
-/* printf function
+/* isascii function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,24 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include <ctype.h>
 
-#include "__printf.h"
-
-static int printf_helper( void* data, char c ) {
-    fputc( c, stdout );
-    return 0;
-}
-
-int printf( const char* format, ... ) {
-    int ret;
-    va_list args;
-
-    va_start( args, format );
-    ret = __printf( printf_helper, NULL, format, args );
-    va_end( args );
-
-    fflush( stdout );
-
-    return ret;
+int isascii( int c ) {
+    return ( ( unsigned int )c < 128u );
 }

@@ -1,4 +1,4 @@
-/* sprintf function
+/* strcspn function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,38 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
 
-#include "__printf.h"
+size_t strcspn( const char* s, const char* reject ) {
+    size_t l = 0;
+    int a = 1;
+    int i;
+    int al = strlen( reject );
 
-typedef struct sprintf_buffer {
-    size_t position;
-    char* buffer;
-} sprintf_buffer_t;
+    while ( ( a ) && ( *s ) ) {
+        for ( i = 0; ( a ) && ( i < al ); i++ ) {
+            if ( *s == reject[ i ] ) {
+                a = 0;
+            }
+        }
 
-static int sprintf_helper( void* data, char c ) {
-    sprintf_buffer_t* buffer;
+        if ( a ) {
+            l++;
+        }
 
-    buffer = ( sprintf_buffer_t* )data;
+        s++;
+    }
 
-    buffer->buffer[ buffer->position++ ] = c;
-
-    return 0;
-}
-
-int sprintf( char* str, const char* format, ... ) {
-    int ret;
-    va_list args;
-    sprintf_buffer_t data;
-
-    data.position = 0;
-    data.buffer = str;
-
-    va_start( args, format );
-    ret = __printf( sprintf_helper, &data, format, args );
-    va_end( args );
-
-    str[ data.position ] = 0;
-
-    return ret;
+    return l;
 }

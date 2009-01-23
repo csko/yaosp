@@ -29,6 +29,7 @@ int finite( double x );
 double sin( double x );
 double cos( double x );
 double log( double x );
+double log10( double x );
 double exp( double x );
 double floor( double x );
 double ceil( double x );

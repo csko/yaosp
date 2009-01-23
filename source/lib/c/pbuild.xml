@@ -37,6 +37,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/math/e_pow.S</item>
         <item>arch/i386/math/s_finite.S</item>
         <item>arch/i386/math/s_scalbn.S</item>
+        <item>arch/i386/math/e_log10.S</item>
     </array>
 
     <array name="files">
@@ -73,6 +74,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strcat.c</item>
         <item>src/string/strncat.c</item>
         <item>src/string/strpbrk.c</item>
+        <item>src/string/strspn.c</item>
+        <item>src/string/strcspn.c</item>
+        <item>src/string/strtok_r.c</item>
+        <item>src/string/strtok.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>
@@ -101,11 +106,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/fgets.c</item>
         <item>src/stdio/fputc.c</item>
         <item>src/stdio/fputs.c</item>
-        <item>src/stdio/__printf.c</item>
-        <item>src/stdio/printf.c</item>
-        <item>src/stdio/fprintf.c</item>
-        <item>src/stdio/snprintf.c</item>
-        <item>src/stdio/sprintf.c</item>
         <item>src/stdio/fileno.c</item>
         <item>src/stdio/feof.c</item>
         <item>src/stdio/fflush.c</item>
@@ -119,8 +119,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/ftell.c</item>
         <item>src/stdio/fread.c</item>
         <item>src/stdio/fwrite.c</item>
-        <item>src/stdio/vfprintf.c</item>
-        <item>src/stdio/vsnprintf.c</item>
         <item>src/stdio/rewind.c</item>
         <item>src/stdio/perror.c</item>
         <item>src/time/time_int.c</item>
@@ -152,6 +150,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/tolower.c</item>
         <item>src/ctype/toupper.c</item>
         <item>src/ctype/isgraph.c</item>
+        <item>src/ctype/ispunct.c</item>
+        <item>src/ctype/isascii.c</item>
         <item>src/signal/signal.c</item>
         <item>src/locale/localeconv.c</item>
         <item>src/termios/tcflush.c</item>
@@ -163,6 +163,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/yaosp/semaphore.c</item>
         <item>src/yaosp/sysinfo.c</item>
         <item>src/yaosp/region.c</item>
+        <item>src/trio/trio.c</item>
+        <item>src/trio/trionan.c</item>
+        <item>src/trio/triostr.c</item>
     </array>
 
     <target name="clean">
@@ -214,6 +217,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <define key="HAVE_MMAP">0</define>
                 <define key="USE_LOCKS">1</define>
                 <define key="YAOSP"/>
+                <define key="TRIO_FEATURE_LOCALE">0</define>
             </gcc>
         </for>
 

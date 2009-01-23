@@ -30,4 +30,6 @@
 typedef unsigned int size_t;
 typedef int ssize_t;
 
+typedef signed long ptrdiff_t;
+
 #endif // _STDDEF_H_

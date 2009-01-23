@@ -1,4 +1,4 @@
-/* vsnprintf function
+/* strtok_r function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,39 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include <string.h>
 
-#include "__printf.h"
+char* strtok_r( char* s, const char* delim, char** ptrptr ) {
+    char* tmp = NULL;
 
-typedef struct vsnprintf_buffer {
-    size_t position;
-    size_t size;
-    char* buffer;
-} vsnprintf_buffer_t;
-
-static int vsnprintf_helper( void* data, char c ) {
-    vsnprintf_buffer_t* buffer;
-
-    buffer = ( vsnprintf_buffer_t* )data;
-
-    if ( buffer->position < ( buffer->size - 1 ) ) {
-        buffer->buffer[ buffer->position++ ] = c;
+    if ( s == NULL ) {
+        s = *ptrptr;
     }
 
-    return 0;
-}
+    s += strspn( s, delim );
 
-int vsnprintf( char* str, size_t size, const char* format, va_list args ) {
-    int ret;
-    vsnprintf_buffer_t data;
+    if ( *s ) {
+        tmp = s;
+        s += strcspn( s, delim );
 
-    data.position = 0;
-    data.size = size;
-    data.buffer = str;
+        if ( *s ) {
+            *s++ = 0;
+        }
+    }
 
-    ret = __printf( vsnprintf_helper, &data, format, args );
+    *ptrptr = s;
 
-    str[ data.position ] = 0;
-
-    return ret;
+    return tmp;
 }

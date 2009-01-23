@@ -1,4 +1,4 @@
-/* fprintf function
+/* strspn function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,22 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include <string.h>
 
-#include "__printf.h"
+size_t strspn( const char* s, const char* accept ) {
+    size_t l = 0;
+    int a = 1;
+    int i;
+    int al = strlen( accept );
 
-static int fprintf_helper( void* data, char c ) {
-    fputc( c, ( FILE* )data );
-    return 0;
-}
+    while( ( a ) && ( *s ) )    {
+        for ( a = i = 0; ( !a ) && ( i < al ); i++ ) {
+            if ( *s == accept[ i ] ) {
+                a = 1;
+            }
+        }
 
-int fprintf( FILE* stream, const char* format, ... ) {
-    int ret;
-    va_list args;
+        if ( a ) {
+            l++;
+        }
 
-    va_start( args, format );
-    ret = __printf( fprintf_helper, ( void* )stream, format, args );
-    va_end( args );
+        s++;
+    }
 
-    return ret;
+    return l;
 }
