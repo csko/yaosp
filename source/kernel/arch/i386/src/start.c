@@ -21,6 +21,7 @@
 #include <multiboot.h>
 #include <kernel.h>
 #include <bootmodule.h>
+#include <version.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
 #include <mm/region.h>
@@ -41,7 +42,15 @@ void arch_start( multiboot_header_t* header ) {
     /* Initialize the screen */
 
     init_screen();
-    kprintf( "Screen initialized.\n" );
+
+    kprintf(
+        "Booting yaOSp %d.%d.%d built on %s %s.\n",
+        KERNEL_MAJOR_VERSION,
+        KERNEL_MINOR_VERSION,
+        KERNEL_RELEASE_VERSION,
+        build_date,
+        build_time
+    );
 
     /* Setup our own Global Descriptor Table */
 

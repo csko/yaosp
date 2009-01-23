@@ -77,6 +77,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/loader.c</item>
         <item>src/time.c</item>
         <item>src/sysinfo.c</item>
+        <item>src/version.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>
