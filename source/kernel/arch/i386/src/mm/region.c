@@ -124,6 +124,30 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
     return 0;
 }
 
+int arch_remap_region_pages( struct memory_context* context, region_t* region, ptr_t address ) {
+    int error;
+    i386_memory_context_t* arch_context;
+
+    arch_context = ( i386_memory_context_t* )context->arch_data;
+
+    error = map_region_pages(
+        arch_context,
+        region->start,
+        address,
+        region->size,
+        ( region->flags & REGION_KERNEL ) != 0,
+        ( region->flags & REGION_WRITE ) != 0
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    flush_tlb();
+
+    return 0;
+}
+
 int arch_resize_region( struct memory_context* context, region_t* region, uint32_t new_size ) {
     i386_memory_context_t* arch_context;
 

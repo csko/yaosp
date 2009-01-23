@@ -65,6 +65,14 @@ void destroy_region( region_t* region );
 int region_insert( struct memory_context* context, region_t* region );
 int region_remove( struct memory_context* context, region_t* region );
 
+region_id do_create_region(
+    const char* name,
+    uint32_t size,
+    region_flags_t flags,
+    alloc_type_t alloc_method,
+    void** _address
+);
+
 /**
  * Creates a new memory region in the memory context of the
  * current process.
@@ -92,6 +100,9 @@ region_id create_region(
  * @return On success 0 is returned
  */
 int delete_region( region_id id );
+
+int do_remap_region( region_id id, ptr_t address );
+int remap_region( region_id id, ptr_t address );
 
 /**
  * Resizes a memory region.

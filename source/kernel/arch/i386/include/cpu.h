@@ -32,6 +32,7 @@ typedef struct i386_cpu {
     int family;
     int model;
     int features;
+    uint8_t apic_id;
     tss_t tss;
 } i386_cpu_t;
 

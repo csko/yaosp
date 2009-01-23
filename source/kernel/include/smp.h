@@ -1,6 +1,6 @@
 /* Symmetric multi-processing
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,6 +23,8 @@
 #include <thread.h>
 #include <process.h>
 
+#include <arch/atomic.h>
+
 typedef struct cpu {
     char name[ 255 ];
 
@@ -36,6 +38,8 @@ typedef struct cpu {
     void* arch_data;
 } cpu_t;
 
+extern int processor_count;
+extern atomic_t active_processor_count;
 extern cpu_t processor_table[ MAX_CPU_COUNT ];
 
 process_t* current_process( void );

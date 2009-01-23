@@ -1,0 +1,169 @@
+/* Handling of Intel MultiProcessor tables
+ *
+ * Copyright (c) 2009 Zoltan Kovacs
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of version 2 of the GNU General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <macros.h>
+#include <console.h>
+#include <errno.h>
+#include <smp.h>
+#include <lib/string.h>
+
+#include <arch/mp.h>
+#include <arch/apic.h>
+#include <arch/cpu.h>
+
+/* Memory places where to look for the MP floating pointer */
+
+static uint32_t mp_fp_places[] = {
+    /* Extended BIOS data area */
+    0x40E0, 0x400,
+    /* Last kilobyte of system base memory */
+    639 * 0x400, 0x400,
+    /* BIOS ROM */
+    0xF0000, 0x10000
+};
+
+/* The signature of the MP floating pointer structure */
+
+static uint8_t mp_fp_signature[ 4 ] = { '_', 'M', 'P', '_' };
+
+/* The signature of the MP configuration table */
+
+static uint8_t mp_ct_signature[ 4 ] = { 'P', 'C', 'M', 'P' };
+
+static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
+    uint8_t* data;
+
+    data = ( uint8_t* )address;
+
+    switch ( *data ) {
+        case MP_PROCESSOR : {
+            mp_processor_t* processor;
+
+            processor = ( mp_processor_t* )data;
+
+            /* Map the local APIC ID of the processor to our processor table */
+
+            apic_to_logical_cpu_id[ processor->local_apic_id ] = processor_count;
+
+            /* Make the processor present and save its local APIC ID */
+
+            processor_table[ processor_count ].present = true;
+            arch_processor_table[ processor_count ].apic_id = processor->local_apic_id;
+
+            /* We have one more processor ;) */
+
+            processor_count++;
+
+            return 20;
+        }
+
+        case MP_BUS :
+            return 8;
+
+        case MP_IOAPIC :
+            return 8;
+
+        case MP_IO_INT_ASSIGN :
+            return 8;
+
+        case MP_LOCAL_INT_ASSIGN :
+            return 8;
+
+        default :
+            kprintf( "mp_handle_cfg_table_entry(): Unknown entry: %d\n", *data & 0xFF );
+            return 1;
+    }
+}
+
+static int mp_handle_cfg_table( void* address ) {
+    int i;
+    ptr_t entry_addr;
+    mp_configuration_table_t* ct;
+
+    ct = ( mp_configuration_table_t* )address;
+
+    /* Validate the MP Configuration table */
+
+    if ( memcmp( ct->signature, mp_ct_signature, sizeof( mp_ct_signature ) ) != 0 ) {
+        return -1;
+    }
+
+    /* Save the local APIC base address */
+
+    local_apic_base = ct->local_apic_address;
+
+    /* Parse the configuration table entries */
+
+    entry_addr = ( ptr_t )ct + sizeof( mp_configuration_table_t );
+
+    for ( i = 0; i < ct->entry_count; i++ ) {
+        entry_addr += mp_handle_cfg_table_entry( entry_addr );
+    }
+
+    kprintf( "Found %d processors in the system.\n", processor_count );
+
+    return 0;
+}
+
+static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_floating_pointer_t** _fp ) {
+    uint32_t offset;
+    mp_floating_pointer_t* fp;
+
+    for ( offset = 0; offset < size; offset += sizeof( mp_floating_pointer_t ) ) {
+        fp = ( mp_floating_pointer_t* )( ( uint8_t* )addr + offset );
+
+        if ( memcmp( fp->signature, mp_fp_signature, sizeof( mp_fp_signature ) ) == 0 ) {
+            *_fp = fp;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+int init_mp( void ) {
+    int i;
+    int error;
+    bool fp_found;
+    mp_floating_pointer_t* fp;
+
+    for ( i = 0; i < ARRAY_SIZE( mp_fp_places ); i += 2 ) {
+        fp_found = mp_find_floating_pointer( ( void* )mp_fp_places[ i ], mp_fp_places[ i + 1 ], &fp );
+
+        if ( fp_found ) {
+            break;
+        }
+    }
+
+    if ( !fp_found ) {
+        kprintf( "MP floating pointer not found!\n" );
+        return -ENOENT;
+    }
+
+    kprintf( "Found MP floating pointer at 0x%x\n", fp );
+
+    error = mp_handle_cfg_table( ( void* )fp->physical_address );
+
+    if ( error < 0 ) {
+        kprintf( "Failed to parse MP configuration table!\n" );
+        return error;
+    }
+
+    return 0;
+}

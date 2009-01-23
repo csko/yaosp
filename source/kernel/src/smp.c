@@ -26,9 +26,9 @@
 #include <arch/cpu.h>
 #include <arch/atomic.h>
 
+int processor_count = 0;
+atomic_t active_processor_count = ATOMIC_INIT(0);
 cpu_t processor_table[ MAX_CPU_COUNT ];
-
-static atomic_t active_processor_count = ATOMIC_INIT(0);
 
 process_t* current_process( void ) {
     return get_processor()->current_thread->process;

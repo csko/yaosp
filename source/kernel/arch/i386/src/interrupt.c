@@ -25,6 +25,7 @@
 #include <arch/interrupt.h>
 #include <arch/gdt.h>
 #include <arch/io.h>
+#include <arch/apic.h>
 
 #define PIC_MASTER_CMD 0x20
 #define PIC_MASTER_IMR 0x21
@@ -61,8 +62,9 @@ extern void isr44( void );
 extern void isr45( void );
 extern void isr46( void );
 extern void isr47( void );
-
 extern void isr128( void );
+extern void isr240( void );
+extern void isr241( void );
 
 idt_descriptor_t idt[ IDT_ENTRIES ];
 
@@ -163,6 +165,9 @@ int init_interrupts( void ) {
     set_interrupt_gate( 47, isr47 );
 
     set_trap_gate( 0x80, isr128 );
+
+    set_interrupt_gate( APIC_TIMER_IRQ, isr240 );
+    set_interrupt_gate( APIC_SPURIOUS_IRQ, isr241 );
 
     idtp.limit = ( sizeof( idt_descriptor_t ) * IDT_ENTRIES ) - 1;
     idtp.base = ( uint32_t )&idt;

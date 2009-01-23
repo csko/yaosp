@@ -100,7 +100,7 @@ int region_remove( memory_context_t* context, region_t* region ) {
     return 0;
 }
 
-region_id create_region(
+region_id do_create_region(
     const char* name,
     uint32_t size,
     region_flags_t flags,
@@ -129,8 +129,6 @@ region_id create_region(
         context = current_process()->memory_context;
     }
 
-    LOCK( region_lock );
-
     /* Search for a suitable unmapped memory region */
 
     found = memory_context_find_unmapped_region(
@@ -143,9 +141,7 @@ region_id create_region(
     /* Not found? :( */
 
     if ( !found ) {
-        UNLOCK( region_lock );
-
-        return -1;
+        return -ENOMEM;
     }
 
     /* Allocate a new region instance */
@@ -153,8 +149,6 @@ region_id create_region(
     region = allocate_region( name );
 
     if ( region == NULL ) {
-        UNLOCK( region_lock );
-
         return -ENOMEM;
     }
 
@@ -169,8 +163,6 @@ region_id create_region(
     error = arch_create_region_pages( context, region );
 
     if ( error < 0 ) {
-        UNLOCK( region_lock );
-
         destroy_region( region );
 
         return error;
@@ -183,19 +175,36 @@ region_id create_region(
     if ( error < 0 ) {
         arch_delete_region_pages( context, region );
 
-        UNLOCK( region_lock );
-
         destroy_region( region );
 
         return error;
     }
 
     *_address = ( void* )address;
-    error = region->id;
+
+    return region->id;
+}
+
+region_id create_region(
+    const char* name,
+    uint32_t size,
+    region_flags_t flags,
+    alloc_type_t alloc_method,
+    void** _address
+) {
+    region_id region;
+
+    if ( alloc_method == ALLOC_LAZY ) {
+        return -EINVAL;
+    }
+
+    LOCK( region_lock );
+
+    region = do_create_region( name, size, flags, alloc_method, _address );
 
     UNLOCK( region_lock );
 
-    return error;
+    return region;
 }
 
 region_id sys_create_region(
@@ -205,9 +214,17 @@ region_id sys_create_region(
     alloc_type_t alloc_method,
     void** _address
 ) {
+    region_id region;
+
     flags &= ( REGION_READ | REGION_WRITE );
 
-    return create_region( name, size, flags, alloc_method, _address );
+    LOCK( region_lock );
+
+    region = do_create_region( name, size, flags, alloc_method, _address );
+
+    UNLOCK( region_lock );
+
+    return region;
 }
 
 static int do_delete_region( region_id id, bool allow_kernel_region ) {
@@ -243,6 +260,35 @@ int delete_region( region_id id ) {
 
 int sys_delete_region( region_id id ) {
     return do_delete_region( id, false );
+}
+
+int do_remap_region( region_id id, ptr_t address ) {
+    region_t* region;
+
+    region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
+
+    if ( region == NULL ) {
+        return -EINVAL;
+    }
+
+    arch_delete_region_pages( region->context, region );
+    arch_remap_region_pages( region->context, region, address );
+
+    region->flags |= REGION_REMAPPED;
+
+    return 0;
+}
+
+int remap_region( region_id id, ptr_t address ) {
+    int error;
+
+    LOCK( region_lock );
+
+    error = do_remap_region( id, address );
+
+    UNLOCK( region_lock );
+
+    return error;
 }
 
 int resize_region( region_id id, uint32_t new_size ) {

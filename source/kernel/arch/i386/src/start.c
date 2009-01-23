@@ -33,6 +33,8 @@
 #include <arch/pit.h>
 #include <arch/elf32.h>
 #include <arch/io.h>
+#include <arch/mp.h>
+#include <arch/apic.h>
 #include <arch/mm/config.h>
 #include <arch/mm/paging.h>
 
@@ -140,6 +142,8 @@ void arch_start( multiboot_header_t* header ) {
 }
 
 int arch_late_init( void ) {
+    init_mp();
+    init_apic();
     init_pit();
     init_system_time();
     init_elf32_module_loader();

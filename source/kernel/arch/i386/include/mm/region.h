@@ -24,6 +24,7 @@
 
 int arch_create_region_pages( struct memory_context* context, region_t* region );
 int arch_delete_region_pages( struct memory_context* context, region_t* region );
+int arch_remap_region_pages( struct memory_context* context, region_t* region, ptr_t address );
 int arch_resize_region( struct memory_context* context, region_t* region, uint32_t new_size );
 
 #endif // _ARCH_MM_REGION_H_

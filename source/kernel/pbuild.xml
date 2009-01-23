@@ -50,11 +50,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/fork.c</item>
         <item>arch/i386/src/hwtime.c</item>
         <item>arch/i386/src/fpu.c</item>
+        <item>arch/i386/src/mp.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
         <item>arch/i386/src/mm/region.c</item>
-
     </array>
 
     <array name="files">
