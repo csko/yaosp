@@ -1,6 +1,6 @@
 /* printf() like function for the kernel
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2008, 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -17,10 +17,9 @@
  */
 
 #include <types.h>
+#include <macros.h>
 #include <lib/printf.h>
 #include <lib/string.h>
-
-#define MIN(a,b) ( ( a ) < ( b ) ? (a) : (b) )
 
 int do_printf( printf_helper_t* helper, void* data, const char* format, va_list args ) {
     int state, radix, ret;
