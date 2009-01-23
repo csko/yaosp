@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008 Zoltan Kovacs
+# Copyright (c) 2008, 2009 Zoltan Kovacs
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -301,6 +301,24 @@ class SymlinkHandler( handler.NodeHandler ) :
         if self.work != None :
             self.get_parent().add_work( self.work )
 
+class HTTPGetHandler( handler.NodeHandler ) :
+    handled_node = "httpget"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+
+    def node_started( self, attrs ) :
+        if not "address" in attrs or not "to" in attrs :
+            return
+
+        self.work = works.HTTPGetWork( attrs[ "address" ], attrs[ "to" ] )
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
 handlers = [
     TargetHandler,
     GccHandler,
@@ -313,5 +331,6 @@ handlers = [
     CopyHandler,
     DeleteHandler,
     ExecHandler,
-    SymlinkHandler
+    SymlinkHandler,
+    HTTPGetHandler
 ]

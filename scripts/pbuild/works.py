@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008 Zoltan Kovacs
+# Copyright (c) 2008, 2009 Zoltan Kovacs
 # Copyright (c) 2009 Kornel Csernai
 #
 # This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,7 @@
 
 import os
 import sys
+import urllib
 import xml.sax
 import subprocess
 import definitions
@@ -343,3 +344,39 @@ class SymlinkWork( Work ) :
             os.symlink( self.src, self.dest )
         except OSError, e :
             pass
+
+class HTTPGetWork( Work ) :
+    def __init__( self, address, dest ) :
+        self.address = address
+        self.dest = dest
+
+    def execute( self, context ) :
+        print "Downloading " + self.address
+
+        urlfile = urllib.urlopen( self.address )
+        urlfile_size = int( urlfile.headers.getheader( "Content-Length" ) )
+        localfile = open( self.dest, "w" )
+
+        size = 0
+        data = urlfile.read( 4096 )
+
+        while data :
+            localfile.write( data )
+
+            size += len( data )
+            percent = "%.1f" % ( float(size) / urlfile_size * 100 )
+            sys.stdout.write( "\r" + percent + "% done [" + self.format_size( size ) + "/" + self.format_size( urlfile_size ) + "]      \b\b\b\b\b\b" )
+            sys.stdout.flush()
+
+            data = urlfile.read( 4096 )
+
+        urlfile.close()
+        localfile.close()
+
+        sys.stdout.write( "\n" )
+
+    def format_size( self, size ) :
+        if size < 1024 : return "%d b" % size
+        elif size < 1024 ** 2 : return "%.2f Kb" % ( size / 1024.0 )
+        elif size < 1024 ** 3 : return "%.2f Mb" % ( size / ( 1024.0 ** 2 ) )
+        else : return "%.2f Gb" % ( size / ( 1024.0 ** 3 ) )
