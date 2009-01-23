@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,6 +25,7 @@ int isalpha( int c );
 int isdigit( int c );
 int isxdigit( int c );
 int isalnum( int c );
+int isblank( int c );
 int isspace( int c );
 int isprint( int c );
 int iscntrl( int c );

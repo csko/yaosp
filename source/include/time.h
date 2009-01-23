@@ -55,6 +55,9 @@ size_t strftime(char *s, size_t max, const char *format,
 /* Converts a broken-down time to UNIX timestamp */
 time_t mktime(tm_t* tloc);
 
+char* asctime(const tm_t* tm);
+char* asctime_r(const tm_t* tm, char* buf);
+
 tm_t* gmtime(const time_t* timep);
 tm_t* gmtime_r(const time_t* timep, tm_t* result);
 

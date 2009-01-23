@@ -90,6 +90,7 @@ int vsnprintf( char* str, size_t size, const char* format, va_list ap );
 int fgetc( FILE* stream );
 int getc( FILE* stream );
 char* fgets( char* s, int size, FILE* stream );
+#define getchar(c) getc(stdin)
 
 int fputc( int c, FILE* stream );
 int putc( int c, FILE* stream );

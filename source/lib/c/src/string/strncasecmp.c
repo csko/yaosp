@@ -1,6 +1,6 @@
-/* rewind function
+/* strncasecmp function
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,9 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
-void rewind( FILE* stream ) {
-    clearerr( stream );
-    fseek( stream, 0L, SEEK_SET );
+int strncasecmp( const char* s1, const char* s2, size_t c ) {
+    int result = 0;
+
+    while ( c ) {
+        result = toupper( *s1 ) - toupper( *s2++ );
+
+        if ( ( result != 0 ) || ( *s1++ == 0 ) ) {
+            break;
+        }
+
+        c--;
+    }
+
+    return result;
 }

@@ -1,6 +1,6 @@
-/* rewind function
+/* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,9 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
+#include <time.h>
 
-void rewind( FILE* stream ) {
-    clearerr( stream );
-    fseek( stream, 0L, SEEK_SET );
+char* asctime_r(const tm_t* tm, char* buf) {
+    strftime(buf, 26, "%a %b %d %H:%M:%S %Y\n", tm);
+    return buf;
 }

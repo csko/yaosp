@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -55,6 +55,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/qsort.c</item>
         <item>src/stdlib/abs.c</item>
         <item>src/stdlib/labs.c</item>
+        <item>src/stdlib/llabs.c</item>
         <item>src/stdlib/strtod.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
@@ -66,6 +67,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strlen.c</item>
         <item>src/string/strcmp.c</item>
         <item>src/string/strncmp.c</item>
+        <item>src/string/strcasecmp.c</item>
+        <item>src/string/strncasecmp.c</item>
         <item>src/string/strdup.c</item>
         <item>src/string/strcpy.c</item>
         <item>src/string/strncpy.c</item>
@@ -124,6 +127,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>
+        <item>src/time/asctime.c</item>
+        <item>src/time/asctime_r.c</item>
         <item>src/time/gmtime.c</item>
         <item>src/time/gmtime_r.c</item>
         <item>src/time/gettimeofday.c</item>
@@ -140,6 +145,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/select.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
+        <item>src/ctype/isblank.c</item>
         <item>src/ctype/islower.c</item>
         <item>src/ctype/isdigit.c</item>
         <item>src/ctype/isxdigit.c</item>
@@ -149,6 +155,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/iscntrl.c</item>
         <item>src/ctype/tolower.c</item>
         <item>src/ctype/toupper.c</item>
+        <item>src/ctype/toascii.c</item>
         <item>src/ctype/isgraph.c</item>
         <item>src/ctype/ispunct.c</item>
         <item>src/ctype/isascii.c</item>

@@ -26,6 +26,7 @@
 
 int abs( int j );
 long labs( long j );
+long long llabs( long long j );
 
 char* getenv( const char* name );
 
