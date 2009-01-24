@@ -761,6 +761,10 @@ int mount( const char* device, const char* dir, const char* filesystem ) {
     return do_mount( true, device, dir, filesystem );
 }
 
+int sys_mount( const char* device, const char* dir, const char* filesystem ) {
+    return do_mount( false, device, dir, filesystem );
+}
+
 int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
     int i;
     int error;
