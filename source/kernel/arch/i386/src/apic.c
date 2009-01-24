@@ -23,6 +23,8 @@
 
 #include <arch/apic.h>
 #include <arch/cpu.h>
+#include <arch/pit.h>
+#include <arch/io.h>
 
 uint32_t local_apic_base = 0;
 region_id local_apic_region;
@@ -76,6 +78,51 @@ void apic_timer_irq( registers_t* regs ) {
 
 void apic_spurious_irq( registers_t* regs ) {
     kprintf( "APIC spurious IRQ!\n" );
+}
+
+void calibrate_apic_timer( void ) {
+    int processor_id;
+    uint32_t end_count;
+
+    /* Divide the bus frequency with 1 */
+
+    apic_write(
+        LAPIC_TIMER_DIVIDE,
+        LAPIC_TIMER_DIV_1
+    );
+
+    /* Configure PIT to use for the calibration */
+
+    outb( PIT_MODE, 0x34 );
+    outb( PIT_CH0, 0xFF );
+    outb( PIT_CH0, 0xFF );
+
+    pit_wait_wrap();
+
+    /* Set the initial count of the timer to 0xFFFFFFFF */
+
+    apic_write(
+        LAPIC_TIMER_INIT_COUNT,
+        0xFFFFFFFF
+    );
+
+    pit_wait_wrap();
+
+    /* Read the current counter from the APIC register */
+
+    end_count = apic_read( LAPIC_TIMER_CURRENT_COUNT );
+
+    /* Calculate the bus speed */
+
+    processor_id = get_processor_id();
+
+    arch_processor_table[ processor_id ].bus_speed = ( ( uint64_t )PIT_TICKS_PER_SEC * ( 0xFFFFFFFFLL - end_count ) / 0xFFFF );
+
+    kprintf(
+        "CPU %d bus speed: %u MHz.\n",
+        processor_id,
+        ( uint32_t )( arch_processor_table[ processor_id ].bus_speed / 1000000 )
+    );
 }
 
 void setup_local_apic( void ) {
@@ -133,6 +180,7 @@ int init_apic( void ) {
     }
 
     setup_local_apic();
+    calibrate_apic_timer();
 
     return 0;
 }

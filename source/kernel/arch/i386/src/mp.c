@@ -45,6 +45,16 @@ static uint8_t mp_fp_signature[ 4 ] = { '_', 'M', 'P', '_' };
 
 static uint8_t mp_ct_signature[ 4 ] = { 'P', 'C', 'M', 'P' };
 
+static inline uint8_t mp_checksum( uint8_t* data, int length ) {
+    uint8_t checksum = 0;
+
+    while ( length-- ) {
+        checksum += *data++;
+    }
+
+    return checksum;
+}
+
 static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
     uint8_t* data;
 
@@ -56,18 +66,20 @@ static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
 
             processor = ( mp_processor_t* )data;
 
-            /* Map the local APIC ID of the processor to our processor table */
+            if ( processor_count < MAX_CPU_COUNT ) {
+                /* Map the local APIC ID of the processor to our processor table */
 
-            apic_to_logical_cpu_id[ processor->local_apic_id ] = processor_count;
+                apic_to_logical_cpu_id[ processor->local_apic_id ] = processor_count;
 
-            /* Make the processor present and save its local APIC ID */
+                /* Make the processor present and save its local APIC ID */
 
-            processor_table[ processor_count ].present = true;
-            arch_processor_table[ processor_count ].apic_id = processor->local_apic_id;
+                processor_table[ processor_count ].present = true;
+                arch_processor_table[ processor_count ].apic_id = processor->local_apic_id;
 
-            /* We have one more processor ;) */
+                /* We have one more processor ;) */
 
-            processor_count++;
+                processor_count++;
+            }
 
             return 20;
         }
@@ -100,7 +112,11 @@ static int mp_handle_cfg_table( void* address ) {
     /* Validate the MP Configuration table */
 
     if ( memcmp( ct->signature, mp_ct_signature, sizeof( mp_ct_signature ) ) != 0 ) {
-        return -1;
+        return -EINVAL;
+    }
+
+    if ( mp_checksum( ( uint8_t* )ct, ct->base_table_length ) != 0 ) {
+        return -EINVAL;
     }
 
     /* Save the local APIC base address */
@@ -115,19 +131,33 @@ static int mp_handle_cfg_table( void* address ) {
         entry_addr += mp_handle_cfg_table_entry( entry_addr );
     }
 
-    kprintf( "Found %d processors in the system.\n", processor_count );
-
     return 0;
+}
+
+static void mp_handle_default_cfg( void ) {
+    int i;
+
+    /* Initialize the default configuration according to the
+       Intel MultiProcessor specification, chapter #5 */
+
+    local_apic_base = 0xFEE00000;
+    processor_count = 2;
+
+    for ( i = 0; i < 2; i++ ) {
+        apic_to_logical_cpu_id[ i ] = i;
+        arch_processor_table[ i ].apic_id = i;
+    }
 }
 
 static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_floating_pointer_t** _fp ) {
     uint32_t offset;
     mp_floating_pointer_t* fp;
 
-    for ( offset = 0; offset < size; offset += sizeof( mp_floating_pointer_t ) ) {
+    for ( offset = 0; offset < size; offset += 16 ) {
         fp = ( mp_floating_pointer_t* )( ( uint8_t* )addr + offset );
 
-        if ( memcmp( fp->signature, mp_fp_signature, sizeof( mp_fp_signature ) ) == 0 ) {
+        if ( ( memcmp( fp->signature, mp_fp_signature, sizeof( mp_fp_signature ) ) == 0 ) &&
+             ( mp_checksum( ( uint8_t* )fp, 16 ) == 0 ) ) {
             *_fp = fp;
 
             return true;
@@ -158,12 +188,18 @@ int init_mp( void ) {
 
     kprintf( "Found MP floating pointer at 0x%x\n", fp );
 
-    error = mp_handle_cfg_table( ( void* )fp->physical_address );
+    if ( fp->mp_feature[ 0 ] == 0 ) {
+        error = mp_handle_cfg_table( ( void* )fp->physical_address );
 
-    if ( error < 0 ) {
-        kprintf( "Failed to parse MP configuration table!\n" );
-        return error;
+        if ( error < 0 ) {
+            kprintf( "Failed to parse MP configuration table!\n" );
+            return error;
+        }
+    } else {
+        mp_handle_default_cfg();
     }
+
+    kprintf( "Found %d processors in the system.\n", processor_count );
 
     return 0;
 }
