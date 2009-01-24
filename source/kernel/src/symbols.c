@@ -28,6 +28,7 @@
 #include <process.h>
 #include <sysinfo.h>
 #include <mm/kmalloc.h>
+#include <mm/pages.h>
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>
@@ -56,6 +57,8 @@ static kernel_symbol_t symbols[] = {
     /* Memory management */
     { "kmalloc", ( ptr_t )kmalloc },
     { "kfree", ( ptr_t )kfree },
+    { "alloc_pages", ( ptr_t )alloc_pages },
+    { "free_pages", ( ptr_t )free_pages },
 
     /* Atomic operations */
     { "atomic_get", ( ptr_t )atomic_get },

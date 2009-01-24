@@ -1,6 +1,6 @@
-/* yaosp C library
+/* RAM disk driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,20 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _FCNTL_H_
-#define _FCNTL_H_
+#ifndef _RAMDISK_H_
+#define _RAMDISK_H_
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
+typedef struct ramdisk_node {
+    int id;
+    size_t size;
+    void* data;
+} ramdisk_node_t;
 
-#define O_RDONLY 0x01
-#define O_WRONLY 0x02
-#define O_RDWR   0x03
-#define O_CREAT  0x04
-#define O_TRUNC  0x08
-#define O_APPEND 0x10
+static int create_ramdisk_node(ramdisk_node_t* ramdisk);
+static int destroy_ramdisk_node(ramdisk_node_t* ramdisk);
 
-int open( const char* filename, int flags, ... ) __nonnull((1));
-int creat(const char* pathname, mode_t mode);
-
-#endif // _FCNTL_H_
+#endif // _RAMDISK_H_

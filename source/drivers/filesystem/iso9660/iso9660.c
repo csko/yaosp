@@ -28,9 +28,10 @@
 
 #include "iso9660.h"
 
-#define INODE_TO_BLOCK(inode) (inode/2048)
-#define INODE_TO_OFFSET(inode) (inode%2048)
-#define POSITION_TO_INODE(block,offset) (((ino_t)(block*2048)|((ino_t)offset)))
+#define BLOCK_SIZE 2048
+#define INODE_TO_BLOCK(inode) ( inode / BLOCK_SIZE )
+#define INODE_TO_OFFSET(inode) ( inode % BLOCK_SIZE )
+#define POSITION_TO_INODE(block,offset) ( ( ( ino_t ) ( block * BLOCK_SIZE ) | ( ( ino_t ) offset ) ) )
 
 static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
 
@@ -53,7 +54,7 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
 
     /* Allocate memory for a block */
 
-    block = ( char* )kmalloc( 2048 );
+    block = ( char* )kmalloc( BLOCK_SIZE );
 
     if ( block == NULL ) {
         error = -ENOMEM;
@@ -63,7 +64,7 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
     /* Read the block from the device where the iso9660
        volume descriptor should be */
 
-    if ( pread( fd, block, 2048, 0x8000 ) != 2048 ) {
+    if ( pread( fd, block, BLOCK_SIZE, 0x8000 ) != BLOCK_SIZE ) {
         kprintf( "ISO9660: Failed to read root block\n" );
         error = -EIO;
         goto error3;
@@ -148,7 +149,7 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
         iso9660_inode_t* inode;
         iso9660_directory_entry_t* iso_dir;
 
-        block = ( char* )kmalloc( 2048 );
+        block = ( char* )kmalloc( BLOCK_SIZE );
 
         if ( block == NULL ) {
             return -ENOMEM;
@@ -157,9 +158,9 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
         if ( pread(
             cookie->fd,
             block,
-            2048,
-            INODE_TO_BLOCK(inode_num) * 2048
-        ) != 2048 ) {
+            BLOCK_SIZE,
+            INODE_TO_BLOCK(inode_num) * BLOCK_SIZE
+        ) != BLOCK_SIZE ) {
             kfree( block );
             return -EIO;
         }
@@ -283,7 +284,7 @@ static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* nam
     parent = ( iso9660_inode_t* )_parent;
     iso_cookie = ( iso9660_cookie_t* )fs_cookie;
 
-    block = ( char* )kmalloc( 2048 );
+    block = ( char* )kmalloc( BLOCK_SIZE );
 
     if ( block == NULL ) {
         return -ENOMEM;
@@ -294,8 +295,8 @@ static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* nam
 
     error = 0;
 
-    while ( ( current_block - start_block ) * 2048 < parent->length ) {
-        if ( pread( iso_cookie->fd, block, 2048, current_block * 2048 ) != 2048 ) {
+    while ( ( current_block - start_block ) * BLOCK_SIZE < parent->length ) {
+        if ( pread( iso_cookie->fd, block, BLOCK_SIZE, current_block * BLOCK_SIZE ) != BLOCK_SIZE ) {
             error = -EIO;
             goto out;
         }
@@ -433,12 +434,12 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
        If it isn't aligned we have to read the whole block and copy
        only the interested parts of it to the destination buffer. */
 
-    if ( ( pos % 2048 ) != 0 ) {
+    if ( ( pos % BLOCK_SIZE ) != 0 ) {
         char* block;
         int to_read;
         int rem_block_length;
 
-        block = ( char* )kmalloc( 2048 );
+        block = ( char* )kmalloc( BLOCK_SIZE );
 
         if ( block == NULL ) {
             return -ENOMEM;
@@ -447,22 +448,22 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
         if ( pread(
             cookie->fd,
             block,
-            2048,
-            node->start_block * 2048 + ( pos & ~2047 )
-        ) != 2048 ) {
+            BLOCK_SIZE,
+            node->start_block * BLOCK_SIZE + ( pos & ~( BLOCK_SIZE - 1 ) )
+        ) != BLOCK_SIZE ) {
             kfree( block );
             return -EIO;
         }
 
-        rem_block_length = 2048 - ( pos % 2048 );
+        rem_block_length = BLOCK_SIZE - ( pos % BLOCK_SIZE );
 
         to_read = MIN( rem_block_length, size );
 
-        memcpy( buffer, block + pos % 2048, to_read );
+        memcpy( buffer, block + pos % BLOCK_SIZE, to_read );
 
         kfree( block );
 
-        current_pos = ( ( pos + 2047 ) & ~2047 );
+        current_pos = ( ( pos + BLOCK_SIZE - 1 ) & ~( BLOCK_SIZE - 1 ) );
 
         buffer += to_read;
         size -= to_read;
@@ -471,21 +472,21 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     /* If the remaining size is at least one block long we
        can read full blocks to the final buffer, do it! */
 
-    if ( size >= 2048 ) {
+    if ( size >= BLOCK_SIZE ) {
         int to_read;
 
-        to_read = size & ~2047;
+        to_read = size & ~( BLOCK_SIZE - 1);
 
         if ( pread(
             cookie->fd,
             buffer,
             to_read,
-            node->start_block * 2048 + ( ( pos + 2047 ) & ~2047 )
+            node->start_block * BLOCK_SIZE + ( ( pos + ( BLOCK_SIZE - 1 ) ) & ~( BLOCK_SIZE - 1 ) )
         ) != to_read ) {
             return -EIO;
         }
 
-        current_pos = ( ( pos + 2047 ) & ~2047 ) + ( size & ~2047 );
+        current_pos = ( ( pos + BLOCK_SIZE - 1 ) & ~( BLOCK_SIZE - 1 ) ) + ( size & ~( BLOCK_SIZE - 1 ) );
 
         buffer += to_read;
         size -= to_read;
@@ -496,7 +497,7 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     if ( size > 0 ) {
         char* block;
 
-        block = ( char* )kmalloc( 2048 );
+        block = ( char* )kmalloc( BLOCK_SIZE );
 
         if ( block == NULL ) {
             return -ENOMEM;
@@ -505,9 +506,9 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
         if ( pread(
             cookie->fd,
             block,
-            2048,
-            node->start_block * 2048 + current_pos
-        ) != 2048 ) {
+            BLOCK_SIZE,
+            node->start_block * BLOCK_SIZE + current_pos
+        ) != BLOCK_SIZE ) {
             kfree( block );
             return -EIO;
         }
@@ -528,11 +529,11 @@ static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) 
     stat->st_ino = POSITION_TO_INODE( node->start_block, 0 );
     stat->st_mode = 0;
     stat->st_size = node->length;
-    stat->st_blksize = 2048;
-    stat->st_blocks = node->length / 2048;
+    stat->st_blksize = BLOCK_SIZE;
+    stat->st_blocks = node->length / BLOCK_SIZE;
     stat->st_atime = stat->st_ctime = stat->st_mtime = node->created;
 
-    if ( ( node->length % 2048 ) != 0 ) {
+    if ( ( node->length % BLOCK_SIZE ) != 0 ) {
         stat->st_blocks++;
     }
 
@@ -553,14 +554,14 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
     iso_cookie = ( iso9660_cookie_t* )fs_cookie;
     dir_cookie = ( iso9660_dir_cookie_t* )file_cookie;
 
-    block = ( char* )kmalloc( 2048 );
+    block = ( char* )kmalloc( BLOCK_SIZE );
 
     if ( block == NULL ) {
         return -ENOMEM;
     }
 
     while ( true ) {
-        if ( pread( iso_cookie->fd, block, 2048, dir_cookie->current_block * 2048 ) != 2048 ) {
+        if ( pread( iso_cookie->fd, block, BLOCK_SIZE, dir_cookie->current_block * BLOCK_SIZE ) != BLOCK_SIZE ) {
             kfree( block );
             return -EIO;
         }
@@ -575,7 +576,7 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
 
             /* Check if we reached the end of the directory entries */
 
-            data_size = ( dir_cookie->current_block - dir_cookie->start_block ) * 2048;
+            data_size = ( dir_cookie->current_block - dir_cookie->start_block ) * BLOCK_SIZE;
 
             if ( data_size >= dir_cookie->size ) {
                 kfree( block );

@@ -102,6 +102,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/chdir.c</item>
         <item>src/unistd/ftruncate.c</item>
         <item>src/fcntl/open.c</item>
+        <item>src/fcntl/creat.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/ferror.c</item>
         <item>src/stdio/fgetc.c</item>
