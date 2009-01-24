@@ -53,6 +53,7 @@ typedef struct system_info {
 
     /* Processor information */
 
+    uint32_t total_processor_count;
     uint32_t active_processor_count;
 } system_info_t;
 

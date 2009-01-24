@@ -29,7 +29,8 @@ int main( int argc, char** argv ) {
     error = get_system_info( &sysinfo );
 
     if ( error < 0 ) {
-        printf( "Failed to get system information!\n" );
+        printf( "%s: Failed to get system information!\n", argv[ 0 ] );
+
         return EXIT_FAILURE;
     }
 
@@ -37,6 +38,7 @@ int main( int argc, char** argv ) {
     printf( "Free memory: %d Kb\n", ( sysinfo.free_page_count * getpagesize() ) / 1024 );
     printf( "Process count: %d\n", sysinfo.process_count );
     printf( "Thread count: %d\n", sysinfo.thread_count );
+    printf( "Total CPUs: %d\n", sysinfo.total_processor_count );
     printf( "Active CPUs: %d\n", sysinfo.active_processor_count );
 
     return EXIT_SUCCESS;

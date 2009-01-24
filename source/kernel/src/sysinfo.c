@@ -85,6 +85,8 @@ int notify_process_listener( proc_listener_event_t event, process_t* process, th
 int sys_get_system_info( system_info_t* system_info ) {
     system_info->total_page_count = get_total_page_count();
     system_info->free_page_count = get_free_page_count();
+
+    system_info->total_processor_count = processor_count;
     system_info->active_processor_count = get_active_processor_count();
 
     spinlock_disable( &scheduler_lock );
