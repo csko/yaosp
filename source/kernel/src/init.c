@@ -75,6 +75,11 @@ static void mount_root_filesystem( void ) {
             continue;
         }
 
+        if ( ( strlen( entry.name ) < 2 ) ||
+             ( strncmp( entry.name, "hd", 2 ) != 0 ) ) {
+            continue;
+        }
+
         snprintf( path, sizeof( path ), "/device/disk/%s", entry.name );
 
         error = mount( path, "/yaosp", "iso9660" );
