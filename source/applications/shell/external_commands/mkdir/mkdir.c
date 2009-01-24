@@ -1,4 +1,4 @@
-/* mount shell command
+/* mkdir shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,7 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/mount.h>
+#include <sys/stat.h>
 
 char* argv0;
 
@@ -27,27 +27,19 @@ int main( int argc, char** argv ) {
 
     argv0 = argv[ 0 ];
 
-    if ( argc < 4 ) {
-        printf( "%s: device path filesystem\n", argv0 );
+    if ( argc == 1 ) {
+        printf( "%s directory\n", argv0 );
 
         return EXIT_FAILURE;
     }
 
-    error = mount(
-        argv[ 1 ],
-        argv[ 2 ],
-        argv[ 3 ],
-        0,
-        NULL
-    );
+    error = mkdir( argv[ 1 ], 0666 );
 
     if ( error < 0 ) {
-        printf( "%s: Failed to mount %s to %s\n", argv0, argv[ 1 ], argv[ 2 ] );
+        printf( "%s: Failed to create directory!\n" );
 
         return EXIT_FAILURE;
     }
-
-    printf( "%s is mounted to %s.\n", argv[ 1 ], argv[ 2 ] );
 
     return EXIT_SUCCESS;
 }

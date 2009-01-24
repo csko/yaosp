@@ -21,7 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>mount.c</item>
+        <item>mkdir.c</item>
     </array>
 
     <target name="clean">
@@ -36,7 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling mount shell command</echo>
+        <echo>Compiling mkdir shell command</echo>
 
         <for var="i" array="${files}">
             <echo>-> ${i}</echo>
@@ -54,14 +54,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo>Linking mount shell command</echo>
-        <echo>-> objs/mount</echo>
+        <echo>Linking mkdir shell command</echo>
+        <echo>-> objs/mkdir</echo>
 
         <gcc>
             <input>objs/*.o</input>
             <input>../../../../lib/start/objs/libstart.a</input>
             <input>../../../../lib/c/objs/libc.a</input>
-            <output>objs/mount</output>
+            <output>objs/mkdir</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
             <flag>--script=../../../../../scripts/i386_app.lnk</flag>
@@ -71,7 +71,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/mount" to="../../../../../build/application/mount"/>
+        <copy from="objs/mkdir" to="../../../../../build/application/mkdir"/>
     </target>
 
     <target name="all">

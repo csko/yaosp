@@ -29,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>date</item>
         <item>cat</item>
         <item>mount</item>
+        <item>mkdir</item>
     </array>
 
     <target name="all">
