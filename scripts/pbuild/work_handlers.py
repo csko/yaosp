@@ -301,6 +301,24 @@ class SymlinkHandler( handler.NodeHandler ) :
         if self.work != None :
             self.get_parent().add_work( self.work )
 
+class ChdirHandler( handler.NodeHandler ) :
+    handled_node = "chdir"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+
+    def node_started( self, attrs ) :
+        if not "directory" in attrs :
+            return
+
+        self.work = works.ChdirWork( attrs[ "directory" ] )
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
 class HTTPGetHandler( handler.NodeHandler ) :
     handled_node = "httpget"
 
@@ -313,7 +331,12 @@ class HTTPGetHandler( handler.NodeHandler ) :
         if not "address" in attrs or not "to" in attrs :
             return
 
-        self.work = works.HTTPGetWork( attrs[ "address" ], attrs[ "to" ] )
+        md5sum = None
+
+        if "md5" in attrs :
+            md5sum = attrs[ "md5" ]
+
+        self.work = works.HTTPGetWork( attrs[ "address" ], attrs[ "to" ], md5sum )
 
     def node_finished( self ) :
         if self.work != None :
@@ -332,5 +355,6 @@ handlers = [
     DeleteHandler,
     ExecHandler,
     SymlinkHandler,
+    ChdirHandler,
     HTTPGetHandler
 ]

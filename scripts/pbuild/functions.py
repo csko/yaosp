@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008 Zoltan Kovacs
+# Copyright (c) 2008, 2009 Zoltan Kovacs
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+import os
 
 class Function :
     def handle( self, arguments ) :
@@ -33,9 +35,17 @@ class FileName( Function ) :
         else :
             return arg[ fn + 1:dot ]
 
+class RealPath( Function ) :
+    def handle( self, arguments ) :
+        if len( arguments ) != 1 :
+            return ""
+
+        return os.path.realpath( arguments[ 0 ] )
+
 class FunctionHandler :
     functions = {
-        "filename" : FileName
+        "filename" : FileName,
+        "realpath" : RealPath
     }
 
     def __init__( self ) :
@@ -49,7 +59,7 @@ class FunctionHandler :
 
         fn_start = arg_start - 1
 
-        while fn_start > 0 and not text[ fn_start ] in [ "/", ">" ] :
+        while fn_start > 0 and not text[ fn_start ] in [ "/", ">", "=" ] :
             fn_start -= 1
 
         end = text.find( ")", arg_start + 1 )

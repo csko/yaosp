@@ -21,6 +21,7 @@ import sys
 import urllib
 import xml.sax
 import subprocess
+import md5
 import definitions
 import handler as hndlr
 import context as ctx
@@ -326,6 +327,7 @@ class ExecWork( Work ) :
         real_args = []
 
         for arg in self.args :
+            arg = context.handle_everything( arg )
             real_args += context.replace_wildcards( arg )
 
         command = [ self.executable ] + real_args
@@ -345,12 +347,34 @@ class SymlinkWork( Work ) :
         except OSError, e :
             pass
 
-class HTTPGetWork( Work ) :
-    def __init__( self, address, dest ) :
-        self.address = address
-        self.dest = dest
+class ChdirWork( Work ) :
+    def __init__( self, directory ) :
+        self.directory = directory
 
     def execute( self, context ) :
+        os.chdir( self.directory )
+
+class HTTPGetWork( Work ) :
+    def __init__( self, address, dest, md5sum ) :
+        self.address = address
+        self.dest = dest
+        self.md5sum = md5sum
+
+    def execute( self, context ) :
+        if os.path.isfile( self.dest ) :
+            m = md5.md5()
+
+            localfile = open( self.dest, "r" )
+            data = localfile.read( 4096 )
+
+            while data :
+                m.update( data )
+                data = localfile.read( 4096 )
+
+            if m.hexdigest() == self.md5sum :
+                print "File %s already exists." % self.dest
+                return
+
         print "Downloading " + self.address
 
         urlfile = urllib.urlopen( self.address )
