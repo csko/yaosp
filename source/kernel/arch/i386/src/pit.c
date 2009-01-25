@@ -27,6 +27,7 @@
 #include <arch/interrupt.h>
 #include <arch/spinlock.h>
 #include <arch/hwtime.h>
+#include <arch/apic.h>
 
 static uint64_t system_time = 0;
 static uint64_t boot_time = 0;
@@ -47,12 +48,14 @@ static int pit_irq( int irq, void* data, registers_t* regs ) {
     waitqueue_wake_up( &sleep_queue, system_time );
     spinunlock( &scheduler_lock );
 
-    /* The PIT irq was acked and masked by the interrupt handler.
-       We have to re-enable it here to let it fire next time. */
+    if ( !apic_present ) {
+        /* The PIT irq was acked and masked by the interrupt handler.
+           We have to re-enable it here to let it fire next time. */
 
-    arch_enable_irq( irq );
+        arch_enable_irq( irq );
 
-    schedule( regs );
+        schedule( regs );
+    }
 
     return 0;
 }

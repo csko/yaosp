@@ -19,12 +19,15 @@
 #include <types.h>
 #include <errno.h>
 #include <console.h>
+#include <scheduler.h>
 #include <mm/region.h>
 
 #include <arch/apic.h>
 #include <arch/cpu.h>
 #include <arch/pit.h>
 #include <arch/io.h>
+
+bool apic_present = false;
 
 uint32_t local_apic_base = 0;
 region_id local_apic_region;
@@ -73,11 +76,14 @@ cpu_t* get_processor( void ) {
 }
 
 void apic_timer_irq( registers_t* regs ) {
-    kprintf( "APIC timer IRQ!\n" );
+    apic_write( LAPIC_EOI, 0 );
+
+    schedule( regs );
 }
 
 void apic_spurious_irq( registers_t* regs ) {
     kprintf( "APIC spurious IRQ!\n" );
+    apic_write( LAPIC_EOI, 0 );
 }
 
 void calibrate_apic_timer( void ) {
@@ -179,8 +185,37 @@ int init_apic( void ) {
         return error;
     }
 
+    /* Setup the local APIC */
+
     setup_local_apic();
+
+    /* Calibrate the APIC bus speed */
+
     calibrate_apic_timer();
+
+    apic_present = true;
+
+    return 0;
+}
+
+int init_apic_timer( void ) {
+    uint32_t init_count;
+
+    if ( !apic_present ) {
+        return -ENOENT;
+    }
+
+    init_count = arch_processor_table[ 0 ].bus_speed;
+    init_count /= 1000;
+    init_count /= 4;
+
+    apic_write( LAPIC_TIMER_DIVIDE, LAPIC_TIMER_DIV_4 );
+    apic_write(
+        LAPIC_LVT_TIMER,
+        ( 1 << 17 ) | /* periodic timer */
+        APIC_TIMER_IRQ
+    );
+    apic_write( LAPIC_TIMER_INIT_COUNT, init_count );
 
     return 0;
 }

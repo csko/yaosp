@@ -53,6 +53,7 @@ enum {
     LAPIC_TIMER_DIV_128 = 0xA
 };
 
+extern bool apic_present;
 extern uint32_t local_apic_base;
 
 extern int apic_to_logical_cpu_id[ 256 ];
@@ -60,5 +61,6 @@ extern int apic_to_logical_cpu_id[ 256 ];
 void setup_local_apic( void );
 
 int init_apic( void );
+int init_apic_timer( void );
 
 #endif // _ARCH_APIC_H_

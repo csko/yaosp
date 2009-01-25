@@ -145,6 +145,7 @@ int arch_late_init( void ) {
     init_mp();
     init_apic();
     init_pit();
+    init_apic_timer();
     init_system_time();
     init_elf32_module_loader();
     init_elf32_application_loader();
