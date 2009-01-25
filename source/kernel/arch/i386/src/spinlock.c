@@ -16,8 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <console.h>
-
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
@@ -30,20 +28,6 @@ int init_spinlock( spinlock_t* lock, const char* name ) {
 }
 
 void spinlock( spinlock_t* lock ) {
-    /* NOTE: Hack begins! This only works for non-smp systems! */
-
-    if ( ( is_interrupts_disabled() ) && ( atomic_get( &lock->locked ) == 1 ) ) {
-        dprintf_unlocked(
-            "Dead spinlock detected: %s\nComing from: %x %x %x\n",
-            lock->name,
-            __builtin_return_address( 0 ),
-            __builtin_return_address( 1 ),
-            __builtin_return_address( 2 )
-        );
-    }
-
-    /* NOTE: End of the hack :) */
-
     while ( atomic_swap( &lock->locked, 1 ) == 1 ) {
         __asm__ __volatile__( "pause" );
     }

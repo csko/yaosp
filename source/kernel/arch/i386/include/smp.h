@@ -1,4 +1,4 @@
-/* Kernel version
+/* Symmetric multi-processing
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,14 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _VERSION_H_
-#define _VERSION_H_
+#ifndef _ARCH_SMP_H_
+#define _ARCH_SMP_H_
 
-#define KERNEL_MAJOR_VERSION   0
-#define KERNEL_MINOR_VERSION   0
-#define KERNEL_RELEASE_VERSION 2
+extern volatile uint32_t tlb_invalidate_mask;
 
-extern const char* build_date;
-extern const char* build_time;
+void processor_activated( void );
 
-#endif // _VERSION_H_
+void flush_tlb_global( void );
+
+int arch_boot_processors( void );
+
+#endif // _ARCH_SMP_H_

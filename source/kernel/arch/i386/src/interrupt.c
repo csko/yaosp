@@ -65,6 +65,7 @@ extern void isr47( void );
 extern void isr128( void );
 extern void isr240( void );
 extern void isr241( void );
+extern void isr242( void );
 
 idt_descriptor_t idt[ IDT_ENTRIES ];
 
@@ -168,6 +169,7 @@ int init_interrupts( void ) {
 
     set_interrupt_gate( APIC_TIMER_IRQ, isr240 );
     set_interrupt_gate( APIC_SPURIOUS_IRQ, isr241 );
+    set_interrupt_gate( APIC_TLB_FLUSH_IRQ, isr242 );
 
     idtp.limit = ( sizeof( idt_descriptor_t ) * IDT_ENTRIES ) - 1;
     idtp.base = ( uint32_t )&idt;

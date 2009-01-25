@@ -21,8 +21,9 @@
 
 #include <types.h>
 
-#define APIC_TIMER_IRQ    0xF0
-#define APIC_SPURIOUS_IRQ 0xF1
+#define APIC_TIMER_IRQ     0xF0
+#define APIC_SPURIOUS_IRQ  0xF1
+#define APIC_TLB_FLUSH_IRQ 0xF2
 
 /* Local APIC register offsets */
 
@@ -55,8 +56,17 @@ enum {
 
 extern bool apic_present;
 extern uint32_t local_apic_base;
+extern uint32_t local_apic_address;
 
 extern int apic_to_logical_cpu_id[ 256 ];
+
+static inline uint32_t apic_read( uint32_t reg ) {
+    return *( ( volatile uint32_t* )( local_apic_address + reg ) );
+}
+
+static inline void apic_write( uint32_t reg, uint32_t value ) {
+    *( ( volatile uint32_t* )( local_apic_address + reg ) ) = value;
+}
 
 void setup_local_apic( void );
 

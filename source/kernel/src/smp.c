@@ -25,6 +25,7 @@
 
 #include <arch/cpu.h>
 #include <arch/atomic.h>
+#include <arch/smp.h>
 
 int processor_count = 0;
 atomic_t active_processor_count = ATOMIC_INIT(0);
@@ -53,6 +54,8 @@ int init_smp( void ) {
 
     processor_table[ 0 ].present = true;
     processor_table[ 0 ].running = true;
+
+    processor_activated();
 
     return 0;
 }

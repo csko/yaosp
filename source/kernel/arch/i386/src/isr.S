@@ -106,3 +106,4 @@ ISR(128,system_call_entry)
 
 ISR(240,apic_timer_irq)
 ISR(241,apic_spurious_irq)
+ISR(242,apic_tlb_flush_irq)

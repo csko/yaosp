@@ -27,6 +27,7 @@
 
 #include <arch/fork.h>
 #include <arch/loader.h>
+#include <arch/smp.h>
 
 static void load_bootmodules( void ) {
     int i;
@@ -100,6 +101,8 @@ static void mount_root_filesystem( void ) {
 
 int init_thread( void* arg ) {
     kprintf( "Init thread started!\n" );
+
+    arch_boot_processors();
 
     kprintf( "Initializing Virtual File System ... " );
     init_vfs();

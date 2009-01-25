@@ -26,24 +26,18 @@
 #include <arch/cpu.h>
 #include <arch/pit.h>
 #include <arch/io.h>
+#include <arch/smp.h>
+#include <arch/atomic.h>
+
+static int fake_lapic_id = 0;
 
 bool apic_present = false;
 
 uint32_t local_apic_base = 0;
 region_id local_apic_region;
-
-static int fake_lapic_id = 0;
-static uint32_t local_apic_address = ( uint32_t )&fake_lapic_id - LAPIC_ID;
+uint32_t local_apic_address = ( uint32_t )&fake_lapic_id - LAPIC_ID;
 
 int apic_to_logical_cpu_id[ 256 ] = { 0, };
-
-static inline uint32_t apic_read( uint32_t reg ) {
-    return *( ( volatile uint32_t* )( local_apic_address + reg ) );
-}
-
-static inline void apic_write( uint32_t reg, uint32_t value ) {
-    *( ( volatile uint32_t* )( local_apic_address + reg ) ) = value;
-}
 
 int get_processor_id( void ) {
     register int id;
@@ -78,11 +72,25 @@ cpu_t* get_processor( void ) {
 void apic_timer_irq( registers_t* regs ) {
     apic_write( LAPIC_EOI, 0 );
 
+    ( ( volatile char* )0xB8000 )[ get_processor_id() * 2 ]++;
+
     schedule( regs );
 }
 
 void apic_spurious_irq( registers_t* regs ) {
     kprintf( "APIC spurious IRQ!\n" );
+    apic_write( LAPIC_EOI, 0 );
+}
+
+void apic_tlb_flush_irq( registers_t* regs ) {
+    int processor_id;
+
+    processor_id = get_processor_id();
+
+    if ( test_and_clear_bit( processor_id, ( void* )&tlb_invalidate_mask ) ) {
+        flush_tlb();
+    }
+
     apic_write( LAPIC_EOI, 0 );
 }
 

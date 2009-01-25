@@ -71,4 +71,20 @@ bool atomic_dec_and_test( atomic_t* atomic );
  */
 int atomic_swap( atomic_t* atomic, int value );
 
+struct __dummy { unsigned long a[100]; };
+#define ADDR (*(volatile struct __dummy *) addr)
+
+static inline int test_and_clear_bit( int nr, volatile void* addr ) {
+    int oldbit;
+
+    __asm__ __volatile__(
+        "lock ; btrl %2,%1\n"
+        "sbbl %0, %0\n"
+        : "=r" ( oldbit ), "=m" (ADDR)
+        : "Ir" ( nr )
+    );
+
+    return oldbit;
+}
+
 #endif // _ARCH_ATOMIC_H_

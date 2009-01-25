@@ -20,7 +20,7 @@
 #include <kernel.h>
 #include <mm/pages.h>
 
-#include <arch/cpu.h>
+#include <arch/smp.h>
 #include <arch/mm/region.h>
 #include <arch/mm/context.h>
 #include <arch/mm/paging.h>
@@ -88,7 +88,7 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
     /* Invalidate the TLB if we changed anything that requires it */
 
     if ( do_tlb_flush ) {
-        flush_tlb();
+        flush_tlb_global();
     }
 
     return 0;
@@ -119,7 +119,7 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
 
     free_region_page_tables( arch_context, region->start, region->size );
 
-    flush_tlb();
+    flush_tlb_global();
 
     return 0;
 }
@@ -143,7 +143,7 @@ int arch_remap_region_pages( struct memory_context* context, region_t* region, p
         return error;
     }
 
-    flush_tlb();
+    flush_tlb_global();
 
     return 0;
 }
@@ -186,7 +186,7 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
         }
     }
 
-    flush_tlb();
+    flush_tlb_global();
 
     return 0;
 }

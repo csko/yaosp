@@ -9,6 +9,9 @@ SECTIONS {
     .text : {
         *(.multiboot_header);
         *(.text);
+        __smp_trampoline_start = .;
+        *(.smp_trampoline);
+        __smp_trampoline_end = .;
     }
 
     . = ALIGN(0x1000);

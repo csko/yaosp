@@ -27,6 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/i386.S</item>
         <item>arch/i386/src/isr.S</item>
         <item>arch/i386/src/switch.S</item>
+        <item>arch/i386/src/smp_entry.S</item>
         <item>arch/i386/src/lib/string.S</item>
     </array>
 
@@ -51,6 +52,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/hwtime.c</item>
         <item>arch/i386/src/fpu.c</item>
         <item>arch/i386/src/mp.c</item>
+        <item>arch/i386/src/smp.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
