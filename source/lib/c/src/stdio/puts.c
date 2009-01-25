@@ -1,4 +1,4 @@
-/* fputs function
+/* puts function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -17,14 +17,10 @@
  */
 
 #include <stdio.h>
-#include <unistd.h>
 
-int fputs( const char* s, FILE* stream ) {
-    while ( *s ) {
-        fputc( *s++, stream );
-    }
-
-    fflush( stream );
+int puts( const char* s ) {
+    fprintf( stdout, "%s\n", s );
+    fflush( stdout );
 
     return 0;
 }

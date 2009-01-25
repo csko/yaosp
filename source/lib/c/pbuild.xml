@@ -125,6 +125,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/fwrite.c</item>
         <item>src/stdio/rewind.c</item>
         <item>src/stdio/perror.c</item>
+        <item>src/stdio/puts.c</item>
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>
