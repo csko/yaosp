@@ -1,6 +1,6 @@
-/* ctime function
+/* localtime_r function
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,6 +18,7 @@
 
 #include <time.h>
 
-char* ctime( const time_t* timep ) {
-    return asctime(localtime(timep));
+tm_t* localtime_r(const time_t *timep, tm_t* result){
+    result = localtime(timep);
+    return result;
 }

@@ -1,6 +1,6 @@
-/* ctime function
+/* localtime function
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,6 +18,10 @@
 
 #include <time.h>
 
-char* ctime( const time_t* timep ) {
-    return asctime(localtime(timep));
+tm_t ret;
+
+tm_t* localtime(const time_t *timep){
+    gmtime_r(timep, &ret);
+    /* TODO: timezones, tzset(3), tzname, etc */
+    return &ret;
 }

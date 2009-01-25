@@ -61,6 +61,9 @@ char* asctime_r(const tm_t* tm, char* buf);
 tm_t* gmtime(const time_t* timep);
 tm_t* gmtime_r(const time_t* timep, tm_t* result);
 
+tm_t* localtime(const time_t* timep);
+tm_t* localtime_r(const time_t* timep, tm_t* result);
+
 char* ctime( const time_t* timep );
 char* ctime_r( const time_t* timep, char* buf );
 

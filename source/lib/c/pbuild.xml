@@ -141,6 +141,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>
+        <item>src/time/ctime.c</item>
+        <item>src/time/ctime_r.c</item>
+        <item>src/time/localtime.c</item>
+        <item>src/time/localtime_r.c</item>
         <item>src/time/asctime.c</item>
         <item>src/time/asctime_r.c</item>
         <item>src/time/gmtime.c</item>
