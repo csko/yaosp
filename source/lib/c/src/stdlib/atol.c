@@ -1,4 +1,4 @@
-/* atoi function
+/* atol function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -19,8 +19,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-int atoi( const char* s ) {
-    int v = 0;
+long atol( const char* s ) {
+    long v = 0;
     int sign = 0;
 
     while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {

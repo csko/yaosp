@@ -1,4 +1,4 @@
-/* atoi function
+/* random function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
+unsigned long _seed = 0xDEADBEEF;
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+int random( void ) {
+    unsigned int next = _seed;
+    unsigned long result;
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
-    }
+    next *= 1103515245;
+    next += 12345;
+    result = ( unsigned int  ) ( next / 65536 ) % 2048;
 
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
+    next *= 1103515245;
+    next += 12345;
+    result <<= 10;
+    result ^= ( unsigned int ) ( next / 65536 ) % 1024;
 
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
+    next *= 1103515245;
+    next += 12345;
+    result <<= 10;
+    result ^= ( unsigned int ) ( next / 65536 ) % 1024;
 
-    return sign ? -v : v;
+    _seed = next;
+
+    return result;
 }

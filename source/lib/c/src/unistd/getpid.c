@@ -1,4 +1,4 @@
-/* atoi function
+/* getpid function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
-    }
-
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
-
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
-
-    return sign ? -v : v;
+pid_t getpid( void ) {
+    return syscall0( SYS_getpid );
 }

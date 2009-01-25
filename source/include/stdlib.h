@@ -28,6 +28,8 @@ int abs( int j );
 long labs( long j );
 long long llabs( long long j );
 
+void exit( int status );
+
 char* getenv( const char* name );
 
 void* calloc( size_t nmemb, size_t size );
@@ -37,12 +39,19 @@ void* realloc( void* ptr, size_t size );
 
 void abort( void );
 
-long int atoi( const char* s );
+int atoi( const char* s );
+long atol( const char* s );
+double atof( const char* s );
 
 long int strtol( const char* nptr, char** endptr, int base );
 unsigned long int strtoul( const char* nptr, char** endptr, int base );
 double strtod( const char* s, char** endptr );
 
 void qsort( void* base, size_t nmemb, size_t size, int (*compar)(const void*,const void*) );
+
+int random( void );
+
+char* mktemp( char* template );
+int mkstemp( char* template );
 
 #endif // _STDLIB_H_

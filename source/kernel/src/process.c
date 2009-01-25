@@ -168,6 +168,10 @@ int process_table_iterate( process_iter_callback_t* callback, void* data ) {
     return 0;
 }
 
+process_id sys_getpid( void ) {
+    return current_process()->id;
+}
+
 int sys_exit( int exit_code ) {
     process_t* process;
 

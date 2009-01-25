@@ -35,7 +35,7 @@
 #define __FILE_NOBUF       0x40
 #define __FILE_BUFINPUT    0x80
 
-#define EOF 0xFFFFFFFF
+#define EOF -1
 
 #define _IO_BUFSIZE 2048
 
@@ -87,6 +87,10 @@ int vfprintf( FILE* stream, const char* format, va_list ap );
 int vsprintf( char *str, const char *format, va_list ap );
 int vsnprintf( char* str, size_t size, const char* format, va_list ap );
 
+int scanf( const char* format, ... );
+int fscanf( FILE* stream, const char* format, ... );
+int sscanf( const char* str, const char* format, ... );
+
 int fgetc( FILE* stream );
 int getc( FILE* stream );
 char* fgets( char* s, int size, FILE* stream );
@@ -96,7 +100,7 @@ int fputc( int c, FILE* stream );
 int putc( int c, FILE* stream );
 int fputs( const char* s, FILE* stream );
 int puts( const char* s );
-#define putchar(c) putc(c,stdout)
+int putchar( int c );
 
 #define setbuf(stream,buf) setvbuf(stream,buf,buf?_IOFBF:_IONBF,BUFSIZ)
 int setvbuf( FILE* stream, char* buf, int flags, size_t size );

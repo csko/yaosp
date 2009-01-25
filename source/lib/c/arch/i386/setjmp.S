@@ -1,4 +1,4 @@
-/* atoi function
+/* setjmp function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
+.section .text
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+.global setjmp
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
-    }
+setjmp:
+    movl 4(%esp), %edx
 
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
+    /* Save return address */
 
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
+    movl 0(%esp), %ecx
+    movl %ecx, 0(%edx)
 
-    return sign ? -v : v;
-}
+    /* Save registers: ebp, esp, ebx, edi and esi */
+
+    movl %ebp, 4(%edx)
+    movl %esp, 8(%edx)
+    movl %ebx, 12(%edx)
+    movl %edi, 16(%edx)
+    movl %esi, 20(%edx)
+
+    /* Return 0 */
+
+    movl $0, %eax
+    ret
+.size setjmp,.-setjmp

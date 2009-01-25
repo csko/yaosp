@@ -28,6 +28,13 @@
 #define O_CREAT  0x04
 #define O_TRUNC  0x08
 #define O_APPEND 0x10
+#define O_EXCL   0x20
+
+#define F_DUPFD 0
+#define F_GETFD 1
+#define F_SETFD 2
+
+#define FD_CLOEXEC 1
 
 int open( const char* filename, int flags, ... ) __nonnull((1));
 int creat(const char* pathname, mode_t mode);

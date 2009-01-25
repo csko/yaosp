@@ -33,6 +33,8 @@ char* strrchr( const char* s, int c );
 char* strstr( const char* s1, const char* s2 );
 int strcmp( const char* s1, const char* s2 );
 int strncmp( const char* s1, const char* s2, size_t c );
+int strcasecmp( const char* s1, const char* s2 );
+int strncasecmp( const char* s1, const char* s2, size_t c );
 char* strcpy( char* d, const char* s );
 char* strncpy( char* d, const char* s, size_t c );
 char* strcat( char* d, const char* s );

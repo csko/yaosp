@@ -60,6 +60,7 @@ uint32_t get_process_count( void );
 process_t* get_process_by_id( process_id id );
 int process_table_iterate( process_iter_callback_t* callback, void* data );
 
+process_id sys_getpid( void );
 int sys_exit( int exit_code );
 int sys_waitpid( process_id pid, int* status, int options );
 

@@ -539,6 +539,8 @@ static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) 
 
     if ( node->flags & ISO9660_FLAG_DIRECTORY ) {
         stat->st_mode |= S_IFDIR;
+    } else {
+        stat->st_mode |= S_IFREG;
     }
 
     return 0;

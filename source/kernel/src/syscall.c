@@ -63,7 +63,8 @@ static system_call_entry_t system_call_table[] = {
     { "get_system_info", sys_get_system_info, 0 },
     { "sleep_thread", sys_sleep_thread, 0 },
     { "create_region", sys_create_region, 0 },
-    { "delete_region", sys_delete_region, 0 }
+    { "delete_region", sys_delete_region, 0 },
+    { "getpid", sys_getpid, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

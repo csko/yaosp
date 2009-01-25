@@ -1,4 +1,4 @@
-/* atoi function
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
+#ifndef _UTIME_H_
+#define _UTIME_H_
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+#include <time.h>
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
-    }
+struct utimbuf {
+    time_t actime; /* access time */
+    time_t modtime; /* modification time */
+};
 
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
+int utime( const char* filename, const struct utimbuf* times );
 
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
-
-    return sign ? -v : v;
-}
+#endif // _UTIME_H_

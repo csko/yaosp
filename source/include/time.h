@@ -32,7 +32,7 @@ typedef struct timeval {
 typedef struct timezone {
     int tz_minuteswest;
     int tz_dsttime;
-} timezone_t ;
+} timezone_t;
 
 typedef struct tm {
     int tm_sec;    /* Seconds. [0-60] (1 leap second) */
@@ -44,7 +44,7 @@ typedef struct tm {
     int tm_wday;   /* Day of week. [0-6], 0=Sunday */
     int tm_yday;   /* Days in year. [0-365] */
     int tm_isdst;  /* Daylight saving [-1/0/1] */
-} tm_t ;
+} tm_t;
 
 time_t time(time_t* tloc);
 int stime(time_t* tptr);
@@ -60,5 +60,8 @@ char* asctime_r(const tm_t* tm, char* buf);
 
 tm_t* gmtime(const time_t* timep);
 tm_t* gmtime_r(const time_t* timep, tm_t* result);
+
+char* ctime( const time_t* timep );
+char* ctime_r( const time_t* timep, char* buf );
 
 #endif // _TIME_H_

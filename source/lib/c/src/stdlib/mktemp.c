@@ -1,4 +1,4 @@
-/* atoi function
+/* mkstemp function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
 #include <stdlib.h>
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+char* mktemp( char* template ) {
+    int fd;
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
+    fd = mkstemp( template );
+
+    if ( fd < 0 ) {
+        return NULL;
     }
 
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
+    close( fd );
 
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
+    unlink( template );
 
-    return sign ? -v : v;
+    return template;
 }

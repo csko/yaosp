@@ -1,4 +1,4 @@
-/* atoi function
+/* longjmp function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
+.section .text
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+.global longjmp
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
-    }
+longjmp:
+    movl 4(%esp), %edx
+    movl 8(%esp), %eax
 
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
+    /* Restore registers */
 
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
+    movl 4(%edx), %ebp
+    movl 8(%edx), %esp
+    movl 12(%edx), %ebx
+    movl 16(%edx), %edi
+    movl 20(%edx), %esi
 
-    return sign ? -v : v;
-}
+    /* Restore return address */
+
+    movl 0(%edx), %ecx
+    movl %ecx, 0(%esp)
+
+    /* Check return code */
+
+    cmpl $0, %eax
+    je  1f
+    ret
+
+1:
+    movl $1, %eax
+    ret
+.size longjmp,.-longjmp

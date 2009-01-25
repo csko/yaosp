@@ -1,4 +1,4 @@
-/* atoi function
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
+#ifndef _SETJMP_H_
+#define _SETJMP_H_
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+typedef unsigned long jmp_buf[ 6 ];
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
-    }
+int setjmp( jmp_buf env );
+void longjmp( jmp_buf env, int val );
 
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
-
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
-
-    return sign ? -v : v;
-}
+#endif // _SETJMP_H_

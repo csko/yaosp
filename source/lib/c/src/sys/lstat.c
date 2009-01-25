@@ -1,4 +1,4 @@
-/* atoi function
+/* lstat function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
-#include <stdlib.h>
+#include <errno.h>
+#include <sys/stat.h>
 
-int atoi( const char* s ) {
-    int v = 0;
-    int sign = 0;
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-    while ( ( *s == ' ' ) || ( ( unsigned int )( *s - 9 ) < 5u ) ) {
-        ++s;
+int lstat( const char* path, struct stat* stat ) {
+    int error;
+
+    error = syscall2( SYS_stat, ( int )path, ( int )stat );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
     }
 
-    switch ( *s ) {
-        case '-' : sign = -1;
-        case '+' : ++s;
-    }
-
-    while ( ( unsigned int )( *s - '0' ) < 10u ) {
-        v = v * 10 + *s - '0';
-        ++s;
-    }
-
-    return sign ? -v : v;
+    return 0;
 }

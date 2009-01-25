@@ -23,6 +23,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="files_i386">
         <item>arch/i386/syscall.S</item>
         <item>arch/i386/getpagesize.c</item>
+        <item>arch/i386/setjmp.S</item>
+        <item>arch/i386/longjmp.S</item>
         <item>arch/i386/math/e_exp.S</item>
         <item>arch/i386/math/e_log.S</item>
         <item>arch/i386/math/s_sin.S</item>
@@ -52,11 +54,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/strtol.c</item>
         <item>src/stdlib/strtoul.c</item>
         <item>src/stdlib/atoi.c</item>
+        <item>src/stdlib/atol.c</item>
+        <item>src/stdlib/atof.c</item>
         <item>src/stdlib/qsort.c</item>
         <item>src/stdlib/abs.c</item>
         <item>src/stdlib/labs.c</item>
         <item>src/stdlib/llabs.c</item>
         <item>src/stdlib/strtod.c</item>
+        <item>src/stdlib/mkstemp.c</item>
+        <item>src/stdlib/random.c</item>
+        <item>src/stdlib/mktemp.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
         <item>src/string/memcmp.c</item>
@@ -101,6 +108,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/access.c</item>
         <item>src/unistd/chdir.c</item>
         <item>src/unistd/ftruncate.c</item>
+        <item>src/unistd/getpid.c</item>
+        <item>src/unistd/link.c</item>
+        <item>src/unistd/rmdir.c</item>
+        <item>src/unistd/chown.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/fcntl/creat.c</item>
         <item>src/stdio/streams.c</item>
@@ -126,6 +137,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/rewind.c</item>
         <item>src/stdio/perror.c</item>
         <item>src/stdio/puts.c</item>
+        <item>src/stdio/putchar.c</item>
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>
@@ -134,6 +146,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/time/gmtime.c</item>
         <item>src/time/gmtime_r.c</item>
         <item>src/time/gettimeofday.c</item>
+        <item>src/time/ctime.c</item>
         <item>src/getopt/getopt.c</item>
         <item>src/getopt/getopt_long.c</item>
         <item>src/getopt/getopt_long_only.c</item>
@@ -146,6 +159,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/ioctl.c</item>
         <item>src/sys/select.c</item>
         <item>src/sys/mount.c</item>
+        <item>src/sys/lstat.c</item>
+        <item>src/sys/umask.c</item>
+        <item>src/sys/chmod.c</item>
+        <item>src/sys/utime.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
         <item>src/ctype/isblank.c</item>

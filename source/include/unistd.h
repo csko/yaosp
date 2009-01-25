@@ -32,7 +32,6 @@ struct dirent {
     char d_name[ NAME_MAX + 1 ];
 };
 
-void exit( int status );
 void _exit( int status );
 
 pid_t fork( void );
@@ -55,11 +54,15 @@ int fchdir( int fd );
 int getdents( int fd, struct dirent* entry, unsigned int count );
 int ftruncate( int fd, off_t length );
 
+int link( const char* oldpath, const char* newpath );
 int access( const char* pathname, int mode );
 int unlink( const char* pathname );
 ssize_t readlink( const char* path, char* buf, size_t bufsiz );
+int rmdir( const char* pathname );
+int chown( const char* path, uid_t owner, gid_t group );
 char* getcwd( char* buf, size_t size );
 
+pid_t getpid( void );
 int getpagesize( void );
 
 unsigned int sleep( unsigned int seconds );

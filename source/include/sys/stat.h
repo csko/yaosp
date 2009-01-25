@@ -23,7 +23,7 @@
 #include <sys/types.h>
 
 /* TODO: Might need to change these */
-#define S_IFMT   0x0F0000
+#define S_IFMT   0xFF0000
 
 #define S_IFSOCK 0x140000
 #define S_IFLNK  0x120000
@@ -40,6 +40,21 @@
 #define S_ISDIR(m)  (((m) & S_IFMT) == S_IFDIR)
 #define S_ISCHR(m)  (((m) & S_IFMT) == S_IFCHR)
 #define S_ISFIFO(m) (((m) & S_IFMT) == S_IFIFO)
+
+#define S_IRWXU 00700
+#define S_IRUSR 00400
+#define S_IWUSR 00200
+#define S_IXUSR 00100
+
+#define S_IRWXG 00070
+#define S_IRGRP 00040
+#define S_IWGRP 00020
+#define S_IXGRP 00010
+
+#define S_IRWXO 00007
+#define S_IROTH 00004
+#define S_IWOTH 00002
+#define S_IXOTH 00001
 
 struct stat {
     dev_t st_dev;
@@ -59,7 +74,12 @@ struct stat {
 
 int stat( const char* path, struct stat* stat );
 int fstat( int fd, struct stat* stat );
+int lstat( const char* path, struct stat* stat );
 
 int mkdir( const char* pathname, mode_t mode );
+
+mode_t umask( mode_t mask );
+
+int chmod( const char* path, mode_t mode );
 
 #endif // _SYS_STAT_H_
