@@ -1,6 +1,6 @@
-/* System information application
+/* Kernel module loader shell command
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,28 +18,27 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-#include <yaosp/sysinfo.h>
+#include <yaosp/module.h>
+
+char* argv0;
 
 int main( int argc, char** argv ) {
     int error;
-    system_info_t sysinfo;
 
-    error = get_system_info( &sysinfo );
+    argv0 = argv[ 0 ];
 
-    if ( error < 0 ) {
-        fprintf( stderr, "%s: Failed to get system information!\n", argv[ 0 ] );
+    if ( argc != 2 ) {
+        fprintf( stderr, "%s module_name\n", argv0 );
         return EXIT_FAILURE;
     }
 
-    printf( "Total memory: %d Kb\n", ( sysinfo.total_page_count * getpagesize() ) / 1024 );
-    printf( "Free memory: %d Kb\n", ( sysinfo.free_page_count * getpagesize() ) / 1024 );
-    printf( "Process count: %d\n", sysinfo.process_count );
-    printf( "Thread count: %d\n", sysinfo.thread_count );
-    printf( "Loaded kernel modules: %d\n", sysinfo.loaded_module_count );
-    printf( "Total CPUs: %d\n", sysinfo.total_processor_count );
-    printf( "Active CPUs: %d\n", sysinfo.active_processor_count );
+    error = load_module( argv[ 1 ] );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to load module: %s (error=%d)\n", argv0, argv[ 1 ], error );
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

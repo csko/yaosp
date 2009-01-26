@@ -55,6 +55,10 @@ typedef struct system_info {
 
     uint32_t total_processor_count;
     uint32_t active_processor_count;
+
+    /* Module informations */
+
+    uint32_t loaded_module_count;
 } system_info_t;
 
 int set_process_listener( process_listener_t* listener );

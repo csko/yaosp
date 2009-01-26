@@ -27,6 +27,7 @@
 #include <time.h>
 #include <sysinfo.h>
 #include <thread.h>
+#include <module.h>
 #include <mm/userspace.h>
 #include <vfs/vfs.h>
 
@@ -64,7 +65,8 @@ static system_call_entry_t system_call_table[] = {
     { "sleep_thread", sys_sleep_thread, 0 },
     { "create_region", sys_create_region, 0 },
     { "delete_region", sys_delete_region, 0 },
-    { "getpid", sys_getpid, 0 }
+    { "getpid", sys_getpid, 0 },
+    { "load_module", sys_load_module, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

@@ -97,7 +97,10 @@ int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int s
 size_t get_module_size( module_reader_t* reader );
 char* get_module_name( module_reader_t* reader );
 
+uint32_t get_loaded_module_count( void );
+
 int load_module( const char* name );
+int sys_load_module( const char* name );
 
 void set_module_loader( module_loader_t* loader );
 

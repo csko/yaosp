@@ -88,6 +88,18 @@ int rename_thread( thread_t* thread, char* new_name );
 void thread_exit( int exit_code );
 void kernel_thread_exit( void );
 
+/**
+ * Creates a new kernel thread.
+ *
+ * @param name The name of the new thread
+ * @param priority The priority of the new thread
+ * @param entry The entry point of the new thread
+ * @param arg The argument of the thread entry function
+ * @param stack_size The stack size of the new thread (can be 0, in this case
+ *                   the default size will be used
+ * @return On success the id of the new thread is returned, otherwise a negative
+ *         error code
+ */
 thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t stack_size );
 
 /**
@@ -99,6 +111,13 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
  * @return On success 0 is returned
  */
 int sleep_thread( uint64_t microsecs );
+
+/**
+ * Wakes up a waiting, sleeping or not yet started thread.
+ *
+ * @param id The id of the thread to wake up
+ * @return On success 0 is returned
+ */
 int wake_up_thread( thread_id id );
 
 /**

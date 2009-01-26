@@ -30,6 +30,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>cat</item>
         <item>mount</item>
         <item>mkdir</item>
+        <item>load_module</item>
     </array>
 
     <target name="all">

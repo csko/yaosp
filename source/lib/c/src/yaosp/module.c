@@ -1,4 +1,4 @@
-/* System information definitions
+/* load_module function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,32 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_SYSINFO_H_
-#define _YAOSP_SYSINFO_H_
+#include <yaosp/module.h>
 
-#include <sys/types.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-typedef struct system_info {
-    /* Memory information */
-
-    uint32_t free_page_count;
-    uint32_t total_page_count;
-
-    /* Process & thread information */
-
-    uint32_t process_count;
-    uint32_t thread_count;
-
-    /* Processor information */
-
-    uint32_t total_processor_count;
-    uint32_t active_processor_count;
-
-    /* Module information */
-
-    uint32_t loaded_module_count;
-} system_info_t;
-
-int get_system_info( system_info_t* system_info );
-
-#endif // _SYSINFO_H_
+int load_module( const char* name ) {
+    return syscall1( SYS_load_module, ( int )name );
+}

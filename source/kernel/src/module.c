@@ -69,6 +69,18 @@ char* get_module_name( module_reader_t* reader ) {
     return reader->get_name( reader->private );
 }
 
+uint32_t get_loaded_module_count( void ) {
+    uint32_t count;
+
+    LOCK( module_lock );
+
+    count = hashtable_get_item_count( &module_table );
+
+    UNLOCK( module_lock );
+
+    return count;
+}
+
 static int do_load_module_dependencies( module_t* module, char** dependencies, size_t count ) {
     int i;
     int error;
@@ -246,6 +258,10 @@ error1:
 }
 
 int load_module( const char* name ) {
+    return do_load_module( name );
+}
+
+int sys_load_module( const char* name ) {
     return do_load_module( name );
 }
 

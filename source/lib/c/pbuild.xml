@@ -194,6 +194,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/yaosp/semaphore.c</item>
         <item>src/yaosp/sysinfo.c</item>
         <item>src/yaosp/region.c</item>
+        <item>src/yaosp/module.c</item>
         <item>src/trio/trio.c</item>
         <item>src/trio/trionan.c</item>
         <item>src/trio/triostr.c</item>
