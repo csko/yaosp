@@ -53,6 +53,8 @@ int memory_context_insert_region( memory_context_t* context, region_t* region );
  */
 int memory_context_remove_region( memory_context_t* context, region_t* region );
 
+region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address );
+
 /**
  * Searches for a size byte(s) long unmapped memory region in the specified
  * memory context.

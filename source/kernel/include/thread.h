@@ -39,6 +39,14 @@ enum {
     THREAD_ZOMBIE
 };
 
+enum {
+    PRIORITY_HIGH = 31,
+    PRIORITY_DISPLAY = 23,
+    PRIORITY_NORMAL = 15,
+    PRIORITY_LOW = 7,
+    PRIORITY_IDLE = 0
+};
+
 struct process;
 
 typedef struct thread {
@@ -49,18 +57,21 @@ typedef struct thread {
     thread_id id;
     char* name;
     int state;
+    int priority;
+    struct process* process;
 
     uint64_t quantum;
     uint64_t exec_time;
 
     uint64_t cpu_time;
 
-    struct process* process;
-
+    uint32_t kernel_stack_pages;
     void* kernel_stack;
     void* kernel_stack_end;
+
     void* user_stack_end;
     region_id user_stack_region;
+
     void* syscall_stack;
 
     void* arch_data;
@@ -69,7 +80,7 @@ typedef struct thread {
 typedef int thread_entry_t( void* arg );
 typedef int thread_iter_callback_t( thread_t* thread, void* data );
 
-thread_t* allocate_thread( const char* name, struct process* process );
+thread_t* allocate_thread( const char* name, struct process* process, int priority, uint32_t kernel_stack_pages );
 void destroy_thread( thread_t* thread );
 int insert_thread( thread_t* thread );
 int rename_thread( thread_t* thread, char* new_name );
@@ -77,7 +88,7 @@ int rename_thread( thread_t* thread, char* new_name );
 void thread_exit( int exit_code );
 void kernel_thread_exit( void );
 
-thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg );
+thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t stack_size );
 
 /**
  * This method can be used to delay the execution of

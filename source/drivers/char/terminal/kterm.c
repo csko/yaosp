@@ -138,7 +138,7 @@ int init_kernel_terminal( void ) {
 
     /* Start kterm buffer flushed */
 
-    kterm_flusher = create_kernel_thread( "kterm flusher", kterm_flusher_thread, NULL );
+    kterm_flusher = create_kernel_thread( "kterm flusher", PRIORITY_NORMAL, kterm_flusher_thread, NULL, 0 );
 
     if ( kterm_flusher < 0 ) {
         close( kterm_tty );

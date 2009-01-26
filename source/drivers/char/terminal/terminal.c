@@ -334,7 +334,7 @@ int init_terminals( void ) {
         terminals[ i ]->start_line = 0;
     }
 
-    read_thread = create_kernel_thread( "terminal read", terminal_read_thread, NULL );
+    read_thread = create_kernel_thread( "terminal read", PRIORITY_NORMAL, terminal_read_thread, NULL, 0 );
 
     if ( read_thread < 0 ) {
         return read_thread;

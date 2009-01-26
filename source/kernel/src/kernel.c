@@ -130,7 +130,7 @@ void kernel_main( void ) {
 
     /* Create the init thread */
 
-    thread_id init_id = create_kernel_thread( "init", init_thread, NULL );
+    thread_id init_id = create_kernel_thread( "init", PRIORITY_NORMAL, init_thread, NULL, 0 );
 
     if ( init_id < 0 ) {
         return;

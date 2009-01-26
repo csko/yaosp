@@ -43,7 +43,7 @@ static thread_id thread_cleaner;
 static thread_t* thread_cleaner_list;
 static semaphore_id thread_cleaner_sync;
 
-thread_t* allocate_thread( const char* name, process_t* process ) {
+thread_t* allocate_thread( const char* name, process_t* process, int priority, uint32_t kernel_stack_pages ) {
     int error;
     thread_t* thread;
 
@@ -62,7 +62,8 @@ thread_t* allocate_thread( const char* name, process_t* process ) {
         return NULL;
     }
 
-    thread->kernel_stack = ( register_t* )alloc_pages( KERNEL_STACK_PAGES );
+    thread->kernel_stack_pages = kernel_stack_pages;
+    thread->kernel_stack = ( register_t* )alloc_pages( kernel_stack_pages );
 
     if ( thread->kernel_stack == NULL ) {
         kfree( thread->name );
@@ -70,12 +71,12 @@ thread_t* allocate_thread( const char* name, process_t* process ) {
         return NULL;
     }
 
-    thread->kernel_stack_end = ( uint8_t* )thread->kernel_stack + ( KERNEL_STACK_PAGES * PAGE_SIZE );
+    thread->kernel_stack_end = ( uint8_t* )thread->kernel_stack + ( kernel_stack_pages * PAGE_SIZE );
 
     error = arch_allocate_thread( thread );
 
     if ( error < 0 ) {
-        free_pages( thread->kernel_stack, KERNEL_STACK_PAGES );
+        free_pages( thread->kernel_stack, kernel_stack_pages );
         kfree( thread->name );
         kfree( thread );
         return NULL;
@@ -83,6 +84,7 @@ thread_t* allocate_thread( const char* name, process_t* process ) {
 
     thread->id = -1;
     thread->state = THREAD_READY;
+    thread->priority = priority;
     thread->process = process;
     thread->user_stack_end = NULL;
     thread->user_stack_region = -1;
@@ -108,7 +110,7 @@ void destroy_thread( thread_t* thread ) {
 
     /* Free the kernel stack */
 
-    free_pages( thread->kernel_stack, KERNEL_STACK_PAGES );
+    free_pages( thread->kernel_stack, thread->kernel_stack_pages );
 
     /* Destroy the process as well if this is the last thread */
 
@@ -204,7 +206,7 @@ void kernel_thread_exit( void ) {
     thread_exit( 0 );
 }
 
-thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* arg ) {
+thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t stack_size ) {
     int error;
     thread_t* thread;
     process_t* kernel_process;
@@ -221,9 +223,19 @@ thread_id create_kernel_thread( const char* name, thread_entry_t* entry, void* a
         return -EINVAL;
     }
 
+    /* Calculate stack size */
+
+    stack_size = PAGE_ALIGN( stack_size );
+
+    if ( stack_size == 0 ) {
+        stack_size = KERNEL_STACK_PAGES;
+    } else {
+        stack_size /= PAGE_SIZE;
+    }
+
     /* Allocate a new thread */
 
-    thread = allocate_thread( name, kernel_process );
+    thread = allocate_thread( name, kernel_process, priority, stack_size );
 
     if ( thread == NULL ) {
         return -ENOMEM;
@@ -407,7 +419,7 @@ int init_thread_cleaner( void ) {
         goto error1;
     }
 
-    thread_cleaner = create_kernel_thread( "thread cleaner", thread_cleaner_entry, NULL );
+    thread_cleaner = create_kernel_thread( "thread cleaner", PRIORITY_LOW, thread_cleaner_entry, NULL, 0 );
 
     if ( thread_cleaner < 0 ) {
         goto error2;

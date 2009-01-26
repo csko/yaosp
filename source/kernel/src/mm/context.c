@@ -111,6 +111,25 @@ int memory_context_remove_region( memory_context_t* context, region_t* region ) 
     return 0;
 }
 
+region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
+    int i;
+    region_t* region = NULL;
+
+    LOCK( region_lock );
+
+    for ( i = 0; i < context->region_count; i++ ) {
+        if ( ( context->regions[ i ]->start <= address ) &&
+             ( address < ( context->regions[ i ]->start + context->regions[ i ]->size ) ) ) {
+            region = context->regions[ i ];
+            break;
+        }
+    }
+
+    UNLOCK( region_lock );
+
+    return region;
+}
+
 bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address ) {
     int i;
     ptr_t start;

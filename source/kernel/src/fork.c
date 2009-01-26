@@ -22,6 +22,7 @@
 #include <thread.h>
 #include <scheduler.h>
 #include <sysinfo.h>
+#include <macros.h>
 #include <mm/context.h>
 
 #include <arch/fork.h>
@@ -54,6 +55,24 @@ int sys_fork( void ) {
         goto error2;
     }
 
+    if ( this_process->heap_region >= 0 ) {
+        region_t* heap_region;
+        region_info_t region_info;
+
+        error = get_region_info( this_process->heap_region, &region_info );
+
+        if ( error >= 0 ) {
+            heap_region = memory_context_get_region_for(
+                new_process->memory_context,
+                region_info.start
+            );
+
+            ASSERT( heap_region != NULL );
+
+            new_process->heap_region = heap_region->id;
+        }
+    }
+
     /* Clone the I/O context */
 
     new_process->io_context = io_context_clone( this_process->io_context );
@@ -72,11 +91,39 @@ int sys_fork( void ) {
         goto error2;
     }
 
-    new_thread = allocate_thread( this_thread->name, new_process );
+    /* Create the main thread of the new process */
+
+    new_thread = allocate_thread(
+        this_thread->name,
+        new_process,
+        this_thread->priority,
+        this_thread->kernel_stack_pages
+    );
 
     if ( new_thread == NULL ) {
         error = -ENOMEM;
         goto error2;
+    }
+
+    /* If the process has an userspace stack region then we have to find
+       out the region ID of the cloned stack region. */
+
+    if ( this_thread->user_stack_region >= 0 ) {
+        region_t* stack_region;
+        region_info_t region_info;
+
+        error = get_region_info( this_thread->user_stack_region, &region_info );
+
+        if ( error >= 0 ) {
+            stack_region = memory_context_get_region_for(
+                new_process->memory_context,
+                region_info.start
+            );
+
+            ASSERT( stack_region != NULL );
+
+            new_thread->user_stack_region = stack_region->id;
+        }
     }
 
     error = arch_do_fork( this_thread, new_thread );

@@ -35,7 +35,7 @@ int pata_port_send_command( pata_port_t* port, uint8_t cmd, bool check_drdy, uin
 
     /* Wait for port to become idle */
 
-    error = pata_port_wait( port, 0, PATA_STATUS_BUSY | PATA_STATUS_DRQ, 0, 50000 );
+    error = pata_port_wait( port, 0, PATA_STATUS_BUSY | PATA_STATUS_DRQ, 0, 100000 );
 
     if ( error < 0 ) {
         kprintf( "PATA: Timed out while waiting for port to become idle\n" );

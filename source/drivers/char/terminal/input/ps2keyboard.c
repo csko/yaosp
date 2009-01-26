@@ -163,7 +163,7 @@ static int ps2_keyboard_init( void ) {
         return device;
     }
 
-    thread = create_kernel_thread( "ps2kbd_input", ps2_keyboard_thread, NULL );
+    thread = create_kernel_thread( "ps2kbd_input", PRIORITY_NORMAL, ps2_keyboard_thread, NULL, 0 );
 
     if ( thread < 0 ) {
         close( device );

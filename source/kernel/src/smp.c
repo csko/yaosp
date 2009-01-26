@@ -78,7 +78,13 @@ int init_smp_late( void ) {
             continue;
         }
 
-        id = create_kernel_thread( "idle", ( thread_entry_t* )halt_loop, NULL );
+        id = create_kernel_thread(
+            "idle",
+            PRIORITY_IDLE,
+            ( thread_entry_t* )halt_loop,
+            NULL,
+            PAGE_SIZE
+        );
 
         if ( id < 0 ) {
             return id;

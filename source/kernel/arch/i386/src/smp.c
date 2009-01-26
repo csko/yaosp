@@ -165,7 +165,7 @@ void ap_processor_entry( void ) {
 
     atomic_inc( &active_processor_count );
     processor_activated();
-    get_processor()->running = 1;
+    get_processor()->running = true;
 
     /* Just enable interrupts here and wait for the first timer interrupt,
        that will start the scheduler on this CPU as well. */
