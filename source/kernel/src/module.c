@@ -22,7 +22,13 @@
 #include <semaphore.h>
 #include <bootmodule.h>
 #include <mm/kmalloc.h>
+#include <vfs/vfs.h>
 #include <lib/string.h>
+
+typedef struct file_module_reader {
+    int fd;
+    char* name;
+} file_module_reader_t;
 
 module_loader_t* module_loader;
 
@@ -81,6 +87,124 @@ uint32_t get_loaded_module_count( void ) {
     return count;
 }
 
+static int file_module_read( void* private, void* data, off_t offset, int size ) {
+    file_module_reader_t* reader;
+
+    reader = ( file_module_reader_t* )private;
+
+    return pread( reader->fd, data, size, offset );
+}
+
+static size_t file_module_get_size( void* private ) {
+    int error;
+    struct stat st;
+    file_module_reader_t* reader;
+
+    reader = ( file_module_reader_t* )private;
+
+    error = fstat( reader->fd, &st );
+
+    if ( error < 0 ) {
+        return 0;
+    }
+
+    return ( size_t )st.st_size;
+}
+
+static char* file_module_get_name( void* private ) {
+    file_module_reader_t* reader;
+
+    reader = ( file_module_reader_t* )private;
+
+    return reader->name;
+}
+
+static module_reader_t* get_file_module_reader_helper( const char* directory, const char* module_name ) {
+    int file;
+    char path[ 128 ];
+    module_reader_t* reader;
+    file_module_reader_t* file_reader;
+
+    snprintf( path, sizeof( path ), "/yaosp/system/module/%s/%s", directory, module_name );
+
+    file = open( path, O_RDONLY );
+
+    if ( file < 0 ) {
+        goto error1;
+    }
+
+    reader = ( module_reader_t* )kmalloc( sizeof( module_reader_t ) + sizeof( file_module_reader_t ) );
+
+    if ( reader == NULL ) {
+        goto error2;
+    }
+
+    file_reader = ( file_module_reader_t* )( reader + 1 );
+
+    file_reader->name = strdup( module_name );
+
+    if ( file_reader->name == NULL ) {
+        goto error3;
+    }
+
+    file_reader->fd = file;
+
+    reader->private = ( void* )file_reader;
+    reader->read = file_module_read;
+    reader->get_size = file_module_get_size;
+    reader->get_name = file_module_get_name;
+
+    return reader;
+
+error3:
+    kfree( reader );
+
+error2:
+    close( file );
+
+error1:
+    return NULL;
+}
+
+static module_reader_t* get_file_module_reader( const char* name ) {
+    int dir;
+    dirent_t entry;
+    module_reader_t* reader;
+
+    dir = open( "/yaosp/system/module", O_RDONLY );
+
+    if ( dir < 0 ) {
+        return NULL;
+    }
+
+    while ( getdents( dir, &entry ) == 1 ) {
+        if ( ( strcmp( entry.name, "." ) == 0 ) ||
+             ( strcmp( entry.name, ".." ) == 0 ) ) {
+            continue;
+        }
+
+        reader = get_file_module_reader_helper( entry.name, name );
+
+        if ( reader != NULL ) {
+            break;
+        }
+    }
+
+    close( dir );
+
+    return reader;
+}
+
+static void put_file_module_reader( module_reader_t* reader ) {
+    file_module_reader_t* file_reader;
+
+    file_reader = ( file_module_reader_t* )reader->private;
+
+    close( file_reader->fd );
+    kfree( file_reader->name );
+    kfree( reader );
+}
+
 static int do_load_module_dependencies( module_t* module, char** dependencies, size_t count ) {
     int i;
     int error;
@@ -130,13 +254,19 @@ static int do_load_module( const char* name ) {
 
     /* Try to load the module from a simple file */
 
-    /* TODO */
+    if ( reader == NULL ) {
+        reader = get_file_module_reader( name );
+    }
+
+    /* If we didn't find anything we can't load the module :( */
 
     if ( reader == NULL ) {
         error = -ENOENT;
 
         goto error1;
     }
+
+    /* Check if this is a valid module */
 
     if ( !module_loader->check_module( reader ) ) {
         error = -EINVAL;
@@ -251,6 +381,8 @@ error3:
 error2:
     if ( is_bootmodule ) {
         put_bootmodule_reader( reader );
+    } else {
+        put_file_module_reader( reader );
     }
 
 error1:

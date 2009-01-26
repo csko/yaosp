@@ -666,6 +666,10 @@ static int do_fstat( bool kernel, int fd, struct stat* stat ) {
     return error;
 }
 
+int fstat( int fd, struct stat* stat ) {
+    return do_fstat( true, fd, stat );
+}
+
 int sys_fstat( int fd, struct stat* stat ) {
     return do_fstat( false, fd, stat );
 }

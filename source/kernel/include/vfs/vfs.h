@@ -1,6 +1,7 @@
 /* Virtual file system
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -126,6 +127,7 @@ int pread( int fd, void* buffer, size_t count, off_t offset );
 int pwrite( int fd, const void* buffer, size_t count, off_t offset );
 int ioctl( int fd, int command, void* buffer );
 int getdents( int fd, dirent_t* entry );
+int fstat( int fd, struct stat* stat );
 int mkdir( const char* path, int permissions );
 int mount( const char* device, const char* dir, const char* filesystem );
 int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
