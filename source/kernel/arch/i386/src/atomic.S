@@ -1,6 +1,6 @@
 /* Atomic operations
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,6 +24,7 @@
 .global atomic_dec
 .global atomic_dec_and_test
 .global atomic_swap
+.global atomic_test_and_clear
 
 /* int atomic_get( atomic_t* atomic ); */
 
@@ -80,3 +81,14 @@ atomic_swap:
     xchgl %eax, (%edx)
     ret
 .size atomic_swap,.-atomic_swap
+
+/* int atomic_test_and_clear( void* address, int bit ); */
+
+atomic_test_and_clear:
+    movl 4(%esp), %edx
+    movl 8(%esp), %eax
+    lock
+    btrl %eax, (%edx)
+    sbbl %eax, %eax
+    ret
+.size atomic_test_and_clear,.-atomic_test_and_clear

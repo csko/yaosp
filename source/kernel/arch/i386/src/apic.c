@@ -87,7 +87,7 @@ void apic_tlb_flush_irq( registers_t* regs ) {
 
     processor_id = get_processor_id();
 
-    if ( test_and_clear_bit( processor_id, ( void* )&tlb_invalidate_mask ) ) {
+    if ( atomic_test_and_clear( ( void* )&tlb_invalidate_mask, processor_id ) ) {
         flush_tlb();
     }
 

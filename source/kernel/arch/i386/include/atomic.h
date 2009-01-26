@@ -71,20 +71,15 @@ bool atomic_dec_and_test( atomic_t* atomic );
  */
 int atomic_swap( atomic_t* atomic, int value );
 
-struct __dummy { unsigned long a[100]; };
-#define ADDR (*(volatile struct __dummy *) addr)
-
-static inline int test_and_clear_bit( int nr, volatile void* addr ) {
-    int oldbit;
-
-    __asm__ __volatile__(
-        "lock ; btrl %2,%1\n"
-        "sbbl %0, %0\n"
-        : "=r" ( oldbit ), "=m" (ADDR)
-        : "Ir" ( nr )
-    );
-
-    return oldbit;
-}
+/**
+ * Atomically tests and clears the nth bit in the dword pointer
+ * by the specified address.
+ *
+ * @param address The address of the dword to test and clear on
+ * @param bit The number of the bit to test and clear
+ * @return 0 is returned if the specified bit was zero, otherwise
+ *         a non-zero value is returned
+ */
+int atomic_test_and_clear( volatile void* address, int bit );
 
 #endif // _ARCH_ATOMIC_H_
