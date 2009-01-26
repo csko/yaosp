@@ -1012,7 +1012,88 @@ int sys_dup2( int old_fd, int new_fd ) {
     return do_dup2( false, old_fd, new_fd );
 }
 
+static int do_utime( bool kernel, const char* path, const struct utimbuf* times) {
+    int error;
+    inode_t* inode;
+    io_context_t* io_context;
+    struct stat _stat = {
+        .st_atime = times->actime,
+        .st_ctime = times->modtime
+    };
 
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, path, &inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( inode->mount_point->fs_calls->write_stat == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = inode->mount_point->fs_calls->write_stat(
+            inode->mount_point->fs_data,
+            inode->fs_node,
+            &_stat,
+            WSTAT_MTIME | WSTAT_CTIME
+        );
+    }
+
+    put_inode( inode );
+
+    return error;
+}
+
+static int do_utimes( bool kernel, const char* path, const timeval_t times[2]) {
+    int error;
+    inode_t* inode;
+    io_context_t* io_context;
+    /* NOTE: No microsecond precision */
+    struct stat _stat = {
+        .st_atime = times[0].tv_sec,
+        .st_ctime = times[1].tv_sec
+    };
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, path, &inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( inode->mount_point->fs_calls->write_stat == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = inode->mount_point->fs_calls->write_stat(
+            inode->mount_point->fs_data,
+            inode->fs_node,
+            &_stat,
+            WSTAT_MTIME | WSTAT_CTIME
+        );
+    }
+
+    put_inode( inode );
+
+    return error;
+}
+
+int sys_utime( const char* filename, const struct utimbuf* times ){
+    return do_utime(false, filename, times);
+}
+
+int sys_utimes( const char* filename, const timeval_t times[2] ){
+    return do_utimes(false, filename, times);
+}
 
 int init_vfs( void ) {
     int error;

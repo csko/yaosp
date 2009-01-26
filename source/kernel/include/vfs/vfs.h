@@ -1,7 +1,6 @@
 /* Virtual file system
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
- * Copyright (c) 2008 Kornel Csernai
+ * Copyright (c) 2008, 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -61,6 +60,22 @@
 #define S_IFCHR  0x020000
 #define S_IFIFO  0x010000
 
+/* write_stat bitmasks */
+#define WSTAT_DEV     1
+#define WSTAT_INO     2
+#define WSTAT_MODE    4
+#define WSTAT_NLINK   8
+#define WSTAT_UID     16
+#define WSTAT_GID     32
+#define WSTAT_RDEV    64
+#define WSTAT_SIZE    128
+#define WSTAT_BLKSIZE 256
+#define WSTAT_BLOCKS  512
+#define WSTAT_ATIME   1024
+#define WSTAT_MTIME   2048
+#define WSTAT_CTIME   4096
+#define WSTAT_ALL     8191
+
 typedef struct dirent {
     ino_t inode_number;
     char name[ NAME_MAX + 1 ];
@@ -110,6 +125,11 @@ struct stat {
     time_t st_ctime;
 };
 
+struct utimbuf {
+    time_t actime; /* access time */
+    time_t modtime; /* modification time */
+};
+
 extern io_context_t kernel_io_context;
 
 mount_point_t* create_mount_point(
@@ -148,6 +168,8 @@ int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
 int sys_mkdir( const char* path, int permissions );
 int sys_mount( const char* device, const char* dir, const char* filesystem );
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
+int sys_utime( const char* filename, const struct utimbuf* times );
+int sys_utimes( const char* filename, const timeval_t times[2] );
 
 int init_vfs( void );
 

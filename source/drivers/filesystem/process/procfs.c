@@ -392,6 +392,7 @@ static filesystem_calls_t procfs_calls = {
     .write = NULL,
     .ioctl = NULL,
     .read_stat = procfs_read_stat,
+    .write_stat = NULL,
     .read_directory = procfs_read_directory,
     .create = NULL,
     .mkdir = NULL,

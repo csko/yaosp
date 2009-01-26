@@ -677,6 +677,7 @@ static filesystem_calls_t pty_calls = {
     .write = pty_write,
     .ioctl = NULL,
     .read_stat = pty_read_stat,
+    .write_stat = NULL,
     .read_directory = pty_read_directory,
     .create = pty_create,
     .mkdir = NULL,

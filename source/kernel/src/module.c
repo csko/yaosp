@@ -1,6 +1,7 @@
 /* Module loader and manager
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -169,7 +170,7 @@ error1:
 static module_reader_t* get_file_module_reader( const char* name ) {
     int dir;
     dirent_t entry;
-    module_reader_t* reader;
+    module_reader_t* reader = NULL;
 
     dir = open( "/yaosp/system/module", O_RDONLY );
 

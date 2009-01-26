@@ -1,6 +1,7 @@
 /* Filesystem definitions
  *
  * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -41,6 +42,7 @@ typedef struct filesystem_calls {
     int ( *write )( void* fs_cookie, void* node, void* file_cookie, const void* buffer, off_t pos, size_t size );
     int ( *ioctl )( void* fs_cookie, void* node, void* file_cookie, int command, void* buffer, bool from_kernel );
     int ( *read_stat )( void* fs_cookie, void* node, struct stat* stat );
+    int ( *write_stat )( void* fs_cookie, void* node, struct stat* stat, uint32_t mask );
     int ( *read_directory )( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
     int ( *create )( void* fs_cookie, void* node, const char* name, int name_len, int mode, int permissions, ino_t* inode_num, void** file_cookie );
     int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_len, int permissions );

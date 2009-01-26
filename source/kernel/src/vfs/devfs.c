@@ -272,6 +272,21 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     return 0;
 }
+static int devfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, uint32_t mask ) {
+    devfs_node_t* node;
+
+    node = ( devfs_node_t* )_node;
+
+    if(mask & WSTAT_MTIME){
+        node->mtime = stat->st_mtime;
+    }
+
+    if(mask & WSTAT_CTIME){
+        node->ctime = stat->st_ctime;
+    }
+
+    return 0;
+}
 
 static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie, struct dirent* entry ) {
     int current;
@@ -477,6 +492,7 @@ static filesystem_calls_t devfs_calls = {
     .write = devfs_write,
     .ioctl = devfs_ioctl,
     .read_stat = devfs_read_stat,
+    .write_stat = devfs_write_stat,
     .read_directory = devfs_read_directory,
     .create = NULL,
     .mkdir = devfs_mkdir,

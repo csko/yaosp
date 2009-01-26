@@ -203,6 +203,22 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     return 0;
 }
 
+static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, uint32_t mask ) {
+    rootfs_node_t* node;
+
+    node = ( rootfs_node_t* )_node;
+
+    if(mask & WSTAT_MTIME){
+        node->mtime = stat->st_mtime;
+    }
+
+    if(mask & WSTAT_CTIME){
+        node->ctime = stat->st_ctime;
+    }
+
+    return 0;
+}
+
 static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cookie, struct dirent* entry ) {
     int current;
     rootfs_node_t* node;
@@ -288,6 +304,7 @@ static filesystem_calls_t rootfs_calls = {
     .write = NULL,
     .ioctl = NULL,
     .read_stat = rootfs_read_stat,
+    .write_stat = rootfs_write_stat,
     .read_directory = rootfs_read_directory,
     .create = NULL,
     .mkdir = rootfs_mkdir,

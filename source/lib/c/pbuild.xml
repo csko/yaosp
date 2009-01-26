@@ -168,6 +168,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/umask.c</item>
         <item>src/sys/chmod.c</item>
         <item>src/sys/utime.c</item>
+        <item>src/sys/utimes.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
         <item>src/ctype/isblank.c</item>

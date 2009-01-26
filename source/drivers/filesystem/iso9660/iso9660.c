@@ -628,6 +628,7 @@ static filesystem_calls_t iso9660_calls = {
     .write = NULL,
     .ioctl = NULL,
     .read_stat = iso9660_read_stat,
+    .write_stat = NULL,
     .read_directory = iso9660_read_directory,
     .create = NULL,
     .mkdir = NULL,

@@ -1,6 +1,6 @@
-/* yaosp C library
+/* utimes function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,17 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _UTIME_H_
-#define _UTIME_H_
+#include <errno.h>
+#include <utime.h>
 
-#include <time.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-struct utimbuf {
-    time_t actime; /* access time */
-    time_t modtime; /* modification time */
-};
+int utimes( const char* filename, const timeval_t times[2] ) {
+    int error;
 
-int utime( const char* filename, const struct utimbuf* times );
-int utimes( const char* filename, const timeval_t times[2] );
+    error = syscall2( SYS_time, ( int )filename, ( int ) times  );
 
-#endif // _UTIME_H_
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
+}

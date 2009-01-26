@@ -66,7 +66,9 @@ static system_call_entry_t system_call_table[] = {
     { "create_region", sys_create_region, 0 },
     { "delete_region", sys_delete_region, 0 },
     { "getpid", sys_getpid, 0 },
-    { "load_module", sys_load_module, 0 }
+    { "load_module", sys_load_module, 0 },
+    { "utime", sys_utime, 0 },
+    { "utimes", sys_utimes, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {
