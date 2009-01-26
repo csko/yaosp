@@ -64,6 +64,15 @@ int init_smp_late( void ) {
     int i;
     thread_id id;
 
+    /* If this is not an SMP system the processor_count won't be
+       increased so we just fix the value here manually. */
+
+    if ( processor_count == 0 ) {
+        processor_count = 1;
+    }
+
+    /* Create the idle thread for present processors */
+
     for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
         if ( !processor_table[ i ].present ) {
             continue;
