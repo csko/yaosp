@@ -21,7 +21,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <target name="get_source">
-        <httpget address="http://www.python.org/ftp/python/2.5.4/Python-2.5.4.tar.bz2" to="python-2.5.4.tar.bz2"/>
+        <httpget address="http://www.python.org/ftp/python/2.5.4/Python-2.5.4.tar.bz2"
+                 to="python-2.5.4.tar.bz2"
+                 md5="394a5f56a5ce811fb0f023197ec0833e"/>
 
         <echo>Extracting python source</echo>
 

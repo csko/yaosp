@@ -127,6 +127,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/ungetc.c</item>
         <item>src/stdio/clearerr.c</item>
         <item>src/stdio/fopen.c</item>
+        <item>src/stdio/fdopen.c</item>
         <item>src/stdio/fclose.c</item>
         <item>src/stdio/putc.c</item>
         <item>src/stdio/setvbuf.c</item>

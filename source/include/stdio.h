@@ -63,6 +63,7 @@ extern FILE* stdout;
 extern FILE* stderr;
 
 FILE* fopen( const char* path, const char* mode );
+FILE* fdopen( int fd, const char* mode );
 int fclose( FILE* stream );
 int feof( FILE* stream );
 int ferror( FILE* stream );
