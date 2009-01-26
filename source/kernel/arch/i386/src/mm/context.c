@@ -85,5 +85,5 @@ int arch_clone_memory_region(
         error = clone_user_region( old_arch_context, old_region, new_arch_context, new_region );
     }
 
-    return 0;
+    return error;
 }
