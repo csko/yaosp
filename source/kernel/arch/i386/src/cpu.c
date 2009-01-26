@@ -39,6 +39,8 @@ i386_feature_t i386_features[] = {
     { 0, "" }
 };
 
+extern uint32_t _kernel_stack_top;
+
 static inline void cpuid( uint32_t reg, register_t* data ) {
     __asm__ __volatile__(
         "cpuid\n"
@@ -70,7 +72,7 @@ int detect_cpu( void ) {
     /* Clear the processor structures */
 
     memset( processor_table, 0, sizeof( cpu_t ) * MAX_CPU_COUNT );
-    //memset( arch_processor_table, 0, sizeof( i386_cpu_t ) * MAX_CPU_COUNT );
+    memset( arch_processor_table, 0, sizeof( i386_cpu_t ) * MAX_CPU_COUNT );
 
     if ( !cpuid_supported() ) {
         return -EINVAL;
@@ -152,7 +154,28 @@ int detect_cpu( void ) {
 
     kprintf( "\n" );
 
-    /* TODO: Later move this to the SMP code */
+    /* Setup TSS for all possible CPU */
+
+    for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
+        tss_t* tss = &arch_processor_table[ i ].tss;
+
+        memset( tss, 0, sizeof( tss_t ) );
+
+        tss->cs = KERNEL_CS;
+        tss->ds = KERNEL_DS;
+        tss->es = KERNEL_DS;
+        tss->fs = KERNEL_DS;
+        tss->eflags = 0x203246;
+        tss->ss0 = KERNEL_DS;
+        tss->esp0 = ( register_t )&_kernel_stack_top;
+        tss->io_bitmap = 104;
+
+        gdt_set_descriptor_base( ( GDT_ENTRIES + i ) * 8, ( uint32_t )tss );
+        gdt_set_descriptor_limit( ( GDT_ENTRIES + i ) * 8, sizeof( tss_t ) );
+        gdt_set_descriptor_access( ( GDT_ENTRIES + i ) * 8, 0x89 );
+    }
+
+    /* Load the TR register on the boot processor */
 
     __asm__ __volatile__(
         "ltr %%ax\n"
