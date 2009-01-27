@@ -116,8 +116,7 @@ region_id do_create_region(
     /* Do some sanity checking */
 
     if ( ( size == 0 ) ||
-         ( ( size % PAGE_SIZE ) != 0 ) ||
-         ( ( ( flags & REGION_KERNEL ) != 0 ) && ( alloc_method == ALLOC_LAZY ) ) ) {
+         ( ( size % PAGE_SIZE ) != 0 ) ) {
         return -EINVAL;
     }
 
