@@ -197,6 +197,8 @@ region_id create_region(
         return -EINVAL;
     }
 
+    flags &= ( REGION_READ | REGION_WRITE | REGION_KERNEL );
+
     LOCK( region_lock );
 
     region = do_create_region( name, size, flags, alloc_method, _address );
