@@ -169,7 +169,6 @@ int sys_mkdir( const char* path, int permissions );
 int sys_mount( const char* device, const char* dir, const char* filesystem );
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 int sys_utime( const char* filename, const struct utimbuf* times );
-int sys_utimes( const char* filename, const timeval_t times[2] );
 
 int init_vfs( void );
 

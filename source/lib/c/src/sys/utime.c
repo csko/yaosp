@@ -25,7 +25,7 @@
 int utime( const char* filename, const struct utimbuf* times ) {
     int error;
 
-    error = syscall2( SYS_time, ( int )filename, ( int ) times  );
+    error = syscall2( SYS_utime, ( int )filename, ( int )times  );
 
     if ( error < 0 ) {
         errno = -error;

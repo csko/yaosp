@@ -1,6 +1,6 @@
 /* utimes function
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,14 +23,10 @@
 #include <yaosp/syscall_table.h>
 
 int utimes( const char* filename, const timeval_t times[2] ) {
-    int error;
+    struct utimbuf tmp;
 
-    error = syscall2( SYS_time, ( int )filename, ( int ) times  );
+    tmp.actime = ( time_t )times[ 0 ].tv_sec * 1000000 + ( time_t )times[ 0 ].tv_usec;
+    tmp.modtime = ( time_t )times[ 1 ].tv_sec * 1000000 + ( time_t )times[ 1 ].tv_usec;
 
-    if ( error < 0 ) {
-        errno = -error;
-        return -1;
-    }
-
-    return 0;
+    return utime( filename, &tmp );
 }
