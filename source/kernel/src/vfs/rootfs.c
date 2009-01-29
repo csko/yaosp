@@ -403,6 +403,8 @@ int init_root_filesystem( void ) {
         return -EINVAL;
     }
 
+    atomic_inc( &kernel_io_context.root_directory->ref_count );
+
     kernel_io_context.current_directory = kernel_io_context.root_directory;
 
     return 0;

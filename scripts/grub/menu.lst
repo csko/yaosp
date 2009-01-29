@@ -2,7 +2,6 @@ title yaOSp
 kernel /system/kernel
 module /system/module/bus/pci
 module /system/module/disk/pata
-module /system/module/disk/ramdisk
 module /system/module/filesystem/iso9660
 module /system/module/input/ps2kbd
 module /system/module/char/terminal
