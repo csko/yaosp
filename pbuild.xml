@@ -55,6 +55,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="scripts/grub/menu.lst" to="build/boot/grub/menu.lst"/>
         <copy from="scripts/grub/stage2_eltorito" to="build/boot/grub/stage2_eltorito"/>
 
+        <echo>Creating bootable ISO9660 CD-ROM image</echo>
+        <echo>-> yaosp.iso</echo>
         <exec executable="mkisofs">
             <arg>-R</arg>
             <arg>-l</arg>
@@ -64,6 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <arg>4</arg>
             <arg>-boot-info-table</arg>
             <arg>-no-emul-boot</arg>
+            <arg>-quiet</arg>
             <arg>-o</arg>
             <arg>yaosp.iso</arg>
             <arg>build</arg>

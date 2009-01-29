@@ -25,8 +25,10 @@
 int utimes( const char* filename, const timeval_t times[2] ) {
     struct utimbuf tmp;
 
-    tmp.actime = ( time_t )times[ 0 ].tv_sec * 1000000 + ( time_t )times[ 0 ].tv_usec;
-    tmp.modtime = ( time_t )times[ 1 ].tv_sec * 1000000 + ( time_t )times[ 1 ].tv_usec;
+    /* NOTE: no microsecond precision */
+    tmp.actime = times[ 0 ].tv_sec;
+    tmp.modtime = times[ 1 ].tv_sec;
 
+    /* This is a wrapper around utime() */
     return utime( filename, &tmp );
 }
