@@ -261,56 +261,6 @@ int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtu
     return 0;
 }
 
-int clone_kernel_region(
-    i386_memory_context_t* old_arch_context,
-    region_t* old_region,
-    i386_memory_context_t* new_arch_context,
-    region_t* new_region
-) {
-    int error;
-    uint32_t i;
-    uint32_t count;
-    uint32_t pt_index;
-    uint32_t pd_index;
-    register uint32_t* old_pt;
-    register uint32_t* new_pt;
-
-    error = map_region_page_tables(
-        new_arch_context,
-        new_region->start,
-        new_region->size,
-        true
-    );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    count = old_region->size / PAGE_SIZE;
-    pd_index = old_region->start >> PGDIR_SHIFT;
-    pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
-    old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
-    new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
-
-    for ( i = 0; i < count; i++ ) {
-        new_pt[ pt_index ] = old_pt[ pt_index ];
-
-        if ( pt_index == 1023 ) {
-            pt_index = 0;
-            pd_index++;
-
-            old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
-            new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
-        } else {
-            pt_index++;
-        }
-    }
-
-    new_region->flags |= REGION_REMAPPED;
-
-    return 0;
-}
-
 static int clone_user_region_pages( 
     i386_memory_context_t* old_arch_context,
     region_t* old_region,

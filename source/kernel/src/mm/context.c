@@ -194,7 +194,7 @@ bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t si
 
     ptr_t remaining_size;
 
-    if ( context->regions > 0 ) {
+    if ( context->region_count > 0 ) {
         region_t* last_region;
 
         last_region = context->regions[ context->region_count - 1 ];
@@ -277,6 +277,8 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
 
     LOCK( region_lock );
 
+    arch_clone_memory_context( old_context, new_context );
+
     /* Go throught regions and clone each one */
 
     for ( i = 0; i < old_context->region_count; i++ ) {
@@ -284,6 +286,12 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
         region_t* new_region;
 
         region = old_context->regions[ i ];
+
+        /* Don't clone kernel regions */
+
+        if ( region->flags & REGION_KERNEL ) {
+            continue;
+        }
 
         new_region = allocate_region( region->name );
 
@@ -324,30 +332,16 @@ error:
 
 int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
     int i;
-    int new_size;
     region_t* region;
-
-    i = 0;
 
     LOCK( region_lock );
 
-    /* If we have to delete the user regions only first we skip
-       the kernel regions. */
-
-    if ( user_only ) {
-        for ( ; i < context->region_count; i++ ) {
-            if ( ( context->regions[ i ]->flags & REGION_KERNEL ) == 0 ) {
-                break;
-            }
-        }
-    }
-
-    new_size = i;
-
     /* Delete the requested regions */
 
-    for ( ; i < context->region_count; i++ ) {
+    for ( i = 0; i < context->region_count; i++ ) {
         region = context->regions[ i ];
+
+        ASSERT( ( region->flags & REGION_KERNEL ) == 0 );
 
         arch_delete_region_pages( context, region );
         hashtable_remove( &region_table, ( const void* )region->id );
@@ -358,7 +352,7 @@ int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
 
     /* Set the new size of memory regions in the context */
 
-    context->region_count = new_size;
+    context->region_count = 0;
 
     UNLOCK( region_lock );
 

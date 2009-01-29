@@ -66,6 +66,22 @@ int arch_destroy_memory_context( memory_context_t* context ) {
     return 0;
 }
 
+int arch_clone_memory_context( memory_context_t* old_context, memory_context_t* new_context ) {
+    i386_memory_context_t* old_arch_context;
+    i386_memory_context_t* new_arch_context;
+
+    old_arch_context = ( i386_memory_context_t* )old_context->arch_data;
+    new_arch_context = ( i386_memory_context_t* )new_context->arch_data;
+
+    memcpy(
+        new_arch_context->page_directory,
+        old_arch_context->page_directory,
+        FIRST_USER_ADDRESS / PGDIR_SIZE * sizeof( uint32_t )
+    );
+
+    return 0;
+}
+
 int arch_clone_memory_region(
     memory_context_t* old_context,
     region_t* old_region,
@@ -80,7 +96,7 @@ int arch_clone_memory_region(
     new_arch_context = ( i386_memory_context_t* )new_context->arch_data;
 
     if ( old_region->flags & REGION_KERNEL ) {
-        error = clone_kernel_region( old_arch_context, old_region, new_arch_context, new_region );
+        error = 0;
     } else {
         error = clone_user_region( old_arch_context, old_region, new_arch_context, new_region );
     }
