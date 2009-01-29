@@ -50,7 +50,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     thread = ( thread_t* )kmalloc( sizeof( thread_t ) );
 
     if ( thread == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     memset( thread, 0, sizeof( thread_t ) );
@@ -58,17 +58,14 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     thread->name = strdup( name );
 
     if ( thread->name == NULL ) {
-        kfree( thread );
-        return NULL;
+        goto error2;
     }
 
     thread->kernel_stack_pages = kernel_stack_pages;
-    thread->kernel_stack = ( register_t* )alloc_pages( kernel_stack_pages );
+    thread->kernel_stack = ( void* )alloc_pages( kernel_stack_pages );
 
     if ( thread->kernel_stack == NULL ) {
-        kfree( thread->name );
-        kfree( thread );
-        return NULL;
+        goto error3;
     }
 
     thread->kernel_stack_end = ( uint8_t* )thread->kernel_stack + ( kernel_stack_pages * PAGE_SIZE );
@@ -76,10 +73,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     error = arch_allocate_thread( thread );
 
     if ( error < 0 ) {
-        free_pages( thread->kernel_stack, kernel_stack_pages );
-        kfree( thread->name );
-        kfree( thread );
-        return NULL;
+        goto error4;
     }
 
     thread->id = -1;
@@ -94,6 +88,18 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     reset_thread_quantum( thread );
 
     return thread;
+
+error4:
+    free_pages( thread->kernel_stack, kernel_stack_pages );
+
+error3:
+    kfree( thread->name );
+
+error2:
+    kfree( thread );
+
+error1:
+    return NULL;
 }
 
 void destroy_thread( thread_t* thread ) {

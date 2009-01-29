@@ -190,6 +190,8 @@ static int execve( char* path, char** argv, char** envp ) {
 
     memory_context_delete_regions( thread->process->memory_context, true );
 
+    thread->process->heap_region = -1;
+
     /* Load the executable with the selected loader */
 
     error = loader->load( fd );

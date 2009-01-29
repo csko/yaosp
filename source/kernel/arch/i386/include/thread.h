@@ -1,6 +1,6 @@
 /* Architecture specific thread functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -31,7 +31,6 @@ enum {
 typedef struct i386_thread {
     register_t esp;
     uint32_t flags;
-    void* fpu_state_base;
     fpu_state_t* fpu_state;
 } i386_thread_t;
 

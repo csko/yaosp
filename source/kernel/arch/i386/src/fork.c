@@ -50,8 +50,7 @@ int arch_do_fork( thread_t* old_thread, thread_t* new_thread ) {
 
     /* Clone the registers on the stack */
 
-    register_t* stack = ( register_t* )( ( uint8_t* )new_thread->kernel_stack + KERNEL_STACK_PAGES * PAGE_SIZE );
-    new_regs = ( registers_t* )( ( uint8_t* )stack - sizeof( registers_t ) );
+    new_regs = ( registers_t* )( ( uint8_t* )new_thread->kernel_stack_end - sizeof( registers_t ) );
 
     memcpy( new_regs, old_regs, sizeof( registers_t ) );
 
