@@ -34,7 +34,7 @@ static char* argv0;
 void print_usage(int status){
 
     if( status != EXIT_SUCCESS ){ /* option error */
-        printf("Try `%s --help' for more information.\n", argv0);
+        fprintf(stderr, "Try `%s --help' for more information.\n", argv0);
     }else{ /* --help */
         printf("Usage: %s [OPTION]... [+FORMAT]\n\
   or:  %s [-u|--utc|--universal] [MMDDhhmm[[CC]YY][.ss]]\n", argv0, argv0);
@@ -51,7 +51,8 @@ void print_usage(int status){
                             Date and time components are separated by\n\
                             a single space: 2006-08-07 12:34:56-06:00\n\
   -s, --set=STRING          set time described by STRING\n\
-  -u, --utc, --universal    print or set Coordinated Universal Time\n");
+  -u, --utc, --universal    print or set Coordinated Universal Time\n\
+  -h, --help                display this help and exit\n");
     }
     exit(status);
 }
@@ -95,7 +96,7 @@ static struct option long_options[] = {
     {"uct", no_argument, NULL, 'u'},
     {"universal", no_argument, NULL, 'u'},
     {"help", no_argument, NULL, 'h'},
-    {"version", no_argument, NULL, 'v'},
+/*    {"version", no_argument, NULL, 'v'}, */
     {NULL, 0, NULL, 0}
 };
 
@@ -188,7 +189,7 @@ int main( int argc, char* argv[] ) {
             case 'u':
                 break;
             case 'h':
-            case 'v':
+/*            case 'v':*/
                 print_usage(EXIT_SUCCESS);
                 break;
             default:

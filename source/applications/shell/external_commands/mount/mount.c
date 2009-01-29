@@ -1,6 +1,6 @@
 /* mount shell command
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,18 +20,16 @@
 #include <stdlib.h>
 #include <sys/mount.h>
 
-char* argv0;
-
 int main( int argc, char** argv ) {
     int error;
 
-    argv0 = argv[ 0 ];
-
     if ( argc < 4 ) {
-        printf( "%s: device path filesystem\n", argv0 );
+        fprintf( stderr, "usage: %s: device path filesystem\n", argv[ 0 ] );
 
         return EXIT_FAILURE;
     }
+
+    /* TODO: Check if the mount point exists and is a directory */
 
     error = mount(
         argv[ 1 ],
@@ -42,7 +40,7 @@ int main( int argc, char** argv ) {
     );
 
     if ( error < 0 ) {
-        printf( "%s: Failed to mount %s to %s\n", argv0, argv[ 1 ], argv[ 2 ] );
+        printf( "%s: Failed to mount %s to %s\n", argv[ 0 ], argv[ 1 ], argv[ 2 ] );
 
         return EXIT_FAILURE;
     }
