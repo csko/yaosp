@@ -32,7 +32,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="clean_iso"/>
     </target>
 
-<!-- TODO: Make each module's pbuild.xml create and clean up these directories -->
     <target name="prepare_build" type="private">
         <mkdir>build</mkdir>
         <mkdir>build/boot</mkdir>
@@ -57,6 +56,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <echo>Creating bootable ISO9660 CD-ROM image</echo>
         <echo>-> yaosp.iso</echo>
+
         <exec executable="mkisofs">
             <arg>-R</arg>
             <arg>-l</arg>

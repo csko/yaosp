@@ -139,7 +139,8 @@ static int execve( char* path, char** argv, char** envp ) {
     fd = open( path, 0 );
 
     if ( fd < 0 ) {
-        return fd;
+        error = fd;
+        goto _error1;
     }
 
     /* Find the proper loader for it */
@@ -147,8 +148,8 @@ static int execve( char* path, char** argv, char** envp ) {
     loader = find_application_loader( fd );
 
     if ( loader == NULL ) {
-        close( fd );
-        return -ENOEXEC;
+        error = -EINVAL;
+        goto _error2;
     }
 
     thread = current_thread();
@@ -158,16 +159,13 @@ static int execve( char* path, char** argv, char** envp ) {
     error = clone_param_array( argv, &cloned_argv, &argc );
 
     if ( error < 0 ) {
-        close( fd );
-        return error;
+        goto _error2;
     }
 
     error = clone_param_array( envp, &cloned_envv, &envc );
 
     if ( error < 0 ) {
-        /* TODO: free cloned argv */
-        close( fd );
-        return error;
+        goto _error3;
     }
 
     /* Rename the process and the thread */
@@ -199,7 +197,7 @@ static int execve( char* path, char** argv, char** envp ) {
     close( fd );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     /* Create stack for the userspace thread */
@@ -213,7 +211,7 @@ static int execve( char* path, char** argv, char** envp ) {
     );
 
     if ( thread->user_stack_region < 0 ) {
-        return thread->user_stack_region;
+        goto error2;
     }
 
     /* Copy argv and envp item values to the user */
@@ -221,14 +219,13 @@ static int execve( char* path, char** argv, char** envp ) {
     user_argv = ( char** )kmalloc( sizeof( char* ) * ( argc + 1 ) );
 
     if ( user_argv == NULL ) {
-        return -ENOMEM;
+        goto error3;
     }
 
     user_envv = ( char** )kmalloc( sizeof( char* ) * ( envc + 1 ) );
 
     if ( user_envv == NULL ) {
-        kfree( user_argv );
-        return -ENOMEM;
+        goto error4;
     }
 
     stack = ( uint8_t* )stack_address;
@@ -272,9 +269,44 @@ static int execve( char* path, char** argv, char** envp ) {
     error = loader->execute();
 
     if ( error < 0 ) {
-        /* TODO: unload the executable */
-        return error;
+        /* NOTE: We can jump to the error3 label here because kfree() has been
+                 called on user_argv and user_envv before. */
+
+        goto error3;
     }
+
+    return 0;
+
+/* Cleanup process before the memory context is destroyed */
+
+_error3:
+    free_param_array( cloned_argv, argc );
+
+_error2:
+    close( fd );
+
+_error1:
+    return error;
+
+/* Cleanup process after the memory context is destroyed */
+
+error4:
+    kfree( user_argv );
+
+error3:
+    delete_region( thread->user_stack_region );
+
+error2:
+    /* TODO: destroy loaded stuff */
+
+error1:
+    thread->user_stack_region = -1;
+
+    kprintf( "Failed to execute %s.\n", thread->process->name );
+
+    thread_exit( 0 );
+
+    /* This is just here to keep GCC happy, but never reached. */
 
     return 0;
 }
