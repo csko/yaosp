@@ -1,6 +1,6 @@
 /* Device file system
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include <semaphore.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
@@ -27,6 +28,7 @@
 
 static ino_t devfs_inode_counter = 0;
 static hashtable_t devfs_node_table;
+static semaphore_id devfs_lock;
 
 static devfs_node_t* devfs_root_node = NULL;
 
@@ -39,7 +41,7 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
     node = ( devfs_node_t* )kmalloc( sizeof( devfs_node_t ) );
 
     if ( node == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     /* Initialize the node */
@@ -51,8 +53,7 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
     }
 
     if ( node->name == NULL ) {
-        kfree( node );
-        return NULL;
+        goto error2;
     }
 
     node->is_directory = is_directory;
@@ -61,11 +62,6 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
     node->first_child = NULL;
     node->calls = NULL;
     node->atime = node->mtime = node->ctime = time( NULL );
-
-    if ( parent != NULL ) {
-        node->next_sibling = parent->first_child;
-        parent->first_child = node;
-    }
 
     /* Insert to the node table */
 
@@ -80,12 +76,24 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
     error = hashtable_add( &devfs_node_table, ( hashitem_t* )node );
 
     if ( error < 0 ) {
-        kfree( node->name );
-        kfree( node );
-        return NULL;
+        goto error3;
+    }
+
+    if ( parent != NULL ) {
+        node->next_sibling = parent->first_child;
+        parent->first_child = node;
     }
 
     return node;
+
+error3:
+    kfree( node->name );
+
+error2:
+    kfree( node );
+
+error1:
+    return NULL;
 }
 
 static int devfs_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
@@ -103,7 +111,11 @@ static int devfs_mount( const char* device, uint32_t flags, void** fs_cookie, in
 static int devfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     devfs_node_t* node;
 
+    LOCK( devfs_lock );
+
     node = ( devfs_node_t* )hashtable_get( &devfs_node_table, ( const void* )&inode_num );
+
+    UNLOCK( devfs_lock );
 
     if ( node == NULL ) {
         return -ENOENT;
@@ -118,7 +130,8 @@ static int devfs_write_inode( void* fs_cookie, void* node ) {
     return 0;
 }
 
-static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_len, ino_t* inode_num ) {
+static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_len, ino_t* inode_num ) {
+    int error = 0;
     devfs_node_t* node;
     devfs_node_t* parent;
 
@@ -128,12 +141,14 @@ static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name,
 
     if ( ( name_len == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
         if ( parent->parent == NULL ) {
-            return -EINVAL;
+            error = -EINVAL;
+
+            goto out;
         }
 
         *inode_num = parent->parent->inode_number;
 
-        return 0;
+        goto out;
     }
 
     node = parent->first_child;
@@ -143,13 +158,28 @@ static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name,
              ( strncmp( node->name, name, name_len ) == 0 ) ) {
             *inode_num = node->inode_number;
 
-            return 0;
+            goto out;
         }
 
         node = node->next_sibling;
     }
 
-    return -ENOENT;
+    error = -ENOENT;
+
+out:
+    return error;
+}
+
+static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_len, ino_t* inode_num ) {
+    int error;
+
+    LOCK( devfs_lock );
+
+    error = devfs_do_lookup_inode( fs_cookie, _parent, name, name_len, inode_num );
+
+    UNLOCK( devfs_lock );
+
+    return error;
 }
 
 static int devfs_open_directory( devfs_node_t* node, int mode, void** cookie ) {
@@ -259,6 +289,8 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     node = ( devfs_node_t* )_node;
 
+    LOCK( devfs_lock );
+
     stat->st_ino = node->inode_number;
     stat->st_mode = 0;
     stat->st_size = 0;
@@ -270,6 +302,8 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
         stat->st_mode |= S_IFDIR;
     }
 
+    UNLOCK( devfs_lock );
+
     return 0;
 }
 static int devfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, uint32_t mask ) {
@@ -277,13 +311,17 @@ static int devfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, ui
 
     node = ( devfs_node_t* )_node;
 
-    if(mask & WSTAT_MTIME){
+    LOCK( devfs_lock );
+
+    if ( mask & WSTAT_MTIME ) {
         node->mtime = stat->st_mtime;
     }
 
-    if(mask & WSTAT_CTIME){
+    if ( mask & WSTAT_CTIME ) {
         node->ctime = stat->st_ctime;
     }
+
+    UNLOCK( devfs_lock );
 
     return 0;
 }
@@ -302,6 +340,8 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
 
     cookie = ( devfs_dir_cookie_t* )file_cookie;
 
+    LOCK( devfs_lock );
+
     child = node->first_child;
     current = 0;
 
@@ -311,6 +351,8 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
             strncpy( entry->name, child->name, NAME_MAX );
             entry->name[ NAME_MAX ] = 0;
 
+            UNLOCK( devfs_lock );
+
             cookie->position++;
 
             return 1;
@@ -319,6 +361,8 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
         current++;
         child = child->next_sibling;
     }
+
+    UNLOCK( devfs_lock );
 
     return 0;
 }
@@ -330,6 +374,8 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
     devfs_node_t* parent;
     devfs_node_t* node;
     ino_t dummy;
+
+    LOCK( devfs_lock );
 
     parent = devfs_root_node;
 
@@ -361,7 +407,8 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
             node = devfs_create_node( parent, path, length, true );
 
             if ( node == NULL ) {
-                return -ENOMEM;
+                error = -ENOMEM;
+                goto out;
             }
         }
 
@@ -374,26 +421,34 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
     node_length = strlen( path );
 
     if ( node_length == 0 ) {
-        return -EINVAL;
+        error = -EINVAL;
+        goto out;
     }
 
-    error = devfs_lookup_inode( NULL, parent, path, node_length, &dummy );
+    error = devfs_do_lookup_inode( NULL, parent, path, node_length, &dummy );
 
     if ( error == 0 ) {
-        return -EEXIST;
+        error = -EEXIST;
+        goto out;
     }
 
     node = devfs_create_node( parent, path, node_length, false );
 
     if ( node == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto out;
     }
 
     node->calls = calls;
     node->cookie = cookie;
     node->atime = node->mtime = node->ctime = time( NULL );
 
-    return 0;
+    error = 0;
+
+out:
+    UNLOCK( devfs_lock );
+
+    return error;
 }
 
 static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_len, int permissions ) {
@@ -402,18 +457,22 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
     devfs_node_t* node;
     devfs_node_t* new_node;
 
+    LOCK( devfs_lock );
+
     /* Check if this name already exists */
 
-    error = devfs_lookup_inode( fs_cookie, _node, name, name_len, &dummy );
+    error = devfs_do_lookup_inode( fs_cookie, _node, name, name_len, &dummy );
 
     if ( error == 0 ) {
-        return -EEXIST;
+        error = -EEXIST;
+        goto out;
     }
 
     node = ( devfs_node_t* )_node;
 
     if ( !node->is_directory ) {
-        return -EINVAL;
+        error = -EINVAL;
+        goto out;
     }
 
     /* Create the new node */
@@ -426,10 +485,16 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
     );
 
     if ( new_node == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto out;
     }
 
-    return 0;
+    error = 0;
+
+out:
+    UNLOCK( devfs_lock );
+
+    return error;
 }
 
 static int devfs_add_select_request( void* fs_cookie, void* _node, void* file_cookie, select_request_t* request ) {
@@ -535,14 +600,30 @@ int init_devfs( void ) {
     );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
+    }
+
+    devfs_lock = create_semaphore( "devfs lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( devfs_lock < 0 ) {
+        error = devfs_lock;
+        goto error2;
     }
 
     error = register_filesystem( "devfs", &devfs_calls );
 
     if ( error < 0 ) {
-        return error;
+        goto error3;
     }
 
     return 0;
+
+error3:
+    delete_semaphore( devfs_lock );
+
+error2:
+    destroy_hashtable( &devfs_node_table );
+
+error1:
+    return error;
 }
