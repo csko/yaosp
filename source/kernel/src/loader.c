@@ -57,7 +57,7 @@ static int clone_param_array( char** old_array, char*** _new_array, int* new_siz
         for ( old_size = 0; old_array[ old_size ] != NULL; old_size++ ) ;
     }
 
-    new_array = ( char** )kmalloc( sizeof( char* ) * ( old_size + 1 ) );
+    new_array = ( char** )kmalloc( sizeof( char* ) * old_size );
 
     if ( new_array == NULL ) {
         return -ENOMEM;
@@ -80,8 +80,6 @@ static int clone_param_array( char** old_array, char*** _new_array, int* new_siz
             memcpy( new_array[ i ], old_array[ i ], len + 1 );
         }
     }
-
-    new_array[ old_size ] = NULL;
 
     *_new_array = new_array;
     *new_size = old_size;
@@ -172,9 +170,6 @@ static int execve( char* path, char** argv, char** envp ) {
         return error;
     }
 
-    user_argv = ( char** )kmalloc( sizeof( char* ) * ( argc + 1 ) );
-    user_envv = ( char** )kmalloc( sizeof( char* ) * ( envc + 1 ) );
-
     /* Rename the process and the thread */
 
     new_name = strrchr( path, '/' );
@@ -223,6 +218,19 @@ static int execve( char* path, char** argv, char** envp ) {
 
     /* Copy argv and envp item values to the user */
 
+    user_argv = ( char** )kmalloc( sizeof( char* ) * ( argc + 1 ) );
+
+    if ( user_argv == NULL ) {
+        return -ENOMEM;
+    }
+
+    user_envv = ( char** )kmalloc( sizeof( char* ) * ( envc + 1 ) );
+
+    if ( user_envv == NULL ) {
+        kfree( user_argv );
+        return -ENOMEM;
+    }
+
     stack = ( uint8_t* )stack_address;
     stack += ( USER_STACK_PAGES * PAGE_SIZE );
 
@@ -244,6 +252,9 @@ static int execve( char* path, char** argv, char** envp ) {
 
     memcpy( argv, user_argv, sizeof( char* ) * ( argc + 1 ) );
     memcpy( envp, user_envv, sizeof( char* ) * ( envc + 1 ) );
+
+    kfree( user_argv );
+    kfree( user_envv );
 
     /* Push argv and envp to the stack */
 
