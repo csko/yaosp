@@ -16,7 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
 #include <arch/gdt.h>
+
+#ifdef ENABLE_SMP
 
 .extern ap_stack_top
 .extern ap_running
@@ -94,3 +98,5 @@ smp_gdtr:
 2:
     hlt
     jmp 2b
+
+#endif /* ENABLE_SMP */

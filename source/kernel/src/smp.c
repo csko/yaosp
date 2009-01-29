@@ -27,7 +27,12 @@
 #include <arch/atomic.h>
 #include <arch/smp.h>
 
+#ifdef ENABLE_SMP
 int processor_count = 0;
+#else
+int processor_count = 1;
+#endif /* ENABLE_SMP */
+
 atomic_t active_processor_count = ATOMIC_INIT(0);
 cpu_t processor_table[ MAX_CPU_COUNT ];
 
@@ -55,7 +60,9 @@ int init_smp( void ) {
     processor_table[ 0 ].present = true;
     processor_table[ 0 ].running = true;
 
+#ifdef ENABLE_SMP
     processor_activated();
+#endif /* ENABLE_SMP */
 
     return 0;
 }
@@ -64,12 +71,14 @@ int init_smp_late( void ) {
     int i;
     thread_id id;
 
+#ifdef ENABLE_SMP
     /* If this is not an SMP system the processor_count won't be
        increased so we just fix the value here manually. */
 
     if ( processor_count == 0 ) {
         processor_count = 1;
     }
+#endif
 
     /* Create the idle thread for present processors */
 

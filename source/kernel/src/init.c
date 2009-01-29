@@ -22,6 +22,7 @@
 #include <bootmodule.h>
 #include <module.h>
 #include <loader.h>
+#include <config.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
@@ -102,7 +103,9 @@ static void mount_root_filesystem( void ) {
 int init_thread( void* arg ) {
     kprintf( "Init thread started!\n" );
 
+#ifdef ENABLE_SMP
     arch_boot_processors();
+#endif /* ENABLE_SMP */
 
     kprintf( "Initializing Virtual File System ... " );
     init_vfs();

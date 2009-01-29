@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_SMP
+
 #include <smp.h>
 #include <console.h>
 #include <thread.h>
@@ -266,3 +270,4 @@ int arch_boot_processors( void ) {
 
     return 0;
 }
+#endif /* ENABLE_SMP */

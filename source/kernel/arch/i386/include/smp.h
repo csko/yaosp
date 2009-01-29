@@ -19,6 +19,9 @@
 #ifndef _ARCH_SMP_H_
 #define _ARCH_SMP_H_
 
+#include <config.h>
+
+#ifdef ENABLE_SMP
 extern volatile uint32_t tlb_invalidate_mask;
 
 void processor_activated( void );
@@ -26,5 +29,9 @@ void processor_activated( void );
 void flush_tlb_global( void );
 
 int arch_boot_processors( void );
+#else
+#include <arch/cpu.h>
+#define flush_tlb_global flush_tlb
+#endif /* ENABLE_SMP */
 
 #endif // _ARCH_SMP_H_

@@ -1,6 +1,6 @@
 /* Configuration definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,10 +19,16 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+//#define ENABLE_SMP 1
+
 /**
  * The maximum number of CPUs supported.
  */
+#ifdef ENABLE_SMP
 #define MAX_CPU_COUNT 32
+#else
+#define MAX_CPU_COUNT 1
+#endif
 
 /**
  * The maximum number of boot modules supported.

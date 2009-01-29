@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
 #include <macros.h>
 #include <console.h>
 #include <errno.h>
@@ -55,6 +56,7 @@ static inline uint8_t mp_checksum( uint8_t* data, int length ) {
     return checksum;
 }
 
+#ifdef ENABLE_SMP
 static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
     uint8_t* data;
 
@@ -101,10 +103,9 @@ static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
             return 1;
     }
 }
+#endif /* ENABLE_SMP */
 
 static int mp_handle_cfg_table( void* address ) {
-    int i;
-    ptr_t entry_addr;
     mp_configuration_table_t* ct;
 
     ct = ( mp_configuration_table_t* )address;
@@ -123,6 +124,10 @@ static int mp_handle_cfg_table( void* address ) {
 
     local_apic_base = ct->local_apic_address;
 
+#ifdef ENABLE_SMP
+    int i;
+    ptr_t entry_addr;
+
     /* Parse the configuration table entries */
 
     entry_addr = ( ptr_t )ct + sizeof( mp_configuration_table_t );
@@ -130,23 +135,27 @@ static int mp_handle_cfg_table( void* address ) {
     for ( i = 0; i < ct->entry_count; i++ ) {
         entry_addr += mp_handle_cfg_table_entry( entry_addr );
     }
+#endif /* ENABLE_SMP */
 
     return 0;
 }
 
 static void mp_handle_default_cfg( void ) {
-    int i;
-
     /* Initialize the default configuration according to the
        Intel MultiProcessor specification, chapter #5 */
 
     local_apic_base = 0xFEE00000;
+
+#ifdef ENABLE_SMP
+    int i;
+
     processor_count = 2;
 
     for ( i = 0; i < 2; i++ ) {
         apic_to_logical_cpu_id[ i ] = i;
         arch_processor_table[ i ].apic_id = i;
     }
+#endif /* ENABLE_SMP */
 }
 
 static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_floating_pointer_t** _fp ) {

@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <console.h>
 #include <scheduler.h>
+#include <config.h>
 #include <mm/region.h>
 
 #include <arch/apic.h>
@@ -37,6 +38,7 @@ uint32_t local_apic_base = 0;
 region_id local_apic_region;
 uint32_t local_apic_address = ( uint32_t )&fake_lapic_id - LAPIC_ID;
 
+#ifdef ENABLE_SMP
 int apic_to_logical_cpu_id[ 256 ] = { 0, };
 
 int get_processor_id( void ) {
@@ -68,6 +70,15 @@ cpu_t* get_processor( void ) {
 
     return &processor_table[ logical_id ];
 }
+#else
+int get_processor_id( void ) {
+    return 0;
+}
+
+cpu_t* get_processor( void ) {
+    return &processor_table[ 0 ];
+}
+#endif /* ENABLE_SMP */
 
 void apic_timer_irq( registers_t* regs ) {
     apic_write( LAPIC_EOI, 0 );
@@ -83,6 +94,7 @@ void apic_spurious_irq( registers_t* regs ) {
 }
 
 void apic_tlb_flush_irq( registers_t* regs ) {
+#ifdef ENABLE_SMP
     int processor_id;
 
     processor_id = get_processor_id();
@@ -90,6 +102,7 @@ void apic_tlb_flush_irq( registers_t* regs ) {
     if ( atomic_test_and_clear( ( void* )&tlb_invalidate_mask, processor_id ) ) {
         flush_tlb();
     }
+#endif /* ENABLE_SMP */
 
     apic_write( LAPIC_EOI, 0 );
 }
