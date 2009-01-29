@@ -30,7 +30,7 @@
 
 static i386_memory_context_t i386_kernel_memory_context;
 
-extern int __text_end;
+extern int __ro_end;
 
 int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel ) {
     void* p;
@@ -485,7 +485,7 @@ static int create_initial_region( const char* name, uint32_t start, uint32_t siz
 
 int init_paging( void ) {
     int error;
-    uint32_t text_size;
+    uint32_t ro_size;
     register_t dummy;
     memory_context_t* context;
     i386_memory_context_t* arch_context;
@@ -513,8 +513,8 @@ int init_paging( void ) {
 
     /* Map the first 512 Mb to the kernel */
 
-    text_size = ( uint32_t )&__text_end - 0x100000;
-    ASSERT( ( text_size % PAGE_SIZE ) == 0 );
+    ro_size = ( uint32_t )&__ro_end - 0x100000;
+    ASSERT( ( ro_size % PAGE_SIZE ) == 0 );
 
     map_region_pages(
         arch_context,
@@ -528,15 +528,15 @@ int init_paging( void ) {
         arch_context,
         1 * 1024 * 1024,
         1 * 1024 * 1024,
-        text_size,
+        ro_size,
         true,
         false
     );
     map_region_pages(
         arch_context,
-        1 * 1024 * 1024 + text_size,
-        1 * 1024 * 1024 + text_size,
-        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + text_size ),
+        1 * 1024 * 1024 + ro_size,
+        1 * 1024 * 1024 + ro_size,
+        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + ro_size ),
         true,
         true
     );
@@ -547,7 +547,7 @@ int init_paging( void ) {
         return error;
     }
 
-    error = create_initial_region( "kernel_ro", 1 * 1024 * 1024, text_size, false );
+    error = create_initial_region( "kernel_ro", 1 * 1024 * 1024, ro_size, false );
 
     if ( error < 0 ) {
         return error;
@@ -555,8 +555,8 @@ int init_paging( void ) {
 
     error = create_initial_region(
         "kernel_rw",
-        1 * 1024 * 1024 + text_size,
-        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + text_size ),
+        1 * 1024 * 1024 + ro_size,
+        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + ro_size ),
         true
     );
 

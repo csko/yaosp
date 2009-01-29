@@ -7,23 +7,35 @@ SECTIONS {
     . = 0x100000;
 
     .text : {
-        *(.multiboot_header);
-        *(.text);
+        *(.multiboot_header)
+
+        *(.text)
+        *(.text.*)
+
         __smp_trampoline_start = .;
-        *(.smp_trampoline);
+        *(.smp_trampoline)
         __smp_trampoline_end = .;
     }
 
     . = ALIGN(0x1000);
-    __text_end = .;
+
+    .rodata : {
+        *(.rodata)
+        *(.rodata.*)
+    }
+
+    . = ALIGN(0x1000);
+    __ro_end = .;
 
     .data : {
-        *(.data);
+        *(.data)
+        *(.data.*)
     }
 
     .bss : {
         . = ALIGN(0x1000);
-        *(.bss);
+        *(.bss)
+        *(.bss.*)
     }
 
     . = ALIGN(0x1000);

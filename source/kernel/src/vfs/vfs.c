@@ -44,7 +44,7 @@ mount_point_t* create_mount_point(
     mount_point = ( mount_point_t* )kmalloc( sizeof( mount_point_t ) );
 
     if ( mount_point == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     /* Initialize the inode cache */
@@ -52,8 +52,7 @@ mount_point_t* create_mount_point(
     error = init_inode_cache( &mount_point->inode_cache, inode_cache_size, free_inodes, max_free_inodes );
 
     if ( error < 0 ) {
-        kfree( mount_point );
-        return NULL;
+        goto error2;
     }
 
     /* Initialize other members */
@@ -61,6 +60,12 @@ mount_point_t* create_mount_point(
     mount_point->fs_calls = fs_calls;
 
     return mount_point;
+
+error2:
+    kfree( mount_point );
+
+error1:
+    return NULL;
 }
 
 void delete_mount_point( mount_point_t* mount_point ) {
@@ -533,6 +538,8 @@ static int do_mkdir( bool kernel, const char* path, int permissions ) {
         error = -ENOSYS;
     }
 
+    put_inode( parent );
+
     return error;
 }
 
@@ -572,6 +579,7 @@ static int do_fchdir( bool kernel, int fd ) {
 
     UNLOCK( io_context->lock );
 
+    io_context_put_file( io_context, file );
     put_inode( tmp );
 
     return 0;
@@ -615,6 +623,8 @@ static int do_stat( bool kernel, const char* path, struct stat* stat ) {
         return error;
     }
 
+    memset( stat, 0, sizeof( struct stat ) );
+
     if ( inode->mount_point->fs_calls->read_stat == NULL ) {
         error = -ENOSYS;
     } else {
@@ -652,6 +662,8 @@ static int do_fstat( bool kernel, int fd, struct stat* stat ) {
     if ( file == NULL ) {
         return -EBADF;
     }
+
+    memset( stat, 0, sizeof( struct stat ) );
 
     if ( file->inode->mount_point->fs_calls->read_stat == NULL ) {
         error = -ENOSYS;
