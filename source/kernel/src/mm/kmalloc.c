@@ -171,6 +171,10 @@ block_found:
 
     spinunlock_enable( &kmalloc_lock );
 
+    if ( p != NULL ) {
+        memset( p, 0xAA, size );
+    }
+
     return p;
 }
 
@@ -196,6 +200,10 @@ void kfree( void* p ) {
     /* make the current chunk free */
 
     chunk->type = CHUNK_FREE;
+
+    /* destroy the previous data in this memory chunk */
+
+    memset( chunk + 1, 0xAA, chunk->size );
 
     /* merge with the previous chunk if it is free */
 

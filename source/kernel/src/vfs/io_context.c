@@ -68,7 +68,7 @@ int io_context_insert_file( io_context_t* io_context, file_t* file ) {
 }
 
 int io_context_insert_file_with_fd( io_context_t* io_context, file_t* file, int fd ) {
-    int error = 0;
+    int error;
 
     atomic_set( &file->ref_count, 1 );
 
@@ -76,9 +76,8 @@ int io_context_insert_file_with_fd( io_context_t* io_context, file_t* file, int 
 
     if ( hashtable_get( &io_context->file_table, ( const void* )fd ) != NULL ) {
         error = -EEXIST;
-    }
-
-    if ( error == 0 ) {
+    } else {
+        error = 0;
         file->fd = fd;
 
         hashtable_add( &io_context->file_table, ( hashitem_t* )file );
@@ -96,25 +95,32 @@ file_t* io_context_get_file( io_context_t* io_context, int fd ) {
 
     file = ( file_t* )hashtable_get( &io_context->file_table, ( const void* )fd );
 
-    UNLOCK( io_context->lock );
-
     if ( file != NULL ) {
         atomic_inc( &file->ref_count );
     }
+
+    UNLOCK( io_context->lock );
 
     return file;
 }
 
 void io_context_put_file( io_context_t* io_context, file_t* file ) {
+    bool do_delete = false;
+
     ASSERT( file != NULL );
 
+    LOCK( io_context->lock );
+
+    ASSERT( atomic_get( &file->ref_count ) > 0 );
+
     if ( atomic_dec_and_test( &file->ref_count ) ) {
-        LOCK( io_context->lock );
-
         hashtable_remove( &io_context->file_table, ( const void* )file->fd );
+        do_delete = true;
+    }
 
-        UNLOCK( io_context->lock );
+    UNLOCK( io_context->lock );
 
+    if ( do_delete ) {
         delete_file( file );
     }
 }
@@ -230,16 +236,16 @@ int init_io_context( io_context_t* io_context ) {
     return 0;
 }
 
-static int destroy_file_callback( hashitem_t* item, void* data ) {
-    delete_file( ( file_t* )item );
-
-    return 0;
-}
-
 void destroy_io_context( io_context_t* io_context ) {
+    file_t* file;
+
     /* Delete all files and the hashtable */
 
-    hashtable_iterate( &io_context->file_table, destroy_file_callback, NULL );
+    while ( ( file = ( file_t* )hashtable_get_first_item( &io_context->file_table ) ) != NULL ) {
+        hashtable_remove( &io_context->file_table, ( const void* )file->fd );
+        delete_file( file );
+    }
+
     destroy_hashtable( &io_context->file_table );
 
     /* Put the inodes in the I/O context */

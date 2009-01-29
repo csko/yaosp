@@ -232,6 +232,8 @@ static int do_close( bool kernel, int fd ) {
         return -EBADF;
     }
 
+    ASSERT( atomic_get( &file->ref_count ) >= 2 );
+
     io_context_put_file( io_context, file ); /* this is for io_contetx_get_file() */
     io_context_put_file( io_context, file ); /* this will close the file */
 
@@ -994,9 +996,9 @@ static int do_dup2( bool kernel, int old_fd, int new_fd ) {
     new_file->inode = old_file->inode;
     new_file->cookie = old_file->cookie;
 
-    io_context_put_file( io_context, old_file );
-
     atomic_inc( &new_file->inode->ref_count );
+
+    io_context_put_file( io_context, old_file );
 
     error = io_context_insert_file_with_fd( io_context, new_file, new_fd );
 

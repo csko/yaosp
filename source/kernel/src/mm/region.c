@@ -40,7 +40,7 @@ region_t* allocate_region( const char* name ) {
     region = ( region_t* )kmalloc( sizeof( region_t ) );
 
     if ( region == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     memset( region, 0, sizeof( region_t ) );
@@ -48,11 +48,16 @@ region_t* allocate_region( const char* name ) {
     region->name = strdup( name );
 
     if ( region->name == NULL ) {
-        kfree( region );
-        return NULL;
+        goto error2;
     }
 
     return region;
+
+error2:
+    kfree( region );
+
+error1:
+    return NULL;
 }
 
 void destroy_region( region_t* region ) {
@@ -76,7 +81,7 @@ int region_insert( memory_context_t* context, region_t* region ) {
     error = hashtable_add( &region_table, ( hashitem_t* )region );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     /* Insert it to the memory context */
@@ -84,11 +89,16 @@ int region_insert( memory_context_t* context, region_t* region ) {
     error = memory_context_insert_region( context, region );
 
     if ( error < 0 ) {
-        hashtable_remove( &region_table, ( const void* )region->id );
-        return error;
+        goto error2;
     }
 
     return 0;
+
+error2:
+    hashtable_remove( &region_table, ( const void* )region->id );
+
+error1:
+    return error;
 }
 
 int region_remove( memory_context_t* context, region_t* region ) {
@@ -162,9 +172,7 @@ region_id do_create_region(
     error = arch_create_region_pages( context, region );
 
     if ( error < 0 ) {
-        destroy_region( region );
-
-        return error;
+        goto error1;
     }
 
     /* Insert the new region to the memory context */
@@ -172,16 +180,20 @@ region_id do_create_region(
     error = region_insert( context, region );
 
     if ( error < 0 ) {
-        arch_delete_region_pages( context, region );
-
-        destroy_region( region );
-
-        return error;
+        goto error2;
     }
 
     *_address = ( void* )address;
 
     return region->id;
+
+error2:
+    arch_delete_region_pages( context, region );
+
+error1:
+    destroy_region( region );
+
+    return error;
 }
 
 region_id create_region(
@@ -192,6 +204,8 @@ region_id create_region(
     void** _address
 ) {
     region_id region;
+
+    /* Lazy page allocation is not allowed for kernel regions */
 
     if ( alloc_method == ALLOC_LAZY ) {
         return -EINVAL;
@@ -231,36 +245,44 @@ region_id sys_create_region(
 static int do_delete_region( region_id id, bool allow_kernel_region ) {
     region_t* region;
 
-    LOCK( region_lock );
-
     region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
 
     if ( region == NULL ) {
-        UNLOCK( region_lock );
-
         return -EINVAL;
     }
 
     if ( ( !allow_kernel_region ) && ( ( region->flags & REGION_KERNEL ) != 0 ) ) {
-        UNLOCK( region_lock );
-
         return -EPERM;
     }
 
     arch_delete_region_pages( region->context, region );
     region_remove( region->context, region );
 
-    UNLOCK( region_lock );
-
     return 0;
 }
 
 int delete_region( region_id id ) {
-    return do_delete_region( id, true );
+    int error;
+
+    LOCK( region_lock );
+
+    error = do_delete_region( id, true );
+
+    UNLOCK( region_lock );
+
+    return error;
 }
 
 int sys_delete_region( region_id id ) {
-    return do_delete_region( id, false );
+    int error;
+
+    LOCK( region_lock );
+
+    error = do_delete_region( id, false );
+
+    UNLOCK( region_lock );
+
+    return error;
 }
 
 int do_remap_region( region_id id, ptr_t address ) {

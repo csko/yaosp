@@ -127,6 +127,20 @@ hashitem_t* hashtable_get( hashtable_t* table, const void* key ) {
     return item;
 }
 
+hashitem_t* hashtable_get_first_item( hashtable_t* table ) {
+    uint32_t i;
+    hashitem_t* item = NULL;
+
+    for ( i = 0; i < table->size; i++ ) {
+        if ( table->items[ i ] != NULL ) {
+            item = table->items[ i ];
+            break;
+        }
+    }
+
+    return item;
+}
+
 int hashtable_remove( hashtable_t* table, const void* key ) {
     uint32_t hash;
     hashitem_t* prev;
