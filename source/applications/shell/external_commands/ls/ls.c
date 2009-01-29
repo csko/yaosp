@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 
 char* argv0 = NULL;
@@ -38,7 +39,7 @@ int do_ls( char* dirname ) {
     dir = opendir( dirname );
 
     if ( dir == NULL ) {
-        fprintf( stderr, "%s: cannot access %s: No such file or directory\n", argv0, dirname);
+        fprintf( stderr, "%s: cannot access %s: No such file or directory\n", argv0, dirname );
         return -1;
     }
 
@@ -74,21 +75,21 @@ int do_ls( char* dirname ) {
 
 int main( int argc, char** argv ) {
     int i;
-    int ret = 0;
+    int ret = EXIT_SUCCESS;
 
     if ( argc > 0 ) {
-        argv0 = argv[0];
+        argv0 = argv[ 0 ];
     }
 
-    if( argc > 1 ) {
-        for ( i = 1; i < argc; i++){
-            if( do_ls( argv[i] ) < 0 ){
-                ret = 1;
+    if ( argc > 1 ) {
+        for ( i = 1; i < argc; i++ ) {
+            if ( do_ls( argv[ i ] ) < 0 ) {
+                ret = EXIT_FAILURE;
             }
         }
     } else {
-        if( do_ls( "." ) < 0 ) {
-            ret = 1;
+        if ( do_ls( "." ) < 0 ) {
+            ret = EXIT_FAILURE;
         }
     }
 

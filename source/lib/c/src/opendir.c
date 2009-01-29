@@ -29,7 +29,7 @@ DIR* opendir( const char* name ) {
         return NULL;
     }
 
-    dir->fd = open( name, 0 /* O_RDONLY */ );
+    dir->fd = open( name, O_RDONLY );
 
     if ( dir->fd < 0 ) {
         free( dir );
