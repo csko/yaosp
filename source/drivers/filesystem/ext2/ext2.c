@@ -1,6 +1,6 @@
 /* ext2 filesystem driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -43,13 +43,33 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     }
 
     if ( pread( cookie->fd, &cookie->superblock, sizeof( ext2_superblock_t ), 1024 ) != sizeof( ext2_superblock_t ) ) {
+        kprintf( "ext2: Failed to read superblock\n" );
         error = -EIO;
         goto error3;
     }
 
     if ( cookie->superblock.magic != EXT2_MAGIC ) {
-        kprintf( "ext2: Invalid magic value: %x\n", cookie->superblock.magic );
+        error = -EINVAL;
+        kprintf( "ext2: Not a valid partition (magic value: %x)!\n", cookie->superblock.magic );
         goto error3;
+    }
+
+    if( cookie->superblock.state != EXT2_VALID_FS ) {
+        kprintf( "ext2: Partition is damaged or was not cleanly unmounted!\n" );
+        error = -EINVAL;
+        goto error3;
+    }
+
+    /* Mark the filesystem as in use and increment the mount counter */
+    /* TODO: only in r/w mode */
+    if( 0 ){
+        cookie->superblock.state = EXT2_ERROR_FS;
+        cookie->superblock.mnt_count++;
+        if( pwrite( cookie->fd, &cookie->superblock, sizeof( ext2_superblock_t ), 1024 ) != sizeof( ext2_superblock_t ) ){
+            kprintf( "ext2: Failed to write back superblock\n" );
+            error = -EIO;
+            goto error3;
+        }
     }
 
     return 0;
@@ -65,6 +85,8 @@ error1:
 }
 
 static int ext2_unmount( void* fs_cookie ) {
+    /* TODO: if r/w, read the superblock and write back it as it is not used anymore */
+
     return -ENOSYS;
 }
 

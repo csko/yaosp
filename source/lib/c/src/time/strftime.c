@@ -198,7 +198,7 @@ size_t strftime(char* s, size_t max, const char* format,
                         APPEND(tmp);
                         break;
                     case 's':
-                        snprintf(tmp, max, "%d", mktime((tm_t*) tm));
+                        snprintf(tmp, max, "%llu", mktime((tm_t*) tm));
                         APPEND(tmp);
                         break;
                     case 'S':

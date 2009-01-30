@@ -106,7 +106,7 @@ int main( int argc, char** argv ) {
             case 'm':
                 mode = check_mode(optarg);
                 if(mode < 0){
-                    fprintf(stderr, "mkdir: invalid mode `%s'", argv[0], optarg);
+                    fprintf(stderr, "%s: invalid mode `%s'", argv[0], optarg);
                     print_usage(EXIT_FAILURE);
                 }
                 break;
