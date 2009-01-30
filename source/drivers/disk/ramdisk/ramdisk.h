@@ -1,6 +1,6 @@
 /* RAM disk driver
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,13 +19,24 @@
 #ifndef _RAMDISK_H_
 #define _RAMDISK_H_
 
+#include <types.h>
+#include <lib/hashtable.h>
+
 typedef struct ramdisk_node {
+    hashitem_t hash;
+
     int id;
-    size_t size;
+    uint64_t size;
     void* data;
 } ramdisk_node_t;
 
-static int create_ramdisk_node(ramdisk_node_t* ramdisk);
-static int destroy_ramdisk_node(ramdisk_node_t* ramdisk);
+typedef struct ramdisk_create_info {
+    uint64_t size;
+    char node_name[ 32 ];
+} ramdisk_create_info_t;
+
+ramdisk_node_t* create_ramdisk_node( uint64_t size );
+
+int init_ramdisk_control_device( void );
 
 #endif // _RAMDISK_H_

@@ -19,6 +19,17 @@
 #ifndef _SYS_IOCTL_H_
 #define _SYS_IOCTL_H_
 
+/* PS/2 driver ioctls */
+
+#define IOCTL_PS2KBD_TOGGLE_LEDS 0x00000001
+
+/* RAMDisk driver ioctls */
+
+#define IOCTL_RAMDISK_CREATE     0x00000100
+#define IOCTL_RAMDISK_DELETE     0x00000101
+#define IOCTL_RAMDISK_GET_COUNT  0x00000102
+#define IOCTL_RAMDISK_GET_LIST   0x00000103
+
 int ioctl( int fd, int request, ... );
 
 #endif // _SYS_IOCTL_H_

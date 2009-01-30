@@ -1,4 +1,4 @@
-/* Terminal driver
+/* RAM disk controller shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,18 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _CONTROL_H_
+#define _CONTROL_H_
 
-/* PS/2 driver ioctls */
+typedef struct ramdisk_create_info {
+    uint64_t size;
+    char node_name[ 32 ];
+} ramdisk_create_info_t;
 
-#define IOCTL_PS2KBD_TOGGLE_LEDS 0x00000001
-
-/* RAMDisk driver ioctls */
-
-#define IOCTL_RAMDISK_CREATE     0x00000100
-#define IOCTL_RAMDISK_DELETE     0x00000101
-#define IOCTL_RAMDISK_GET_COUNT  0x00000102
-#define IOCTL_RAMDISK_GET_LIST   0x00000103
-
-#endif // _IOCTL_H_
+#endif /* _CONTROL_H_ */
