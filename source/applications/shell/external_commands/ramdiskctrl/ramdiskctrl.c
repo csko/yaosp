@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 
 #include "control.h"
 
@@ -36,12 +37,14 @@ char* argv0;
 int ramdiskctrl_device;
 
 uint64_t size = 0;
+char* file = NULL;
 
-static char const short_options[] = "a:s:h";
+static char const short_options[] = "a:s:f:h";
 
 static struct option long_options[] = {
     { "action", required_argument, NULL, 'a' },
     { "size", required_argument, NULL, 's' },
+    { "file", required_argument, NULL, 'f' },
     { "help", no_argument, NULL, 'h' }
 };
 
@@ -52,9 +55,11 @@ static void print_usage( int status ) {
         printf( "Usage: %s [OPTION]\n", argv0 );
         printf( "  -a, --action=ACTION\n" );
         printf( "  -s, --size=SIZE\n" );
+        printf( "  -f, --file=FILE\n" );
         printf( "\n" );
         printf( "Creating a new ramdisk:\n" );
         printf( "  %s --action=create --size=1048576\n", argv0 );
+        printf( "  %s --action=create --file=a.img\n", argv0 );
     }
 
     exit( status );
@@ -66,9 +71,36 @@ static int ramdisk_do_create( void ) {
 
     /* Make sure size is valid */
 
-    if ( size == 0 ) {
-        fprintf( stderr, "%s: Size parameter is invalid/not specified!\n", argv0 );
-        return EXIT_FAILURE;
+    if ( file == NULL ) {
+        /* Create an empty ramdisk node with the given size */
+
+        if ( size == 0 ) {
+            fprintf( stderr, "%s: Size parameter is invalid/not specified!\n", argv0 );
+            return EXIT_FAILURE;
+        }
+
+        data.load_from_file = 0;
+    } else {
+        /* Create the ramdisk node from an existing file */
+
+        struct stat st;
+
+        if ( stat( file, &st ) != 0 ) {
+            fprintf( stderr, "%s: Failed to stat file: %s\n", argv0, file );
+            return EXIT_FAILURE;
+        }
+
+        if ( ( st.st_size == 0 ) || ( !S_ISREG( st.st_mode ) ) ) {
+            fprintf( stderr, "%s: Invalid file: %s\n", argv0, file );
+            return EXIT_FAILURE;
+        }
+
+        data.load_from_file = 1;
+
+        strncpy( data.image_file, file, 256 );
+        data.image_file[ 255 ] = 0;
+
+        size = st.st_size;
     }
 
     /* Setup the structure we need to create the new ramdisk node */
@@ -141,6 +173,10 @@ int main( int argc, char** argv ) {
 
             case 's' :
                 size = atoi( optarg );
+                break;
+
+            case 'f' :
+                file = optarg;
                 break;
 
             case 'h' :

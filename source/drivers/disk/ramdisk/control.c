@@ -26,7 +26,7 @@
 static int ramdisk_do_create( ramdisk_create_info_t* info ) {
     ramdisk_node_t* node;
 
-    node = create_ramdisk_node( info->size );
+    node = create_ramdisk_node( info );
 
     if ( node == NULL ) {
         return -1;

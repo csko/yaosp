@@ -19,7 +19,9 @@
 #include <console.h>
 #include <errno.h>
 #include <semaphore.h>
+#include <macros.h>
 #include <vfs/devfs.h>
+#include <vfs/vfs.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -85,14 +87,25 @@ static device_calls_t ramdisk_calls = {
     .remove_select_request = NULL
 };
 
-ramdisk_node_t* create_ramdisk_node( uint64_t size ) {
+ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info ) {
     int error;
+    uint64_t mod;
+    uint64_t aligned_size;
     char path[ 64 ];
     ramdisk_node_t* node;
 
-    if ( ( size % PAGE_SIZE ) != 0 ) {
+    /* Do some checks before starting to create the node */
+
+    if ( info->size == 0 ) {
         goto error1;
     }
+
+    /* Align the size to page size boundary */
+
+    mod = info->size % PAGE_SIZE;
+    aligned_size = info->size + ( PAGE_SIZE - mod );
+
+    ASSERT( ( aligned_size % PAGE_SIZE ) == 0 );
 
     node = ( ramdisk_node_t* )kmalloc( sizeof( ramdisk_node_t ) );
 
@@ -100,13 +113,13 @@ ramdisk_node_t* create_ramdisk_node( uint64_t size ) {
         goto error1;
     }
 
-    node->data = alloc_pages( size / PAGE_SIZE );
+    node->data = alloc_pages( aligned_size / PAGE_SIZE );
 
     if ( node->data == NULL ) {
         goto error2;
     }
 
-    node->size = size;
+    node->size = info->size;
 
     LOCK( ramdisk_lock );
 
@@ -130,7 +143,42 @@ ramdisk_node_t* create_ramdisk_node( uint64_t size ) {
         goto error3;
     }
 
+    /* Load an image file to the ramdisk (if requested) */
+
+    if ( info->load_from_file ) {
+        int fd;
+        int data_size;
+        struct stat st;
+        size_t to_read;
+
+        kprintf( "Loading ramdisk data from file: %s\n", info->image_file );
+
+        fd = open( info->image_file, O_RDONLY );
+
+        if ( fd < 0 ) {
+            goto error4;
+        }
+
+        if ( fstat( fd, &st ) != 0 ) {
+            close( fd );
+            goto error4;
+        }
+
+        to_read = MIN( info->size, st.st_size );
+
+        data_size = pread( fd, node->data, to_read, 0 );
+
+        close( fd );
+
+        if ( data_size != to_read ) {
+            goto error4;
+        }
+    }
+
     return node;
+
+error4:
+    /* TODO: destroy device node */
 
 error3:
     /* TODO */

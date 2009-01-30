@@ -32,10 +32,12 @@ typedef struct ramdisk_node {
 
 typedef struct ramdisk_create_info {
     uint64_t size;
+    int load_from_file;
+    char image_file[ 256 ];
     char node_name[ 32 ];
 } ramdisk_create_info_t;
 
-ramdisk_node_t* create_ramdisk_node( uint64_t size );
+ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info );
 
 int init_ramdisk_control_device( void );
 
