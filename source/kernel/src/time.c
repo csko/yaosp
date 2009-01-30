@@ -60,7 +60,7 @@ int sys_time( int* tloc ) {
         *ret = get_system_time() / 1000000;
     }
 
-    return ( int ) ret;
+    return ( int ) *ret;
 }
 
 int sys_get_system_time( time_t* _time ) {
