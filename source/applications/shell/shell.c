@@ -24,10 +24,26 @@
 #include <yaosp/debug.h>
 
 #include "command.h"
+#include "shell.h"
+
+builtin_command_t quit_command = {
+    .name = "quit",
+    .description = "exit from the shell",
+    .command = NULL
+};
+
+builtin_command_t exit_command = {
+    .name = "exit",
+    .description = "exit from the shell",
+    .command = NULL
+};
 
 static builtin_command_t* builtin_commands[] = {
     &cd_command,
     &pwd_command,
+    &help_command,
+    &quit_command,
+    &exit_command,
     NULL
 };
 
@@ -83,7 +99,13 @@ static char* get_line( void ) {
     return line_buf;
 }
 
-#define MAX_ARGV 32
+void shell_print_commands(){
+    int i;
+
+    for ( i = 0; builtin_commands[ i ] != NULL; i++ ) {
+        printf("%-15s %s\n", builtin_commands[ i ]->name, builtin_commands[ i ]->description);
+    }
+}
 
 int main( int argc, char** argv, char** envp ) {
     int i;

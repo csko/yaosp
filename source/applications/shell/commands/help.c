@@ -1,6 +1,6 @@
-/* Print working directory
+/* help command
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,23 +20,22 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "../shell.h"
 #include "../command.h"
 
-static int pwd_command_function( int argc, char** argv, char** envp ) {
-    char buffer[ 256 ];
+static int help_command_function( int argc, char** argv, char** envp ) {
 
-    if ( getcwd( buffer, sizeof( buffer ) ) == NULL ) {
-        printf( "%s: Failed to get CWD!\n", argv[ 0 ] );
-        return EXIT_FAILURE;
-    }
-
-    printf( "%s\n", buffer );
+    printf("yaOSp help\n");
+    printf("Internal shell commands:\n");
+    shell_print_commands();
+    /* TODO: Print all applications, possibly using ls or just listing the
+       application dir OR use an internal database */
 
     return EXIT_SUCCESS;
 }
 
-builtin_command_t pwd_command = {
-    .name = "pwd",
-    .description = "print the current working directory",
-    .command = pwd_command_function
+builtin_command_t help_command = {
+    .name = "help",
+    .description = "prints this help text",
+    .command = help_command_function
 };

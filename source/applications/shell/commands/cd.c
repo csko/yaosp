@@ -79,16 +79,17 @@ static int cd_command_function( int argc, char** argv, char** envp ) {
 
     close( fd );
 
-    return 0;
+    return EXIT_SUCCESS;
 
 error2:
     close( fd );
 
 error1:
-    return 1;
+    return EXIT_FAILURE;
 }
 
 builtin_command_t cd_command = {
     .name = "cd",
+    .description = "change the working directory",
     .command = cd_command_function
 };

@@ -23,10 +23,12 @@ typedef int command_function_t( int argc, char** argv, char** envp );
 
 typedef struct builtin_command {
     const char* name;
+    const char* description;
     command_function_t* command;
 } builtin_command_t;
 
 extern builtin_command_t cd_command;
 extern builtin_command_t pwd_command;
+extern builtin_command_t help_command;
 
 #endif // _COMMAND_H_

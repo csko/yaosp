@@ -53,15 +53,14 @@ const char* sday_names[ 7 ] = { "Sun", "Mon", "Tue",
                                 "Sat" };
 
 int sys_time( int* tloc ) {
-    int ret;
+    time_t* ret = ( time_t* ) tloc;
 
-    ret = ( int )( get_system_time() / 1000000 );
-
-    if(tloc != NULL) {
-        *tloc = ret;
+    /* NOTE: ret never actually is NULL */
+    if( ret != NULL ){
+        *ret = get_system_time() / 1000000;
     }
 
-    return ret;
+    return ( int ) ret;
 }
 
 int sys_get_system_time( time_t* _time ) {

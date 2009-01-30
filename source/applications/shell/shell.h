@@ -1,6 +1,6 @@
-/* Print working directory
+/* Shell functions
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,27 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
+#ifndef _SHELL_H_
+#define _SHELL_H_
 
-#include "../command.h"
+#include "command.h"
 
-static int pwd_command_function( int argc, char** argv, char** envp ) {
-    char buffer[ 256 ];
+#define MAX_ARGV 32
 
-    if ( getcwd( buffer, sizeof( buffer ) ) == NULL ) {
-        printf( "%s: Failed to get CWD!\n", argv[ 0 ] );
-        return EXIT_FAILURE;
-    }
+void shell_print_commands();
 
-    printf( "%s\n", buffer );
-
-    return EXIT_SUCCESS;
-}
-
-builtin_command_t pwd_command = {
-    .name = "pwd",
-    .description = "print the current working directory",
-    .command = pwd_command_function
-};
+#endif // _SHELL_H_
