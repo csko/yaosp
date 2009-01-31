@@ -71,7 +71,7 @@ static void mount_root_filesystem( void ) {
 
     error = -1;
 
-    while ( getdents( dir, &entry ) == 1 ) {
+    while ( getdents( dir, &entry, sizeof( dirent_t ) ) == 1 ) {
         if ( ( strcmp( entry.name, "." ) == 0 ) ||
              ( strcmp( entry.name, ".." ) == 0 ) ) {
             continue;

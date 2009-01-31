@@ -503,9 +503,11 @@ int sys_ioctl( int fd, int command, void* buffer ) {
     return do_ioctl( false, fd, command, buffer );
 }
 
-static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
+static int do_getdents( bool kernel, int fd, dirent_t* entry, unsigned int size ) {
+    int ret;
     int error;
     file_t* file;
+    unsigned int count;
     io_context_t* io_context;
 
     if ( kernel ) {
@@ -520,36 +522,53 @@ static int do_getdents( bool kernel, int fd, dirent_t* entry ) {
         return -EBADF;
     }
 
-    /* TODO: check file type */
-
     if ( file->inode->mount_point->fs_calls->read_directory == NULL ) {
         error = -ENOSYS;
-    } else {
+        goto out;
+    }
+
+    /* TODO: check file type */
+
+    ret = 0;
+    count = size / sizeof( dirent_t );
+
+    while ( count > 0 ) {
         error = file->inode->mount_point->fs_calls->read_directory(
             file->inode->mount_point->fs_data,
             file->inode->fs_node,
             file->cookie,
             entry
         );
+
+        if ( error == 0 ) {
+            break;
+        }
+
+        if ( ( strcmp( entry->name, ".." ) == 0 ) &&
+             ( entry->inode_number == file->inode->mount_point->root_inode_number ) &&
+             ( file->inode->mount_point->mount_inode != NULL ) ) {
+            entry->inode_number = file->inode->mount_point->mount_inode->inode_number;
+        }
+
+        ret++;
+        count--;
+        entry++;
     }
 
-    if ( ( strcmp( entry->name, ".." ) == 0 ) &&
-         ( entry->inode_number == file->inode->mount_point->root_inode_number ) &&
-         ( file->inode->mount_point->mount_inode != NULL ) ) {
-        entry->inode_number = file->inode->mount_point->mount_inode->inode_number;
-    }
+    error = ret;
 
+out:
     io_context_put_file( io_context, file );
 
     return error;
 }
 
-int getdents( int fd, dirent_t* entry ) {
-    return do_getdents( true, fd, entry );
+int getdents( int fd, dirent_t* entry, unsigned int count ) {
+    return do_getdents( true, fd, entry, count );
 }
 
 int sys_getdents( int fd, dirent_t* entry, unsigned int count ) {
-    return do_getdents( false, fd, entry );
+    return do_getdents( false, fd, entry, count );
 }
 
 static int do_isatty( bool kernel, int fd ) {

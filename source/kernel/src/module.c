@@ -178,7 +178,7 @@ static module_reader_t* get_file_module_reader( const char* name ) {
         return NULL;
     }
 
-    while ( getdents( dir, &entry ) == 1 ) {
+    while ( getdents( dir, &entry, sizeof( dirent_t ) ) == 1 ) {
         if ( ( strcmp( entry.name, "." ) == 0 ) ||
              ( strcmp( entry.name, ".." ) == 0 ) ) {
             continue;

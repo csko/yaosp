@@ -150,7 +150,7 @@ int close( int fd );
 int pread( int fd, void* buffer, size_t count, off_t offset );
 int pwrite( int fd, const void* buffer, size_t count, off_t offset );
 int ioctl( int fd, int command, void* buffer );
-int getdents( int fd, dirent_t* entry );
+int getdents( int fd, dirent_t* entry, unsigned int count );
 int fstat( int fd, struct stat* stat );
 int mkdir( const char* path, int permissions );
 int symlink( const char* src, const char* dest );

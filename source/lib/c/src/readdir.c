@@ -22,7 +22,7 @@
 struct dirent* readdir( DIR* dir ) {
     int error;
 
-    error = getdents( dir->fd, &dir->entry, 1 );
+    error = getdents( dir->fd, &dir->entry, sizeof( struct dirent ) );
 
     if ( error == 0 ) {
         return NULL;
