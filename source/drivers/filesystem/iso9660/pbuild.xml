@@ -36,10 +36,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
+        <echo></echo>
         <echo>Compiling ISO9660 filesystem driver</echo>
+        <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/drivers/filesystem/iso9660/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -56,8 +58,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking ISO9660 filesystem driver</echo>
-        <echo>-> objs/iso9660</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/drivers/filesystem/iso9660/objs/iso9660</echo>
 
         <gcc>
             <input>objs/*.o</input>

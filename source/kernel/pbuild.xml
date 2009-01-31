@@ -125,9 +125,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo>Compiling architecture specific assembly files</echo>
+        <echo></echo>
 
         <for var="i" array="${arch_files_asm}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/kernel/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/arch/filename(${i}).o</output>
@@ -143,10 +144,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Compiling architecture specific C files</echo>
+        <echo></echo>
 
         <for var="i" array="${arch_files_c}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/kernel/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/arch/filename(${i}).o</output>
@@ -164,10 +167,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Compiling architecture independent files</echo>
+        <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/kernel/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -186,7 +191,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <for var="i" array="${files_lib}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/kernel/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/lib/filename(${i}).o</output>
@@ -203,8 +208,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking kernel binary</echo>
-        <echo>-> objs/kernel</echo>
+        <echo></echo>
+        <echo>[LD    ] source/kernel/objs/kernel</echo>
 
         <ld>
             <input>objs/*.o</input>

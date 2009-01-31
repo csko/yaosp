@@ -155,9 +155,6 @@ class GccWork( Work ) :
                 
         # Build the command
 
-        # TODO: Some systems might require the compiler to be called with an absolute path
-        # This could be determined by a configure file later.
-#        command = [ "/usr/bin/gcc" ] + real_flags + real_inputs + real_includes
         command = [ "gcc" ] + real_flags + real_inputs + real_includes
         command += real_defines
         command += [ "-o", context.handle_everything( self.output ) ]
@@ -200,8 +197,6 @@ class LdWork( Work ) :
 
         # Build the command
 
-        # TODO: Some systems might require the linker to be called with an absolute path
-        # This could be determined by a configure file later.
         command = [ "ld" ]
 
         if self.linker_script != None :
@@ -332,9 +327,14 @@ class ExecWork( Work ) :
 
         command = [ self.executable ] + real_args
 
-        # TODO: Do we need return value checking here?
-        process = subprocess.Popen( command )
-        process.wait()
+
+        # Get the return code of the process
+        retcode = subprocess.call( command )
+        # If the return code is not 0, the build process must stop
+        if retcode != 0 :
+            print "Process returned with return code %d" % retcode
+            print "Build stopped."
+            sys.exit( retcode )
 
 class SymlinkWork( Work ) :
     def __init__( self, src, dest ) :

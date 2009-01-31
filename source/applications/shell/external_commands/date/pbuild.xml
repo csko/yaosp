@@ -36,10 +36,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
+        <echo></echo>
         <echo>Compiling date shell command</echo>
+        <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/applications/shell/external_commands/date/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -54,8 +56,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking date shell command</echo>
-        <echo>-> objs/date</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/applications/shell/external_commands/date/objs/date</echo>
 
         <gcc>
             <input>objs/*.o</input>

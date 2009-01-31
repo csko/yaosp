@@ -36,10 +36,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
+        <echo></echo>
         <echo>Compiling ls shell command</echo>
+        <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/applications/shell/external_commands/ls/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -54,8 +56,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking ls shell command</echo>
-        <echo>-> objs/ls</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/applications/shell/external_commands/ls/objs/ls</echo>
 
         <gcc>
             <input>objs/*.o</input>

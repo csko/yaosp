@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -36,10 +36,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
+        <echo></echo>
         <echo>Compiling ext2 filesystem driver</echo>
+        <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/drivers/filesystem/ext2/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -56,8 +58,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking ext2 filesystem driver</echo>
-        <echo>-> objs/ext2</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/drivers/filesystem/ext2/objs/ext2</echo>
 
         <gcc>
             <input>objs/*.o</input>

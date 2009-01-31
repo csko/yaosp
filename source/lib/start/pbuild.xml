@@ -37,9 +37,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo>Compiling startup library</echo>
+        <echo></echo>
 
         <for var="i" array="${files_i386}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/lib/start/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -53,8 +54,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking startup library</echo>
-        <echo>-> objs/libstart.a</echo>
+        <echo></echo>
+        <echo>[AR     ] source/lib/start/objs/libstart.a</echo>
 
         <exec executable="ar">
             <arg>-rc</arg>

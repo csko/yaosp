@@ -37,9 +37,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo>Compiling init application</echo>
+        <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/applications/init/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -54,8 +55,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking init application</echo>
-        <echo>-> objs/init</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/applications/init/objs/init</echo>
 
         <gcc>
             <input>objs/*.o</input>

@@ -218,10 +218,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
+        <echo></echo>
         <echo>Compiling C library</echo>
+        <echo></echo>
 
         <for var="i" array="${files_i386}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/lib/c/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/arch/filename(${i}).o</output>
@@ -237,7 +239,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/lib/c/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -256,8 +258,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking C library</echo>
-        <echo>-> objs/libc.a</echo>
+        <echo></echo>
+        <echo>[AR     ] source/lib/c/objs/libc.a</echo>
 
         <exec executable="ar">
             <arg>-rc</arg>

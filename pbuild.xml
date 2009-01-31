@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare_build"/>
         <call target="compile_sources"/>
         <call target="create_iso"/>
+        <echo>Build done.</echo>
     </target>
 
     <target name="clean">
@@ -55,7 +56,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="scripts/grub/stage2_eltorito" to="build/boot/grub/stage2_eltorito"/>
 
         <echo>Creating bootable ISO9660 CD-ROM image</echo>
-        <echo>-> yaosp.iso</echo>
+        <echo></echo>
+        <echo>[MKISOFS] yaosp.iso</echo>
 
         <exec executable="mkisofs">
             <arg>-R</arg>

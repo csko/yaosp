@@ -40,10 +40,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
+        <echo></echo>
         <echo>Compiling terminal driver</echo>
+        <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>-> ${i}</echo>
+            <echo>[GCC    ] source/drivers/char/terminal/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -60,8 +62,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <echo></echo>
         <echo>Linking terminal driver</echo>
-        <echo>-> objs/terminal</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/drivers/char/terminal/objs/terminal</echo>
 
         <gcc>
             <input>objs/*.o</input>
