@@ -633,6 +633,8 @@ static filesystem_calls_t iso9660_calls = {
     .create = NULL,
     .mkdir = NULL,
     .isatty = NULL,
+    .symlink = NULL,
+    .readlink = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };

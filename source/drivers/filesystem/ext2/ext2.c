@@ -54,7 +54,7 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
         goto error3;
     }
 
-    if( cookie->superblock.state != EXT2_VALID_FS ) {
+    if ( cookie->superblock.state != EXT2_VALID_FS ) {
         kprintf( "ext2: Partition is damaged or was not cleanly unmounted!\n" );
         error = -EINVAL;
         goto error3;
@@ -109,20 +109,22 @@ static filesystem_calls_t ext2_calls = {
     .read_inode = ext2_read_inode,
     .write_inode = ext2_write_inode,
     .lookup_inode = ext2_lookup_inode,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    .open = NULL,
+    .close = NULL,
+    .free_cookie = NULL,
+    .read = NULL,
+    .write = NULL,
+    .ioctl = NULL,
+    .read_stat = NULL,
+    .write_stat = NULL,
+    .read_directory = NULL,
+    .create = NULL,
+    .mkdir = NULL,
+    .isatty = NULL,
+    .symlink = NULL,
+    .readlink = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
 };
 
 int init_module( void ) {

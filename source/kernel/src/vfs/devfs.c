@@ -130,7 +130,7 @@ static int devfs_write_inode( void* fs_cookie, void* node ) {
     return 0;
 }
 
-static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_len, ino_t* inode_num ) {
+static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
     int error = 0;
     devfs_node_t* node;
     devfs_node_t* parent;
@@ -139,7 +139,7 @@ static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* na
 
     /* First check for ".." */
 
-    if ( ( name_len == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
+    if ( ( name_length == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
         if ( parent->parent == NULL ) {
             error = -EINVAL;
 
@@ -154,8 +154,8 @@ static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* na
     node = parent->first_child;
 
     while ( node != NULL ) {
-        if ( ( strlen( node->name ) == name_len ) &&
-             ( strncmp( node->name, name, name_len ) == 0 ) ) {
+        if ( ( strlen( node->name ) == name_length ) &&
+             ( strncmp( node->name, name, name_length ) == 0 ) ) {
             *inode_num = node->inode_number;
 
             goto out;
@@ -170,12 +170,12 @@ out:
     return error;
 }
 
-static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_len, ino_t* inode_num ) {
+static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
     int error;
 
     LOCK( devfs_lock );
 
-    error = devfs_do_lookup_inode( fs_cookie, _parent, name, name_len, inode_num );
+    error = devfs_do_lookup_inode( fs_cookie, _parent, name, name_length, inode_num );
 
     UNLOCK( devfs_lock );
 
@@ -451,7 +451,7 @@ out:
     return error;
 }
 
-static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_len, int permissions ) {
+static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_length, int permissions ) {
     int error;
     ino_t dummy;
     devfs_node_t* node;
@@ -461,7 +461,7 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
 
     /* Check if this name already exists */
 
-    error = devfs_do_lookup_inode( fs_cookie, _node, name, name_len, &dummy );
+    error = devfs_do_lookup_inode( fs_cookie, _node, name, name_length, &dummy );
 
     if ( error == 0 ) {
         error = -EEXIST;
@@ -480,7 +480,7 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
     new_node = devfs_create_node(
         node,
         name,
-        name_len,
+        name_length,
         true
     );
 
@@ -562,6 +562,8 @@ static filesystem_calls_t devfs_calls = {
     .create = NULL,
     .mkdir = devfs_mkdir,
     .isatty = NULL,
+    .symlink = NULL,
+    .readlink = NULL,
     .add_select_request = devfs_add_select_request,
     .remove_select_request = devfs_remove_select_request
 };

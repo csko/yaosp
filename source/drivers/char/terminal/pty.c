@@ -187,12 +187,12 @@ static int pty_lookup_helper( hashitem_t* item, void* _data ) {
     return 0;
 }
 
-static int pty_lookup_inode( void* fs_cookie, void* parent, const char* name, int name_len, ino_t* inode_num ) {
+static int pty_lookup_inode( void* fs_cookie, void* parent, const char* name, int name_length, ino_t* inode_num ) {
     int error;
     pty_lookup_data_t data;
 
     data.name = ( char* )name;
-    data.length = name_len;
+    data.length = name_length;
     data.inode_number = inode_num;
 
     LOCK( pty_lock );
@@ -497,7 +497,7 @@ static int pty_create(
     void* fs_cookie,
     void* node,
     const char* name,
-    int name_len,
+    int name_length,
     int mode,
     int permissions,
     ino_t* inode_num,
@@ -509,17 +509,17 @@ static int pty_create(
     pty_node_t* master;
     pty_node_t* slave;
 
-    if ( ( name_len < 4 ) || ( strncmp( name, "pty", 3 ) != 0 ) ) {
+    if ( ( name_length < 4 ) || ( strncmp( name, "pty", 3 ) != 0 ) ) {
         return -EINVAL;
     }
 
-    error = pty_lookup_inode( fs_cookie, node, name, name_len, &dummy );
+    error = pty_lookup_inode( fs_cookie, node, name, name_length, &dummy );
 
     if ( error == 0 ) {
         return -EEXIST;
     }
 
-    master = pty_create_node( name, name_len, PTY_BUFSIZE, S_IFCHR );
+    master = pty_create_node( name, name_length, PTY_BUFSIZE, S_IFCHR );
 
     if ( master == NULL ) {
         return -ENOMEM;
@@ -682,6 +682,8 @@ static filesystem_calls_t pty_calls = {
     .create = pty_create,
     .mkdir = NULL,
     .isatty = pty_isatty,
+    .symlink = NULL,
+    .readlink = NULL,
     .add_select_request = pty_add_select_request,
     .remove_select_request = pty_remove_select_request
 };

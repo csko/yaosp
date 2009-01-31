@@ -116,7 +116,7 @@ static int rootfs_write_inode( void* fs_cookie, void* node ) {
     return 0;
 }
 
-static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_len, ino_t* inode_num ) {
+static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
     rootfs_node_t* node;
     rootfs_node_t* parent;
 
@@ -125,7 +125,7 @@ static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
 
     /* First check for ".." */
 
-    if ( ( name_len == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
+    if ( ( name_length == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
         if ( parent->parent == NULL ) {
             return -EINVAL;
         }
@@ -136,8 +136,8 @@ static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
     }
 
     while ( node != NULL ) {
-        if ( ( strlen( node->name ) == name_len ) &&
-             ( strncmp( node->name, name, name_len ) == 0 ) ) {
+        if ( ( strlen( node->name ) == name_length ) &&
+             ( strncmp( node->name, name, name_length ) == 0 ) ) {
             *inode_num = node->inode_number;
             return 0;
         }
@@ -208,11 +208,11 @@ static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, u
 
     node = ( rootfs_node_t* )_node;
 
-    if(mask & WSTAT_MTIME){
+    if ( mask & WSTAT_MTIME ) {
         node->mtime = stat->st_mtime;
     }
 
-    if(mask & WSTAT_CTIME){
+    if ( mask & WSTAT_CTIME ) {
         node->ctime = stat->st_ctime;
     }
 
@@ -254,7 +254,7 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
     return 0;
 }
 
-static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_len, int permissions ) {
+static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_length, int permissions ) {
     int error;
     ino_t dummy;
     rootfs_node_t* node;
@@ -262,7 +262,7 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
 
     /* Check if this name already exists */
 
-    error = rootfs_lookup_inode( fs_cookie, _node, name, name_len, &dummy );
+    error = rootfs_lookup_inode( fs_cookie, _node, name, name_length, &dummy );
 
     if ( error == 0 ) {
         return -EEXIST;
@@ -279,7 +279,7 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     new_node = rootfs_create_node(
         node,
         name,
-        name_len,
+        name_length,
         true
     );
 
@@ -309,6 +309,8 @@ static filesystem_calls_t rootfs_calls = {
     .create = NULL,
     .mkdir = rootfs_mkdir,
     .isatty = NULL,
+    .symlink = NULL,
+    .readlink = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };

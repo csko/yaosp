@@ -34,7 +34,7 @@ typedef struct filesystem_calls {
     int ( *unmount )( void* fs_cookie );
     int ( *read_inode )( void* fs_cookie, ino_t inode_num, void** node );
     int ( *write_inode )( void* fs_cookie, void* node );
-    int ( *lookup_inode )( void* fs_cookie, void* parent, const char* name, int name_len, ino_t* inode_num );
+    int ( *lookup_inode )( void* fs_cookie, void* parent, const char* name, int name_length, ino_t* inode_num );
     int ( *open )( void* fs_cookie, void* node, int mode, void** file_cookie );
     int ( *close )( void* fs_cookie, void* node, void* file_cookie );
     int ( *free_cookie )( void* fs_cookie, void* node, void* file_cookie );
@@ -44,9 +44,11 @@ typedef struct filesystem_calls {
     int ( *read_stat )( void* fs_cookie, void* node, struct stat* stat );
     int ( *write_stat )( void* fs_cookie, void* node, struct stat* stat, uint32_t mask );
     int ( *read_directory )( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
-    int ( *create )( void* fs_cookie, void* node, const char* name, int name_len, int mode, int permissions, ino_t* inode_num, void** file_cookie );
-    int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_len, int permissions );
+    int ( *create )( void* fs_cookie, void* node, const char* name, int name_length, int mode, int permissions, ino_t* inode_num, void** file_cookie );
+    int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_length, int permissions );
     int ( *isatty )( void* fs_cookie, void* node );
+    int ( *symlink )( void* fs_cookie, void* node, const char* name, int name_length, const char* link_path );
+    int ( *readlink )( void* fs_cookie, void* node, char* buffer, size_t length );
     int ( *add_select_request )( void* fs_cookie, void* node, void* file_cookie, struct select_request* request );
     int ( *remove_select_request )( void* fs_cookie, void* node, void* file_cookie, struct select_request* request );
 } filesystem_calls_t;
