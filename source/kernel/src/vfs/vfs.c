@@ -842,9 +842,95 @@ int sys_fstat( int fd, struct stat* stat ) {
     return do_fstat( false, fd, stat );
 }
 
-int sys_lseek( int fd, off_t* offset, int whence, off_t* result ) {
-    /* TODO */
-    return 0;
+static int do_lseek( bool kernel, int fd, off_t offset, int whence, off_t* new_offset ) {
+    int error;
+    file_t* file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    error = 0;
+
+    switch ( whence ) {
+        case SEEK_SET :
+            if ( offset < 0 ) {
+                error = -EINVAL;
+                goto out;
+            }
+
+            file->position = offset;
+
+            break;
+
+        case SEEK_CUR :
+            if ( ( file->position + offset ) < 0 ) {
+                error = -EINVAL;
+                goto out;
+            } else {
+                file->position += offset;
+            }
+
+            break;
+
+        case SEEK_END : {
+            struct stat st;
+
+            error = do_read_stat( file->inode, &st );
+
+            if ( error < 0 ) {
+                goto out;
+            }
+
+            if ( ( file->position + offset ) < 0 ) {
+                error = -EINVAL;
+                goto out;
+            } else {
+                file->position = st.st_size + offset;
+            }
+
+            break;
+        }
+
+        default :
+            error = -EINVAL;
+            break;
+    }
+
+    if ( error >= 0 ) {
+        *new_offset = file->position;
+    }
+
+out:
+    io_context_put_file( io_context, file );
+
+    return error;
+}
+
+off_t lseek( int fd, off_t offset, int whence ) {
+    int error;
+    off_t new_offset;
+
+    error = do_lseek( true, fd, offset, whence, &new_offset );
+
+    if ( error < 0 ) {
+        return ( off_t )-1;
+    }
+
+    return new_offset;
+}
+
+int sys_lseek( int fd, off_t* offset, int whence, off_t* new_offset ) {
+    return do_lseek( false, fd, *offset, whence, new_offset );
 }
 
 int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {

@@ -400,7 +400,8 @@ int sys_load_module( const char* name ) {
 
 void set_module_loader( module_loader_t* loader ) {
     module_loader = loader;
-    kprintf( "Using %s module loader.\n", module_loader->name );
+
+    kprintf( "Registered module loader: %s.\n", module_loader->name );
 }
 
 static void* module_key( hashitem_t* item ) {

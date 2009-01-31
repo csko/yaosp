@@ -51,6 +51,10 @@
 #define FD_ISSET(fd,set) \
     ((set)->fds[fd/32] & (1<<(fd%32)))
 
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
+
 /* stat definitions */
 
 #define S_IFSOCK 0x400000
@@ -152,6 +156,7 @@ int pwrite( int fd, const void* buffer, size_t count, off_t offset );
 int ioctl( int fd, int command, void* buffer );
 int getdents( int fd, dirent_t* entry, unsigned int count );
 int fstat( int fd, struct stat* stat );
+off_t lseek( int fd, off_t offset, int whence );
 int mkdir( const char* path, int permissions );
 int symlink( const char* src, const char* dest );
 int mount( const char* device, const char* dir, const char* filesystem );

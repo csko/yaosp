@@ -102,6 +102,7 @@ void kernel_main( void ) {
     init_devices();
     init_module_loader();
     init_application_loader();
+    init_interpreter_loader();
 
     kprintf( "Initializing processes ... " );
     init_processes();

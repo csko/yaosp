@@ -30,6 +30,8 @@ int execvp( const char* filename, char* const argv[] ) {
     char tmp_path[ 128 ];
     char tmp_exec[ 128 ];
 
+    execve( filename, argv, environ );
+
     path = getenv( "PATH" );
 
     if ( path == NULL ) {

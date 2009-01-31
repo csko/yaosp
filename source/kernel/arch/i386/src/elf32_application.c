@@ -37,7 +37,7 @@ static bool elf32_application_check( int fd ) {
         return false;
     }
 
-    return elf32_check(&header);
+    return elf32_check( &header );
 }
 
 static int elf32_parse_dynsym_section(

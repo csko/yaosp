@@ -21,6 +21,8 @@
 
 #include <types.h>
 
+/* Application loader calls */
+
 typedef bool check_application_t( int fd );
 typedef int load_application_t( int fd );
 typedef int execute_application_t( void );
@@ -35,10 +37,27 @@ typedef struct application_loader {
     struct application_loader* next;
 } application_loader_t;
 
+/* Interpreter loader calls */
+
+typedef bool check_interpreter_t( int fd );
+typedef int execute_interpreter_t( int fd, const char* filename, char** argv, char** envp );
+
+typedef struct interpreter_loader {
+    const char* name;
+
+    check_interpreter_t* check;
+    execute_interpreter_t* execute;
+
+    struct interpreter_loader* next;
+} interpreter_loader_t;
+
+int do_execve( char* path, char** argv, char** envp, bool free_argv );
 int sys_execve( char* path, char** argv, char** envp );
 
 int register_application_loader( application_loader_t* loader );
+int register_interpreter_loader( interpreter_loader_t* loader );
 
+int init_interpreter_loader( void );
 int init_application_loader( void );
 
 #endif // _LOADER_H_

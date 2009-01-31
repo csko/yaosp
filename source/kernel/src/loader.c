@@ -28,12 +28,29 @@
 
 #define USER_STACK_PAGES ( USER_STACK_SIZE / PAGE_SIZE )
 
-static application_loader_t* loaders;
+static application_loader_t* application_loaders;
+static interpreter_loader_t* interpreter_loaders;
 
 static application_loader_t* find_application_loader( int fd ) {
     application_loader_t* loader;
 
-    loader = loaders;
+    loader = application_loaders;
+
+    while ( loader != NULL ) {
+        if ( loader->check( fd ) ) {
+            break;
+        }
+
+        loader = loader->next;
+    }
+
+    return loader;
+}
+
+static interpreter_loader_t* find_interpreter_loader( int fd ) {
+    interpreter_loader_t* loader;
+
+    loader = interpreter_loaders;
 
     while ( loader != NULL ) {
         if ( loader->check( fd ) ) {
@@ -118,7 +135,7 @@ static uint8_t* copy_param_array_to_user( char** array, char** user_array, int c
     return stack;
 }
 
-static int execve( char* path, char** argv, char** envp ) {
+int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     int fd;
     int error;
     char* new_name;
@@ -126,6 +143,7 @@ static int execve( char* path, char** argv, char** envp ) {
     thread_t* thread;
     void* stack_address;
     application_loader_t* loader;
+    interpreter_loader_t* interpreter_loader;
 
     int argc;
     char** cloned_argv;
@@ -144,6 +162,12 @@ static int execve( char* path, char** argv, char** envp ) {
     }
 
     /* Find the proper loader for it */
+
+    interpreter_loader = find_interpreter_loader( fd );
+
+    if ( interpreter_loader != NULL ) {
+        return interpreter_loader->execute( fd, path, argv, envp );
+    }
 
     loader = find_application_loader( fd );
 
@@ -166,6 +190,10 @@ static int execve( char* path, char** argv, char** envp ) {
 
     if ( error < 0 ) {
         goto _error3;
+    }
+
+    if ( free_argv ) {
+        kfree( argv );
     }
 
     /* Rename the process and the thread */
@@ -314,20 +342,30 @@ error1:
 }
 
 int sys_execve( char* path, char** argv, char** envp ) {
-    return execve( path, argv, envp );
+    return do_execve( path, argv, envp, false );
 }
 
 int register_application_loader( application_loader_t* loader ) {
-    loader->next = loaders;
-    loaders = loader;
+    loader->next = application_loaders;
+    application_loaders = loader;
 
-    kprintf( "%s application loader registered.\n", loader->name );
+    kprintf( "Registered application loader: %s.\n", loader->name );
+
+    return 0;
+}
+
+int register_interpreter_loader( interpreter_loader_t* loader ) {
+    loader->next = interpreter_loaders;
+    interpreter_loaders = loader;
+
+    kprintf( "Registered interpreter loader: %s.\n", loader->name );
 
     return 0;
 }
 
 int init_application_loader( void ) {
-    loaders = NULL;
+    application_loaders = NULL;
+    interpreter_loaders = NULL;
 
     return 0;
 }
