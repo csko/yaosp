@@ -22,13 +22,12 @@
 #include <time.h>
 #include <sys/types.h>
 
-/* TODO: Might need to change these */
 #define S_IFMT   0xFF0000
 
-#define S_IFSOCK 0x140000
-#define S_IFLNK  0x120000
+#define S_IFSOCK 0x400000
+#define S_IFLNK  0x200000
 #define S_IFREG  0x100000
-#define S_IFBLK  0x060000
+#define S_IFBLK  0x080000
 #define S_IFDIR  0x040000
 #define S_IFCHR  0x020000
 #define S_IFIFO  0x010000
