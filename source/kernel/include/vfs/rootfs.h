@@ -32,6 +32,7 @@ typedef struct rootfs_node {
     time_t atime;
     time_t mtime;
     time_t ctime;
+    char* link_path;
 
     struct rootfs_node* parent;
     struct rootfs_node* next_sibling;

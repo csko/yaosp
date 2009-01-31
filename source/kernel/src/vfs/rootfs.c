@@ -60,6 +60,9 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* nam
     node->next_sibling = NULL;
     node->first_child = NULL;
     node->atime = node->mtime = node->ctime = time( NULL );
+    node->link_path = NULL;
+
+    /* Link the new node to the parent */
 
     if ( parent != NULL ) {
         node->next_sibling = parent->first_child;
@@ -196,8 +199,14 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     stat->st_mtime = node->mtime;
     stat->st_ctime = node->ctime;
 
-    if ( node->is_directory ) {
-        stat->st_mode |= S_IFDIR;
+    if ( node->link_path != NULL ) {
+        stat->st_mode |= S_IFLNK;
+    } else {
+        if ( node->is_directory ) {
+            stat->st_mode |= S_IFDIR;
+        } else {
+            stat->st_mode |= S_IFREG;
+        }
     }
 
     return 0;
@@ -290,6 +299,68 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     return 0;
 }
 
+static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int name_length, const char* link_path ) {
+    int error;
+    ino_t dummy;
+    rootfs_node_t* node;
+    rootfs_node_t* new_node;
+
+    /* Check if this name already exists */
+
+    error = rootfs_lookup_inode( fs_cookie, _node, name, name_length, &dummy );
+
+    if ( error == 0 ) {
+        return -EEXIST;
+    }
+
+    node = ( rootfs_node_t* )_node;
+
+    /* We can create symbolic links only in directories */
+
+    if ( !node->is_directory ) {
+        return -EINVAL;
+    }
+
+    /* Create the new node */
+
+    new_node = rootfs_create_node(
+        node,
+        name,
+        name_length,
+        true
+    );
+
+    if ( new_node == NULL ) {
+        return -ENOMEM;
+    }
+
+    /* Save the link path in the new node */
+
+    new_node->link_path = strdup( link_path );
+
+    if ( new_node->link_path == NULL ) {
+        /* TODO: delete the node */
+        return -ENOMEM;
+    }
+
+    return 0;
+}
+
+static int rootfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t length ) {
+    rootfs_node_t* node;
+
+    node = ( rootfs_node_t* )_node;
+
+    if ( node->link_path == NULL ) {
+        return -EINVAL;
+    }
+
+    strncpy( buffer, node->link_path, length );
+    buffer[ length - 1 ] = 0;
+
+    return strlen( buffer );
+}
+
 static filesystem_calls_t rootfs_calls = {
     .probe = NULL,
     .mount = NULL,
@@ -309,8 +380,8 @@ static filesystem_calls_t rootfs_calls = {
     .create = NULL,
     .mkdir = rootfs_mkdir,
     .isatty = NULL,
-    .symlink = NULL,
-    .readlink = NULL,
+    .symlink = rootfs_symlink,
+    .readlink = rootfs_readlink,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };
