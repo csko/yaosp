@@ -273,10 +273,16 @@ out:
     return error;
 }
 
-int lookup_parent_inode( io_context_t* io_context, const char* path, char** name, int* length, inode_t** _parent ) {
+int lookup_parent_inode(
+    io_context_t* io_context,
+    inode_t* parent,
+    const char* path,
+    char** name,
+    int* length,
+    inode_t** _parent
+) {
     int error;
     char* sep;
-    inode_t* parent;
 
     LOCK( io_context->lock );
 
@@ -284,7 +290,9 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
         parent = io_context->root_directory;
         path++;
     } else {
-        parent = io_context->current_directory;
+        if ( parent == NULL ) {
+            parent = io_context->current_directory;
+        }
     }
 
     if ( parent == NULL ) {
@@ -316,6 +324,14 @@ int lookup_parent_inode( io_context_t* io_context, const char* path, char** name
 
         error = do_lookup_inode( io_context, parent, path, name_length, true, &inode );
 
+        if ( error == 0 ) {
+            error = follow_symbolic_link( io_context, &parent, &inode );
+
+            if ( error < 0 ) {
+                put_inode( inode );
+            }
+        }
+
         put_inode( parent );
 
         if ( error < 0 ) {
@@ -337,14 +353,14 @@ next:
     return 0;
 }
 
-int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode ) {
+int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, inode_t** _inode ) {
     int error;
     char* name;
     int length;
     inode_t* inode;
-    inode_t* parent;
+    inode_t* new_parent;
 
-    error = lookup_parent_inode( io_context, path, &name, &length, &parent );
+    error = lookup_parent_inode( io_context, parent, path, &name, &length, &new_parent );
 
     if ( error < 0 ) {
         return error;
@@ -352,15 +368,23 @@ int lookup_inode( io_context_t* io_context, const char* path, inode_t** _inode )
 
     if ( ( length == 0 ) ||
          ( ( length == 1 ) && ( name[ 0 ] == '.' ) ) ) {
-        inode = parent;
         error = 0;
+        inode = new_parent;
 
         atomic_inc( &inode->ref_count );
     } else {
-        error = do_lookup_inode( io_context, parent, name, length, true, &inode );
+        error = do_lookup_inode( io_context, new_parent, name, length, true, &inode );
     }
 
-    put_inode( parent );
+    if ( error == 0 ) {
+        error = follow_symbolic_link( io_context, &new_parent, &inode );
+
+        if ( error < 0 ) {
+            put_inode( inode );
+        }
+    }
+
+    put_inode( new_parent );
 
     if ( error < 0 ) {
         return error;

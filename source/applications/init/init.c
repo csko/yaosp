@@ -26,6 +26,9 @@ int main( int argc, char** argv ) {
     int i;
     pid_t child;
 
+    symlink( "/application", "/yaosp/application" );
+    symlink( "/system", "/yaosp/system" );
+
     for ( i = 0; i < 5; i++ ) {
         child = fork();
 

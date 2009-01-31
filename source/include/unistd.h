@@ -61,6 +61,7 @@ ssize_t readlink( const char* path, char* buf, size_t bufsiz );
 int rmdir( const char* pathname );
 int chown( const char* path, uid_t owner, gid_t group );
 char* getcwd( char* buf, size_t size );
+int symlink( const char* oldpath, const char* newpath );
 
 pid_t getpid( void );
 int getpagesize( void );

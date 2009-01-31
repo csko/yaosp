@@ -143,6 +143,8 @@ mount_point_t* create_mount_point(
 void delete_mount_point( mount_point_t* mount_point );
 int insert_mount_point( mount_point_t* mount_point );
 
+int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t** _inode );
+
 int open( const char* path, int flags );
 int close( int fd );
 int pread( int fd, void* buffer, size_t count, off_t offset );
@@ -151,6 +153,7 @@ int ioctl( int fd, int command, void* buffer );
 int getdents( int fd, dirent_t* entry );
 int fstat( int fd, struct stat* stat );
 int mkdir( const char* path, int permissions );
+int symlink( const char* src, const char* dest );
 int mount( const char* device, const char* dir, const char* filesystem );
 int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 
@@ -168,6 +171,7 @@ int sys_stat( const char* path, struct stat* stat );
 int sys_fstat( int fd, struct stat* stat );
 int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
 int sys_mkdir( const char* path, int permissions );
+int sys_symlink( const char* src, const char* dest );
 int sys_mount( const char* device, const char* dir, const char* filesystem );
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 int sys_utime( const char* filename, const struct utimbuf* times );

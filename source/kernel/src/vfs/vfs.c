@@ -80,8 +80,84 @@ int insert_mount_point( mount_point_t* mount_point ) {
     return 0;
 }
 
-static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t* parent, char* name, int length ) {
+static int do_read_stat( inode_t* inode, struct stat* stat );
+
+int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t** _inode ) {
     int error;
+    struct stat st;
+    inode_t* inode;
+    char buffer[ 256 ];
+
+    inode = *_inode;
+
+    error = do_read_stat( inode, &st );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    while ( st.st_mode & S_IFLNK ) {
+        char* name;
+        int name_length;
+        inode_t* new_parent;
+        inode_t* new_inode;
+
+        if ( inode->mount_point->fs_calls->readlink == NULL ) {
+            error = -ENOSYS;
+        } else {
+            error = inode->mount_point->fs_calls->readlink(
+                inode->mount_point->fs_data,
+                inode->fs_node,
+                buffer,
+                sizeof( buffer )
+            );
+        }
+
+        if ( error < 0 ) {
+            break;
+        }
+
+        error = lookup_parent_inode( io_context, *_parent, buffer, &name, &name_length, &new_parent );
+
+        if ( error < 0 ) {
+            break;
+        }
+
+        if ( ( name_length == 0 ) ||
+             ( ( name_length == 1 ) && ( name[ 0 ] == '.' ) ) ) {
+            atomic_inc( &new_parent->ref_count );
+            new_inode = new_parent;
+        } else {
+            error = do_lookup_inode( io_context, new_parent, name, name_length, true, &new_inode );
+
+            if ( error < 0 ) {
+                put_inode( new_parent );
+                break;
+            }
+        }
+
+        put_inode( *_parent );
+        put_inode( inode );
+        *_parent = new_parent;
+        inode = new_inode;
+
+        error = do_read_stat( inode, &st );
+
+        if ( error < 0 ) {
+            break;
+        }
+    }
+
+    *_inode = inode;
+
+    return error;
+}
+
+static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t** _parent, char* name, int length ) {
+    int error;
+    inode_t* parent;
+
+    parent = *_parent;
 
     if ( ( length == 0 ) ||
          ( ( length == 1 ) && ( name[ 0 ] == '.' ) ) ) {
@@ -101,6 +177,12 @@ static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t* par
         atomic_inc( &parent->ref_count );
     } else {
         error = do_lookup_inode( io_context, parent, name, length, true, &file->inode );
+
+        if ( error < 0 ) {
+            return error;
+        }
+
+        error = follow_symbolic_link( io_context, _parent, &file->inode );
 
         if ( error < 0 ) {
             return error;
@@ -173,7 +255,7 @@ static int do_open( bool kernel, const char* path, int flags ) {
 
     /* Lookup the parent of the inode we want to open */
 
-    error = lookup_parent_inode( io_context, path, &name, &length, &parent );
+    error = lookup_parent_inode( io_context, NULL, path, &name, &length, &parent );
 
     if ( error < 0 ) {
         return error;
@@ -188,7 +270,7 @@ static int do_open( bool kernel, const char* path, int flags ) {
         return -ENOMEM;
     }
 
-    error = do_open_helper1( io_context, file, parent, name, length );
+    error = do_open_helper1( io_context, file, &parent, name, length );
 
     if ( ( error == -ENOENT ) && ( ( flags & O_CREAT ) != 0 ) ) {
         error = do_open_helper2( file, parent, name, length );
@@ -520,7 +602,7 @@ static int do_mkdir( bool kernel, const char* path, int permissions ) {
         io_context = current_process()->io_context;
     }
 
-    error = lookup_parent_inode( io_context, path, &name, &length, &parent );
+    error = lookup_parent_inode( io_context, NULL, path, &name, &length, &parent );
 
     if ( error < 0 ) {
         return error;
@@ -549,6 +631,51 @@ int mkdir( const char* path, int permissions ) {
 
 int sys_mkdir( const char* path, int permissions ) {
     return do_mkdir( false, path, permissions );
+}
+
+static int do_symlink( bool kernel, const char* src, const char* dest ) {
+    int error;
+    io_context_t* io_context;
+
+    char* name;
+    int name_length;
+    inode_t* inode;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_parent_inode( io_context, NULL, src, &name, &name_length, &inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( inode->mount_point->fs_calls->symlink == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = inode->mount_point->fs_calls->symlink(
+            inode->mount_point->fs_data,
+            inode->fs_node,
+            name,
+            name_length,
+            dest
+        );
+    }
+
+    put_inode( inode );
+
+    return error;
+}
+
+int symlink( const char* src, const char* dest ) {
+    return do_symlink( true, src, dest );
+}
+
+int sys_symlink( const char* src, const char* dest ) {
+    return do_symlink( false, src, dest );
 }
 
 static int do_fchdir( bool kernel, int fd ) {
@@ -606,22 +733,8 @@ int sys_fchdir( int fd ) {
     return do_fchdir( false, fd );
 }
 
-static int do_stat( bool kernel, const char* path, struct stat* stat ) {
+static int do_read_stat( inode_t* inode, struct stat* stat ) {
     int error;
-    inode_t* inode;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
-
-    error = lookup_inode( io_context, path, &inode );
-
-    if ( error < 0 ) {
-        return error;
-    }
 
     memset( stat, 0, sizeof( struct stat ) );
 
@@ -636,6 +749,28 @@ static int do_stat( bool kernel, const char* path, struct stat* stat ) {
     }
 
     stat->st_dev = ( dev_t )inode->mount_point;
+
+    return error;
+}
+
+static int do_stat( bool kernel, const char* path, struct stat* stat ) {
+    int error;
+    inode_t* inode;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, NULL, path, &inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = do_read_stat( inode, stat );
 
     put_inode( inode );
 
@@ -707,7 +842,7 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, dir, &dir_inode );
+    error = lookup_inode( io_context, NULL, dir, &dir_inode );
 
     if ( error < 0 ) {
         return error;
@@ -1042,7 +1177,7 @@ static int do_utime( bool kernel, const char* path, const struct utimbuf* times)
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, path, &inode );
+    error = lookup_inode( io_context, NULL, path, &inode );
 
     if ( error < 0 ) {
         return error;

@@ -112,6 +112,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/link.c</item>
         <item>src/unistd/rmdir.c</item>
         <item>src/unistd/chown.c</item>
+        <item>src/unistd/symlink.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/fcntl/creat.c</item>
         <item>src/stdio/streams.c</item>
