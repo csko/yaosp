@@ -446,6 +446,17 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                 found = elf32_module_find_symbol(
                     elf_module,
                     symbol->name,
+                    STT_FUNC,
+                    &address
+                );
+
+                if ( found ) {
+                    goto r_386_32_found;
+                }
+
+                found = elf32_module_find_symbol(
+                    elf_module,
+                    symbol->name,
                     STT_OBJECT,
                     &address
                 );
@@ -455,6 +466,7 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                     return -EINVAL;
                 }
 
+r_386_32_found:
                 target = ( uint32_t* )( elf_module->text_address + reloc->offset );
                 *target = *target + ( uint32_t )address;
 

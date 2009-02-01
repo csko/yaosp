@@ -322,12 +322,16 @@ static int do_load_module( const char* name ) {
     found = module_loader->get_symbol( module, "init_module", ( ptr_t* )&module->init );
 
     if ( !found ) {
+        kprintf( "Module %s doesn't export init_module function!\n", name );
+        error = -ENOENT;
         goto error4;
     }
 
     found = module_loader->get_symbol( module, "destroy_module", ( ptr_t* )&module->destroy );
 
     if ( !found ) {
+        kprintf( "Module %s doesn't export destroy_module function!\n", name );
+        error = -ENOENT;
         goto error4;
     }
 

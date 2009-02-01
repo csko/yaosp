@@ -19,6 +19,9 @@
 #ifndef _ARCH_CPU_H_
 #define _ARCH_CPU_H_
 
+#define EFLAG_CF ( 1 << 0 )  /* Carry flag */
+#define EFLAG_ZF ( 1 << 6 )  /* Zero flag */
+#define EFLAG_SF ( 1 << 7 )  /* Sign flag */
 #define EFLAG_IF ( 1 << 9 )  /* Interrupt flag */
 #define EFLAG_ID ( 1 << 21 ) /* ID flag */
 
