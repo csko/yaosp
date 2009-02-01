@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-1 -*-
 # Python build system
 #
 # Copyright (c) 2008, 2009 Zoltan Kovacs
@@ -158,9 +159,6 @@ class GccWork( Work ) :
         command = [ "gcc" ] + real_flags + real_inputs + real_includes
         command += real_defines
         command += [ "-o", context.handle_everything( self.output ) ]
-
-        # Debug
-#        print command
 
         # Get the return code of the process
         retcode = subprocess.call( command )

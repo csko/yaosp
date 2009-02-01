@@ -78,7 +78,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/terminal" to="../../../../build/system/module/char/terminal"/>
+        <copy from="objs/terminal" to="../../../../build/image/system/module/char/terminal"/>
     </target>
 
     <target name="all">

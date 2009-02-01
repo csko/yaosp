@@ -1,0 +1,85 @@
+diff -Nru binutils-2.19-orig/bfd/config.bfd binutils-2.19/bfd/config.bfd
+--- binutils-2.19-orig/bfd/config.bfd	2008-04-16 20:02:01.000000000 +0200
++++ binutils-2.19/bfd/config.bfd	2009-02-01 15:50:12.000000000 +0100
+@@ -652,6 +652,9 @@
+     targ_defvec=bfd_elf32_i386_vec
+     targ_selvecs="i386pe_vec i386pei_vec"
+     ;;
++  i[3-7]86-*-yaosp*)
++    targ_defvec=bfd_elf32_i386_vec
++    ;;
+   i[3-7]86-*-interix*)
+     targ_defvec=i386pei_vec
+     targ_selvecs="i386pe_vec"
+diff -Nru binutils-2.19-orig/config.sub binutils-2.19/config.sub
+--- binutils-2.19-orig/config.sub	2008-04-14 11:28:35.000000000 +0200
++++ binutils-2.19/config.sub	2009-02-01 15:50:12.000000000 +0100
+@@ -1247,7 +1247,7 @@
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+-	      | -aos* \
++	      | -aos* | -yaosp* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
+diff -Nru binutils-2.19-orig/gas/configure.tgt binutils-2.19/gas/configure.tgt
+--- binutils-2.19-orig/gas/configure.tgt	2008-10-02 10:07:17.000000000 +0200
++++ binutils-2.19/gas/configure.tgt	2009-02-01 15:50:12.000000000 +0100
+@@ -175,6 +175,7 @@
+   i386-sequent-bsd*)			fmt=aout em=dynix ;;
+   i386-*-beospe*)			fmt=coff em=pe ;;
+   i386-*-beos*)				fmt=elf ;;
++  i386-*-yaosp*)			fmt=elf bfd_gas=yes ;;
+   i386-*-coff)				fmt=coff ;;
+   i386-*-elf)				fmt=elf ;;
+   i386-*-kaos*)				fmt=elf ;;
+diff -Nru binutils-2.19-orig/ld/Makefile.in binutils-2.19/ld/Makefile.in
+--- binutils-2.19-orig/ld/Makefile.in	2008-09-09 10:02:19.000000000 +0200
++++ binutils-2.19/ld/Makefile.in	2009-02-01 15:51:10.000000000 +0100
+@@ -457,6 +457,7 @@
+ 	eelf32xtensa.o \
+ 	eelf_i386.o \
+ 	eelf_i386_be.o \
++	eelf_i386_yaosp.o \
+ 	eelf_i386_chaos.o \
+ 	eelf_i386_fbsd.o \
+ 	eelf_i386_ldso.o \
+@@ -1846,6 +1847,9 @@
+ eelf_i386_be.c: $(srcdir)/emulparams/elf_i386_be.sh \
+   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+ 	${GENSCRIPTS} elf_i386_be "$(tdir_elf_i386_be)"
++eelf_i386_yaosp.c: $(srcdir)/emulparams/elf_i386_yaosp.sh \
++  $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
++	${GENSCRIPTS} elf_i386_yaosp "$(tdir_elf_i386_yaosp)"
+ eelf_i386_chaos.c: $(srcdir)/emulparams/elf_i386_chaos.sh \
+   $(ELF_DEPS) $(srcdir)/scripttempl/elf_chaos.sc ${GEN_DEPENDS}
+ 	${GENSCRIPTS} elf_i386_chaos "$(tdir_elf_i386_chaos)"
+diff -Nru binutils-2.19-orig/ld/configure.tgt binutils-2.19/ld/configure.tgt
+--- binutils-2.19-orig/ld/configure.tgt	2008-08-09 07:35:13.000000000 +0200
++++ binutils-2.19/ld/configure.tgt	2009-02-01 15:50:12.000000000 +0100
+@@ -273,6 +273,7 @@
+ i[3-7]86-*-interix*)	targ_emul=i386pe_posix;
+  			targ_extra_ofiles="deffilep.o pe-dll.o" ;;
+ i[3-7]86-*-beospe*)	targ_emul=i386beos ;;
++i[3-7]86-*-yaosp*)	targ_emul=elf_i386_yaosp ;;
+ i[3-7]86-*-beos*)	targ_emul=elf_i386_be ;;
+ i[3-7]86-*-vxworks*)	targ_emul=elf_i386_vxworks ;;
+ i[3-7]86-*-chaos)	targ_emul=elf_i386_chaos
+diff -Nru binutils-2.19-orig/ld/emulparams/elf_i386_yaosp.sh binutils-2.19/ld/emulparams/elf_i386_yaosp.sh
+--- binutils-2.19-orig/ld/emulparams/elf_i386_yaosp.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils-2.19/ld/emulparams/elf_i386_yaosp.sh	2009-02-01 15:50:12.000000000 +0100
+@@ -0,0 +1,13 @@
++SCRIPT_NAME=elf
++OUTPUT_FORMAT="elf32-i386"
++MAXPAGESIZE=0x1000
++COMMONPAGESIZE=0x1000
++TEXT_START_ADDR=0x40000000
++SHLIB_TEXT_START_ADDR=0x40000000
++NONPAGED_TEXT_START_ADDR=0x40000000
++ARCH=i386
++MACHINE=
++NOP=0x90909090
++TEMPLATE_NAME=elf32
++GENERATE_SHLIB_SCRIPT=yes
++NO_SMALL_DATA=yes

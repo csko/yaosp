@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <sys/types.h>
 
 static void exch(char* base,size_t size,size_t a,size_t b) {
   char* x=base+a*size;

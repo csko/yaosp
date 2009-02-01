@@ -1,0 +1,78 @@
+diff -Nru gcc-4.3.3-orig/config.sub gcc-4.3.3/config.sub
+--- gcc-4.3.3-orig/config.sub	2008-01-23 03:37:40.000000000 +0100
++++ gcc-4.3.3/config.sub	2009-02-01 17:21:38.000000000 +0100
+@@ -1239,7 +1239,7 @@
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+-	      | -aos* \
++	      | -aos* | -yaosp* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
+diff -Nru gcc-4.3.3-orig/gcc/config/yaosp.h gcc-4.3.3/gcc/config/yaosp.h
+--- gcc-4.3.3-orig/gcc/config/yaosp.h	1970-01-01 01:00:00.000000000 +0100
++++ gcc-4.3.3/gcc/config/yaosp.h	2009-02-01 17:21:38.000000000 +0100
+@@ -0,0 +1,8 @@
++#undef TARGET_OS_CPP_BUILTINS
++#define TARGET_OS_CPP_BUILTINS() \
++do { \
++    builtin_define( "__yaosp__" ); \
++} while (0)
++
++#undef TARGET_VERSION
++#define TARGET_VERSION fprintf( stderr, " (i386 yaosp)" );
+diff -Nru gcc-4.3.3-orig/gcc/config.gcc gcc-4.3.3/gcc/config.gcc
+--- gcc-4.3.3-orig/gcc/config.gcc	2008-11-20 18:09:53.000000000 +0100
++++ gcc-4.3.3/gcc/config.gcc	2009-02-01 17:21:38.000000000 +0100
+@@ -537,6 +537,11 @@
+   default_use_cxa_atexit=yes
+   use_gcc_tgmath=no
+   ;;
++*-*-yaosp*)
++  extra_parts="crtbegin.o crtend.o"
++  gas=yes
++  gnu_ld=yes
++  ;;
+ *-*-netbsd*)
+   tmake_file="t-slibgcc-elf-ver t-libc-ok t-netbsd t-libgcc-pic"
+   gas=yes
+@@ -1114,6 +1119,10 @@
+ 	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h svr4.h i386/beos-elf.h"
+ 	extra_parts='crtbegin.o crtend.o'
+ 	;;
++i[34567]86-*-yaosp*)
++	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h i386/i386elf.h yaosp.h"
++	tmake_file="i386/t-i386elf t-svr4"
++	;;
+ i[34567]86-*-freebsd*)
+ 	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h ${fbsd_tm_file} i386/freebsd.h"
+ 	;;
+diff -Nru gcc-4.3.3-orig/libgcc/config.host gcc-4.3.3/libgcc/config.host
+--- gcc-4.3.3-orig/libgcc/config.host	2008-11-20 18:09:53.000000000 +0100
++++ gcc-4.3.3/libgcc/config.host	2009-02-01 17:21:53.000000000 +0100
+@@ -385,6 +385,8 @@
+ 	;;
+ i[34567]86-*-kaos*)
+ 	;;
++i[34567]86-*-yaosp*)
++	;;
+ ia64*-*-elf*)
+ 	extra_parts="crtbegin.o crtend.o crtbeginS.o crtendS.o crtfastmath.o"
+ 	tmake_file="ia64/t-ia64"
+diff -Nru gcc-4.3.3-orig/libtool.m4 gcc-4.3.3/libtool.m4
+--- gcc-4.3.3-orig/libtool.m4	2008-02-16 04:57:53.000000000 +0100
++++ gcc-4.3.3/libtool.m4	2009-02-01 17:21:38.000000000 +0100
+@@ -5120,7 +5120,11 @@
+   _LT_LINKER_SHLIBS($1)
+   _LT_SYS_DYNAMIC_LINKER($1)
+   _LT_LINKER_HARDCODE_LIBPATH($1)
+-  LT_SYS_DLOPEN_SELF
++
++  if test "$cross_compiling" = no; then
++    LT_SYS_DLOPEN_SELF
++  fi
++
+   _LT_CMD_STRIPLIB
+ 
+   # Report which library types will actually be built

@@ -75,7 +75,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ps2kbd" to="../../../../build/system/module/input/ps2kbd"/>
+        <copy from="objs/ps2kbd" to="../../../../build/image/system/module/input/ps2kbd"/>
     </target>
 
     <target name="all">

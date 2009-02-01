@@ -45,6 +45,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
                 <include>../../include</include>
+                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-m32</flag>
@@ -74,7 +75,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/init" to="../../../build/application/init"/>
+        <copy from="objs/init" to="../../../build/image/application/init"/>
     </target>
 
     <target name="all">

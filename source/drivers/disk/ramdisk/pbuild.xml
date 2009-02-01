@@ -75,7 +75,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ramdisk" to="../../../../build/system/module/disk/ramdisk"/>
+        <copy from="objs/ramdisk" to="../../../../build/image/system/module/disk/ramdisk"/>
     </target>
 
     <target name="all">

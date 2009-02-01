@@ -74,7 +74,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/process" to="../../../../build/system/module/filesystem/process"/>
+        <copy from="objs/process" to="../../../../build/image/system/module/filesystem/process"/>
     </target>
 
     <target name="all">

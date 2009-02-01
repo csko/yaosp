@@ -19,7 +19,12 @@
 #ifndef _STRING_H_
 #define _STRING_H_
 
+#define __need_size_t
 #include <stddef.h>
+
+#ifndef NULL
+#define NULL ((void*)0)
+#endif /* NULL */
 
 void* memset( void* s, int c, size_t n );
 void* memcpy( void* d, const void* s, size_t n );

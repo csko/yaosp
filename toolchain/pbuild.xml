@@ -1,0 +1,112 @@
+<build default="all">
+    <target name="prepare" type="private">
+        <mkdir>../build/crosscompiler</mkdir>
+    </target>
+
+    <target name="get_sources" type="private">
+        <httpget address="http://ftp.gnu.org/gnu/binutils/binutils-2.19.tar.bz2"
+                 to="binutils-2.19.tar.bz2"
+                 md5="17a52219dee5a76c1a9d9b0bfd337d66"/>
+        <httpget address="http://ftp.gnu.org/gnu/gcc/gcc-4.3.3/gcc-4.3.3.tar.bz2"
+                 to="gcc-4.3.3.tar.bz2"
+                 md5="cc3c5565fdb9ab87a05ddb106ba0bd1f"/>
+
+        <echo>Unpacking binutils 2.19 ...</echo>
+
+        <exec executable="tar">
+            <arg>jxf</arg>
+            <arg>binutils-2.19.tar.bz2</arg>
+        </exec>
+
+        <echo>Patching binutils 2.19 ...</echo>
+
+        <exec executable="patch">
+            <arg>-t</arg>
+            <arg>-p0</arg>
+            <arg>-i</arg>
+            <arg>binutils-2.19.patch</arg>
+        </exec>
+
+        <echo>Unpacking gcc 4.3.3 ...</echo>
+
+        <exec executable="tar">
+            <arg>jxf</arg>
+            <arg>gcc-4.3.3.tar.bz2</arg>
+        </exec>
+
+        <echo>Patching gcc 4.3.3 ...</echo>
+
+        <exec executable="patch">
+            <arg>-t</arg>
+            <arg>-p0</arg>
+            <arg>-i</arg>
+            <arg>gcc-4.3.3.patch</arg>
+        </exec>
+    </target>
+
+    <target name="compile_binutils" type="private">
+        <echo>Compiling binutils 2.19 ...</echo>
+
+        <mkdir>binutils-build</mkdir>
+        <chdir directory="binutils-build"/>
+        
+        <exec executable="../binutils-2.19/configure">
+            <arg>--prefix=realpath(../../build/crosscompiler)</arg>
+            <arg>--target=i686-pc-yaosp</arg>
+            <arg>--disable-nls</arg>
+        </exec>
+
+        <exec executable="make">
+            <arg>-j2</arg>
+        </exec>
+
+        <exec executable="make">
+            <arg>install</arg>
+        </exec>
+
+        <chdir directory=".."/>
+    </target>
+
+    <target name="compile_gcc" type="private">
+        <echo>Compiling gcc 4.3.3 ...</echo>
+
+        <mkdir>gcc-build</mkdir>
+        <chdir directory="gcc-build"/>
+        
+        <exec executable="../gcc-4.3.3/configure">
+            <arg>--prefix=realpath(../../build/crosscompiler)</arg>
+            <arg>--target=i686-pc-yaosp</arg>
+            <arg>--disable-nls</arg>
+            <arg>--enable-shared</arg>
+            <arg>--enable-languages=c</arg>
+            <arg>--with-headers=../../source/include</arg>
+        </exec>
+
+        <exec executable="make">
+            <arg>-j2</arg>
+            <arg>all-gcc</arg>
+        </exec>
+
+        <exec executable="make">
+            <arg>-j2</arg>
+            <arg>all-target-libgcc</arg>
+        </exec>
+
+        <exec executable="make">
+            <arg>install-gcc</arg>
+        </exec>
+
+        <exec executable="make">
+            <arg>install-target-libgcc</arg>
+        </exec>
+
+        <chdir directory=".."/>
+    </target>
+
+    <target name="all">
+        <call target="prepare"/>
+        <call target="get_sources"/>
+        <call target="compile_binutils"/>
+        <call target="compile_gcc"/>
+    </target>
+</build>
