@@ -19,19 +19,28 @@
 #include <string.h>
 
 static char* error_strings[] = {
-    "Out of memory",
-    "I/O operation failed",
-    "Request timed out",
-    "Operation not supported",
-    "No such file or directory",
-    "Already exists",
-    "Recource busy",
-    "This is a directory",
-    "Inode not found",
-    "Not an executable",
-    "Bad file descriptor",
-    "Hardware error",
-    "Out of range"
+    "Cannot allocate memory", /* ENOMEM */
+    "Invalid argument", /* EINVAL */
+    "Input/output error", /* EIO */
+    "Timer expired", /* ETIME */
+    "Function not implemented", /* ENOSYS */
+    "No such file or directory", /* ENOENT */
+    "File exists", /* EEXIST */
+    "Device or resource busy", /* EBUSY */
+    "Is a directory", /* EISDIR */
+    "Inode not found", /* ENOINO */
+    "Executable format error", /* ENOEXEC */
+    "Bad file descriptor", /* EBADF */
+    "Hardware error", /* EHW */
+    "Numerical result out of range", /* ERANGE */
+    "No such device or address", /* ENXIO */
+    "Numerical argument out of domain", /* EDOM */
+    "No such device", /* ENODEV */
+    "Interrupted system call", /* EINTR */
+    "Inappropriate ioctl for device", /* ENOTTY */
+    "Operation not permitted", /* EPERM */
+    "Read-only file system", /* EROFS */
+    "Too many levels of symbolic links" /* ELOOP */
 };
 
 char* strerror( int errnum ) {
