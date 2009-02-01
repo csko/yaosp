@@ -933,6 +933,43 @@ int sys_lseek( int fd, off_t* offset, int whence, off_t* new_offset ) {
     return do_lseek( false, fd, *offset, whence, new_offset );
 }
 
+static int do_readlink( bool kernel, const char* path, char* buffer, size_t length ) {
+    int error;
+    inode_t* inode;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, NULL, path, &inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( inode->mount_point->fs_calls->readlink == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = inode->mount_point->fs_calls->readlink(
+            inode->mount_point->fs_data,
+            inode->fs_node,
+            buffer,
+            length
+        );
+    }
+
+    put_inode( inode );
+
+    return error;
+}
+
+int sys_readlink( const char* path, char* buffer, size_t length ) {
+    return do_readlink( false, path, buffer, length );
+}
+
 int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {
     int error;
     inode_t* dir_inode;

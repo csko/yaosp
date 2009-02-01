@@ -177,6 +177,7 @@ int sys_fstat( int fd, struct stat* stat );
 int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
 int sys_mkdir( const char* path, int permissions );
 int sys_symlink( const char* src, const char* dest );
+int sys_readlink( const char* path, char* buffer, size_t length );
 int sys_mount( const char* device, const char* dir, const char* filesystem );
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 int sys_utime( const char* filename, const struct utimbuf* times );

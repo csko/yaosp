@@ -16,13 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include <yaosp/debug.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
 ssize_t readlink( const char* path, char* buf, size_t bufsiz ) {
-    /* TODO */
-    dbprintf( "readlink() called!\n" );
-    return snprintf( buf, bufsiz, "%s", path );
+    int error;
+
+    error = syscall3( SYS_readlink, ( int )path, ( int )buf, bufsiz );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return error;
 }
