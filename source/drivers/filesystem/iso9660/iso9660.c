@@ -23,7 +23,6 @@
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
-#include <lib/ctype.h>
 #include <time.h>
 
 #include "iso9660.h"
@@ -308,7 +307,6 @@ static void iso9660_parse_rr_extension( iso9660_directory_entry_t* entry, struct
 
 static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
     iso9660_directory_entry_t* iso_entry;
-    int i;
 
     iso_entry = ( iso9660_directory_entry_t* )buffer;
 
@@ -327,10 +325,7 @@ static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
 
         name = ( char* )( iso_entry + 1 );
 
-        for ( i = 0; i < length; i++ ) {
-            entry->name[ i ] = tolower( name[ i ] );
-        }
-
+        memcpy( entry->name, name, length );
         entry->name[ length ] = 0;
 
         /* Cut the semicolon from the end of the filename if exists */

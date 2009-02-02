@@ -132,7 +132,6 @@ static kernel_symbol_t symbols[] = {
     { "strdup", ( ptr_t )strdup },
     { "strndup", ( ptr_t )strndup },
     { "snprintf", ( ptr_t )snprintf },
-    { "tolower", ( ptr_t )tolower },
 
     /* Hashtable functions */
     { "init_hashtable", ( ptr_t )init_hashtable },
