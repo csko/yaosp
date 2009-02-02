@@ -245,9 +245,11 @@ static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
         length = MIN( NAME_MAX, iso_entry->name_length );
 
         name = ( char* )( iso_entry + 1 );
-        for(i = 0; i < length; i++ ){
-            entry->name[ i ] = tolower( name [ i ] );
+
+        for ( i = 0; i < length; i++ ) {
+            entry->name[ i ] = tolower( name[ i ] );
         }
+
         entry->name[ length ] = 0;
 
         /* Cut the semicolon from the end of the filename if exists */
@@ -474,7 +476,7 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     if ( size >= BLOCK_SIZE ) {
         int to_read;
 
-        to_read = size & ~( BLOCK_SIZE - 1);
+        to_read = size & ~( BLOCK_SIZE - 1 );
 
         if ( pread(
             cookie->fd,
