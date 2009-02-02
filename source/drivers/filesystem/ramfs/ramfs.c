@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <macros.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>

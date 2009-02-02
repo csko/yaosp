@@ -28,7 +28,7 @@ long ftell( FILE* stream ) {
 
     l = lseek( stream->fd, 0, SEEK_CUR );
 
-    if ( l == -1 ) {
+    if ( l == ( off_t )-1 ) {
         return -1;
     }
 
