@@ -42,7 +42,13 @@ static int bm_read_module( void* private, void* data, off_t offset, int size ) {
 
     bootmodule = ( bootmodule_t* )private;
 
-    memcpy( data, ( char* )bootmodule->address + offset, size );
+    if ( offset + size > bootmodule->size ) {
+        size = bootmodule->size - offset;
+    }
+
+    if ( size > 0 ) {
+        memcpy( data, ( char* )bootmodule->address + offset, size );
+    }
 
     return size;
 }
