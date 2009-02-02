@@ -1,4 +1,4 @@
-/* I/O context
+/* I/O context handling
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <mm/kmalloc.h>
 #include <vfs/io_context.h>
+#include <vfs/vfs.h>
 #include <lib/string.h>
 
 file_t* create_file( void ) {
@@ -121,6 +122,34 @@ void io_context_put_file( io_context_t* io_context, file_t* file ) {
     UNLOCK( io_context->lock );
 
     if ( do_delete ) {
+        inode_t* tmp;
+
+        ASSERT( file->inode != NULL );
+
+        tmp = file->inode;
+
+        /* Close the file */
+
+        if ( tmp->mount_point->fs_calls->close != NULL ) {
+            tmp->mount_point->fs_calls->close(
+                tmp->mount_point->fs_data,
+                tmp->fs_node,
+                file->cookie
+            );
+        }
+
+        /* Free the cookie */
+
+        if ( tmp->mount_point->fs_calls->free_cookie != NULL ) {
+            tmp->mount_point->fs_calls->free_cookie(
+                tmp->mount_point->fs_data,
+                tmp->fs_node,
+                file->cookie
+            );
+        }
+
+        /* Delete the file */
+
         delete_file( file );
     }
 }

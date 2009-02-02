@@ -153,7 +153,7 @@ int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t**
     return error;
 }
 
-static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t** _parent, char* name, int length ) {
+static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t** _parent, char* name, int length, int flags ) {
     int error;
     inode_t* parent;
 
@@ -161,10 +161,18 @@ static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t** _p
 
     if ( ( length == 0 ) ||
          ( ( length == 1 ) && ( name[ 0 ] == '.' ) ) ) {
+        /* Check if the current filesystem supports opening */
+
+        if ( parent->mount_point->fs_calls->open == NULL ) {
+            return -ENOSYS;
+        }
+
+        /* Open the inode */
+
         error = parent->mount_point->fs_calls->open(
             parent->mount_point->fs_data,
             parent->fs_node,
-            0 /* mode */,
+            flags,
             &file->cookie
         );
 
@@ -176,11 +184,15 @@ static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t** _p
 
         atomic_inc( &parent->ref_count );
     } else {
+        /* Lookup the child */
+
         error = do_lookup_inode( io_context, parent, name, length, true, &file->inode );
 
         if ( error < 0 ) {
             return error;
         }
+
+        /* Follow possible symbolic link */
 
         error = follow_symbolic_link( io_context, _parent, &file->inode );
 
@@ -190,10 +202,18 @@ static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t** _p
 
         ASSERT( file->inode != NULL );
 
+        /* Check if the current filesystem supports opening */
+
+        if ( file->inode->mount_point->fs_calls->open == NULL ) {
+            return -ENOSYS;
+        }
+
+        /* Open the inode */
+
         error = file->inode->mount_point->fs_calls->open(
             file->inode->mount_point->fs_data,
             file->inode->fs_node,
-            0 /* mode */,
+            flags,
             &file->cookie
         );
 
@@ -205,7 +225,7 @@ static int do_open_helper1( io_context_t* io_context, file_t* file, inode_t** _p
     return 0;
 }
 
-static int do_open_helper2( file_t* file, inode_t* parent, char* name, int length ) {
+static int do_open_helper2( file_t* file, inode_t* parent, char* name, int length, int flags, int perms ) {
     int error;
     ino_t inode_number;
 
@@ -213,13 +233,15 @@ static int do_open_helper2( file_t* file, inode_t* parent, char* name, int lengt
         return -ENOSYS;
     }
 
+    /* Create a new inode */
+
     error = parent->mount_point->fs_calls->create(
         parent->mount_point->fs_data,
         parent->fs_node,
         name,
         length,
-        0,
-        0,
+        flags,
+        perms,
         &inode_number,
         &file->cookie
     );
@@ -227,6 +249,8 @@ static int do_open_helper2( file_t* file, inode_t* parent, char* name, int lengt
     if ( error < 0 ) {
         return error;
     }
+
+    /* Assign the newly created inode with the file */
 
     file->inode = get_inode( parent->mount_point, inode_number );
 
@@ -237,7 +261,7 @@ static int do_open_helper2( file_t* file, inode_t* parent, char* name, int lengt
     return 0;
 }
 
-static int do_open( bool kernel, const char* path, int flags ) {
+static int do_open( bool kernel, const char* path, int flags, int perms ) {
     int error;
     char* name;
     int length;
@@ -270,10 +294,12 @@ static int do_open( bool kernel, const char* path, int flags ) {
         return -ENOMEM;
     }
 
-    error = do_open_helper1( io_context, file, &parent, name, length );
+    /* Open the requested inode */
+
+    error = do_open_helper1( io_context, file, &parent, name, length, flags );
 
     if ( ( error == -ENOENT ) && ( ( flags & O_CREAT ) != 0 ) ) {
-        error = do_open_helper2( file, parent, name, length );
+        error = do_open_helper2( file, parent, name, length, flags, perms );
     }
 
     put_inode( parent );
@@ -282,6 +308,8 @@ static int do_open( bool kernel, const char* path, int flags ) {
         delete_file( file );
         return error;
     }
+
+    /* Insert the new file to the I/O context */
 
     error = io_context_insert_file( io_context, file );
 
@@ -294,11 +322,11 @@ static int do_open( bool kernel, const char* path, int flags ) {
 }
 
 int open( const char* path, int flags ) {
-    return do_open( true, path, flags );
+    return do_open( true, path, flags, 0666 );
 }
 
 int sys_open( const char* path, int flags ) {
-    return do_open( false, path, flags );
+    return do_open( false, path, flags, 0666 );
 }
 
 static int do_close( bool kernel, int fd ) {

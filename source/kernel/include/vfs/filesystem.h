@@ -30,11 +30,11 @@ struct stat;
 
 typedef struct filesystem_calls {
     bool ( *probe )( const char* device );
-    int ( *mount )( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num );
+    int ( *mount )( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number );
     int ( *unmount )( void* fs_cookie );
-    int ( *read_inode )( void* fs_cookie, ino_t inode_num, void** node );
+    int ( *read_inode )( void* fs_cookie, ino_t inode_number, void** node );
     int ( *write_inode )( void* fs_cookie, void* node );
-    int ( *lookup_inode )( void* fs_cookie, void* parent, const char* name, int name_length, ino_t* inode_num );
+    int ( *lookup_inode )( void* fs_cookie, void* parent, const char* name, int name_length, ino_t* inode_number );
     int ( *open )( void* fs_cookie, void* node, int mode, void** file_cookie );
     int ( *close )( void* fs_cookie, void* node, void* file_cookie );
     int ( *free_cookie )( void* fs_cookie, void* node, void* file_cookie );
@@ -44,8 +44,8 @@ typedef struct filesystem_calls {
     int ( *read_stat )( void* fs_cookie, void* node, struct stat* stat );
     int ( *write_stat )( void* fs_cookie, void* node, struct stat* stat, uint32_t mask );
     int ( *read_directory )( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
-    int ( *create )( void* fs_cookie, void* node, const char* name, int name_length, int mode, int permissions, ino_t* inode_num, void** file_cookie );
-    int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_length, int permissions );
+    int ( *create )( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_num, void** file_cookie );
+    int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_length, int perms );
     int ( *isatty )( void* fs_cookie, void* node );
     int ( *symlink )( void* fs_cookie, void* node, const char* name, int name_length, const char* link_path );
     int ( *readlink )( void* fs_cookie, void* node, char* buffer, size_t length );
