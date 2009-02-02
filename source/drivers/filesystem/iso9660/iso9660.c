@@ -27,13 +27,12 @@
 #include <time.h>
 
 #include "iso9660.h"
+#include "rockridge.h"
 
 #define BLOCK_SIZE 2048
 #define INODE_TO_BLOCK(inode) ( inode / BLOCK_SIZE )
 #define INODE_TO_OFFSET(inode) ( inode % BLOCK_SIZE )
 #define POSITION_TO_INODE(block,offset) ( ( ( ino_t ) ( block * BLOCK_SIZE ) | ( ( ino_t ) offset ) ) )
-
-static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
 
 static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
     int fd;
@@ -225,6 +224,88 @@ static int iso9660_write_inode( void* fs_cookie, void* node ) {
     return 0;
 }
 
+static void iso9660_parse_rr_extension( iso9660_directory_entry_t* entry, struct dirent* dir_entry ) {
+    bool done;
+    uint8_t* data;
+    uint8_t rem_size;
+    rr_header_t* header;
+
+    int alt_name_size;
+
+    data = ( uint8_t* )( entry + 1 );
+    data += entry->name_length;
+
+    if ( ( entry->name_length % 2 ) == 0 ) {
+        data++;
+    }
+
+    done = false;
+    alt_name_size = 0;
+
+    rem_size = entry->record_length;
+    rem_size -= ( ( void* )data - ( void* )entry );
+
+    while ( ( !done ) && ( rem_size > 0 ) ) {
+        header = ( rr_header_t* )data;
+
+        switch ( header->tag ) {
+            case RR_TAG_PX :
+                /* Posix stat structure */
+                break;
+
+            case RR_TAG_PN :
+                break;
+
+            case RR_TAG_SL :
+                /* Symbolic link information */
+                break;
+
+            case RR_TAG_NM : {
+                int to_copy;
+                uint8_t cur_name_size;
+                rr_nm_data_t* nm_data;
+
+                nm_data = ( rr_nm_data_t* )( header + 1 );
+                cur_name_size = ( header->length - ( sizeof( rr_header_t ) + sizeof( rr_nm_data_t ) ) );
+
+                to_copy = MIN( NAME_MAX - alt_name_size, cur_name_size );
+
+                if ( to_copy > 0 ) {
+                    memcpy( dir_entry->name + alt_name_size, nm_data + 1, cur_name_size );
+                    alt_name_size += to_copy;
+                }
+
+                dir_entry->name[ alt_name_size ] = 0;
+
+                break;
+            }
+
+            case RR_TAG_CL :
+                break;
+
+            case RR_TAG_PL :
+                break;
+
+            case RR_TAG_RE :
+                /* Relocated directory */
+                break;
+
+            case RR_TAG_TF :
+                break;
+
+            case RR_TAG_RR :
+                break;
+
+            default :
+                done = true;
+                break;
+        }
+
+        data += header->length;
+        rem_size -= header->length;
+    }
+}
+
 static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
     iso9660_directory_entry_t* iso_entry;
     int i;
@@ -267,6 +348,8 @@ static int iso9660_parse_directory_entry( char* buffer, struct dirent* entry ) {
             entry->name[ strlen( entry->name ) - 1 ] = 0;
         }
     }
+
+    iso9660_parse_rr_extension( iso_entry, entry );
 
     return iso_entry->record_length;
 }
