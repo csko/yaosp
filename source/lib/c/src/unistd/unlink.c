@@ -16,12 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <unistd.h>
 
-#include <yaosp/debug.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
 int unlink( const char* pathname ) {
-    dbprintf( "unlink() called!\n" );
-    /* TODO */
-    return -1;
+    int error;
+
+    error = syscall1( SYS_unlink, ( int )pathname );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
 }

@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <yaosp/module.h>
 
@@ -36,7 +37,7 @@ int main( int argc, char** argv ) {
     error = load_module( argv[ 1 ] );
 
     if ( error < 0 ) {
-        fprintf( stderr, "%s: Failed to load module: %s (error=%d)\n", argv0, argv[ 1 ], error );
+        fprintf( stderr, "%s: Failed to load module: `%s': %s\n", argv0, argv[ 1 ], strerror( error ) );
         return EXIT_FAILURE;
     }
 

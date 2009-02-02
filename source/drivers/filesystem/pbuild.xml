@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>iso9660</item>
         <item>process</item>
         <item>ext2</item>
+        <item>ramfs</item>
     </array>
 
     <target name="all">

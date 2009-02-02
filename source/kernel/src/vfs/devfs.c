@@ -497,6 +497,12 @@ out:
     return error;
 }
 
+static int devfs_rmdir( void* fs_cookie, void* _node, const char* name, int name_length ) {
+    /* TODO */
+
+    return -ENOSYS;
+}
+
 static int devfs_add_select_request( void* fs_cookie, void* _node, void* file_cookie, select_request_t* request ) {
     int error;
     devfs_node_t* node;
@@ -560,7 +566,9 @@ static filesystem_calls_t devfs_calls = {
     .write_stat = devfs_write_stat,
     .read_directory = devfs_read_directory,
     .create = NULL,
+    .unlink = NULL,
     .mkdir = devfs_mkdir,
+    .rmdir = devfs_rmdir,
     .isatty = NULL,
     .symlink = NULL,
     .readlink = NULL,

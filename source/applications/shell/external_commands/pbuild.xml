@@ -32,6 +32,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>mkdir</item>
         <item>load_module</item>
         <item>ramdiskctrl</item>
+        <item>touch</item>
+        <item>rmdir</item>
+        <item>rm</item>
     </array>
 
     <target name="all">

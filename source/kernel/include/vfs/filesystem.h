@@ -45,7 +45,9 @@ typedef struct filesystem_calls {
     int ( *write_stat )( void* fs_cookie, void* node, struct stat* stat, uint32_t mask );
     int ( *read_directory )( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
     int ( *create )( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_num, void** file_cookie );
+    int ( *unlink )( void* fs_cookie, void* node, const char* name, int name_length );
     int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_length, int perms );
+    int ( *rmdir )( void* fs_cookie, void* node, const char* name, int name_length );
     int ( *isatty )( void* fs_cookie, void* node );
     int ( *symlink )( void* fs_cookie, void* node, const char* name, int name_length, const char* link_path );
     int ( *readlink )( void* fs_cookie, void* node, char* buffer, size_t length );

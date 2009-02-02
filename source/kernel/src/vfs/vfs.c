@@ -680,6 +680,114 @@ int sys_mkdir( const char* path, int permissions ) {
     return do_mkdir( false, path, permissions );
 }
 
+static int do_rmdir( bool kernel, const char* path ) {
+    int error;
+    inode_t* parent;
+    io_context_t* io_context;
+
+    char* name;
+    int name_length;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_parent_inode( io_context, NULL, path, &name, &name_length, &parent );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( name_length == 0 ) {
+        return -EINVAL;
+    }
+
+    if ( parent->mount_point->fs_calls->rmdir == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = parent->mount_point->fs_calls->rmdir(
+            parent->mount_point->fs_data,
+            parent->fs_node,
+            name,
+            name_length
+        );
+    }
+
+    put_inode( parent );
+
+    return error;
+}
+
+int sys_rmdir( const char* _path ) {
+    int error;
+    char* path;
+    size_t length;
+
+    path = strdup( _path );
+
+    if ( path == NULL ) {
+        return -ENOMEM;
+    }
+
+    length = strlen( path );
+
+    if ( ( length > 0 ) && ( path[ length - 1 ] == '/' ) ) {
+        path[ length - 1 ] = 0;
+    }
+
+    error = do_rmdir( false, path );
+
+    kfree( path );
+
+    return error;
+}
+
+static int do_unlink( bool kernel, const char* path ) {
+    int error;
+    inode_t* parent;
+    io_context_t* io_context;
+
+    char* name;
+    int name_length;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_parent_inode( io_context, NULL, path, &name, &name_length, &parent );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( name_length == 0 ) {
+        return -EINVAL;
+    }
+
+    if ( parent->mount_point->fs_calls->unlink == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = parent->mount_point->fs_calls->unlink(
+            parent->mount_point->fs_data,
+            parent->fs_node,
+            name,
+            name_length
+        );
+    }
+
+    put_inode( parent );
+
+    return error;
+}
+
+int sys_unlink( const char* path ) {
+    return do_unlink( false, path );
+}
+
 static int do_symlink( bool kernel, const char* src, const char* dest ) {
     int error;
     io_context_t* io_context;

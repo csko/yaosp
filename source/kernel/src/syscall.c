@@ -54,6 +54,8 @@ static system_call_entry_t system_call_table[] = {
     { "fstat", sys_fstat, 0 },
     { "lseek", sys_lseek, 0 },
     { "mkdir", sys_mkdir, 0 },
+    { "rmdir", sys_rmdir, 0 },
+    { "unlink", sys_unlink, 0 },
     { "symlink", sys_symlink, 0 },
     { "readlink", sys_readlink, 0 },
     { "mount", sys_mount, 0 },

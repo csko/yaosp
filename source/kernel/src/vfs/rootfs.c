@@ -299,6 +299,12 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     return 0;
 }
 
+static int rootfs_rmdir( void* fs_cookie, void* _node, const char* name, int name_length ) {
+    /* TODO */
+
+    return -ENOSYS;
+}
+
 static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int name_length, const char* link_path ) {
     int error;
     ino_t dummy;
@@ -378,7 +384,9 @@ static filesystem_calls_t rootfs_calls = {
     .write_stat = rootfs_write_stat,
     .read_directory = rootfs_read_directory,
     .create = NULL,
+    .unlink = NULL,
     .mkdir = rootfs_mkdir,
+    .rmdir = rootfs_rmdir,
     .isatty = NULL,
     .symlink = rootfs_symlink,
     .readlink = rootfs_readlink,

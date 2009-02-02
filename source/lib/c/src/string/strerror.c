@@ -40,7 +40,9 @@ static char* error_strings[] = {
     "Inappropriate ioctl for device", /* ENOTTY */
     "Operation not permitted", /* EPERM */
     "Read-only file system", /* EROFS */
-    "Too many levels of symbolic links" /* ELOOP */
+    "Too many levels of symbolic links", /* ELOOP */
+    "Not a directory", /* ENOTDIR */
+    "Directory not empty" /* ENOTEMPTY */
 };
 
 char* strerror( int errnum ) {

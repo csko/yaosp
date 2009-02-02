@@ -367,8 +367,7 @@ static int iso9660_open( void* fs_cookie, void* _node, int mode, void** file_coo
     int error;
     iso9660_inode_t* node;
 
-    if ( ( mode & O_WRONLY ) ||
-         ( mode & O_RDWR ) ) {
+    if ( mode & O_WRONLY ) {
         return -EROFS;
     }
 
@@ -631,7 +630,9 @@ static filesystem_calls_t iso9660_calls = {
     .write_stat = NULL,
     .read_directory = iso9660_read_directory,
     .create = NULL,
+    .unlink = NULL,
     .mkdir = NULL,
+    .rmdir = NULL,
     .isatty = NULL,
     .symlink = NULL,
     .readlink = NULL,
