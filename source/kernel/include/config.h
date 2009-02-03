@@ -41,6 +41,16 @@
 #define MAX_MODULE_NAME_LENGTH 64
 
 /**
+ * The maximum length of process names.
+ */
+#define MAX_PROCESS_NAME_LENGTH 64
+
+/**
+ * The maximum length of thread names.
+ */
+#define MAX_THREAD_NAME_LENGTH 64
+
+/**
  * The size of the kernel stack for threads.
  */
 #define KERNEL_STACK_SIZE ( 32 * 1024 )

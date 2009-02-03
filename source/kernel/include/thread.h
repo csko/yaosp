@@ -77,6 +77,12 @@ typedef struct thread {
     void* arch_data;
 } thread_t;
 
+typedef struct thread_info {
+    thread_id id;
+    char name[ MAX_THREAD_NAME_LENGTH ];
+    uint64_t cpu_time;
+} thread_info_t;
+
 typedef int thread_entry_t( void* arg );
 typedef int thread_iter_callback_t( thread_t* thread, void* data );
 

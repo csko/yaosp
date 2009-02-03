@@ -20,6 +20,7 @@
 #define _PROCESS_H_
 
 #include <semaphore.h>
+#include <config.h>
 #include <mm/context.h>
 #include <mm/region.h>
 #include <vfs/io_context.h>
@@ -47,6 +48,13 @@ typedef struct process {
 
     semaphore_id waiters;
 } process_t;
+
+typedef struct process_info {
+    process_id id;
+    char name[ MAX_PROCESS_NAME_LENGTH ];
+    uint64_t pmem_size;
+    uint64_t vmem_size;
+} process_info_t;
 
 typedef int process_iter_callback_t( process_t* process, void* data );
 
