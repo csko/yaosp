@@ -25,6 +25,7 @@
 int main( int argc, char** argv ) {
     int error;
     system_info_t sysinfo;
+    kernel_info_t kernel_info;
 
     error = get_system_info( &sysinfo );
 
@@ -32,6 +33,25 @@ int main( int argc, char** argv ) {
         fprintf( stderr, "%s: Failed to get system information!\n", argv[ 0 ] );
         return EXIT_FAILURE;
     }
+
+    error = get_kernel_info( &kernel_info );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to get kernel information!\n", argv[ 0 ] );
+        return EXIT_FAILURE;
+    }
+
+    printf(
+        "Kernel version: %d.%d.%d\n",
+        kernel_info.major_version,
+        kernel_info.minor_version,
+        kernel_info.release_version
+    );
+    printf(
+        "Kernel was built on %s %s\n",
+        kernel_info.build_date,
+        kernel_info.build_time
+    );
 
     printf( "Total memory: %d Kb\n", ( sysinfo.total_page_count * getpagesize() ) / 1024 );
     printf( "Free memory: %d Kb\n", ( sysinfo.free_page_count * getpagesize() ) / 1024 );

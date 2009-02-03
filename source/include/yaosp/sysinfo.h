@@ -42,6 +42,15 @@ typedef struct system_info {
     uint32_t loaded_module_count;
 } system_info_t;
 
+typedef struct kernel_info {
+    uint32_t major_version;
+    uint32_t minor_version;
+    uint32_t release_version;
+    char build_date[ 32 ];
+    char build_time[ 32 ];
+} kernel_info_t;
+
 int get_system_info( system_info_t* system_info );
+int get_kernel_info( kernel_info_t* kernel_info );
 
 #endif // _SYSINFO_H_

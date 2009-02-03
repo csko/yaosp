@@ -68,6 +68,7 @@ static system_call_entry_t system_call_table[] = {
     { "stime", sys_stime, 0 },
     { "get_system_time", sys_get_system_time, 0 },
     { "get_system_info", sys_get_system_info, 0 },
+    { "get_kernel_info", sys_get_kernel_info, 0 },
     { "sleep_thread", sys_sleep_thread, 0 },
     { "create_region", sys_create_region, 0 },
     { "delete_region", sys_delete_region, 0 },
