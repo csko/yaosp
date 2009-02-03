@@ -1069,6 +1069,12 @@ int sys_lseek( int fd, off_t* offset, int whence, off_t* new_offset ) {
     return do_lseek( false, fd, *offset, whence, new_offset );
 }
 
+int sys_fcntl( int fd, int cmd, int arg ) {
+    /* TODO */
+
+    return -ENOSYS;
+}
+
 static int do_readlink( bool kernel, const char* path, char* buffer, size_t length ) {
     int error;
     inode_t* inode;
@@ -1390,6 +1396,53 @@ int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, tim
 
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
     return do_select( false, count, readfds, writefds, exceptfds, timeout );
+}
+
+static int do_dup( bool kernel, int old_fd ) {
+    int error;
+    file_t* old_file;
+    file_t* new_file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    old_file = io_context_get_file( io_context, old_fd );
+
+    if ( old_file == NULL ) {
+        return -EBADF;
+    }
+
+    new_file = create_file();
+
+    if ( new_file == NULL ) {
+        io_context_put_file( io_context, old_file );
+        return -ENOMEM;
+    }
+
+    new_file->type = old_file->type;
+    new_file->inode = old_file->inode;
+    new_file->cookie = old_file->cookie;
+
+    atomic_inc( &new_file->inode->ref_count );
+
+    io_context_put_file( io_context, old_file );
+
+    error = io_context_insert_file( io_context, new_file );
+
+    if ( error < 0 ) {
+        delete_file( new_file );
+        return error;
+    }
+
+    return new_file->fd;
+}
+
+int sys_dup( int old_fd ) {
+    return do_dup( false, old_fd );
 }
 
 static int do_dup2( bool kernel, int old_fd, int new_fd ) {

@@ -1,4 +1,4 @@
-/* yaosp C library
+/* fcntl function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,30 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _FCNTL_H_
-#define _FCNTL_H_
+#include <errno.h>
+#include <fcntl.h>
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define O_RDONLY 0x01
-#define O_WRONLY 0x02
-#define O_RDWR   0x03
-#define O_CREAT  0x04
-#define O_TRUNC  0x08
-#define O_APPEND 0x10
-#define O_EXCL   0x20
+int fcntl( int fd, int cmd, ... ) {
+    int error;
 
-#define F_DUPFD 0
-#define F_GETFD 1
-#define F_SETFD 2
-#define F_GETFL 3
-#define F_SETFL 4
+    error = syscall3( SYS_fcntl, fd, cmd, *( ( ( int* )&cmd ) + 1 ) );
 
-#define FD_CLOEXEC 1
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
 
-int open( const char* filename, int flags, ... ) __nonnull((1));
-int creat( const char* pathname, mode_t mode );
-int fcntl( int fd, int cmd, ... );
-
-#endif // _FCNTL_H_
+    return error;
+}

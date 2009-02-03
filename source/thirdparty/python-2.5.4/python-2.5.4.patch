@@ -1,6 +1,6 @@
-diff -N -r -u Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
+diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 --- Python-2.5.4-orig/Modules/config.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Modules/config.c	2009-01-22 10:08:20.000000000 +0100
++++ Python-2.5.4/Modules/config.c	2009-02-03 09:50:17.000000000 +0100
 @@ -0,0 +1,89 @@
 +/* Generated automatically from ./Modules/config.c.in by makesetup. */
 +/* -*- C -*- ***********************************************
@@ -50,7 +50,7 @@ diff -N -r -u Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 +
 +//  {"thread", initthread},
 +//  {"signal", initsignal},
-+//  {"posix", initposix},
++  {"posix", initposix},
 +  {"errno", initerrno},
 +//  {"pwd", initpwd},
 +  {"_sre", init_sre},
@@ -91,9 +91,92 @@ diff -N -r -u Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 +}
 +#endif
 +
-diff -N -r -u Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform.c
+diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodule.c
+--- Python-2.5.4-orig/Modules/posixmodule.c	2008-12-13 16:14:30.000000000 +0100
++++ Python-2.5.4/Modules/posixmodule.c	2009-02-03 11:10:44.000000000 +0100
+@@ -2457,6 +2457,7 @@
+ }
+ 
+ 
++#undef HAVE_SYSTEM
+ #ifdef HAVE_SYSTEM
+ PyDoc_STRVAR(posix_system__doc__,
+ "system(command) -> exit_status\n\n\
+@@ -3583,6 +3584,7 @@
+ }
+ #endif
+ 
++#undef HAVE_GETEGID
+ #ifdef HAVE_GETEGID
+ PyDoc_STRVAR(posix_getegid__doc__,
+ "getegid() -> egid\n\n\
+@@ -3596,6 +3598,7 @@
+ #endif
+ 
+ 
++#undef HAVE_GETEUID
+ #ifdef HAVE_GETEUID
+ PyDoc_STRVAR(posix_geteuid__doc__,
+ "geteuid() -> euid\n\n\
+@@ -3609,6 +3612,7 @@
+ #endif
+ 
+ 
++#undef HAVE_GETGID
+ #ifdef HAVE_GETGID
+ PyDoc_STRVAR(posix_getgid__doc__,
+ "getgid() -> gid\n\n\
+@@ -3731,6 +3735,7 @@
+ 
+ #endif /* HAVE_SETPGRP */
+ 
++#undef HAVE_GETPPID
+ #ifdef HAVE_GETPPID
+ PyDoc_STRVAR(posix_getppid__doc__,
+ "getppid() -> ppid\n\n\
+@@ -3773,6 +3778,7 @@
+ }
+ #endif
+ 
++#undef HAVE_GETUID
+ #ifdef HAVE_GETUID
+ PyDoc_STRVAR(posix_getuid__doc__,
+ "getuid() -> uid\n\n\
+@@ -3786,6 +3792,7 @@
+ #endif
+ 
+ 
++#undef HAVE_KILL
+ #ifdef HAVE_KILL
+ PyDoc_STRVAR(posix_kill__doc__,
+ "kill(pid, sig)\n\n\
+@@ -3861,6 +3868,7 @@
+ #endif
+ 
+ 
++#undef HAVE_POPEN
+ #ifdef HAVE_POPEN
+ PyDoc_STRVAR(posix_popen__doc__,
+ "popen(command [, mode='r' [, bufsize]]) -> pipe\n\n\
+@@ -5669,6 +5677,7 @@
+ }
+ #endif /* HAVE_WAITPID || HAVE_CWAIT */
+ 
++#undef HAVE_WAIT
+ #ifdef HAVE_WAIT
+ PyDoc_STRVAR(posix_wait__doc__,
+ "wait() -> (pid, status)\n\n\
+@@ -6230,6 +6239,7 @@
+ 	return PyBool_FromLong(isatty(fd));
+ }
+ 
++#undef HAVE_PIPE
+ #ifdef HAVE_PIPE
+ PyDoc_STRVAR(posix_pipe__doc__,
+ "pipe() -> (read_end, write_end)\n\n\
+diff -Nru Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform.c
 --- Python-2.5.4-orig/Python/getplatform.c	2000-09-02 01:29:29.000000000 +0200
-+++ Python-2.5.4/Python/getplatform.c	2009-01-23 11:16:30.000000000 +0100
++++ Python-2.5.4/Python/getplatform.c	2009-02-03 09:50:06.000000000 +0100
 @@ -2,7 +2,7 @@
  #include "Python.h"
  
@@ -103,10 +186,10 @@ diff -N -r -u Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplat
  #endif
  
  const char *
-diff -N -r -u Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
+diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 --- Python-2.5.4-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pbuild.xml	2009-01-23 11:42:48.000000000 +0100
-@@ -0,0 +1,181 @@
++++ Python-2.5.4/pbuild.xml	2009-02-03 11:25:58.000000000 +0100
+@@ -0,0 +1,183 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -223,6 +306,7 @@ diff -N -r -u Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +        <item>Modules/_codecsmodule.c</item>
 +        <item>Modules/zipimport.c</item>
 +        <item>Modules/symtablemodule.c</item>
++        <item>Modules/posixmodule.c</item>
 +        <item>Modules/python.c</item>
 +        <item>Python/sigcheck.c</item>
 +        <item>Parser/intrcheck.c</item>
@@ -248,6 +332,7 @@ diff -N -r -u Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +                <input>${i}</input>
 +                <output>objs/filename(${i}).o</output>
 +                <include>../../../include</include>
++                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
 +                <include>./</include>
 +                <include>./Include</include>
 +                <flag>-c</flag>
@@ -279,7 +364,7 @@ diff -N -r -u Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +    </target>
 +
 +    <target name="install">
-+        <copy from="objs/python" to="../../../../build/application/python"/>
++        <copy from="objs/python" to="../../../../build/image/application/python"/>
 +    </target>
 +
 +    <target name="all">
@@ -288,9 +373,9 @@ diff -N -r -u Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +        <call target="install"/>
 +    </target>
 +</build>
-diff -N -r -u Python-2.5.4-orig/pyconfig.h Python-2.5.4/pyconfig.h
+diff -Nru Python-2.5.4-orig/pyconfig.h Python-2.5.4/pyconfig.h
 --- Python-2.5.4-orig/pyconfig.h	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pyconfig.h	2009-01-23 11:36:19.000000000 +0100
++++ Python-2.5.4/pyconfig.h	2009-02-03 11:10:59.000000000 +0100
 @@ -0,0 +1,1001 @@
 +/* pyconfig.h.  Generated from pyconfig.h.in by configure.  */
 +/* pyconfig.h.in.  Generated from configure.in by autoheader.  */
@@ -984,7 +1069,7 @@ diff -N -r -u Python-2.5.4-orig/pyconfig.h Python-2.5.4/pyconfig.h
 +#define HAVE_UNISTD_H 1
 +
 +/* Define to 1 if you have the `unsetenv' function. */
-+#define HAVE_UNSETENV 1
++/* #undef HAVE_UNSETENV */
 +
 +/* Define if you have a useable wchar_t type defined in wchar.h; useable means
 +   wchar_t must be an unsigned type with at least 16 bits. (see
@@ -995,13 +1080,13 @@ diff -N -r -u Python-2.5.4-orig/pyconfig.h Python-2.5.4/pyconfig.h
 +/* #undef HAVE_UTIMES */
 +
 +/* Define to 1 if you have the <utime.h> header file. */
-+/* #undef HAVE_UTIME_H */
++#define HAVE_UTIME_H 1
 +
 +/* Define to 1 if you have the `wait3' function. */
-+#define HAVE_WAIT3 1
++/* #undef HAVE_WAIT3 */
 +
 +/* Define to 1 if you have the `wait4' function. */
-+#define HAVE_WAIT4 1
++/* #undef HAVE_WAIT4 */
 +
 +/* Define to 1 if you have the `waitpid' function. */
 +#define HAVE_WAITPID 1

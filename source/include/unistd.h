@@ -36,12 +36,14 @@ void _exit( int status );
 
 pid_t fork( void );
 
+int execv( const char* file, char* const argv[] );
 int execve( const char* filename, char* const argv[], char* const envp[] );
 int execvp( const char* filename, char* const argv[] );
 
 void* sbrk( int increment );
 
 int close( int fd );
+int dup( int old_fd );
 int dup2( int old_fd, int new_fd );
 
 ssize_t read( int fd, void* buf, size_t count );
@@ -62,6 +64,8 @@ int rmdir( const char* pathname );
 int chown( const char* path, uid_t owner, gid_t group );
 char* getcwd( char* buf, size_t size );
 int symlink( const char* oldpath, const char* newpath );
+char* ttyname( int fd );
+int ttyname_r( int fd, char* buf, size_t buflen );
 
 pid_t getpid( void );
 int getpagesize( void );
