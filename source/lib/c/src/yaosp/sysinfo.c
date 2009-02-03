@@ -27,3 +27,11 @@ int get_system_info( system_info_t* system_info ) {
 int get_kernel_info( kernel_info_t* kernel_info ) {
     return syscall1( SYS_get_kernel_info, ( int )kernel_info );
 }
+
+uint32_t get_module_count( void ) {
+    return syscall0( SYS_get_module_count );
+}
+
+int get_module_info( module_info_t* info, uint32_t max_count ) {
+    return syscall2( SYS_get_module_info, ( int )info, max_count );
+}

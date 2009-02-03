@@ -20,6 +20,7 @@
 #define _MODULE_H_
 
 #include <types.h>
+#include <config.h>
 #include <lib/hashtable.h>
 
 #define MODULE_DEPENDENCIES(...) \
@@ -55,6 +56,11 @@ typedef struct module {
 
     void* loader_data;
 } module_t;
+
+typedef struct module_info {
+    uint32_t dependency_count;
+    char name[ MAX_MODULE_NAME_LENGTH ];
+} module_info_t;
 
 /* Module reader definitions */
 
@@ -97,10 +103,11 @@ int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int s
 size_t get_module_size( module_reader_t* reader );
 char* get_module_name( module_reader_t* reader );
 
-uint32_t get_loaded_module_count( void );
-
 int load_module( const char* name );
+
 int sys_load_module( const char* name );
+uint32_t sys_get_module_count( void );
+int sys_get_module_info( module_info_t* module_info, uint32_t max_count );
 
 void set_module_loader( module_loader_t* loader );
 

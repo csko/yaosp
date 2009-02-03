@@ -21,6 +21,8 @@
 
 #include <sys/types.h>
 
+#define MAX_MODULE_NAME_LENGTH 64
+
 typedef struct system_info {
     /* Memory information */
 
@@ -36,10 +38,6 @@ typedef struct system_info {
 
     uint32_t total_processor_count;
     uint32_t active_processor_count;
-
-    /* Module information */
-
-    uint32_t loaded_module_count;
 } system_info_t;
 
 typedef struct kernel_info {
@@ -50,7 +48,15 @@ typedef struct kernel_info {
     char build_time[ 32 ];
 } kernel_info_t;
 
+typedef struct module_info {
+    uint32_t dependency_count;
+    char name[ MAX_MODULE_NAME_LENGTH ];
+} module_info_t;
+
 int get_system_info( system_info_t* system_info );
 int get_kernel_info( kernel_info_t* kernel_info );
+
+uint32_t get_module_count( void );
+int get_module_info( module_info_t* info, uint32_t max_count );
 
 #endif // _SYSINFO_H_

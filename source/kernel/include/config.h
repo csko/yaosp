@@ -36,6 +36,11 @@
 #define MAX_BOOTMODULE_COUNT 16
 
 /**
+ * The maximum length of module names.
+ */
+#define MAX_MODULE_NAME_LENGTH 64
+
+/**
  * The size of the kernel stack for threads.
  */
 #define KERNEL_STACK_SIZE ( 32 * 1024 )

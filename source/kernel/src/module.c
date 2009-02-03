@@ -31,6 +31,12 @@ typedef struct file_module_reader {
     char* name;
 } file_module_reader_t;
 
+typedef struct module_info_iter_data {
+    uint32_t curr_index;
+    uint32_t max_count;
+    module_info_t* info_table;
+} module_info_iter_data_t;
+
 module_loader_t* module_loader;
 
 static hashtable_t module_table;
@@ -74,18 +80,6 @@ size_t get_module_size( module_reader_t* reader ) {
 
 char* get_module_name( module_reader_t* reader ) {
     return reader->get_name( reader->private );
-}
-
-uint32_t get_loaded_module_count( void ) {
-    uint32_t count;
-
-    LOCK( module_lock );
-
-    count = hashtable_get_item_count( &module_table );
-
-    UNLOCK( module_lock );
-
-    return count;
 }
 
 static int file_module_read( void* private, void* data, off_t offset, int size ) {
@@ -400,6 +394,58 @@ int load_module( const char* name ) {
 
 int sys_load_module( const char* name ) {
     return do_load_module( name );
+}
+
+uint32_t sys_get_module_count( void ) {
+    uint32_t result;
+
+    LOCK( module_lock );
+
+    result = hashtable_get_item_count( &module_table );
+
+    UNLOCK( module_lock );
+
+    return result;
+}
+
+static int get_module_info_iterator( hashitem_t* item, void* _data ) {
+    module_t* module;
+    module_info_t* current;
+    module_info_iter_data_t* data;
+
+    data = ( module_info_iter_data_t* )_data;
+
+    if ( data->curr_index >= data->max_count ) {
+        return 0;
+    }
+
+    module = ( module_t* )item;
+    current = ( module_info_t* )&data->info_table[ data->curr_index ];
+
+    current->dependency_count = 0;
+    strncpy( current->name, module->name, MAX_MODULE_NAME_LENGTH );
+    current->name[ MAX_MODULE_NAME_LENGTH - 1 ] = 0;
+
+    data->curr_index++;
+
+    return 0;
+}
+
+int sys_get_module_info( module_info_t* module_info, uint32_t max_count ) {
+    int error;
+    module_info_iter_data_t data;
+
+    data.curr_index = 0;
+    data.max_count = max_count;
+    data.info_table = module_info;
+
+    LOCK( module_lock );
+
+    error = hashtable_iterate( &module_table, get_module_info_iterator, ( void* )&data );
+
+    UNLOCK( module_lock );
+
+    return error;
 }
 
 void set_module_loader( module_loader_t* loader ) {

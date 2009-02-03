@@ -92,8 +92,6 @@ int sys_get_system_info( system_info_t* system_info ) {
     system_info->total_processor_count = processor_count;
     system_info->active_processor_count = get_active_processor_count();
 
-    system_info->loaded_module_count = get_loaded_module_count();
-
     spinlock_disable( &scheduler_lock );
 
     system_info->process_count = get_process_count();

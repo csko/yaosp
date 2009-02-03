@@ -22,23 +22,17 @@
 
 #include <yaosp/sysinfo.h>
 
-int main( int argc, char** argv ) {
+char* argv0 = NULL;
+
+static void do_get_kernel_info( void ) {
     int error;
-    system_info_t sysinfo;
     kernel_info_t kernel_info;
-
-    error = get_system_info( &sysinfo );
-
-    if ( error < 0 ) {
-        fprintf( stderr, "%s: Failed to get system information!\n", argv[ 0 ] );
-        return EXIT_FAILURE;
-    }
 
     error = get_kernel_info( &kernel_info );
 
     if ( error < 0 ) {
-        fprintf( stderr, "%s: Failed to get kernel information!\n", argv[ 0 ] );
-        return EXIT_FAILURE;
+        fprintf( stderr, "%s: Failed to get kernel information!\n", argv0 );
+        return;
     }
 
     printf(
@@ -52,14 +46,62 @@ int main( int argc, char** argv ) {
         kernel_info.build_date,
         kernel_info.build_time
     );
+}
+
+static void do_get_module_info( void ) {
+    int error;
+    uint32_t i;
+    uint32_t module_count;
+    module_info_t* info_table;
+
+    module_count = get_module_count();
+
+    printf( "Loaded modules: %u\n", module_count );
+
+    if ( module_count > 0 ) {
+        info_table = ( module_info_t* )malloc( sizeof( module_info_t ) * module_count );
+
+        if ( info_table == NULL ) {
+            return;
+        }
+
+        error = get_module_info( info_table, module_count );
+
+        if ( error < 0 ) {
+            goto out;
+        }
+
+        for ( i = 0; i < module_count; i++ ) {
+            printf( "%s\n", info_table[ i ].name );
+        }
+
+out:
+        free( info_table );
+    }
+}
+
+int main( int argc, char** argv ) {
+    int error;
+    system_info_t sysinfo;
+
+    argv0 = argv[ 0 ];
+
+    error = get_system_info( &sysinfo );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to get system information!\n", argv0 );
+        return EXIT_FAILURE;
+    }
 
     printf( "Total memory: %d Kb\n", ( sysinfo.total_page_count * getpagesize() ) / 1024 );
     printf( "Free memory: %d Kb\n", ( sysinfo.free_page_count * getpagesize() ) / 1024 );
     printf( "Process count: %d\n", sysinfo.process_count );
     printf( "Thread count: %d\n", sysinfo.thread_count );
-    printf( "Loaded kernel modules: %d\n", sysinfo.loaded_module_count );
     printf( "Total CPUs: %d\n", sysinfo.total_processor_count );
     printf( "Active CPUs: %d\n", sysinfo.active_processor_count );
+
+    do_get_kernel_info();
+    do_get_module_info();
 
     return EXIT_SUCCESS;
 }
