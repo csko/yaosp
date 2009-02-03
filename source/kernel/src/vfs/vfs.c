@@ -1027,7 +1027,7 @@ static int do_lseek( bool kernel, int fd, off_t offset, int whence, off_t* new_o
                 goto out;
             }
 
-            if ( ( file->position + offset ) < 0 ) {
+            if ( ( st.st_size + offset ) < 0 ) {
                 error = -EINVAL;
                 goto out;
             } else {
