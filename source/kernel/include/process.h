@@ -42,6 +42,9 @@ typedef struct process {
 
     region_id heap_region;
 
+    uint64_t vmem_size;
+    uint64_t pmem_size;
+
     void* loader_data;
 
     semaphore_id waiters;

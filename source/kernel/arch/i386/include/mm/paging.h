@@ -52,9 +52,9 @@ int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t vir
 int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 
 int clone_user_region(
-    i386_memory_context_t* old_arch_context,
+    memory_context_t* old_context,
     region_t* old_region,
-    i386_memory_context_t* new_arch_context,
+    memory_context_t* new_context,
     region_t* new_region
 );
 

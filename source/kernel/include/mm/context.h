@@ -21,12 +21,16 @@
 
 #include <mm/region.h>
 
+struct process;
+
 typedef struct memory_context {
     struct memory_context* next;
 
     int max_regions;
     int region_count;
     region_t** regions;
+
+    struct process* process;
 
     void* arch_data;
 } memory_context_t;
@@ -82,9 +86,10 @@ bool memory_context_can_resize_region( memory_context_t* context, region_t* regi
  * Clones an existing memory context.
  *
  * @param old_context The old memory context that will be cloned
+ * @param new_process The process we're creating the new memory context for
  * @return The cloned memory context
  */
-memory_context_t* memory_context_clone( memory_context_t* old_context );
+memory_context_t* memory_context_clone( memory_context_t* old_context, struct process* new_process );
 
 /**
  * Deletes all regions from the specified memory context. If the

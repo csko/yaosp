@@ -68,9 +68,6 @@ process_t* allocate_process( char* name ) {
 
     process->id = -1;
     process->heap_region = -1;
-    process->memory_context = NULL;
-    process->io_context = NULL;
-    process->semaphore_context = NULL;
 
     atomic_set( &process->thread_count, 0 );
 
@@ -197,8 +194,8 @@ static int get_process_info_iterator( hashitem_t* item, void* _data ) {
     info->id = process->id;
     strncpy( info->name, process->name, MAX_PROCESS_NAME_LENGTH );
     info->name[ MAX_PROCESS_NAME_LENGTH - 1 ] = 0;
-    info->pmem_size = 0;
-    info->vmem_size = 0;
+    info->pmem_size = process->pmem_size;
+    info->vmem_size = process->vmem_size;
 
     data->curr_index++;
 
@@ -304,6 +301,11 @@ int init_processes( void ) {
     process->memory_context = &kernel_memory_context;
     process->semaphore_context = &kernel_semaphore_context;
     process->io_context = &kernel_io_context;
+
+    /* TODO: This vmem setting is highly architecture dependent! */
+    process->vmem_size = 512 * 1024 * 1024;
+
+    kernel_memory_context.process = process;
 
     spinlock_disable( &scheduler_lock );
     error = insert_process( process );

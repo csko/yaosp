@@ -22,6 +22,7 @@
 #include <kernel.h>
 #include <macros.h>
 #include <semaphore.h>
+#include <scheduler.h>
 #include <mm/region.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
@@ -183,6 +184,14 @@ region_id do_create_region(
         goto error2;
     }
 
+    /* Update process vmem statistics */
+
+    spinlock_disable( &scheduler_lock );
+
+    context->process->vmem_size += region->size;
+
+    spinunlock_enable( &scheduler_lock );
+
     *_address = ( void* )address;
 
     return region->id;
@@ -257,6 +266,16 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
 
     arch_delete_region_pages( region->context, region );
     region_remove( region->context, region );
+
+    /* Update process vmem statistics */
+
+    spinlock_disable( &scheduler_lock );
+
+    region->context->process->vmem_size -= region->size;
+
+    spinunlock_enable( &scheduler_lock );
+
+    kfree( region );
 
     return 0;
 }
@@ -356,6 +375,15 @@ int resize_region( region_id id, uint32_t new_size ) {
 
         return error;
     }
+
+    /* Update process vmem statistics */
+
+    spinlock_disable( &scheduler_lock );
+
+    context->process->vmem_size -= region->size;
+    context->process->vmem_size += new_size;
+
+    spinunlock_enable( &scheduler_lock );
 
     region->size = new_size;
 

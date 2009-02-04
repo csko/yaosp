@@ -48,7 +48,7 @@ int sys_fork( void ) {
 
     /* Clone the memory context of the old process */
 
-    new_process->memory_context = memory_context_clone( this_process->memory_context );
+    new_process->memory_context = memory_context_clone( this_process->memory_context, new_process );
 
     if ( new_process->memory_context == NULL ) {
         error = -ENOMEM;

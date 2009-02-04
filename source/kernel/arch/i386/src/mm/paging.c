@@ -20,6 +20,7 @@
 #include <types.h>
 #include <kernel.h>
 #include <macros.h>
+#include <scheduler.h>
 #include <mm/context.h>
 #include <mm/pages.h>
 #include <mm/region.h>
@@ -358,12 +359,18 @@ static int clone_user_region_contiguous(
 }
 
 int clone_user_region(
-    i386_memory_context_t* old_arch_context,
+    memory_context_t* old_context,
     region_t* old_region,
-    i386_memory_context_t* new_arch_context,
+    memory_context_t* new_context,
     region_t* new_region
 ) {
     int error;
+    uint64_t allocated_pmem;
+    i386_memory_context_t* old_arch_context;
+    i386_memory_context_t* new_arch_context;
+
+    old_arch_context = ( i386_memory_context_t* )old_context->arch_data;
+    new_arch_context = ( i386_memory_context_t* )new_context->arch_data;
 
     error = map_region_page_tables(
         new_arch_context,
@@ -376,6 +383,8 @@ int clone_user_region(
         return error;
     }
 
+    allocated_pmem = 0;
+
     switch ( ( int )old_region->alloc_method ) {
         case ALLOC_PAGES :
             error = clone_user_region_pages( old_arch_context, old_region, new_arch_context, new_region );
@@ -383,6 +392,8 @@ int clone_user_region(
             if ( error < 0 ) {
                 return error;
             }
+
+            allocated_pmem = old_region->size;
 
             break;
 
@@ -393,12 +404,22 @@ int clone_user_region(
                 return error;
             }
 
+            allocated_pmem = old_region->size;
+
             break;
         }
 
         default :
             panic( "Not yet implemented!\n" );
             break;
+    }
+
+    if ( allocated_pmem != 0 ) {
+        spinlock_disable( &scheduler_lock );
+
+        new_context->process->pmem_size += allocated_pmem;
+
+        spinunlock_enable( &scheduler_lock );
     }
 
     return 0;

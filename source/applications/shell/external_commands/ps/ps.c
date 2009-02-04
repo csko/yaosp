@@ -60,15 +60,32 @@ static int t_desc( const void* _t1, const void* _t2 ) {
 }
 */
 
+static void format_size( char* buffer, size_t length, uint64_t size ) {
+    if ( size < 1024 ) {
+        snprintf( buffer, length, "%4u b ", ( unsigned int )size );
+    } else if ( size < ( 1024 * 1024 ) ) {
+        snprintf( buffer, length, "%4u Kb", ( unsigned int )( size / 1024 ) );
+    } else if ( size < ( 1024 * 1024 * 1024 ) ) {
+        snprintf( buffer, length, "%4u Mb", ( unsigned int )( size / ( 1024 * 1024 ) ) );
+    } else {
+        snprintf( buffer, length, "%4u Gb", ( unsigned int )( size / ( 1024 * 1024 * 1024 ) ) );
+    }
+}
+
 static void print_thread( thread_info_t* thread ) {
-    printf( "%4s %4d  `- %s\n", "", thread->id, thread->name );
+    printf( "%4s %4d                  `- %s\n", "", thread->id, thread->name );
 }
 
 static void print_process( process_info_t* process ) {
+    char vmem_str[ 32 ];
+    char pmem_str[ 32 ];
     uint32_t thread_count;
     thread_info_t* thread_table;
 
-    printf( "%4d %4s %s\n", process->id, "-", process->name );
+    format_size( vmem_str, sizeof( vmem_str ), process->vmem_size );
+    format_size( pmem_str, sizeof( pmem_str ), process->pmem_size );
+
+    printf( "%4d %4s %s %s %s\n", process->id, "-", vmem_str, pmem_str, process->name );
 
     thread_count = get_thread_count_for_process( process->id );
 
@@ -122,7 +139,7 @@ int main( int argc, char** argv ) {
 
         /* Print the header */
 
-        printf( " PID  TID NAME\n" );
+        printf( " PID  TID VIRTMEM PHYSMEM NAME\n" );
 
         /* Print the process list */
 

@@ -21,6 +21,8 @@
 #include <macros.h>
 #include <kernel.h>
 #include <semaphore.h>
+#include <process.h>
+#include <scheduler.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -251,7 +253,7 @@ bool memory_context_can_resize_region( memory_context_t* context, region_t* regi
     return ( ( region->start + new_size - 1 ) < context->regions[ i + 1 ]->start );
 }
 
-memory_context_t* memory_context_clone( memory_context_t* old_context ) {
+memory_context_t* memory_context_clone( memory_context_t* old_context, process_t* new_process ) {
     int i;
     int error;
     memory_context_t* new_context;
@@ -266,6 +268,7 @@ memory_context_t* memory_context_clone( memory_context_t* old_context ) {
 
     memset( new_context, 0, sizeof( memory_context_t ) );
 
+    new_context->process = new_process;
     /* Initialize the architecture dependent part of the memory context */
 
     error = arch_init_memory_context( new_context );
@@ -353,6 +356,14 @@ int memory_context_delete_regions( memory_context_t* context, bool user_only ) {
     /* Set the new size of memory regions in the context */
 
     context->region_count = 0;
+
+    /* Update vmem statistics */
+
+    spinlock_disable( &scheduler_lock );
+
+    context->process->vmem_size = 0;
+
+    spinunlock_enable( &scheduler_lock );
 
     UNLOCK( region_lock );
 

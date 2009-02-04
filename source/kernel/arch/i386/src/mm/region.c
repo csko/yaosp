@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <kernel.h>
+#include <scheduler.h>
 #include <mm/pages.h>
 
 #include <arch/smp.h>
@@ -28,8 +29,10 @@
 int arch_create_region_pages( memory_context_t* context, region_t* region ) {
     int error;
     bool do_tlb_flush;
+    uint64_t allocated_pmem;
     i386_memory_context_t* arch_context;
 
+    allocated_pmem = 0;
     do_tlb_flush = true;
     arch_context = ( i386_memory_context_t* )context->arch_data;
 
@@ -48,6 +51,8 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
             if ( error < 0 ) {
                 return error;
             }
+
+            allocated_pmem = region->size;
 
             break;
 
@@ -73,6 +78,8 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
                 return error;
             }
 
+            allocated_pmem = region->size;
+
             break;
         }
 
@@ -85,6 +92,16 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
             break;
     }
 
+    /* Update pmem statistics */
+
+    if ( allocated_pmem != 0 ) {
+        spinlock_disable( &scheduler_lock );
+
+        context->process->pmem_size += allocated_pmem;
+
+        spinunlock_enable( &scheduler_lock );
+    }
+
     /* Invalidate the TLB if we changed anything that requires it */
 
     if ( do_tlb_flush ) {
@@ -95,8 +112,10 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
 }
 
 int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
+    uint64_t freed_pmem;
     i386_memory_context_t* arch_context;
 
+    freed_pmem = 0;
     arch_context = ( i386_memory_context_t* )context->arch_data;
 
     if ( ( region->flags & REGION_REMAPPED ) == 0 ) {
@@ -107,10 +126,12 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
 
             case ALLOC_PAGES :
                 free_region_pages( arch_context, region->start, region->size );
+                freed_pmem = region->size;
                 break;
 
             case ALLOC_CONTIGUOUS :
                 free_region_pages_contiguous( arch_context, region->start, region->size );
+                freed_pmem = region->size;
                 break;
         }
     } else {
@@ -118,6 +139,16 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
     }
 
     free_region_page_tables( arch_context, region->start, region->size );
+
+    /* Update pmem statistics */
+
+    if ( freed_pmem != 0 ) {
+        spinlock_disable( &scheduler_lock );
+
+        context->process->pmem_size -= freed_pmem;
+
+        spinunlock_enable( &scheduler_lock );
+    }
 
     flush_tlb_global();
 
@@ -156,7 +187,15 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
     if ( new_size < region->size ) {
         free_region_pages( arch_context, region->start + new_size, region->size - new_size );
         free_region_page_tables( arch_context, region->start + new_size, region->size - new_size );
+
+        spinlock_disable( &scheduler_lock );
+
+        context->process->pmem_size -= ( region->size - new_size );
+
+        spinunlock_enable( &scheduler_lock );
     } else {
+        uint64_t allocated_pmem = 0;
+
         switch ( ( int )region->alloc_method ) {
             case ALLOC_LAZY :
                 panic( "Resizing lazy allocated memory region not yet implemented!\n" );
@@ -177,12 +216,22 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
                     return error;
                 }
 
+                allocated_pmem = new_size - region->size;
+
                 break;
             }
 
             case ALLOC_CONTIGUOUS :
                 panic( "Resizing contiguous allocated memory region not yet implemented!\n" );
                 break;
+        }
+
+        if ( allocated_pmem != 0 ) {
+            spinlock_disable( &scheduler_lock );
+
+            context->process->pmem_size += allocated_pmem;
+
+            spinunlock_enable( &scheduler_lock );
         }
     }
 

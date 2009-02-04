@@ -89,16 +89,11 @@ int arch_clone_memory_region(
     region_t* new_region
 ) {
     int error;
-    i386_memory_context_t* old_arch_context;
-    i386_memory_context_t* new_arch_context;
-
-    old_arch_context = ( i386_memory_context_t* )old_context->arch_data;
-    new_arch_context = ( i386_memory_context_t* )new_context->arch_data;
 
     if ( old_region->flags & REGION_KERNEL ) {
         error = 0;
     } else {
-        error = clone_user_region( old_arch_context, old_region, new_arch_context, new_region );
+        error = clone_user_region( old_context, old_region, new_context, new_region );
     }
 
     return error;
