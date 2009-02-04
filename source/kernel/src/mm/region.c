@@ -275,7 +275,7 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
 
     spinunlock_enable( &scheduler_lock );
 
-    kfree( region );
+    destroy_region( region );
 
     return 0;
 }
