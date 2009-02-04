@@ -21,9 +21,10 @@
 
 #include <sys/types.h>
 
-#define MAX_MODULE_NAME_LENGTH  64
-#define MAX_PROCESS_NAME_LENGTH 64
-#define MAX_THREAD_NAME_LENGTH  64
+#define MAX_MODULE_NAME_LENGTH    64
+#define MAX_PROCESS_NAME_LENGTH   64
+#define MAX_THREAD_NAME_LENGTH    64
+#define MAX_PROCESSOR_NAME_LENGTH 64
 
 typedef int process_id;
 typedef int thread_id;
@@ -66,6 +67,13 @@ typedef struct thread_info {
     uint64_t cpu_time;
 } thread_info_t;
 
+typedef struct processor_info {
+    char name[ MAX_PROCESSOR_NAME_LENGTH ];
+    uint64_t core_speed;
+    int present;
+    int running;
+} processor_info_t;
+
 int get_system_info( system_info_t* system_info );
 int get_kernel_info( kernel_info_t* kernel_info );
 
@@ -77,5 +85,8 @@ uint32_t get_process_info( process_info_t* info, uint32_t max_count );
 
 uint32_t get_thread_count_for_process( process_id id );
 uint32_t get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count );
+
+uint32_t get_processor_count( void );
+uint32_t get_processor_info( processor_info_t* info_table, uint32_t max_count );
 
 #endif // _SYSINFO_H_

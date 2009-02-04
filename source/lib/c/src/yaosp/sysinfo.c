@@ -51,3 +51,11 @@ uint32_t get_thread_count_for_process( process_id id ) {
 uint32_t get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count ) {
     return syscall3( SYS_get_thread_info_for_process, id, ( int )info_table, max_count );
 }
+
+uint32_t get_processor_count( void ) {
+    return syscall0( SYS_get_processor_count );
+}
+
+uint32_t get_processor_info( processor_info_t* info_table, uint32_t max_count ) {
+    return syscall2( SYS_get_processor_info, ( int )info_table, max_count );
+}

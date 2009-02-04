@@ -75,6 +75,8 @@ static system_call_entry_t system_call_table[] = {
     { "get_process_info", sys_get_process_info, 0 },
     { "get_thread_count_for_process", sys_get_thread_count_for_process, 0 },
     { "get_thread_info_for_process", sys_get_thread_info_for_process, 0 },
+    { "get_processor_count", sys_get_processor_count, 0 },
+    { "get_processor_info", sys_get_processor_info, 0 },
     { "sleep_thread", sys_sleep_thread, 0 },
     { "create_region", sys_create_region, 0 },
     { "delete_region", sys_delete_region, 0 },

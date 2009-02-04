@@ -184,7 +184,9 @@ int detect_cpu( void ) {
     );
 
     for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
-        memcpy( processor_table[ i ].name, name, sizeof( name ) );
+        strncpy( processor_table[ i ].name, name, MAX_PROCESSOR_NAME_LENGTH );
+        processor_table[ i ].name[ MAX_PROCESSOR_NAME_LENGTH - 1 ] = 0;
+
         processor_table[ i ].arch_data = ( void* )&arch_processor_table[ i ];
 
         arch_processor_table[ i ].family = family;

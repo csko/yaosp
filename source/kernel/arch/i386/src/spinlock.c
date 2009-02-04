@@ -16,25 +16,37 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <macros.h>
+
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
 int init_spinlock( spinlock_t* lock, const char* name ) {
     lock->name = name;
+#ifdef ENABLE_SMP
     atomic_set( &lock->locked, 0 );
+#endif /* ENABLE_SMP */
     lock->enable_interrupts = false;
 
     return 0;
 }
 
 void spinlock( spinlock_t* lock ) {
+    ASSERT( is_interrupts_disabled() );
+
+#ifdef ENABLE_SMP
     while ( atomic_swap( &lock->locked, 1 ) == 1 ) {
         __asm__ __volatile__( "pause" );
     }
+#endif /* ENABLE_SMP */
 }
 
 void spinunlock( spinlock_t* lock ) {
+    ASSERT( is_interrupts_disabled() );
+
+#ifdef ENABLE_SMP
     atomic_set( &lock->locked, 0 );
+#endif /* ENABLE_SMP */
 }
 
 void spinlock_disable( spinlock_t* lock ) {
@@ -42,7 +54,9 @@ void spinlock_disable( spinlock_t* lock ) {
 
     ints = disable_interrupts();
 
+#ifdef ENABLE_SMP
     spinlock( lock );
+#endif /* ENABLE_SMP */
 
     lock->enable_interrupts = ints;
 }
@@ -52,7 +66,9 @@ void spinunlock_enable( spinlock_t* lock ) {
 
     ints = lock->enable_interrupts;
 
+#ifdef ENABLE_SMP
     spinunlock( lock );
+#endif /* ENABLE_SMP */
 
     if ( ints ) {
         enable_interrupts();
@@ -60,5 +76,9 @@ void spinunlock_enable( spinlock_t* lock ) {
 }
 
 bool spinlock_is_locked( spinlock_t* lock ) {
+#ifdef ENABLE_SMP
     return ( atomic_get( &lock->locked ) == 1 );
+#else
+    return is_interrupts_disabled();
+#endif /* ENABLE_SMP */
 }

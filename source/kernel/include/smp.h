@@ -26,7 +26,7 @@
 #include <arch/atomic.h>
 
 typedef struct cpu {
-    char name[ 255 ];
+    char name[ MAX_PROCESSOR_NAME_LENGTH ];
 
     bool present;
     volatile bool running;
@@ -38,6 +38,13 @@ typedef struct cpu {
     void* arch_data;
 } cpu_t;
 
+typedef struct processor_info {
+    char name[ MAX_PROCESSOR_NAME_LENGTH ];
+    uint64_t core_speed;
+    int present;
+    int running;
+} processor_info_t;
+
 extern int processor_count;
 extern atomic_t active_processor_count;
 extern cpu_t processor_table[ MAX_CPU_COUNT ];
@@ -47,6 +54,9 @@ thread_t* current_thread( void );
 thread_t* idle_thread( void );
 
 int get_active_processor_count( void );
+
+uint32_t sys_get_processor_count( void );
+uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_count );
 
 int init_smp( void );
 int init_smp_late( void );

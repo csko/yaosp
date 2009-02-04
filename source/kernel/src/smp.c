@@ -21,6 +21,7 @@
 #include <thread.h>
 #include <errno.h>
 #include <scheduler.h>
+#include <macros.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -50,6 +51,31 @@ thread_t* idle_thread( void ) {
 
 int get_active_processor_count( void ) {
     return atomic_get( &active_processor_count );
+}
+
+uint32_t sys_get_processor_count( void ) {
+    return MAX_CPU_COUNT;
+}
+
+uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_count ) {
+    uint32_t i;
+    uint32_t max;
+    cpu_t* cpu;
+    processor_info_t* processor_info;
+
+    max = MAX( max_count, MAX_CPU_COUNT );
+
+    for ( i = 0; i < max; i++ ) {
+        cpu = &processor_table[ i ];
+        processor_info = &info_table[ i ];
+
+        strncpy( processor_info->name, cpu->name, MAX_PROCESSOR_NAME_LENGTH );
+        processor_info->present = cpu->present;
+        processor_info->running = cpu->running;
+        processor_info->core_speed = cpu->core_speed;
+    }
+
+    return max;
 }
 
 int init_smp( void ) {

@@ -20,16 +20,25 @@
 #define _ARCH_SPINLOCK_H_
 
 #include <types.h>
+#include <config.h>
 
+#ifdef ENABLE_SMP
 #include <arch/atomic.h>
+#endif /* ENABLE_SMP */
 
 typedef struct spinlock {
     const char* name;
+#ifdef ENABLE_SMP
     atomic_t locked;
+#endif /* ENABLE_SMP */
     bool enable_interrupts;
 } spinlock_t;
 
+#ifdef ENABLE_SMP
 #define INIT_SPINLOCK(name) { name, ATOMIC_INIT(0), false }
+#else
+#define INIT_SPINLOCK(name) { name, false }
+#endif /* ENABLE_SMP */
 
 int init_spinlock( spinlock_t* lock, const char* name );
 

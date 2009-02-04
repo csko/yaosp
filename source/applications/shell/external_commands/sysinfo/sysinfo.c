@@ -24,6 +24,15 @@
 
 char* argv0 = NULL;
 
+static void print_usage( void ) {
+    printf( "%s info_type\n", argv0 );
+    printf( "\n" );
+    printf( "The info_type has to be one of these values:\n" );
+    printf( "    kernel - Kernel information\n" );
+    printf( "    module - Kernel module information\n" );
+    printf( "    processor - Processor information\n" );
+}
+
 static void do_get_kernel_info( void ) {
     int error;
     kernel_info_t kernel_info;
@@ -62,6 +71,7 @@ static void do_get_module_info( void ) {
         info_table = ( module_info_t* )malloc( sizeof( module_info_t ) * module_count );
 
         if ( info_table == NULL ) {
+            fprintf( stderr, "%s: No memory for module info table!\n", argv0 );
             return;
         }
 
@@ -80,26 +90,64 @@ out:
     }
 }
 
+static void do_get_processor_info( void ) {
+    uint32_t i;
+    uint32_t processor_count;
+    processor_info_t* info;
+    processor_info_t* info_table;
+
+    processor_count = get_processor_count();
+
+    if ( processor_count == 0 ) {
+        return;
+    }
+
+    info_table = ( processor_info_t* )malloc( sizeof( processor_info_t ) * processor_count );
+
+    if ( info_table == NULL ) {
+        fprintf( stderr, "%s: No memory for processor info table!\n", argv0 );
+        return;
+    }
+
+    processor_count = get_processor_info( info_table, processor_count );
+
+    for ( i = 0; i < processor_count; i++ ) {
+        info = &info_table[ i ];
+
+        if ( ( !info->present ) || ( !info->running ) ) {
+            continue;
+        }
+
+        printf( "Processor:  %u\n", i );
+        printf( "Model name: %s\n", info->name );
+        printf( "Speed:      %u MHz\n\n", ( uint32_t )( info->core_speed / 1000000 ) );
+    }
+
+    free( info_table );
+}
+
 int main( int argc, char** argv ) {
-    int error;
-    system_info_t sysinfo;
+    char* info_type;
 
     argv0 = argv[ 0 ];
 
-    error = get_system_info( &sysinfo );
-
-    if ( error < 0 ) {
-        fprintf( stderr, "%s: Failed to get system information!\n", argv0 );
+    if ( argc != 2 ) {
+        print_usage();
         return EXIT_FAILURE;
     }
 
-    printf( "Total memory: %d Kb\n", ( sysinfo.total_page_count * getpagesize() ) / 1024 );
-    printf( "Free memory: %d Kb\n", ( sysinfo.free_page_count * getpagesize() ) / 1024 );
-    printf( "Total CPUs: %d\n", sysinfo.total_processor_count );
-    printf( "Active CPUs: %d\n", sysinfo.active_processor_count );
+    info_type = argv[ 1 ];
 
-    do_get_kernel_info();
-    do_get_module_info();
+    if ( strcmp( info_type, "kernel" ) == 0 ) {
+        do_get_kernel_info();
+    } else if ( strcmp( info_type, "module" ) == 0 ) {
+        do_get_module_info();
+    } else if ( strcmp( info_type, "processor" ) == 0 ) {
+        do_get_processor_info();
+    } else {
+        print_usage();
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
