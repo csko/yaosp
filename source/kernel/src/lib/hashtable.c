@@ -148,7 +148,7 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
     const void* other_key;
 
     hash = table->hash_func( key ) % table->size;
-    
+
     prev = NULL;
     item = table->items[ hash ];
 
@@ -276,16 +276,16 @@ uint32_t hash_number( uint8_t* data, size_t length ) {
 uint32_t hash_string( uint8_t* data, size_t length ) {
     size_t i;
     uint32_t hash = 2166136261U;
-        
+
     for ( i = 0; i < length; i++ ) {
         hash = ( hash ^ data[ i ] ) * 16777619;
     }
-        
+
     hash += hash << 13;
     hash ^= hash >> 7;
     hash += hash << 3;
     hash ^= hash >> 17;
     hash += hash << 5;
-        
+
     return hash;
 }
