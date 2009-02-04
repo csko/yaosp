@@ -21,18 +21,18 @@
 
 #include <sys/types.h>
 
-#define MAX_MODULE_NAME_LENGTH 64
+#define MAX_MODULE_NAME_LENGTH  64
+#define MAX_PROCESS_NAME_LENGTH 64
+#define MAX_THREAD_NAME_LENGTH  64
+
+typedef int process_id;
+typedef int thread_id;
 
 typedef struct system_info {
     /* Memory information */
 
     uint32_t free_page_count;
     uint32_t total_page_count;
-
-    /* Process & thread information */
-
-    uint32_t process_count;
-    uint32_t thread_count;
 
     /* Processor information */
 
@@ -53,10 +53,29 @@ typedef struct module_info {
     char name[ MAX_MODULE_NAME_LENGTH ];
 } module_info_t;
 
+typedef struct process_info {
+    process_id id;
+    char name[ MAX_PROCESS_NAME_LENGTH ];
+    uint64_t pmem_size;
+    uint64_t vmem_size;
+} process_info_t;
+
+typedef struct thread_info {
+    thread_id id;
+    char name[ MAX_THREAD_NAME_LENGTH ];
+    uint64_t cpu_time;
+} thread_info_t;
+
 int get_system_info( system_info_t* system_info );
 int get_kernel_info( kernel_info_t* kernel_info );
 
 uint32_t get_module_count( void );
 int get_module_info( module_info_t* info, uint32_t max_count );
+
+uint32_t get_process_count( void );
+uint32_t get_process_info( process_info_t* info, uint32_t max_count );
+
+uint32_t get_thread_count_for_process( process_id id );
+uint32_t get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count );
 
 #endif // _SYSINFO_H_

@@ -22,34 +22,11 @@
 #include <types.h>
 #include <process.h>
 
-typedef enum proc_listener_event {
-    PROCESS_CREATED,
-    PROCESS_DESTROYED,
-    PROCESS_RENAMED,
-    THREAD_CREATED,
-    THREAD_DESTROYED,
-    THREAD_RENAMED,
-} proc_listener_event_t;
-
-typedef struct process_listener {
-    int ( *process_created )( process_t* process );
-    int ( *process_destroyed )( process_id id );
-    int ( *process_renamed )( process_t* process );
-    int ( *thread_created )( thread_t* thread );
-    int ( *thread_destroyed )( process_id proc_id, thread_id thr_id );
-    int ( *thread_renamed )( thread_t* thread );
-} process_listener_t;
-
 typedef struct system_info {
     /* Memory information */
 
     uint32_t free_page_count;
     uint32_t total_page_count;
-
-    /* Process & thread information */
-
-    uint32_t process_count;
-    uint32_t thread_count;
 
     /* Processor information */
 
@@ -64,9 +41,6 @@ typedef struct kernel_info {
     char build_date[ 32 ];
     char build_time[ 32 ];
 } kernel_info_t;
-
-int set_process_listener( process_listener_t* listener );
-int notify_process_listener( proc_listener_event_t event, process_t* process, thread_t* thread );
 
 int sys_get_system_info( system_info_t* system_info );
 int sys_get_kernel_info( kernel_info_t* kernel_info );

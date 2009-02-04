@@ -115,9 +115,6 @@ static kernel_symbol_t symbols[] = {
     { "create_kernel_thread", ( ptr_t )create_kernel_thread },
     { "sleep_thread", ( ptr_t )sleep_thread },
     { "wake_up_thread", ( ptr_t )wake_up_thread },
-    { "process_table_iterate", ( ptr_t )process_table_iterate },
-    { "thread_table_iterate", ( ptr_t )thread_table_iterate },
-    { "set_process_listener", ( ptr_t )set_process_listener },
 
     /* Memory & string functions */
     { "memcpy", ( ptr_t )memcpy },

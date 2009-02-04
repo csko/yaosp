@@ -196,8 +196,62 @@ int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, 
     return 0;
 }
 
+int hashtable_filtered_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data, hashtable_filter_callback_t* filter, void* filter_data ) {
+    int result;
+    uint32_t i;
+    hashitem_t* item;
+
+    for ( i = 0; i < table->size; i++ ) {
+        item = table->items[ i ];
+
+        while ( item != NULL ) {
+            result = filter( item, filter_data );
+
+            if ( result < 0 ) {
+                goto next;
+            }
+
+            result = callback( item, data );
+
+            if ( result < 0 ) {
+                return result;
+            }
+
+next:
+            item = item->next;
+        }
+    }
+
+    return 0;
+}
+
 uint32_t hashtable_get_item_count( hashtable_t* table ) {
     return table->item_count;
+}
+
+uint32_t hashtable_get_filtered_item_count( hashtable_t* table, hashtable_filter_callback_t* filter, void* data ) {
+    int result;
+    uint32_t i;
+    uint32_t count;
+    hashitem_t* item;
+
+    count = 0;
+
+    for ( i = 0; i < table->size; i++ ) {
+        item = table->items[ i ];
+
+        while ( item != NULL ) {
+            result = filter( item, data );
+
+            if ( result == 0 ) {
+                count++;
+            }
+
+            item = item->next;
+        }
+    }
+
+    return count;
 }
 
 uint32_t hash_number( uint8_t* data, size_t length ) {

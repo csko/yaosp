@@ -211,9 +211,6 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     rename_thread( thread, "main" );
     unlock_scheduler();
 
-    notify_process_listener( PROCESS_RENAMED, thread->process, NULL );
-    notify_process_listener( THREAD_RENAMED, NULL, thread );
-
     /* Empty the memory context of the process */
 
     memory_context_delete_regions( thread->process->memory_context, true );

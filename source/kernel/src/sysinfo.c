@@ -26,65 +26,6 @@
 #include <mm/pages.h>
 #include <lib/string.h>
 
-static process_listener_t* process_listener = NULL;
-
-int set_process_listener( process_listener_t* listener ) {
-    process_listener = listener;
-    return 0;
-}
-
-int notify_process_listener( proc_listener_event_t event, process_t* process, thread_t* thread ) {
-    if ( process_listener == NULL ) {
-        return 0;
-    }
-
-    switch ( event ) {
-        case PROCESS_CREATED :
-            if ( process_listener->process_created != NULL ) {
-                process_listener->process_created( process );
-            }
-
-            break;
-
-        case PROCESS_DESTROYED :
-            if ( process_listener->process_destroyed != NULL ) {
-                process_listener->process_destroyed( process->id );
-            }
-
-            break;
-
-        case PROCESS_RENAMED :
-            if ( process_listener->process_renamed != NULL ) {
-                process_listener->process_renamed( process );
-            }
-
-            break;
-
-        case THREAD_CREATED :
-            if ( process_listener->thread_created != NULL ) {
-                process_listener->thread_created( thread );
-            }
-
-            break;
-
-        case THREAD_DESTROYED :
-            if ( process_listener->thread_destroyed != NULL ) {
-                process_listener->thread_destroyed( thread->process->id, thread->id );
-            }
-
-            break;
-
-        case THREAD_RENAMED :
-            if ( process_listener->thread_renamed != NULL ) {
-                process_listener->thread_renamed( thread );
-            }
-
-            break;
-    }
-
-    return 0;
-}
-
 int sys_get_system_info( system_info_t* system_info ) {
     system_info->total_page_count = get_total_page_count();
     system_info->free_page_count = get_free_page_count();
@@ -93,9 +34,6 @@ int sys_get_system_info( system_info_t* system_info ) {
     system_info->active_processor_count = get_active_processor_count();
 
     spinlock_disable( &scheduler_lock );
-
-    system_info->process_count = get_process_count();
-    system_info->thread_count = get_thread_count();
 
     spinunlock_enable( &scheduler_lock );
 

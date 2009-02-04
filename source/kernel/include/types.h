@@ -35,6 +35,9 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
+typedef int process_id;
+typedef int thread_id;
+
 typedef int bool;
 typedef unsigned int size_t;
 typedef int64_t off_t;

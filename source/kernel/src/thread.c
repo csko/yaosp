@@ -36,6 +36,12 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
+typedef struct thread_info_iter_data {
+    uint32_t curr_index;
+    uint32_t max_count;
+    thread_info_t* info_table;
+} thread_info_iter_data_t;
+
 static int thread_id_counter = 0;
 static hashtable_t thread_table;
 
@@ -128,10 +134,6 @@ void destroy_thread( thread_t* thread ) {
         remove_process( thread->process );
 
         spinunlock_enable( &scheduler_lock );
-
-        /* Tell the system information that a process is died */
-
-        notify_process_listener( PROCESS_DESTROYED, thread->process, NULL );
 
         /* Destroy the process */
 
@@ -268,8 +270,6 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
 
     spinunlock_enable( &scheduler_lock );
 
-    notify_process_listener( THREAD_CREATED, NULL, thread );
-
     return error;
 }
 
@@ -299,6 +299,72 @@ int sleep_thread( uint64_t microsecs ) {
     }
 
     return 0;
+}
+
+static int thread_info_process_filter( hashitem_t* item, void* data ) {
+    process_id id;
+    thread_t* thread;
+
+    id = *( ( process_id* )data );
+    thread = ( thread_t* )item;
+
+    if ( thread->process->id != id ) {
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
+static int get_thread_info_iterator( hashitem_t* item, void* _data ) {
+    thread_t* thread;
+    thread_info_t* info;
+    thread_info_iter_data_t* data;
+
+    thread = ( thread_t* )item;
+    data = ( thread_info_iter_data_t* )_data;
+
+    if ( data->curr_index >= data->max_count ) {
+        return 0;
+    }
+
+    info = ( thread_info_t* )&data->info_table[ data->curr_index ];
+
+    info->id = thread->id;
+    strncpy( info->name, thread->name, MAX_THREAD_NAME_LENGTH );
+    info->name[ MAX_THREAD_NAME_LENGTH - 1 ] = 0;
+    info->cpu_time = 0;
+
+    data->curr_index++;
+
+    return 0;
+}
+
+uint32_t sys_get_thread_count_for_process( process_id id ) {
+    uint32_t count;
+
+    spinlock_disable( &scheduler_lock );
+
+    count = hashtable_get_filtered_item_count( &thread_table, thread_info_process_filter, ( void* )&id );
+
+    spinunlock_enable( &scheduler_lock );
+
+    return count;
+}
+
+uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count ) {
+    thread_info_iter_data_t data;
+
+    data.curr_index = 0;
+    data.max_count = max_count;
+    data.info_table = info_table;
+
+    spinlock_disable( &scheduler_lock );
+
+    hashtable_filtered_iterate( &thread_table, get_thread_info_iterator, ( void* )&data, thread_info_process_filter, ( void* )&id );
+
+    spinunlock_enable( &scheduler_lock );
+
+    return data.curr_index;
 }
 
 int sys_sleep_thread( uint64_t* microsecs ) {
@@ -333,12 +399,6 @@ uint32_t get_thread_count( void ) {
 thread_t* get_thread_by_id( thread_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
     return ( thread_t* )hashtable_get( &thread_table, ( const void* )id );
-}
-
-int thread_table_iterate( thread_iter_callback_t* callback, void* data ) {
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
-    hashtable_iterate( &thread_table, ( hashtable_iter_callback_t* )callback, data );
-    return 0;
 }
 
 static void* thread_key( hashitem_t* item ) {
@@ -403,10 +463,6 @@ static int thread_cleaner_entry( void* arg ) {
         if ( thread == NULL ) {
             continue;
         }
-
-        /* Tell the system information that the thread is died */
-
-        notify_process_listener( THREAD_DESTROYED, NULL, thread );
 
         /* Free the resources allocated by this thread */
 

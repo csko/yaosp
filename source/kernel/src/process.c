@@ -28,6 +28,12 @@
 #include <lib/hashtable.h>
 #include <lib/string.h>
 
+typedef struct process_info_iter_data {
+    uint32_t curr_index;
+    uint32_t max_count;
+    process_info_t* info_table;
+} process_info_iter_data_t;
+
 static int process_id_counter = 0;
 static hashtable_t process_table;
 
@@ -162,10 +168,57 @@ process_t* get_process_by_id( process_id id ) {
     return ( process_t* )hashtable_get( &process_table, ( const void* )id );
 }
 
-int process_table_iterate( process_iter_callback_t* callback, void* data ) {
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
-    hashtable_iterate( &process_table, ( hashtable_iter_callback_t* )callback, data );
+uint32_t sys_get_process_count( void ) {
+    uint32_t result;
+
+    spinlock_disable( &scheduler_lock );
+
+    result = hashtable_get_item_count( &process_table );
+
+    spinunlock_enable( &scheduler_lock );
+
+    return result;
+}
+
+static int get_process_info_iterator( hashitem_t* item, void* _data ) {
+    process_t* process;
+    process_info_t* info;
+    process_info_iter_data_t* data;
+
+    process = ( process_t* )item;
+    data = ( process_info_iter_data_t* )_data;
+
+    if ( data->curr_index >= data->max_count ) {
+        return 0;
+    }
+
+    info = ( process_info_t* )&data->info_table[ data->curr_index ];
+
+    info->id = process->id;
+    strncpy( info->name, process->name, MAX_PROCESS_NAME_LENGTH );
+    info->name[ MAX_PROCESS_NAME_LENGTH - 1 ] = 0;
+    info->pmem_size = 0;
+    info->vmem_size = 0;
+
+    data->curr_index++;
+
     return 0;
+}
+
+uint32_t sys_get_process_info( process_info_t* info_table, uint32_t max_count ) {
+    process_info_iter_data_t data;
+
+    data.curr_index = 0;
+    data.max_count = max_count;
+    data.info_table = info_table;
+
+    spinlock_disable( &scheduler_lock );
+
+    hashtable_iterate( &process_table, get_process_info_iterator, ( void* )&data );
+
+    spinunlock_enable( &scheduler_lock );
+
+    return data.curr_index;
 }
 
 process_id sys_getpid( void ) {

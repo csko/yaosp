@@ -28,8 +28,6 @@
 
 #define KERNEL_STACK_PAGES ( KERNEL_STACK_SIZE / PAGE_SIZE )
 
-typedef int thread_id;
-
 enum {
     THREAD_UNKNOWN = 0,
     THREAD_READY,
@@ -144,7 +142,8 @@ uint32_t get_thread_count( void );
  */
 thread_t* get_thread_by_id( thread_id id );
 
-int thread_table_iterate( thread_iter_callback_t* callback, void* data );
+uint32_t sys_get_thread_count_for_process( process_id id );
+uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count );
 
 int sys_sleep_thread( uint64_t* microsecs );
 

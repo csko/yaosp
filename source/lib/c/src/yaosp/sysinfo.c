@@ -35,3 +35,19 @@ uint32_t get_module_count( void ) {
 int get_module_info( module_info_t* info, uint32_t max_count ) {
     return syscall2( SYS_get_module_info, ( int )info, max_count );
 }
+
+uint32_t get_process_count( void ) {
+    return syscall0( SYS_get_process_count );
+}
+
+uint32_t get_process_info( process_info_t* info, uint32_t max_count ) {
+    return syscall2( SYS_get_process_info, ( int )info, max_count );
+}
+
+uint32_t get_thread_count_for_process( process_id id ) {
+    return syscall1( SYS_get_thread_count_for_process, id );
+}
+
+uint32_t get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count ) {
+    return syscall3( SYS_get_thread_info_for_process, id, ( int )info_table, max_count );
+}

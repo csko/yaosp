@@ -22,7 +22,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build>
     <array name="subdirs">
         <item>iso9660</item>
-        <item>process</item>
         <item>ext2</item>
         <item>ramfs</item>
     </array>

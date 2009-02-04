@@ -95,8 +95,6 @@ int main( int argc, char** argv ) {
 
     printf( "Total memory: %d Kb\n", ( sysinfo.total_page_count * getpagesize() ) / 1024 );
     printf( "Free memory: %d Kb\n", ( sysinfo.free_page_count * getpagesize() ) / 1024 );
-    printf( "Process count: %d\n", sysinfo.process_count );
-    printf( "Thread count: %d\n", sysinfo.thread_count );
     printf( "Total CPUs: %d\n", sysinfo.total_processor_count );
     printf( "Active CPUs: %d\n", sysinfo.active_processor_count );
 

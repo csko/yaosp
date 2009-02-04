@@ -24,251 +24,114 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <yaosp/sysinfo.h>
 
-#define ALLOC_NUM 32
+char* argv0 = NULL;
 
-typedef struct thread_info {
-    int tid;
-    char* name;
-} thread_info_t;
+static int p_asc( const void* _p1, const void* _p2  ) {
+    process_info_t* p1 = ( process_info_t* )_p1;
+    process_info_t* p2 = ( process_info_t* )_p2;
 
-typedef struct process_info {
-    int pid;
-    char* name;
-    thread_info_t* threads;
-    int numthreads;
-} process_info_t;
-
-static int p_asc(const void* _p1, const void* _p2){
-    process_info_t* p1 = (process_info_t*) _p1;
-    process_info_t* p2 = (process_info_t*) _p2;
-
-    return p1->pid - p2->pid;
+    return ( p1->id - p2->id );
 }
 
 /*
-static int p_desc(const void* _p1, const void* _p2){
-    process_info_t* p1 = (process_info_t*) _p1;
-    process_info_t* p2 = (process_info_t*) _p2;
+static int p_desc( const void* _p1, const void* _p2 ) {
+    process_info_t* p1 = ( process_info_t* )_p1;
+    process_info_t* p2 = ( process_info_t* )_p2;
 
-    return p2->pid - p1->pid;
+    return ( p2->id - p1->id );
 }
 */
 
-static int t_asc(const void* _t1, const void* _t2){
-    thread_info_t* t1 = (thread_info_t*) _t1;
-    thread_info_t* t2 = (thread_info_t*) _t2;
+static int t_asc( const void* _t1, const void* _t2 ) {
+    thread_info_t* t1 = ( thread_info_t* )_t1;
+    thread_info_t* t2 = ( thread_info_t* )_t2;
 
-    return t1->tid - t2->tid;
+    return ( t1->id - t2->id );
 }
 
 /*
-static int t_desc(const void* _t1, const void* _t2){
-    thread_info_t* t1 = (thread_info_t*) _t1;
-    thread_info_t* t2 = (thread_info_t*) _t2;
+static int t_desc( const void* _t1, const void* _t2 ) {
+    thread_info_t* t1 = ( thread_info_t* )_t1;
+    thread_info_t* t2 = ( thread_info_t* )_t2;
 
-    return t2->tid - t1->tid;
+    return ( t2->id - t1->id );
 }
 */
 
-process_info_t* procs = NULL;
-size_t numprocs = 0;
-
-static void print_thread(thread_info_t* thread){
-    printf( "%4s %4d  `- %s\n", "", thread->tid, thread->name );
+static void print_thread( thread_info_t* thread ) {
+    printf( "%4s %4d  `- %s\n", "", thread->id, thread->name );
 }
 
-static void print_proc(process_info_t* proc){
-    int j;
+static void print_process( process_info_t* process ) {
+    uint32_t thread_count;
+    thread_info_t* thread_table;
 
-    printf( "%4d %4s %s\n", proc->pid, "-", proc->name );
+    printf( "%4d %4s %s\n", process->id, "-", process->name );
 
-    if(proc->numthreads > 0){
-        /* Sort the threads */
-        qsort(proc->threads, proc->numthreads, sizeof(proc->threads[0]), t_asc);
-    }
+    thread_count = get_thread_count_for_process( process->id );
 
-    /* Print threads */
-    for(j = 0; j < proc->numthreads; j++){
-        print_thread(&(proc->threads[j]));
-    }
+    if ( thread_count > 0 ) {
+        uint32_t i;
 
-}
+        thread_table = ( thread_info_t* )malloc( sizeof( thread_info_t ) * thread_count );
 
-/* Free all the allocated memory */
-static void destroy_procs(){
-    int i,j;
-
-    for(i = 0; i < numprocs; i++){
-        free(procs[i].name);
-
-        for(j = 0; j < procs[i].numthreads; j++){
-            free(procs[i].threads[j].name);
+        if ( thread_table == NULL ) {
+            fprintf( stderr, "%s: No memory for thread table!\n", argv0 );
+            return;
         }
 
-        free(procs[i].threads);
-    }
+        thread_count = get_thread_info_for_process( process->id, thread_table, thread_count );
 
-    free(procs);
+        qsort( thread_table, thread_count, sizeof( thread_info_t ), t_asc );
 
-}
-
-static int read_proc_entry_node( char* dir, char* node, char* buffer, size_t size ) {
-    int fd;
-    int data;
-    char path[ 64 ];
-
-    snprintf( path, sizeof( path ), "/process/%s/%s", dir, node );
-
-    fd = open( path, O_RDONLY );
-
-    if ( fd < 0 ) {
-        return fd;
-    }
-
-    data = read( fd, buffer, size - 1 );
-
-    close( fd );
-
-    if ( data < 0 ) {
-        return data;
-    }
-
-    buffer[ data ] = 0;
-
-    return 0;
-}
-
-static int do_ts( char* thread, char* tid, process_info_t* proc ) {
-    int error;
-    char name[ 128 ];
-    thread_info_t* threads = proc->threads;
-    thread_info_t* tmp_threads;
-    int numthreads = proc->numthreads;
-
-    error = read_proc_entry_node( thread, "name", name, sizeof( name ) );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    if(numthreads % ALLOC_NUM == 0){
-        tmp_threads = (thread_info_t*) realloc(threads, sizeof(thread_info_t) * (numthreads + ALLOC_NUM));
-
-        if(tmp_threads == NULL){
-            return -ENOMEM;
+        for ( i = 0; i < thread_count; i++ ) {
+            print_thread( &thread_table[ i ] );
         }
 
-        threads = tmp_threads;
-
+        free( thread_table );
     }
-
-    threads[numthreads].name = strdup(name);
-    threads[numthreads].tid = atoi(tid);
-    proc->numthreads++;
-    proc->threads = threads;
-
-    return 0;
-}
-
-static int do_ps( char* process ) {
-    int error;
-    char name[ 128 ];
-    char path[ 128 ];
-    DIR* dir;
-    struct dirent* entry;
-    struct stat entry_stat;
-    process_info_t* tmp_procs;
-
-    error = read_proc_entry_node( process, "name", name, sizeof( name ) );
-
-    if ( error < 0 ) {
-        return 0;
-    }
-
-    if(numprocs % ALLOC_NUM == 0){
-        tmp_procs = (process_info_t*) realloc(procs, sizeof(process_info_t) * (numprocs + ALLOC_NUM));
-
-        if(tmp_procs == NULL){
-            return -ENOMEM;
-        }
-
-        procs = tmp_procs;
-
-    }
-
-    procs[numprocs].pid = atoi(process);
-    procs[numprocs].name = strdup(name);
-    procs[numprocs].numthreads = 0;
-    procs[numprocs].threads = NULL;
-    numprocs++;
-
-    snprintf( path, sizeof( path ), "/process/%s", process );
-
-    dir = opendir( path );
-
-    if ( dir == NULL ) {
-        return 0;
-    }
-
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        snprintf( path, sizeof( path ), "/process/%s/%s", process, entry->d_name );
-
-        if ( stat( path, &entry_stat ) != 0 ) {
-            continue;
-        }
-
-        if ( !S_ISDIR( entry_stat.st_mode ) ) {
-            continue;
-        }
-
-        snprintf( path, sizeof( path ), "%s/%s", process, entry->d_name );
-        if( do_ts( path, entry->d_name, &procs[numprocs - 1] ) == -ENOMEM ){
-            return -ENOMEM;
-        }
-    }
-
-    closedir( dir );
-    return 0;
 }
 
 int main( int argc, char** argv ) {
-    DIR* dir;
-    struct dirent* entry;
-    int i;
+    uint32_t process_count;
+    process_info_t* process_table;
 
-    dir = opendir( "/process" );
+    argv0 = argv[ 0 ];
 
-    if ( dir == NULL ) {
-        fprintf (stderr, "%s: Failed to open /process!\n", argv[0] );
-        return EXIT_FAILURE;
-    }
+    process_count = get_process_count();
 
-    while ( ( entry = readdir( dir ) ) != NULL ) {
-        if(do_ps( entry->d_name ) == -ENOMEM ){
-            fprintf (stderr, "%s: Failed to allocate memory for process list!\n", argv[0] );
+    if ( process_count > 0 ) {
+        uint32_t i;
 
-            closedir(dir);
+        /* Get the process list */
 
-            return EXIT_FAILURE;
+        process_table = ( process_info_t* )malloc( sizeof( process_info_t ) * process_count );
+
+        if ( process_table == NULL ) {
+            fprintf( stderr, "%s: No memory for process table!\n", argv0 );
+            return EXIT_SUCCESS;
         }
-    }
 
-    closedir( dir );
+        process_count = get_process_info( process_table, process_count );
 
-    if(numprocs > 0){
-        /* Sort the processes */
-        qsort(procs, numprocs, sizeof(procs[0]), p_asc);
+        /* Sort the process list */
+
+        qsort( process_table, process_count, sizeof( process_info_t ), p_asc );
+
+        /* Print the header */
 
         printf( " PID  TID NAME\n" );
 
-        /* Print the processes */
-        for(i = 0; i < numprocs; i++){
-            print_proc(&procs[i]);
-        }
-    }
+        /* Print the process list */
 
-    destroy_procs();
+        for ( i = 0; i < process_count; i++ ) {
+            print_process( &process_table[ i ] );
+        }
+
+        free( process_table );
+    }
 
     return EXIT_SUCCESS;
 }

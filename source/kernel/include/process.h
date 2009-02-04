@@ -28,8 +28,6 @@
 
 #include <arch/atomic.h>
 
-typedef int process_id;
-
 typedef struct process {
     hashitem_t hash;
 
@@ -64,9 +62,10 @@ int insert_process( process_t* process );
 void remove_process( process_t* process );
 int rename_process( process_t* process, char* new_name );
 
-uint32_t get_process_count( void );
 process_t* get_process_by_id( process_id id );
-int process_table_iterate( process_iter_callback_t* callback, void* data );
+
+uint32_t sys_get_process_count( void );
+uint32_t sys_get_process_info( process_info_t* info_table, uint32_t max_count );
 
 process_id sys_getpid( void );
 int sys_exit( int exit_code );

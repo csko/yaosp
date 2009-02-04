@@ -154,9 +154,6 @@ int sys_fork( void ) {
         goto error3;
     }
 
-    notify_process_listener( PROCESS_CREATED, new_process, NULL );
-    notify_process_listener( THREAD_CREATED, NULL, new_thread );
-
     return error;
 
 error3:
