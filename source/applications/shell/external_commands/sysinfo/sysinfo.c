@@ -31,6 +31,7 @@ static void print_usage( void ) {
     printf( "    kernel - Kernel information\n" );
     printf( "    module - Kernel module information\n" );
     printf( "    processor - Processor information\n" );
+    printf( "    memory - Memory information\n" );
 }
 
 static void do_get_kernel_info( void ) {
@@ -126,6 +127,21 @@ static void do_get_processor_info( void ) {
     free( info_table );
 }
 
+static void do_get_memory_info( void ) {
+    int error;
+    memory_info_t memory_info;
+
+    error = get_memory_info( &memory_info );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to get memory information!\n", argv0 );
+        return;
+    }
+
+    printf( "Total memory: %u Kb\n", ( memory_info.total_page_count * getpagesize() / 1024 ) );
+    printf( "Free memory: %u Kb\n", ( memory_info.free_page_count * getpagesize() / 1024 ) );
+}
+
 int main( int argc, char** argv ) {
     char* info_type;
 
@@ -144,6 +160,8 @@ int main( int argc, char** argv ) {
         do_get_module_info();
     } else if ( strcmp( info_type, "processor" ) == 0 ) {
         do_get_processor_info();
+    } else if ( strcmp( info_type, "memory" ) == 0 ) {
+        do_get_memory_info();
     } else {
         print_usage();
         return EXIT_FAILURE;

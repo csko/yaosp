@@ -20,10 +20,6 @@
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
-int get_system_info( system_info_t* system_info ) {
-    return syscall1( SYS_get_system_info, ( int )system_info );
-}
-
 int get_kernel_info( kernel_info_t* kernel_info ) {
     return syscall1( SYS_get_kernel_info, ( int )kernel_info );
 }
@@ -58,4 +54,8 @@ uint32_t get_processor_count( void ) {
 
 uint32_t get_processor_info( processor_info_t* info_table, uint32_t max_count ) {
     return syscall2( SYS_get_processor_info, ( int )info_table, max_count );
+}
+
+int get_memory_info( memory_info_t* info ) {
+    return syscall1( SYS_get_memory_info, ( int )info );
 }

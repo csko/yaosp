@@ -25,10 +25,10 @@
 #include <kernel.h>
 #include <semaphore.h>
 #include <time.h>
-#include <sysinfo.h>
 #include <thread.h>
 #include <module.h>
 #include <mm/userspace.h>
+#include <mm/pages.h>
 #include <vfs/vfs.h>
 
 static system_call_entry_t system_call_table[] = {
@@ -67,7 +67,6 @@ static system_call_entry_t system_call_table[] = {
     { "time", sys_time, 0 },
     { "stime", sys_stime, 0 },
     { "get_system_time", sys_get_system_time, 0 },
-    { "get_system_info", sys_get_system_info, 0 },
     { "get_kernel_info", sys_get_kernel_info, 0 },
     { "get_module_count", sys_get_module_count, 0 },
     { "get_module_info", sys_get_module_info, 0 },
@@ -77,6 +76,7 @@ static system_call_entry_t system_call_table[] = {
     { "get_thread_info_for_process", sys_get_thread_info_for_process, 0 },
     { "get_processor_count", sys_get_processor_count, 0 },
     { "get_processor_info", sys_get_processor_info, 0 },
+    { "get_memory_info", sys_get_memory_info, 0 },
     { "sleep_thread", sys_sleep_thread, 0 },
     { "create_region", sys_create_region, 0 },
     { "delete_region", sys_delete_region, 0 },

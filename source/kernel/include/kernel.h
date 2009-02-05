@@ -1,6 +1,6 @@
 /* Miscellaneous kernel functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,8 +19,20 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
 
+#include <types.h>
+
 #define panic( format, arg... ) \
     handle_panic( __FILE__, __LINE__, format, ##arg )
+
+typedef struct kernel_info {
+    uint32_t major_version;
+    uint32_t minor_version;
+    uint32_t release_version;
+    char build_date[ 32 ];
+    char build_time[ 32 ];
+} kernel_info_t;
+
+int sys_get_kernel_info( kernel_info_t* kernel_info );
 
 int sys_dbprintf( const char* format, char** parameters );
 

@@ -1,6 +1,6 @@
 /* Memory page allocator
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -32,8 +32,19 @@
  * pages.
  */
 typedef struct page {
-    atomic_t ref;
+    atomic_t ref_count;
 } page_t;
+
+/**
+ * @struct memory_info
+ *
+ * This structure is used to pass memory informations to
+ * userspace applications.
+ */
+typedef struct memory_info {
+    uint32_t free_page_count;
+    uint32_t total_page_count;
+} memory_info_t;
 
 /**
  * Allocates a number of physical memory pages.
@@ -64,6 +75,8 @@ int get_free_page_count( void );
  * @return The total number of memory pages
  */
 int get_total_page_count( void );
+
+int sys_get_memory_info( memory_info_t* info );
 
 /**
  * Initializes the page allocator subsystem according to

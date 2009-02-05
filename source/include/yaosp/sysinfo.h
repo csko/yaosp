@@ -29,18 +29,6 @@
 typedef int process_id;
 typedef int thread_id;
 
-typedef struct system_info {
-    /* Memory information */
-
-    uint32_t free_page_count;
-    uint32_t total_page_count;
-
-    /* Processor information */
-
-    uint32_t total_processor_count;
-    uint32_t active_processor_count;
-} system_info_t;
-
 typedef struct kernel_info {
     uint32_t major_version;
     uint32_t minor_version;
@@ -74,7 +62,11 @@ typedef struct processor_info {
     int running;
 } processor_info_t;
 
-int get_system_info( system_info_t* system_info );
+typedef struct memory_info {
+    uint32_t free_page_count;
+    uint32_t total_page_count;
+} memory_info_t;
+
 int get_kernel_info( kernel_info_t* kernel_info );
 
 uint32_t get_module_count( void );
@@ -88,5 +80,7 @@ uint32_t get_thread_info_for_process( process_id id, thread_info_t* info_table, 
 
 uint32_t get_processor_count( void );
 uint32_t get_processor_info( processor_info_t* info_table, uint32_t max_count );
+
+int get_memory_info( memory_info_t* info );
 
 #endif // _SYSINFO_H_

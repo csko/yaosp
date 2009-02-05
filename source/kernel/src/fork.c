@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <thread.h>
 #include <scheduler.h>
-#include <sysinfo.h>
 #include <macros.h>
 #include <mm/context.h>
 

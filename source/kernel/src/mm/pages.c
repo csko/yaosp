@@ -73,7 +73,7 @@ void* alloc_pages( uint32_t count ) {
     spinlock_disable( &pages_lock );
 
     for ( i = first_free_page_index; i < memory_page_count; i++ ) {
-        if ( atomic_get( &memory_pages[ i ].ref ) == 0 ) {
+        if ( atomic_get( &memory_pages[ i ].ref_count ) == 0 ) {
             if ( region_start == 0 ) {
                 region_start = i;
                 cur_free_pages = 1;
@@ -86,7 +86,7 @@ void* alloc_pages( uint32_t count ) {
                 page_t* tmp = &memory_pages[ region_start ];
 
                 for ( j = 0; j < count; j++, tmp++ ) {
-                    atomic_set( &tmp->ref, 1 );
+                    atomic_set( &tmp->ref_count, 1 );
                     atomic_dec( &free_page_count );
                 }
 
@@ -121,10 +121,10 @@ void free_pages( void* address, uint32_t count ) {
 
     spinlock_disable( &pages_lock );
 
-    ASSERT( atomic_get( &tmp->ref ) > 0 );
+    ASSERT( atomic_get( &tmp->ref_count ) > 0 );
 
     for ( i = 0; i < count; i++, tmp++ ) {
-        atomic_set( &tmp->ref, 0 );
+        atomic_set( &tmp->ref_count, 0 );
         atomic_inc( &free_page_count );
     }
 
@@ -137,6 +137,13 @@ int get_free_page_count( void ) {
 
 int get_total_page_count( void ) {
     return ( int )memory_page_count;
+}
+
+int sys_get_memory_info( memory_info_t* info ) {
+    info->free_page_count = atomic_get( &free_page_count );
+    info->total_page_count = memory_page_count;
+
+    return 0;
 }
 
 int init_page_allocator( multiboot_header_t* header ) {
@@ -198,7 +205,7 @@ int init_page_allocator( multiboot_header_t* header ) {
        allocate from this region. */
 
     for ( i = 0; i < first_free_page; i += PAGE_SIZE ) {
-        atomic_inc( &memory_pages[ i ].ref );
+        atomic_inc( &memory_pages[ i ].ref_count );
         atomic_dec( &free_page_count );
     }
 
@@ -221,8 +228,8 @@ int init_page_allocator( multiboot_header_t* header ) {
                   ( i < ( ( real_base + real_length ) / PAGE_SIZE ) ) &&
                   ( i < memory_page_count );
                   i++ ) {
-                if ( atomic_get( &memory_pages[ i ].ref ) == 0 ) {
-                    atomic_inc( &memory_pages[ i ].ref );
+                if ( atomic_get( &memory_pages[ i ].ref_count ) == 0 ) {
+                    atomic_inc( &memory_pages[ i ].ref_count );
                     atomic_dec( &free_page_count );
                 }
             }

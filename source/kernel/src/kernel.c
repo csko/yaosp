@@ -25,6 +25,7 @@
 #include <semaphore.h>
 #include <devices.h>
 #include <loader.h>
+#include <version.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>
 
@@ -33,6 +34,20 @@
 
 extern void arch_reboot( void );
 extern void arch_shutdown( void );
+
+int sys_get_kernel_info( kernel_info_t* kernel_info ) {
+    kernel_info->major_version = KERNEL_MAJOR_VERSION;
+    kernel_info->minor_version = KERNEL_MINOR_VERSION;
+    kernel_info->release_version = KERNEL_RELEASE_VERSION;
+
+    strncpy( kernel_info->build_date, build_date, 32 );
+    strncpy( kernel_info->build_time, build_time, 32 );
+
+    kernel_info->build_date[ 31 ] = 0;
+    kernel_info->build_time[ 31 ] = 0;
+
+    return 0;
+}
 
 int sys_dbprintf( const char* format, char** parameters ) {
     char buf[ 256 ];

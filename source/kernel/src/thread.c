@@ -25,7 +25,6 @@
 #include <waitqueue.h>
 #include <macros.h>
 #include <console.h>
-#include <sysinfo.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>

@@ -26,7 +26,6 @@
 #include <irq.h>
 #include <scheduler.h>
 #include <process.h>
-#include <sysinfo.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <vfs/devfs.h>

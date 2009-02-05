@@ -21,7 +21,6 @@
 #include <console.h>
 #include <smp.h>
 #include <scheduler.h>
-#include <sysinfo.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
