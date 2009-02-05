@@ -113,11 +113,9 @@ int memory_context_remove_region( memory_context_t* context, region_t* region ) 
     return 0;
 }
 
-region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
+region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
     int i;
     region_t* region = NULL;
-
-    LOCK( region_lock );
 
     for ( i = 0; i < context->region_count; i++ ) {
         if ( ( context->regions[ i ]->start <= address ) &&
@@ -126,6 +124,16 @@ region_t* memory_context_get_region_for( memory_context_t* context, ptr_t addres
             break;
         }
     }
+
+    return region;
+}
+
+region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
+    region_t* region;
+
+    LOCK( region_lock );
+
+    region = do_memory_context_get_region_for( context, address );
 
     UNLOCK( region_lock );
 
@@ -269,6 +277,7 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
     memset( new_context, 0, sizeof( memory_context_t ) );
 
     new_context->process = new_process;
+
     /* Initialize the architecture dependent part of the memory context */
 
     error = arch_init_memory_context( new_context );

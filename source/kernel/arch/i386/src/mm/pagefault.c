@@ -19,26 +19,62 @@
 #include <types.h>
 #include <console.h>
 #include <smp.h>
+#include <errno.h>
+#include <semaphore.h>
+#include <mm/region.h>
+#include <mm/context.h>
+#include <mm/pages.h>
 
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
+#include <arch/mm/paging.h>
+
+extern semaphore_id region_lock;
 
 void dump_registers( registers_t* regs );
 
-void handle_page_fault( registers_t* regs ) {
-    thread_t* thread;
-
-    kprintf( "Page fault!\n" );
+static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr2 ) {
+    kprintf( "Invalid page fault at 0x%x\n", cr2 );
     dump_registers( regs );
-    kprintf( "CR2=%x\n", get_cr2() );
-    kprintf( "CR3=%x\n", get_cr3() );
-
-    thread = current_thread();
 
     if ( thread != NULL ) {
         kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
+        thread_exit( 0 );
+    } else {
+        disable_interrupts();
+        halt_loop();
+    }
+}
+
+void handle_page_fault( registers_t* regs ) {
+    int error;
+    uint32_t cr2;
+    region_t* region;
+    thread_t* thread;
+
+    cr2 = get_cr2();
+
+    thread = current_thread();
+
+    if ( thread == NULL ) {
+        invalid_page_fault( NULL, regs, cr2 );
     }
 
-    disable_interrupts();
-    halt_loop();
+    LOCK( region_lock );
+
+    region = do_memory_context_get_region_for( thread->process->memory_context, cr2 );
+
+    /* TODO */
+    /* NOTE: At the moment we don't expect page faults! */
+
+    goto invalid;
+
+    UNLOCK( region_lock );
+
+    return;
+
+invalid:
+    UNLOCK( region_lock );
+
+    invalid_page_fault( thread, regs, cr2 );
 }
