@@ -189,6 +189,15 @@ int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual,
 
     for ( addr = virtual; addr < ( virtual + size ); addr += PGDIR_SIZE ) {
         pgd_entry = page_directory_entry( arch_context, addr );
+
+        /* Don't try to free the page table if it wasn't allocated. This
+           could happen if someone creates a region with ALLOC_NONE and
+           then tries to remap it. */
+
+        if ( *pgd_entry == 0 ) {
+            continue;
+        }
+
         page_table = ( uint32_t* )( *pgd_entry & PAGE_MASK );
 
         free = true;
@@ -489,9 +498,9 @@ int init_paging( void ) {
 
     map_region_pages(
         arch_context,
-        0,
-        0,
-        1 * 1024 * 1024,
+        PAGE_SIZE,
+        PAGE_SIZE,
+        1 * 1024 * 1024 - PAGE_SIZE,
         true,
         true
     );
