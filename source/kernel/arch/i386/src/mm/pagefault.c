@@ -47,7 +47,6 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
 }
 
 void handle_page_fault( registers_t* regs ) {
-    int error;
     uint32_t cr2;
     region_t* region;
     thread_t* thread;
