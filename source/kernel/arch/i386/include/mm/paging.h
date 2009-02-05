@@ -46,9 +46,11 @@ int map_region_pages(
     bool write
 );
 int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel, bool write );
+int clear_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool fail_on_nonpresent_pt );
 int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 int free_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
+int free_region_pages_lazy( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
 
 int clone_user_region(

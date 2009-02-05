@@ -85,7 +85,17 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
         }
 
         case ALLOC_LAZY :
-            panic( "Lazy page allocation not yet supported!\n" );
+            error = clear_region_pages(
+                arch_context,
+                region->start,
+                region->size,
+                false
+            );
+
+            if ( error < 0 ) {
+                return error;
+            }
+
             break;
 
         default :
@@ -121,10 +131,6 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
 
     if ( ( region->flags & REGION_REMAPPED ) == 0 ) {
         switch ( ( int )region->alloc_method ) {
-            case ALLOC_LAZY :
-                panic( "Freeing lazy allocated region not yet implemented!\n" );
-                break;
-
             case ALLOC_PAGES :
                 free_region_pages( arch_context, region->start, region->size );
                 freed_pmem = region->size;
@@ -133,6 +139,10 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
             case ALLOC_CONTIGUOUS :
                 free_region_pages_contiguous( arch_context, region->start, region->size );
                 freed_pmem = region->size;
+                break;
+
+            case ALLOC_LAZY :
+                free_region_pages_lazy( arch_context, region->start, region->size );
                 break;
         }
     } else {
@@ -239,4 +249,21 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
     flush_tlb_global();
 
     return 0;
+}
+
+int arch_clone_memory_region(
+    memory_context_t* old_context,
+    region_t* old_region,
+    memory_context_t* new_context,
+    region_t* new_region
+) {
+    int error;
+
+    if ( old_region->flags & REGION_KERNEL ) {
+        error = 0;
+    } else {
+        error = clone_user_region( old_context, old_region, new_context, new_region );
+    }
+
+    return error;
 }

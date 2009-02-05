@@ -180,6 +180,49 @@ int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uin
     return 0;
 }
 
+int clear_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool fail_on_nonpresent_pt ) {
+    uint32_t i;
+    uint32_t count;
+    uint32_t pd_index;
+    uint32_t pt_index;
+    uint32_t* pt;
+
+    count = size / PAGE_SIZE;
+    pd_index = virtual >> PGDIR_SHIFT;
+    pt_index = ( virtual >> PAGE_SHIFT ) & 1023;
+    pt = ( uint32_t* )( arch_context->page_directory[ pd_index ] & PAGE_MASK );
+
+    if ( ( fail_on_nonpresent_pt ) &&
+         ( pt == NULL ) ) {
+        return -EINVAL;
+    }
+
+    for ( i = 0; i < count; i++ ) {
+        if ( pt == NULL ) {
+            goto next;
+        }
+
+        pt[ pt_index ] = 0;
+
+next:
+        if ( pt_index == 1023 ) {
+            pt_index = 0;
+            pd_index++;
+
+            pt = ( uint32_t* )( arch_context->page_directory[ pd_index ] & PAGE_MASK );
+
+            if ( ( fail_on_nonpresent_pt ) &&
+                 ( pt == NULL ) ) {
+                return -EINVAL;
+            }
+        } else {
+            pt_index++;
+        }
+    }
+
+    return 0;
+}
+
 int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size ) {
     int i;
     bool free;
@@ -249,6 +292,32 @@ int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t vir
     for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
         pgd_entry = page_directory_entry( arch_context, addr );
         pt_entry = page_table_entry( *pgd_entry, addr );
+
+        *pt_entry = 0;
+    }
+
+    return 0;
+}
+
+int free_region_pages_lazy( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size ) {
+    ptr_t addr;
+    uint32_t* pgd_entry;
+    uint32_t* pt_entry;
+
+    for ( addr = virtual; addr < ( virtual + size ); addr += PAGE_SIZE ) {
+        pgd_entry = page_directory_entry( arch_context, addr );
+
+        if ( *pgd_entry == 0 ) {
+            continue;
+        }
+
+        pt_entry = page_table_entry( *pgd_entry, addr );
+
+        if ( *pt_entry == 0 ) {
+            continue;
+        }
+
+        free_pages( ( void* )( *pt_entry & PAGE_MASK ), 1 );
 
         *pt_entry = 0;
     }
@@ -367,6 +436,60 @@ static int clone_user_region_contiguous(
     return 0;
 }
 
+static int clone_user_region_lazy( 
+    i386_memory_context_t* old_arch_context,
+    region_t* old_region,
+    i386_memory_context_t* new_arch_context,
+    region_t* new_region,
+    uint64_t* _allocated_pmem
+) {
+    int i;
+    void* p;
+    uint32_t count;
+    uint32_t pt_index;
+    uint32_t pd_index;
+    uint64_t allocated_pmem;
+    register uint32_t* old_pt;
+    register uint32_t* new_pt;
+
+    allocated_pmem = 0;
+    count = old_region->size / PAGE_SIZE;
+    pd_index = old_region->start >> PGDIR_SHIFT;
+    pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
+    old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+    new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+
+    for ( i = 0; i < count; i++ ) {
+        if ( ( old_pt == NULL ) || ( old_pt[ pt_index ] == 0 ) ) {
+            new_pt[ pt_index ] = 0;
+        } else {
+            p = alloc_pages( 1 );
+
+            if ( p == NULL ) {
+                return -ENOMEM;
+            }
+
+            allocated_pmem += PAGE_SIZE;
+
+            memcpy( p, ( void* )( old_pt[ pt_index ] & PAGE_MASK ), PAGE_SIZE );
+
+            new_pt[ pt_index ] = ( uint32_t )p | ( old_pt[ pt_index ] & ~PAGE_MASK );
+        }
+
+        if ( pt_index == 1023 ) {
+            pt_index = 0;
+            pd_index++;
+
+            old_pt = ( uint32_t* )( old_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+            new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
+        } else {
+            pt_index++;
+        }
+    }
+
+    return 0;
+}
+
 int clone_user_region(
     memory_context_t* old_context,
     region_t* old_region,
@@ -406,7 +529,7 @@ int clone_user_region(
 
             break;
 
-        case ALLOC_CONTIGUOUS : {
+        case ALLOC_CONTIGUOUS :
             error = clone_user_region_contiguous( old_arch_context, old_region, new_arch_context, new_region );
 
             if ( error < 0 ) {
@@ -416,7 +539,15 @@ int clone_user_region(
             allocated_pmem = old_region->size;
 
             break;
-        }
+
+        case ALLOC_LAZY :
+            error = clone_user_region_lazy( old_arch_context, old_region, new_arch_context, new_region, &allocated_pmem );
+
+            if ( error < 0 ) {
+                return error;
+            }
+
+            break;
 
         default :
             panic( "Not yet implemented!\n" );

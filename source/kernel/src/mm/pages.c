@@ -109,6 +109,8 @@ void free_pages( void* address, uint32_t count ) {
     page_t* tmp;
     ptr_t region_start;
 
+    ASSERT( address != NULL );
+
     region_start = ( ptr_t )address;
 
     if ( region_start >= memory_size ) {

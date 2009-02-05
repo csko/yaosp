@@ -24,6 +24,7 @@
 #include <mm/region.h>
 #include <mm/context.h>
 #include <mm/pages.h>
+#include <lib/string.h>
 
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
@@ -46,7 +47,47 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
     }
 }
 
+static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
+    void* p;
+    uint32_t* pgd_entry;
+    uint32_t* pt_entry;
+    memory_context_t* context;
+    i386_memory_context_t* arch_context;
+
+    context = region->context;
+    arch_context = ( i386_memory_context_t* )context->arch_data;
+
+    pgd_entry = page_directory_entry( arch_context, address );
+
+    if ( *pgd_entry == 0 ) {
+        p = alloc_pages( 1 );
+
+        if ( p == NULL ) {
+            return -ENOMEM;
+        }
+
+        memsetl( p, 0, PAGE_SIZE / 4 );
+
+        *pgd_entry = ( uint32_t )p | PRESENT | WRITE | USER;
+    }
+
+    pt_entry = page_table_entry( *pgd_entry, address );
+
+    p = alloc_pages( 1 );
+
+    if ( p == NULL ) {
+        return -ENOMEM;
+    }
+
+    memsetl( p, 0, PAGE_SIZE / 4 );
+
+    *pt_entry = ( uint32_t )p | PRESENT | WRITE | USER;
+
+    return 0;
+}
+
 void handle_page_fault( registers_t* regs ) {
+    int error;
     uint32_t cr2;
     region_t* region;
     thread_t* thread;
@@ -63,10 +104,19 @@ void handle_page_fault( registers_t* regs ) {
 
     region = do_memory_context_get_region_for( thread->process->memory_context, cr2 );
 
-    /* TODO */
-    /* NOTE: At the moment we don't expect page faults! */
+    if ( region == NULL ) {
+        goto invalid;
+    }
 
-    goto invalid;
+    if ( region->alloc_method == ALLOC_LAZY ) {
+        error = handle_lazy_page_allocation( region, cr2 );
+
+        if ( error < 0 ) {
+            goto invalid;
+        }
+    } else {
+        goto invalid;
+    }
 
     UNLOCK( region_lock );
 

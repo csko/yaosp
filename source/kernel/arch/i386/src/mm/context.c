@@ -81,20 +81,3 @@ int arch_clone_memory_context( memory_context_t* old_context, memory_context_t* 
 
     return 0;
 }
-
-int arch_clone_memory_region(
-    memory_context_t* old_context,
-    region_t* old_region,
-    memory_context_t* new_context,
-    region_t* new_region
-) {
-    int error;
-
-    if ( old_region->flags & REGION_KERNEL ) {
-        error = 0;
-    } else {
-        error = clone_user_region( old_context, old_region, new_context, new_region );
-    }
-
-    return error;
-}
