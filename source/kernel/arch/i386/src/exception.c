@@ -32,7 +32,10 @@ void dump_registers( registers_t* regs ) {
     kprintf( "ESI=%x EDI=%x\n", regs->esi, regs->edi );
     kprintf( "EBP=%x\n", regs->ebp );
     kprintf( "CS:EIP=%x:%x\n", regs->cs, regs->eip );
-    kprintf( "SS:ESP=%x:%x\n", regs->ss, regs->esp );
+
+    if ( regs->cs & 3 ) {
+        kprintf( "SS:ESP=%x:%x\n", regs->ss, regs->esp );
+    }
 }
 
 void handle_division_by_zero( registers_t* regs ) {
