@@ -39,7 +39,7 @@ int arch_init_memory_context( memory_context_t* context ) {
 
     /* Allocate a memory page for the page directory */
 
-    arch_context->page_directory = ( uint32_t* )alloc_pages( 1 );
+    arch_context->page_directory = ( uint32_t* )alloc_pages( 1, MEM_COMMON );
 
     if ( arch_context->page_directory == NULL ) {
         kfree( arch_context );

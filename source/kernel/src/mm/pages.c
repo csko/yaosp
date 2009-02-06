@@ -14,30 +14,6 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Memory structure:
- *
- * -------------- <- 0 Mb
- * |    Below   |
- * |     1Mb    |
- * |------------| <- 1 Mb
- * |   Kernel   |
- * |------------| <- 1 Mb + kernel_size
- * |    Page    |
- * | allocator  |
- * | structures |
- * |------------| <- 1 Mb + kernel_size +
- * |            |    sizeof(page_t) * memory_pages
- * |   Kernel   |
- * |   memory   |
- * |            |
- * |------------| <- userspace start
- * |     U      |
- * |     S      |
- * |     E      |
- * |     R      |
- * |   SPACE    |
- * |------------| <- end of memory
  */
 
 #include <types.h>
@@ -45,6 +21,7 @@
 #include <errno.h>
 #include <bootmodule.h>
 #include <macros.h>
+#include <config.h>
 #include <mm/pages.h>
 #include <lib/string.h>
 
@@ -52,52 +29,97 @@
 #include <arch/spinlock.h>
 #include <arch/mm/config.h>
 
-ptr_t memory_size;
-page_t* memory_pages;
-
-atomic_t free_page_count;
-uint32_t memory_page_count;
-
-ptr_t first_free_page_index;
+static uint64_t memory_size;
+static page_t* memory_pages;
+static memory_type_desc_t memory_descriptors[ MAX_MEMORY_TYPES ];
 
 static spinlock_t pages_lock = INIT_SPINLOCK( "Page allocator" );
 
-extern int __kernel_end;
+static memory_type_desc_t* get_memory_descriptor( ptr_t address ) {
+    int i;
+    memory_type_desc_t* memory_desc;
 
-void* alloc_pages( uint32_t count ) {
-    void* p = NULL;
+    for ( i = 0; i < MAX_MEMORY_TYPES; i++ ) {
+        memory_desc = &memory_descriptors[ i ];
+
+        if ( memory_desc->free ) {
+            continue;
+        }
+
+        if ( ( address >= memory_desc->start ) &&
+             ( ( address - memory_desc->start ) < memory_desc->size ) ) {
+            return memory_desc;
+        }
+    }
+
+    return NULL;
+}
+
+static void* do_alloc_pages( memory_type_desc_t* memory_desc, uint32_t count ) {
     ptr_t i;
-    ptr_t region_start = 0;
-    uint32_t cur_free_pages = 0;
+    void* p;
+    bool found;
+    page_t* page;
+    ptr_t page_count;
+    ptr_t region_start;
+    uint32_t free_page_count;
 
-    spinlock_disable( &pages_lock );
+    p = NULL;
+    found = false;
+    page_count = memory_desc->size / PAGE_SIZE;
+    page = &memory_pages[ memory_desc->start / PAGE_SIZE ];
 
-    for ( i = first_free_page_index; i < memory_page_count; i++ ) {
-        if ( atomic_get( &memory_pages[ i ].ref_count ) == 0 ) {
-            if ( region_start == 0 ) {
+    /* First make sure this memory region is big enough for
+       the requested number of pages */
+
+    if ( page_count < count ) {
+        return NULL;
+    }
+
+    for ( i = 0; i < page_count; i++, page++ ) {
+        if ( atomic_get( &page->ref_count ) == 0 ) {
+            if ( !found ) {
+                found = true;
                 region_start = i;
-                cur_free_pages = 1;
+                free_page_count = 1;
             } else {
-                cur_free_pages++;
+                free_page_count++;
             }
 
-            if ( cur_free_pages == count ) {
+            if ( free_page_count == count ) {
                 uint32_t j;
-                page_t* tmp = &memory_pages[ region_start ];
+                page_t* tmp;
+
+                tmp = &memory_pages[ ( memory_desc->start / PAGE_SIZE ) + region_start ];
 
                 for ( j = 0; j < count; j++, tmp++ ) {
                     atomic_set( &tmp->ref_count, 1 );
-                    atomic_dec( &free_page_count );
+                    memory_desc->free_pages--;
                 }
 
-                p = ( void* )( region_start * PAGE_SIZE );
+                p = ( void* )( memory_desc->start + ( region_start * PAGE_SIZE ) );
 
                 break;
             }
         } else {
-            region_start = 0;
+            found = false;
         }
     }
+
+    return p;
+}
+
+void* alloc_pages( uint32_t count, int mem_type ) {
+    void* p;
+    memory_type_desc_t* memory_desc;
+
+    ASSERT( ( mem_type >= 0 ) && ( mem_type < MAX_MEMORY_TYPES ) );
+
+    memory_desc = &memory_descriptors[ mem_type ];
+
+    spinlock_disable( &pages_lock );
+
+    p = do_alloc_pages( memory_desc, count );
 
     spinunlock_enable( &pages_lock );
 
@@ -108,6 +130,7 @@ void free_pages( void* address, uint32_t count ) {
     uint32_t i;
     page_t* tmp;
     ptr_t region_start;
+    memory_type_desc_t* memory_desc;
 
     ASSERT( address != NULL );
 
@@ -120,6 +143,9 @@ void free_pages( void* address, uint32_t count ) {
 
     region_start /= PAGE_SIZE;
     tmp = &memory_pages[ region_start ];
+    memory_desc = get_memory_descriptor( ( ptr_t )address );
+
+    ASSERT( memory_desc != NULL );
 
     spinlock_disable( &pages_lock );
 
@@ -127,116 +153,127 @@ void free_pages( void* address, uint32_t count ) {
 
     for ( i = 0; i < count; i++, tmp++ ) {
         atomic_set( &tmp->ref_count, 0 );
-        atomic_inc( &free_page_count );
+        memory_desc->free_pages++;
     }
 
     spinunlock_enable( &pages_lock );
 }
 
-int get_free_page_count( void ) {
-    return atomic_get( &free_page_count );
+uint32_t get_free_page_count( void ) {
+    int i;
+    uint32_t count;
+    memory_type_desc_t* memory_desc;
+
+    count = 0;
+
+    spinlock_disable( &pages_lock );
+
+    for ( i = 0; i < MAX_MEMORY_TYPES; i++ ) {
+        memory_desc = &memory_descriptors[ i ];
+
+        if ( memory_desc->free ) {
+            continue;
+        }
+
+        count += memory_desc->free_pages;
+    }
+
+    spinunlock_enable( &pages_lock );
+
+    return count;
 }
 
-int get_total_page_count( void ) {
-    return ( int )memory_page_count;
+uint32_t get_total_page_count( void ) {
+    return ( memory_size / PAGE_SIZE );
 }
 
 int sys_get_memory_info( memory_info_t* info ) {
-    info->free_page_count = atomic_get( &free_page_count );
-    info->total_page_count = memory_page_count;
+    info->free_page_count = get_free_page_count();
+    info->total_page_count = get_total_page_count();
 
     return 0;
 }
 
-int init_page_allocator( multiboot_header_t* header ) {
+int reserve_memory_pages( ptr_t start, ptr_t size ) {
     ptr_t i;
-    ptr_t first_free_page;
-    int module_count;
-    uint32_t mmap_length;
-    multiboot_mmap_entry_t* mmap_entry;
+    ptr_t count;
+    page_t* page;
+    memory_type_desc_t* memory_desc;
 
-    /* Check if we have memory information in the multiboot header */
+    ASSERT( ( start % PAGE_SIZE ) == 0 );
+    ASSERT( ( size % PAGE_SIZE ) == 0 );
+    ASSERT( ( start + size ) <= memory_size );
 
-    if ( ( header->flags & MB_FLAG_MEMORY_INFO ) == 0 ) {
+    count = size / PAGE_SIZE;
+    page = &memory_pages[ start / PAGE_SIZE ];
+    memory_desc = get_memory_descriptor( start );
+
+    ASSERT( memory_desc != NULL );
+    ASSERT( ( start - memory_desc->start + size ) <= memory_desc->size );
+
+    for ( i = 0; i < count; i++, page++ ) {
+        if ( atomic_get( &page->ref_count ) == 0 ) {
+            atomic_inc( &page->ref_count );
+            memory_desc->free_pages--;
+        }
+    }
+
+    return 0;
+}
+
+int register_memory_type( int mem_type, ptr_t start, ptr_t size ) {
+    memory_type_desc_t* memory_desc;
+
+    if ( ( mem_type < 0 ) || ( mem_type >= MAX_MEMORY_TYPES ) ) {
         return -EINVAL;
     }
 
-    /* Calculate the physical memory size and the number
-       of usable memory pages */
+    memory_desc = &memory_descriptors[ mem_type ];
 
-    memory_size = header->memory_upper * 1024 + 1024 * 1024;
-    memory_page_count = memory_size / PAGE_SIZE;
-    atomic_set( &free_page_count, memory_page_count );
-
-    /* The first usable page starts at the end of the kernel.
-       We place the page_t structures right after the kernel. */
-
-    first_free_page = PAGE_ALIGN( ( ptr_t )&__kernel_end );
-
-    /* Wait, one more thing: the bootmodules :) */
-
-    module_count = get_bootmodule_count();
-
-    if ( module_count > 0 ) {
-        int j;
-        ptr_t module_end;
-        bootmodule_t* module;
-
-        for ( j = 0; j < module_count; j++ ) {
-            module = get_bootmodule_at( j );
-            module_end = PAGE_ALIGN( ( ptr_t )module->address + module->size );
-
-            if ( module_end > first_free_page ) {
-                first_free_page = module_end;
-            }
-        }
+    if ( !memory_desc->free ) {
+        return -EBUSY;
     }
 
-    memory_pages = ( page_t* )first_free_page;
+    memory_desc->free = false;
+    memory_desc->start = start;
+    memory_desc->size = size;
+    memory_desc->free_pages = size / PAGE_SIZE;
 
-    /* Reserve the pages used by the page allocator structures */
+    return 0;
+}
 
-    first_free_page += PAGE_ALIGN( memory_page_count * sizeof( page_t ) );
-    first_free_page_index = first_free_page / PAGE_SIZE;
+int init_page_allocator( ptr_t page_map_address, uint64_t _memory_size ) {
+    int i;
+    ptr_t page_count;
+    memory_type_desc_t* memory_desc;
 
-    /* Clear the memory */
+    /* Make all memory types free */
 
-    memset( ( void* )memory_pages, 0, memory_page_count * sizeof( page_t ) );
+    for ( i = 0; i < MAX_MEMORY_TYPES; i++ ) {
+        memory_desc = &memory_descriptors[ i ];
 
-    /* Make the kernel and page allocator pages used not to
-       allocate from this region. */
-
-    for ( i = 0; i < first_free_page; i += PAGE_SIZE ) {
-        atomic_inc( &memory_pages[ i ].ref_count );
-        atomic_dec( &free_page_count );
+        memory_desc->free = true;
+        memory_desc->start = 0;
+        memory_desc->size = 0;
+        memory_desc->free_pages = 0;
     }
 
-    /* Parse the memory map provided by the GRUB */
+    /* Setup the page structures for the whole memory */
 
-    mmap_length = 0;
-    mmap_entry = ( multiboot_mmap_entry_t* )header->memory_map_address;
+    memory_size = _memory_size;
+    memory_pages = ( page_t* )page_map_address;
 
-    for ( ; mmap_length < header->memory_map_length;
-            mmap_length += ( mmap_entry->size + 4 ),
-            mmap_entry = ( multiboot_mmap_entry_t* )( ( uint8_t* )mmap_entry + mmap_entry->size + 4 ) ) {
-        if ( mmap_entry->type != 1 ) {
-            uint64_t real_base;
-            uint64_t real_length;
+    page_count = memory_size / PAGE_SIZE;
 
-            real_base = mmap_entry->base & PAGE_MASK;
-            real_length = PAGE_ALIGN( ( mmap_entry->base & ~PAGE_MASK ) + mmap_entry->length );
+    memset( ( void* )memory_pages, 0, page_count * sizeof( page_t ) );
 
-            for ( i = real_base / PAGE_SIZE;
-                  ( i < ( ( real_base + real_length ) / PAGE_SIZE ) ) &&
-                  ( i < memory_page_count );
-                  i++ ) {
-                if ( atomic_get( &memory_pages[ i ].ref_count ) == 0 ) {
-                    atomic_inc( &memory_pages[ i ].ref_count );
-                    atomic_dec( &free_page_count );
-                }
-            }
-        }
-    }
+    return 0;
+}
+
+int init_page_allocator_late( void ) {
+    /* Reserve the memory pages used for the page_t structures */
+
+    reserve_memory_pages( ( ptr_t )memory_pages, PAGE_ALIGN( ( memory_size / PAGE_SIZE ) * sizeof( page_t ) ) );
 
     return 0;
 }

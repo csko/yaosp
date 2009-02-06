@@ -49,7 +49,7 @@ int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, ui
         pgd_entry = page_directory_entry( arch_context, addr );
 
         if ( *pgd_entry == 0 ) {
-            p = alloc_pages( 1 );
+            p = alloc_pages( 1, MEM_COMMON );
 
             if ( p == NULL ) {
                 return -ENOMEM;
@@ -159,7 +159,7 @@ int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uin
     pt = ( uint32_t* )( arch_context->page_directory[ pd_index ] & PAGE_MASK );
 
     for ( i = 0; i < count; i++ ) {
-        p = alloc_pages( 1 );
+        p = alloc_pages( 1, MEM_COMMON );
 
         if ( p == NULL ) {
             return -ENOMEM;
@@ -362,7 +362,7 @@ static int clone_user_region_pages(
     new_pt = ( uint32_t* )( new_arch_context->page_directory[ pd_index ] & PAGE_MASK );
 
     for ( i = 0; i < count; i++ ) {
-        p = alloc_pages( 1 );
+        p = alloc_pages( 1, MEM_COMMON );
 
         if ( p == NULL ) {
             return -ENOMEM;
@@ -405,7 +405,7 @@ static int clone_user_region_contiguous(
 
     count = old_region->size / PAGE_SIZE;
 
-    p = alloc_pages( count );
+    p = alloc_pages( count, MEM_COMMON );
 
     if ( p == NULL ) {
         return -ENOMEM;
@@ -463,7 +463,7 @@ static int clone_user_region_lazy(
         if ( ( old_pt == NULL ) || ( old_pt[ pt_index ] == 0 ) ) {
             new_pt[ pt_index ] = 0;
         } else {
-            p = alloc_pages( 1 );
+            p = alloc_pages( 1, MEM_COMMON );
 
             if ( p == NULL ) {
                 return -ENOMEM;
@@ -613,7 +613,7 @@ int init_paging( void ) {
 
     /* Allocate page directory */
 
-    arch_context->page_directory = ( uint32_t* )alloc_pages( 1 );
+    arch_context->page_directory = ( uint32_t* )alloc_pages( 1, MEM_COMMON );
 
     if ( arch_context->page_directory == NULL ) {
         return -ENOMEM;

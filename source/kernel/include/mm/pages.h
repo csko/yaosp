@@ -23,6 +23,18 @@
 
 #include <arch/atomic.h>
 
+enum memory_type {
+    MEM_COMMON,
+    MEM_ARCH_FIRST
+};
+
+typedef struct memory_type_desc {
+    bool free;
+    ptr_t start;
+    ptr_t size;
+    ptr_t free_pages;
+} memory_type_desc_t;
+
 /**
  * @struct page
  *
@@ -53,7 +65,8 @@ typedef struct memory_info {
  * @return In the case of failure NULL is returned, otherwise
  *         the start address of the allocated memory region
  */
-void* alloc_pages( uint32_t count );
+void* alloc_pages( uint32_t count, int mem_type );
+
 /**
  * Frees a previously allocated set of memory pages.
  *
@@ -67,25 +80,20 @@ void free_pages( void* address, uint32_t count );
  *
  * @return The number of the free physical memory pages
  */
-int get_free_page_count( void );
+uint32_t get_free_page_count( void );
 
 /**
  * Returns the total number of available physical memory pages
  *
  * @return The total number of memory pages
  */
-int get_total_page_count( void );
+uint32_t get_total_page_count( void );
 
 int sys_get_memory_info( memory_info_t* info );
 
-/**
- * Initializes the page allocator subsystem according to
- * the multiboot structure created by the bootloader.
- *
- * @param header The pointer to the multiboot structure that
- *               contains valid memory informations
- * @return On success 0 is returned
- */
-int init_page_allocator( multiboot_header_t* header );
+int reserve_memory_pages( ptr_t start, ptr_t size );
+int register_memory_type( int mem_type, ptr_t start, ptr_t size );
+int init_page_allocator( ptr_t page_map_address, uint64_t _memory_size );
+int init_page_allocator_late( void );
 
 #endif // _MM_PAGES_H_

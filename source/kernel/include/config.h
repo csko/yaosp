@@ -56,6 +56,11 @@
 #define MAX_PROCESSOR_NAME_LENGTH 64
 
 /**
+ * The maximum number of available memory type descriptors.
+ */
+#define MAX_MEMORY_TYPES 4
+
+/**
  * The size of the kernel stack for threads.
  */
 #define KERNEL_STACK_SIZE ( 32 * 1024 )

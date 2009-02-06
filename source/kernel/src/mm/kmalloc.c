@@ -35,7 +35,7 @@ static kmalloc_block_t* __kmalloc_create_block( uint32_t pages ) {
     kmalloc_block_t* block;
     kmalloc_chunk_t* chunk;
 
-    block = ( kmalloc_block_t* )alloc_pages( pages );
+    block = ( kmalloc_block_t* )alloc_pages( pages, MEM_COMMON );
 
     if ( block == NULL ) {
         return NULL;

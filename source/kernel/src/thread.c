@@ -67,7 +67,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     }
 
     thread->kernel_stack_pages = kernel_stack_pages;
-    thread->kernel_stack = ( void* )alloc_pages( kernel_stack_pages );
+    thread->kernel_stack = ( void* )alloc_pages( kernel_stack_pages, MEM_COMMON );
 
     if ( thread->kernel_stack == NULL ) {
         goto error3;

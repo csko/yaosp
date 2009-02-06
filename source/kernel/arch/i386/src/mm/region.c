@@ -60,7 +60,7 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
         case ALLOC_CONTIGUOUS : {
             void* p;
 
-            p = alloc_pages( region->size / PAGE_SIZE );
+            p = alloc_pages( region->size / PAGE_SIZE, MEM_COMMON );
 
             if ( p == NULL ) {
                 return -ENOMEM;

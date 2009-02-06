@@ -62,7 +62,7 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
     pgd_entry = page_directory_entry( arch_context, address );
 
     if ( *pgd_entry == 0 ) {
-        p = alloc_pages( 1 );
+        p = alloc_pages( 1, MEM_COMMON );
 
         if ( p == NULL ) {
             return -ENOMEM;
@@ -75,7 +75,7 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
 
     pt_entry = page_table_entry( *pgd_entry, address );
 
-    p = alloc_pages( 1 );
+    p = alloc_pages( 1, MEM_COMMON );
 
     if ( p == NULL ) {
         return -ENOMEM;
