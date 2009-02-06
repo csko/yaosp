@@ -517,7 +517,7 @@ int clone_user_region(
 
     allocated_pmem = 0;
 
-    switch ( ( int )old_region->alloc_method ) {
+    switch ( old_region->alloc_method ) {
         case ALLOC_PAGES :
             error = clone_user_region_pages( old_arch_context, old_region, new_arch_context, new_region );
 
@@ -549,8 +549,7 @@ int clone_user_region(
 
             break;
 
-        default :
-            panic( "Not yet implemented!\n" );
+        case ALLOC_NONE :
             break;
     }
 

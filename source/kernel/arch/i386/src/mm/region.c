@@ -39,7 +39,7 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
 
     /* Create the physical pages for the memory region */
 
-    switch ( ( int )region->alloc_method ) {
+    switch ( region->alloc_method ) {
         case ALLOC_PAGES :
             error = create_region_pages(
                 arch_context,
@@ -98,7 +98,7 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
 
             break;
 
-        default :
+        case ALLOC_NONE :
             do_tlb_flush = false;
             break;
     }
@@ -130,7 +130,7 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
     arch_context = ( i386_memory_context_t* )context->arch_data;
 
     if ( ( region->flags & REGION_REMAPPED ) == 0 ) {
-        switch ( ( int )region->alloc_method ) {
+        switch ( region->alloc_method ) {
             case ALLOC_PAGES :
                 free_region_pages( arch_context, region->start, region->size );
                 freed_pmem = region->size;
@@ -143,6 +143,9 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
 
             case ALLOC_LAZY :
                 free_region_pages_lazy( arch_context, region->start, region->size );
+                break;
+
+            case ALLOC_NONE :
                 break;
         }
     } else {
@@ -207,7 +210,7 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
     } else {
         uint64_t allocated_pmem = 0;
 
-        switch ( ( int )region->alloc_method ) {
+        switch ( region->alloc_method ) {
             case ALLOC_LAZY :
                 panic( "Resizing lazy allocated memory region not yet implemented!\n" );
                 break;
@@ -234,6 +237,9 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
 
             case ALLOC_CONTIGUOUS :
                 panic( "Resizing contiguous allocated memory region not yet implemented!\n" );
+                break;
+
+            case ALLOC_NONE :
                 break;
         }
 
