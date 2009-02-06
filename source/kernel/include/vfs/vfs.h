@@ -152,6 +152,7 @@ int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t**
 
 int open( const char* path, int flags );
 int close( int fd );
+int do_pread_helper( file_t* file, void* buffer, size_t count, off_t offset );
 int pread( int fd, void* buffer, size_t count, off_t offset );
 int pwrite( int fd, const void* buffer, size_t count, off_t offset );
 int ioctl( int fd, int command, void* buffer );
@@ -167,6 +168,8 @@ int sys_open( const char* path, int flags );
 int sys_close( int fd );
 int sys_read( int fd, void* buffer, size_t count );
 int sys_write( int fd, const void* buffer, size_t count );
+int sys_pread( int fd, void* buffer, size_t count, off_t offset );
+int sys_pwrite( int fd, const void* buffer, size_t count, off_t offset );
 int sys_dup( int old_fd );
 int sys_dup2( int old_fd, int new_fd );
 int sys_isatty( int fd );

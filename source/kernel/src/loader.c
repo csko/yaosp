@@ -153,7 +153,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     /* Open the file */
 
-    fd = open( path, 0 );
+    fd = sys_open( path, O_RDONLY );
 
     if ( fd < 0 ) {
         error = fd;
@@ -212,7 +212,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     /* Empty the memory context of the process */
 
-    memory_context_delete_regions( thread->process->memory_context, true );
+    memory_context_delete_regions( thread->process->memory_context );
 
     thread->process->heap_region = -1;
 
@@ -220,7 +220,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     error = loader->load( fd );
 
-    close( fd );
+    sys_close( fd );
 
     if ( error < 0 ) {
         goto error1;
@@ -309,7 +309,7 @@ _error3:
     free_param_array( cloned_argv, argc );
 
 _error2:
-    close( fd );
+    sys_close( fd );
 
 _error1:
     return error;

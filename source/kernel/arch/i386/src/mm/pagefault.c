@@ -21,9 +21,11 @@
 #include <smp.h>
 #include <errno.h>
 #include <semaphore.h>
+#include <macros.h>
 #include <mm/region.h>
 #include <mm/context.h>
 #include <mm/pages.h>
+#include <vfs/vfs.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -82,6 +84,30 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
     memsetl( p, 0, PAGE_SIZE / 4 );
 
     *pt_entry = ( uint32_t )p | PRESENT | WRITE | USER;
+
+    /* Handle memory mapped files */
+
+    if ( region->file != NULL ) {
+        int data;
+        size_t to_read;
+        off_t file_read_offset;
+        uint32_t region_offset;
+
+        ASSERT( address >= region->start );
+
+        region_offset = address - region->start;
+
+        if ( ( region_offset & PAGE_MASK ) < region->file_size ) {
+            file_read_offset = region->file_offset + ( region_offset & PAGE_MASK );
+            to_read = MIN( PAGE_SIZE, ( region->file_offset + region->file_size - file_read_offset ) );
+
+            data = do_pread_helper( region->file, p, to_read, file_read_offset );
+
+            if ( data != to_read ) {
+                return -EIO;
+            }
+        }
+    }
 
     return 0;
 }

@@ -24,6 +24,9 @@
 
 #include <arch/mm/config.h>
 
+struct memory_context;
+struct file;
+
 typedef int region_id;
 
 typedef enum alloc_type {
@@ -49,6 +52,11 @@ typedef struct region {
     alloc_type_t alloc_method;
     ptr_t start;
     ptr_t size;
+
+    struct file* file;
+    off_t file_offset;
+    size_t file_size;
+
     struct memory_context* context;
 } region_t;
 
@@ -56,8 +64,6 @@ typedef struct region_info {
     ptr_t start;
     ptr_t size;
 } region_info_t;
-
-struct memory_context;
 
 region_t* allocate_region( const char* name );
 void destroy_region( region_t* region );
@@ -112,6 +118,8 @@ int remap_region( region_id id, ptr_t address );
  * @return On success 0 is returned
  */
 int resize_region( region_id id, uint32_t new_size );
+
+int map_region_to_file( region_id id, int fd, off_t offset, size_t length );
 
 /**
  * Gets information about a memory region.

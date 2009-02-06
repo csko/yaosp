@@ -33,7 +33,7 @@
 static bool elf32_application_check( int fd ) {
     elf_header_t header;
 
-    if ( pread( fd, &header, sizeof( elf_header_t ), 0 ) != sizeof( elf_header_t ) ) {
+    if ( sys_pread( fd, &header, sizeof( elf_header_t ), 0 ) != sizeof( elf_header_t ) ) {
         return false;
     }
 
@@ -59,7 +59,7 @@ static int elf32_parse_dynsym_section(
         return -ENOMEM;
     }
 
-    if ( pread(
+    if ( sys_pread(
         fd,
         ( void* )elf_application->strings,
         string_section->size,
@@ -80,7 +80,7 @@ static int elf32_parse_dynsym_section(
         return -ENOMEM;
     }
 
-    if ( pread(
+    if ( sys_pread(
         fd,
         ( void* )symbols,
         dynsym_section->size,
@@ -189,7 +189,7 @@ static int elf32_parse_dynamic_section(
         }
 
         if ( rel_size > 0 ) {
-            if ( pread(
+            if ( sys_pread(
                 fd,
                 ( void* )elf_application->relocs,
                 rel_size,
@@ -202,7 +202,7 @@ static int elf32_parse_dynamic_section(
         }
 
         if ( pltrel_size > 0 ) {
-            if ( pread(
+            if ( sys_pread(
                 fd,
                 ( char* )elf_application->relocs + rel_size,
                 pltrel_size,
@@ -269,6 +269,7 @@ static int elf32_parse_section_headers( int fd, elf_application_t* elf_applicati
 }
 
 static int elf32_application_map( int fd, elf_application_t* elf_application ) {
+    int error;
     uint32_t i;
     elf_section_header_t* section_header;
 
@@ -341,7 +342,7 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
         "ro",
         PAGE_ALIGN( text_size ),
         REGION_READ,
-        ALLOC_PAGES,
+        ALLOC_LAZY,
         &text_address
     );
 
@@ -349,21 +350,18 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
         return elf_application->text_region;
     }
 
-    /* Copy text in */
+    error = map_region_to_file( elf_application->text_region, fd, text_offset, text_size );
 
-    if ( pread( fd, text_address, text_size, text_offset ) != text_size ) {
-        /* TODO: delete text & data regions */
-        return -EIO;
+    if ( error < 0 ) {
+        return error;
     }
 
     if ( data_found > 0 ) {
-        uint32_t bss_size;
-
         elf_application->data_region = create_region(
             "rw",
             PAGE_ALIGN( data_size_with_bss ),
             REGION_READ | REGION_WRITE,
-            ALLOC_PAGES,
+            ALLOC_LAZY,
             &data_address
         );
 
@@ -373,28 +371,10 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
         }
 
         if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
-            if ( pread(
-                fd,
-                data_address,
-                data_size,
-                data_offset
-            ) != data_size ) {
-                /* TODO: delete text & data regions */
-                return -EIO;
-            }
-        }
+            error = map_region_to_file( elf_application->data_region, fd, data_offset, data_size );
 
-        if ( data_end != 0 )  {
-            bss_size = data_size_with_bss - data_size;
-        } else {
-            bss_size = data_size_with_bss;
-        }
-
-        if ( bss_size > 0 ) {
-            if ( data_end != 0 ) {
-                memset( ( char* )data_address + data_size, 0, bss_size );
-            } else {
-                memset( ( char* )data_address, 0, bss_size );
+            if ( error < 0 ) {
+                return error;
             }
         }
     }
@@ -407,7 +387,7 @@ static int elf32_application_load( int fd ) {
     elf_header_t header;
     elf_application_t* elf_application;
 
-    if ( pread( fd, &header, sizeof( elf_header_t ), 0 ) != sizeof( elf_header_t ) ) {
+    if ( sys_pread( fd, &header, sizeof( elf_header_t ), 0 ) != sizeof( elf_header_t ) ) {
         return -EIO;
     }
 
@@ -438,7 +418,7 @@ static int elf32_application_load( int fd ) {
         return -ENOMEM;
     }
 
-    if ( pread(
+    if ( sys_pread(
         fd,
         ( void* )elf_application->sections,
         sizeof( elf_section_header_t ) * elf_application->section_count,

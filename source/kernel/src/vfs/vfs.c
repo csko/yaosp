@@ -363,6 +363,21 @@ int sys_close( int fd ) {
     return do_close( false, fd );
 }
 
+int do_pread_helper( file_t* file, void* buffer, size_t count, off_t offset ) {
+    if ( file->inode->mount_point->fs_calls->read == NULL ) {
+        return -ENOSYS;
+    }
+
+    return file->inode->mount_point->fs_calls->read(
+        file->inode->mount_point->fs_data,
+        file->inode->fs_node,
+        file->cookie,
+        buffer,
+        offset,
+        count
+    );
+}
+
 static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offset ) {
     int error;
     file_t* file;
@@ -380,18 +395,7 @@ static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offs
         return -EBADF;
     }
 
-    if ( file->inode->mount_point->fs_calls->read != NULL ) {
-        error = file->inode->mount_point->fs_calls->read(
-            file->inode->mount_point->fs_data,
-            file->inode->fs_node,
-            file->cookie,
-            buffer,
-            offset,
-            count
-        );
-    } else {
-        error = -ENOSYS;
-    }
+    error = do_pread_helper( file, buffer, count, offset );
 
     io_context_put_file( io_context, file );
 
@@ -400,6 +404,10 @@ static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offs
 
 int pread( int fd, void* buffer, size_t count, off_t offset ) {
     return do_pread( true, fd, buffer, count, offset );
+}
+
+int sys_pread( int fd, void* buffer, size_t count, off_t offset ) {
+    return do_pread( false, fd, buffer, count, offset );
 }
 
 static int do_read( bool kernel, int fd, void* buffer, size_t count ) {
@@ -484,8 +492,51 @@ int pwrite( int fd, const void* buffer, size_t count, off_t offset ) {
     return do_pwrite( true, fd, buffer, count, offset );
 }
 
+int sys_pwrite( int fd, const void* buffer, size_t count, off_t offset ) {
+    return do_pwrite( false, fd, buffer, count, offset );
+}
+
+static int do_write( bool kernel, int fd, const void* buffer, size_t count ) {
+    int error;
+    file_t* file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    if ( file->inode->mount_point->fs_calls->write != NULL ) {
+        error = file->inode->mount_point->fs_calls->write(
+            file->inode->mount_point->fs_data,
+            file->inode->fs_node,
+            file->cookie,
+            buffer,
+            file->position,
+            count
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    if ( error > 0 ) {
+        file->position += error;
+    }
+
+    io_context_put_file( io_context, file );
+
+    return error;
+}
+
 int sys_write( int fd, const void* buffer, size_t count ) {
-    return do_pwrite( false, fd, buffer, count, 0 );
+    return do_write( false, fd, buffer, count );
 }
 
 static int do_ioctl( bool kernel, int fd, int command, void* buffer ) {

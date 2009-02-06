@@ -93,7 +93,7 @@ void destroy_process( process_t* process ) {
     /* Destroy the memory context */
 
     if ( process->memory_context != NULL ) {
-        memory_context_delete_regions( process->memory_context, false );
+        memory_context_delete_regions( process->memory_context );
         memory_context_destroy( process->memory_context );
     }
 

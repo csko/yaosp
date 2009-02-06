@@ -62,7 +62,21 @@ error1:
 }
 
 void destroy_region( region_t* region ) {
+    if ( region->file != NULL ) {
+        io_context_t* io_context;
+
+        io_context = region->context->process->io_context;
+
+        ASSERT( io_context != NULL );
+
+        io_context_put_file( io_context, region->file );
+
+        region->file = NULL;
+    }
+
     kfree( region->name );
+    region->name = NULL;
+
     kfree( region );
 }
 
@@ -216,7 +230,8 @@ region_id create_region(
 
     /* Lazy page allocation is not allowed for kernel regions */
 
-    if ( alloc_method == ALLOC_LAZY ) {
+    if ( ( flags & REGION_KERNEL ) &&
+         ( alloc_method == ALLOC_LAZY ) ) {
         return -EINVAL;
     }
 
@@ -386,6 +401,46 @@ int resize_region( region_id id, uint32_t new_size ) {
     spinunlock_enable( &scheduler_lock );
 
     region->size = new_size;
+
+    UNLOCK( region_lock );
+
+    return 0;
+}
+
+int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
+    file_t* file;
+    region_t* region;
+    io_context_t* io_context;
+
+    io_context = current_process()->io_context;
+
+    ASSERT( io_context != NULL );
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EINVAL;
+    }
+
+    ASSERT( atomic_get( &file->ref_count ) >= 2 );
+
+    LOCK( region_lock );
+
+    region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
+
+    if ( ( region == NULL ) ||
+         ( region->alloc_method != ALLOC_LAZY ) ||
+         ( region->file != NULL ) ) {
+        UNLOCK( region_lock );
+
+        io_context_put_file( io_context, file );
+
+        return -EINVAL;
+    }
+
+    region->file = file;
+    region->file_offset = offset;
+    region->file_size = length;
 
     UNLOCK( region_lock );
 
