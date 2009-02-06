@@ -113,7 +113,7 @@ ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info ) {
         goto error1;
     }
 
-    node->data = alloc_pages( aligned_size / PAGE_SIZE );
+    node->data = alloc_pages( aligned_size / PAGE_SIZE, MEM_COMMON );
 
     if ( node->data == NULL ) {
         goto error2;
