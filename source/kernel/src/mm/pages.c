@@ -117,9 +117,78 @@ void* alloc_pages( uint32_t count, int mem_type ) {
 
     memory_desc = &memory_descriptors[ mem_type ];
 
+    ASSERT( !memory_desc->free );
+
     spinlock_disable( &pages_lock );
 
     p = do_alloc_pages( memory_desc, count );
+
+    spinunlock_enable( &pages_lock );
+
+    return p;
+}
+
+static void* do_alloc_pages_aligned( memory_type_desc_t* memory_desc, uint32_t count, uint32_t alignment ) {
+    ptr_t i;
+    void* p;
+    uint32_t j;
+    ptr_t start;
+    page_t* page;
+    uint32_t step;
+    ptr_t start_page;
+    ptr_t end_page;
+
+    start = memory_desc->start;
+
+    if ( ( start % alignment ) != 0 ) {
+        start = ALIGN( start, alignment );
+    }
+
+    step = ALIGN( count * PAGE_SIZE, alignment ) / PAGE_SIZE;
+    start_page = ( start - memory_desc->start ) / PAGE_SIZE;
+    end_page = memory_desc->size / PAGE_SIZE;
+
+    p = NULL;    
+    page = &memory_pages[ start / PAGE_SIZE ];
+
+    for ( i = start_page; i < end_page; i += step ) {
+        bool free = true;
+
+        for ( j = 0; j < count; j++ ) {
+            if ( atomic_get( &memory_pages[ i + j ].ref_count ) != 0 ) {
+                free = false;
+                break;
+            }
+        }
+
+        if ( free ) {
+            for ( j = 0; j < count; j++ ) {
+                atomic_set( &memory_pages[ i + j ].ref_count, 1 );
+            }
+
+            p = ( void* )( memory_desc->start + ( i * PAGE_SIZE ) );
+
+            break;
+        }
+    }
+
+    return p;
+}
+
+void* alloc_pages_aligned( uint32_t count, int mem_type, uint32_t alignment ) {
+    void* p;
+    memory_type_desc_t* memory_desc;
+
+    ASSERT( ( mem_type >= 0 ) && ( mem_type < MAX_MEMORY_TYPES ) );
+    ASSERT( ( alignment % PAGE_SIZE ) == 0 );
+
+    memory_desc = &memory_descriptors[ mem_type ];
+
+    ASSERT( !memory_desc->free );
+
+    spinlock_disable( &pages_lock );
+
+    p = do_alloc_pages_aligned( memory_desc, count, alignment );
 
     spinunlock_enable( &pages_lock );
 

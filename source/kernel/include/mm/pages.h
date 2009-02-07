@@ -62,10 +62,13 @@ typedef struct memory_info {
  * Allocates a number of physical memory pages.
  *
  * @param count The number of memory pages to allocate
+ * @param mem_type The type of the memory to allocated from
  * @return In the case of failure NULL is returned, otherwise
  *         the start address of the allocated memory region
  */
 void* alloc_pages( uint32_t count, int mem_type );
+
+void* alloc_pages_aligned( uint32_t count, int mem_type, uint32_t alignment );
 
 /**
  * Frees a previously allocated set of memory pages.

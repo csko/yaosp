@@ -628,9 +628,9 @@ int init_paging( void ) {
 
     map_region_pages(
         arch_context,
-        PAGE_SIZE,
-        PAGE_SIZE,
-        1 * 1024 * 1024 - PAGE_SIZE,
+        0,
+        0,
+        1 * 1024 * 1024,
         true,
         true
     );

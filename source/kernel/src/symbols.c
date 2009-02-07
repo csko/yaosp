@@ -57,6 +57,7 @@ static kernel_symbol_t symbols[] = {
     { "kmalloc", ( ptr_t )kmalloc },
     { "kfree", ( ptr_t )kfree },
     { "alloc_pages", ( ptr_t )alloc_pages },
+    { "alloc_pages_aligned", ( ptr_t )alloc_pages_aligned },
     { "free_pages", ( ptr_t )free_pages },
 
     /* Atomic operations */
