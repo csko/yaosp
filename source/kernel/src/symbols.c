@@ -39,6 +39,7 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 #include <arch/pit.h>
+#include <arch/bios.h>
 
 extern void __moddi3( void );
 extern void __divdi3( void );
@@ -139,6 +140,9 @@ static kernel_symbol_t symbols[] = {
     { "hashtable_iterate", ( ptr_t )hashtable_iterate },
     { "hash_number", ( ptr_t )hash_number },
     { "hash_string", ( ptr_t )hash_string },
+
+    /* Architecture dependent functions */
+    { "call_bios_interrupt", ( ptr_t )call_bios_interrupt },
 
     /* Misc functions */
     { "reboot", ( ptr_t )reboot },

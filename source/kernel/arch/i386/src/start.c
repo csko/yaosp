@@ -36,6 +36,7 @@
 #include <arch/io.h>
 #include <arch/mp.h>
 #include <arch/apic.h>
+#include <arch/bios.h>
 #include <arch/mm/config.h>
 #include <arch/mm/paging.h>
 
@@ -255,6 +256,7 @@ int arch_late_init( void ) {
     init_system_time();
     init_elf32_module_loader();
     init_elf32_application_loader();
+    init_bios_access();
 
     return 0;
 }

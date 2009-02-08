@@ -36,8 +36,8 @@ extern semaphore_id region_lock;
 
 void dump_registers( registers_t* regs );
 
-static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr2 ) {
-    kprintf( "Invalid page fault at 0x%x\n", cr2 );
+static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr2, const char* message ) {
+    kprintf( "Invalid page fault at 0x%x (%s)\n", cr2, message );
     dump_registers( regs );
 
     if ( thread != NULL ) {
@@ -117,13 +117,14 @@ void handle_page_fault( registers_t* regs ) {
     uint32_t cr2;
     region_t* region;
     thread_t* thread;
+    const char* message;
 
     cr2 = get_cr2();
 
     thread = current_thread();
 
     if ( thread == NULL ) {
-        invalid_page_fault( NULL, regs, cr2 );
+        invalid_page_fault( NULL, regs, cr2, "unknown" );
     }
 
     LOCK( region_lock );
@@ -131,6 +132,7 @@ void handle_page_fault( registers_t* regs ) {
     region = do_memory_context_get_region_for( thread->process->memory_context, cr2 );
 
     if ( region == NULL ) {
+        message = "no region for address";
         goto invalid;
     }
 
@@ -138,9 +140,11 @@ void handle_page_fault( registers_t* regs ) {
         error = handle_lazy_page_allocation( region, cr2 );
 
         if ( error < 0 ) {
+            message = "lazy page allocation failed";
             goto invalid;
         }
     } else {
+        message = "unknown";
         goto invalid;
     }
 
@@ -151,5 +155,5 @@ void handle_page_fault( registers_t* regs ) {
 invalid:
     UNLOCK( region_lock );
 
-    invalid_page_fault( thread, regs, cr2 );
+    invalid_page_fault( thread, regs, cr2, message );
 }

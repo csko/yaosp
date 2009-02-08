@@ -53,10 +53,21 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/fpu.c</item>
         <item>arch/i386/src/mp.c</item>
         <item>arch/i386/src/smp.c</item>
+        <item>arch/i386/src/bios.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
         <item>arch/i386/src/mm/region.c</item>
+    </array>
+
+    <array name="arch_files_x86emu">
+        <item>arch/i386/src/x86emu/debug.c</item>
+        <item>arch/i386/src/x86emu/decode.c</item>
+        <item>arch/i386/src/x86emu/fpu.c</item>
+        <item>arch/i386/src/x86emu/ops.c</item>
+        <item>arch/i386/src/x86emu/ops2.c</item>
+        <item>arch/i386/src/x86emu/prim_ops.c</item>
+        <item>arch/i386/src/x86emu/sys.c</item>
     </array>
 
     <array name="files">
@@ -104,6 +115,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </array>
 
     <target name="clean">
+        <delete>objs/x86emu/*</delete>
+        <rmdir>objs/x86emu</rmdir>
         <delete>objs/arch/*</delete>
         <rmdir>objs/arch</rmdir>
         <delete>objs/lib/*</delete>
@@ -117,6 +130,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <mkdir>objs</mkdir>
         <mkdir>objs/lib</mkdir>
         <mkdir>objs/arch</mkdir>
+        <mkdir>objs/x86emu</mkdir>
         <symlink from="../arch/i386/include" to="include/arch"/>
     </target>
 
@@ -166,6 +180,24 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <for var="i" array="${arch_files_x86emu}">
+            <echo>[GCC    ] source/kernel/${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/x86emu/filename(${i}).o</output>
+                <include>./include</include>
+                <flag>-c</flag>
+                <flag>-O2</flag>
+                <flag>-m32</flag>
+                <flag>-Wall</flag>
+                <flag>-Werror</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-ffreestanding</flag>
+                <flag>-fno-strict-aliasing</flag>
+            </gcc>
+        </for>
+        
         <echo/>
         <echo>Compiling architecture independent files</echo>
         <echo/>
@@ -216,6 +248,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>objs/lib/*.o</input>
             <input>objs/arch/*.o</input>
+            <input>objs/x86emu/*.o</input>
             <output>objs/kernel</output>
             <linkerscript>arch/i386/linker.ld</linkerscript>
         </ld>
