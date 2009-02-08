@@ -107,7 +107,7 @@ region_id create_region(
  */
 int delete_region( region_id id );
 
-int do_remap_region( region_id id, ptr_t address );
+int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region );
 int remap_region( region_id id, ptr_t address );
 
 /**
@@ -139,6 +139,8 @@ region_id sys_create_region(
 );
 
 int sys_delete_region( region_id id );
+
+int sys_remap_region( region_id id, ptr_t address );
 
 int preinit_regions( void );
 int init_regions( void );

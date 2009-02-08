@@ -198,7 +198,7 @@ int init_apic( void ) {
 
     /* Remap the created region */
 
-    error = do_remap_region( local_apic_region, ( ptr_t )local_apic_base );
+    error = do_remap_region( local_apic_region, ( ptr_t )local_apic_base, true );
 
     if ( error < 0 ) {
         kprintf( "Failed to remap the local APIC register memory region!\n" );

@@ -275,7 +275,8 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
         return -EINVAL;
     }
 
-    if ( ( !allow_kernel_region ) && ( ( region->flags & REGION_KERNEL ) != 0 ) ) {
+    if ( ( region->flags & REGION_KERNEL ) &&
+         ( !allow_kernel_region ) ) {
         return -EPERM;
     }
 
@@ -319,13 +320,18 @@ int sys_delete_region( region_id id ) {
     return error;
 }
 
-int do_remap_region( region_id id, ptr_t address ) {
+int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region ) {
     region_t* region;
 
     region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
 
     if ( region == NULL ) {
         return -EINVAL;
+    }
+
+    if ( ( region->flags & REGION_KERNEL ) &&
+         ( !allow_kernel_region ) ) {
+        return -EPERM;
     }
 
     arch_delete_region_pages( region->context, region );
@@ -341,7 +347,19 @@ int remap_region( region_id id, ptr_t address ) {
 
     LOCK( region_lock );
 
-    error = do_remap_region( id, address );
+    error = do_remap_region( id, address, true );
+
+    UNLOCK( region_lock );
+
+    return error;
+}
+
+int sys_remap_region( region_id id, ptr_t address ) {
+    int error;
+
+    LOCK( region_lock );
+
+    error = do_remap_region( id, address, false );
 
     UNLOCK( region_lock );
 

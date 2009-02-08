@@ -80,6 +80,7 @@ static system_call_entry_t system_call_table[] = {
     { "sleep_thread", sys_sleep_thread, 0 },
     { "create_region", sys_create_region, 0 },
     { "delete_region", sys_delete_region, 0 },
+    { "remap_region", sys_remap_region, 0 },
     { "getpid", sys_getpid, 0 },
     { "load_module", sys_load_module, 0 },
     { "utime", sys_utime, 0 }

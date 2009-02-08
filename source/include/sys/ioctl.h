@@ -30,6 +30,12 @@
 #define IOCTL_RAMDISK_GET_COUNT  0x00000102
 #define IOCTL_RAMDISK_GET_LIST   0x00000103
 
+/* VESA driver ioctls */
+
+#define IOCTL_VESA_GET_MODE_LIST 0x00000200
+#define IOCTL_VESA_GET_MODE_INFO 0x00000201
+#define IOCTL_VESA_SET_MODE      0x00000202
+
 int ioctl( int fd, int request, ... );
 
 #endif // _SYS_IOCTL_H_

@@ -35,5 +35,6 @@ typedef enum region_flags {
 
 region_id create_region( const char* name, uint32_t size, region_flags_t flags, alloc_type_t alloc_method, void** _address );
 int delete_region( region_id id );
+int remap_region( region_id id, void* address );
 
 #endif // _YAOSP_REGION_H_

@@ -37,3 +37,11 @@ int delete_region( region_id id ) {
         id
     );
 }
+
+int remap_region( region_id id, void* address ) {
+    return syscall2(
+        SYS_remap_region,
+        id,
+        ( int )address
+    );
+}
