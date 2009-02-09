@@ -20,6 +20,8 @@
 #include <unistd.h>
 
 int fgetc( FILE* stream ) {
+    unsigned char c;
+
     /* Check if we can read from the stream */
 
     if ( ( stream->flags & __FILE_CAN_READ ) == 0 ) {
@@ -61,5 +63,9 @@ int fgetc( FILE* stream ) {
 
     /* Get one character from the buffer */
 
-    return stream->buffer[ stream->buffer_pos++ ];
+    c = stream->buffer[ stream->buffer_pos ];
+
+    stream->buffer_pos++;
+
+    return c;
 }
