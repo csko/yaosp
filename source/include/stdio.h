@@ -55,7 +55,7 @@ typedef struct FILE {
     unsigned int buffer_size;
     unsigned int buffer_data_size;
     int has_ungotten;
-    int unget_buffer;
+    unsigned char unget_buffer;
 } FILE;
 
 extern FILE* stdin;
