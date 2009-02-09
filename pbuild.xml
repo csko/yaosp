@@ -52,6 +52,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <mkdir>build/image/system/module/disk</mkdir>
         <mkdir>build/image/system/module/filesystem</mkdir>
         <mkdir>build/image/system/module/input</mkdir>
+        <mkdir>build/image/system/module/video</mkdir>
         <mkdir>build/image/package</mkdir>
     </target>
 
