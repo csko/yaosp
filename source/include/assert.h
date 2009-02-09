@@ -19,14 +19,13 @@
 #ifndef _ASSERT_H_
 #define _ASSERT_H_
 
-#include <unistd.h>
+#include <stdlib.h>
 
 #ifdef NDEBUG
 #define assert(expr) ((void)0)
 #else
 #define assert(expr) \
     ((expr) ? ((void)0) : abort())
-
 #endif // NDEBUG
 
 #endif // _ASSERT_H_
