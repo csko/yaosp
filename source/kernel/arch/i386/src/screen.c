@@ -1,6 +1,7 @@
 /* Basic screen output handling functions
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2008, 2009 Zoltan Kovacs 
+ * Copyright (c) 2008 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,6 +19,7 @@
 
 #include <types.h>
 #include <console.h>
+#include <kernel.h>
 #include <lib/string.h>
 
 #include <arch/screen.h>

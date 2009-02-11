@@ -32,6 +32,11 @@ typedef struct kernel_info {
     char build_time[ 32 ];
 } kernel_info_t;
 
+int parse_kernel_parameters( const char* params );
+
+int get_kernel_param_as_string( const char* key, const char** value );
+int get_kernel_param_as_bool( const char* key, bool* value );
+
 int sys_get_kernel_info( kernel_info_t* kernel_info );
 
 int sys_dbprintf( const char* format, char** parameters );

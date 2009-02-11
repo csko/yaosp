@@ -26,14 +26,97 @@
 #include <devices.h>
 #include <loader.h>
 #include <version.h>
+#include <macros.h>
+#include <errno.h>
+#include <config.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>
 
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
 
+static uint32_t kernel_param_count = 0;
+static char* kernel_params[ MAX_KERNEL_PARAMS ];
+static char kernel_param_buffer[ KERNEL_PARAM_BUF_SIZE ];
+
 extern void arch_reboot( void );
 extern void arch_shutdown( void );
+
+int parse_kernel_parameters( const char* params ) {
+    char* p;
+    size_t length;
+
+    p = strchr( params, ' ' );
+
+    if ( p == NULL ) {
+        return 0;
+    }
+
+    length = strlen( p );
+
+    if ( length == 0 ) {
+        return 0;
+    }
+
+    length = MIN( length, KERNEL_PARAM_BUF_SIZE - 1 );
+
+    memcpy( kernel_param_buffer, p, length );
+    kernel_param_buffer[ length ] = 0;
+
+    p = kernel_param_buffer;
+
+    do {
+        kernel_params[ kernel_param_count++ ] = p;
+        p = strchr( p, ' ' );
+
+        if ( p != NULL ) {
+            *p++ = 0;
+        }
+    } while ( ( p != NULL ) && ( kernel_param_count < MAX_KERNEL_PARAMS ) );
+
+    return 0;
+}
+
+int get_kernel_param_as_string( const char* key, const char** value ) {
+    char* s;
+    uint32_t i;
+
+    for ( i = 0; i < kernel_param_count; i++ ) {
+        s = strchr( kernel_params[ i ], '=' );
+
+        if ( s == NULL ) {
+            continue;
+        }
+
+        if ( strncmp( kernel_params[ i ], key, s - kernel_params[ i ] ) == 0 ) {
+            *value = ++s;
+            return 0;
+        }
+    }
+
+    return -ENOENT;
+}
+
+int get_kernel_param_as_bool( const char* key, bool* value ) {
+    int error;
+    const char* tmp;
+
+    error = get_kernel_param_as_string( key, &tmp );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    if ( strcmp( tmp, "true" ) == 0 ) {
+        *value = true;
+    } else if ( strcmp( tmp, "false" ) == 0 ) {
+        *value = false;
+    } else {
+        return -EINVAL;
+    }
+
+    return 0;
+}
 
 int sys_get_kernel_info( kernel_info_t* kernel_info ) {
     kernel_info->major_version = KERNEL_MAJOR_VERSION;

@@ -148,6 +148,10 @@ static int arch_init_page_allocator( multiboot_header_t* header ) {
 void arch_start( multiboot_header_t* header ) {
     int error;
 
+    /* Save the kernel parameters before we write to any memory location */
+
+    parse_kernel_parameters( header->kernel_parameters );
+
     /* Initialize the screen */
 
     init_screen();
