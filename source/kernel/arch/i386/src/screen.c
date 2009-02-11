@@ -191,11 +191,19 @@ static console_t debug = {
 };
 
 int init_screen( void ) {
+    int error;
+    bool enable_debug;
+
     video_memory = ( uint16_t* )0xB8000;
 
     screen_clear( &screen );
     console_set_screen( &screen );
-    console_set_debug( &debug );
+
+    error = get_kernel_param_as_bool( "enable_debug", &enable_debug );
+
+    if ( ( error == 0 ) && ( enable_debug ) ) {
+        console_set_debug( &debug );
+    }
 
     return 0;
 }
