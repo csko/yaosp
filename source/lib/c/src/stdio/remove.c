@@ -1,4 +1,4 @@
-/* yaosp C library
+/* remove function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,12 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_WAIT_H_
-#define _SYS_WAIT_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
-#include <sys/types.h>
+int remove( const char* path ) {
+  struct stat st;
 
-pid_t wait( int* status );
-pid_t waitpid( pid_t pid, int* status, int options );
+  if ( stat( path, &st) != 0 ) {
+    return -1;
+  }
 
-#endif // _SYS_WAIT_H_
+  if ( S_ISDIR( st.st_mode ) ) {
+    return rmdir( path );
+  } else {
+    return unlink( path );
+  }
+}

@@ -22,6 +22,11 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define F_OK 0x00
+#define R_OK 0x01
+#define W_OK 0x02
+#define X_OK 0x04
+
 #define NAME_MAX 255
 
 #define _D_EXACT_NAMLEN(d) (strlen((d)->d_name))
@@ -50,6 +55,7 @@ ssize_t read( int fd, void* buf, size_t count );
 ssize_t write( int fd, const void* buf, size_t count );
 off_t lseek( int fd, off_t offset, int whence );
 
+int pipe( int pipefd[2] );
 int isatty( int fd );
 int chdir( const char* path );
 int fchdir( int fd );
@@ -71,5 +77,6 @@ pid_t getpid( void );
 int getpagesize( void );
 
 unsigned int sleep( unsigned int seconds );
+unsigned int alarm( unsigned int seconds );
 
 #endif // _UNISTD_H_

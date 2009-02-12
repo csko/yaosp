@@ -19,6 +19,8 @@
 #ifndef _SIGNAL_H_
 #define _SIGNAL_H_
 
+#include <sys/types.h>
+
 #define SIGHUP          1       /* Hangup (POSIX).  */
 #define SIGINT          2       /* Interrupt (ANSI).  */
 #define SIGQUIT         3       /* Quit (POSIX).  */
@@ -62,5 +64,8 @@ typedef int sig_atomic_t;
 typedef void ( *sighandler_t )( int );
 
 sighandler_t signal( int signum, sighandler_t handler );
+
+int kill( pid_t pid, int signal );
+int raise( int signal );
 
 #endif // _SIGNAL_H_

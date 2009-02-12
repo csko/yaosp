@@ -42,7 +42,9 @@ static char* error_strings[] = {
     "Read-only file system", /* EROFS */
     "Too many levels of symbolic links", /* ELOOP */
     "Not a directory", /* ENOTDIR */
-    "Directory not empty" /* ENOTEMPTY */
+    "Directory not empty", /* ENOTEMPTY */
+    "Resource temporarily unavailable", /* EAGAIN */
+    "Argument list too long" /* E2BIG */
 };
 
 char* strerror( int errnum ) {

@@ -64,6 +64,8 @@ extern FILE* stderr;
 
 FILE* fopen( const char* path, const char* mode );
 FILE* fdopen( int fd, const char* mode );
+FILE* freopen( const char* path, const char* mode, FILE* stream );
+
 int fclose( FILE* stream );
 int feof( FILE* stream );
 int ferror( FILE* stream );
@@ -107,6 +109,7 @@ int putchar( int c );
 int setvbuf( FILE* stream, char* buf, int flags, size_t size );
 
 int rename( const char* oldpath, const char* newpath );
+int remove( const char* path );
 
 void perror( const char* s );
 

@@ -44,5 +44,7 @@
 #define ELOOP     22
 #define ENOTDIR   23
 #define ENOTEMPTY 24
+#define EAGAIN    25
+#define E2BIG     26
 
 #endif // _ERRNO_H_

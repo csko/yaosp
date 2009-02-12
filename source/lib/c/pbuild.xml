@@ -116,6 +116,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/chown.c</item>
         <item>src/unistd/symlink.c</item>
         <item>src/unistd/ttyname.c</item>
+        <item>src/unistd/pipe.c</item>
+        <item>src/unistd/alarm.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/fcntl/creat.c</item>
         <item>src/fcntl/fcntl.c</item>
@@ -133,6 +135,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/clearerr.c</item>
         <item>src/stdio/fopen.c</item>
         <item>src/stdio/fdopen.c</item>
+        <item>src/stdio/freopen.c</item>
         <item>src/stdio/fclose.c</item>
         <item>src/stdio/putc.c</item>
         <item>src/stdio/setvbuf.c</item>
@@ -145,6 +148,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/puts.c</item>
         <item>src/stdio/putchar.c</item>
         <item>src/stdio/rename.c</item>
+        <item>src/stdio/remove.c</item>
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>
@@ -175,6 +179,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/chmod.c</item>
         <item>src/sys/utime.c</item>
         <item>src/sys/utimes.c</item>
+        <item>src/sys/wait.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
         <item>src/ctype/isblank.c</item>
@@ -192,6 +197,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/ispunct.c</item>
         <item>src/ctype/isascii.c</item>
         <item>src/signal/signal.c</item>
+        <item>src/signal/kill.c</item>
+        <item>src/signal/raise.c</item>
         <item>src/locale/localeconv.c</item>
         <item>src/termios/tcflush.c</item>
         <item>src/termios/tcgetattr.c</item>
