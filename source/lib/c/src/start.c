@@ -17,6 +17,7 @@
  */
 
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <yaosp/debug.h>
 
@@ -61,5 +62,5 @@ void __libc_start_main( char** argv, char** envp ) {
 
     /* Exit the process */
 
-    _exit( error );
+    exit( error );
 }
