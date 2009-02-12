@@ -83,8 +83,6 @@ cpu_t* get_processor( void ) {
 void apic_timer_irq( registers_t* regs ) {
     apic_write( LAPIC_EOI, 0 );
 
-    ( ( volatile char* )0xB8000 )[ get_processor_id() * 2 ]++;
-
     schedule( regs );
 }
 
