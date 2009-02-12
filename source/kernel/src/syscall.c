@@ -52,6 +52,7 @@ static system_call_entry_t system_call_table[] = {
     { "chdir", sys_chdir, 0 },
     { "fchdir", sys_fchdir, 0 },
     { "stat", sys_stat, 0 },
+    { "lstat", sys_lstat, 0 },
     { "fstat", sys_fstat, 0 },
     { "lseek", sys_lseek, 0 },
     { "fcntl", sys_fcntl, 0 },

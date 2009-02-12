@@ -77,7 +77,8 @@ int lookup_inode(
     struct io_context* io_context,
     inode_t* parent,
     const char* path,
-    inode_t** _inode
+    inode_t** _inode,
+    bool follow_symlink
 );
 
 int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes );

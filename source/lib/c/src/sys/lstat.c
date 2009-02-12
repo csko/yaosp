@@ -25,7 +25,7 @@
 int lstat( const char* path, struct stat* stat ) {
     int error;
 
-    error = syscall2( SYS_stat, ( int )path, ( int )stat );
+    error = syscall2( SYS_lstat, ( int )path, ( int )stat );
 
     if ( error < 0 ) {
         errno = -error;

@@ -353,7 +353,7 @@ next:
     return 0;
 }
 
-int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, inode_t** _inode ) {
+int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, inode_t** _inode, bool follow_symlink ) {
     int error;
     char* name;
     int length;
@@ -376,7 +376,7 @@ int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, i
         error = do_lookup_inode( io_context, new_parent, name, length, true, &inode );
     }
 
-    if ( error == 0 ) {
+    if ( ( error == 0 ) && ( follow_symlink ) ) {
         error = follow_symbolic_link( io_context, &new_parent, &inode );
 
         if ( error < 0 ) {

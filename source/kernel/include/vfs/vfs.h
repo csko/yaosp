@@ -178,6 +178,7 @@ int sys_getdents( int fd, dirent_t* entry, unsigned int count );
 int sys_chdir( const char* path );
 int sys_fchdir( int fd );
 int sys_stat( const char* path, struct stat* stat );
+int sys_lstat( const char* path, struct stat* stat );
 int sys_fstat( int fd, struct stat* stat );
 int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
 int sys_fcntl( int fd, int cmd, int arg );

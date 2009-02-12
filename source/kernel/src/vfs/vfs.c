@@ -970,7 +970,7 @@ static int do_stat( bool kernel, const char* path, struct stat* stat ) {
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode );
+    error = lookup_inode( io_context, NULL, path, &inode, true );
 
     if ( error < 0 ) {
         return error;
@@ -985,6 +985,34 @@ static int do_stat( bool kernel, const char* path, struct stat* stat ) {
 
 int sys_stat( const char* path, struct stat* stat ) {
     return do_stat( false, path, stat );
+}
+
+static int do_lstat( bool kernel, const char* path, struct stat* stat ) {
+    int error;
+    inode_t* inode;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, NULL, path, &inode, false );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = do_read_stat( inode, stat );
+
+    put_inode( inode );
+
+    return error;
+}
+
+int sys_lstat( const char* path, struct stat* stat ) {
+    return do_lstat( false, path, stat );
 }
 
 static int do_fstat( bool kernel, int fd, struct stat* stat ) {
@@ -1137,7 +1165,7 @@ static int do_readlink( bool kernel, const char* path, char* buffer, size_t leng
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode );
+    error = lookup_inode( io_context, NULL, path, &inode, true );
 
     if ( error < 0 ) {
         return error;
@@ -1177,7 +1205,7 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, dir, &dir_inode );
+    error = lookup_inode( io_context, NULL, dir, &dir_inode, true );
 
     if ( error < 0 ) {
         return error;
@@ -1559,7 +1587,7 @@ static int do_utime( bool kernel, const char* path, const struct utimbuf* times)
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode );
+    error = lookup_inode( io_context, NULL, path, &inode, true );
 
     if ( error < 0 ) {
         return error;
