@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern char* environ[];
+extern char** environ;
 
 char* getenv( const char* name ) {
     int i;

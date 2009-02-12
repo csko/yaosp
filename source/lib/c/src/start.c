@@ -28,10 +28,10 @@ extern int main( int argc, char** argv, char** envp );
 
 int errno;
 
-char* environ[ MAX_ENV_COUNT ];
+char** environ;
+int __environ_allocated;
 
 void __libc_start_main( char** argv, char** envp ) {
-    int i;
     int argc;
     int error;
 
@@ -41,11 +41,8 @@ void __libc_start_main( char** argv, char** envp ) {
 
     /* Store the env array */
 
-    for ( i = 0; ( i < MAX_ENV_COUNT - 1 ) && ( envp[ i ] != NULL ); i++ ) {
-        environ[ i ] = envp[ i ];
-    }
-
-    environ[ i ] = NULL;
+    environ = envp;
+    __environ_allocated = 0;
 
     /* Initialize the memory allocator */
 

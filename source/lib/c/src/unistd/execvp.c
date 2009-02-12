@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 
-extern char* environ[];
+extern char** environ;
 
 int execvp( const char* filename, char* const argv[] ) {
     char* path;
