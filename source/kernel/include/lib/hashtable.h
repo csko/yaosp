@@ -53,7 +53,6 @@ void destroy_hashtable( hashtable_t* table );
 
 int hashtable_add( hashtable_t* table, hashitem_t* item );
 hashitem_t* hashtable_get( hashtable_t* table, const void* key );
-hashitem_t* hashtable_get_first_item( hashtable_t* table );
 int hashtable_remove( hashtable_t* table, const void* key );
 
 int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data );

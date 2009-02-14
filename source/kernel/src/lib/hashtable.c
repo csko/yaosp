@@ -127,20 +127,6 @@ hashitem_t* hashtable_get( hashtable_t* table, const void* key ) {
     return item;
 }
 
-hashitem_t* hashtable_get_first_item( hashtable_t* table ) {
-    uint32_t i;
-    hashitem_t* item = NULL;
-
-    for ( i = 0; i < table->size; i++ ) {
-        if ( table->items[ i ] != NULL ) {
-            item = table->items[ i ];
-            break;
-        }
-    }
-
-    return item;
-}
-
 int hashtable_remove( hashtable_t* table, const void* key ) {
     uint32_t hash;
     hashitem_t* prev;
@@ -178,18 +164,20 @@ int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, 
     int result;
     uint32_t i;
     hashitem_t* item;
+    hashitem_t* next;
 
     for ( i = 0; i < table->size; i++ ) {
         item = table->items[ i ];
 
         while ( item != NULL ) {
+            next = item->next;
             result = callback( item, data );
 
             if ( result < 0 ) {
                 return result;
             }
 
-            item = item->next;
+            item = next;
         }
     }
 
@@ -200,11 +188,13 @@ int hashtable_filtered_iterate( hashtable_t* table, hashtable_iter_callback_t* c
     int result;
     uint32_t i;
     hashitem_t* item;
+    hashitem_t* next;
 
     for ( i = 0; i < table->size; i++ ) {
         item = table->items[ i ];
 
         while ( item != NULL ) {
+            next = item->next;
             result = filter( item, filter_data );
 
             if ( result < 0 ) {
@@ -218,7 +208,7 @@ int hashtable_filtered_iterate( hashtable_t* table, hashtable_iter_callback_t* c
             }
 
 next:
-            item = item->next;
+            item = next;
         }
     }
 

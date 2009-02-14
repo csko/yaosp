@@ -265,16 +265,19 @@ int init_io_context( io_context_t* io_context ) {
     return 0;
 }
 
-void destroy_io_context( io_context_t* io_context ) {
+static int destroy_file_callback( hashitem_t* item, void* data ) {
     file_t* file;
 
+    file = ( file_t* )item;
+    delete_file( file );
+
+    return 0;
+}
+
+void destroy_io_context( io_context_t* io_context ) {
     /* Delete all files and the hashtable */
 
-    while ( ( file = ( file_t* )hashtable_get_first_item( &io_context->file_table ) ) != NULL ) {
-        hashtable_remove( &io_context->file_table, ( const void* )file->fd );
-        delete_file( file );
-    }
-
+    hashtable_iterate( &io_context->file_table, destroy_file_callback, NULL );
     destroy_hashtable( &io_context->file_table );
 
     /* Put the inodes in the I/O context */
