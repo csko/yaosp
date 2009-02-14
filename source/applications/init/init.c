@@ -44,7 +44,7 @@ int main( int argc, char** argv ) {
                 NULL
             };
 
-            snprintf( tty_path, sizeof( tty_path ), "/device/pty/tty%d", i );
+            snprintf( tty_path, sizeof( tty_path ), "/device/terminal/tty%d", i );
 
             dbprintf( "Executing shell #%d! (tty=%s)\n", i, tty_path );
 

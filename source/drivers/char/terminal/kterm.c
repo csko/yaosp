@@ -114,7 +114,7 @@ int init_kernel_terminal( void ) {
 
     /* Open the slave side of the pseudo terminal */
 
-    snprintf( buf, sizeof( buf ), "/device/pty/tty%d", MAX_TERMINAL_COUNT - 1 );
+    snprintf( buf, sizeof( buf ), "/device/terminal/tty%d", MAX_TERMINAL_COUNT - 1 );
 
     kterm_tty = open( buf, O_WRONLY );
 

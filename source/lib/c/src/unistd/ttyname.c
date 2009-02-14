@@ -37,7 +37,7 @@ int ttyname_r( int fd, char* buf, size_t buflen ) {
         return -1;
     }
 
-    dir = open( "/device/pty", O_RDONLY );
+    dir = open( "/device/terminal", O_RDONLY );
 
     if ( dir < 0 ) {
         return -1;
@@ -47,7 +47,7 @@ int ttyname_r( int fd, char* buf, size_t buflen ) {
 
     while ( getdents( dir, &entry, sizeof( struct dirent ) ) == 1 ) {
         if ( entry.d_ino == st.st_ino ) {
-            snprintf( buf, buflen, "/device/pty/%s", entry.d_name );
+            snprintf( buf, buflen, "/device/terminal/%s", entry.d_name );
             found = 1;
             break;
         }

@@ -313,7 +313,7 @@ int init_terminals( void ) {
             return -ENOMEM;
         }
 
-        snprintf( path, sizeof( path ), "/device/pty/pty%d", i );
+        snprintf( path, sizeof( path ), "/device/terminal/pty%d", i );
 
         terminals[ i ]->master_pty = open( path, O_RDWR | O_CREAT );
 
@@ -355,10 +355,10 @@ int init_module( void ) {
         return lock;
     }
 
-    error = mkdir( "/device/pty", 0 );
+    error = mkdir( "/device/terminal", 0 );
 
     if ( error < 0 ) {
-        kprintf( "Terminal: Failed to create /device/pty\n" );
+        kprintf( "Terminal: Failed to create /device/terminal\n" );
         return error;
     }
 
@@ -369,7 +369,7 @@ int init_module( void ) {
         return error;
     }
 
-    error = mount( "", "/device/pty", "pty" );
+    error = mount( "", "/device/terminal", "pty" );
 
     if ( error < 0 ) {
         kprintf( "Terminal: Failed to mount pty filesystem!\n" );
