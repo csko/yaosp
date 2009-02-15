@@ -1,6 +1,6 @@
 /* Console structure definitions and functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,10 +24,31 @@
 
 struct console;
 
+typedef enum console_color {
+    COLOR_BLACK,
+    COLOR_BLUE,
+    COLOR_GREEN,
+    COLOR_CYAN,
+    COLOR_RED,
+    COLOR_MAGENTA,
+    COLOR_BROWN,
+    COLOR_LIGHT_GRAY,
+    COLOR_DARK_GRAY,
+    COLOR_LIGHT_BLUE,
+    COLOR_LIGHT_GREEN,
+    COLOR_LIGHT_CYAN,
+    COLOR_LIGHT_RED,
+    COLOR_LIGHT_MAGENTA,
+    COLOR_LIGHT_BROWN,
+    COLOR_WHITE
+} console_color_t;
+
 typedef void console_init_t( struct console* console );
 typedef void console_clear_t( struct console* console );
 typedef void console_putchar_t( struct console* console, char c );
 typedef void console_gotoxy_t( struct console* console, int x, int y );
+typedef void console_set_fg_t( struct console* console, console_color_t fg );
+typedef void console_set_bg_t( struct console* console, console_color_t bg );
 typedef void console_flush_t( struct console* console );
 
 typedef struct console_operations {
@@ -35,6 +56,8 @@ typedef struct console_operations {
     console_clear_t* clear;
     console_putchar_t* putchar;
     console_gotoxy_t* gotoxy;
+    console_set_fg_t* set_fg_color;
+    console_set_bg_t* set_bg_color;
     console_flush_t* flush;
 } console_operations_t;
 

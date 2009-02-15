@@ -25,6 +25,7 @@
 #include <arch/screen.h>
 #include <arch/io.h>
 
+static uint8_t screen_color = 7;
 static uint16_t* video_memory;
 
 static void screen_move_cursor( console_t* console ) {
@@ -41,7 +42,7 @@ static void screen_move_cursor( console_t* console ) {
 static void screen_clear( console_t* console ) {
     /* Fill the video memory with spaces */
 
-    memsetw( video_memory, ( 7 << 8 ) | ' ', console->width * console->height );
+    memsetw( video_memory, ( screen_color << 8 ) | ' ', console->width * console->height );
 
     /* Set the cursor position to the top-left corner of the screen */
 
@@ -88,7 +89,7 @@ static void screen_putchar( console_t* console, char c ) {
             break;
 
         default :
-            *p++ = ( 7 << 8 ) | c;
+            *p++ = ( screen_color << 8 ) | c;
             console->x++; 
 
             break;
@@ -142,12 +143,22 @@ static void screen_gotoxy( console_t* console, int x, int y ) {
 
     screen_move_cursor( console );
 }
- 
+
+static void screen_set_fg_color( console_t* console, console_color_t fg ) {
+    screen_color = ( screen_color & 0xF0 ) | ( int )fg;
+}
+
+static void screen_set_bg_color( console_t* console, console_color_t bg ) {
+    screen_color = ( screen_color & 0x0F ) | ( ( int )bg << 4 );
+}
+
 static console_operations_t screen_ops = {
     .init = NULL,
     .clear = screen_clear,
     .putchar = screen_putchar,
     .gotoxy = screen_gotoxy,
+    .set_fg_color = screen_set_fg_color,
+    .set_bg_color = screen_set_bg_color,
     .flush = NULL
 };
 
@@ -179,6 +190,8 @@ static console_operations_t debug_ops = {
     .clear = NULL,
     .putchar = debug_putchar,
     .gotoxy = NULL,
+    .set_fg_color = NULL,
+    .set_bg_color = NULL,
     .flush = NULL
 };
 
