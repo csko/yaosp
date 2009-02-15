@@ -25,31 +25,55 @@
 
 #define TERMINAL_WIDTH 80
 #define TERMINAL_HEIGHT 25
-#define TERMINAL_MAX_LINES 200
-
+#define TERMINAL_MAX_LINES 300
 #define TERMINAL_ACCEPTS_USER_INPUT 0x01
 
 #define TERM_BUFFER_LINE_END 0x01
 
-typedef struct term_buffer_item {
-    char* buffer;
-    size_t size;
-    int flags;
-} term_buffer_item_t;
+#define MAX_INPUT_PARAMETERS 10
+
+typedef struct terminal_buffer_item {
+    char character;
+    char fg_color;
+    char bg_color;
+} terminal_buffer_item_t;
+
+typedef struct terminal_buffer {
+    terminal_buffer_item_t* data;
+    int last_dirty;
+} terminal_buffer_t;
+
+typedef enum terminal_input_state {
+    IS_NONE,
+    IS_ESC,
+    IS_BRACKET
+} terminal_input_state_t;
 
 typedef struct terminal {
     int master_pty;
     int flags;
 
-    int line_count;
-    term_buffer_item_t* lines;
+    console_color_t fg_color;
+    console_color_t bg_color;
+
+    int input_param_count;
+    int input_params[ MAX_INPUT_PARAMETERS ];
+    terminal_input_state_t input_state;
+
     int start_line;
+
+    int cursor_row;
+    int cursor_column;
+
+    int line_count;
+    terminal_buffer_t* lines;
 } terminal_t;
 
 extern terminal_t* terminals[ MAX_TERMINAL_COUNT ];
 
+void terminal_put_char( terminal_t* terminal, char c );
+
 int terminal_scroll( int offset );
 int terminal_switch_to( int index );
-int terminal_buffer_insert( terminal_t* terminal, char* buf, int size );
 
 #endif // _TERMINAL_TERMINAL_H_

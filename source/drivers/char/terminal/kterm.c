@@ -155,7 +155,11 @@ int init_kernel_terminal( void ) {
     /* Copy the buffered kernel output to the terminal buffer */
 
     while ( ( data = kernel_console_read( buf, sizeof( buf ) ) ) > 0 ) {
-        terminal_buffer_insert( kterm, buf, data );
+        char* c = buf;
+
+        for ( ; data > 0; data--, c++ ) {
+            terminal_put_char( kterm, *c );
+        }
     }
 
     /* Make the kernel terminal the active */
