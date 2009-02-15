@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <semaphore.h>
 #include <macros.h>
+#include <scheduler.h>
 #include <mm/region.h>
 #include <mm/context.h>
 #include <mm/pages.h>
@@ -108,6 +109,14 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
             }
         }
     }
+
+    /* Update pmem of the current process */
+
+    spinlock_disable( &scheduler_lock );
+
+    context->process->pmem_size += PAGE_SIZE;
+
+    spinunlock_enable( &scheduler_lock );
 
     return 0;
 }
