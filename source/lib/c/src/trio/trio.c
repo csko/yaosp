@@ -7188,7 +7188,7 @@ TRIO_VARGS2((format, va_alist),
  */
 #if TRIO_FEATURE_STDIO
 TRIO_PUBLIC int
-trio_vscanf
+vscanf
 TRIO_ARGS2((format, args),
 	   TRIO_CONST char *format,
 	   va_list args)
@@ -7270,7 +7270,7 @@ TRIO_VARGS3((file, format, va_alist),
  */
 #if TRIO_FEATURE_FILE
 TRIO_PUBLIC int
-trio_vfscanf
+vfscanf
 TRIO_ARGS3((file, format, args),
 	   FILE *file,
 	   TRIO_CONST char *format,
@@ -7507,7 +7507,7 @@ TRIO_VARGS3((buffer, format, va_alist),
    @return Number of scanned characters.
  */
 TRIO_PUBLIC int
-trio_vsscanf
+vsscanf
 TRIO_ARGS3((buffer, format, args),
 	   TRIO_CONST char *buffer,
 	   TRIO_CONST char *format,

@@ -121,6 +121,15 @@
 #define PENDIN  0040000
 #define IEXTEN  0100000
 
+#define OPOST   0000001
+#define OLCUC   0000002
+#define ONLCR   0000004
+#define OCRNL   0000010
+#define ONOCR   0000020
+#define ONLRET  0000040
+#define OFILL   0000100
+#define OFDEL   0000200
+
 /* tcflush() and TCFLSH use these */
 
 #define TCIFLUSH        0

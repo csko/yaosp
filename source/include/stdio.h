@@ -47,6 +47,8 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
+#define P_tmpdir "/tmp"
+
 typedef struct FILE {
     int fd;
     int flags;
@@ -93,6 +95,10 @@ int vsnprintf( char* str, size_t size, const char* format, va_list ap ) __attrib
 int scanf( const char* format, ... );
 int fscanf( FILE* stream, const char* format, ... );
 int sscanf( const char* str, const char* format, ... );
+
+int vscanf( const char* format, va_list ap );
+int vsscanf( const char* str, const char* format, va_list ap );
+int vfscanf( FILE* stream, const char* format, va_list ap );
 
 int fgetc( FILE* stream );
 int getc( FILE* stream );
