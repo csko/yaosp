@@ -236,7 +236,7 @@ void terminal_put_char( terminal_t* terminal, char c ) {
     if ( buffer->data == NULL ) {
         int i;
 
-        buffer->data = ( terminal_buffer_item_t* )kmalloc( sizeof( terminal_buffer_item_t ) * 80 );
+        buffer->data = ( terminal_buffer_item_t* )kmalloc( sizeof( terminal_buffer_item_t ) * screen->width );
 
         if ( buffer->data == NULL ) {
             return;
@@ -244,7 +244,7 @@ void terminal_put_char( terminal_t* terminal, char c ) {
 
         data_item = &buffer->data[ 0 ];
 
-        for ( i = 0; i < 80; i++, data_item++ ) {
+        for ( i = 0; i < screen->width; i++, data_item++ ) {
             data_item->character = ' ';
             data_item->bg_color = COLOR_BLACK;
             data_item->fg_color = COLOR_LIGHT_GRAY;
@@ -272,7 +272,7 @@ void terminal_put_char( terminal_t* terminal, char c ) {
 
     terminal->cursor_column++;
 
-    if ( terminal->cursor_column == 80 ) {
+    if ( terminal->cursor_column == screen->width ) {
         terminal_handle_new_line( terminal );
     }
 }
@@ -287,7 +287,9 @@ static inline void terminal_move_cursor_to( terminal_t* terminal, int cursor_x, 
     terminal->cursor_row = terminal->start_line + cursor_y;
     terminal->cursor_column = cursor_x;
 
-    screen->ops->gotoxy( screen, cursor_x, cursor_y );
+    if ( terminal == active_terminal ) {
+        screen->ops->gotoxy( screen, cursor_x, cursor_y );
+    }
 }
 
 static inline console_color_t ansi_to_console_color( int color ) {
@@ -350,6 +352,35 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         terminal->input_state = IS_ESC;
                         terminal->input_param_count = 0;
                         break;
+
+                    case '\r' :
+                        terminal_move_cursor_to( terminal, 0, terminal->cursor_row - terminal->start_line );
+                        break;
+
+                    case '\b' : {
+                        int new_x;
+                        int new_y;
+
+                        if ( terminal->cursor_column == 0 ) {
+                            if ( terminal->cursor_row == terminal->start_line ) {
+                                new_x = terminal->cursor_column;
+                                new_y = terminal->cursor_row;
+                            } else {
+                                new_x = screen->width - 1;
+                                new_y = terminal->cursor_row - 1;
+                            }
+                        } else {
+                            new_x = terminal->cursor_column - 1;
+                            new_y = terminal->cursor_row;
+                        }
+
+                        if ( ( new_x != terminal->cursor_column ) ||
+                             ( new_y != terminal->cursor_row ) ) {
+                            terminal_move_cursor_to( terminal, new_x, new_y - terminal->start_line );
+                        }
+
+                        break;
+                    }
 
                     default :
                         terminal_put_char( terminal, c );
