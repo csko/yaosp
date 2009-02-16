@@ -68,7 +68,7 @@ static void terminal_do_full_update( terminal_t* terminal ) {
     for ( i = 0; ( i < lines_to_write ) && ( buffer->data != NULL ); i++, buffer++ ) {
         data_item = &buffer->data[ 0 ];
 
-        for ( j = 0; j < buffer->last_dirty; j++, data_item++ ) {
+        for ( j = 0; j <= buffer->last_dirty; j++, data_item++ ) {
             /* Check BG color */
 
             if ( data_item->bg_color != bg_color ) {
@@ -209,7 +209,7 @@ static inline void terminal_handle_new_line( terminal_t* terminal ) {
         tmp = &terminal->lines[ TERMINAL_MAX_LINES - 1 ];
 
         tmp->data = new_data;
-        tmp->last_dirty = 0;
+        tmp->last_dirty = -1;
     } else {
         terminal->line_count++;
 
