@@ -81,7 +81,7 @@ static char const *const time_spec_string[] ={
     "date", "seconds", "ns"
 };
 
-static char const short_options[] = "d:f::r:Rs:uhv";
+static char const short_options[] = "d:f::r:Rs:uh";
 
 static struct option long_options[] = {
     {"date", required_argument, NULL, 'd'},
@@ -96,7 +96,7 @@ static struct option long_options[] = {
     {"uct", no_argument, NULL, 'u'},
     {"universal", no_argument, NULL, 'u'},
     {"help", no_argument, NULL, 'h'},
-/*    {"version", no_argument, NULL, 'v'}, */
+/*    {"version", no_argument, NULL, 'V'}, */
     {NULL, 0, NULL, 0}
 };
 

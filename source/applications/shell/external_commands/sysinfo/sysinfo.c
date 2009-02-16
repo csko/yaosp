@@ -25,16 +25,17 @@
 char* argv0 = NULL;
 
 static void print_usage( void ) {
-    printf( "%s info_type\n", argv0 );
+    printf( "%s INFO_TYPE ...\n", argv0 );
     printf( "\n" );
-    printf( "The info_type has to be one of these values:\n" );
-    printf( "    kernel - Kernel information\n" );
-    printf( "    module - Kernel module information\n" );
-    printf( "    processor - Processor information\n" );
-    printf( "    memory - Memory information\n" );
+    printf( "The INFO_TYPE has to be one of these values:\n" );
+    printf( "    kernel       Kernel information\n" );
+    printf( "    module       Kernel module information\n" );
+    printf( "    processor    Processor information\n" );
+    printf( "    memory       Memory information\n" );
+    printf( "    all          All of the above\n" );
 }
 
-static void do_get_kernel_info( void ) {
+static int do_get_kernel_info( void ) {
     int error;
     kernel_info_t kernel_info;
 
@@ -42,7 +43,7 @@ static void do_get_kernel_info( void ) {
 
     if ( error < 0 ) {
         fprintf( stderr, "%s: Failed to get kernel information!\n", argv0 );
-        return;
+        return EXIT_FAILURE;
     }
 
     printf(
@@ -56,9 +57,11 @@ static void do_get_kernel_info( void ) {
         kernel_info.build_date,
         kernel_info.build_time
     );
+
+    return EXIT_SUCCESS;
 }
 
-static void do_get_module_info( void ) {
+static int do_get_module_info( void ) {
     int error;
     uint32_t i;
     uint32_t module_count;
@@ -73,25 +76,28 @@ static void do_get_module_info( void ) {
 
         if ( info_table == NULL ) {
             fprintf( stderr, "%s: No memory for module info table!\n", argv0 );
-            return;
+            return EXIT_FAILURE;
         }
 
         error = get_module_info( info_table, module_count );
 
         if ( error < 0 ) {
-            goto out;
+            fprintf( stderr, "%s: Failed to get module information!\n", argv0 );
+            free( info_table );
+            return EXIT_FAILURE;
         }
 
         for ( i = 0; i < module_count; i++ ) {
             printf( "%s\n", info_table[ i ].name );
         }
 
-out:
         free( info_table );
     }
+
+    return EXIT_SUCCESS;
 }
 
-static void do_get_processor_info( void ) {
+static int do_get_processor_info( void ) {
     uint32_t i;
     uint32_t processor_count;
     processor_info_t* info;
@@ -100,14 +106,15 @@ static void do_get_processor_info( void ) {
     processor_count = get_processor_count();
 
     if ( processor_count == 0 ) {
-        return;
+        printf( "No processors.\n" );
+        return EXIT_SUCCESS;
     }
 
     info_table = ( processor_info_t* )malloc( sizeof( processor_info_t ) * processor_count );
 
     if ( info_table == NULL ) {
         fprintf( stderr, "%s: No memory for processor info table!\n", argv0 );
-        return;
+        return EXIT_FAILURE;
     }
 
     processor_count = get_processor_info( info_table, processor_count );
@@ -119,15 +126,17 @@ static void do_get_processor_info( void ) {
             continue;
         }
 
-        printf( "Processor:  %u\n", i );
-        printf( "Model name: %s\n", info->name );
-        printf( "Speed:      %u MHz\n\n", ( uint32_t )( info->core_speed / 1000000 ) );
+        printf( "Processor:    %u\n", i );
+        printf( "Model name:   %s\n", info->name );
+        printf( "Speed:        %u MHz\n", ( uint32_t )( info->core_speed / 1000000 ) );
     }
 
     free( info_table );
+
+    return EXIT_SUCCESS;
 }
 
-static void do_get_memory_info( void ) {
+static int do_get_memory_info( void ) {
     int error;
     memory_info_t memory_info;
 
@@ -135,37 +144,64 @@ static void do_get_memory_info( void ) {
 
     if ( error < 0 ) {
         fprintf( stderr, "%s: Failed to get memory information!\n", argv0 );
-        return;
+        return EXIT_FAILURE;
     }
 
     printf( "Total memory: %u Kb\n", ( memory_info.total_page_count * getpagesize() / 1024 ) );
-    printf( "Free memory: %u Kb\n", ( memory_info.free_page_count * getpagesize() / 1024 ) );
+    printf( "Free memory:  %u Kb\n", ( memory_info.free_page_count * getpagesize() / 1024 ) );
+
+    return EXIT_SUCCESS;
 }
 
 int main( int argc, char** argv ) {
     char* info_type;
+    int i, ret = EXIT_SUCCESS;
 
     argv0 = argv[ 0 ];
 
-    if ( argc != 2 ) {
+    if ( argc <= 1 ) {
         print_usage();
         return EXIT_FAILURE;
     }
 
-    info_type = argv[ 1 ];
+    for(i = 1; i < argc; i++) {
+        info_type = argv[ i ];
 
-    if ( strcmp( info_type, "kernel" ) == 0 ) {
-        do_get_kernel_info();
-    } else if ( strcmp( info_type, "module" ) == 0 ) {
-        do_get_module_info();
-    } else if ( strcmp( info_type, "processor" ) == 0 ) {
-        do_get_processor_info();
-    } else if ( strcmp( info_type, "memory" ) == 0 ) {
-        do_get_memory_info();
-    } else {
-        print_usage();
-        return EXIT_FAILURE;
+        if ( strcmp( info_type, "kernel" ) == 0 ) {
+            if(do_get_kernel_info() != EXIT_SUCCESS) {
+                ret = EXIT_FAILURE;
+            }
+        } else if ( strcmp( info_type, "module" ) == 0 ) {
+            if(do_get_module_info() != EXIT_SUCCESS){
+                ret = EXIT_FAILURE;
+            }
+        } else if ( strcmp( info_type, "processor" ) == 0 ) {
+            if(do_get_processor_info() != EXIT_SUCCESS){
+                ret = EXIT_FAILURE;
+            }
+        } else if ( strcmp( info_type, "memory" ) == 0 ) {
+            if(do_get_memory_info() != EXIT_SUCCESS){
+                ret = EXIT_FAILURE;
+            }
+        } else if ( strcmp( info_type, "all" ) == 0 ) {
+            if(do_get_kernel_info() != EXIT_SUCCESS){
+                ret = EXIT_FAILURE;
+            }
+            if(do_get_module_info() != EXIT_SUCCESS){
+                ret = EXIT_FAILURE;
+            }
+            if(do_get_processor_info() != EXIT_SUCCESS){
+                ret = EXIT_FAILURE;
+            }
+            if(do_get_memory_info() != EXIT_SUCCESS){
+                ret = EXIT_FAILURE;
+            }
+        } else {
+            /* Maybe use preprocessing of arguments? */
+            print_usage();
+            return EXIT_FAILURE;
+        }
     }
 
-    return EXIT_SUCCESS;
+    return ret;
 }

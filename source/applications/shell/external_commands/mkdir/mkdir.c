@@ -51,7 +51,7 @@ static struct option long_options[] = {
     {"parents", no_argument, NULL, 'p'},
     {"verbose", no_argument, NULL, 'v'},
     {"help", no_argument, NULL, 'h'},
-/*    {"version", no_argument, NULL, 'v'}, */
+/*    {"version", no_argument, NULL, 'V'}, */
     {NULL, 0, NULL, 0}
 };
 
@@ -84,12 +84,9 @@ int main( int argc, char** argv ) {
     int error = 0;
     int optc;
     int i;
+    int mode;
 
     argv0 = argv[0];
-
-    if ( argc == 1 ) {
-        print_usage(EXIT_FAILURE);
-    }
 
     /* Get the command line options */
     opterr = 0;
@@ -126,7 +123,7 @@ int main( int argc, char** argv ) {
 
     if (optind == argc){
         fprintf(stderr, "%s: missing operand\n", argv0);
-        print_usage(EXIT_SUCCESS);
+        print_usage(EXIT_FAILURE);
     }
 
     for ( i = optind; i < argc; i++ ) {
