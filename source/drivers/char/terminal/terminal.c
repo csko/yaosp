@@ -405,13 +405,18 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
             case IS_BRACKET :
                 switch ( c ) {
                     case 's' :
-                        /* TODO: Save cursor position */
+                        terminal->saved_cursor_row = terminal->cursor_row;
+                        terminal->saved_cursor_column = terminal->cursor_column;
+
                         terminal->input_state = IS_NONE;
+
                         break;
 
                     case 'u' :
-                        /* TODO: Restore cursor position */
+                        terminal_move_cursor_to( terminal, terminal->saved_cursor_column, terminal->saved_cursor_row - terminal->start_line );
+
                         terminal->input_state = IS_NONE;
+
                         break;
 
                     case 'H' :

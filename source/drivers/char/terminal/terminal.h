@@ -64,6 +64,8 @@ typedef struct terminal {
 
     int cursor_row;
     int cursor_column;
+    int saved_cursor_row;
+    int saved_cursor_column;
 
     int line_count;
     terminal_buffer_t* lines;
