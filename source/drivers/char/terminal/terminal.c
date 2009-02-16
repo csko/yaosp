@@ -537,8 +537,10 @@ static int terminal_read_thread( void* arg ) {
 
 int init_terminals( void ) {
     int i;
+    int j;
     char path[ 128 ];
     terminal_t* terminal;
+    terminal_buffer_t* buffer;
 
     for ( i = 0; i < MAX_TERMINAL_COUNT; i++ ) {
         terminal = ( terminal_t* )kmalloc( sizeof( terminal_t ) );
@@ -561,7 +563,12 @@ int init_terminals( void ) {
             return -ENOMEM;
         }
 
-        memset( terminal->lines, 0, sizeof( terminal_buffer_t ) * TERMINAL_MAX_LINES );
+        buffer = &terminal->lines[ 0 ];
+
+        for ( j = 0; j < TERMINAL_MAX_LINES; j++, buffer++ ) {
+            buffer->data = NULL;
+            buffer->last_dirty = -1;
+        }
 
         terminal->flags = TERMINAL_ACCEPTS_USER_INPUT;
         terminal->fg_color = COLOR_LIGHT_GRAY;
