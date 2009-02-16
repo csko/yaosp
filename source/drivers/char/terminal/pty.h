@@ -26,6 +26,8 @@
 #include <lib/hashtable.h>
 #include <time.h>
 
+#include "termios.h"
+
 #define PTY_ROOT_INODE 0
 
 typedef struct pty_node {
@@ -57,6 +59,8 @@ typedef struct pty_node {
     select_request_t* write_requests;
 
     int line_size;
+
+    struct winsize window_size;
 } pty_node_t;
 
 typedef struct pty_lookup_data {

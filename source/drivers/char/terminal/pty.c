@@ -427,6 +427,36 @@ static int pty_write( void* fs_cookie, void* _node, void* file_cookie, const voi
     }
 }
 
+static int pty_ioctl( void* fs_cookie, void* _node, void* file_cookie, int command, void* buffer, bool from_kernel ) {
+    int error;
+    pty_node_t* node;
+
+    node = ( pty_node_t* )_node;
+
+    LOCK( node->lock );
+
+    switch ( command ) {
+        case TIOCGWINSZ :
+            memcpy( buffer, &node->window_size, sizeof( struct winsize ) );
+            error = 0;
+            break;
+
+        case TIOCSWINSZ :
+            memcpy( &node->window_size, buffer, sizeof( struct winsize ) );
+            error = 0;
+            break;
+
+        default :
+            kprintf( "Terminal: Unknown pty ioctl: %x\n", command );
+            error = -ENOSYS;
+            break;
+    }
+
+    UNLOCK( node->lock );
+
+    return error;
+}
+
 static int pty_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     pty_node_t* node;
 
@@ -543,6 +573,9 @@ static int pty_create(
 
     master->partner = slave;
     slave->partner = master;
+
+    slave->window_size.ws_row = 24;
+    slave->window_size.ws_col = 80;
 
     master->atime = time( NULL );
     master->mtime = master->atime;
@@ -675,7 +708,7 @@ static filesystem_calls_t pty_calls = {
     .free_cookie = pty_free_cookie,
     .read = pty_read,
     .write = pty_write,
-    .ioctl = NULL,
+    .ioctl = pty_ioctl,
     .read_stat = pty_read_stat,
     .write_stat = NULL,
     .read_directory = pty_read_directory,
