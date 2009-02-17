@@ -339,7 +339,6 @@ static inline void terminal_set_bg_color( terminal_t* terminal, int ansi_color )
 }
 
 static void terminal_parse_data( terminal_t* terminal, char* data, size_t size ) {
-    int i;
     char c;
 
     for ( ; size > 0; size--, data++ ) {
@@ -439,7 +438,9 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
                     }
 
-                    case 'm' :
+                    case 'm' : {
+                        int i;
+
                         for ( i = 0; i < terminal->input_param_count; i++ ) {
                             switch ( terminal->input_params[ i ] ) {
                                 case 30 ... 37 :
@@ -455,11 +456,64 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         }
 
                         break;
+                    }
 
                     case 'J' :
-                        if ( ( terminal->input_param_count == 1 ) &&
-                             ( terminal->input_params[ 0 ] == 2 ) ) {
-                            terminal_clear( terminal );
+                        if ( ( terminal->input_param_count == 0 ) ||
+                             ( ( terminal->input_param_count == 1 ) && ( terminal->input_params[ 0 ] == 0 ) ) ) {
+                            int i;
+                            int j;
+                            terminal_buffer_t* buffer;
+
+                            /* Clear screen from cursor down */
+
+                            buffer = &terminal->lines[ terminal->cursor_row ];
+
+                            for ( i = terminal->cursor_row; i < terminal->start_line + screen->height; i++, buffer++ ) {
+                                terminal_buffer_item_t* data_item;
+
+                                data_item = &buffer->data[ 0 ];
+
+                                for ( j = 0; j < screen->width; j++, data_item++ ) {
+                                    data_item->character = ' ';
+                                }
+
+                                buffer->last_dirty = -1;
+                            }
+
+                            /* Update the screen */
+
+                            if ( terminal == active_terminal ) {
+                                terminal_do_full_update( terminal );
+                            }
+                        } else if ( ( terminal->input_param_count == 1 ) && ( terminal->input_params[ 0 ] == 1 ) ) {
+                            int i;
+                            int j;
+                            terminal_buffer_t* buffer;
+
+                            /* Clear screen from cursor up */
+
+                            buffer = &terminal->lines[ terminal->cursor_row ];
+
+                            for ( i = terminal->cursor_row; i >= terminal->start_line; i--, buffer-- ) {
+                                terminal_buffer_item_t* data_item;
+
+                                data_item = &buffer->data[ 0 ];
+
+                                for ( j = 0; j < screen->width; j++, data_item++ ) {
+                                    data_item->character = ' ';
+                                }
+
+                                buffer->last_dirty = -1;
+                            }
+
+                            /* Update the screen */
+
+                            if ( terminal == active_terminal ) {
+                                terminal_do_full_update( terminal );
+                            }
+                        } else if ( ( terminal->input_param_count == 1 ) && ( terminal->input_params[ 0 ] == 2 ) ) {
+                            /* TODO: clear entire screen */
                         }
 
                         terminal->input_state = IS_NONE;
