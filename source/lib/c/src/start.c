@@ -57,6 +57,10 @@ void __libc_start_main( char** argv, char** envp ) {
 
     error = main( argc, argv, envp );
 
+    /* Flush stdout before exit */
+
+    fflush( stdout );
+
     /* Exit the process */
 
     exit( error );
