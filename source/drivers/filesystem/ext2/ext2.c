@@ -118,6 +118,7 @@ static filesystem_calls_t ext2_calls = {
     .read_stat = NULL,
     .write_stat = NULL,
     .read_directory = NULL,
+    .rewind_directory = NULL,
     .create = NULL,
     .unlink = NULL,
     .mkdir = NULL,

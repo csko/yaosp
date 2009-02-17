@@ -1,4 +1,4 @@
-/* yaosp C library
+/* rewinddir function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,20 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DIRENT_H_
-#define _DIRENT_H_
+#include <dirent.h>
+#include <errno.h>
 
-#include <unistd.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-typedef struct DIR {
-    int fd;
-    struct dirent entry;
-} DIR;
+void rewinddir( DIR* dir ) {
+    int error;
 
-DIR* opendir( const char* name );
-int closedir( DIR* dir );
+    error = syscall1( SYS_rewinddir, dir->fd );
 
-struct dirent* readdir( DIR* dir );
-void rewinddir( DIR* dir );
-
-#endif // _DIRENT_H_
+    if ( error < 0 ) {
+        errno = -error;
+    }
+}

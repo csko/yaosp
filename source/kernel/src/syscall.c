@@ -49,6 +49,7 @@ static system_call_entry_t system_call_table[] = {
     { "isatty", sys_isatty, 0 },
     { "ioctl", sys_ioctl, 0 },
     { "getdents", sys_getdents, 0 },
+    { "rewinddir", sys_rewinddir, 0 },
     { "chdir", sys_chdir, 0 },
     { "fchdir", sys_fchdir, 0 },
     { "stat", sys_stat, 0 },

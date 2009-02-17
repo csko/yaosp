@@ -175,6 +175,7 @@ int sys_dup2( int old_fd, int new_fd );
 int sys_isatty( int fd );
 int sys_ioctl( int fd, int command, void* buffer );
 int sys_getdents( int fd, dirent_t* entry, unsigned int count );
+int sys_rewinddir( int fd );
 int sys_chdir( const char* path );
 int sys_fchdir( int fd );
 int sys_stat( const char* path, struct stat* stat );

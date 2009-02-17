@@ -367,6 +367,16 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
     return 0;
 }
 
+static int devfs_rewind_directory( void* fs_cookie, void* _node, void* file_cookie ) {
+    devfs_dir_cookie_t* cookie;
+
+    cookie = ( devfs_dir_cookie_t* )file_cookie;
+
+    cookie->position = 0;
+
+    return 0;
+}
+
 int create_device_node( const char* path, device_calls_t* calls, void* cookie ) {
     int error;
     char* sep;
@@ -565,6 +575,7 @@ static filesystem_calls_t devfs_calls = {
     .read_stat = devfs_read_stat,
     .write_stat = devfs_write_stat,
     .read_directory = devfs_read_directory,
+    .rewind_directory = devfs_rewind_directory,
     .create = NULL,
     .unlink = NULL,
     .mkdir = devfs_mkdir,

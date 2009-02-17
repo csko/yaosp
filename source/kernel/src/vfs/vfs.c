@@ -650,6 +650,46 @@ int sys_getdents( int fd, dirent_t* entry, unsigned int count ) {
     return do_getdents( false, fd, entry, count );
 }
 
+static int do_rewinddir( bool kernel, int fd ) {
+    int error;
+    file_t* file;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    if ( file->inode->mount_point->fs_calls->rewind_directory == NULL ) {
+        error = -ENOSYS;
+        goto out;
+    }
+
+    /* TODO: check file type */
+
+    error = file->inode->mount_point->fs_calls->rewind_directory(
+        file->inode->mount_point->fs_data,
+        file->inode->fs_node,
+        file->cookie
+    );
+
+out:
+    io_context_put_file( io_context, file );
+
+    return error;
+}
+
+int sys_rewinddir( int fd ) {
+    return do_rewinddir( false, fd );
+}
+
 static int do_isatty( bool kernel, int fd ) {
     int error;
     file_t* file;

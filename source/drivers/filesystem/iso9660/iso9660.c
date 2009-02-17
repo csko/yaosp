@@ -693,6 +693,17 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
     return 1;
 }
 
+static int iso9660_rewind_directory( void* fs_cookie, void* node, void* file_cookie ) {
+    iso9660_dir_cookie_t* dir_cookie;
+
+    dir_cookie = ( iso9660_dir_cookie_t* )file_cookie;
+
+    dir_cookie->current_block = dir_cookie->start_block;
+    dir_cookie->block_position = 0;
+
+    return 0;
+}
+
 static filesystem_calls_t iso9660_calls = {
     .probe = NULL,
     .mount = iso9660_mount,
@@ -709,6 +720,7 @@ static filesystem_calls_t iso9660_calls = {
     .read_stat = iso9660_read_stat,
     .write_stat = NULL,
     .read_directory = iso9660_read_directory,
+    .rewind_directory = iso9660_rewind_directory,
     .create = NULL,
     .unlink = NULL,
     .mkdir = NULL,

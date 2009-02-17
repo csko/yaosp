@@ -263,6 +263,16 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
     return 0;
 }
 
+static int rootfs_rewind_directory( void* fs_cookie, void* _node, void* file_cookie ) {
+    rootfs_dir_cookie_t* cookie;
+
+    cookie = ( rootfs_dir_cookie_t* )file_cookie;
+
+    cookie->position = 0;
+
+    return 0;
+}
+
 static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int name_length, int permissions ) {
     int error;
     ino_t dummy;
@@ -383,6 +393,7 @@ static filesystem_calls_t rootfs_calls = {
     .read_stat = rootfs_read_stat,
     .write_stat = rootfs_write_stat,
     .read_directory = rootfs_read_directory,
+    .rewind_directory = rootfs_rewind_directory,
     .create = NULL,
     .unlink = NULL,
     .mkdir = rootfs_mkdir,

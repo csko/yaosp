@@ -523,6 +523,16 @@ static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, s
     return 1;
 }
 
+static int pty_rewind_directory( void* fs_cookie, void* node, void* file_cookie ) {
+    pty_dir_cookie_t* cookie;
+
+    cookie = ( pty_dir_cookie_t* )file_cookie;
+
+    cookie->current = 0;
+
+    return 0;
+}
+
 static int pty_create(
     void* fs_cookie,
     void* node,
@@ -712,6 +722,7 @@ static filesystem_calls_t pty_calls = {
     .read_stat = pty_read_stat,
     .write_stat = NULL,
     .read_directory = pty_read_directory,
+    .rewind_directory = pty_rewind_directory,
     .create = pty_create,
     .unlink = NULL,
     .mkdir = NULL,

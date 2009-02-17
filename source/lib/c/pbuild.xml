@@ -47,6 +47,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/opendir.c</item>
         <item>src/readdir.c</item>
         <item>src/closedir.c</item>
+        <item>src/rewinddir.c</item>
         <item>src/udivmoddi4.c</item>
         <item>src/stdlib/malloc.c</item>
         <item>src/stdlib/abort.c</item>

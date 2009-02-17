@@ -504,6 +504,16 @@ static int ramfs_read_directory( void* fs_cookie, void* node, void* file_cookie,
     return result;
 }
 
+static int ramfs_rewind_directory( void* fs_cookie, void* node, void* file_cookie ) {
+    ramfs_dir_cookie_t* dir_cookie;
+
+    dir_cookie = ( ramfs_dir_cookie_t* )file_cookie;
+
+    dir_cookie->position = 0;
+
+    return 0;
+}
+
 static int ramfs_create( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_number, void** file_cookie ) {
     int error = 0;
     ramfs_cookie_t* cookie;
@@ -670,6 +680,7 @@ static filesystem_calls_t ramfs_calls = {
     .read_stat = ramfs_read_stat,
     .write_stat = ramfs_write_stat,
     .read_directory = ramfs_read_directory,
+    .rewind_directory = ramfs_rewind_directory,
     .create = ramfs_create,
     .unlink = ramfs_unlink,
     .mkdir = ramfs_mkdir,
