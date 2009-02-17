@@ -1,6 +1,6 @@
-/* isblank function
+/* getpwent function
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,8 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
+#include <pwd.h>
 
-int isblank( int c ) {
-    return ( c == ' ' || c == '\t' );
+static struct passwd _passwd = {
+    .pw_name = "root",
+    .pw_name = "password",
+    .pw_uid = 0,
+    .pw_gid = 0,
+    .pw_gecos = "r00t",
+    .pw_dir = "/",
+    .pw_shell = "/yaosp/application/shell"
+};
+
+struct passwd* getpwent( void ) {
+    return &_passwd;
 }

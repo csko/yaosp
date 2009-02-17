@@ -46,7 +46,10 @@ typedef struct terminal_buffer {
 typedef enum terminal_input_state {
     IS_NONE,
     IS_ESC,
-    IS_BRACKET
+    IS_BRACKET,
+    IS_OPEN_BRACKET,
+    IS_CLOSE_BRACKET,
+    IS_QUESTION
 } terminal_input_state_t;
 
 typedef struct terminal {

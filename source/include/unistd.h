@@ -22,6 +22,10 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+
 #define F_OK 0x00
 #define R_OK 0x01
 #define W_OK 0x02

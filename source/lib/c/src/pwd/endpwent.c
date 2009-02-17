@@ -1,6 +1,6 @@
-/* isblank function
+/* endpwent function
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,8 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
+#include <pwd.h>
 
-int isblank( int c ) {
-    return ( c == ' ' || c == '\t' );
+void endpwent( void ) {
 }

@@ -31,4 +31,7 @@ struct passwd {
     char* pw_shell;
 };
 
+struct passwd* getpwent( void );
+void endpwent( void );
+
 #endif /* _PWD_H_ */

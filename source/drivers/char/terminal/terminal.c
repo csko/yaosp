@@ -183,6 +183,9 @@ int terminal_switch_to( int index ) {
 
     terminal_do_full_update( active_terminal );
 
+    screen->ops->set_bg_color( screen, active_terminal->bg_color );
+    screen->ops->set_fg_color( screen, active_terminal->fg_color );
+
     UNLOCK( lock );
 
     return 0;
@@ -394,14 +397,37 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         terminal->input_state = IS_BRACKET;
                         break;
 
-                    default :
+                    case '(' :
+                        terminal->input_state = IS_OPEN_BRACKET;
+                        break;
+
+                    case ')' :
+                        terminal->input_state = IS_CLOSE_BRACKET;
+                        break;
+
+                    case '=' :
+                        /* TODO: Set alternate keypad mode */
                         terminal->input_state = IS_NONE;
+                        break;
+
+                    case '>' :
+                        /* TODO: Set numeric keypad mode */
+                        terminal->input_state = IS_NONE;
+                        break;
+
+                    default :
+                        kprintf( "Terminal: Unknown character (%x) in IS_ESC state!\n", c );
+
+                        terminal->input_state = IS_NONE;
+
                         break;
                 }
 
                 break;
 
             case IS_BRACKET :
+                kprintf( "IS_BRACKET: c=%c (%x)\n", c, c );
+
                 switch ( c ) {
                     case 's' :
                         terminal->saved_cursor_row = terminal->cursor_row;
@@ -432,7 +458,6 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         }
 
                         terminal_move_cursor_to( terminal, new_x, new_y );
-
                         terminal->input_state = IS_NONE;
 
                         break;
@@ -443,6 +468,32 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                         for ( i = 0; i < terminal->input_param_count; i++ ) {
                             switch ( terminal->input_params[ i ] ) {
+                                case 0 :
+                                    terminal->fg_color = COLOR_LIGHT_GRAY;
+                                    terminal->bg_color = COLOR_BLACK;
+
+                                    if ( terminal == active_terminal ) {
+                                        screen->ops->set_bg_color( screen, terminal->bg_color );
+                                        screen->ops->set_fg_color( screen, terminal->fg_color );
+                                    }
+
+                                    break;
+
+                                case 7 : {
+                                    console_color_t tmp;
+
+                                    tmp = terminal->fg_color;
+                                    terminal->fg_color = terminal->bg_color;
+                                    terminal->bg_color = tmp;
+
+                                    if ( terminal == active_terminal ) {
+                                        screen->ops->set_bg_color( screen, terminal->bg_color );
+                                        screen->ops->set_fg_color( screen, terminal->fg_color );
+                                    }
+
+                                    break;
+                                }
+
                                 case 30 ... 37 :
                                     terminal_set_fg_color( terminal, terminal->input_params[ i ] );
                                     break;
@@ -450,10 +501,14 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                                 case 40 ... 47 :
                                     terminal_set_bg_color( terminal, terminal->input_params[ i ] );
                                     break;
-                            }
 
-                            terminal->input_state = IS_NONE;
+                                default :
+                                    kprintf( "Terminal: Invalid parameter (%d) for 'm' sequence!\n", terminal->input_params[ i ] );
+                                    break;
+                            }
                         }
+
+                        terminal->input_state = IS_NONE;
 
                         break;
                     }
@@ -520,6 +575,79 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                         break;
 
+                    case 'A' :
+                        if ( terminal->input_param_count == 1 ) {
+                            int new_y;
+
+                            new_y = terminal->cursor_row - terminal->input_params[ 0 ];
+
+                            if ( new_y >= terminal->start_line ) {
+                                terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
+                            } else {
+                                kprintf( "Terminal: Invalid number of rows for cursor up!\n" );
+                            }
+                        }
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+
+                    case 'B' :
+                        if ( terminal->input_param_count == 1 ) {
+                            int new_y;
+
+                            new_y = terminal->cursor_row + terminal->input_params[ 0 ];
+
+                            if ( new_y < ( terminal->start_line + screen->height ) ) {
+                                terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
+                            } else {
+                                kprintf( "Terminal: Invalid number of rows for cursor down!\n" );
+                            }
+                        }
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+
+                    case 'C' :
+                        if ( terminal->input_param_count == 1 ) {
+                            int new_x;
+
+                            new_x = terminal->cursor_column + terminal->input_params[ 0 ];
+
+                            if ( new_x < screen->width ) {
+                                terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
+                            } else {
+                                kprintf( "Terminal: Invalid number of rows for cursor forward!\n" );
+                            }
+                        }
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+
+                    case 'D' :
+                        if ( terminal->input_param_count == 1 ) {
+                            int new_x;
+
+                            new_x = terminal->cursor_column - terminal->input_params[ 0 ];
+
+                            if ( new_x >= 0 ) {
+                                terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
+                            } else {
+                                kprintf( "Terminal: Invalid number of rows for cursor backward!\n" );
+                            }
+                        }
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+
+                    case 'r' :
+                        /* TODO: what's this? */
+                        terminal->input_state = IS_NONE;
+                        break;
+
                     case '0' ... '9' :
                         if ( terminal->input_param_count == 0 ) {
                             terminal->input_param_count++;
@@ -528,6 +656,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                             terminal->input_params[ terminal->input_param_count - 1 ] *= 10;
                             terminal->input_params[ terminal->input_param_count - 1 ] += ( c - '0' );
                         }
+
                         break;
 
                     case ';' :
@@ -535,8 +664,81 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         terminal->input_params[ terminal->input_param_count - 1 ] = 0;
                         break;
 
+                    case '?' :
+                        terminal->input_state = IS_QUESTION;
+                        break;
+
                     default :
+                        kprintf( "Terminal: Unknown character (%x) in IS_BRACKET state!\n", c );
+
                         terminal->input_state = IS_NONE;
+
+                        break;
+                }
+
+                break;
+
+            case IS_OPEN_BRACKET :
+                switch ( c ) {
+                    case 'A' :
+                        /* TODO: Set United Kingdom G0 character set */
+                        terminal->input_state = IS_NONE;
+                        break;
+
+                    case 'B' :
+                        /* TODO: Set United States G0 character set */
+                        terminal->input_state = IS_NONE;
+                        break;
+
+                    case '0' :
+                        /* TODO: Set G0 special chars. & line set */
+                        terminal->input_state = IS_NONE;
+                         break;
+
+                    default :
+                        kprintf( "Terminal: Unknown character (%x) in IS_OPEN_BRACKET state!\n", c );
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+                }
+
+                break;
+
+            case IS_CLOSE_BRACKET :
+                switch ( c ) {
+                    case 'A' :
+                        /* Set United Kingdom G1 character set */
+                        terminal->input_state = IS_NONE;
+                        break;
+
+                    case 'B' :
+                        /* Set United States G1 character set */
+                        terminal->input_state = IS_NONE;
+                        break;
+
+                    case '0' :
+                        /* TODO: Set G1 special chars. & line set */
+                        terminal->input_state = IS_NONE;
+                         break;
+
+                    default :
+                        kprintf( "Terminal: Unknown character (%x) in IS_CLOSE_BRACKET state!\n", c );
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+                }
+
+                break;
+
+            case IS_QUESTION :
+                switch ( c ) {
+                    default :
+                        kprintf( "Terminal: Unknown character (%x) in IS_QUESTION state!\n", c );
+
+                        terminal->input_state = IS_NONE;
+
                         break;
                 }
 

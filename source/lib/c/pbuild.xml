@@ -73,6 +73,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strchr.c</item>
         <item>src/string/strrchr.c</item>
         <item>src/string/strlen.c</item>
+        <item>src/string/strnlen.c</item>
         <item>src/string/strcmp.c</item>
         <item>src/string/strncmp.c</item>
         <item>src/string/strcasecmp.c</item>
@@ -214,6 +215,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/trio/trio.c</item>
         <item>src/trio/trionan.c</item>
         <item>src/trio/triostr.c</item>
+        <item>src/pwd/getpwent.c</item>
+        <item>src/pwd/endpwent.c</item>
     </array>
 
     <target name="clean">

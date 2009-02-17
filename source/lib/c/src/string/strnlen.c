@@ -1,6 +1,6 @@
-/* isblank function
+/* strnlen function
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,8 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ctype.h>
+#include <string.h>
 
-int isblank( int c ) {
-    return ( c == ' ' || c == '\t' );
+size_t strnlen( const char* s, size_t count ) {
+    const char* sc;
+
+    for ( sc = s; count-- && ( *sc != 0 ); ++sc ) { }
+
+    return ( sc - s );
 }
