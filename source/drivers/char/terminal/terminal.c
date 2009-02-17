@@ -46,7 +46,6 @@ static void terminal_do_full_update( terminal_t* terminal ) {
     int j;
     char bg_color;
     char fg_color;
-    int lines_to_write;
     terminal_buffer_t* buffer;
     terminal_buffer_item_t* data_item;
 
@@ -61,11 +60,14 @@ static void terminal_do_full_update( terminal_t* terminal ) {
 
     ASSERT( terminal->line_count > 0 );
 
-    lines_to_write = MIN( screen->height, terminal->line_count - terminal->start_line );
-
     buffer = &terminal->lines[ terminal->start_line ];
 
-    for ( i = 0; ( i < lines_to_write ) && ( buffer->data != NULL ); i++, buffer++ ) {
+    for ( i = 0; i < screen->height; i++, buffer++ ) {
+        if ( ( buffer->data == NULL ) && ( i != screen->height - 1 ) ) {
+            screen->ops->putchar( screen, '\n' );
+            continue;
+        }
+
         data_item = &buffer->data[ 0 ];
 
         for ( j = 0; j <= buffer->last_dirty; j++, data_item++ ) {
@@ -92,7 +94,7 @@ static void terminal_do_full_update( terminal_t* terminal ) {
 
         /* Put a newline if the current line is not the last one and we didn't print a whole line */
 
-        if ( ( buffer->last_dirty != ( screen->width - 1 ) ) && ( i != ( lines_to_write - 1 ) ) ) {
+        if ( ( buffer->last_dirty != ( screen->width - 1 ) ) && ( i != ( screen->height - 1 ) ) ) {
             screen->ops->putchar( screen, '\n' );
         }
     }
@@ -385,7 +387,13 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                     }
 
                     default :
-                        terminal_put_char( terminal, c );
+                        if ( ( c >= ' ' ) ||
+                             ( c == '\r' ) ||
+                             ( c == '\n' ) ||
+                             ( c == '\b' ) ) {
+                            terminal_put_char( terminal, c );
+                        }
+
                         break;
                 }
 
@@ -417,17 +425,13 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_ESC state!\n", c );
-
                         terminal->input_state = IS_NONE;
-
                         break;
                 }
 
                 break;
 
             case IS_BRACKET :
-                kprintf( "IS_BRACKET: c=%c (%x)\n", c, c );
-
                 switch ( c ) {
                     case 's' :
                         terminal->saved_cursor_row = terminal->cursor_row;
@@ -450,8 +454,8 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         int new_y;
 
                         if ( terminal->input_param_count == 2 ) {
-                            new_y = terminal->input_params[ 0 ];
-                            new_x = terminal->input_params[ 1 ];
+                            new_y = terminal->input_params[ 0 ] - 1;
+                            new_x = terminal->input_params[ 1 ] - 1;
                         } else {
                             new_x = 0;
                             new_y = 0;
@@ -670,9 +674,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_BRACKET state!\n", c );
-
                         terminal->input_state = IS_NONE;
-
                         break;
                 }
 
@@ -697,9 +699,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_OPEN_BRACKET state!\n", c );
-
                         terminal->input_state = IS_NONE;
-
                         break;
                 }
 
@@ -724,9 +724,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_CLOSE_BRACKET state!\n", c );
-
                         terminal->input_state = IS_NONE;
-
                         break;
                 }
 
@@ -736,9 +734,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                 switch ( c ) {
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_QUESTION state!\n", c );
-
                         terminal->input_state = IS_NONE;
-
                         break;
                 }
 
