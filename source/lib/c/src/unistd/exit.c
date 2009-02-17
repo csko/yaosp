@@ -18,6 +18,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/types.h>
 
 #include <yaosp/syscall.h>
@@ -39,6 +40,10 @@ int atexit( void ( *function )( void ) ) {
 }
 
 void _exit( int status ) {
+    /* Flush stdout before exit */
+
+    fflush( stdout );
+
     syscall1( SYS_exit, status );
 }
 

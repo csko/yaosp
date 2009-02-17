@@ -18,7 +18,6 @@
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include <yaosp/debug.h>
 
@@ -57,10 +56,6 @@ void __libc_start_main( char** argv, char** envp ) {
     /* Call the main function of the application */
 
     error = main( argc, argv, envp );
-
-    /* Flush stdout before exit */
-
-    fflush( stdout );
 
     /* Exit the process */
 
