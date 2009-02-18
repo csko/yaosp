@@ -1438,7 +1438,15 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
         }
     }
 
-    LOCK( sync );
+    if ( timeout == NULL ) {
+        lock_semaphore( sync, 1, INFINITE_TIMEOUT );
+    } else {
+        uint64_t _timeout;
+
+        _timeout = ( uint64_t )timeout->tv_sec * 1000000 + ( uint64_t )timeout->tv_usec;
+
+        lock_semaphore( sync, 1, _timeout );
+    }
 
     if ( readfds != NULL ) {
         FD_ZERO( readfds );

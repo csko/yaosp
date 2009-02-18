@@ -28,7 +28,7 @@
 typedef struct timeval {
     time_t      tv_sec;    /* Seconds */
     suseconds_t tv_usec;   /* Microseconds */
-} timeval_t ;
+} timeval_t;
 
 typedef struct timezone {
     int tz_minuteswest;
@@ -45,7 +45,7 @@ typedef struct tm {
     int tm_wday;   /* Day of week. [0-6], 0=Sunday */
     int tm_yday;   /* Days in year. [0-365] */
     int tm_isdst;  /* Daylight saving [-1/0/1] */
-} tm_t ;
+} tm_t;
 
 int sys_time(int* tloc);
 int sys_stime(int* tptr);

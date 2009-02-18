@@ -124,8 +124,30 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
 
             /* Write the new character to the terminal */
 
-            if ( active_terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) {
-                pwrite( active_terminal->master_pty, &param1, 1, 0 );
+            if ( ( active_terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) == 0 ) {
+                break;
+            }
+
+            switch ( param1 ) {
+                case KEY_LEFT :
+                    pwrite( active_terminal->master_pty, "\x1b[D", 3, 0 );
+                    break;
+
+                case KEY_RIGHT :
+                    pwrite( active_terminal->master_pty, "\x1b[C", 3, 0 );
+                    break;
+
+                case KEY_UP :
+                    pwrite( active_terminal->master_pty, "\x1b[A", 3, 0 );
+                    break;
+
+                case KEY_DOWN :
+                    pwrite( active_terminal->master_pty, "\x1b[B", 3, 0 );
+                    break;
+
+                default :
+                    pwrite( active_terminal->master_pty, &param1, 1, 0 );
+                    break;
             }
 
             break;
@@ -470,54 +492,65 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                     case 'm' : {
                         int i;
 
-                        for ( i = 0; i < terminal->input_param_count; i++ ) {
-                            switch ( terminal->input_params[ i ] ) {
-                                case 0 :
-                                    terminal->is_bold = false;
-                                    terminal->fg_color = COLOR_LIGHT_GRAY;
-                                    terminal->bg_color = COLOR_BLACK;
+                        if ( terminal->input_param_count == 0 ) {
+                            terminal->is_bold = false;
+                            terminal->fg_color = COLOR_LIGHT_GRAY;
+                            terminal->bg_color = COLOR_BLACK;
 
-                                    if ( terminal == active_terminal ) {
-                                        screen->ops->set_bg_color( screen, terminal->bg_color );
-                                        screen->ops->set_fg_color( screen, terminal->fg_color );
+                            if ( terminal == active_terminal ) {
+                                screen->ops->set_bg_color( screen, terminal->bg_color );
+                                screen->ops->set_fg_color( screen, terminal->fg_color );
+                            }
+                        } else {
+                            for ( i = 0; i < terminal->input_param_count; i++ ) {
+                                switch ( terminal->input_params[ i ] ) {
+                                    case 0 :
+                                        terminal->is_bold = false;
+                                        terminal->fg_color = COLOR_LIGHT_GRAY;
+                                        terminal->bg_color = COLOR_BLACK;
+
+                                        if ( terminal == active_terminal ) {
+                                            screen->ops->set_bg_color( screen, terminal->bg_color );
+                                            screen->ops->set_fg_color( screen, terminal->fg_color );
+                                        }
+
+                                        break;
+
+                                    case 1 :
+                                        terminal->is_bold = true;
+                                        break;
+
+                                    case 2 :
+                                        terminal->is_bold = false;
+                                        break;
+
+                                    case 7 : {
+                                        console_color_t tmp;
+
+                                        tmp = terminal->fg_color;
+                                        terminal->fg_color = terminal->bg_color;
+                                        terminal->bg_color = tmp;
+
+                                        if ( terminal == active_terminal ) {
+                                            screen->ops->set_bg_color( screen, terminal->bg_color );
+                                            screen->ops->set_fg_color( screen, terminal->fg_color );
+                                        }
+
+                                        break;
                                     }
 
-                                    break;
+                                    case 30 ... 37 :
+                                        terminal_set_fg_color( terminal, terminal->input_params[ i ] );
+                                        break;
 
-                                case 1 :
-                                    terminal->is_bold = true;
-                                    break;
+                                    case 40 ... 47 :
+                                        terminal_set_bg_color( terminal, terminal->input_params[ i ] );
+                                        break;
 
-                                case 2 :
-                                    terminal->is_bold = false;
-                                    break;
-
-                                case 7 : {
-                                    console_color_t tmp;
-
-                                    tmp = terminal->fg_color;
-                                    terminal->fg_color = terminal->bg_color;
-                                    terminal->bg_color = tmp;
-
-                                    if ( terminal == active_terminal ) {
-                                        screen->ops->set_bg_color( screen, terminal->bg_color );
-                                        screen->ops->set_fg_color( screen, terminal->fg_color );
-                                    }
-
-                                    break;
+                                    default :
+                                        kprintf( "Terminal: Invalid parameter (%d) for 'm' sequence!\n", terminal->input_params[ i ] );
+                                        break;
                                 }
-
-                                case 30 ... 37 :
-                                    terminal_set_fg_color( terminal, terminal->input_params[ i ] );
-                                    break;
-
-                                case 40 ... 47 :
-                                    terminal_set_bg_color( terminal, terminal->input_params[ i ] );
-                                    break;
-
-                                default :
-                                    kprintf( "Terminal: Invalid parameter (%d) for 'm' sequence!\n", terminal->input_params[ i ] );
-                                    break;
                             }
                         }
 
@@ -741,6 +774,22 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
             case IS_QUESTION :
                 switch ( c ) {
+                    case '0' ... '9' :
+                        if ( terminal->input_param_count == 0 ) {
+                            terminal->input_param_count++;
+                            terminal->input_params[ 0 ] = ( c - '0' );
+                        } else {
+                            terminal->input_params[ terminal->input_param_count - 1 ] *= 10;
+                            terminal->input_params[ terminal->input_param_count - 1 ] += ( c - '0' );
+                        }
+
+                        break;
+
+                    case 'h' :
+                        /* TODO */
+                        terminal->input_state = IS_NONE;
+                        break;
+
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_QUESTION state!\n", c );
                         terminal->input_state = IS_NONE;

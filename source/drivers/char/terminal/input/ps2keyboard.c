@@ -124,13 +124,11 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
         }
 
         default :
-            if ( ( key != 0 ) && ( ( key & 0xFF00 ) == 0 ) ) {
-                terminal_handle_event(
-                    up ? E_KEY_RELEASED : E_KEY_PRESSED,
-                    key,
-                    0
-                );
-            }
+            terminal_handle_event(
+                up ? E_KEY_RELEASED : E_KEY_PRESSED,
+                key,
+                0
+            );
 
             break;
     }
