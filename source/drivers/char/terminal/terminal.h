@@ -56,6 +56,7 @@ typedef struct terminal {
     int master_pty;
     int flags;
 
+    bool is_bold;
     console_color_t fg_color;
     console_color_t bg_color;
 

@@ -297,16 +297,16 @@ static inline void terminal_move_cursor_to( terminal_t* terminal, int cursor_x, 
     }
 }
 
-static inline console_color_t ansi_to_console_color( int color ) {
+static inline console_color_t ansi_to_console_color( bool is_bold, int color ) {
     switch ( color ) {
-        case 0 : return COLOR_BLACK;
-        case 1 : return COLOR_RED;
-        case 2 : return COLOR_GREEN;
+        case 0 : if ( is_bold ) { return COLOR_BLACK; } else { return COLOR_BLACK; }
+        case 1 : if ( is_bold ) { return COLOR_LIGHT_RED; } else { return COLOR_RED; }
+        case 2 : if ( is_bold ) { return COLOR_LIGHT_GREEN; } else { return COLOR_GREEN; }
         case 3 : return COLOR_BLACK; /* TODO: yellow? */
-        case 4 : return COLOR_BLUE;
-        case 5 : return COLOR_MAGENTA;
-        case 6 : return COLOR_CYAN;
-        case 7 : return COLOR_WHITE;
+        case 4 : if ( is_bold ) { return COLOR_LIGHT_BLUE; } else { return COLOR_BLUE; }
+        case 5 : if ( is_bold ) { return COLOR_LIGHT_MAGENTA; } else { return COLOR_MAGENTA; }
+        case 6 : if ( is_bold ) { return COLOR_LIGHT_CYAN; } else { return COLOR_CYAN; }
+        case 7 : if ( is_bold ) { return COLOR_WHITE; } else { return COLOR_LIGHT_GRAY; }
         default : return COLOR_BLACK;
     }
 }
@@ -316,7 +316,7 @@ static inline void terminal_set_fg_color( terminal_t* terminal, int ansi_color )
 
     ASSERT( ( ansi_color >= 30 ) && ( ansi_color <= 37 ) );
 
-    color = ansi_to_console_color( ansi_color - 30 );
+    color = ansi_to_console_color( terminal->is_bold, ansi_color - 30 );
 
     if ( terminal->fg_color != color ) {
         terminal->fg_color = color;
@@ -332,7 +332,7 @@ static inline void terminal_set_bg_color( terminal_t* terminal, int ansi_color )
 
     ASSERT( ( ansi_color >= 40 ) && ( ansi_color <= 47 ) );
 
-    color = ansi_to_console_color( ansi_color - 40 );
+    color = ansi_to_console_color( terminal->is_bold, ansi_color - 40 );
 
     if ( terminal->bg_color != color ) {
         terminal->bg_color = color;
@@ -473,6 +473,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         for ( i = 0; i < terminal->input_param_count; i++ ) {
                             switch ( terminal->input_params[ i ] ) {
                                 case 0 :
+                                    terminal->is_bold = false;
                                     terminal->fg_color = COLOR_LIGHT_GRAY;
                                     terminal->bg_color = COLOR_BLACK;
 
@@ -481,6 +482,14 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                                         screen->ops->set_fg_color( screen, terminal->fg_color );
                                     }
 
+                                    break;
+
+                                case 1 :
+                                    terminal->is_bold = true;
+                                    break;
+
+                                case 2 :
+                                    terminal->is_bold = false;
                                     break;
 
                                 case 7 : {

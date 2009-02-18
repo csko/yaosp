@@ -99,7 +99,7 @@ static char* get_line( void ) {
     return line_buf;
 }
 
-void shell_print_commands(){
+void shell_print_commands( void ) {
     int i;
 
     for ( i = 0; builtin_commands[ i ] != NULL; i++ ) {
@@ -124,7 +124,7 @@ int main( int argc, char** argv, char** envp ) {
     while ( 1 ) {
         getcwd( cwd, sizeof( cwd ) );
 
-        printf( "%s> ", cwd );
+        printf( "%c[1;40;32m%s %c[34m$%c[0m ", 27, cwd, 27, 27 );
 
         /* Read in a line */
 
