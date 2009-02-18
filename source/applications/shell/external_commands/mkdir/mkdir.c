@@ -81,7 +81,7 @@ int do_mkdir(const char* dirname, int umask){
 }
 
 int main( int argc, char** argv ) {
-    int error = 0;
+    int error = EXIT_SUCCESS;
     int optc;
     int i;
     int mode;

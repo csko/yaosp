@@ -929,7 +929,7 @@ int init_module( void ) {
         return error;
     }
 
-    error = mount( "", "/device/terminal", "pty" );
+    error = mount( "", "/device/terminal", "pty", MOUNT_NONE );
 
     if ( error < 0 ) {
         kprintf( "Terminal: Failed to mount pty filesystem!\n" );

@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #include <sys/mount.h>
 
+#define MOUNT_NONE 0
+#define MOUNT_RO 1
+
 int main( int argc, char** argv ) {
     int error;
 
@@ -35,7 +38,7 @@ int main( int argc, char** argv ) {
         argv[ 1 ],
         argv[ 2 ],
         argv[ 3 ],
-        0,
+        MOUNT_NONE, /* TODO */
         NULL
     );
 

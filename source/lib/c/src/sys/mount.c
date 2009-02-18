@@ -31,11 +31,12 @@ int mount(
 ) {
     int error;
 
-    error = syscall3(
+    error = syscall4(
         SYS_mount,
         ( int )source,
         ( int )target,
-        ( int )filesystemtype
+        ( int )filesystemtype,
+        ( int )mountflags
     );
 
     if ( error < 0 ) {

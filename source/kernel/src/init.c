@@ -84,7 +84,7 @@ static void mount_root_filesystem( void ) {
 
         snprintf( path, sizeof( path ), "/device/disk/%s", entry.name );
 
-        error = mount( path, "/yaosp", "iso9660" );
+        error = mount( path, "/yaosp", "iso9660", MOUNT_RO );
 
         if ( error >= 0 ) {
             break;

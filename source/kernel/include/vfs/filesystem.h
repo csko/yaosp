@@ -24,6 +24,9 @@
 #include <vfs/inode.h>
 #include <lib/hashtable.h>
 
+#define MOUNT_NONE    0
+#define MOUNT_RO      1
+
 struct dirent;
 struct select_request;
 struct stat;

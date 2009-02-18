@@ -461,7 +461,8 @@ int init_root_filesystem( void ) {
         &rootfs_calls,
         32, /* initial inode cache size */
         4, /*  current free inodes */
-        4 /* max free inodes */
+        4, /* max free inodes */
+        MOUNT_NONE /* rw */
     );
 
     if ( mount_point == NULL ) {

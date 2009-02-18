@@ -95,6 +95,7 @@ typedef struct mount_point {
     inode_t* mount_inode;
     void* fs_data;
     struct mount_point* next;
+    uint32_t flags;
 } mount_point_t;
 
 typedef enum select_type {
@@ -143,7 +144,8 @@ mount_point_t* create_mount_point(
     filesystem_calls_t* fs_calls,
     int inode_cache_size,
     int free_inodes,
-    int max_free_inodes
+    int max_free_inodes,
+    uint32_t flags
 );
 void delete_mount_point( mount_point_t* mount_point );
 int insert_mount_point( mount_point_t* mount_point );
@@ -161,7 +163,7 @@ int fstat( int fd, struct stat* stat );
 off_t lseek( int fd, off_t offset, int whence );
 int mkdir( const char* path, int permissions );
 int symlink( const char* src, const char* dest );
-int mount( const char* device, const char* dir, const char* filesystem );
+int mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags );
 int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 
 int sys_open( const char* path, int flags );
@@ -188,7 +190,7 @@ int sys_rmdir( const char* path );
 int sys_unlink( const char* path );
 int sys_symlink( const char* src, const char* dest );
 int sys_readlink( const char* path, char* buffer, size_t length );
-int sys_mount( const char* device, const char* dir, const char* filesystem );
+int sys_mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags );
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 int sys_utime( const char* filename, const struct utimbuf* times );
 

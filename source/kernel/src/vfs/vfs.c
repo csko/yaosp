@@ -34,7 +34,8 @@ mount_point_t* create_mount_point(
     filesystem_calls_t* fs_calls,
     int inode_cache_size,
     int free_inodes,
-    int max_free_inodes
+    int max_free_inodes,
+    uint32_t flags
 ) {
     int error;
     mount_point_t* mount_point;
@@ -58,6 +59,7 @@ mount_point_t* create_mount_point(
     /* Initialize other members */
 
     mount_point->fs_calls = fs_calls;
+    mount_point->flags = flags;
 
     return mount_point;
 
@@ -283,6 +285,14 @@ static int do_open( bool kernel, const char* path, int flags, int perms ) {
 
     if ( error < 0 ) {
         return error;
+    }
+
+    /* Check if the filesystem if writable and we want to create a file*/
+
+    /* TODO: check the values of O_RDWR, O_WRONLY */
+    if ( flags & O_CREAT && parent->mount_point->flags & MOUNT_RO ) {
+        put_inode ( parent);
+        return -EROFS;
     }
 
     /* Create a new file */
@@ -513,7 +523,11 @@ static int do_write( bool kernel, int fd, const void* buffer, size_t count ) {
         return -EBADF;
     }
 
-    if ( file->inode->mount_point->fs_calls->write != NULL ) {
+    /* Check if the filesystem is writable */
+
+    if ( file->inode->mount_point->flags & MOUNT_RO ) {
+        error = -EROFS;
+    } else if ( file->inode->mount_point->fs_calls->write != NULL ) {
         error = file->inode->mount_point->fs_calls->write(
             file->inode->mount_point->fs_data,
             file->inode->fs_node,
@@ -746,7 +760,11 @@ static int do_mkdir( bool kernel, const char* path, int permissions ) {
         return error;
     }
 
-    if ( parent->mount_point->fs_calls->mkdir != NULL ) {
+    /* Check if the filesystem is writable */
+
+    if ( parent->mount_point->flags & MOUNT_RO ) {
+        error = -EROFS;
+    } else  if ( parent->mount_point->fs_calls->mkdir != NULL ) {
         error = parent->mount_point->fs_calls->mkdir(
             parent->mount_point->fs_data,
             parent->fs_node,
@@ -899,7 +917,9 @@ static int do_symlink( bool kernel, const char* src, const char* dest ) {
         return error;
     }
 
-    if ( inode->mount_point->fs_calls->symlink == NULL ) {
+    if ( inode->mount_point->flags & MOUNT_RO ) {
+        error = -EROFS;
+    } else if ( inode->mount_point->fs_calls->symlink == NULL ) {
         error = -ENOSYS;
     } else {
         error = inode->mount_point->fs_calls->symlink(
@@ -1231,7 +1251,7 @@ int sys_readlink( const char* path, char* buffer, size_t length ) {
     return do_readlink( false, path, buffer, length );
 }
 
-int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem ) {
+int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem, uint32_t mountflags ) {
     int error;
     inode_t* dir_inode;
     io_context_t* io_context;
@@ -1267,7 +1287,8 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
         fs_desc->calls,
         256,
         16,
-        32
+        32,
+        mountflags
     );
 
     if ( mount_point == NULL ) {
@@ -1278,7 +1299,7 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
 
     error = fs_desc->calls->mount(
         device,
-        0,
+        mountflags,
         &mount_point->fs_data,
         &root_inode_number
     );
@@ -1313,12 +1334,12 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
     return 0;
 }
 
-int mount( const char* device, const char* dir, const char* filesystem ) {
-    return do_mount( true, device, dir, filesystem );
+int mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags ) {
+    return do_mount( true, device, dir, filesystem, mountflags );
 }
 
-int sys_mount( const char* device, const char* dir, const char* filesystem ) {
-    return do_mount( false, device, dir, filesystem );
+int sys_mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags ) {
+    return do_mount( false, device, dir, filesystem, mountflags );
 }
 
 int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
@@ -1704,7 +1725,7 @@ int init_vfs( void ) {
         goto error1;
     }
 
-    error = do_mount( true, "", "/device", "devfs" );
+    error = do_mount( true, "", "/device", "devfs", MOUNT_NONE );
 
     if ( error < 0 ) {
         return error;
