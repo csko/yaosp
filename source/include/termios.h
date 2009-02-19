@@ -130,6 +130,13 @@
 #define OFILL   0000100
 #define OFDEL   0000200
 
+/* tcflow() and TCXONC use these */
+
+#define TCOOFF          0
+#define TCOON           1
+#define TCIOFF          2
+#define TCION           3
+
 /* tcflush() and TCFLSH use these */
 
 #define TCIFLUSH        0
@@ -207,6 +214,7 @@ struct winsize {
     unsigned short ws_col;
 };
 
+int tcflow( int fd, int action );
 int tcflush( int fd, int queue_selector );
 int tcgetattr( int fd, struct termios* tio );
 int tcsetattr( int fd, int optional_actions, const struct termios* tio );

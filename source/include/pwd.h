@@ -32,6 +32,7 @@ struct passwd {
 };
 
 struct passwd* getpwent( void );
+void setpwent( void );
 void endpwent( void );
 
 #endif /* _PWD_H_ */

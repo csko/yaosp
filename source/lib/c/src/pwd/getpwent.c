@@ -18,6 +18,8 @@
 
 #include <pwd.h>
 
+int _passwd_db_position = 0;
+
 static struct passwd _passwd = {
     .pw_name = "root",
     .pw_name = "password",
@@ -29,5 +31,11 @@ static struct passwd _passwd = {
 };
 
 struct passwd* getpwent( void ) {
-    return &_passwd;
+    if ( _passwd_db_position == 0 ) {
+        _passwd_db_position++;
+
+        return &_passwd;
+    } else {
+        return NULL;
+    }
 }

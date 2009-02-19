@@ -1,4 +1,4 @@
-/* endpwent function
+/* tcflow function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,10 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <pwd.h>
+#include <termios.h>
 
-extern int _passwd_db_position;
-
-void endpwent( void ) {
-    _passwd_db_position = 0;
+int tcflow( int fd, int action ) {
+    return 0;
 }

@@ -41,6 +41,7 @@ int main( int argc, char** argv ) {
             char* envv[] = {
                 "PATH=/yaosp/application",
                 "HOME=/",
+                "TERM=vt100",
                 NULL
             };
 

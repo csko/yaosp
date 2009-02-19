@@ -1,4 +1,4 @@
-/* endpwent function
+/* setpwent function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -20,6 +20,6 @@
 
 extern int _passwd_db_position;
 
-void endpwent( void ) {
+void setpwent( void ) {
     _passwd_db_position = 0;
 }
