@@ -145,6 +145,14 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
                     pwrite( active_terminal->master_pty, "\x1b[B", 3, 0 );
                     break;
 
+                case KEY_HOME :
+                    pwrite( active_terminal->master_pty, "\x1b[H", 3, 0 );
+                    break;
+
+                case KEY_END :
+                    pwrite( active_terminal->master_pty, "\x1b[F", 3, 0 );
+                    break;
+
                 default :
                     pwrite( active_terminal->master_pty, &param1, 1, 0 );
                     break;
@@ -620,6 +628,28 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         terminal->input_state = IS_NONE;
 
                         break;
+
+                    case 'K' : {
+                        int i;
+                        terminal_buffer_t* buffer;
+
+                        buffer = &terminal->lines[ terminal->cursor_row ];
+
+                        for ( i = terminal->cursor_column; i < screen->width; i++ ) {
+                            buffer->data[ i ].character = ' ';
+                        }
+
+                        buffer->last_dirty = terminal->cursor_column - 1;
+
+                        if ( terminal == active_terminal ) {
+                            /* TODO: Update only the touched line here, not the entire screen! */
+                            terminal_do_full_update( terminal );
+                        }
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+                    }
 
                     case 'A' :
                         if ( terminal->input_param_count == 1 ) {

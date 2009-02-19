@@ -23,6 +23,8 @@
 
 #include <yaosp/debug.h>
 
+#include <readline/readline.h>
+
 #include "command.h"
 #include "shell.h"
 
@@ -47,63 +49,11 @@ static builtin_command_t* builtin_commands[] = {
     NULL
 };
 
-static char line_buf[ 255 ];
-
-static char* get_line( void ) {
-    int c;
-    int pos = 0;
-    int done = 0;
-    int newline = 0; /* TODO: bool type */
-
-    while ( !done ) {
-        c = fgetc( stdin );
-
-        switch ( c ) {
-            case EOF:
-                return NULL;
-
-            case '\\':
-                newline = 1;
-                break;
-
-            case '\n' :
-                if ( newline == 0 ) {
-                    done = 1;
-                } else {
-                    newline = 0;
-                }
-                break;
-
-            case '\b' :
-                if ( pos > 0 ) {
-                    pos--;
-                }
-
-                break;
-
-            case '\t' :
-            case 27 :
-                break;
-
-            default :
-                if ( pos < 254 ) {
-                    line_buf[ pos++ ] = c;
-                }
-
-                break;
-        }
-    }
-
-    line_buf[ pos ] = 0;
-
-    return line_buf;
-}
-
 void shell_print_commands( void ) {
     int i;
 
     for ( i = 0; builtin_commands[ i ] != NULL; i++ ) {
-        printf("%-15s %s\n", builtin_commands[ i ]->name, builtin_commands[ i ]->description);
+        printf( "%-15s %s\n", builtin_commands[ i ]->name, builtin_commands[ i ]->description );
     }
 }
 
@@ -114,6 +64,7 @@ int main( int argc, char** argv, char** envp ) {
     char* args;
     pid_t child;
     char cwd[ 256 ];
+    char prompt[ 256 ];
 
     char* arg;
     int arg_count;
@@ -124,11 +75,11 @@ int main( int argc, char** argv, char** envp ) {
     while ( 1 ) {
         getcwd( cwd, sizeof( cwd ) );
 
-        printf( "%c[1;40;32m%s %c[34m$%c[0m ", 27, cwd, 27, 27 );
+        snprintf( prompt, sizeof( prompt ), "%c[1;40;32m%s %c[34m$%c[0m ", 27, cwd, 27, 27 );
 
         /* Read in a line */
 
-        line = get_line();
+        line = readline( prompt );
 
         /* Skip whitespaces at the beginning of the line */
 

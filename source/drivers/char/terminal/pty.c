@@ -18,11 +18,12 @@
 
 #include <console.h>
 #include <errno.h>
+#include <time.h>
 #include <mm/kmalloc.h>
 #include <vfs/filesystem.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
-#include <time.h>
+#include <lib/ctype.h>
 
 #include "pty.h"
 
@@ -358,40 +359,57 @@ static int pty_do_write( pty_node_t* node, const void* buffer, size_t size ) {
     return written;
 }
 
-static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t size, bool count_line_size ) {
+static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t size, bool echo_mode ) {
     size_t i;
     char* buf;
+    struct termios* term_info;
 
     buf = ( char* )buffer;
 
     LOCK( master->lock );
 
+    term_info = master->term_info;
+
     for ( i = 0; i < size; i++, buf++ ) {
         switch ( *buf ) {
-            case '\b' :
-                if ( master->line_size > 0 ) {
-                    master->line_size--;
-                    pty_do_write( master, "\b \b", 3 );
+            case '\n' :
+                if ( ( term_info->c_oflag & ( OPOST | ONLCR ) ) == ( OPOST | ONLCR ) ) {
+                    pty_do_write( master, "\r\n", 2 );
+                } else {
+                    pty_do_write( master, "\n", 1 );
                 }
 
                 break;
 
-            case '\n' :
-                pty_do_write( master, buf, 1 );
+            case '\r' : {
+                bool nocr;
 
-                if ( count_line_size ) {
-                    master->line_size = 0;
+                nocr = ( ( term_info->c_oflag & ( OPOST | ONLRET ) ) == 0 ) ||
+                       ( ( term_info->c_oflag & ( OPOST | ONLRET ) ) == OPOST );
+
+                if ( !nocr ) {
+                    if ( ( term_info->c_oflag & ( OPOST | OCRNL ) ) == ( OPOST | OCRNL ) ) {
+                        pty_do_write( master, "\n", 1 );
+                    } else {
+                        pty_do_write( master, "\r", 1 );
+                    }
+                }
+
+                break;
+            }
+
+            case '\b' :
+                if ( ( echo_mode ) &&
+                     ( term_info->c_lflag & ICANON ) ) {
+                    pty_do_write( master, "\b \b", 3 );
+                } else {
+                    pty_do_write( master, "\b", 1 );
                 }
 
                 break;
 
             default :
                 pty_do_write( master, buf, 1 );
-
-                if ( count_line_size ) {
-                    master->line_size++;
-                }
-
                 break;
         }
     }
@@ -401,12 +419,101 @@ static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t s
     return size;
 }
 
-static int pty_do_write_slave( pty_node_t* slave, const void* buffer, size_t size ) {
-    LOCK( slave->lock );
-    pty_do_write( slave, buffer, size );
-    UNLOCK( slave->lock );
+static void pty_echo_one_character( pty_node_t* master, pty_node_t* slave, char c ) {
+    struct termios* term_info;
 
-    pty_do_write_master( slave->partner, buffer, size, true );
+    term_info = master->term_info;
+
+    if ( term_info->c_lflag & ECHO ) {
+        if ( ( c == '\r' ) && ( term_info->c_iflag & ICRNL ) ) {
+            c = '\n';
+        }
+
+        if ( ( term_info->c_lflag & ECHOCTL ) &&
+             ( ( c < ' ' ) || ( c == '\x7f' ) ) &&
+             ( c != '\n' ) &&
+             ( c != '\t' ) ) {
+            char tmp[ 2 ];
+
+            tmp[ 0 ] = '^';
+            tmp[ 1 ] = ( c == '\x7f' ) ? '?' : ( c + '@' );
+
+            pty_do_write_master( master, tmp, 2, true );
+        } else {
+            pty_do_write_master( master, &c, 1, true );
+        }
+    }
+}
+
+static int pty_do_write_slave( pty_node_t* slave, const void* buffer, size_t size ) {
+    char c;
+    size_t i;
+    char* data;
+    struct termios* term_info;
+
+    data = ( char* )buffer;
+
+    LOCK( slave->lock );
+
+    term_info = slave->term_info;
+
+    for ( i = 0; i < size; i++, data++ ) {
+        c = *data;
+
+        /* Convert uppercase characters to lowercase */
+
+        if ( term_info->c_iflag & IUCLC ) {
+            c = tolower( c );
+        }
+
+        /* Handle special characters first */
+
+        if ( c == '\n' ) {
+            /* Replace \n with \r ? */
+
+            if ( term_info->c_iflag & INLCR ) {
+                pty_do_write( slave, "\r", 1 );
+            } else {
+                pty_do_write( slave, "\n", 1 );
+            }
+
+            /* Echo it to the master? */
+
+            if ( ( term_info->c_lflag & ECHO ) ||
+                 ( term_info->c_lflag & ECHONL ) ) {
+                pty_do_write_master( slave->partner, "\n", 1, true );
+            }
+
+            /* Skip the common echo part */
+
+            goto no_echo;
+        } else if ( c == '\r' ) {
+            if ( ( term_info->c_iflag & IGNCR ) == 0 ) {
+                /* Replace \r with \n ? */
+
+                if ( term_info->c_iflag & ICRNL ) {
+                    pty_do_write( slave, "\n", 1 );
+                } else {
+                    pty_do_write( slave, "\r", 1 );
+                }
+            }
+
+            goto echo;
+        } else if ( c == '\0' ) {
+            goto write_and_echo;
+        }
+
+write_and_echo:
+        pty_do_write( slave, &c, 1 );
+
+echo:
+        pty_echo_one_character( slave->partner, slave, c );
+
+no_echo:
+        ;
+    }
+
+    UNLOCK( slave->lock );
 
     return size;
 }

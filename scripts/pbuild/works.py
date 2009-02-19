@@ -281,11 +281,14 @@ class CopyWork( Work ) :
         self.dest = dest
 
     def execute( self, context ) :
-        if not os.path.isfile( self.src ) :
+        src = context.replace_definitions( self.src )
+        dest = context.replace_definitions( self.dest )
+
+        if not os.path.isfile( src ) :
             return
 
-        src_file = open( self.src, "r" )
-        dest_file = open( self.dest, "w" )
+        src_file = open( src, "r" )
+        dest_file = open( dest, "w" )
 
         dest_file.write( src_file.read() )
 
