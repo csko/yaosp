@@ -11334,7 +11334,7 @@ diff -Nru ncurses-5.7-orig/pbuild.xml ncurses-5.7/pbuild.xml
 +            <copy from="include/${i}" to="../../../include/${i}"/>
 +        </for>
 +        
-+        <copy from="../../../include/curses.h" to="../../../include/curses.h"/>
++        <copy from="../../../include/curses.h" to="../../../include/ncurses.h"/>
 +    </target>
 +
 +    <target name="all">
