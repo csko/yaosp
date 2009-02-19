@@ -50,6 +50,8 @@ typedef struct tm {
 int sys_time(int* tloc);
 int sys_stime(int* tptr);
 int sys_get_system_time( time_t* time );
+int sys_get_boot_time( time_t* _time );
+
 time_t time(time_t* tloc);
 
 /* int sys_adjtimex(timex_t* txc_p); */

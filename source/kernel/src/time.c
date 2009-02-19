@@ -69,6 +69,11 @@ int sys_get_system_time( time_t* _time ) {
     return 0;
 }
 
+int sys_get_boot_time( time_t* _time ) {
+    *_time = get_boot_time();
+    return 0;
+}
+
 int sys_stime(int* tptr) {
 
     if(tptr == NULL){

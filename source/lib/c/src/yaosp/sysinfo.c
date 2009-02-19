@@ -16,6 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
+
+#include <yaosp/time.h>
 #include <yaosp/sysinfo.h>
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
@@ -58,4 +61,32 @@ uint32_t get_processor_info( processor_info_t* info_table, uint32_t max_count ) 
 
 int get_memory_info( memory_info_t* info ) {
     return syscall1( SYS_get_memory_info, ( int )info );
+}
+
+time_t get_system_time( void ) {
+    int error;
+    time_t tmp;
+
+    error = syscall1( SYS_get_system_time, ( int )&tmp );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return 0;
+    }
+
+    return tmp;
+}
+
+time_t get_boot_time( void ) {
+    int error;
+    time_t tmp;
+
+    error = syscall1( SYS_get_boot_time, ( int )&tmp );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return 0;
+    }
+
+    return tmp;
 }
