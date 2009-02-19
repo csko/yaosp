@@ -19,11 +19,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 
 #include <yaosp/debug.h>
 
 #include <readline/readline.h>
+#include <readline/history.h>
 
 #include "command.h"
 #include "shell.h"
@@ -70,6 +72,9 @@ int main( int argc, char** argv, char** envp ) {
     int arg_count;
     char* child_argv[ MAX_ARGV ];
 
+    using_history();
+    rl_initialize();
+
     fputs( "Welcome to the yaosp shell!\nType `help' for more information.\n\n", stdout );
 
     while ( 1 ) {
@@ -97,6 +102,23 @@ int main( int argc, char** argv, char** envp ) {
              || line == NULL ) {
             break;
         }
+
+        /* Handle history */
+
+        char* tmp;
+        HISTORY_STATE* hist_state = history_get_history_state();
+
+        if ( hist_state->length > 0 ) {
+            tmp = history_get( hist_state->length )->line;
+        } else {
+            tmp = "";
+        }
+
+        if ( strcmp( line, tmp ) != 0 ) {
+            add_history( line );
+        }
+
+        free( hist_state );
 
         /* Parse arguments */
 
