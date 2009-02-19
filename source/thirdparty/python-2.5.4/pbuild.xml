@@ -20,6 +20,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <target name="clean">
+        <cleandir>python-2.5.4</cleandir>
+        <rmdir>python-2.5.4</rmdir>
+    </target>
+
     <target name="get_source">
         <httpget address="http://www.python.org/ftp/python/2.5.4/Python-2.5.4.tar.bz2"
                  to="python-2.5.4.tar.bz2"
@@ -43,6 +48,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="all">
+        <call target="clean"/>
         <call target="get_source"/>
         <call target="all" directory="Python-2.5.4"/>
     </target>

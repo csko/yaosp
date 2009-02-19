@@ -1,6 +1,14 @@
 <build default="all">
     <target name="prepare" type="private">
         <mkdir>../build/crosscompiler</mkdir>
+        <cleandir>binutils-2.19</cleandir>
+        <cleandir>binutils-build</cleandir>
+        <rmdir>binutils-2.19</rmdir>
+        <rmdir>binutils-build</rmdir>
+        <cleandir>gcc-4.3.3</cleandir>
+        <cleandir>gcc-build</cleandir>
+        <rmdir>gcc-4.1.3</rmdir>
+        <rmdir>gcc-build</rmdir>
     </target>
 
     <target name="get_sources" type="private">

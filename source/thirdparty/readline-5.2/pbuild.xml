@@ -20,6 +20,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <target name="clean">
+        <cleandir>readline-5.2</cleandir>
+        <rmdir>readline-5.2</rmdir>
+    </target>
+
     <target name="get_source">
         <httpget address="http://ftp.gnu.org/gnu/readline/readline-5.2.tar.gz"
                  to="readline-5.2.tar.gz"
@@ -43,6 +48,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="all">
+        <call target="clean"/>
         <call target="get_source"/>
         <call target="all" directory="readline-5.2"/>
     </target>

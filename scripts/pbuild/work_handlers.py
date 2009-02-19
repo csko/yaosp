@@ -196,6 +196,26 @@ class RmDirHandler( handler.NodeHandler ) :
     def element_data( self, data ) :
         self.data = data
 
+class CleanDirHandler( handler.NodeHandler ) :
+    handled_node = "cleandir"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.data = ""
+        self.work = None
+
+    def node_started( self, attrs ) :
+        self.work = works.CleanDirectory()
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.work.set_directory( self.data )
+            self.get_parent().add_work( self.work )
+
+    def element_data( self, data ) :
+        self.data = data
+
 class CallHandler( handler.NodeHandler ) :
     handled_node = "call"
 
@@ -350,6 +370,7 @@ handlers = [
     ForHandler,
     MkDirHandler,
     RmDirHandler,
+    CleanDirHandler,
     CallHandler,
     CopyHandler,
     DeleteHandler,

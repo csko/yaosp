@@ -239,6 +239,38 @@ class RemoveDirectory( Work ) :
         except OSError, e :
             pass
 
+class CleanDirectory( Work ) :
+    def __init__( self ) :
+        self.directory = ""
+
+    def set_directory( self, directory ) :
+        self.directory = directory
+
+    def execute( self, context ) :
+        if not os.path.isdir( self.directory ) :
+            return
+
+        self._clean_directory( self.directory )
+
+    def _clean_directory( self, dir ) :
+        entries = os.listdir( dir )
+
+        for entry in entries :
+            path = dir + os.path.sep + entry
+
+            if os.path.isdir( path ) :
+                self._clean_directory( path )
+
+                try :
+                    os.rmdir( path )
+                except OSError, e :
+                    pass
+            else :
+                try :
+                    os.remove( path )
+                except OSError, e :
+                    pass
+
 class CallTarget( Work ) :
     def __init__( self, target, directory ) :
         self.target = target

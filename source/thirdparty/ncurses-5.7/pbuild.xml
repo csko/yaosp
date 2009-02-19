@@ -20,6 +20,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <target name="clean">
+        <cleandir>ncurses-5.7</cleandir>
+        <rmdir>ncurses-5.7</rmdir>
+    </target>
+
     <target name="get_source">
         <httpget address="http://ftp.gnu.org/gnu/ncurses/ncurses-5.7.tar.gz"
                  to="ncurses-5.7.tar.gz"
@@ -43,6 +48,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="all">
+        <call target="clean"/>
         <call target="get_source"/>
         <call target="all" directory="ncurses-5.7"/>
     </target>
