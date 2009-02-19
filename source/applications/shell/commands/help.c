@@ -1,6 +1,6 @@
 /* help command
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,12 +24,9 @@
 #include "../command.h"
 
 static int help_command_function( int argc, char** argv, char** envp ) {
-
-    printf("yaOSp help\n");
-    printf("Internal shell commands:\n");
+    printf( "Internal shell commands:\n" );
     shell_print_commands();
-    /* TODO: Print all applications, possibly using ls or just listing the
-       application dir OR use an internal database */
+    printf( "For a full list of external shell commands type `ls /application'\n" );
 
     return EXIT_SUCCESS;
 }

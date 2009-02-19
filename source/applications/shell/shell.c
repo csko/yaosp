@@ -70,7 +70,7 @@ int main( int argc, char** argv, char** envp ) {
     int arg_count;
     char* child_argv[ MAX_ARGV ];
 
-    fputs( "Welcome to the yaosp shell!\n\n", stdout );
+    fputs( "Welcome to the yaosp shell!\nType `help' for more information.\n\n", stdout );
 
     while ( 1 ) {
         getcwd( cwd, sizeof( cwd ) );

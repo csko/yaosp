@@ -53,6 +53,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <mkdir>build/image/system/module/filesystem</mkdir>
         <mkdir>build/image/system/module/input</mkdir>
         <mkdir>build/image/system/module/video</mkdir>
+        <mkdir>build/image/system/terminfo</mkdir>
+        <mkdir>build/image/system/terminfo/v</mkdir>
         <mkdir>build/image/package</mkdir>
     </target>
 
@@ -63,6 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="create_iso">
         <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
         <copy from="scripts/grub/stage2_eltorito" to="build/image/boot/grub/stage2_eltorito"/>
+        <copy from="scripts/vt100" to="build/image/system/terminfo/v/vt100"/>
 
         <echo>Creating bootable ISO9660 CD-ROM image</echo>
         <echo></echo>
