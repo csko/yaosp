@@ -19,20 +19,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mount.h>
+#include <sys/stat.h>
 
-#define MOUNT_NONE 0
-#define MOUNT_RO 1
+char* argv0 = NULL;
 
 int main( int argc, char** argv ) {
     int error;
+    struct stat st;
+
+    argv0 = argv[ 0 ];
 
     if ( argc < 4 ) {
-        fprintf( stderr, "usage: %s: device path filesystem\n", argv[ 0 ] );
+        fprintf( stderr, "usage: %s: device path filesystem\n", argv0 );
 
         return EXIT_FAILURE;
     }
 
-    /* TODO: Check if the mount point exists and is a directory */
+    if ( stat( argv[ 2 ], &st ) != 0 ) {
+        fprintf( stderr, "%s: Failed to stat: %s\n", argv0, argv[ 2 ] );
+
+        return EXIT_FAILURE;
+    }
+
+    if ( !S_ISDIR( st.st_mode ) ) {
+        fprintf( stderr, "%s: %s is not a directory!\n", argv0, argv[ 2 ] );
+
+        return EXIT_FAILURE;
+    }
 
     error = mount(
         argv[ 1 ],
@@ -43,7 +56,7 @@ int main( int argc, char** argv ) {
     );
 
     if ( error < 0 ) {
-        printf( "%s: Failed to mount %s to %s\n", argv[ 0 ], argv[ 1 ], argv[ 2 ] );
+        fprintf( stderr, "%s: Failed to mount %s to %s\n", argv0, argv[ 1 ], argv[ 2 ] );
 
         return EXIT_FAILURE;
     }
