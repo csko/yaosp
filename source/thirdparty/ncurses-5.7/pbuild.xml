@@ -1,0 +1,49 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2009 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <target name="get_source">
+        <httpget address="http://ftp.gnu.org/gnu/ncurses/ncurses-5.7.tar.gz"
+                 to="ncurses-5.7.tar.gz"
+                 md5="cce05daf61a64501ef6cd8da1f727ec6"/>
+
+        <echo>Extracting ncurses source</echo>
+
+        <exec executable="tar">
+            <arg>-zxf</arg>
+            <arg>ncurses-5.7.tar.gz</arg>
+        </exec>
+
+        <echo>Patching ncurses source</echo>
+
+        <exec executable="patch">
+            <arg>-t</arg>
+            <arg>-p0</arg>
+            <arg>-i</arg>
+            <arg>ncurses-5.7.patch</arg>
+        </exec>
+    </target>
+
+    <target name="all">
+        <call target="get_source"/>
+        <call target="all" directory="ncurses-5.7"/>
+    </target>
+</build>
