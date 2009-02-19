@@ -436,13 +436,25 @@ static int pty_ioctl( void* fs_cookie, void* _node, void* file_cookie, int comma
     LOCK( node->lock );
 
     switch ( command ) {
+        case TCGETA :
+            memcpy( buffer, node->term_info, sizeof( struct termios ) );
+            error = 0;
+            break;
+
+        case TCSETA :
+        case TCSETAW :
+        case TCSETAF :
+            memcpy( node->term_info, buffer, sizeof( struct termios ) );
+            error = 0;
+            break;
+
         case TIOCGWINSZ :
-            memcpy( buffer, &node->window_size, sizeof( struct winsize ) );
+            memcpy( buffer, node->window_size, sizeof( struct winsize ) );
             error = 0;
             break;
 
         case TIOCSWINSZ :
-            memcpy( &node->window_size, buffer, sizeof( struct winsize ) );
+            memcpy( node->window_size, buffer, sizeof( struct winsize ) );
             error = 0;
             break;
 
@@ -540,7 +552,7 @@ static int pty_create(
     int name_length,
     int mode,
     int permissions,
-    ino_t* inode_num,
+    ino_t* inode_number,
     void** file_cookie
 ) {
     int error;
@@ -548,10 +560,16 @@ static int pty_create(
     char* tty_name;
     pty_node_t* master;
     pty_node_t* slave;
+    struct winsize* win_size;
+    struct termios* term_info;
+
+    /* Make sure this is a valid node */
 
     if ( ( name_length < 4 ) || ( strncmp( name, "pty", 3 ) != 0 ) ) {
         return -EINVAL;
     }
+
+    /* Check if the node already exist */
 
     error = pty_lookup_inode( fs_cookie, node, name, name_length, &dummy );
 
@@ -559,11 +577,15 @@ static int pty_create(
         return -EEXIST;
     }
 
+    /* Create the master node */
+
     master = pty_create_node( name, name_length, PTY_BUFSIZE, S_IFCHR );
 
     if ( master == NULL ) {
         return -ENOMEM;
     }
+
+    /* Build the name of the slave node */
 
     tty_name = strdup( master->name );
 
@@ -573,6 +595,8 @@ static int pty_create(
 
     tty_name[ 0 ] = 't';
 
+    /* Create the slave node */
+
     slave = pty_create_node( tty_name, -1, PTY_BUFSIZE, S_IFCHR );
 
     kfree( tty_name );
@@ -581,11 +605,49 @@ static int pty_create(
         return -ENOMEM;
     }
 
+    /* Make the partnership :) */
+
     master->partner = slave;
     slave->partner = master;
 
-    slave->window_size.ws_row = 24;
-    slave->window_size.ws_col = 80;
+    /* Initialize terminal info */
+
+    term_info = ( struct termios* )kmalloc( sizeof( struct termios ) );
+
+    memset( term_info, 0, sizeof( struct termios ) );
+
+    term_info->c_iflag = BRKINT | IGNPAR | ISTRIP | ICRNL | IXON;
+    term_info->c_oflag = OPOST | ONLCR;
+    term_info->c_cflag = CREAD | HUPCL | CLOCAL;
+    term_info->c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN | ECHOCTL | ECHOKE;
+    term_info->c_ispeed = B38400;
+    term_info->c_ospeed = B38400;
+    term_info->c_cc[ VINTR ] = '\x03';
+    term_info->c_cc[ VQUIT ] = '\x1c';
+    term_info->c_cc[ VERASE ] = '\x08';
+    term_info->c_cc[ VKILL ] = '\x15';
+    term_info->c_cc[ VEOF ] = '\x04';
+    term_info->c_cc[ VSTART ] = '\x11';
+    term_info->c_cc[ VSTOP ] = '\x13';
+    term_info->c_cc[ VSUSP ] = '\x1a';
+    term_info->c_cc[ VREPRINT ] = '\x12';
+    term_info->c_cc[ VWERASE ] = '\x17';
+    term_info->c_cc[ VLNEXT ] = '\x16';
+
+    master->term_info = term_info;
+    slave->term_info = term_info;
+
+    /* Initialize window size */
+
+    win_size = ( struct winsize* )kmalloc( sizeof( struct winsize ) );
+
+    win_size->ws_row = 24;
+    win_size->ws_col = 80;
+
+    master->window_size = win_size;
+    slave->window_size = win_size;
+
+    /* Initialize other stuffs */
 
     master->atime = time( NULL );
     master->mtime = master->atime;
@@ -594,6 +656,8 @@ static int pty_create(
     slave->mtime = master->atime;
     slave->ctime = master->atime;
 
+    /* Insert the nodes */
+
     LOCK( pty_lock );
 
     pty_insert_node( master );
@@ -601,7 +665,7 @@ static int pty_create(
 
     UNLOCK( pty_lock );
 
-    *inode_num = master->inode_number;
+    *inode_number = master->inode_number;
 
     return 0;
 }

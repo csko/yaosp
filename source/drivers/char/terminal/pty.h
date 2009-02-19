@@ -60,7 +60,8 @@ typedef struct pty_node {
 
     int line_size;
 
-    struct winsize window_size;
+    struct termios* term_info;
+    struct winsize* window_size;
 } pty_node_t;
 
 typedef struct pty_lookup_data {
