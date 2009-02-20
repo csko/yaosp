@@ -35,8 +35,8 @@ int atexit( void ( *function )( void ) );
 
 char* getenv( const char* name );
 
-void* calloc( size_t nmemb, size_t size );
-void* malloc( size_t size );
+void* calloc( size_t nmemb, size_t size ) __attribute__(( malloc ));
+void* malloc( size_t size ) __attribute__(( malloc ));
 void free( void* ptr );
 void* realloc( void* ptr, size_t size );
 

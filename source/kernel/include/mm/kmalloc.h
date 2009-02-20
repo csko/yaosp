@@ -67,7 +67,7 @@ typedef struct kmalloc_chunk {
  * @return On success a non-NULL pointer is returned pointing to
  *         the start of the allocated memory chunk
  */
-void* kmalloc( uint32_t size );
+void* kmalloc( uint32_t size ) __attribute__(( malloc ));
 
 /**
  * Frees a previously allocated memory region.
