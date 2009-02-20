@@ -382,12 +382,12 @@ static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t s
                 break;
 
             case '\r' : {
-                bool nocr;
+                bool hascr;
 
-                nocr = ( ( term_info->c_oflag & ( OPOST | ONLRET ) ) == 0 ) ||
+                hascr = ( ( term_info->c_oflag & ( OPOST | ONLRET ) ) == 0 ) ||
                        ( ( term_info->c_oflag & ( OPOST | ONLRET ) ) == OPOST );
 
-                if ( !nocr ) {
+                if ( hascr ) {
                     if ( ( term_info->c_oflag & ( OPOST | OCRNL ) ) == ( OPOST | OCRNL ) ) {
                         pty_do_write( master, "\n", 1 );
                     } else {
