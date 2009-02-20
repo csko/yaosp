@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -31,24 +33,29 @@ char buffer[ BUFLEN ];
 
 int do_cat( char* file ) {
     struct stat st;
-    int handle;
+    int error;
     ssize_t last_read;
+    error = stat( file, &st );
 
-    if ( stat( file, &st ) != 0 ) {
-        fprintf( stderr, "%s: %s: No such file or directory\n", argv0, file );
+    if ( error != 0 ) {
+        fprintf( stderr, "%s: %s: %s\n", argv0, file, strerror( errno ) );
         return -1;
     }
 
-    handle = open( file, O_RDONLY );
+    if( S_ISDIR( st.st_mode ) ) {
+        fprintf( stderr, "%s: %s: Is a directory\n", argv0, file);
+        return -1;
+    }
 
-    if ( handle < 0 ) {
-        /* TODO: use errno */
-        fprintf( stderr, "%s: %s: Cannot open file.\n", argv0, file );
+    error = open( file, O_RDONLY );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: %s: %s.\n", argv0, file, strerror( errno ) );
         return -1;
     }
 
     for ( ;; ) {
-        last_read = read( handle, buffer, BUFLEN );
+        last_read = read( error, buffer, BUFLEN );
 
         if ( last_read <= 0 ) {
             break;
@@ -61,26 +68,40 @@ int do_cat( char* file ) {
         }
     }
 
-    close( handle );
+    close( error );
 
     return 0;
 }
 
 int main( int argc, char** argv ) {
     int i;
-    int ret = 0;
+    int ret = EXIT_SUCCESS;
 
     argv0 = argv[0];
 
     if( argc > 1 ) {
         for ( i = 1; i < argc; i++){
             if( do_cat( argv[i] ) < 0 ){
-                ret = 1;
+                ret = EXIT_FAILURE;
             }
         }
     } else {
-        /* TODO: Echo back from stdin to stdout */
-        return 0;
+        /* Basic echo from stdin */
+        int last_read;
+    
+        for ( ;; ) {
+            last_read = getchar();
+
+            if ( last_read == EOF ) {
+                break;
+            }
+
+            if ( putchar( last_read ) == EOF ) {
+                break;
+            }
+        }
+
+        return EXIT_SUCCESS;
     }
 
     return ret;

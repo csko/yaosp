@@ -18,6 +18,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <time.h>
 #include <sys/stat.h>
 
@@ -29,11 +31,13 @@ int do_stat( char* file ) {
     char* type;
     char buf[sizeof( "DDD MMM DD HH:MM:SS ZZZ YYYY" ) + 1];
     tm_t timeval;
+    int error;
 
-    if ( stat( file, &st ) != 0 ) {
-        /* TODO: use return value */
-        fprintf( stderr, "%s: cannot stat `%s': No such file or directory\n", argv0, file );
-        return -1;
+    error = stat( file, &st );
+
+    if ( error != 0 ) {
+        fprintf( stderr, "%s: cannot stat `%s': %s\n", argv0, file, strerror( errno ) );
+        return EXIT_FAILURE;
     }
 
     if ( S_ISDIR ( st.st_mode ) ){
@@ -76,24 +80,24 @@ int do_stat( char* file ) {
         printf( "Change: %s\n", buf );
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int main( int argc, char** argv ) {
     int i;
-    int ret = 0;
+    int ret = EXIT_SUCCESS;
 
     argv0 = argv[0];
 
     if( argc > 1 ) {
         for ( i = 1; i < argc; i++){
             if( do_stat( argv[i] ) < 0 ){
-                ret = 1;
+                ret = EXIT_FAILURE;
             }
         }
     } else {
         fprintf( stderr, "%s: missing operand\n", argv[ 0 ] );
-        return 1;
+        return EXIT_FAILURE;
     }
 
     return ret;

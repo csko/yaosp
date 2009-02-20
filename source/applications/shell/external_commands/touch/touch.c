@@ -91,7 +91,7 @@ int main( int argc, char** argv ) {
     int error = EXIT_SUCCESS;
     int optc;
     int i;
-    int mode;
+    int mode = 0;
 
     argv0 = argv[ 0 ];
 

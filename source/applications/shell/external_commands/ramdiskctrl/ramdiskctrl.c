@@ -190,6 +190,7 @@ int main( int argc, char** argv ) {
     /* Action is a required argument */
 
     if ( action == NULL ) {
+        close( ramdiskctrl_device );
         print_usage( EXIT_FAILURE );
     }
 

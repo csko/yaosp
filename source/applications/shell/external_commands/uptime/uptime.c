@@ -48,19 +48,32 @@ int main( int argc, char** argv ) {
     printf( "Uptime:" );
 
     if ( uptime > 0 ) {
-        printf( " %u days", ( uint32_t )uptime );
+        printf( " %u day", ( uint32_t )uptime );
+        if ( uptime > 1 ) {
+            printf("s");
+        }
     }
 
     if ( hour > 0 ) {
-        printf( " %u hours", hour );
+        printf( " %u hour", hour );
+        if ( hour > 1 ) {
+            printf("s");
+        }
     }
 
     if ( min > 0 ) {
-        printf( " %u minutes", min );
+        printf( " %u minute", min );
+        if ( min > 1 ) {
+            printf("s");
+        }
     }
 
     if ( sec > 0 ) {
-        printf( " %u seconds", sec );
+        printf( " %u second", sec );
+        if ( sec > 1 ) {
+            printf("s");
+        }
+
     }
 
     printf( "\n" );

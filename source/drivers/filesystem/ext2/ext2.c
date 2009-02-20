@@ -61,8 +61,7 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     }
 
     /* Mark the filesystem as in use and increment the mount counter */
-    /* TODO: only in r/w mode */
-    if( 0 ){
+    if( flags & ~MOUNT_RO ){
         cookie->superblock.state = EXT2_ERROR_FS;
         cookie->superblock.mnt_count++;
         if( pwrite( cookie->fd, &cookie->superblock, sizeof( ext2_superblock_t ), 1024 ) != sizeof( ext2_superblock_t ) ){
@@ -86,7 +85,9 @@ error1:
 
 static int ext2_unmount( void* fs_cookie ) {
     /* TODO: if r/w, read the superblock and write back it as it is not used anymore */
-
+/*    if( flags & ~MOUNT_RO ){
+    }
+*/
     return -ENOSYS;
 }
 
