@@ -170,6 +170,7 @@ int io_context_file_clone_iterator( hashitem_t* item, void* data ) {
     new_file->type = old_file->type;
     new_file->inode = old_file->inode;
     new_file->cookie = old_file->cookie;
+    new_file->position = old_file->position;
 
     atomic_inc( &new_file->inode->ref_count );
 
@@ -267,6 +268,8 @@ int init_io_context( io_context_t* io_context ) {
 
 static int destroy_file_callback( hashitem_t* item, void* data ) {
     file_t* file;
+
+    /* Destroy the current file */
 
     file = ( file_t* )item;
     delete_file( file );

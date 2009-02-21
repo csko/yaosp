@@ -268,6 +268,7 @@ static int do_open( bool kernel, const char* path, int flags, int perms ) {
     char* name;
     int length;
     file_t* file;
+    struct stat st;
     inode_t* parent;
     io_context_t* io_context;
 
@@ -317,6 +318,19 @@ static int do_open( bool kernel, const char* path, int flags, int perms ) {
     if ( error < 0 ) {
         delete_file( file );
         return error;
+    }
+
+    error = do_read_stat( file->inode, &st );
+
+    if ( error < 0 ) {
+        delete_file( file );
+        return error;
+    }
+
+    if ( st.st_mode & S_IFDIR ) {
+        file->type = TYPE_DIRECTORY;
+    } else {
+        file->type = TYPE_FILE;
     }
 
     /* Insert the new file to the I/O context */
@@ -437,6 +451,11 @@ static int do_read( bool kernel, int fd, void* buffer, size_t count ) {
         return -EBADF;
     }
 
+    if ( file->type == TYPE_DIRECTORY ) {
+        error = -EISDIR;
+        goto out;
+    }
+
     if ( file->inode->mount_point->fs_calls->read != NULL ) {
         error = file->inode->mount_point->fs_calls->read(
             file->inode->mount_point->fs_data,
@@ -454,6 +473,7 @@ static int do_read( bool kernel, int fd, void* buffer, size_t count ) {
         file->position += error;
     }
 
+out:
     io_context_put_file( io_context, file );
 
     return error;
@@ -480,7 +500,14 @@ static int do_pwrite( bool kernel, int fd, const void* buffer, size_t count, off
         return -EBADF;
     }
 
-    if ( file->inode->mount_point->fs_calls->write != NULL ) {
+    if ( file->type == TYPE_DIRECTORY ) {
+        error = -EISDIR;
+        goto out;
+    }
+
+    if ( file->inode->mount_point->flags & MOUNT_RO ) {
+        error = -EROFS;
+    } else if ( file->inode->mount_point->fs_calls->write != NULL ) {
         error = file->inode->mount_point->fs_calls->write(
             file->inode->mount_point->fs_data,
             file->inode->fs_node,
@@ -493,6 +520,7 @@ static int do_pwrite( bool kernel, int fd, const void* buffer, size_t count, off
         error = -ENOSYS;
     }
 
+out:
     io_context_put_file( io_context, file );
 
     return error;
@@ -523,6 +551,11 @@ static int do_write( bool kernel, int fd, const void* buffer, size_t count ) {
         return -EBADF;
     }
 
+    if ( file->type == TYPE_DIRECTORY ) {
+        error = -EISDIR;
+        goto out;
+    }
+
     /* Check if the filesystem is writable */
 
     if ( file->inode->mount_point->flags & MOUNT_RO ) {
@@ -544,6 +577,7 @@ static int do_write( bool kernel, int fd, const void* buffer, size_t count ) {
         file->position += error;
     }
 
+out:
     io_context_put_file( io_context, file );
 
     return error;
@@ -615,12 +649,15 @@ static int do_getdents( bool kernel, int fd, dirent_t* entry, unsigned int size 
         return -EBADF;
     }
 
+    if ( file->type != TYPE_DIRECTORY ) {
+        error = -ENOTDIR;
+        goto out;
+    }
+
     if ( file->inode->mount_point->fs_calls->read_directory == NULL ) {
         error = -ENOSYS;
         goto out;
     }
-
-    /* TODO: check file type */
 
     ret = 0;
     count = size / sizeof( dirent_t );
@@ -681,12 +718,15 @@ static int do_rewinddir( bool kernel, int fd ) {
         return -EBADF;
     }
 
+    if ( file->type != TYPE_DIRECTORY ) {
+        error = -ENOTDIR;
+        goto out;
+    }
+
     if ( file->inode->mount_point->fs_calls->rewind_directory == NULL ) {
         error = -ENOSYS;
         goto out;
     }
-
-    /* TODO: check file type */
 
     error = file->inode->mount_point->fs_calls->rewind_directory(
         file->inode->mount_point->fs_data,
@@ -945,6 +985,7 @@ int sys_symlink( const char* src, const char* dest ) {
 }
 
 static int do_fchdir( bool kernel, int fd ) {
+    int error = 0;
     file_t* file;
     inode_t* tmp;
     io_context_t* io_context;
@@ -961,7 +1002,10 @@ static int do_fchdir( bool kernel, int fd ) {
         return -EBADF;
     }
 
-    /* TODO: check if this is really a directory */
+    if ( file->type != TYPE_DIRECTORY ) {
+        error = -ENOTDIR;
+        goto out;
+    }
 
     LOCK( io_context->lock );
 
@@ -972,10 +1016,12 @@ static int do_fchdir( bool kernel, int fd ) {
 
     UNLOCK( io_context->lock );
 
-    io_context_put_file( io_context, file );
     put_inode( tmp );
 
-    return 0;
+out:
+    io_context_put_file( io_context, file );
+
+    return error;
 }
 
 int sys_chdir( const char* path ) {
