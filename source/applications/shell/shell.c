@@ -86,6 +86,11 @@ int main( int argc, char** argv, char** envp ) {
 
         line = readline( prompt );
 
+        if ( line == NULL ) {
+            printf( "\n" );
+            continue;
+        }
+
         /* Skip whitespaces at the beginning of the line */
 
         while ( ( *line != 0 ) && ( *line == ' ' ) ) {
