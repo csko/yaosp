@@ -820,6 +820,11 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         terminal->input_state = IS_NONE;
                         break;
 
+                    case 'l' :
+                        /* TODO */
+                        terminal->input_state = IS_NONE;
+                        break;
+
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_QUESTION state!\n", c );
                         terminal->input_state = IS_NONE;

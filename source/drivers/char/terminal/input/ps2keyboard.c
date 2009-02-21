@@ -48,6 +48,7 @@ static uint8_t last_scancode = 0;
 
 extern uint16_t keyboard_normal_map[];
 extern uint16_t keyboard_shifted_map[];
+extern uint16_t keyboard_ctrl_map[];
 extern uint16_t keyboard_escaped_map[];
 
 static void toggle_capslock( void ) {
@@ -74,21 +75,27 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
     }
 
     if ( last_scancode == 0xE0 ) {
-        key = keyboard_escaped_map[ scancode ];
+        key = keyboard_escaped_map[ scancode & 0x7F ];
     } else if ( ( qualifiers & ( L_SHIFT | R_SHIFT ) ) != 0 ) {
         if ( qualifiers & CAPSLOCK ) {
-            key = keyboard_normal_map[ scancode ];
+            key = keyboard_normal_map[ scancode & 0x7F ];
         } else {
-            key = keyboard_shifted_map[ scancode ];
+            key = keyboard_shifted_map[ scancode & 0x7F ];
         }
     } else if ( ( qualifiers & ( CAPSLOCK ) ) != 0 ) {
         if ( qualifiers & ( L_SHIFT | R_SHIFT ) ) {
-            key = keyboard_normal_map[ scancode ];
+            key = keyboard_normal_map[ scancode & 0x7F ];
         } else {
-            key = keyboard_shifted_map[ scancode ];
+            key = keyboard_shifted_map[ scancode & 0x7F ];
         }
+    } else if ( ( qualifiers & ( L_CTRL | R_CTRL ) ) != 0 ) {
+        key = keyboard_ctrl_map[ scancode & 0x7F ];
     } else {
-        key = keyboard_normal_map[ scancode ];
+        key = keyboard_normal_map[ scancode & 0x7F ];
+    }
+
+    if ( key == 0 ) {
+        goto done;
     }
 
     up = ( ( scancode & 0x80 ) != 0 );
