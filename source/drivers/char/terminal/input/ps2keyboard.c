@@ -113,8 +113,8 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
         /* Reboot on CTRL-ALT-DEL, for now. */
         case KEY_DELETE : if ( qualifiers & ( L_ALT | R_ALT) &&
                                qualifiers & ( L_CTRL | R_CTRL) ) reboot(); break;
-        case KEY_PAGE_UP : terminal_scroll( -5 ); break;
-        case KEY_PAGE_DOWN : terminal_scroll( 5 ); break;
+        case KEY_PAGE_UP : if ( !up ) terminal_scroll( -10 ); break;
+        case KEY_PAGE_DOWN : if ( !up ) terminal_scroll( 10 ); break;
         case KEY_F1 :
         case KEY_F2 :
         case KEY_F3 :
