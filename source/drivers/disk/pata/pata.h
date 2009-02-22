@@ -69,6 +69,10 @@
 #define PATA_CONTROL_SW_RESET   0x04
 #define PATA_CONTROL_DEFAULT    0x08
 
+/* Possible bits in the device register */
+
+#define PATA_DEVICE_LBA 0x40
+
 #define PATA_SELECT_DEFAULT 0xE0
 #define PATA_SELECT_SLAVE   0x10
 

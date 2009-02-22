@@ -111,16 +111,6 @@ int pata_port_finish_command( pata_port_t* port, bool busy_wait, bool check_drdy
     return 0;
 }
 
-int pata_port_ata_read( pata_port_t* port, void* buffer, uint64_t offset, size_t size ) {
-    /* TODO: not yet implemented */
-    return -ENOSYS;
-}
-
-int pata_port_ata_write( pata_port_t* port, void* buffer, uint64_t offset, size_t size ) {
-    /* TODO: not yet implemented */
-    return -ENOSYS;
-}
-
 int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read, void* buffer, size_t size ) {
     int error;
     char* data;

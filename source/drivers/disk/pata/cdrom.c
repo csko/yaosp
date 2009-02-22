@@ -140,7 +140,15 @@ static int pata_cdrom_close( void* node, void* cookie ) {
 }
 
 static int pata_cdrom_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
-    return -ENOSYS;
+    int error;
+
+    switch ( command ) {
+        default :
+            error = -ENOSYS;
+            break;
+    }
+
+    return error;
 }
 
 static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t position, size_t size ) {
