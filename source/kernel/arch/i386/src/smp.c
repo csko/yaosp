@@ -193,7 +193,7 @@ int arch_boot_processors( void ) {
 
         /* Allocate a new stack for the AP */
 
-        ap_stack_top = ( uint32_t )alloc_pages( 2 );
+        ap_stack_top = ( uint32_t )alloc_pages( 2, MEM_COMMON );
         ap_stack_top += 2 * PAGE_SIZE;
         ap_stack_top -= sizeof( register_t );
         atomic_set( &ap_running, 0 );
