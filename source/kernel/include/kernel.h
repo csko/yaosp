@@ -48,6 +48,9 @@ int init_thread( void* arg );
 void reboot( void );
 void shutdown( void );
 
+int sys_reboot( void );
+int sys_shutdown( void );
+
 int arch_late_init( void );
 void kernel_main( void );
 

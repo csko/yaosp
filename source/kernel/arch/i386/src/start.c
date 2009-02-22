@@ -26,6 +26,7 @@
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
 #include <mm/region.h>
+#include <lib/string.h>
 
 #include <arch/screen.h>
 #include <arch/gdt.h>
@@ -280,7 +281,43 @@ void arch_reboot( void ) {
 }
 
 void arch_shutdown( void ) {
-    kprintf( "Shutdown complete!\n" );
+    bios_regs_t regs;
+
+    memset( &regs, 0, sizeof( bios_regs_t ) );
+
+    regs.ax = 0x5304;
+    regs.bx = 0;
+    call_bios_interrupt( 0x15, &regs );
+
+    regs.ax = 0x5302;
+    regs.bx = 0;
+    call_bios_interrupt( 0x15, &regs );
+
+    regs.ax = 0x5308;
+    regs.bx = 1;
+    regs.cx = 1; /* enabled */
+    call_bios_interrupt( 0x15, &regs );
+
+    regs.ax = 0x530D;
+    regs.bx = 1;
+    regs.cx = 1; /* enable power management */
+    call_bios_interrupt( 0x15, &regs );
+
+    regs.ax = 0x530F;
+    regs.bx = 1;
+    regs.cx = 1; /* engage power management */
+    call_bios_interrupt( 0x15, &regs );
+
+    regs.ax = 0x530E;
+    regs.bx = 0;
+    regs.cx = 0x102;
+    call_bios_interrupt( 0x15, &regs );
+
+    regs.ax = 0x5307;
+    regs.bx = 1;
+    regs.cx = 3; /* turn off system */
+    call_bios_interrupt( 0x15, &regs );
+
     disable_interrupts();
     halt_loop();
 }

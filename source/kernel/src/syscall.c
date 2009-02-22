@@ -86,7 +86,9 @@ static system_call_entry_t system_call_table[] = {
     { "remap_region", sys_remap_region, 0 },
     { "getpid", sys_getpid, 0 },
     { "load_module", sys_load_module, 0 },
-    { "utime", sys_utime, 0 }
+    { "utime", sys_utime, 0 },
+    { "reboot", sys_reboot, 0 },
+    { "shutdown", sys_shutdown, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

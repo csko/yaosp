@@ -188,8 +188,18 @@ void reboot( void ) {
     arch_reboot();
 }
 
+int sys_reboot( void ) {
+    arch_reboot();
+    return 0;
+}
+
 void shutdown( void ) {
     arch_shutdown();
+}
+
+int sys_shutdown( void ) {
+    arch_shutdown();
+    return 0;
 }
 
 void kernel_main( void ) {
