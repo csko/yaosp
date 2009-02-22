@@ -96,6 +96,7 @@ static kernel_symbol_t symbols[] = {
     { "mkdir", ( ptr_t )mkdir },
     { "mount", ( ptr_t )mount },
     { "select", ( ptr_t )select },
+    { "getdents", ( ptr_t )getdents },
 
     /* Semaphore functions */
     { "create_semaphore", ( ptr_t )create_semaphore },
