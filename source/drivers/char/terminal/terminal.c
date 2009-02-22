@@ -312,12 +312,6 @@ void terminal_put_char( terminal_t* terminal, char c ) {
     }
 }
 
-static inline void terminal_clear( terminal_t* terminal ) {
-    if ( terminal == active_terminal ) {
-        screen->ops->clear( screen );
-    }
-}
-
 static inline void terminal_move_cursor_to( terminal_t* terminal, int cursor_x, int cursor_y ) {
     terminal->cursor_row = terminal->start_line + cursor_y;
     terminal->cursor_column = cursor_x;
