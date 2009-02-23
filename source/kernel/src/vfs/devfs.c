@@ -300,6 +300,8 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     if ( node->is_directory ) {
         stat->st_mode |= S_IFDIR;
+    } else { /* TODO: character devices, etc */
+        stat->st_mode |= S_IFBLK;
     }
 
     UNLOCK( devfs_lock );
@@ -312,6 +314,10 @@ static int devfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, ui
     node = ( devfs_node_t* )_node;
 
     LOCK( devfs_lock );
+
+    if ( mask & WSTAT_ATIME ) {
+        node->atime = stat->st_atime;
+    }
 
     if ( mask & WSTAT_MTIME ) {
         node->mtime = stat->st_mtime;

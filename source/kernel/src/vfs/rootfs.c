@@ -192,6 +192,8 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     node = ( rootfs_node_t* )_node;
 
+    /* TODO: locking */
+
     stat->st_ino = node->inode_number;
     stat->st_mode = 0;
     stat->st_size = 0;
@@ -216,6 +218,12 @@ static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, u
     rootfs_node_t* node;
 
     node = ( rootfs_node_t* )_node;
+
+    /* TODO: locking */
+
+    if ( mask & WSTAT_ATIME ) {
+        node->atime = stat->st_atime;
+    }
 
     if ( mask & WSTAT_MTIME ) {
         node->mtime = stat->st_mtime;

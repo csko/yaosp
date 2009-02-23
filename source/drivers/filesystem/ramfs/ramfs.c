@@ -1,6 +1,6 @@
 /* RAM filesystem implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -50,6 +50,7 @@ static ramfs_inode_t* ramfs_create_inode( ramfs_cookie_t* cookie, ramfs_inode_t*
 
     inode->link_count = 1;
     inode->is_loaded = false;
+    inode->atime = inode->mtime = inode->ctime = time( NULL );
 
     inode->parent = parent;
     inode->first_children = NULL;
@@ -443,6 +444,7 @@ static int ramfs_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
 
     stat->st_ino = inode->inode_number;
     stat->st_size = inode->size;
+    stat->st_mode = 0;
 
     if ( inode->is_directory ) {
         stat->st_mode |= S_IFDIR;
@@ -450,13 +452,39 @@ static int ramfs_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
         stat->st_mode |= S_IFREG;
     }
 
+    stat->st_atime = inode->atime;
+    stat->st_mtime = inode->mtime;
+    stat->st_ctime = inode->ctime;
+
     UNLOCK( cookie->lock );
 
     return 0;
 }
 
 static int ramfs_write_stat( void* fs_cookie, void* node, struct stat* stat, uint32_t mask ) {
-    return -ENOSYS;
+    ramfs_cookie_t* cookie;
+    ramfs_inode_t* inode;
+
+    cookie = ( ramfs_cookie_t* )fs_cookie;
+    inode = ( ramfs_inode_t* )node;
+
+    LOCK( cookie->lock );
+
+    if(mask & WSTAT_ATIME){
+        inode->atime = stat->st_atime;
+    }
+
+    if(mask & WSTAT_MTIME){
+        inode->mtime = stat->st_mtime;
+    }
+
+    if(mask & WSTAT_CTIME){
+        inode->ctime = stat->st_ctime;
+    }
+
+    UNLOCK( cookie->lock );
+
+    return 0;
 }
 
 static int ramfs_read_directory( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry ) {
