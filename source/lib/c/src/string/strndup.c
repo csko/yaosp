@@ -21,15 +21,19 @@
 
 char* strndup( const char* s, size_t n ) {
     char* s2;
+    size_t len;
 
-    s2 = ( char* )malloc( n + 1 );
+    len = strlen( s );
+    len = MIN( len, n );
+
+    s2 = ( char* )malloc( len + 1 );
 
     if ( s2 == NULL ) {
         return NULL;
     }
 
-    memcpy( s2, s, n );
-    s2[n] = '\0';
+    memcpy( s2, s, len );
+    s2[ len ] = '\0';
 
     return s2;
 }
