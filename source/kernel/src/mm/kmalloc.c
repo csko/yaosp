@@ -255,7 +255,7 @@ void kfree( void* p ) {
     spinunlock_enable( &kmalloc_lock );
 }
 
-int init_kmalloc( void ) {
+__init int init_kmalloc( void ) {
     root = __kmalloc_create_block( KMALLOC_ROOT_SIZE / PAGE_SIZE );
 
     if ( root == NULL ) {

@@ -21,6 +21,9 @@
 
 #include <types.h>
 
+#define __init \
+    __attribute__(( section( ".kernel_init" ) ))
+
 #define panic( format, arg... ) \
     handle_panic( __FILE__, __LINE__, format, ##arg )
 

@@ -32,10 +32,18 @@ SECTIONS {
         *(.data.*)
     }
 
+    . = ALIGN(0x1000);
+
     .bss : {
-        . = ALIGN(0x1000);
         *(.bss)
         *(.bss.*)
+    }
+
+    . = ALIGN(0x1000);
+    __k_init_start = .;
+
+    .kinit : {
+        *(.kernel_init)
     }
 
     . = ALIGN(0x1000);

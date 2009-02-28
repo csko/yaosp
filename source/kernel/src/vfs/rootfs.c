@@ -20,6 +20,7 @@
 #include <types.h>
 #include <errno.h>
 #include <scheduler.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/rootfs.h>
 #include <vfs/vfs.h>
@@ -435,7 +436,7 @@ static bool rootfs_node_compare( const void* key1, const void* key2 ) {
     return ( *inode_num_1 == *inode_num_2 );
 }
 
-int init_root_filesystem( void ) {
+__init int init_root_filesystem( void ) {
     int error;
     rootfs_node_t* root_node;
     mount_point_t* mount_point;

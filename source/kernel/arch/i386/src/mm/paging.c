@@ -564,7 +564,7 @@ int clone_user_region(
     return 0;
 }
 
-static int create_initial_region( const char* name, uint32_t start, uint32_t size, bool writable ) {
+__init static int create_initial_region( const char* name, uint32_t start, uint32_t size, bool writable ) {
     int error;
     region_t* region;
 
@@ -593,7 +593,7 @@ static int create_initial_region( const char* name, uint32_t start, uint32_t siz
     return 0;
 }
 
-int init_paging( void ) {
+__init int init_paging( void ) {
     int error;
     uint32_t ro_size;
     register_t dummy;

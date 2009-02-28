@@ -311,7 +311,7 @@ int register_memory_type( int mem_type, ptr_t start, ptr_t size ) {
     return 0;
 }
 
-int init_page_allocator( ptr_t page_map_address, uint64_t _memory_size ) {
+__init int init_page_allocator( ptr_t page_map_address, uint64_t _memory_size ) {
     int i;
     ptr_t page_count;
     memory_type_desc_t* memory_desc;
@@ -339,7 +339,7 @@ int init_page_allocator( ptr_t page_map_address, uint64_t _memory_size ) {
     return 0;
 }
 
-int init_page_allocator_late( void ) {
+__init int init_page_allocator_late( void ) {
     /* Reserve the memory pages used for the page_t structures */
 
     reserve_memory_pages( ( ptr_t )memory_pages, PAGE_ALIGN( ( memory_size / PAGE_SIZE ) * sizeof( page_t ) ) );

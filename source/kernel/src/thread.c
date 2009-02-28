@@ -416,7 +416,7 @@ static bool thread_compare( const void* key1, const void* key2 ) {
     return ( key1 == key2 );
 }
 
-int init_threads( void ) {
+__init int init_threads( void ) {
     int error;
 
     error = init_hashtable(
@@ -471,7 +471,7 @@ static int thread_cleaner_entry( void* arg ) {
     return 0;
 }
 
-int init_thread_cleaner( void ) {
+__init int init_thread_cleaner( void ) {
     thread_cleaner_list = NULL;
 
     thread_cleaner_sync = create_semaphore( "thread cleaner sync", SEMAPHORE_COUNTING, 0, 0 );

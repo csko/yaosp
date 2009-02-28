@@ -21,6 +21,7 @@
 #include <console.h>
 #include <scheduler.h>
 #include <time.h>
+#include <kernel.h>
 
 #include <arch/pit.h>
 #include <arch/io.h>
@@ -133,7 +134,7 @@ int init_system_time( void ) {
     return 0;
 }
 
-int init_pit( void ) {
+__init int init_pit( void ) {
     int error;
     uint32_t base;
 

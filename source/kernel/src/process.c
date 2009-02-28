@@ -22,6 +22,7 @@
 #include <smp.h>
 #include <scheduler.h>
 #include <macros.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
 #include <vfs/vfs.h>
@@ -272,7 +273,7 @@ static bool process_compare( const void* key1, const void* key2 ) {
     return ( key1 == key2 );
 }
 
-int init_processes( void ) {
+int __init init_processes( void ) {
     int error;
     process_t* process;
 

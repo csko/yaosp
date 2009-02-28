@@ -19,6 +19,7 @@
 #include <bootmodule.h>
 #include <macros.h>
 #include <config.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -94,7 +95,7 @@ void put_bootmodule_reader( module_reader_t* reader ) {
     kfree( reader );
 }
 
-int init_bootmodules( multiboot_header_t* header ) {
+__init int init_bootmodules( multiboot_header_t* header ) {
     int i;
     multiboot_module_t* modules;
 

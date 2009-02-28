@@ -179,7 +179,7 @@ void unlock_scheduler( void ) {
     spinunlock_enable( &scheduler_lock );
 }
 
-int init_scheduler( void ) {
+int __init init_scheduler( void ) {
     int error;
 
     first_ready = NULL;

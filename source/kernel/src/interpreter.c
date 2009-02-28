@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <loader.h>
 #include <console.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
@@ -86,7 +87,7 @@ static interpreter_loader_t interpreter_loader = {
     .execute = interpreter_execute
 };
 
-int init_interpreter_loader( void ) {
+__init int init_interpreter_loader( void ) {
     int error;
 
     error = register_interpreter_loader( &interpreter_loader );

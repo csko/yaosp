@@ -718,7 +718,7 @@ static module_loader_t elf32_module_loader = {
     .get_symbol = elf32_module_get_symbol
 };
 
-int init_elf32_module_loader( void ) {
+__init int init_elf32_module_loader( void ) {
     set_module_loader( &elf32_module_loader );
 
     return 0;

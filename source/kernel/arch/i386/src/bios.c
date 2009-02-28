@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <kernel.h>
 #include <lib/string.h>
 
 #include <arch/io.h>
@@ -106,7 +107,7 @@ int call_bios_interrupt( int num, bios_regs_t* regs ) {
     return 0;
 }
 
-int init_bios_access( void ) {
+__init int init_bios_access( void ) {
     X86EMU_setupPioFuncs( &x86emu_pio_funcs );
 
     return 0;

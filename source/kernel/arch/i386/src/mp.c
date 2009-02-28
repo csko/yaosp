@@ -21,6 +21,7 @@
 #include <console.h>
 #include <errno.h>
 #include <smp.h>
+#include <kernel.h>
 #include <lib/string.h>
 
 #include <arch/mp.h>
@@ -57,7 +58,7 @@ static inline uint8_t mp_checksum( uint8_t* data, int length ) {
 }
 
 #ifdef ENABLE_SMP
-static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
+__init static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
     uint8_t* data;
 
     data = ( uint8_t* )address;
@@ -105,7 +106,7 @@ static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
 }
 #endif /* ENABLE_SMP */
 
-static int mp_handle_cfg_table( void* address ) {
+__init static int mp_handle_cfg_table( void* address ) {
     mp_configuration_table_t* ct;
 
     ct = ( mp_configuration_table_t* )address;
@@ -140,7 +141,7 @@ static int mp_handle_cfg_table( void* address ) {
     return 0;
 }
 
-static void mp_handle_default_cfg( void ) {
+__init static void mp_handle_default_cfg( void ) {
     /* Initialize the default configuration according to the
        Intel MultiProcessor specification, chapter #5 */
 
@@ -158,7 +159,7 @@ static void mp_handle_default_cfg( void ) {
 #endif /* ENABLE_SMP */
 }
 
-static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_floating_pointer_t** _fp ) {
+__init static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_floating_pointer_t** _fp ) {
     uint32_t offset;
     mp_floating_pointer_t* fp;
 
@@ -176,7 +177,7 @@ static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_floating_poi
     return false;
 }
 
-int init_mp( void ) {
+__init int init_mp( void ) {
     int i;
     int error;
     bool fp_found;

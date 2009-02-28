@@ -503,7 +503,7 @@ static bool region_compare( const void* key1, const void* key2 ) {
     return ( key1 == key2 );
 }
 
-int preinit_regions( void ) {
+__init int preinit_regions( void ) {
     int error;
 
     error = init_hashtable(
@@ -521,7 +521,7 @@ int preinit_regions( void ) {
     return 0;
 }
 
-int init_regions( void ) {
+__init int init_regions( void ) {
     region_lock = create_semaphore( "region lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( region_lock < 0 ) {

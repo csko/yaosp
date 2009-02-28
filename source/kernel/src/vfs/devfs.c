@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <semaphore.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
@@ -615,7 +616,7 @@ static bool devfs_node_compare( const void* key1, const void* key2 ) {
     return ( *inode_num_1 == *inode_num_2 );
 }
 
-int init_devfs( void ) {
+__init int init_devfs( void ) {
     int error;
 
     error = init_hashtable(

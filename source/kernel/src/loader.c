@@ -21,6 +21,7 @@
 #include <console.h>
 #include <smp.h>
 #include <scheduler.h>
+#include <kernel.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
@@ -359,7 +360,7 @@ int register_interpreter_loader( interpreter_loader_t* loader ) {
     return 0;
 }
 
-int init_application_loader( void ) {
+__init int init_application_loader( void ) {
     application_loaders = NULL;
     interpreter_loaders = NULL;
 

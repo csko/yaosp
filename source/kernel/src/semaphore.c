@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <scheduler.h>
 #include <macros.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -475,7 +476,7 @@ semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context )
     return new_context;
 }
 
-int init_semaphores( void ) {
+__init int init_semaphores( void ) {
     int error;
 
     /* Initialize global semaphore context */

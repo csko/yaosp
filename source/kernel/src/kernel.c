@@ -42,7 +42,7 @@ static char kernel_param_buffer[ KERNEL_PARAM_BUF_SIZE ];
 extern void arch_reboot( void );
 extern void arch_shutdown( void );
 
-int parse_kernel_parameters( const char* params ) {
+__init int parse_kernel_parameters( const char* params ) {
     char* p;
     size_t length;
 
@@ -202,7 +202,7 @@ int sys_shutdown( void ) {
     return 0;
 }
 
-void kernel_main( void ) {
+__init void kernel_main( void ) {
     int error;
 
     init_semaphores();

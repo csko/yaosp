@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <smp.h>
 #include <macros.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <vfs/rootfs.h>
@@ -1728,7 +1729,7 @@ int sys_utime( const char* filename, const struct utimbuf* times ){
     return do_utime(false, filename, times);
 }
 
-int init_vfs( void ) {
+__init int init_vfs( void ) {
     int error;
 
     mount_points = NULL;

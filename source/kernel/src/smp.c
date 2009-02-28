@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <scheduler.h>
 #include <macros.h>
+#include <kernel.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -78,7 +79,7 @@ uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_coun
     return max;
 }
 
-int init_smp( void ) {
+__init int init_smp( void ) {
     atomic_inc( &active_processor_count );
 
     /* Make the boot CPU available */
@@ -93,7 +94,7 @@ int init_smp( void ) {
     return 0;
 }
 
-int init_smp_late( void ) {
+__init int init_smp_late( void ) {
     int i;
     thread_id id;
 

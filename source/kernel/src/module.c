@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <semaphore.h>
 #include <bootmodule.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
@@ -470,7 +471,7 @@ static bool module_compare( const void* key1, const void* key2 ) {
     return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
 }
 
-int init_module_loader( void ) {
+__init int init_module_loader( void ) {
     int error;
 
     module_loader = NULL;

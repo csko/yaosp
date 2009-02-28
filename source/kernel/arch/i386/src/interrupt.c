@@ -1,6 +1,6 @@
 /* Interrupt handler functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +19,7 @@
 #include <types.h>
 #include <console.h>
 #include <irq.h>
+#include <kernel.h>
 #include <lib/string.h>
 
 #include <arch/idt.h>
@@ -131,7 +132,7 @@ void irq_handler( registers_t* regs ) {
     arch_enable_irq( irq );
 }
 
-int init_interrupts( void ) {
+__init int init_interrupts( void ) {
     idt_t idtp;
 
     /* Zero the whole Interrupt Descriptor Table */

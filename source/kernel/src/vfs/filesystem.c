@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <semaphore.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/filesystem.h>
 #include <lib/hashtable.h>
@@ -93,7 +94,7 @@ filesystem_descriptor_t* get_filesystem( const char* name ) {
     return fs_desc;
 }
 
-int init_filesystems( void ) {
+__init int init_filesystems( void ) {
     int error;
 
     error = init_hashtable(

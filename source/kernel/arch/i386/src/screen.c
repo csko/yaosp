@@ -203,7 +203,7 @@ static console_t debug = {
     .ops = &debug_ops
 };
 
-int init_screen( void ) {
+__init int init_screen( void ) {
     int error;
     bool enable_debug;
 

@@ -21,6 +21,7 @@
 #include <console.h>
 #include <scheduler.h>
 #include <config.h>
+#include <kernel.h>
 #include <mm/region.h>
 
 #include <arch/apic.h>
@@ -105,7 +106,7 @@ void apic_tlb_flush_irq( registers_t* regs ) {
     apic_write( LAPIC_EOI, 0 );
 }
 
-void calibrate_apic_timer( void ) {
+__init void calibrate_apic_timer( void ) {
     int processor_id;
     uint32_t end_count;
 
@@ -150,7 +151,7 @@ void calibrate_apic_timer( void ) {
     );
 }
 
-void setup_local_apic( void ) {
+__init void setup_local_apic( void ) {
     /* Set Task Priority to "accept all" interrupts */
 
     apic_write( LAPIC_TASK_PRIORITY, 0 );
@@ -168,7 +169,7 @@ void setup_local_apic( void ) {
     apic_write( LAPIC_EOI, 0 );
 }
 
-int init_apic( void ) {
+__init int init_apic( void ) {
     int error;
 
     /* First check if we found the APIC in the system */
@@ -217,7 +218,7 @@ int init_apic( void ) {
     return 0;
 }
 
-int init_apic_timer( void ) {
+__init int init_apic_timer( void ) {
     uint32_t init_count;
 
     if ( !apic_present ) {

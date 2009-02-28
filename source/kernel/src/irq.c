@@ -1,6 +1,6 @@
 /* IRQ handling code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,6 +18,7 @@
 
 #include <irq.h>
 #include <errno.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -66,7 +67,7 @@ void do_handle_irq( int irq, registers_t* regs ) {
     }
 }
 
-int init_irq_handlers( void ) {
+__init int init_irq_handlers( void ) {
     memset( irq_handlers, 0, sizeof( irq_handler_t* ) * ARCH_IRQ_COUNT );
 
     return 0;

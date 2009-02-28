@@ -21,13 +21,13 @@
 #include <console.h>
 #include <smp.h>
 #include <config.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
 #include <arch/elf32.h>
 #include <arch/gdt.h>
-
 #include <arch/mm/paging.h>
 
 static bool elf32_application_check( int fd ) {
@@ -488,7 +488,7 @@ static application_loader_t elf32_application_loader = {
     .execute = elf32_application_execute
 };
 
-int init_elf32_application_loader( void ) {
+__init int init_elf32_application_loader( void ) {
     register_application_loader( &elf32_application_loader );
 
     return 0;

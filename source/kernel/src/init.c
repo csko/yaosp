@@ -23,6 +23,7 @@
 #include <module.h>
 #include <loader.h>
 #include <config.h>
+#include <mm/pages.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
@@ -30,7 +31,10 @@
 #include <arch/loader.h>
 #include <arch/smp.h>
 
-static void load_bootmodules( void ) {
+extern int __k_init_start;
+extern int __kernel_end;
+
+__init static void load_bootmodules( void ) {
     int i;
     int error;
     int module_count;
@@ -51,7 +55,7 @@ static void load_bootmodules( void ) {
     }
 }
 
-static void mount_root_filesystem( void ) {
+__init static void mount_root_filesystem( void ) {
     int dir;
     int error;
     dirent_t entry;
@@ -101,6 +105,8 @@ static void mount_root_filesystem( void ) {
 }
 
 int init_thread( void* arg ) {
+    uint32_t init_page_count;
+
     kprintf( "Init thread started!\n" );
 
 #ifdef ENABLE_SMP
@@ -113,6 +119,14 @@ int init_thread( void* arg ) {
 
     load_bootmodules();
     mount_root_filesystem();
+
+    /* Free init code */
+
+    init_page_count = ( ( uint32_t )&__kernel_end - ( uint32_t )&__k_init_start ) / PAGE_SIZE;
+    kprintf( "Freeing %u pages containing initialization code.\n", init_page_count );
+    free_pages( ( void* )&__k_init_start, init_page_count );
+
+    /* Create a new process and start the init application */
 
     if ( fork() == 0 ) {
         if ( execve( "/yaosp/application/init", NULL, NULL ) != 0 ) {

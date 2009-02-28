@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <kernel.h>
 #include <lib/string.h>
 
 #include <arch/gdt.h>
@@ -55,7 +56,7 @@ void gdt_set_descriptor_access( uint16_t desc, uint8_t access ) {
     gdt[ desc ].access = access;
 }
 
-int init_gdt( void ) {
+__init int init_gdt( void ) {
     gdt_t gdtp;
 
     gdtp.size = sizeof( gdt ) - 1;

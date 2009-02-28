@@ -78,19 +78,6 @@ is_interrupts_disabled:
     ret
 .size is_interrupts_disabled,.-is_interrupts_disabled
 
-/* void reload_segment_descriptors( void ) */
-
-reload_segment_descriptors:
-    movw $KERNEL_DS, %ax
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %ds
-    movw %ax, %ss
-    ljmpl $KERNEL_CS, $1f
-1:
-    ret
-.size reload_segment_descriptors,.-reload_segment_descriptors
-
 /* register_t get_cr2( void ) */
 
 get_cr2:
@@ -143,3 +130,18 @@ halt_loop:
     hlt
     jmp halt_loop
 .size halt_loop,.-halt_loop
+
+.section .kernel_init
+
+/* void reload_segment_descriptors( void ) */
+
+reload_segment_descriptors:
+    movw $KERNEL_DS, %ax
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %ds
+    movw %ax, %ss
+    ljmpl $KERNEL_CS, $1f
+1:
+    ret
+.size reload_segment_descriptors,.-reload_segment_descriptors

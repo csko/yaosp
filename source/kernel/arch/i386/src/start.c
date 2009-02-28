@@ -43,7 +43,7 @@
 
 extern int __kernel_end;
 
-static int arch_init_page_allocator( multiboot_header_t* header ) {
+__init static int arch_init_page_allocator( multiboot_header_t* header ) {
     int error;
     int module_count;
     uint32_t memory_size;
@@ -146,7 +146,7 @@ static int arch_init_page_allocator( multiboot_header_t* header ) {
     return 0;
 }
 
-void arch_start( multiboot_header_t* header ) {
+__init void arch_start( multiboot_header_t* header ) {
     int error;
 
     /* Save the kernel parameters before we write to any memory location */
@@ -253,7 +253,7 @@ void arch_start( multiboot_header_t* header ) {
     kernel_main();
 }
 
-int arch_late_init( void ) {
+__init int arch_late_init( void ) {
     init_mp();
     init_apic();
     init_pit();

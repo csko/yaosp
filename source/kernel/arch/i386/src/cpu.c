@@ -20,6 +20,7 @@
 #include <types.h>
 #include <console.h>
 #include <smp.h>
+#include <kernel.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -49,7 +50,7 @@ static inline void cpuid( uint32_t reg, register_t* data ) {
     );
 }
 
-static bool cpuid_supported( void ) {
+__init static bool cpuid_supported( void ) {
     register_t old_eflags;
     register_t new_eflags;
 
@@ -60,7 +61,7 @@ static bool cpuid_supported( void ) {
     return ( ( old_eflags & EFLAG_ID ) != ( new_eflags & EFLAG_ID ) );
 }
 
-int detect_cpu( void ) {
+__init int detect_cpu( void ) {
     int i;
     int family = 0;
     int model = 0;
@@ -197,7 +198,7 @@ int detect_cpu( void ) {
     return 0;
 }
 
-int cpu_calibrate_speed( void ) {
+__init int cpu_calibrate_speed( void ) {
     uint64_t start;
     uint64_t end;
     cpu_t* processor;

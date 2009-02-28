@@ -1,6 +1,6 @@
 /* Device management
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,6 +20,7 @@
 #include <semaphore.h>
 #include <time.h>
 #include <errno.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -122,7 +123,7 @@ static bool bus_driver_compare( const void* key1, const void* key2 ) {
     return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
 }
 
-int init_devices( void ) {
+__init int init_devices( void ) {
     int error;
 
     /* Initialize bus driver table */
