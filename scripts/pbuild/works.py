@@ -1,4 +1,3 @@
-# -*- coding: iso-8859-1 -*-
 # Python build system
 #
 # Copyright (c) 2008, 2009 Zoltan Kovacs
@@ -314,11 +313,38 @@ class CopyWork( Work ) :
 
     def execute( self, context ) :
         src = context.replace_definitions( self.src )
+        src = context.replace_wildcards( src )
         dest = context.replace_definitions( self.dest )
 
-        if not os.path.isfile( src ) :
+        dest_is_dir = os.path.isdir( dest )
+
+        # In the case of more than one input is specified dest
+        # must be a directory
+
+        if len( src ) > 1 and not dest_is_dir :
             return
 
+        # Put the path separator character to the end of dest
+
+        if dest_is_dir and not dest.endswith( os.path.sep ) :
+            dest += os.path.sep
+
+        # Copy the file(s)
+
+        for sf in src :
+            if dest_is_dir :
+                sep = sf.rfind( os.path.sep )
+
+                if sep == -1 :
+                    df = dest + sf
+                else :
+                    df = dest + sf[ sep + 1: ]
+            else :
+                df = dest
+
+            self._do_copy_file( sf, df )
+        
+    def _do_copy_file( self, src, dest ) :
         src_file = open( src, "r" )
         dest_file = open( dest, "w" )
 
