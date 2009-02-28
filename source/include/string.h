@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -52,6 +52,7 @@ char* strtok_r( char* s, const char* delim, char** ptrptr );
 char* strtok( char* s, const char* delim );
 
 char* strdup( const char* s );
+char* strndup( const char* s, size_t n);
 
 char* strerror( int errnum );
 

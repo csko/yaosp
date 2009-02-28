@@ -79,6 +79,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strcasecmp.c</item>
         <item>src/string/strncasecmp.c</item>
         <item>src/string/strdup.c</item>
+        <item>src/string/strndup.c</item>
         <item>src/string/strcpy.c</item>
         <item>src/string/strncpy.c</item>
         <item>src/string/strstr.c</item>

@@ -63,12 +63,10 @@ int main( int argc, char** argv, char** envp ) {
     int i;
     int done;
     char* line;
-    char* args;
     pid_t child;
     char cwd[ 256 ];
     char prompt[ 256 ];
 
-    char* arg;
     int arg_count;
     char* child_argv[ MAX_ARGV ];
 
@@ -93,7 +91,9 @@ int main( int argc, char** argv, char** envp ) {
 
         /* Skip whitespaces at the beginning of the line */
 
-        while ( ( *line != 0 ) && ( *line == ' ' ) ) {
+        char* tmpline = line; /* Preserve pointer for free() */
+
+        while ( ( *line != 0 ) && ( isspace(*line) ) ) {
             line++;
         }
 
@@ -127,18 +127,51 @@ int main( int argc, char** argv, char** envp ) {
 
         /* Parse arguments */
 
-        args = line;
+        int strip_first_and_last = 0;
+        int in_quote_1 = 0;
+        int in_quote_2 = 0;
+        size_t start = 0;
+        size_t length = strlen(line);
         arg_count = 0;
 
-        while ( ( arg_count < ( MAX_ARGV - 1 ) ) &&
-                ( ( arg = strchr( args, ' ' ) ) != NULL ) ) {
-            child_argv[ arg_count++ ] = args;
-            *arg++ = 0;
-            args = arg;
+        for ( i = 0; i < length; i++ ) {
+            if ( line[i] == ' ' ) {
+                if ( !in_quote_1 && !in_quote_2 ) {
+                    line[i] = 0;
+                    if ( i - start > 0 ) {
+                        if ( strip_first_and_last ) {
+                            child_argv[arg_count++] = strndup( line + start + 1, i - start - 2 );
+                        } else {
+                            child_argv[arg_count++] = strndup( line + start, i - start );
+                        }
+                    }
+                    start = i + 1;
+                    strip_first_and_last = 0;
+                }
+            } else if ( !in_quote_2 && line[i] == '"' ) {
+                if ( !in_quote_1 ) {
+                    strip_first_and_last = 1;
+                }
+                in_quote_1 = !in_quote_1;
+            } else if ( !in_quote_1 && line[i] == '\'' ) {
+                if ( !in_quote_2 ) {
+                    strip_first_and_last = 1;
+                }
+                in_quote_2 = !in_quote_2;
+            }
         }
 
-        child_argv[ arg_count++ ] = args;
-        child_argv[ arg_count ] = NULL;
+        if ( i - start > 0 ) {
+            if ( strip_first_and_last ) {
+                child_argv[arg_count++] = strndup( line + start + 1, i - start - 2 );
+            } else {
+                child_argv[arg_count++] = strndup( line + start, i - start );
+            }
+        }
+
+        /* TODO: free the strings created by strndup() later on */
+
+        child_argv[arg_count] = NULL;
 
         /* First try to run it as a builtin command */
 
@@ -177,6 +210,8 @@ int main( int argc, char** argv, char** envp ) {
         } else {
             waitpid( child, NULL, 0 );
         }
+
+        free(tmpline);
     }
 
     return 0;
