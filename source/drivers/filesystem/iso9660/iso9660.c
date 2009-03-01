@@ -668,7 +668,7 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
         }
     }
 
-    error = iso9660_parse_directory_entry( block + dir_cookie->block_position, entry );
+    error = iso9660_parse_directory_entry( ( char* )dir_entry, entry );
 
     kfree( block );
 
@@ -682,11 +682,14 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
         return 0;
     }
 
-    if ( dir_entry->location_le == iso_cookie->root_inode.start_block ) {
-        entry->inode_number = iso_cookie->root_inode.inode_number;
-    } else {
-        entry->inode_number = POSITION_TO_INODE( dir_entry->location_le, 0 );
-    }
+    ino_t tmp_inode_number;
+    iso9660_inode_t* tmp_inode;
+
+    tmp_inode_number = POSITION_TO_INODE( dir_cookie->current_block, dir_cookie->block_position );
+    
+    iso9660_read_inode( fs_cookie, tmp_inode_number, ( void** )&tmp_inode );
+    entry->inode_number = POSITION_TO_INODE( tmp_inode->start_block, 0 );
+    iso9660_write_inode( fs_cookie, tmp_inode );
 
     dir_cookie->block_position += error;
 
