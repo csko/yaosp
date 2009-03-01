@@ -1,6 +1,6 @@
 /* Shell functions
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,8 +21,8 @@
 
 #include "command.h"
 
-#define MAX_ARGV 32
+#define MAX_ARGV 64
 
-void shell_print_commands();
+void shell_print_commands( void );
 
 #endif // _SHELL_H_

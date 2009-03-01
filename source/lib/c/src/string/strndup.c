@@ -1,4 +1,4 @@
-/* strdup function
+/* strndup function
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
 
 char* strndup( const char* s, size_t n ) {
     char* s2;

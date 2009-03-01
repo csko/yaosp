@@ -131,7 +131,7 @@ int main( int argc, char** argv, char** envp ) {
         int in_quote_1 = 0;
         int in_quote_2 = 0;
         size_t start = 0;
-        size_t length = strlen(line);
+        size_t length = strlen( line );
         arg_count = 0;
 
         for ( i = 0; i < length; i++ ) {
@@ -140,11 +140,14 @@ int main( int argc, char** argv, char** envp ) {
                     line[i] = 0;
                     if ( i - start > 0 ) {
                         if ( strip_first_and_last ) {
-                            child_argv[arg_count++] = strndup( line + start + 1, i - start - 2 );
+                            child_argv[ arg_count++ ] = line + start + 1;
+                            line[ i - 1 ] = 0;
                         } else {
-                            child_argv[arg_count++] = strndup( line + start, i - start );
+                            child_argv[ arg_count++ ] = line + start;
+                            line[ i ] = 0;
                         }
                     }
+
                     start = i + 1;
                     strip_first_and_last = 0;
                 }
@@ -152,26 +155,28 @@ int main( int argc, char** argv, char** envp ) {
                 if ( !in_quote_1 ) {
                     strip_first_and_last = 1;
                 }
+
                 in_quote_1 = !in_quote_1;
             } else if ( !in_quote_1 && line[i] == '\'' ) {
                 if ( !in_quote_2 ) {
                     strip_first_and_last = 1;
                 }
+
                 in_quote_2 = !in_quote_2;
             }
         }
 
         if ( i - start > 0 ) {
             if ( strip_first_and_last ) {
-                child_argv[arg_count++] = strndup( line + start + 1, i - start - 2 );
+                child_argv[ arg_count++ ] = line + start + 1;
+                line[ i - 1 ] = 0;
             } else {
-                child_argv[arg_count++] = strndup( line + start, i - start );
+                child_argv[ arg_count++ ] = line + start;
+                line[ i ] = 0;
             }
         }
 
-        /* TODO: free the strings created by strndup() later on */
-
-        child_argv[arg_count] = NULL;
+        child_argv[ arg_count ] = NULL;
 
         /* First try to run it as a builtin command */
 
