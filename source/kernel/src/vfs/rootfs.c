@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <scheduler.h>
 #include <kernel.h>
+#include <semaphore.h>
 #include <mm/kmalloc.h>
 #include <vfs/rootfs.h>
 #include <vfs/vfs.h>
@@ -30,6 +31,7 @@
 
 static ino_t rootfs_inode_counter = 0;
 static hashtable_t rootfs_node_table;
+static semaphore_id rootfs_lock;
 
 static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* name, int length, bool is_directory ) {
     int error;
@@ -40,7 +42,7 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* nam
     node = ( rootfs_node_t* )kmalloc( sizeof( rootfs_node_t ) );
 
     if ( node == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     /* Initialize the node */
@@ -52,8 +54,7 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* nam
     }
 
     if ( node->name == NULL ) {
-        kfree( node );
-        return NULL;
+        goto error2;
     }
 
     node->is_directory = is_directory;
@@ -83,12 +84,19 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* nam
     error = hashtable_add( &rootfs_node_table, ( hashitem_t* )node );
 
     if ( error < 0 ) {
-        kfree( node->name );
-        kfree( node );
-        return NULL;
+        goto error3;
     }
 
     return node;
+
+error3:
+    kfree( node->name );
+
+error2:
+    kfree( node );
+
+error1:
+    return NULL;
 }
 
 static void rootfs_delete_node( rootfs_node_t* node ) {
@@ -105,7 +113,11 @@ static void rootfs_delete_node( rootfs_node_t* node ) {
 static int rootfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     rootfs_node_t* node;
 
+    LOCK( rootfs_lock );
+
     node = ( rootfs_node_t* )hashtable_get( &rootfs_node_table, ( const void* )&inode_num );
+
+    UNLOCK( rootfs_lock );
 
     if ( node == NULL ) {
         return -ENOENT;
@@ -120,7 +132,7 @@ static int rootfs_write_inode( void* fs_cookie, void* node ) {
     return 0;
 }
 
-static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
+static int rootfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
     rootfs_node_t* node;
     rootfs_node_t* parent;
 
@@ -134,7 +146,7 @@ static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
             return -EINVAL;
         }
 
-        *inode_num = parent->parent->inode_number;
+        *inode_number = parent->parent->inode_number;
 
         return 0;
     }
@@ -142,7 +154,7 @@ static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
     while ( node != NULL ) {
         if ( ( strlen( node->name ) == name_length ) &&
              ( strncmp( node->name, name, name_length ) == 0 ) ) {
-            *inode_num = node->inode_number;
+            *inode_number = node->inode_number;
             return 0;
         }
 
@@ -150,6 +162,18 @@ static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name
     }
 
     return -ENOENT;
+}
+
+static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
+    int error;
+
+    LOCK( rootfs_lock );
+
+    error = rootfs_do_lookup_inode( fs_cookie, _parent, name, name_length, inode_number );
+
+    UNLOCK( rootfs_lock );
+
+    return error;
 }
 
 static int rootfs_open_directory( rootfs_node_t* node, int mode, void** cookie ) {
@@ -193,7 +217,7 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     node = ( rootfs_node_t* )_node;
 
-    /* TODO: locking */
+    LOCK( rootfs_lock );
 
     stat->st_ino = node->inode_number;
     stat->st_mode = 0;
@@ -212,6 +236,8 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
         }
     }
 
+    UNLOCK( rootfs_lock );
+
     return 0;
 }
 
@@ -220,7 +246,7 @@ static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, u
 
     node = ( rootfs_node_t* )_node;
 
-    /* TODO: locking */
+    LOCK( rootfs_lock );
 
     if ( mask & WSTAT_ATIME ) {
         node->atime = stat->st_atime;
@@ -233,6 +259,8 @@ static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, u
     if ( mask & WSTAT_CTIME ) {
         node->ctime = stat->st_ctime;
     }
+
+    UNLOCK( rootfs_lock );
 
     return 0;
 }
@@ -251,6 +279,8 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
 
     cookie = ( rootfs_dir_cookie_t* )file_cookie;
 
+    LOCK( rootfs_lock );
+
     child = node->first_child;
     current = 0;
 
@@ -260,6 +290,8 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
             strncpy( entry->name, child->name, NAME_MAX );
             entry->name[ NAME_MAX ] = 0;
 
+            UNLOCK( rootfs_lock );
+
             cookie->position++;
 
             return 1;
@@ -268,6 +300,8 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
         current++;
         child = child->next_sibling;
     }
+
+    UNLOCK( rootfs_lock );
 
     return 0;
 }
@@ -288,18 +322,22 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     rootfs_node_t* node;
     rootfs_node_t* new_node;
 
+    LOCK( rootfs_lock );
+
     /* Check if this name already exists */
 
-    error = rootfs_lookup_inode( fs_cookie, _node, name, name_length, &dummy );
+    error = rootfs_do_lookup_inode( fs_cookie, _node, name, name_length, &dummy );
 
     if ( error == 0 ) {
-        return -EEXIST;
+        error = -EEXIST;
+        goto out;
     }
 
     node = ( rootfs_node_t* )_node;
 
     if ( !node->is_directory ) {
-        return -EINVAL;
+        error = -EINVAL;
+        goto out;
     }
 
     /* Create the new node */
@@ -312,10 +350,16 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     );
 
     if ( new_node == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto out;
     }
 
-    return 0;
+    error = 0;
+
+out:
+    UNLOCK( rootfs_lock );
+
+    return error;
 }
 
 static int rootfs_rmdir( void* fs_cookie, void* _node, const char* name, int name_length ) {
@@ -330,12 +374,15 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     rootfs_node_t* node;
     rootfs_node_t* new_node;
 
+    LOCK( rootfs_lock );
+
     /* Check if this name already exists */
 
-    error = rootfs_lookup_inode( fs_cookie, _node, name, name_length, &dummy );
+    error = rootfs_do_lookup_inode( fs_cookie, _node, name, name_length, &dummy );
 
     if ( error == 0 ) {
-        return -EEXIST;
+        error = -EEXIST;
+        goto out;
     }
 
     node = ( rootfs_node_t* )_node;
@@ -343,7 +390,8 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     /* We can create symbolic links only in directories */
 
     if ( !node->is_directory ) {
-        return -EINVAL;
+        error = -EINVAL;
+        goto out;
     }
 
     /* Create the new node */
@@ -356,7 +404,8 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     );
 
     if ( new_node == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto out;
     }
 
     /* Save the link path in the new node */
@@ -365,10 +414,16 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
 
     if ( new_node->link_path == NULL ) {
         /* TODO: delete the node */
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto out;
     }
 
-    return 0;
+    error = 0;
+
+out:
+    UNLOCK( rootfs_lock );
+
+    return error;
 }
 
 static int rootfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t length ) {
@@ -376,12 +431,18 @@ static int rootfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t l
 
     node = ( rootfs_node_t* )_node;
 
+    LOCK( rootfs_lock );
+
     if ( node->link_path == NULL ) {
+        UNLOCK( rootfs_lock );
+
         return -EINVAL;
     }
 
     strncpy( buffer, node->link_path, length );
     buffer[ length - 1 ] = 0;
+
+    UNLOCK( rootfs_lock );
 
     return strlen( buffer );
 }
@@ -440,6 +501,14 @@ __init int init_root_filesystem( void ) {
     int error;
     rootfs_node_t* root_node;
     mount_point_t* mount_point;
+
+    /* Create rootfs lock */
+
+    rootfs_lock = create_semaphore( "devfs lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( rootfs_lock < 0 ) {
+        return rootfs_lock;
+    }
 
     /* Initialize the rootfs node hashtable */
 
