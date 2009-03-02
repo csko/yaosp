@@ -53,7 +53,7 @@ static void print_usage( int status ) {
         printf( "                               WORD is access, atime, or use: equivalent to -a\n" );
         printf( "                               WORD is modify or mtime: equivalent to -m\n" );
         printf( "      --help                 display this help and exit\n" );
-        printf( "n" );
+        printf( "\n" );
         printf( "Note that the -d and -t options accept different time-date formats.\n" );
     }
 
