@@ -138,7 +138,7 @@ int main( int argc, char** argv, char** envp ) {
             if ( line[i] == ' ' ) {
                 if ( !in_quote_1 && !in_quote_2 ) {
                     line[i] = 0;
-                    if ( i - start > 0 ) {
+                    if ( ( i - start > 0 ) && ( arg_count < MAX_ARGV - 1 ) ) {
                         if ( strip_first_and_last ) {
                             child_argv[ arg_count++ ] = line + start + 1;
                             line[ i - 1 ] = 0;
@@ -166,7 +166,7 @@ int main( int argc, char** argv, char** envp ) {
             }
         }
 
-        if ( i - start > 0 ) {
+        if ( ( i - start > 0 ) && ( arg_count < MAX_ARGV - 1 ) ) {
             if ( strip_first_and_last ) {
                 child_argv[ arg_count++ ] = line + start + 1;
                 line[ i - 1 ] = 0;
@@ -191,6 +191,7 @@ int main( int argc, char** argv, char** envp ) {
         }
 
         if ( done ) {
+            free( tmpline );
             continue;
         }
 
@@ -216,7 +217,7 @@ int main( int argc, char** argv, char** envp ) {
             waitpid( child, NULL, 0 );
         }
 
-        free(tmpline);
+        free( tmpline );
     }
 
     return 0;
