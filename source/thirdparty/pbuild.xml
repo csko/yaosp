@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build>
     <array name="libraries">
         <item>ncurses-5.7</item>
-        <item>readline-5.2</item>
+        <item>readline-6.0</item>
     </array>
 
     <target name="all">
