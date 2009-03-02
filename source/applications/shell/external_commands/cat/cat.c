@@ -26,8 +26,8 @@
 
 #define BUFLEN 4096
 
-char* argv0;
-char buffer[ BUFLEN ];
+static char* argv0;
+static char buffer[ BUFLEN ];
 
 /* Simple cat function */
 
@@ -42,7 +42,7 @@ int do_cat( char* file ) {
         return -1;
     }
 
-    if( S_ISDIR( st.st_mode ) ) {
+    if ( S_ISDIR( st.st_mode ) ) {
         fprintf( stderr, "%s: %s: Is a directory\n", argv0, file);
         return -1;
     }
@@ -77,16 +77,17 @@ int main( int argc, char** argv ) {
     int i;
     int ret = EXIT_SUCCESS;
 
-    argv0 = argv[0];
+    argv0 = argv[ 0 ];
 
-    if( argc > 1 ) {
-        for ( i = 1; i < argc; i++){
-            if( do_cat( argv[i] ) < 0 ){
+    if ( argc > 1 ) {
+        for ( i = 1; i < argc; i++ ) {
+            if ( do_cat( argv[ i ] ) < 0 ) {
                 ret = EXIT_FAILURE;
             }
         }
     } else {
         /* Basic echo from stdin */
+
         int last_read;
     
         for ( ;; ) {
@@ -100,8 +101,6 @@ int main( int argc, char** argv ) {
                 break;
             }
         }
-
-        return EXIT_SUCCESS;
     }
 
     return ret;

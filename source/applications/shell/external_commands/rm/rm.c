@@ -22,13 +22,12 @@
 #include <unistd.h>
 #include <getopt.h>
 
-char* argv0 = NULL;
+static char* argv0 = NULL;
 
-static void print_usage(int status){
-
-    if( status != EXIT_SUCCESS ){ /* option error */
-        fprintf(stderr, "Try `%s --help' for more information.\n", argv0);
-    }else{ /* --help */
+static void print_usage( int status ) {
+    if ( status != EXIT_SUCCESS ){ /* option error */
+        fprintf( stderr, "Try `%s --help' for more information.\n", argv0 );
+    } else { /* --help */
         printf("Usage: %s [OPTION] FILE...\n", argv0);
         printf("Remove (unlink) the FILE(s).\n\
 \n\
@@ -60,25 +59,26 @@ use one of these commands:\n\
 Note that if you use rm to remove a file, it is usually possible to recover\n\
 the contents of that file.\n");
     }
-    exit(status);
+
+    exit( status );
 }
 
 static char const short_options[] = "fiI::rRvh";
 
 static struct option long_options[] = {
-    {"force", no_argument, NULL, 'f'},
-    {"interactive", optional_argument, NULL, 'J'},
-    {"one-file-system", no_argument, NULL, 'O'},
-    {"no-preserve-root", no_argument, NULL, 'N'},
-    {"preserve-root", no_argument, NULL, 'P'},
-    {"recursive", no_argument, NULL, 'r'},
-    {"verbose", no_argument, NULL, 'v'},
-    {"help", no_argument, NULL, 'h'},
-/*    {"version", no_argument, NULL, 'V'}, */
-    {NULL, 0, NULL, 0}
+    { "force", no_argument, NULL, 'f' },
+    { "interactive", optional_argument, NULL, 'J' },
+    { "one-file-system", no_argument, NULL, 'O' },
+    { "no-preserve-root", no_argument, NULL, 'N' },
+    { "preserve-root", no_argument, NULL, 'P' },
+    { "recursive", no_argument, NULL, 'r' },
+    { "verbose", no_argument, NULL, 'v' },
+    { "help", no_argument, NULL, 'h' },
+    /*{ "version", no_argument, NULL, 'V' },*/
+    { NULL, 0, NULL, 0 }
 };
 
-int do_rm(const char* file){
+int do_rm( const char* file ) {
     int error;
 
     error = unlink( file );
@@ -101,35 +101,42 @@ int main( int argc, char** argv ) {
     /* Get the command line options */
     opterr = 0;
 
-    for(;;){
-        optc = getopt_long (argc, argv, short_options,
-                       long_options, NULL);
+    for ( ;; ) {
+        optc = getopt_long( argc, argv, short_options,
+                       long_options, NULL );
 
-        if (optc == -1){ /* No more options */
+        if ( optc == -1 ) {
+            /* No more options */
             break;
         }
 
-        switch(optc){
+        switch ( optc ) {
             case 'f':
                 break;
+
             case 'i':
                 break;
+
             case 'I':
                 break;
+
             case 'r':
                 break;
+
             case 'h':
-                print_usage(EXIT_SUCCESS);
+                print_usage( EXIT_SUCCESS );
                 break;
             /* TODO */
+
             default:
-                print_usage(EXIT_FAILURE);
+                print_usage( EXIT_FAILURE );
+                break;
         }
     }
 
-    if (optind == argc){
-        fprintf(stderr, "%s: missing operand\n", argv0);
-        print_usage(EXIT_FAILURE);
+    if ( optind == argc ) {
+        fprintf( stderr, "%s: missing operand\n", argv0 );
+        print_usage( EXIT_FAILURE );
     }
 
     for ( i = optind; i < argc; i++ ) {

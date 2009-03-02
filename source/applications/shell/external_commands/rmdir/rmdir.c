@@ -22,13 +22,12 @@
 #include <unistd.h>
 #include <getopt.h>
 
-char* argv0 = NULL;
+static char* argv0 = NULL;
 
-static void print_usage(int status){
-
-    if( status != EXIT_SUCCESS ){ /* option error */
-        fprintf(stderr, "Try `%s --help' for more information.\n", argv0);
-    }else{ /* --help */
+static void print_usage( int status ) {
+    if ( status != EXIT_SUCCESS ) { /* option error */
+        fprintf( stderr, "Try `%s --help' for more information.\n", argv0 );
+    } else { /* --help */
         printf("Usage: %s [OPTION] FILE...\n", argv0);
         printf("Usage: rmdir [OPTION]... DIRECTORY...\n\
 Remove the DIRECTORY(ies), if they are empty.\n\
@@ -42,21 +41,22 @@ Remove the DIRECTORY(ies), if they are empty.\n\
       --help     display this help and exit\n");
 
     }
-    exit(status);
+
+    exit( status );
 }
 
 static char const short_options[] = "pvh";
 
 static struct option long_options[] = {
-    {"ignore-fail-on-non-empty", no_argument, NULL, 'I'},
-    {"parents", optional_argument, NULL, 'p'},
-    {"verbose", no_argument, NULL, 'v'},
-    {"help", no_argument, NULL, 'h'},
-/*    {"version", no_argument, NULL, 'V'}, */
-    {NULL, 0, NULL, 0}
+    { "ignore-fail-on-non-empty", no_argument, NULL, 'I' },
+    { "parents", optional_argument, NULL, 'p' },
+    { "verbose", no_argument, NULL, 'v' },
+    { "help", no_argument, NULL, 'h' },
+    /*{ "version", no_argument, NULL, 'V' },*/
+    { NULL, 0, NULL, 0 }
 };
 
-int do_rmdir(const char* dir){
+int do_rmdir( const char* dir ) {
     int error;
 
     error = rmdir( dir );
@@ -78,34 +78,40 @@ int main( int argc, char** argv ) {
     /* Get the command line options */
     opterr = 0;
 
-    for(;;){
-        optc = getopt_long (argc, argv, short_options,
-                       long_options, NULL);
+    for ( ;; ) {
+        optc = getopt_long( argc, argv, short_options,
+                       long_options, NULL );
 
-        if (optc == -1){ /* No more options */
+        if ( optc == -1 ) {
+            /* No more options */
             break;
         }
 
-        switch(optc){
+        switch ( optc ) {
             /* TODO */
             case 'I':
                 break;
+
             case 'p':
                 break;
+
             case 'v':
                 break;
+
             case 'h':
-                print_usage(EXIT_SUCCESS);
+                print_usage( EXIT_SUCCESS );
                 break;
+
             default:
-                print_usage(EXIT_FAILURE);
+                print_usage( EXIT_FAILURE );
+                break;
         }
     }
 
 
-    if (optind == argc){
-        fprintf(stderr, "%s: missing operand\n", argv0);
-        print_usage(EXIT_FAILURE);
+    if ( optind == argc ) {
+        fprintf( stderr, "%s: missing operand\n", argv0 );
+        print_usage( EXIT_FAILURE );
     }
 
     for ( i = optind; i < argc; i++ ) {

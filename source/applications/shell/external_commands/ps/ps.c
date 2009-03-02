@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <yaosp/sysinfo.h>
 
-char* argv0 = NULL;
+static char* argv0 = NULL;
 
 static int p_asc( const void* _p1, const void* _p2  ) {
     process_info_t* p1 = ( process_info_t* )_p1;

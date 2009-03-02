@@ -21,7 +21,7 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 
-char* argv0 = NULL;
+static char* argv0 = NULL;
 
 int main( int argc, char** argv ) {
     int error;

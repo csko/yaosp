@@ -22,7 +22,7 @@
 
 #include <yaosp/module.h>
 
-char* argv0;
+static char* argv0;
 
 int main( int argc, char** argv ) {
     int error;

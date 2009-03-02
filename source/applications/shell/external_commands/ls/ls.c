@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-char* argv0 = NULL;
+static char* argv0 = NULL;
 
 static const char* units[] = { "b", "Kb", "Mb", "Gb", "Tb", "Pb" };
 

@@ -26,13 +26,12 @@
 #define TOUCH_NOCREATE 2
 #define TOUCH_MTIME 4
 
-char* argv0 = NULL;
+static char* argv0 = NULL;
 
-static void print_usage(int status){
-
-    if( status != EXIT_SUCCESS ){ /* option error */
+static void print_usage( int status ) {
+    if ( status != EXIT_SUCCESS ) { /* option error */
         fprintf(stderr, "Try `%s --help' for more information.\n", argv0);
-    }else{ /* --help */
+    } else { /* --help */
         printf("Usage: %s [OPTION]... FILE...\n", argv0);
         printf("Update the access and modification times of each FILE to the current time.\n\
 \n\
@@ -55,7 +54,8 @@ Mandatory arguments to long options are mandatory for short options too.\n\
 \n\
 Note that the -d and -t options accept different time-date formats.\n");
     }
-    exit(status);
+
+    exit( status );
 }
 
 static char const short_options[] = "acd:t:h";

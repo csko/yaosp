@@ -23,13 +23,13 @@
 #include <time.h>
 #include <sys/stat.h>
 
-char* argv0;
+static char* argv0;
 
 int do_stat( char* file ) {
     struct stat st;
-    char device_id[15];
+    char device_id[ 32 ];
     char* type;
-    char buf[sizeof( "DDD MMM DD HH:MM:SS ZZZ YYYY" ) + 1];
+    char buf[ sizeof( "DDD MMM DD HH:MM:SS ZZZ YYYY" ) + 1 ];
     tm_t timeval;
     int error;
 
@@ -40,19 +40,19 @@ int do_stat( char* file ) {
         return EXIT_FAILURE;
     }
 
-    if ( S_ISDIR ( st.st_mode ) ){
+    if ( S_ISDIR ( st.st_mode ) ) {
         type = "directory";
-    } else if ( S_ISREG ( st.st_mode ) ){
+    } else if ( S_ISREG ( st.st_mode ) ) {
         type = "regular file";
-    } else if ( S_ISCHR ( st.st_mode ) ){
+    } else if ( S_ISCHR ( st.st_mode ) ) {
         type = "character device";
-    } else if ( S_ISBLK ( st.st_mode ) ){
+    } else if ( S_ISBLK ( st.st_mode ) ) {
         type = "block device";
     } else if ( S_ISFIFO ( st.st_mode ) ){
         type = "FIFO (named pipe)";
-    } else if ( S_ISLNK ( st.st_mode ) ){
+    } else if ( S_ISLNK ( st.st_mode ) ) {
         type = "symbolic link";
-    } else if ( S_ISSOCK ( st.st_mode ) ){
+    } else if ( S_ISSOCK ( st.st_mode ) ) {
         type = "socket";
     } else {
         type = "unknown";
@@ -65,17 +65,17 @@ int do_stat( char* file ) {
     printf( "Device: %s Inode: %-11lld Links: %d\n", device_id, st.st_ino, st.st_nlink );
     printf( "Access: none               Uid: none               Gid: none\n" );
 
-    if(gmtime_r((const time_t*) &st.st_atime, &timeval) != NULL) {
+    if ( gmtime_r( ( const time_t* )&st.st_atime, &timeval ) != NULL ) {
         strftime( buf, sizeof( buf ), "%c", &timeval );
         printf( "Access: %s\n", buf );
     }
 
-    if(gmtime_r((const time_t*) &st.st_mtime, &timeval) != NULL) {
+    if ( gmtime_r( ( const time_t* )&st.st_mtime, &timeval ) != NULL ) {
         strftime( buf, sizeof( buf ), "%c", &timeval );
         printf( "Modify: %s\n", buf );
     }
 
-    if(gmtime_r((const time_t*) &st.st_ctime, &timeval) != NULL) {
+    if ( gmtime_r( ( const time_t* )&st.st_ctime, &timeval ) != NULL ) {
         strftime( buf, sizeof( buf ), "%c", &timeval );
         printf( "Change: %s\n", buf );
     }
@@ -87,11 +87,11 @@ int main( int argc, char** argv ) {
     int i;
     int ret = EXIT_SUCCESS;
 
-    argv0 = argv[0];
+    argv0 = argv[ 0 ];
 
-    if( argc > 1 ) {
+    if ( argc > 1 ) {
         for ( i = 1; i < argc; i++){
-            if( do_stat( argv[i] ) < 0 ){
+            if( do_stat( argv[ i ] ) < 0 ){
                 ret = EXIT_FAILURE;
             }
         }
