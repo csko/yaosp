@@ -68,9 +68,11 @@ static void list_pci_entry( char* dir ) {
     char subsystem_vendor[ 16 ];
     char subsystem_device[ 16 ];
 */
-    int index;
-    char* vendor_name;
-    char* device_name;
+
+    const char* vendor_name;
+    const char* device_name;
+    vendor_info_t* vendor_info;
+    device_info_t* device_info;
 
     error = read_pci_entry_node( dir, "vendor", vendor, sizeof( vendor ) );
 
@@ -87,17 +89,20 @@ static void list_pci_entry( char* dir ) {
     vendor_id = strtol( vendor, NULL, 16 );
     device_id = strtol( device, NULL, 16 );
 
-    index = get_vendor( vendor_id );
+    vendor_info = get_vendor_info( vendor_id );
 
-    if ( index == -1 ) {
+    if ( vendor_info == NULL ) {
         vendor_name = "Unknown vendor";
         device_name = "Unknown device";
     } else {
-        vendor_name = ( char* )pci_device_id_list[ index ].name;
-        device_name = ( char* )get_device_name( device_id, index );
+        vendor_name = vendor_info->name;
 
-        if ( device_name == NULL ) {
+        device_info = get_device_info( device_id, vendor_info->device_start, vendor_info->device_count );
+
+        if ( device_info == NULL ) {
             device_name = "Unknown device";
+        } else {
+            device_name = device_info->name;
         }
     }
 

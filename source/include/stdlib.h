@@ -50,7 +50,8 @@ long int strtol( const char* nptr, char** endptr, int base );
 unsigned long int strtoul( const char* nptr, char** endptr, int base );
 double strtod( const char* s, char** endptr );
 
-void qsort( void* base, size_t nmemb, size_t size, int (*compar)(const void*,const void*) );
+void qsort( void* base, size_t nmemb, size_t size, int ( *compar )( const void*, const void* ) );
+void* bsearch( const void* key, const void* base, size_t nmemb, size_t size, int ( *compare )( const void*, const void* ) );
 
 int random( void );
 

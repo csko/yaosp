@@ -58,6 +58,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/atol.c</item>
         <item>src/stdlib/atof.c</item>
         <item>src/stdlib/qsort.c</item>
+        <item>src/stdlib/bsearch.c</item>
         <item>src/stdlib/abs.c</item>
         <item>src/stdlib/labs.c</item>
         <item>src/stdlib/llabs.c</item>
