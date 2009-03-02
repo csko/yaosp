@@ -301,6 +301,8 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
         child = child->next_sibling;
     }
 
+    node->atime = time( NULL );
+
     UNLOCK( rootfs_lock );
 
     return 0;
@@ -441,6 +443,8 @@ static int rootfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t l
 
     strncpy( buffer, node->link_path, length );
     buffer[ length - 1 ] = 0;
+
+    node->atime = time( NULL );
 
     UNLOCK( rootfs_lock );
 

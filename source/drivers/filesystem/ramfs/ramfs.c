@@ -375,6 +375,10 @@ static int ramfs_read( void* fs_cookie, void* node, void* file_cookie, void* buf
 
     result = size;
 
+    if( size > 0 ){
+        inode->atime = time( NULL );
+    }
+
 out:
     UNLOCK( cookie->lock );
 
@@ -526,6 +530,8 @@ static int ramfs_read_directory( void* fs_cookie, void* node, void* file_cookie,
     } else {
         result = 0;
     }
+
+    parent->atime = time( NULL );
 
     UNLOCK( cookie->lock );
 

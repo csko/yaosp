@@ -249,7 +249,11 @@ static int devfs_read( void* fs_cookie, void* _node, void* file_cookie, void* bu
     if ( node->calls->read == NULL ) {
         return -ENOSYS;
     } else {
-        return node->calls->read( node->cookie, file_cookie, buffer, pos, size );
+        int ret = node->calls->read( node->cookie, file_cookie, buffer, pos, size );
+        if( size > 0 ){
+            node->atime = time( NULL );
+        }
+        return ret;
     }
 }
 
@@ -368,6 +372,8 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
         current++;
         child = child->next_sibling;
     }
+
+    node->atime = time( NULL );
 
     UNLOCK( devfs_lock );
 
