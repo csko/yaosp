@@ -1,0 +1,683 @@
+diff -Nru readline-6.0-orig/bind.c readline-6.0/bind.c
+--- readline-6.0-orig/bind.c	2009-01-23 02:15:57.000000000 +0100
++++ readline-6.0/bind.c	2009-03-02 20:42:49.000000000 +0100
+@@ -340,6 +340,7 @@
+   register int i;
+   KEYMAP_ENTRY k;
+ 
++  k.type = 0;
+   k.function = 0;
+ 
+   /* If no keys to bind to, exit right away. */
+@@ -441,7 +442,7 @@
+ {
+   register int i, c, l, temp;
+ 
+-  for (i = l = 0; c = seq[i]; i++)
++  for (i = l = 0; ( c = seq[i] ); i++)
+     {
+       if (c == '\\')
+ 	{
+@@ -857,7 +858,7 @@
+ {
+   register int i;
+   char *buffer, *openname, *line, *end;
+-  size_t file_size;
++  size_t file_size = 0;
+ 
+   current_readline_init_file = filename;
+   current_readline_init_include_level = include_level;
+@@ -1187,7 +1188,7 @@
+     {
+       int passc = 0;
+ 
+-      for (i = 1; c = string[i]; i++)
++      for (i = 1; ( c = string[i] ); i++)
+ 	{
+ 	  if (passc)
+ 	    {
+@@ -1278,7 +1279,7 @@
+       int delimiter, passc;
+ 
+       delimiter = string[i++];
+-      for (passc = 0; c = string[i]; i++)
++      for (passc = 0; ( c = string[i] ); i++)
+ 	{
+ 	  if (passc)
+ 	    {
+@@ -2087,7 +2088,7 @@
+ 
+   fprintf (rl_outstream, "\n");
+ 
+-  for (i = 0; name = names[i]; i++)
++  for (i = 0; ( name = names[i] ); i++)
+     {
+       rl_command_func_t *function;
+       char **invokers;
+diff -Nru readline-6.0-orig/complete.c readline-6.0/complete.c
+--- readline-6.0-orig/complete.c	2009-01-22 21:15:14.000000000 +0100
++++ readline-6.0/complete.c	2009-03-02 20:41:46.000000000 +0100
+@@ -942,7 +942,7 @@
+       /* We didn't find an unclosed quoted substring upon which to do
+          completion, so use the word break characters to find the
+          substring on which to complete. */
+-      while (rl_point = MB_PREVCHAR (rl_line_buffer, rl_point, MB_FIND_ANY))
++      while ((rl_point = MB_PREVCHAR (rl_line_buffer, rl_point, MB_FIND_ANY)))
+ 	{
+ 	  scan = rl_line_buffer[rl_point];
+ 
+@@ -1884,7 +1884,7 @@
+   match_list[1] = (char *)NULL;
+ 
+   _rl_interrupt_immediately++;
+-  while (string = (*entry_function) (text, matches))
++  while ((string = (*entry_function) (text, matches)))
+     {
+       if (matches + 1 == match_list_size)
+ 	match_list = (char **)xrealloc
+@@ -1936,7 +1936,7 @@
+     }
+ 
+ #if defined (HAVE_GETPWENT)
+-  while (entry = getpwent ())
++  while ((entry = getpwent ()))
+     {
+       /* Null usernames should result in all users as possible completions. */
+       if (namelen == 0 || (STREQN (username, entry->pw_name, namelen)))
+diff -Nru readline-6.0-orig/config.h readline-6.0/config.h
+--- readline-6.0-orig/config.h	1970-01-01 01:00:00.000000000 +0100
++++ readline-6.0/config.h	2009-03-02 20:38:55.000000000 +0100
+@@ -0,0 +1,269 @@
++/* config.h.  Generated from config.h.in by configure.  */
++/* config.h.in.  Maintained by hand. */
++
++/* Define NO_MULTIBYTE_SUPPORT to not compile in support for multibyte
++   characters, even if the OS supports them. */
++/* #undef NO_MULTIBYTE_SUPPORT */
++
++/* Define if on MINIX.  */
++/* #undef _MINIX */
++
++/* Define as the return type of signal handlers (int or void).  */
++#define RETSIGTYPE void
++
++#define VOID_SIGHANDLER 1
++
++/* Characteristics of the compiler. */
++/* #undef sig_atomic_t */
++
++/* #undef size_t */
++
++/* #undef ssize_t */
++
++/* #undef const */
++
++/* #undef volatile */
++
++#define PROTOTYPES 1
++
++/* #undef __CHAR_UNSIGNED__ */
++
++/* Define if the `S_IS*' macros in <sys/stat.h> do not work properly.  */
++/* #undef STAT_MACROS_BROKEN */
++
++/* Define if you have the fcntl function. */
++#define HAVE_FCNTL 1
++
++/* Define if you have the getpwent function. */
++#define HAVE_GETPWENT 1
++
++/* Define if you have the getpwnam function. */
++/* #undef HAVE_GETPWNAM */
++
++/* Define if you have the getpwuid function. */
++/* #undef HAVE_GETPWUID */
++
++/* Define if you have the isascii function. */
++#define HAVE_ISASCII 1
++
++/* Define if you have the iswctype function.  */
++#define HAVE_ISWCTYPE 1
++
++/* Define if you have the iswlower function.  */
++#define HAVE_ISWLOWER 1
++
++/* Define if you have the iswupper function.  */
++#define HAVE_ISWUPPER 1
++
++/* Define if you have the isxdigit function. */
++#define HAVE_ISXDIGIT 1
++
++/* Define if you have the kill function. */
++#define HAVE_KILL 1
++
++/* Define if you have the lstat function. */
++#define HAVE_LSTAT 1
++
++/* Define if you have the mbrlen function. */
++#define HAVE_MBRLEN 1
++
++/* Define if you have the mbrtowc function. */
++#define HAVE_MBRTOWC 1
++
++/* Define if you have the mbsrtowcs function. */
++#define HAVE_MBSRTOWCS 1
++
++/* Define if you have the memmove function. */
++#define HAVE_MEMMOVE 1
++
++/* Define if you have the putenv function.  */
++/* #undef HAVE_PUTENV */
++
++/* Define if you have the select function.  */
++#define HAVE_SELECT 1
++
++/* Define if you have the setenv function.  */
++/* #undef HAVE_SETENV */
++
++/* Define if you have the setlocale function. */
++/* #undef HAVE_SETLOCALE */
++
++/* Define if you have the strcasecmp function.  */
++#define HAVE_STRCASECMP 1
++
++/* Define if you have the strcoll function.  */
++/* #undef HAVE_STRCOLL */
++
++/* #undef STRCOLL_BROKEN */
++
++/* Define if you have the strpbrk function.  */
++#define HAVE_STRPBRK 1
++
++/* Define if you have the tcgetattr function.  */
++#define HAVE_TCGETATTR 1
++
++/* Define if you have the towlower function.  */
++#define HAVE_TOWLOWER 1
++
++/* Define if you have the towupper function.  */
++#define HAVE_TOWUPPER 1
++
++/* Define if you have the vsnprintf function.  */
++#define HAVE_VSNPRINTF 1
++
++/* Define if you have the wcrtomb function.  */
++#define HAVE_WCRTOMB 1
++
++/* Define if you have the wcscoll function.  */
++#define HAVE_WCSCOLL 1
++
++/* Define if you have the wctype function.  */
++#define HAVE_WCTYPE 1
++
++/* Define if you have the wcwidth function.  */
++#define HAVE_WCWIDTH 1
++
++#define STDC_HEADERS 1
++
++/* Define if you have the <dirent.h> header file.  */
++#define HAVE_DIRENT_H 1
++
++/* Define if you have the <fcntl.h> header file.  */
++#define HAVE_FCNTL_H 1
++
++/* Define if you have the <langinfo.h> header file.  */
++#define HAVE_LANGINFO_H 1
++
++/* Define if you have the <limits.h> header file.  */
++#define HAVE_LIMITS_H 1
++
++/* Define if you have the <locale.h> header file.  */
++#define HAVE_LOCALE_H 1
++
++/* Define if you have the <memory.h> header file.  */
++#define HAVE_MEMORY_H 1
++
++/* Define if you have the <ndir.h> header file.  */
++/* #undef HAVE_NDIR_H */
++
++/* Define if you have the <pwd.h> header file.  */
++#define HAVE_PWD_H 1
++
++/* Define if you have the <stdarg.h> header file.  */
++#define HAVE_STDARG_H 1
++
++/* Define if you have the <stdlib.h> header file.  */
++#define HAVE_STDLIB_H 1
++
++/* Define if you have the <string.h> header file.  */
++#define HAVE_STRING_H 1
++
++/* Define if you have the <strings.h> header file.  */
++/* #undef HAVE_STRINGS_H */
++
++/* Define if you have the <sys/dir.h> header file.  */
++/* #undef HAVE_SYS_DIR_H */
++
++/* Define if you have the <sys/file.h> header file.  */
++/* #undef HAVE_SYS_FILE_H */
++
++/* Define if you have the <sys/ndir.h> header file.  */
++/* #undef HAVE_SYS_NDIR_H */
++
++/* Define if you have the <sys/pte.h> header file.  */
++/* #undef HAVE_SYS_PTE_H */
++
++/* Define if you have the <sys/ptem.h> header file.  */
++/* #undef HAVE_SYS_PTEM_H */
++
++/* Define if you have the <sys/select.h> header file.  */
++#define HAVE_SYS_SELECT_H 1
++
++/* Define if you have the <sys/stream.h> header file.  */
++/* #undef HAVE_SYS_STREAM_H */
++
++/* Define if you have the <termcap.h> header file.  */
++#define HAVE_TERMCAP_H 1
++
++/* Define if you have the <termio.h> header file.  */
++#define HAVE_TERMIO_H 1
++
++/* Define if you have the <termios.h> header file.  */
++#define HAVE_TERMIOS_H 1
++
++/* Define if you have the <unistd.h> header file.  */
++#define HAVE_UNISTD_H 1
++
++/* Define if you have the <varargs.h> header file.  */
++/* #undef HAVE_VARARGS_H */
++
++/* Define if you have the <wchar.h> header file.  */
++/* #undef HAVE_WCHAR_H */
++
++/* Define if you have the <wctype.h> header file.  */
++/* #undef HAVE_WCTYPE_H */
++
++#define HAVE_MBSTATE_T 1
++
++/* Define if you have wchar_t in <wctype.h>. */
++#define HAVE_WCHAR_T 1
++
++/* Define if you have wctype_t in <wctype.h>. */
++#define HAVE_WCTYPE_T 1
++
++/* Define if you have wint_t in <wctype.h>. */  
++#define HAVE_WINT_T 1
++
++/* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
++#define HAVE_LANGINFO_CODESET 1
++
++/* Definitions pulled in from aclocal.m4. */
++#define VOID_SIGHANDLER 1
++
++#define GWINSZ_IN_SYS_IOCTL 1
++
++#define STRUCT_WINSIZE_IN_SYS_IOCTL 1
++
++/* #undef STRUCT_WINSIZE_IN_TERMIOS */
++
++/* #undef TIOCSTAT_IN_SYS_IOCTL */
++
++#define FIONREAD_IN_SYS_IOCTL 1
++
++/* #undef SPEED_T_IN_SYS_TYPES */
++
++#define HAVE_GETPW_DECLS 1
++
++/* #undef STRUCT_DIRENT_HAS_D_INO */
++
++/* #undef STRUCT_DIRENT_HAS_D_FILENO */
++
++/* #undef HAVE_BSD_SIGNALS */
++
++/* #undef HAVE_POSIX_SIGNALS */
++
++/* #undef HAVE_USG_SIGHOLD */
++
++/* #undef MUST_REINSTALL_SIGHANDLERS */
++
++/* #undef HAVE_POSIX_SIGSETJMP */
++
++#define CTYPE_NON_ASCII 1
++
++/* modify settings or make new ones based on what autoconf tells us. */
++
++/* Ultrix botches type-ahead when switching from canonical to
++   non-canonical mode, at least through version 4.3 */
++#if !defined (HAVE_TERMIOS_H) || !defined (HAVE_TCGETATTR) || defined (ultrix)
++#  define TERMIOS_MISSING
++#endif
++
++#if defined (__STDC__) && defined (HAVE_STDARG_H)
++#  define PREFER_STDARG
++#  define USE_VARARGS
++#else
++#  if defined (HAVE_VARARGS_H)
++#    define PREFER_VARARGS
++#    define USE_VARARGS
++#  endif
++#endif
+diff -Nru readline-6.0-orig/display.c readline-6.0/display.c
+--- readline-6.0-orig/display.c	2009-01-04 20:32:32.000000000 +0100
++++ readline-6.0/display.c	2009-03-02 20:43:57.000000000 +0100
+@@ -253,7 +253,10 @@
+      int *lp, *lip, *niflp, *vlp;
+ {
+   char *r, *ret, *p, *igstart;
+-  int l, rl, last, ignoring, ninvis, invfl, invflset, ind, pind, physchars;
++  int l, rl, last, ignoring, ninvis, invfl, invflset, physchars;
++#if defined (HANDLE_MULTIBYTE)
++  int pind, ind;
++#endif
+ 
+   /* Short-circuit if we can. */
+   if ((MB_CUR_MAX <= 1 || rl_byte_oriented) && strchr (pmt, RL_PROMPT_START_IGNORE) == 0)
+@@ -496,9 +499,10 @@
+   register int in, out, c, linenum, cursor_linenum;
+   register char *line;
+   int inv_botlin, lb_botlin, lb_linenum, o_cpos;
+-  int newlines, lpos, temp, n0, num, prompt_lines_estimate;
++  int newlines, lpos, temp, prompt_lines_estimate;
+   char *prompt_this_line;
+ #if defined (HANDLE_MULTIBYTE)
++  int num, n0;
+   wchar_t wc;
+   size_t wc_bytes;
+   int wc_width;
+@@ -672,7 +676,6 @@
+      contents of the command line? */
+   while (lpos >= _rl_screenwidth)
+     {
+-      int z;
+       /* fix from Darin Johnson <darin@acuson.com> for prompt string with
+          invisible characters that is longer than the screen width.  The
+          prompt_invis_chars_first_line variable could be made into an array
+@@ -681,6 +684,8 @@
+          prompts that exceed two physical lines?
+          Additional logic fix from Edward Catmur <ed@catmur.co.uk> */
+ #if defined (HANDLE_MULTIBYTE)
++      int z;
++
+       if (MB_CUR_MAX > 1 && rl_byte_oriented == 0 && prompt_multibyte_chars > 0)
+ 	{
+ 	  n0 = num;
+diff -Nru readline-6.0-orig/histexpand.c readline-6.0/histexpand.c
+--- readline-6.0-orig/histexpand.c	2009-01-13 14:41:32.000000000 +0100
++++ readline-6.0/histexpand.c	2009-03-02 20:45:35.000000000 +0100
+@@ -204,7 +204,7 @@
+     }
+ 
+   /* Only a closing `?' or a newline delimit a substring search string. */
+-  for (local_index = i; c = string[i]; i++)
++  for (local_index = i; ( c = string[i] ); i++)
+     {
+ #if defined (HANDLE_MULTIBYTE)
+       if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
+diff -Nru readline-6.0-orig/input.c readline-6.0/input.c
+--- readline-6.0-orig/input.c	2009-01-23 02:23:56.000000000 +0100
++++ readline-6.0/input.c	2009-03-02 20:45:24.000000000 +0100
+@@ -182,6 +182,7 @@
+   struct timeval timeout;
+ #endif
+ 
++  input = 0;
+   chars_avail = 0;
+   tty = fileno (rl_instream);
+ 
+@@ -429,7 +430,7 @@
+   else
+     {
+       /* If input is coming from a macro, then use that. */
+-      if (c = _rl_next_macro_key ())
++      if ((c = _rl_next_macro_key ()))
+ 	return (c);
+ 
+       /* If the user has an event function, then call it periodically. */
+diff -Nru readline-6.0-orig/misc.c readline-6.0/misc.c
+--- readline-6.0-orig/misc.c	2009-01-08 14:58:26.000000000 +0100
++++ readline-6.0/misc.c	2009-03-02 20:46:48.000000000 +0100
+@@ -453,7 +453,7 @@
+   entry = (hpos == history_length) ? previous_history () : current_history ();
+   while (entry)
+     {
+-      if (ul = (UNDO_LIST *)entry->data)
++      if ((ul = (UNDO_LIST *)entry->data))
+ 	{
+ 	  if (ul == saved_undo_list)
+ 	    saved_undo_list = 0;
+diff -Nru readline-6.0-orig/pbuild.xml readline-6.0/pbuild.xml
+--- readline-6.0-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ readline-6.0/pbuild.xml	2009-03-02 20:31:07.000000000 +0100
+@@ -0,0 +1,129 @@
++<!--
++
++This file is part of the yaosp build system
++
++Copyright (c) 2009 Zoltan Kovacs
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of version 2 of the GNU General Public License
++as published by the Free Software Foundation.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along
++with this program; if not, write to the Free Software Foundation, Inc.,
++51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++
++-->
++
++<build default="all">
++    <array name="files">
++        <item>readline.c</item>
++        <item>funmap.c</item>
++        <item>keymaps.c</item>
++        <item>vi_mode.c</item>
++        <item>parens.c</item>
++        <item>rltty.c</item>
++        <item>complete.c</item>
++        <item>bind.c</item>
++        <item>isearch.c</item>
++        <item>display.c</item>
++        <item>signals.c</item>
++        <item>util.c</item>
++        <item>kill.c</item>
++        <item>undo.c</item>
++        <item>macro.c</item>
++        <item>input.c</item>
++        <item>callback.c</item>
++        <item>terminal.c</item>
++        <item>xmalloc.c</item>
++        <item>history.c</item>
++        <item>histsearch.c</item>
++        <item>histexpand.c</item>
++        <item>histfile.c</item>
++        <item>nls.c</item>
++        <item>search.c</item>
++        <item>shell.c</item>
++        <item>savestring.c</item>
++        <item>tilde.c</item>
++        <item>text.c</item>
++        <item>misc.c</item>
++        <item>compat.c</item>
++        <item>mbutil.c</item>
++    </array>
++
++    <array name="headers_to_install">
++        <item>chardefs.h</item>
++        <item>history.h</item>
++        <item>keymaps.h</item>
++        <item>readline.h</item>
++        <item>rlconf.h</item>
++        <item>rlstdc.h</item>
++        <item>rltypedefs.h</item>
++        <item>tilde.h</item>
++    </array>
++
++    <target name="clean">
++        <delete>objs/*</delete>
++        <rmdir>objs</rmdir>
++    </target>
++
++    <target name="prepare" type="private">
++        <mkdir>objs</mkdir>
++    </target>
++
++    <target name="compile">
++        <call target="prepare"/>
++
++        <echo>Compiling readline 6.0</echo>
++
++        <for var="i" array="${files}">
++            <echo>-> ${i}</echo>
++            <gcc>
++                <input>${i}</input>
++                <output>objs/filename(${i}).o</output>
++                <include>../../../include</include>
++                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
++                <include>./</include>
++                <flag>-c</flag>
++                <flag>-O2</flag>
++                <flag>-m32</flag>
++                <flag>-Wall</flag>
++                <flag>-nostdinc</flag>
++                <flag>-nostdlib</flag>
++                <flag>-fno-builtin</flag>
++                <flag>-fno-strict-aliasing</flag>
++                <define key="HAVE_CONFIG_H"/>
++                <define key="_POSIX_VERSION"/>
++            </gcc>
++        </for>
++
++        <echo>Linking readline 6.0</echo>
++        <echo>-> objs/libreadline.a</echo>
++
++        <exec executable="ar">
++            <arg>-rc</arg>
++            <arg>objs/libreadline.a</arg>
++            <arg>objs/*.o</arg>
++        </exec>
++    </target>
++
++    <target name="install">
++        <echo>Installing readline 6.0 headers</echo>
++
++        <mkdir>../../../include/readline</mkdir>
++        <for var="i" array="${headers_to_install}">
++            <echo>-> ${i}</echo>
++            <copy from="${i}" to="../../../include/readline/${i}"/>
++        </for>
++    </target>
++
++    <target name="all">
++        <call target="clean"/>
++        <call target="compile"/>
++        <call target="install"/>
++    </target>
++</build>
+diff -Nru readline-6.0-orig/readline.c readline-6.0/readline.c
+--- readline-6.0-orig/readline.c	2009-01-26 03:33:34.000000000 +0100
++++ readline-6.0/readline.c	2009-03-02 20:41:08.000000000 +0100
+@@ -90,7 +90,9 @@
+ static void bind_arrow_keys PARAMS((void));
+ 
+ static void readline_default_bindings PARAMS((void));
++#if 0
+ static void reset_default_bindings PARAMS((void));
++#endif
+ 
+ static int _rl_subseq_result PARAMS((int, Keymap, int, int));
+ static int _rl_subseq_getchar PARAMS((int));
+@@ -1106,6 +1108,7 @@
+     rl_tty_set_default_bindings (_rl_keymap);
+ }
+ 
++#if 0
+ /* Reset the default bindings for the terminal special characters we're
+    interested in back to rl_insert and read the new ones. */
+ static void
+@@ -1117,6 +1120,7 @@
+       rl_tty_set_default_bindings (_rl_keymap);
+     }
+ }
++#endif
+ 
+ /* Bind some common arrow key sequences in MAP. */
+ static void
+diff -Nru readline-6.0-orig/search.c readline-6.0/search.c
+--- readline-6.0-orig/search.c	2009-01-04 20:32:33.000000000 +0100
++++ readline-6.0/search.c	2009-03-02 20:45:46.000000000 +0100
+@@ -210,7 +210,7 @@
+   rl_end = rl_point = 0;
+ 
+   p = _rl_make_prompt_for_search (pchar ? pchar : ':');
+-  rl_message ("%s", p, 0);
++  rl_message ("%s", p);
+   free (p);
+ 
+   RL_SETSTATE(RL_STATE_NSEARCH);
+diff -Nru readline-6.0-orig/shell.c readline-6.0/shell.c
+--- readline-6.0-orig/shell.c	2009-01-04 20:32:33.000000000 +0100
++++ readline-6.0/shell.c	2009-03-02 20:46:28.000000000 +0100
+@@ -124,7 +124,9 @@
+ sh_set_lines_and_columns (lines, cols)
+      int lines, cols;
+ {
++#if defined (HAVE_SETENV) || defined (HAVE_PUTENV)
+   char *b;
++#endif
+ 
+ #if defined (HAVE_SETENV)
+   b = (char *)xmalloc (INT_STRLEN_BOUND (int) + 1);
+@@ -160,10 +162,11 @@
+ sh_get_home_dir ()
+ {
+   char *home_dir;
+-  struct passwd *entry;
+ 
+   home_dir = (char *)NULL;
+ #if defined (HAVE_GETPWUID)
++  struct passwd *entry;
++
+   entry = getpwuid (getuid ());
+   if (entry)
+     home_dir = entry->pw_dir;
+diff -Nru readline-6.0-orig/tilde.c readline-6.0/tilde.c
+--- readline-6.0-orig/tilde.c	2009-01-04 20:32:37.000000000 +0100
++++ readline-6.0/tilde.c	2009-03-02 20:46:40.000000000 +0100
+@@ -196,7 +196,7 @@
+   int result_size, result_index;
+ 
+   result_index = result_size = 0;
+-  if (result = strchr (string, '~'))
++  if ((result = strchr (string, '~')))
+     result = (char *)xmalloc (result_size = (strlen (string) + 16));
+   else
+     result = (char *)xmalloc (result_size = (strlen (string) + 1));
+diff -Nru readline-6.0-orig/undo.c readline-6.0/undo.c
+--- readline-6.0-orig/undo.c	2009-01-23 02:26:47.000000000 +0100
++++ readline-6.0/undo.c	2009-03-02 20:44:56.000000000 +0100
+@@ -141,6 +141,8 @@
+ 
+   list = head;
+   new = 0;
++  roving = 0;
++
+   while (list)
+     {
+       c = _rl_copy_undo_entry (list);
+diff -Nru readline-6.0-orig/util.c readline-6.0/util.c
+--- readline-6.0-orig/util.c	2009-01-04 20:32:34.000000000 +0100
++++ readline-6.0/util.c	2009-03-02 20:44:36.000000000 +0100
+@@ -486,7 +486,7 @@
+ 
+   if (_rl_tracefp)
+     fclose (_rl_tracefp);
+-  sprintf (fnbuf, "/var/tmp/rltrace.%ld", getpid());
++  sprintf (fnbuf, "/var/tmp/rltrace.%ld", (long int)getpid());
+   unlink(fnbuf);
+   _rl_tracefp = fopen (fnbuf, "w+");
+   return _rl_tracefp != 0;
