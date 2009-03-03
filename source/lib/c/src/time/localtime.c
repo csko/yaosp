@@ -18,10 +18,10 @@
 
 #include <time.h>
 
-tm_t ret;
+static tm_t ret;
 
-tm_t* localtime(const time_t *timep){
-    gmtime_r(timep, &ret);
+tm_t* localtime( const time_t* timep ) {
+    gmtime_r( timep, &ret );
     /* TODO: timezones, tzset(3), tzname, etc */
     return &ret;
 }

@@ -47,7 +47,6 @@ typedef struct tm {
     int tm_isdst;  /* Daylight saving [-1/0/1] */
 } tm_t;
 
-int sys_time(int* tloc);
 int sys_stime(int* tptr);
 int sys_get_system_time( time_t* time );
 int sys_get_boot_time( time_t* _time );

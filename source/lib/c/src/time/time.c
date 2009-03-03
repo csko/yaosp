@@ -21,14 +21,21 @@
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
-time_t time( time_t *t ) {
-    time_t tmp;
+time_t time( time_t* t ) {
+    int ret;
+    uint64_t time;
 
-    syscall1( SYS_time, ( int )&tmp );
+    ret = syscall1( SYS_get_system_time, ( int )&time );
 
-    if ( t != NULL ) {
-        *t = tmp;
+    if ( ret < 0 ) {
+        time = 0;
+    } else {
+        time /= 1000000;
     }
 
-    return tmp;
+    if ( t != NULL ) {
+        *t = time;
+    }
+
+    return time;
 }

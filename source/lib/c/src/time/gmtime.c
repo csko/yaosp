@@ -18,8 +18,8 @@
 
 #include <time.h>
 
-tm_t ret;
+static tm_t ret;
 
-tm_t* gmtime(const time_t *timep) {
-    return gmtime_r(timep, &ret);
+tm_t* gmtime( const time_t* timep ) {
+    return gmtime_r( timep, &ret );
 }

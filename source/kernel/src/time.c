@@ -1,7 +1,6 @@
 /* Date and time handling
  *
- * Copyright (c) 2009 Kornel Csernai
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -52,18 +51,6 @@ const char* sday_names[ 7 ] = { "Sun", "Mon", "Tue",
                                 "Wed", "Thu", "Fri",
                                 "Sat" };
 
-int sys_time( int* tloc ) {
-    time_t t = get_system_time() / 1000000;
-    time_t* ret;
-
-    if( tloc != NULL ){
-        ret = (time_t*) tloc;
-        *ret = t;
-    }
-
-    return ( int ) t;
-}
-
 int sys_get_system_time( time_t* _time ) {
     *_time = get_system_time();
     return 0;
@@ -87,11 +74,11 @@ int sys_stime(int* tptr) {
 
 
 time_t time( time_t* tloc ) {
-    int ret;
+    time_t ret;
 
-    ret = ( int )( get_system_time() / 1000000 );
+    ret = ( time_t )( get_system_time() / 1000000 );
 
-    if(tloc != NULL) {
+    if ( tloc != NULL ) {
         *tloc = ret;
     }
 
