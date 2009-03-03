@@ -56,8 +56,8 @@ static int read_pci_entry_node( char* dir, char* node, char* buffer, size_t size
 
 static void list_pci_entry( char* dir ) {
     int error;
-    long vendor_id;
-    long device_id;
+    int vendor_id;
+    int device_id;
     char vendor[ 16 ];
     char device[ 16 ];
 /*
@@ -106,7 +106,7 @@ static void list_pci_entry( char* dir ) {
         }
     }
 
-    printf( "%s %s:%s %s %s\n", dir, vendor, device, vendor_name, device_name );
+    printf( "%s %04x:%04x %s %s\n", dir, vendor_id, device_id, vendor_name, device_name );
 }
 
 int main( int argc, char** argv ) {
