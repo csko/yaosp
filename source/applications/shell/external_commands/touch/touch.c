@@ -32,7 +32,7 @@ static char* argv0;
 
 static void print_usage( int status ) {
     if ( status != EXIT_SUCCESS ) { /* option error */
-        fprintf(stderr, "Try `%s --help' for more information.\n", argv0);
+        fprintf( stderr, "Try `%s --help' for more information.\n", argv0 );
     } else { /* --help */
         printf( "Usage: %s [OPTION]... FILE...\n", argv0 );
         printf( "Update the access and modification times of each FILE to the current time.\n" );

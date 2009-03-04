@@ -38,6 +38,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>uptime</item>
         <item>reboot</item>
         <item>halt</item>
+        <item>symlink</item>
     </array>
 
     <target name="all">
