@@ -357,6 +357,10 @@ static int ramfs_read( void* fs_cookie, void* node, void* file_cookie, void* buf
         return -EINVAL;
     }
 
+    if ( size == 0 ) {
+        return 0;
+    }
+
     LOCK( cookie->lock );
 
     if ( ( inode->data == NULL ) ||
@@ -369,15 +373,11 @@ static int ramfs_read( void* fs_cookie, void* node, void* file_cookie, void* buf
         size = inode->size - pos;
     }
 
-    if ( size > 0 ) {
-        memcpy( buffer, ( uint8_t* )inode->data + pos, size );
-    }
+    memcpy( buffer, ( uint8_t* )inode->data + pos, size );
+
+    inode->atime = time( NULL );
 
     result = size;
-
-    if( size > 0 ){
-        inode->atime = time( NULL );
-    }
 
 out:
     UNLOCK( cookie->lock );
@@ -430,6 +430,9 @@ static int ramfs_write( void* fs_cookie, void* node, void* _file_cookie, const v
     }
 
     memcpy( ( uint8_t* )inode->data + pos, buffer, size );
+
+    inode->parent->mtime = time( NULL );
+
     result = size;
 
 out:
@@ -649,6 +652,8 @@ static int ramfs_mkdir( void* fs_cookie, void* node, const char* name, int name_
         goto out;
     }
 
+    parent->mtime = time( NULL );
+
 out:
     UNLOCK( cookie->lock );
 
@@ -684,6 +689,8 @@ static int ramfs_rmdir( void* fs_cookie, void* node, const char* name, int name_
     }
 
     ramfs_delete_inode( cookie, inode );
+
+    parent->mtime = time( NULL );
 
 out:
     UNLOCK( cookie->lock );

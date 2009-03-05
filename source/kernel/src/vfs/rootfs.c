@@ -356,6 +356,8 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
         goto out;
     }
 
+    node->mtime = time( NULL );
+
     error = 0;
 
 out:
@@ -421,6 +423,8 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     }
 
     error = 0;
+
+    node->mtime = time( NULL );
 
 out:
     UNLOCK( rootfs_lock );

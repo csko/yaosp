@@ -269,7 +269,11 @@ static int devfs_write( void* fs_cookie, void* _node, void* file_cookie, const v
     if ( node->calls->write == NULL ) {
         return -ENOSYS;
     } else {
-        return node->calls->write( node->cookie, file_cookie, buffer, pos, size );
+        int ret = node->calls->write( node->cookie, file_cookie, buffer, pos, size );
+        if( size > 0 ){
+            node->mtime = time( NULL );
+        }
+        return ret;
     }
 }
 
@@ -511,6 +515,8 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
         error = -ENOMEM;
         goto out;
     }
+
+    node->mtime = time( NULL );
 
     error = 0;
 
