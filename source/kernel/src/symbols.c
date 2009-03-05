@@ -104,6 +104,11 @@ static kernel_symbol_t symbols[] = {
     { "lock_semaphore", ( ptr_t )lock_semaphore },
     { "unlock_semaphore", ( ptr_t )unlock_semaphore },
 
+    /* Spinlock calls */
+    { "init_spinlock", ( ptr_t )init_spinlock },
+    { "spinlock_disable", ( ptr_t )spinlock_disable },
+    { "spinunlock_enable", ( ptr_t )spinunlock_enable },
+
     /* Time functions */
     { "get_system_time", ( ptr_t )get_system_time },
     { "time", ( ptr_t )time },

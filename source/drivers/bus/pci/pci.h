@@ -37,6 +37,7 @@
 #define PCI_BASE_REGISTERS 0x10 /* base registers (size varies) */
 #define PCI_SUBSYS_VEND_ID 0x2C /* (2 byte) subsystem vendor id */
 #define PCI_SUBSYS_DEV_ID  0x2E /* (2 byte) subsystem id */
+#define PCI_INTERRUPT_LINE 0x3C /* (1 byte) interrupt line */
 
 #define PCI_HEADER_BRIDGE 0x01 /* PCI bridge */
 #define PCI_MULTIFUNCTION 0x80 /* multifunction device flag */
@@ -84,6 +85,10 @@
 #define PCI_RAID               0x03 /* RAID controller */
 #define PCI_MASS_STORAGE_OTHER 0x80 /* other mass storage controller */
 
+#define PCI_ADDRESS_IO_MASK        0xFFFFFFFC
+#define PCI_ADDRESS_MEMORY_32_MASK 0xFFFFFFF0
+#define PCI_ADDRESS_MEMORY_64_MASK 0xFFFFFFFFFFFFFFF0ULL
+
 #define MAX_PCI_DEVICES 256
 
 typedef struct pci_device {
@@ -99,6 +104,9 @@ typedef struct pci_device {
     uint8_t class_base;
     uint16_t subsystem_vendor_id;
     uint16_t subsystem_device_id;
+
+    int interrupt_line;
+    uint32_t base[ 6 ];
 } pci_device_t;
 
 typedef struct pci_bus {

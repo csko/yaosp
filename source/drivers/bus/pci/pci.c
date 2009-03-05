@@ -352,6 +352,8 @@ static int pci_scan_device( int bus, int dev, int func ) {
 
         pci_scan_bus( ( int )secondary );
     } else {
+        int i;
+        int error;
         uint32_t device_id;
         uint32_t revision_id;
         uint32_t class_api;
@@ -359,6 +361,7 @@ static int pci_scan_device( int bus, int dev, int func ) {
         uint32_t class_base;
         uint32_t subsystem_vendor_id;
         uint32_t subsystem_device_id;
+        uint32_t interrupt_line;
         pci_device_t* device;
 
         device = ( pci_device_t* )kmalloc( sizeof( pci_device_t ) );
@@ -379,8 +382,17 @@ static int pci_scan_device( int bus, int dev, int func ) {
              ( pci_access->read( bus, dev, func, PCI_CLASS_SUB, 1, &class_sub ) < 0 ) ||
              ( pci_access->read( bus, dev, func, PCI_CLASS_BASE, 1, &class_base ) < 0 ) ||
              ( pci_access->read( bus, dev, func, PCI_SUBSYS_VEND_ID, 2, &subsystem_vendor_id ) < 0 ) ||
-             ( pci_access->read( bus, dev, func, PCI_SUBSYS_DEV_ID, 2, &subsystem_device_id ) < 0 ) ) {
+             ( pci_access->read( bus, dev, func, PCI_SUBSYS_DEV_ID, 2, &subsystem_device_id ) < 0 ) ||
+             ( pci_access->read( bus, dev, func, PCI_INTERRUPT_LINE, 1, &interrupt_line ) < 0 ) ) {
             return -1;
+        }
+
+        for ( i = 0; i < 6; i++ ) {
+            error = pci_access->read( bus, dev, func, PCI_BASE_REGISTERS + ( i * 4 ), 4, &device->base[ i ] );
+
+            if ( error < 0 ) {
+                return error;
+            }
         }
 
         device->device_id = device_id;
@@ -390,6 +402,11 @@ static int pci_scan_device( int bus, int dev, int func ) {
         device->class_base = class_base;
         device->subsystem_vendor_id = subsystem_vendor_id;
         device->subsystem_device_id = subsystem_device_id;
+        device->interrupt_line = interrupt_line;
+
+        if ( device->interrupt_line >= 16 ) {
+            device->interrupt_line = 0;
+        }
 
         if ( pci_device_count < MAX_PCI_DEVICES ) {
 
