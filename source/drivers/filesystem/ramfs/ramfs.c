@@ -430,6 +430,7 @@ static int ramfs_write( void* fs_cookie, void* node, void* _file_cookie, const v
     }
 
     memcpy( ( uint8_t* )inode->data + pos, buffer, size );
+    result = size;
 
 out:
     UNLOCK( cookie->lock );
