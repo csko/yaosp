@@ -21,7 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>ls.c</item>
+        <item>copy.c</item>
     </array>
 
     <target name="clean">
@@ -37,11 +37,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo></echo>
-        <echo>Compiling ls shell command</echo>
+        <echo>Compiling copy shell command</echo>
         <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/shell/external_commands/ls/${i}</echo>
+            <echo>[GCC    ] source/applications/shell/external_commands/copy/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -58,15 +58,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo></echo>
-        <echo>Linking ls shell command</echo>
+        <echo>Linking copy application</echo>
         <echo></echo>
-        <echo>[GCC    ] source/applications/shell/external_commands/ls/objs/ls</echo>
+        <echo>[GCC    ] source/applications/shell/external_commands/copy/objs/copy</echo>
 
         <gcc>
             <input>objs/*.o</input>
             <input>../../../../lib/start/objs/libstart.a</input>
             <input>../../../../lib/c/objs/libc.a</input>
-            <output>objs/ls</output>
+            <output>objs/copy</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
             <flag>--script=../../../../../scripts/i386_app.lnk</flag>
@@ -76,7 +76,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ls" to="../../../../../build/image/application/ls"/>
+        <copy from="objs/copy" to="../../../../../build/image/application/copy"/>
     </target>
 
     <target name="all">

@@ -21,7 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>ps.c</item>
+        <item>list.c</item>
     </array>
 
     <target name="clean">
@@ -37,11 +37,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo></echo>
-        <echo>Compiling ps shell command</echo>
+        <echo>Compiling list shell command</echo>
         <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/shell/external_commands/ps/${i}</echo>
+            <echo>[GCC    ] source/applications/shell/external_commands/list/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -58,15 +58,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo></echo>
-        <echo>Linking ps shell command</echo>
+        <echo>Linking list shell command</echo>
         <echo></echo>
-        <echo>[GCC    ] source/applications/shell/external_commands/ps/objs/ps</echo>
+        <echo>[GCC    ] source/applications/shell/external_commands/list/objs/list</echo>
 
         <gcc>
             <input>objs/*.o</input>
             <input>../../../../lib/start/objs/libstart.a</input>
             <input>../../../../lib/c/objs/libc.a</input>
-            <output>objs/ps</output>
+            <output>objs/list</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
             <flag>--script=../../../../../scripts/i386_app.lnk</flag>
@@ -76,7 +76,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ps" to="../../../../../build/image/application/ps"/>
+        <copy from="objs/list" to="../../../../../build/image/application/list"/>
     </target>
 
     <target name="all">

@@ -1,4 +1,4 @@
-/* rmdir shell command
+/* remdir shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
@@ -56,7 +56,7 @@ static struct option long_options[] = {
     { NULL, 0, NULL, 0 }
 };
 
-int do_rmdir( const char* dir ) {
+int do_remdir( const char* dir ) {
     int error;
 
     error = rmdir( dir );
@@ -115,7 +115,7 @@ int main( int argc, char** argv ) {
     }
 
     for ( i = optind; i < argc; i++ ) {
-        if ( do_rmdir( argv[ i ] ) < 0 ) {
+        if ( do_remdir( argv[ i ] ) < 0 ) {
             error = EXIT_FAILURE;
         }
     }

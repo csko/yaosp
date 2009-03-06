@@ -1,4 +1,4 @@
-/* ls shell command
+/* list shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
@@ -34,7 +34,7 @@ static int entry_compare( const void* p1, const void* p2 ) {
     return strcmp( entry1->d_name, entry2->d_name );
 }
 
-static int do_ls( char* dirname ) {
+static int do_list( char* dirname ) {
     int i;
     int fd;
     int tmp;
@@ -126,12 +126,12 @@ int main( int argc, char** argv ) {
 
     if ( argc > 1 ) {
         for ( i = 1; i < argc; i++ ) {
-            if ( do_ls( argv[ i ] ) < 0 ) {
+            if ( do_list( argv[ i ] ) < 0 ) {
                 ret = EXIT_FAILURE;
             }
         }
     } else {
-        if ( do_ls( "." ) < 0 ) {
+        if ( do_list( "." ) < 0 ) {
             ret = EXIT_FAILURE;
         }
     }

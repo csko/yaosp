@@ -21,8 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>lspci.c</item>
-        <item>deviceid.c</item>
+        <item>makedir.c</item>
     </array>
 
     <target name="clean">
@@ -38,11 +37,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo></echo>
-        <echo>Compiling lspci shell command</echo>
+        <echo>Compiling makedir shell command</echo>
         <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/shell/external_commands/lspci/${i}</echo>
+            <echo>[GCC    ] source/applications/shell/external_commands/makedir/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -59,15 +58,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo></echo>
-        <echo>Linking lspci application</echo>
+        <echo>Linking makedir shell command</echo>
         <echo></echo>
-        <echo>[GCC    ] source/applications/shell/external_commands/lspci/objs/lspci</echo>
+        <echo>[GCC    ] source/applications/shell/external_commands/makedir/objs/makedir</echo>
 
         <gcc>
             <input>objs/*.o</input>
             <input>../../../../lib/start/objs/libstart.a</input>
             <input>../../../../lib/c/objs/libc.a</input>
-            <output>objs/lspci</output>
+            <output>objs/makedir</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
             <flag>--script=../../../../../scripts/i386_app.lnk</flag>
@@ -77,7 +76,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/lspci" to="../../../../../build/image/application/lspci"/>
+        <copy from="objs/makedir" to="../../../../../build/image/application/makedir"/>
     </target>
 
     <target name="all">

@@ -1,4 +1,4 @@
-/* rm shell command
+/* remove shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
@@ -78,7 +78,7 @@ static struct option long_options[] = {
     { NULL, 0, NULL, 0 }
 };
 
-int do_rm( const char* file ) {
+int do_remove( const char* file ) {
     int error;
 
     error = unlink( file );
@@ -140,7 +140,7 @@ int main( int argc, char** argv ) {
     }
 
     for ( i = optind; i < argc; i++ ) {
-        if ( do_rm( argv[ i ] ) < 0 ) {
+        if ( do_remove( argv[ i ] ) < 0 ) {
             error = EXIT_FAILURE;
         }
     }

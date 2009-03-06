@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,12 +21,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>rm.c</item>
+        <item>remdir.c</item>
     </array>
 
     <target name="clean">
         <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
+        <remdir>objs</remdir>
     </target>
 
     <target name="prepare" type="private">
@@ -37,11 +37,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo/>
-        <echo>Compiling rm shell command</echo>
+        <echo>Compiling remdir shell command</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/shell/external_commands/rm/${i}</echo>
+            <echo>[GCC    ] source/applications/shell/external_commands/remdir/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -58,15 +58,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking rm shell command</echo>
+        <echo>Linking remdir shell command</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/shell/external_commands/rm/objs/rm</echo>
+        <echo>[GCC    ] source/applications/shell/external_commands/remdir/objs/remdir</echo>
 
         <gcc>
             <input>objs/*.o</input>
             <input>../../../../lib/start/objs/libstart.a</input>
             <input>../../../../lib/c/objs/libc.a</input>
-            <output>objs/rm</output>
+            <output>objs/remdir</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
             <flag>--script=../../../../../scripts/i386_app.lnk</flag>
@@ -76,7 +76,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/rm" to="../../../../../build/image/application/rm"/>
+        <copy from="objs/remdir" to="../../../../../build/image/application/remdir"/>
     </target>
 
     <target name="all">

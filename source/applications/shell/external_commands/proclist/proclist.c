@@ -1,4 +1,4 @@
-/* ps shell command
+/* proclist shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *

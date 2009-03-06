@@ -26,7 +26,7 @@
 static int help_command_function( int argc, char** argv, char** envp ) {
     printf( "Internal shell commands:\n" );
     shell_print_commands();
-    printf( "For a full list of external shell commands type `ls /application'\n" );
+    printf( "For a full list of external shell commands type `list /application'\n" );
 
     return EXIT_SUCCESS;
 }

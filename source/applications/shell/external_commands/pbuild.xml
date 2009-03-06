@@ -21,25 +21,25 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build>
     <array name="subdirs">
-        <item>ls</item>
+        <item>list</item>
         <item>stat</item>
         <item>sysinfo</item>
-        <item>lspci</item>
-        <item>ps</item>
+        <item>listpci</item>
+        <item>proclist</item>
         <item>date</item>
         <item>cat</item>
         <item>mount</item>
-        <item>mkdir</item>
+        <item>makedir</item>
         <item>load_module</item>
         <item>ramdiskctrl</item>
         <item>touch</item>
-        <item>rmdir</item>
-        <item>rm</item>
+        <item>remdir</item>
+        <item>remove</item>
         <item>uptime</item>
         <item>reboot</item>
         <item>halt</item>
         <item>symlink</item>
-        <item>cp</item>
+        <item>copy</item>
     </array>
 
     <target name="all">

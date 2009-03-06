@@ -1,4 +1,4 @@
-/* mkdir shell command
+/* makedir shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
@@ -63,7 +63,7 @@ int check_mode( optarg ) {
     return 0777;
 }
 
-int do_mkdir( const char* dirname, int umask ) {
+int do_makedir( const char* dirname, int umask ) {
     int error;
 
     error = mkdir( dirname, umask );
@@ -136,7 +136,7 @@ int main( int argc, char** argv ) {
     }
 
     for ( i = optind; i < argc; i++ ) {
-        if ( do_mkdir( argv[ i ], mode ) < 0 ) {
+        if ( do_makedir( argv[ i ], mode ) < 0 ) {
             error = EXIT_FAILURE;
         }
     }

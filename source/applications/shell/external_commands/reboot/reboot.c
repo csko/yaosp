@@ -21,7 +21,7 @@
 #include <yaosp/yaosp.h>
 
 int main( int argc, char** argv ) {
-    halt();
+    reboot();
 
     return EXIT_SUCCESS;
 }

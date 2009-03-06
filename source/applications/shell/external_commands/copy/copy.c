@@ -1,6 +1,6 @@
-/* cp shell command
+/* copy shell command
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -60,7 +60,8 @@ static int do_copy( const char* from, const char* to ) {
     if ( S_ISDIR( from_stat.st_mode ) ) {
         fprintf( stderr, "%s: %s is a directory.\n", argv0, from );
         close( from_fd );
-        return EXIT_FAILURE;    }
+        return EXIT_FAILURE;
+    }
 
     to_fd = open( to, O_WRONLY | O_CREAT );
 
