@@ -95,6 +95,7 @@ static int do_copy( const char* from, const char* to ) {
 int main( int argc, char** argv ) {
     int i;
     char* to;
+    int to_is_dir;
     char tmp[ 256 ];
     struct stat st;
 
@@ -113,29 +114,30 @@ int main( int argc, char** argv ) {
     to = argv[ argc - 1 ];
 
     if ( stat( to, &st ) != 0 ) {
-        fprintf( stderr, "%s: Failed to stat %s.\n", argv0, to );
-        return EXIT_FAILURE;
-    }
-
-    if ( S_ISDIR( st.st_mode ) ) {
-        size_t len;
-
-        len = strlen( to );
-
-        if ( to[ len - 1 ] == '/' ) {
-            to[ len - 1 ] = 0;
-        }
+        to_is_dir = 0;
     } else {
-        if ( argc > 3 ) {
-            fprintf( stderr, "%s: %s is not a directory!\n", argv0, to );
-            return EXIT_FAILURE;
+        to_is_dir = S_ISDIR( st.st_mode );
+
+        if ( to_is_dir ) {
+            size_t len;
+
+            len = strlen( to );
+
+            if ( to[ len - 1 ] == '/' ) {
+                to[ len - 1 ] = 0;
+            }
+        } else {
+            if ( argc > 3 ) {
+                fprintf( stderr, "%s: %s is not a directory!\n", argv0, to );
+                return EXIT_FAILURE;
+            }
         }
     }
 
     for ( i = 1; i <= argc - 2; i++ ) {
         char* dest;
 
-        if ( S_ISDIR( st.st_mode ) ) {
+        if ( to_is_dir ) {
             char* from_filename;
 
             from_filename = strrchr( argv[ i ], '/' );
