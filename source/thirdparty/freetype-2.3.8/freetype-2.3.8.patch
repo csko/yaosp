@@ -1,0 +1,137 @@
+diff -Nru freetype-2.3.8-orig/include/freetype/config/ftmodule.h freetype-2.3.8/include/freetype/config/ftmodule.h
+--- freetype-2.3.8-orig/include/freetype/config/ftmodule.h	2008-12-21 11:10:21.000000000 +0100
++++ freetype-2.3.8/include/freetype/config/ftmodule.h	2009-02-28 13:48:04.000000000 +0100
+@@ -12,21 +12,21 @@
+ 
+ FT_USE_MODULE( FT_Module_Class, autofit_module_class )
+ FT_USE_MODULE( FT_Driver_ClassRec, tt_driver_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, t1_driver_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, cff_driver_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, t1cid_driver_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, pfr_driver_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, t42_driver_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, winfnt_driver_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, pcf_driver_class )
+-FT_USE_MODULE( FT_Module_Class, psaux_module_class )
+-FT_USE_MODULE( FT_Module_Class, psnames_module_class )
+-FT_USE_MODULE( FT_Module_Class, pshinter_module_class )
+-FT_USE_MODULE( FT_Renderer_Class, ft_raster1_renderer_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, t1_driver_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, cff_driver_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, t1cid_driver_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, pfr_driver_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, t42_driver_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, winfnt_driver_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, pcf_driver_class )
++//FT_USE_MODULE( FT_Module_Class, psaux_module_class )
++//FT_USE_MODULE( FT_Module_Class, psnames_module_class )
++//FT_USE_MODULE( FT_Module_Class, pshinter_module_class )
++//FT_USE_MODULE( FT_Renderer_Class, ft_raster1_renderer_class )
+ FT_USE_MODULE( FT_Module_Class, sfnt_module_class )
+ FT_USE_MODULE( FT_Renderer_Class, ft_smooth_renderer_class )
+ FT_USE_MODULE( FT_Renderer_Class, ft_smooth_lcd_renderer_class )
+ FT_USE_MODULE( FT_Renderer_Class, ft_smooth_lcdv_renderer_class )
+-FT_USE_MODULE( FT_Driver_ClassRec, bdf_driver_class )
++//FT_USE_MODULE( FT_Driver_ClassRec, bdf_driver_class )
+ 
+ /* EOF */
+diff -Nru freetype-2.3.8-orig/pbuild.xml freetype-2.3.8/pbuild.xml
+--- freetype-2.3.8-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ freetype-2.3.8/pbuild.xml	2009-03-01 16:53:22.000000000 +0100
+@@ -0,0 +1,96 @@
++<!--
++
++This file is part of the yaosp build system
++
++Copyright (c) 2009 Zoltan Kovacs
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of version 2 of the GNU General Public License
++as published by the Free Software Foundation.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along
++with this program; if not, write to the Free Software Foundation, Inc.,
++51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++
++-->
++
++<build default="all">
++    <array name="files">
++        <item>src/autofit/autofit.c</item>
++        <item>src/base/ftbase.c</item>
++        <item>src/base/ftinit.c</item>
++        <item>src/base/ftsystem.c</item>
++        <item>src/base/ftglyph.c</item>
++        <item>src/base/ftbitmap.c</item>
++        <item>src/base/fttype1.c</item>
++        <item>src/truetype/truetype.c</item>
++        <item>src/sfnt/sfnt.c</item>
++        <item>src/smooth/smooth.c</item>
++    </array>
++
++    <target name="clean">
++        <delete>objs/*</delete>
++        <rmdir>objs</rmdir>
++    </target>
++
++    <target name="prepare" type="private">
++        <mkdir>objs</mkdir>
++    </target>
++
++    <target name="compile">
++        <call target="prepare"/>
++
++        <echo>Compiling freetype 2.3.8</echo>
++
++        <for var="i" array="${files}">
++            <echo>-> ${i}</echo>
++            <gcc>
++                <input>${i}</input>
++                <output>objs/filename(${i}).o</output>
++                <include>../../../include</include>
++                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
++                <include>./include</include>
++                <flag>-c</flag>
++                <flag>-O2</flag>
++                <flag>-m32</flag>
++                <flag>-Wall</flag>
++                <flag>-nostdinc</flag>
++                <flag>-nostdlib</flag>
++                <flag>-fno-builtin</flag>
++                <flag>-fno-strict-aliasing</flag>
++                <define key="FT2_BUILD_LIBRARY"/>
++            </gcc>
++        </for>
++
++        <echo>Linking freetype 2.3.8</echo>
++        <echo>-> objs/libfreetype.a</echo>
++
++        <exec executable="ar">
++            <arg>-rc</arg>
++            <arg>objs/libfreetype.a</arg>
++            <arg>objs/*.o</arg>
++        </exec>
++    </target>
++
++    <target name="install">
++        <echo>Installing freetype 2.3.8 headers</echo>
++
++        <mkdir>../../../include/freetype</mkdir>
++        <mkdir>../../../include/freetype/config</mkdir>
++
++        <copy from="include/ft2build.h" to="../../../include/ft2build.h"/>
++        <copy from="include/freetype/*.h" to="../../../include/freetype"/>
++        <copy from="include/freetype/config/*.h" to="../../../include/freetype/config"/>
++    </target>
++
++    <target name="all">
++        <call target="clean"/>
++        <call target="compile"/>
++        <call target="install"/>
++    </target>
++</build>

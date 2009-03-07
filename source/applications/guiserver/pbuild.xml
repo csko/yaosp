@@ -1,0 +1,116 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2009 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <array name="files">
+        <item>src/guiserver.c</item>
+        <item>src/bitmap.c</item>
+        <item>src/graphicsdriver.c</item>
+        <item>src/fontmanager.c</item>
+        <item>src/arch/i386/graphicsdriver_i386.c</item>
+        <item>driver/video/vesa/vesa.c</item>
+    </array>
+
+    <target name="clean">
+        <delete>objs/*</delete>
+        <rmdir>objs</rmdir>
+    </target>
+
+    <target name="prepare" type="private">
+        <mkdir>objs</mkdir>
+    </target>
+
+    <target name="compile">
+        <call target="prepare"/>
+
+        <echo>Compiling guiserver application</echo>
+        <echo></echo>
+
+        <for var="i" array="${files}">
+            <echo>[GCC    ] source/applications/guiserver/${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/filename(${i}).o</output>
+                <include>../../include</include>
+                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
+                <include>./include</include>
+                <flag>-c</flag>
+                <flag>-O2</flag>
+                <flag>-m32</flag>
+                <flag>-Wall</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-fno-builtin</flag>
+                <define key="USE_I386_ASM"/>
+            </gcc>
+        </for>
+
+        <echo></echo>
+        <echo>Linking guiserver application</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/applications/guiserver/objs/guiserver</echo>
+
+        <gcc>
+            <input>objs/*.o</input>
+            <input>../../lib/start/objs/libstart.a</input>
+            <input>../../thirdparty/freetype-2.3.8/freetype-2.3.8/objs/libfreetype.a</input>
+            <input>../../lib/c/objs/libc.a</input>
+            <input>../../lib/yutil/objs/libyutil.a</input>
+            <output>objs/guiserver</output>
+            <flag>-m32</flag>
+            <flag>-Xlinker</flag>
+            <flag>--script=../../../scripts/i386_app.lnk</flag>
+            <flag>-nostartfiles</flag>
+            <flag>-nodefaultlibs</flag>
+        </gcc>
+    </target>
+
+    <target name="install">
+        <echo>Installing guiserver</echo>
+        <copy from="objs/guiserver" to="../../../build/image/application/guiserver"/>
+
+        <echo>Downloading DejaVu fonts</echo>
+        <httpget address="http://prdownloads.sourceforge.net/dejavu/dejavu-fonts-ttf-2.28.tar.bz2?download"
+                 to="dejavu-fonts-ttf-2.28.tar.bz2"
+                 md5="10002ae52fbad207641d1fd2bf9bf4b8"/>
+
+        <echo>Installing fonts</echo>
+
+        <cleandir>fonts</cleandir>
+        <rmdir>fonts</rmdir>
+        <mkdir>fonts</mkdir>
+        <exec executable="tar">
+            <arg>-jxf</arg>
+            <arg>dejavu-fonts-ttf-2.28.tar.bz2</arg>
+            <arg>-C</arg>
+            <arg>fonts</arg>
+        </exec>
+
+        <mkdir>../../../build/image/system/fonts</mkdir>
+        <copy from="fonts/dejavu-fonts-ttf-2.28/ttf/*.ttf" to="../../../build/image/system/fonts"/>
+    </target>
+
+    <target name="all">
+        <call target="clean"/>
+        <call target="compile"/>
+        <call target="install"/>
+    </target>
+</build>
