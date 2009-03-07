@@ -1,6 +1,6 @@
 diff -Nru readline-6.0-orig/bind.c readline-6.0/bind.c
 --- readline-6.0-orig/bind.c	2009-01-23 02:15:57.000000000 +0100
-+++ readline-6.0/bind.c	2009-03-02 20:42:49.000000000 +0100
++++ readline-6.0/bind.c	2009-03-07 22:02:06.000000000 +0100
 @@ -340,6 +340,7 @@
    register int i;
    KEYMAP_ENTRY k;
@@ -56,7 +56,7 @@ diff -Nru readline-6.0-orig/bind.c readline-6.0/bind.c
        char **invokers;
 diff -Nru readline-6.0-orig/complete.c readline-6.0/complete.c
 --- readline-6.0-orig/complete.c	2009-01-22 21:15:14.000000000 +0100
-+++ readline-6.0/complete.c	2009-03-02 20:41:46.000000000 +0100
++++ readline-6.0/complete.c	2009-03-07 22:02:06.000000000 +0100
 @@ -942,7 +942,7 @@
        /* We didn't find an unclosed quoted substring upon which to do
           completion, so use the word break characters to find the
@@ -86,7 +86,7 @@ diff -Nru readline-6.0-orig/complete.c readline-6.0/complete.c
        if (namelen == 0 || (STREQN (username, entry->pw_name, namelen)))
 diff -Nru readline-6.0-orig/config.h readline-6.0/config.h
 --- readline-6.0-orig/config.h	1970-01-01 01:00:00.000000000 +0100
-+++ readline-6.0/config.h	2009-03-02 20:38:55.000000000 +0100
++++ readline-6.0/config.h	2009-03-07 22:02:06.000000000 +0100
 @@ -0,0 +1,269 @@
 +/* config.h.  Generated from config.h.in by configure.  */
 +/* config.h.in.  Maintained by hand. */
@@ -359,7 +359,7 @@ diff -Nru readline-6.0-orig/config.h readline-6.0/config.h
 +#endif
 diff -Nru readline-6.0-orig/display.c readline-6.0/display.c
 --- readline-6.0-orig/display.c	2009-01-04 20:32:32.000000000 +0100
-+++ readline-6.0/display.c	2009-03-02 20:43:57.000000000 +0100
++++ readline-6.0/display.c	2009-03-07 22:02:06.000000000 +0100
 @@ -253,7 +253,10 @@
       int *lp, *lip, *niflp, *vlp;
  {
@@ -403,7 +403,7 @@ diff -Nru readline-6.0-orig/display.c readline-6.0/display.c
  	  n0 = num;
 diff -Nru readline-6.0-orig/histexpand.c readline-6.0/histexpand.c
 --- readline-6.0-orig/histexpand.c	2009-01-13 14:41:32.000000000 +0100
-+++ readline-6.0/histexpand.c	2009-03-02 20:45:35.000000000 +0100
++++ readline-6.0/histexpand.c	2009-03-07 22:02:06.000000000 +0100
 @@ -204,7 +204,7 @@
      }
  
@@ -415,7 +415,7 @@ diff -Nru readline-6.0-orig/histexpand.c readline-6.0/histexpand.c
        if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
 diff -Nru readline-6.0-orig/input.c readline-6.0/input.c
 --- readline-6.0-orig/input.c	2009-01-23 02:23:56.000000000 +0100
-+++ readline-6.0/input.c	2009-03-02 20:45:24.000000000 +0100
++++ readline-6.0/input.c	2009-03-07 22:02:06.000000000 +0100
 @@ -182,6 +182,7 @@
    struct timeval timeout;
  #endif
@@ -435,7 +435,7 @@ diff -Nru readline-6.0-orig/input.c readline-6.0/input.c
        /* If the user has an event function, then call it periodically. */
 diff -Nru readline-6.0-orig/misc.c readline-6.0/misc.c
 --- readline-6.0-orig/misc.c	2009-01-08 14:58:26.000000000 +0100
-+++ readline-6.0/misc.c	2009-03-02 20:46:48.000000000 +0100
++++ readline-6.0/misc.c	2009-03-07 22:02:06.000000000 +0100
 @@ -453,7 +453,7 @@
    entry = (hpos == history_length) ? previous_history () : current_history ();
    while (entry)
@@ -447,8 +447,8 @@ diff -Nru readline-6.0-orig/misc.c readline-6.0/misc.c
  	    saved_undo_list = 0;
 diff -Nru readline-6.0-orig/pbuild.xml readline-6.0/pbuild.xml
 --- readline-6.0-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ readline-6.0/pbuild.xml	2009-03-02 20:31:07.000000000 +0100
-@@ -0,0 +1,129 @@
++++ readline-6.0/pbuild.xml	2009-03-07 22:36:51.000000000 +0100
+@@ -0,0 +1,148 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -499,7 +499,6 @@ diff -Nru readline-6.0-orig/pbuild.xml readline-6.0/pbuild.xml
 +        <item>search.c</item>
 +        <item>shell.c</item>
 +        <item>savestring.c</item>
-+        <item>tilde.c</item>
 +        <item>text.c</item>
 +        <item>misc.c</item>
 +        <item>compat.c</item>
@@ -552,6 +551,26 @@ diff -Nru readline-6.0-orig/pbuild.xml readline-6.0/pbuild.xml
 +            </gcc>
 +        </for>
 +
++        <echo>-> tilde.c</echo>
++        <gcc>
++            <input>tilde.c</input>
++            <output>objs/tilde.o</output>
++            <include>../../../include</include>
++            <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
++            <include>./</include>
++            <flag>-c</flag>
++            <flag>-O2</flag>
++            <flag>-m32</flag>
++            <flag>-Wall</flag>
++            <flag>-nostdinc</flag>
++            <flag>-nostdlib</flag>
++            <flag>-fno-builtin</flag>
++            <flag>-fno-strict-aliasing</flag>
++            <define key="HAVE_CONFIG_H"/>
++            <define key="_POSIX_VERSION"/>
++            <define key="READLINE_LIBRARY"/>
++        </gcc>
++            
 +        <echo>Linking readline 6.0</echo>
 +        <echo>-> objs/libreadline.a</echo>
 +
@@ -580,7 +599,7 @@ diff -Nru readline-6.0-orig/pbuild.xml readline-6.0/pbuild.xml
 +</build>
 diff -Nru readline-6.0-orig/readline.c readline-6.0/readline.c
 --- readline-6.0-orig/readline.c	2009-01-26 03:33:34.000000000 +0100
-+++ readline-6.0/readline.c	2009-03-02 20:41:08.000000000 +0100
++++ readline-6.0/readline.c	2009-03-07 22:02:06.000000000 +0100
 @@ -90,7 +90,9 @@
  static void bind_arrow_keys PARAMS((void));
  
@@ -609,7 +628,7 @@ diff -Nru readline-6.0-orig/readline.c readline-6.0/readline.c
  static void
 diff -Nru readline-6.0-orig/search.c readline-6.0/search.c
 --- readline-6.0-orig/search.c	2009-01-04 20:32:33.000000000 +0100
-+++ readline-6.0/search.c	2009-03-02 20:45:46.000000000 +0100
++++ readline-6.0/search.c	2009-03-07 22:02:06.000000000 +0100
 @@ -210,7 +210,7 @@
    rl_end = rl_point = 0;
  
@@ -621,7 +640,7 @@ diff -Nru readline-6.0-orig/search.c readline-6.0/search.c
    RL_SETSTATE(RL_STATE_NSEARCH);
 diff -Nru readline-6.0-orig/shell.c readline-6.0/shell.c
 --- readline-6.0-orig/shell.c	2009-01-04 20:32:33.000000000 +0100
-+++ readline-6.0/shell.c	2009-03-02 20:46:28.000000000 +0100
++++ readline-6.0/shell.c	2009-03-07 22:02:06.000000000 +0100
 @@ -124,7 +124,9 @@
  sh_set_lines_and_columns (lines, cols)
       int lines, cols;
@@ -647,7 +666,7 @@ diff -Nru readline-6.0-orig/shell.c readline-6.0/shell.c
      home_dir = entry->pw_dir;
 diff -Nru readline-6.0-orig/tilde.c readline-6.0/tilde.c
 --- readline-6.0-orig/tilde.c	2009-01-04 20:32:37.000000000 +0100
-+++ readline-6.0/tilde.c	2009-03-02 20:46:40.000000000 +0100
++++ readline-6.0/tilde.c	2009-03-07 22:02:06.000000000 +0100
 @@ -196,7 +196,7 @@
    int result_size, result_index;
  
@@ -659,7 +678,7 @@ diff -Nru readline-6.0-orig/tilde.c readline-6.0/tilde.c
      result = (char *)xmalloc (result_size = (strlen (string) + 1));
 diff -Nru readline-6.0-orig/undo.c readline-6.0/undo.c
 --- readline-6.0-orig/undo.c	2009-01-23 02:26:47.000000000 +0100
-+++ readline-6.0/undo.c	2009-03-02 20:44:56.000000000 +0100
++++ readline-6.0/undo.c	2009-03-07 22:02:06.000000000 +0100
 @@ -141,6 +141,8 @@
  
    list = head;
@@ -671,7 +690,7 @@ diff -Nru readline-6.0-orig/undo.c readline-6.0/undo.c
        c = _rl_copy_undo_entry (list);
 diff -Nru readline-6.0-orig/util.c readline-6.0/util.c
 --- readline-6.0-orig/util.c	2009-01-04 20:32:34.000000000 +0100
-+++ readline-6.0/util.c	2009-03-02 20:44:36.000000000 +0100
++++ readline-6.0/util.c	2009-03-07 22:02:06.000000000 +0100
 @@ -486,7 +486,7 @@
  
    if (_rl_tracefp)
