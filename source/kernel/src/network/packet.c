@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <network/packet.h>
 
@@ -69,4 +70,28 @@ error2:
 
 error1:
     return NULL;
+}
+
+int packet_queue_insert( packet_queue_t* queue, packet_t* packet ) {
+    packet->next = NULL;
+
+    spinlock_disable( &queue->lock );
+
+    if ( queue->first == NULL ) {
+        ASSERT( queue->last == NULL );
+
+        queue->first = packet;
+        queue->last = packet;
+    } else {
+        ASSERT( queue->last != NULL );
+
+        queue->last->next = packet;
+        queue->last = packet;
+    }
+
+    spinunlock_enable( &queue->lock );
+
+    UNLOCK( queue->sync );
+
+    return 0;
 }

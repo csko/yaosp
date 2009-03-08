@@ -152,6 +152,7 @@ static kernel_symbol_t symbols[] = {
     /* Networking functions */
     { "create_packet", ( ptr_t )create_packet },
     { "delete_packet", ( ptr_t )delete_packet },
+    { "packet_queue_insert", ( ptr_t )packet_queue_insert },
 
     /* Architecture dependent functions */
     { "call_bios_interrupt", ( ptr_t )call_bios_interrupt },

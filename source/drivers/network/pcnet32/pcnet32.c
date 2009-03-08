@@ -279,7 +279,7 @@ static void pcnet32_rx_entry( pcnet32_private_t* device, pcnet32_rx_head_t* rxp,
     wmb();
 
     ASSERT( device->input_queue != NULL );
-    /* TODO: add the packet to the queue */
+    packet_queue_insert( device->input_queue, packet );
 
     //dev->stats.rx_bytes += skb->len;
     //dev->last_rx = jiffies;
