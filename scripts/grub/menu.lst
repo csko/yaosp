@@ -4,4 +4,5 @@ module /system/module/bus/pci
 module /system/module/disk/pata
 module /system/module/filesystem/iso9660
 module /system/module/input/ps2kbd
+module /system/module/network/pcnet32
 module /system/module/char/terminal

@@ -36,4 +36,9 @@
 #define IOCTL_VESA_GET_MODE_INFO 0x00000201
 #define IOCTL_VESA_SET_MODE      0x00000202
 
+/* Network ioctls */
+
+#define IOCTL_NET_SET_IN_QUEUE   0x00000300
+#define IOCTL_NET_START          0x00000301
+
 #endif // _IOCTL_H_

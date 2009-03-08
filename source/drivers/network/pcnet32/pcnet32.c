@@ -20,17 +20,23 @@
 #include <macros.h>
 #include <devices.h>
 #include <errno.h>
+#include <ioctl.h>
+#include <irq.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <lib/string.h>
 
 #include <arch/io.h>
+#include <arch/smp.h>
 
 #include "../../bus/pci/pci.h"
 
 #include "pcnet32.h"
 
+#define PKT_BUF_SKB 1544
+
 static int cards_found = 0;
+static int max_interrupt_work = 40;
 
 /* TODO: move to network stuff */
 static inline int is_valid_ether_addr( uint8_t* address ) {
@@ -136,6 +142,32 @@ static pcnet32_access_t pcnet32_dwio = {
     .reset = pcnet32_dwio_reset
 };
 
+static int mdio_read( pcnet32_private_t* device, int phy_id, int reg_num ) {
+    int io_address;
+
+    if ( !device->mii ) {
+        return 0;
+    }
+
+    io_address = device->io_address;
+
+    device->access->write_bcr( io_address, 33, ( ( phy_id & 0x1F ) << 5 ) | ( reg_num & 0x1F ) );
+    return device->access->read_bcr( io_address, 34 );
+}
+
+static void mdio_write( pcnet32_private_t* device, int phy_id, int reg_num, int value ) {
+    int io_address;
+
+    if ( !device->mii ) {
+        return;
+    }
+
+    io_address = device->io_address;
+
+    device->access->write_bcr( io_address, 33, ( ( phy_id & 0x1F ) << 5 ) | ( reg_num & 0x1F ) );
+    device->access->write_bcr( io_address, 34, value );
+}
+
 static int pcnet32_alloc_ring( pcnet32_private_t* device ) {
     uint32_t tmp;
 
@@ -151,6 +183,18 @@ static int pcnet32_alloc_ring( pcnet32_private_t* device ) {
         return -ENOMEM;
     }
 
+    device->tx_packet_buf = ( packet_t** )kmalloc( sizeof( packet_t* ) * device->tx_ring_size );
+
+    if ( device->tx_packet_buf == NULL ) {
+        return -ENOMEM;
+    }
+
+    device->rx_packet_buf = ( packet_t** )kmalloc( sizeof( packet_t* ) * device->rx_ring_size );
+
+    if ( device->rx_packet_buf == NULL ) {
+        return -ENOMEM;
+    }
+
     tmp = ( uint32_t )device->tx_ring_base;
     tmp = ( tmp + 15 ) & ~15;
     device->tx_ring = ( pcnet32_tx_head_t* )tmp;
@@ -159,15 +203,622 @@ static int pcnet32_alloc_ring( pcnet32_private_t* device ) {
     tmp = ( tmp + 15 ) & ~15;
     device->rx_ring = ( pcnet32_rx_head_t* )tmp;
 
+    memset( device->tx_ring, 0, sizeof( pcnet32_tx_head_t ) * device->tx_ring_size );
+    memset( device->rx_ring, 0, sizeof( pcnet32_rx_head_t ) * device->rx_ring_size );
+    memset( device->tx_packet_buf, 0, sizeof( packet_t* ) * device->tx_ring_size );
+    memset( device->rx_packet_buf, 0, sizeof( packet_t* ) * device->rx_ring_size );
+
     return 0;
 }
 
+static void pcnet32_rx_entry( pcnet32_private_t* device, pcnet32_rx_head_t* rxp, int entry ) {
+    int status;
+    int rx_in_place;
+    short pkt_len;
+    packet_t* packet;
+    packet_t* new_packet;
+
+    status = rxp->status >> 8;
+    rx_in_place = 0;
+
+    if ( status != 0x03 ) {   /* There was an error. */
+#if 0
+                /*
+                 * There is a tricky error noted by John Murphy,
+                 * <murf@perftech.com> to Russ Nelson: Even with full-sized
+                 * buffers it's possible for a jabber packet to use two
+                 * buffers, with only the last correctly noting the error.
+                 */
+                if (status & 0x01)      /* Only count a general error at the */
+                        dev->stats.rx_errors++; /* end of a packet. */
+                if (status & 0x20)
+                        dev->stats.rx_frame_errors++;
+                if (status & 0x10)
+                        dev->stats.rx_over_errors++;
+                if (status & 0x08)
+                        dev->stats.rx_crc_errors++;
+                if (status & 0x04)
+                        dev->stats.rx_fifo_errors++;
+#endif
+
+        return;
+    }
+
+    pkt_len = ( rxp->msg_length & 0xFFF ) - 4;
+
+    /* Discard oversize frames. */
+
+    if ( pkt_len > PKT_BUF_SKB ) {
+        kprintf( "PCnet32: Impossible packet size %d!\n", pkt_len );
+        //dev->stats.rx_errors++;
+        return;
+    }
+
+    if ( pkt_len < 60 ) {
+        kprintf( "PCnet32: Runt packet!\n" );
+        //dev->stats.rx_errors++;
+        return;
+    }
+
+    kprintf( "pkt_len=%d\n", pkt_len );
+
+    new_packet = create_packet( PKT_BUF_SKB );
+
+    if ( new_packet == NULL ) {
+        kprintf( "PCnet32: No memory for new packet buffer!\n" );
+        return;
+    }
+
+    packet = device->rx_packet_buf[ entry ];
+
+    device->rx_packet_buf[ entry ] = new_packet;
+    rxp->base = ( uint32_t )new_packet->data;
+
+    /* Make sure owner changes after all others are visible */
+
+    wmb();
+
+    ASSERT( device->input_queue != NULL );
+    /* TODO: add the packet to the queue */
+
+    //dev->stats.rx_bytes += skb->len;
+    //dev->last_rx = jiffies;
+    //dev->stats.rx_packets++;
+}
+
+static int pcnet32_rx( pcnet32_private_t* device ) {
+    int entry;
+    int npackets;
+    pcnet32_rx_head_t* rxp;
+
+    npackets = 0;
+    entry = device->cur_rx & device->rx_mod_mask;
+    rxp = &device->rx_ring[ entry ];
+
+    while ( ( short )rxp->status >= 0 ) {
+        pcnet32_rx_entry( device, rxp, entry );
+        npackets += 1;
+
+        rxp->buf_length = -PKT_BUF_SKB;
+
+        /* Make sure owner changes after others are visible */
+
+        wmb();
+
+        rxp->status = 0x8000;
+
+        entry = ( ++device->cur_rx ) & device->rx_mod_mask;
+        rxp = &device->rx_ring[ entry ];
+    }
+
+    return npackets;
+}
+
+static int pcnet32_tx( pcnet32_private_t* device ) {
+    int delta;
+    int must_restart;
+    uint32_t dirty_tx;
+
+    dirty_tx = device->dirty_tx;
+    must_restart = 0;
+
+    while ( dirty_tx != device->cur_tx ) {
+        int entry;
+        int status;
+
+        entry = dirty_tx & device->tx_mod_mask;
+        status = ( short )device->tx_ring[ entry ].status;
+
+        if ( status < 0 ) {
+            break;
+        }
+
+        device->tx_ring[ entry ].base = 0;
+
+        if ( status & 0x4000 ) {
+            int err_status;
+
+            /* There was a major error, log it. */
+
+            err_status = device->tx_ring[ entry ].misc;
+            //dev->stats.tx_errors++;
+
+            kprintf( "PCnet32: Tx error status=%04x err_status=%08x\n", status, err_status );
+
+#if 0
+            if (err_status & 0x04000000)
+                dev->stats.tx_aborted_errors++;
+            if (err_status & 0x08000000)
+                dev->stats.tx_carrier_errors++;
+            if (err_status & 0x10000000)
+                dev->stats.tx_window_errors++;
+
+#ifndef DO_DXSUFLO
+                        if (err_status & 0x40000000) {
+                                dev->stats.tx_fifo_errors++;
+                                /* Ackk!  On FIFO errors the Tx unit is turned off! */
+                                /* Remove this verbosity later! */
+                                if (netif_msg_tx_err(lp))
+                                        printk(KERN_ERR
+                                               "%s: Tx FIFO error!\n",
+                                               dev->name);
+                                must_restart = 1;
+                        }
+#else
+
+            if (err_status & 0x40000000) {
+                                dev->stats.tx_fifo_errors++;
+                                if (!lp->dxsuflo) {     /* If controller doesn't recover ... */
+                                        /* Ackk!  On FIFO errors the Tx unit is turned off! */
+                                        /* Remove this verbosity later! */
+                                        if (netif_msg_tx_err(lp))
+                                                printk(KERN_ERR
+                                                       "%s: Tx FIFO error!\n",
+                                                       dev->name);
+                                        must_restart = 1;
+                                }
+                        }
+#endif
+#endif
+        } else {
+#if 0
+            if (status & 0x1800)
+                dev->stats.collisions++;
+            dev->stats.tx_packets++;
+#endif
+        }
+
+        /* We must free the original skb */
+
+        if ( device->tx_packet_buf[ entry ] ) {
+            delete_packet( device->tx_packet_buf[ entry ] );
+            device->tx_packet_buf[ entry ] = NULL;
+        }
+
+        dirty_tx++;
+    }
+
+    delta = ( device->cur_tx - dirty_tx ) & ( device->tx_mod_mask + device->tx_ring_size );
+
+    if ( delta > device->tx_ring_size ) {
+        kprintf( "PCnet32: out-of-sync dirty pointer, %d vs. %d, full=%d.\n", dirty_tx, device->cur_tx, device->tx_full );
+        dirty_tx += device->tx_ring_size;
+        delta -= device->tx_ring_size;
+    }
+
+#if 0
+    if (lp->tx_full &&
+            netif_queue_stopped(dev) &&
+            delta < lp->tx_ring_size - 2) {
+                /* The ring is no longer full, clear tbusy. */
+                lp->tx_full = 0;
+                netif_wake_queue(dev);
+    }
+#endif
+
+    device->dirty_tx = dirty_tx;
+
+    return must_restart;
+}
+
+static int pcnet32_start_xmit( pcnet32_private_t* device, packet_t* packet ) {
+    int entry;
+    int io_address;
+    uint16_t status;
+
+    io_address = device->io_address;
+
+    spinlock_disable( &device->lock );
+
+    /* Default status -- will not enable Successful-TxDone
+     * interrupt when that option is available to us.
+     */
+
+    status = 0x8300;
+
+    /* Fill in a Tx ring entry */
+
+    /* Mask to ring buffer boundary. */
+
+    entry = device->cur_tx & device->tx_mod_mask;
+
+    /* Caution: the write order is important here, set the status
+     * with the "ownership" bits last. */
+
+    device->tx_ring[ entry ].length = -packet->size;
+    device->tx_ring[ entry ].misc = 0x00000000;
+    device->tx_packet_buf[ entry ] = packet;
+    device->tx_ring[ entry ].base = ( uint32_t )packet->data;
+
+    /* Make sure owner changes after all others are visible */
+
+    wmb();
+
+    device->tx_ring[ entry ].status = status;
+
+    device->cur_tx++;
+    //dev->stats.tx_bytes += skb->len;
+
+    /* Trigger an immediate send poll. */
+    device->access->write_csr( io_address, CSR0, CSR0_INTEN | CSR0_TXPOLL );
+
+    //dev->trans_start = jiffies;
+
+    if ( device->tx_ring[ ( entry + 1 ) & device->tx_mod_mask ].base != 0 ) {
+        device->tx_full = 1;
+        //netif_stop_queue(dev);
+    }
+
+    spinunlock_enable( &device->lock );
+
+    return 0;
+}
+
+static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
+    int boguscnt;
+    uint16_t csr0;
+    int io_address;
+    pcnet32_private_t* device;
+
+    device = ( pcnet32_private_t* )data;
+    io_address = device->io_address;
+
+    spinlock_disable( &device->lock );
+
+    boguscnt = max_interrupt_work;
+    csr0 = device->access->read_csr( io_address, CSR0 );
+
+    while ( ( csr0 & 0x8F00 ) && ( --boguscnt >= 0 ) ) {
+        if ( csr0 == 0xFFFF ) {
+            /* PCMCIA remove happened */
+            break;
+        }
+
+        kprintf( "PCnet32: csr0=%x\n", csr0 );
+
+        /* Acknowledge all of the current interrupt sources ASAP. */
+
+        device->access->write_csr( io_address, CSR0, csr0 & ~0x004F );
+
+        /* Log misc errors. */
+
+        if ( csr0 & 0x4000 ) {
+            //dev->stats.tx_errors++; /* Tx babble. */
+        }
+
+        if ( csr0 & 0x1000 ) {
+            /*
+             * This happens when our receive ring is full. This
+             * shouldn't be a problem as we will see normal rx
+             * interrupts for the frames in the receive ring.  But
+             * there are some PCI chipsets (I can reproduce this
+             * on SP3G with Intel saturn chipset) which have
+             * sometimes problems and will fill up the receive
+             * ring with error descriptors.  In this situation we
+             * don't get a rx interrupt, but a missed frame
+             * interrupt sooner or later.
+             */
+
+             pcnet32_rx( device );
+
+             //dev->stats.rx_errors++; /* Missed a Rx frame. */
+        }
+
+
+        if ( csr0 & 0x0800 ) {
+            /* unlike for the lance, there is no restart needed */
+
+            kprintf( "PCnet32: Bus master arbitration failure, status %x.\n", csr0 );   
+        }
+
+        if ( csr0 & 0x0400 ) {
+            pcnet32_rx( device );
+        }
+
+        if ( csr0 & 0x0200 ) {
+            pcnet32_tx( device );
+        }
+
+        csr0 = device->access->read_csr( io_address, CSR0 );
+    }
+
+    /* Clear any other interrupt, and set interrupt enable. */
+
+    device->access->write_csr( io_address, 0, 0x7940 );
+
+    spinunlock_enable( &device->lock );
+
+    return 0;
+}
+
+static int pcnet32_init_ring( pcnet32_private_t* device ) {
+    int i;
+    packet_t* packet;
+
+    device->tx_full = 0;
+    device->cur_rx = 0;
+    device->cur_tx = 0;
+    device->dirty_rx = 0;
+    device->dirty_tx = 0;
+
+    for ( i = 0; i < device->rx_ring_size; i++ ) {
+        packet = device->rx_packet_buf[ i ];
+
+        if ( packet == NULL ) {
+            packet = create_packet( PKT_BUF_SKB );
+
+            if ( packet == NULL ) {
+                kprintf( "PCnet32: create_packet() failed for rx_ring entry!\n" );
+
+                return -ENOMEM;
+            }
+
+            device->rx_packet_buf[ i ] = packet;
+        }
+
+        rmb();
+
+        device->rx_ring[ i ].base = ( uint32_t )packet->data;
+        device->rx_ring[ i ].buf_length = -PKT_BUF_SKB;
+
+        /* Make sure owner changes after all others are visible */
+
+        wmb();
+
+        device->rx_ring[ i ].status = 0x8000;
+    }
+
+    /* The Tx buffer address is filled in as needed, but we do need to clear
+        the upper ownership bit. */
+
+    for ( i = 0; i < device->tx_ring_size; i++ ) {
+        /* CPU owns buffer */
+
+        device->tx_ring[ i ].status = 0;
+
+        /* Make sure adapter sees owner change */
+
+        wmb();
+
+        device->tx_ring[ i ].base = 0;
+    }
+
+    device->init_block->tlen_rlen = device->tx_len_bits | device->rx_len_bits;
+
+    for ( i = 0; i < 6; i++ ) {
+        device->init_block->phys_addr[ i ] = device->dev_address[ i ];
+    }
+
+    device->init_block->rx_ring = ( uint32_t )device->rx_ring;
+    device->init_block->tx_ring = ( uint32_t )device->tx_ring;
+
+    /* Make sure all changes are visible */
+
+    wmb();
+
+    return 0;
+}
+
+static int pcnet32_start( pcnet32_private_t* device ) {
+    int i;
+    int error;
+    int io_address;
+    uint16_t value;
+
+    io_address = device->io_address;
+
+    error = request_irq( device->irq, pcnet32_interrupt, ( void* )device );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    spinlock_disable( &device->lock );
+
+    if ( !is_valid_ether_addr( device->dev_address ) ) {
+        goto error_free_irq;
+    }
+
+    /* Reset the device */
+
+    device->access->reset( io_address );
+
+    /* Wwitch to 32bit mode */
+
+    device->access->write_bcr( io_address, 20, 2 );
+
+    /* Set/reset autoselect bit */
+
+    value = device->access->read_bcr( io_address, 2 ) & ~2;
+
+    if ( device->options & PCNET32_PORT_ASEL ) {
+        value |= 2;
+    }
+
+    device->access->write_bcr( io_address, 2, value );
+
+    /* Set/reset GPSI bit in test register */
+
+    value = device->access->read_csr( io_address, 124 ) & ~0x10;
+
+    if ( ( device->options & PCNET32_PORT_PORTSEL ) == PCNET32_PORT_GPSI ) {
+        value |= 0x10;
+    }
+
+    device->access->write_csr( io_address, 124, value );
+
+    if ( device->phycount < 2 ) {
+        /*
+         * 24 Jun 2004 according AMD, in order to change the PHY,
+         * DANAS (or DISPM for 79C976) must be set; then select the speed,
+         * duplex, and/or enable auto negotiation, and clear DANAS
+         */
+
+        if ( ( device->mii ) &&
+             !( device->options & PCNET32_PORT_ASEL ) ) {
+            device->access->write_bcr(
+                io_address,
+                32,
+                device->access->read_bcr( io_address, 32 ) | 0x0080
+            );
+
+            /* Disable Auto Negotiation, set 10Mpbs, HD */
+
+            value = device->access->read_bcr( io_address, 32 ) & ~0xB8;
+
+            if ( device->options & PCNET32_PORT_FD ) {
+                value |= 0x10;
+            }
+
+            if ( device->options & PCNET32_PORT_100 ) {
+                value |= 0x08;
+            }
+
+            device->access->write_bcr( io_address, 32, value );
+        } else {
+            if ( device->options & PCNET32_PORT_ASEL ) {
+                device->access->write_bcr(
+                    io_address,
+                    32,
+                    device->access->read_bcr( io_address, 32 ) | 0x0080
+                );
+
+                /* Enable auto negotiate, setup, disable fd */
+
+                value = device->access->read_bcr( io_address, 32 ) & ~0x98;
+                value |= 0x20;
+                device->access->write_bcr( io_address, 32, value );
+            }
+        }
+    } else {
+        kprintf( "PCnet32 TODO: Support multiple PHYs\n" );
+    }
+
+    device->init_block->mode = ( ( device->options & PCNET32_PORT_PORTSEL ) << 7 );
+
+    /* pcnet32_load_multicast( device ); */
+
+    if ( pcnet32_init_ring( device ) ) {
+        goto error_free_ring;
+    }
+
+    /* Re-initialize the PCNET32, and start it when done. */
+
+    device->access->write_csr( io_address, 1, ( uint32_t )device->init_block & 0xFFFF );
+    device->access->write_csr( io_address, 2, ( ( uint32_t )device->init_block ) >> 16 );
+
+    device->access->write_csr( io_address, CSR4, 0x0915 );
+    device->access->write_csr( io_address, CSR0, CSR0_INIT );
+
+    if ( device->chip_version >= PCNET32_79C970A ) {
+        /* TODO pcnet32_check_media(dev, 1); */
+    }
+
+    i = 0;
+
+    while ( i++ < 100 ) {
+        if ( device->access->read_csr( io_address, CSR0 ) & CSR0_IDON ) {
+            break;
+        }
+    }
+
+    /*
+     * We used to clear the InitDone bit, 0x0100, here but Mark Stockton
+     * reports that doing so triggers a bug in the '974.
+     */
+
+    device->access->write_csr( io_address, CSR0, CSR0_NORMAL );
+
+    spinunlock_enable( &device->lock );
+
+    return 0;
+
+error_free_ring:
+    spinunlock_enable( &device->lock );
+
+error_free_irq:
+    /* TODO: release IRQ */
+
+    return -ENOMEM;
+}
+
+static int pcnet32_open( void* node, uint32_t flags, void** cookie ) {
+    return 0;
+}
+
+static int pcnet32_close( void* node, void* cookie ) {
+    return 0;
+}
+
+static int pcnet32_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
+    int error;
+    pcnet32_private_t* device;
+
+    device = ( pcnet32_private_t* )node;
+
+    switch ( command ) {
+        case IOCTL_NET_SET_IN_QUEUE :
+            device->input_queue = ( packet_queue_t* )args;
+            error = 0;
+            break;
+
+        case IOCTL_NET_START :
+            error = pcnet32_start( device );
+            break;
+
+        default :
+            error = -ENOSYS;
+            break;
+    }
+
+    return error;
+}
+
+static int pcnet32_write( void* node, void* cookie, const void* buffer, off_t position, size_t size ) {
+    packet_t* packet;
+    pcnet32_private_t* device;
+
+    device = ( pcnet32_private_t* )node;
+
+    packet = create_packet( size );
+
+    if ( packet == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy( packet->data, buffer, size );
+
+    pcnet32_start_xmit( device, packet );
+
+    return size;
+}
+
 static device_calls_t pcnet32_calls = {
-    .open = NULL,
-    .close = NULL,
+    .open = pcnet32_open,
+    .close = pcnet32_close,
+    .ioctl = pcnet32_ioctl,
     .read = NULL,
-    .write = NULL,
-    .ioctl = NULL,
+    .write = pcnet32_write,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };
@@ -394,6 +1045,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     init_spinlock( &device->lock, "pcnet32 device" );
 
     device->access = access;
+    device->io_address = io_addr;
     device->chip_version = chip_version;
     device->tx_ring_size = TX_RING_SIZE;
     device->rx_ring_size = RX_RING_SIZE;
@@ -401,7 +1053,14 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     device->rx_mod_mask = device->rx_ring_size - 1;
     device->tx_len_bits = ( PCNET32_LOG_TX_BUFFERS << 12 );
     device->rx_len_bits = ( PCNET32_LOG_RX_BUFFERS << 4 );
+    device->mii = mii;
+    device->phymask = 0;
+    device->phycount = 0;
+    device->mii_if.full_duplex = fdx;
+    device->mii_if.phy_id_mask = 0x1F;
+    device->mii_if.reg_num_mask = 0x1F;
     device->options = PCNET32_PORT_ASEL;
+    device->input_queue = NULL;
 
     error = pcnet32_alloc_ring( device );
 
@@ -431,8 +1090,52 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     /* Switch pcnet32 to 32bit mode */
 
     access->write_bcr( io_addr, 20, 2 );
+
     access->write_csr( io_addr, 1, ( ( uint32_t )device->init_block & 0xFFFF ) );
     access->write_csr( io_addr, 2, ( ( uint32_t )device->init_block >> 16 ) );
+
+    /* Set the mii phy_id so that we can query the link state */
+
+    if ( device->mii ) {
+        device->mii_if.phy_id = ( ( device->access->read_bcr( io_addr, 33 ) ) >> 5 ) & 0x1F;
+
+        /* Scan for PHYs */
+
+        for ( i = 0; i < PCNET32_MAX_PHYS; i++ ) {
+            uint16_t id1;
+            uint16_t id2;
+
+            id1 = mdio_read( device, i, MII_PHYSID1 );
+
+            if ( id1 == 0xFFFF ) {
+                continue;
+            }
+
+            id2 = mdio_read( device, i, MII_PHYSID2 );
+
+            if (id2 == 0xFFFF ) {
+                continue;
+            }
+
+            if ( ( i == 31 ) &&
+                 ( ( chip_version + 1 ) & 0xFFFE ) == 0x2624 ) {
+                /* 79C971 & 79C972 have phantom phy at id 31 */
+                continue;
+            }
+
+            device->phycount++;
+            device->phymask |= ( 1 << i );
+            device->mii_if.phy_id = i;
+
+            kprintf( "PCnet32: Found PHY %04x:%04x at address %d.\n", id1, id2, i );
+        }
+
+        device->access->write_bcr( io_addr, 33, ( device->mii_if.phy_id ) << 5 );
+
+        if ( device->phycount > 1 ) {
+            device->options |= PCNET32_PORT_MII;
+        }
+    }
 
     device->irq = pci_device->interrupt_line;
 

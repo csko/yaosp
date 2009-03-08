@@ -1,4 +1,4 @@
-/* Symmetric multi-processing
+/* Network packet handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,30 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_SMP_H_
-#define _ARCH_SMP_H_
+#ifndef _NETWORK_PACKET_H_
+#define _NETWORK_PACKET_H_
 
-#include <config.h>
+#include <semaphore.h>
 
-#define rmb() __asm__ __volatile__( "" : : : "memory" )
-#define wmb() __asm__ __volatile__( "lock ; addl $0, 0(%%esp)" : : : "memory" )
+#include <arch/spinlock.h>
 
-#ifdef ENABLE_SMP
+typedef struct packet {
+    struct packet* next;
 
-extern volatile uint32_t tlb_invalidate_mask;
+    void* data;
+    int size;
+} packet_t;
 
-void processor_activated( void );
+typedef struct packet_queue {
+    spinlock_t lock;
+    semaphore_id sync;
+    packet_t* first;
+    packet_t* last;
+} packet_queue_t;
 
-void flush_tlb_global( void );
+packet_t* create_packet( int size );
+void delete_packet( packet_t* packet );
 
-int arch_boot_processors( void );
-#else
-#include <arch/cpu.h>
-#define flush_tlb_global flush_tlb
-#endif /* ENABLE_SMP */
+packet_queue_t* create_packet_queue( void );
 
-#endif // _ARCH_SMP_H_
+#endif /* _NETWORK_PACKET_H_ */

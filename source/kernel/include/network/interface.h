@@ -1,4 +1,4 @@
-/* Symmetric multi-processing
+/* Network interface handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,30 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_SMP_H_
-#define _ARCH_SMP_H_
+#ifndef _NETWORK_INTERFACE_H_
+#define _NETWORK_INTERFACE_H_
 
-#include <config.h>
+#include <types.h>
+#include <thread.h>
+#include <network/packet.h>
+#include <lib/hashtable.h>
 
-#define rmb() __asm__ __volatile__( "" : : : "memory" )
-#define wmb() __asm__ __volatile__( "lock ; addl $0, 0(%%esp)" : : : "memory" )
+#include <arch/atomic.h>
 
-#ifdef ENABLE_SMP
+typedef struct net_interface {
+    hashitem_t hash;
 
-extern volatile uint32_t tlb_invalidate_mask;
+    char name[ 16 ];
+    atomic_t ref_count;
 
-void processor_activated( void );
+    int device;
+    uint32_t flags;
+    thread_id recv_thread;
+    packet_queue_t* input_queue;
+} net_interface_t;
 
-void flush_tlb_global( void );
+int create_network_interfaces( void );
 
-int arch_boot_processors( void );
-#else
-#include <arch/cpu.h>
-#define flush_tlb_global flush_tlb
-#endif /* ENABLE_SMP */
+int init_network_interfaces( void );
 
-#endif // _ARCH_SMP_H_
+#endif /* _NETWORK_INTERFACE_H_ */

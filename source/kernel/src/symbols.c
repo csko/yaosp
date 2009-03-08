@@ -31,6 +31,7 @@
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>
+#include <network/packet.h>
 #include <lib/string.h>
 #include <lib/hashtable.h>
 #include <lib/ctype.h>
@@ -147,6 +148,10 @@ static kernel_symbol_t symbols[] = {
     { "hashtable_iterate", ( ptr_t )hashtable_iterate },
     { "hash_number", ( ptr_t )hash_number },
     { "hash_string", ( ptr_t )hash_string },
+
+    /* Networking functions */
+    { "create_packet", ( ptr_t )create_packet },
+    { "delete_packet", ( ptr_t )delete_packet },
 
     /* Architecture dependent functions */
     { "call_bios_interrupt", ( ptr_t )call_bios_interrupt },

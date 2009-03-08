@@ -20,6 +20,8 @@
 #define _PCNET32_H_
 
 #include <types.h>
+#include <network/packet.h>
+#include <network/mii.h>
 
 #include <arch/spinlock.h>
 
@@ -50,8 +52,26 @@
 #define PCNET32_LOG_TX_BUFFERS 4
 #define PCNET32_LOG_RX_BUFFERS 5
 
+#define PCNET32_MAX_PHYS 32
+
 #define TX_RING_SIZE ( 1 << PCNET32_LOG_TX_BUFFERS )
 #define RX_RING_SIZE ( 1 << PCNET32_LOG_RX_BUFFERS )
+
+#define CSR0            0
+#define CSR0_INIT       0x1
+#define CSR0_START      0x2
+#define CSR0_STOP       0x4
+#define CSR0_TXPOLL     0x8
+#define CSR0_INTEN      0x40
+#define CSR0_IDON       0x0100
+#define CSR0_NORMAL     (CSR0_START | CSR0_INTEN)
+#define CSR3            3
+#define CSR4            4
+#define CSR5            5
+#define CSR5_SUSPEND    0x0001
+#define CSR15           15
+
+#define PCNET32_79C970A 0x2621
 
 typedef struct pcnet32_pci_entry {
     uint16_t vendor_id;
@@ -98,6 +118,7 @@ typedef struct pcnet32_private {
     spinlock_t lock;
 
     int irq;
+    int io_address;
     int chip_version;
     pcnet32_access_t* access;
     uint32_t rx_ring_size;
@@ -106,9 +127,19 @@ typedef struct pcnet32_private {
     uint32_t tx_mod_mask;
     uint16_t rx_len_bits;
     uint16_t tx_len_bits;
+    char tx_full;
+    uint32_t cur_tx;
+    uint32_t cur_rx;
+    uint32_t dirty_tx;
+    uint32_t dirty_rx;
     uint32_t options;
     uint8_t dev_address[ 6 ];
     uint8_t perm_address[ 6 ];
+
+    int mii;
+    uint32_t phymask;
+    int phycount;
+    mii_if_info_t mii_if;
 
     void* init_block_base;
     pcnet32_init_block_t* init_block;
@@ -117,6 +148,10 @@ typedef struct pcnet32_private {
     void* tx_ring_base;
     pcnet32_rx_head_t* rx_ring;
     pcnet32_tx_head_t* tx_ring;
+    packet_t** rx_packet_buf;
+    packet_t** tx_packet_buf;
+
+    packet_queue_t* input_queue;
 } pcnet32_private_t;
 
 #endif /* _PCNET32_H_ */

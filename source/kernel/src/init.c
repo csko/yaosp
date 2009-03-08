@@ -25,6 +25,7 @@
 #include <config.h>
 #include <mm/pages.h>
 #include <vfs/vfs.h>
+#include <network/interface.h>
 #include <lib/string.h>
 
 #include <arch/fork.h>
@@ -104,6 +105,11 @@ __init static void mount_root_filesystem( void ) {
     kprintf( "Root filesystem mounted!\n" );
 }
 
+__init static void init_network( void ) {
+    init_network_interfaces();
+    create_network_interfaces();
+}
+
 int init_thread( void* arg ) {
     uint32_t init_page_count;
 
@@ -119,6 +125,7 @@ int init_thread( void* arg ) {
 
     load_bootmodules();
     mount_root_filesystem();
+    init_network();
 
     /* Free init code */
 
