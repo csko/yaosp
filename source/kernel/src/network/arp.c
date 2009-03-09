@@ -1,4 +1,4 @@
-/* Ethernet layer definitions
+/* Network interface handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,21 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETWORK_ETHERNET_H_
-#define _NETWORK_ETHERNET_H_
+#include <console.h>
+#include <network/arp.h>
+#include <network/ethernet.h>
+#include <network/device.h>
 
-#include <types.h>
+int arp_input( packet_t* packet ) {
+    arp_header_t* arp_header;
 
-#define ETH_ALEN 6
-#define ETH_HLEN 14
+    arp_header = ( arp_header_t* )( packet->data + ETH_HLEN );
 
-#define ETH_P_IP  0x0800
-#define ETH_P_ARP 0x0806
+    kprintf( "ARP command: 0x%x\n", ntohw( arp_header->command ) );
 
-typedef struct ethernet_header {
-    uint8_t dest[ ETH_ALEN ];
-    uint8_t src[ ETH_ALEN ];
-    uint16_t proto;
-} ethernet_header_t;
-
-#endif /* _NETWORK_ETHERNET_H_ */
+    return 0;
+}

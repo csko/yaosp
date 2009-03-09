@@ -19,6 +19,7 @@
 #ifndef _NETWORK_PACKET_H_
 #define _NETWORK_PACKET_H_
 
+#include <types.h>
 #include <semaphore.h>
 
 #include <arch/spinlock.h>
@@ -26,7 +27,7 @@
 typedef struct packet {
     struct packet* next;
 
-    void* data;
+    uint8_t* data;
     int size;
 } packet_t;
 

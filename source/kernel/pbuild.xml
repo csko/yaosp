@@ -104,6 +104,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/vfs/filesystem.c</item>
         <item>src/network/interface.c</item>
         <item>src/network/packet.c</item>
+        <item>src/network/arp.c</item>
     </array>
 
     <array name="files_lib">
