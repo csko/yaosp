@@ -222,24 +222,9 @@ static void pcnet32_rx_entry( pcnet32_private_t* device, pcnet32_rx_head_t* rxp,
     rx_in_place = 0;
 
     if ( status != 0x03 ) {   /* There was an error. */
-#if 0
-                /*
-                 * There is a tricky error noted by John Murphy,
-                 * <murf@perftech.com> to Russ Nelson: Even with full-sized
-                 * buffers it's possible for a jabber packet to use two
-                 * buffers, with only the last correctly noting the error.
-                 */
-                if (status & 0x01)      /* Only count a general error at the */
-                        dev->stats.rx_errors++; /* end of a packet. */
-                if (status & 0x20)
-                        dev->stats.rx_frame_errors++;
-                if (status & 0x10)
-                        dev->stats.rx_over_errors++;
-                if (status & 0x08)
-                        dev->stats.rx_crc_errors++;
-                if (status & 0x04)
-                        dev->stats.rx_fifo_errors++;
-#endif
+        if ( status & 0x01 ) {
+            device->stats.rx_errors++;
+        }
 
         return;
     }
@@ -250,17 +235,15 @@ static void pcnet32_rx_entry( pcnet32_private_t* device, pcnet32_rx_head_t* rxp,
 
     if ( pkt_len > PKT_BUF_SKB ) {
         kprintf( "PCnet32: Impossible packet size %d!\n", pkt_len );
-        //dev->stats.rx_errors++;
+        device->stats.rx_errors++;
         return;
     }
 
     if ( pkt_len < 60 ) {
         kprintf( "PCnet32: Runt packet!\n" );
-        //dev->stats.rx_errors++;
+        device->stats.rx_errors++;
         return;
     }
-
-    kprintf( "pkt_len=%d\n", pkt_len );
 
     new_packet = create_packet( PKT_BUF_SKB );
 
@@ -278,12 +261,12 @@ static void pcnet32_rx_entry( pcnet32_private_t* device, pcnet32_rx_head_t* rxp,
 
     wmb();
 
+    packet->size = pkt_len;
     ASSERT( device->input_queue != NULL );
     packet_queue_insert( device->input_queue, packet );
 
-    //dev->stats.rx_bytes += skb->len;
-    //dev->last_rx = jiffies;
-    //dev->stats.rx_packets++;
+    device->stats.rx_bytes += pkt_len;
+    device->stats.rx_packets++;
 }
 
 static int pcnet32_rx( pcnet32_private_t* device ) {
@@ -341,51 +324,13 @@ static int pcnet32_tx( pcnet32_private_t* device ) {
             /* There was a major error, log it. */
 
             err_status = device->tx_ring[ entry ].misc;
-            //dev->stats.tx_errors++;
+            device->stats.tx_errors++;
 
             kprintf( "PCnet32: Tx error status=%04x err_status=%08x\n", status, err_status );
 
-#if 0
-            if (err_status & 0x04000000)
-                dev->stats.tx_aborted_errors++;
-            if (err_status & 0x08000000)
-                dev->stats.tx_carrier_errors++;
-            if (err_status & 0x10000000)
-                dev->stats.tx_window_errors++;
-
-#ifndef DO_DXSUFLO
-                        if (err_status & 0x40000000) {
-                                dev->stats.tx_fifo_errors++;
-                                /* Ackk!  On FIFO errors the Tx unit is turned off! */
-                                /* Remove this verbosity later! */
-                                if (netif_msg_tx_err(lp))
-                                        printk(KERN_ERR
-                                               "%s: Tx FIFO error!\n",
-                                               dev->name);
-                                must_restart = 1;
-                        }
-#else
-
-            if (err_status & 0x40000000) {
-                                dev->stats.tx_fifo_errors++;
-                                if (!lp->dxsuflo) {     /* If controller doesn't recover ... */
-                                        /* Ackk!  On FIFO errors the Tx unit is turned off! */
-                                        /* Remove this verbosity later! */
-                                        if (netif_msg_tx_err(lp))
-                                                printk(KERN_ERR
-                                                       "%s: Tx FIFO error!\n",
-                                                       dev->name);
-                                        must_restart = 1;
-                                }
-                        }
-#endif
-#endif
+            must_restart = 1;
         } else {
-#if 0
-            if (status & 0x1800)
-                dev->stats.collisions++;
-            dev->stats.tx_packets++;
-#endif
+            device->stats.tx_packets++;
         }
 
         /* We must free the original skb */
@@ -457,12 +402,11 @@ static int pcnet32_start_xmit( pcnet32_private_t* device, packet_t* packet ) {
     device->tx_ring[ entry ].status = status;
 
     device->cur_tx++;
-    //dev->stats.tx_bytes += skb->len;
+    device->stats.tx_bytes += packet->size;
 
     /* Trigger an immediate send poll. */
-    device->access->write_csr( io_address, CSR0, CSR0_INTEN | CSR0_TXPOLL );
 
-    //dev->trans_start = jiffies;
+    device->access->write_csr( io_address, CSR0, CSR0_INTEN | CSR0_TXPOLL );
 
     if ( device->tx_ring[ ( entry + 1 ) & device->tx_mod_mask ].base != 0 ) {
         device->tx_full = 1;
@@ -503,7 +447,7 @@ static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
         /* Log misc errors. */
 
         if ( csr0 & 0x4000 ) {
-            //dev->stats.tx_errors++; /* Tx babble. */
+            device->stats.tx_errors++; /* Tx babble. */
         }
 
         if ( csr0 & 0x1000 ) {
@@ -521,12 +465,12 @@ static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
 
              pcnet32_rx( device );
 
-             //dev->stats.rx_errors++; /* Missed a Rx frame. */
+             device->stats.rx_errors++; /* Missed a Rx frame. */
         }
 
 
         if ( csr0 & 0x0800 ) {
-            /* unlike for the lance, there is no restart needed */
+            /* Unlike for the lance, there is no restart needed */
 
             kprintf( "PCnet32: Bus master arbitration failure, status %x.\n", csr0 );   
         }
@@ -1061,6 +1005,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     device->mii_if.reg_num_mask = 0x1F;
     device->options = PCNET32_PORT_ASEL;
     device->input_queue = NULL;
+    memset( &device->stats, 0, sizeof( net_device_stats_t ) );
 
     error = pcnet32_alloc_ring( device );
 

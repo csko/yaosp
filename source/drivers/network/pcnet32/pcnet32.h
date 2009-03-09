@@ -22,6 +22,7 @@
 #include <types.h>
 #include <network/packet.h>
 #include <network/mii.h>
+#include <network/device.h>
 
 #include <arch/spinlock.h>
 
@@ -152,6 +153,7 @@ typedef struct pcnet32_private {
     packet_t** tx_packet_buf;
 
     packet_queue_t* input_queue;
+    net_device_stats_t stats;
 } pcnet32_private_t;
 
 #endif /* _PCNET32_H_ */
