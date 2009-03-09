@@ -95,3 +95,26 @@ int packet_queue_insert( packet_queue_t* queue, packet_t* packet ) {
 
     return 0;
 }
+
+packet_t* packet_queue_pop_head( packet_queue_t* queue, uint64_t timeout ) {
+    packet_t* packet;
+
+    lock_semaphore( queue->sync, 1, timeout );
+
+    spinlock_disable( &queue->lock );
+
+    packet = queue->first;
+
+    if ( packet != NULL ) {
+        queue->first = packet->next;
+
+        if ( queue->first == NULL ) {
+            queue->last = NULL;
+        }
+    }
+
+    spinunlock_enable( &queue->lock );
+
+    return packet;
+}
+

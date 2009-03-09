@@ -21,6 +21,8 @@
 
 #include <types.h>
 
+#define ntohw(n) (((((uint32_t)n)&0xFF)<<8)|(((((uint32_t)n)>>8)&0xFF)))
+
 typedef struct net_device_stats {
     uint32_t rx_packets;
     uint32_t tx_packets;

@@ -24,6 +24,8 @@
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/interface.h>
+#include <network/ethernet.h>
+#include <network/device.h>
 #include <lib/string.h>
 
 static uint32_t interface_counter = 0;
@@ -76,8 +78,58 @@ static int insert_network_interface( net_interface_t* interface ) {
     return 0;
 }
 
+static int network_rx_thread( void* data ) {
+    packet_t* packet;
+    net_interface_t* interface;
+    ethernet_header_t* eth_header;
+
+    interface = ( net_interface_t* )data;
+
+    while ( 1 ) {
+        packet = packet_queue_pop_head( interface->input_queue, INFINITE_TIMEOUT );
+
+        if ( packet == NULL ) {
+            continue;
+        }
+
+        kprintf( "Received packet with size %d\n", packet->size );
+
+        eth_header = ( ethernet_header_t* )packet->data;
+
+        switch ( ntohw( eth_header->proto ) ) {
+            case ETH_P_ARP :
+                kprintf( "ARP packet\n" );
+                break;
+
+            case ETH_P_IP :
+                kprintf( "IP packet\n" );
+                break;
+
+            default :
+                kprintf( "Unknown packet\n" );
+                break;
+        }
+    }
+
+    return 0;
+}
+
 static int start_network_interface( net_interface_t* interface ) {
     int error;
+
+    interface->rx_thread = create_kernel_thread(
+        "network_rx",
+        PRIORITY_NORMAL,
+        network_rx_thread,
+        ( void* )interface,
+        0
+    );
+
+    if ( interface->rx_thread < 0 ) {
+        return -1;
+    }
+
+    wake_up_thread( interface->rx_thread );
 
     error = ioctl( interface->device, IOCTL_NET_SET_IN_QUEUE, ( void* )interface->input_queue );
 

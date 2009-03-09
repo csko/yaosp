@@ -1,4 +1,4 @@
-/* Network interface handling
+/* Ethernet layer definitions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,30 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETWORK_INTERFACE_H_
-#define _NETWORK_INTERFACE_H_
+#ifndef _NETWORK_ETHERNET_H_
+#define _NETWORK_ETHERNET_H_
 
 #include <types.h>
-#include <thread.h>
-#include <network/packet.h>
-#include <lib/hashtable.h>
 
-#include <arch/atomic.h>
+#define ETH_ALEN 6
 
-typedef struct net_interface {
-    hashitem_t hash;
+#define ETH_P_IP  0x0800
+#define ETH_P_ARP 0x0806
 
-    char name[ 16 ];
-    atomic_t ref_count;
+typedef struct ethernet_header {
+    uint8_t dest[ ETH_ALEN ];
+    uint8_t src[ ETH_ALEN ];
+    uint16_t proto;
+} ethernet_header_t;
 
-    int device;
-    uint32_t flags;
-    thread_id rx_thread;
-    packet_queue_t* input_queue;
-} net_interface_t;
-
-int create_network_interfaces( void );
-
-int init_network_interfaces( void );
-
-#endif /* _NETWORK_INTERFACE_H_ */
+#endif /* _NETWORK_ETHERNET_H_ */

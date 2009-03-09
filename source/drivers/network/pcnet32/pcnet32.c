@@ -438,8 +438,6 @@ static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
             break;
         }
 
-        kprintf( "PCnet32: csr0=%x\n", csr0 );
-
         /* Acknowledge all of the current interrupt sources ASAP. */
 
         device->access->write_csr( io_address, CSR0, csr0 & ~0x004F );
