@@ -34,6 +34,8 @@ packet_t* create_packet( int size ) {
     tmp = ( tmp + 15 ) & ~15;
 
     packet->data = ( void* )tmp;
+    packet->network_data = NULL;
+    packet->transport_data = NULL;
     packet->size = size;
 
     return packet;

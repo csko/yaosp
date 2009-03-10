@@ -27,6 +27,7 @@
 #include <network/ethernet.h>
 #include <network/device.h>
 #include <network/arp.h>
+#include <network/ipv4.h>
 #include <lib/string.h>
 
 static uint32_t interface_counter = 0;
@@ -94,10 +95,12 @@ static int network_rx_thread( void* data ) {
         }
 
         eth_header = ( ethernet_header_t* )packet->data;
+        packet->network_data = ( uint8_t* )( eth_header + 1 );
 
         switch ( ntohw( eth_header->proto ) ) {
             case ETH_P_IP :
                 kprintf( "IP packet\n" );
+                ipv4_input( packet );
                 break;
 
             case ETH_P_ARP :

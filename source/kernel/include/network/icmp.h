@@ -1,4 +1,4 @@
-/* Network packet handling
+/* ICMP packet handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,36 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETWORK_PACKET_H_
-#define _NETWORK_PACKET_H_
+#ifndef _NETWORK_ICMP_H_
+#define _NETWORK_ICMP_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <network/packet.h>
 
-#include <arch/spinlock.h>
+#define ICMP_HEADER_LEN 4
 
-typedef struct packet {
-    struct packet* next;
+#define ICMP_ECHO_REPLY 0
+#define ICMP_ECHO       8
 
-    uint8_t* data;
-    uint8_t* network_data;
-    uint8_t* transport_data;
+typedef struct icmp_header {
+    uint8_t type;
+    uint8_t code;
+    uint16_t checksum;
+} __attribute__(( packed )) icmp_header_t;
 
-    int size;
-} packet_t;
+typedef struct icmp_echo {
+    uint16_t identifier;
+    uint16_t sequence;
+} __attribute__(( packed )) icmp_echo_t;
 
-typedef struct packet_queue {
-    spinlock_t lock;
-    semaphore_id sync;
-    packet_t* first;
-    packet_t* last;
-} packet_queue_t;
+typedef struct icmp_echo_reply {
+    uint16_t identifier;
+    uint16_t sequence;
+} __attribute__(( packed )) icmp_echo_reply_t;
 
-packet_t* create_packet( int size );
-void delete_packet( packet_t* packet );
+int icmp_input( packet_t* packet );
 
-packet_queue_t* create_packet_queue( void );
-int packet_queue_insert( packet_queue_t* queue, packet_t* packet );
-packet_t* packet_queue_pop_head( packet_queue_t* queue, uint64_t timeout );
-
-#endif /* _NETWORK_PACKET_H_ */
+#endif /* _NETWORK_ICMP_H_ */

@@ -1,4 +1,4 @@
-/* IP packet handling
+/* IPv4 packet handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -20,7 +20,31 @@
 #define _NETWORK_IP_H_
 
 #include <types.h>
+#include <network/packet.h>
 
 #define IPV4_ADDR_LEN 4
+#define IPV4_HEADER_LEN 20
+
+#define IPV4_HDR_VERSION(n) ((((uint32_t)n)&0xF0)>>4)
+#define IPV4_HDR_SIZE(n)    (((uint32_t)n)&0x0F)
+
+#define IP_PROTO_ICMP 1
+#define IP_PROTO_TCP  6
+#define IP_PROTO_UDP  17
+
+typedef struct ipv4_header {
+    uint8_t version_and_size;
+    uint8_t type_of_service;
+    uint16_t packet_size;
+    uint16_t packet_id;
+    uint16_t fragment_offset;
+    uint8_t time_to_live;
+    uint8_t protocol;
+    uint16_t checksum;
+    uint8_t src_address[ IPV4_ADDR_LEN ];
+    uint8_t dest_address[ IPV4_ADDR_LEN ];
+} __attribute__(( packed )) ipv4_header_t;
+
+int ipv4_input( packet_t* packet );
 
 #endif /* _NETWORK_IP_H_ */
