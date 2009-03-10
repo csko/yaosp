@@ -21,16 +21,16 @@
 
 #include <types.h>
 
-#define ETH_ALEN 6
-#define ETH_HLEN 14
+#define ETH_ADDR_LEN   6
+#define ETH_HEADER_LEN 14
 
 #define ETH_P_IP  0x0800
 #define ETH_P_ARP 0x0806
 
 typedef struct ethernet_header {
-    uint8_t dest[ ETH_ALEN ];
-    uint8_t src[ ETH_ALEN ];
+    uint8_t dest[ ETH_ADDR_LEN ];
+    uint8_t src[ ETH_ADDR_LEN ];
     uint16_t proto;
-} ethernet_header_t;
+} __attribute__(( packed )) ethernet_header_t;
 
 #endif /* _NETWORK_ETHERNET_H_ */

@@ -1,4 +1,4 @@
-/* Network interface handling
+/* ARP packet handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -21,6 +21,17 @@
 
 #include <types.h>
 #include <network/packet.h>
+#include <network/ipv4.h>
+#include <network/ethernet.h>
+#include <network/interface.h>
+
+#define ARP_HEADER_LEN 8
+#define ARP_DATA_LEN   ( 2 * ETH_ADDR_LEN + 2 * IPV4_ADDR_LEN )
+
+#define ARP_HEADER_ETHER 1
+
+#define ARP_CMD_REQUEST 1
+#define ARP_CMD_REPLY   2
 
 typedef struct arp_header {
     uint16_t hardware_addr_format;
@@ -28,8 +39,15 @@ typedef struct arp_header {
     uint8_t hardware_addr_size;
     uint8_t protocol_addr_size;
     uint16_t command;
-} arp_header_t;
+} __attribute__(( packed )) arp_header_t;
 
-int arp_input( packet_t* packet );
+typedef struct arp_data {
+    uint8_t hw_sender[ ETH_ADDR_LEN ];
+    uint8_t ip_sender[ IPV4_ADDR_LEN ];
+    uint8_t hw_target[ ETH_ADDR_LEN ];
+    uint8_t ip_target[ IPV4_ADDR_LEN ];
+} __attribute__(( packed )) arp_data_t;
+
+int arp_input( net_interface_t* interface, packet_t* packet );
 
 #endif /* _NETWORK_ARP_H_ */

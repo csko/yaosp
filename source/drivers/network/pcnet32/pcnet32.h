@@ -23,6 +23,7 @@
 #include <network/packet.h>
 #include <network/mii.h>
 #include <network/device.h>
+#include <network/ethernet.h>
 
 #include <arch/spinlock.h>
 
@@ -134,8 +135,8 @@ typedef struct pcnet32_private {
     uint32_t dirty_tx;
     uint32_t dirty_rx;
     uint32_t options;
-    uint8_t dev_address[ 6 ];
-    uint8_t perm_address[ 6 ];
+    uint8_t dev_address[ ETH_ADDR_LEN ];
+    uint8_t perm_address[ ETH_ADDR_LEN ];
 
     int mii;
     uint32_t phymask;

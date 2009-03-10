@@ -93,8 +93,6 @@ static int network_rx_thread( void* data ) {
             continue;
         }
 
-        kprintf( "Received packet with size %d\n", packet->size );
-
         eth_header = ( ethernet_header_t* )packet->data;
 
         switch ( ntohw( eth_header->proto ) ) {
@@ -104,7 +102,7 @@ static int network_rx_thread( void* data ) {
 
             case ETH_P_ARP :
                 kprintf( "ARP packet\n" );
-                arp_input( packet );
+                arp_input( interface, packet );
                 break;
 
             default :
@@ -132,6 +130,18 @@ static int start_network_interface( net_interface_t* interface ) {
     }
 
     wake_up_thread( interface->rx_thread );
+
+    /* TODO */
+    interface->ip_address[ 0 ] = 192;
+    interface->ip_address[ 1 ] = 168;
+    interface->ip_address[ 2 ] = 1;
+    interface->ip_address[ 3 ] = 192;
+
+    error = ioctl( interface->device, IOCTL_NET_GET_HW_ADDRESS, ( void* )interface->hw_address );
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     error = ioctl( interface->device, IOCTL_NET_SET_IN_QUEUE, ( void* )interface->input_queue );
 

@@ -728,6 +728,11 @@ static int pcnet32_ioctl( void* node, void* cookie, uint32_t command, void* args
             error = pcnet32_start( device );
             break;
 
+        case IOCTL_NET_GET_HW_ADDRESS :
+            memcpy( args, device->dev_address, ETH_ADDR_LEN );
+            error = 0;
+            break;
+
         default :
             error = -ENOSYS;
             break;
@@ -947,15 +952,15 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
         prom_addr[ i ] = inb( io_addr + i );
     }
 
-    if ( ( memcmp( prom_addr, device->dev_address, 6 ) ) ||
+    if ( ( memcmp( prom_addr, device->dev_address, ETH_ADDR_LEN ) ) ||
          ( !is_valid_ether_addr( device->dev_address ) ) ) {
         if ( is_valid_ether_addr( prom_addr ) ) {
             kprintf( "PCnet32: CSR address invalid, using PROM address instead\n" );
-            memcpy( device->dev_address, prom_addr, 6 );
+            memcpy( device->dev_address, prom_addr, ETH_ADDR_LEN );
         }
     }
 
-    memcpy( device->perm_address, device->dev_address, /* TODO device->addr_len*/ 6 );
+    memcpy( device->perm_address, device->dev_address, ETH_ADDR_LEN );
 
     if ( !is_valid_ether_addr( device->perm_address ) ) {
         memset( device->dev_address, 0, sizeof( device->dev_address ) );

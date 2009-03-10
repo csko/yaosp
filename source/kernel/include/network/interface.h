@@ -22,6 +22,8 @@
 #include <types.h>
 #include <thread.h>
 #include <network/packet.h>
+#include <network/ipv4.h>
+#include <network/ethernet.h>
 #include <lib/hashtable.h>
 
 #include <arch/atomic.h>
@@ -31,6 +33,9 @@ typedef struct net_interface {
 
     char name[ 16 ];
     atomic_t ref_count;
+
+    uint8_t hw_address[ ETH_ADDR_LEN ];
+    uint8_t ip_address[ IPV4_ADDR_LEN ];
 
     int device;
     uint32_t flags;

@@ -1,4 +1,4 @@
-/* Network device definitions
+/* IP packet handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETWORK_DEVICE_H_
-#define _NETWORK_DEVICE_H_
+#ifndef _NETWORK_IP_H_
+#define _NETWORK_IP_H_
 
 #include <types.h>
 
-#define ntohw(n) (((((uint32_t)n)&0xFF)<<8)|(((((uint32_t)n)>>8)&0xFF)))
-#define htonw ntohw
+#define IPV4_ADDR_LEN 4
 
-typedef struct net_device_stats {
-    uint32_t rx_packets;
-    uint32_t tx_packets;
-    uint64_t rx_bytes;
-    uint64_t tx_bytes;
-    uint32_t rx_errors;
-    uint32_t tx_errors;
-    uint32_t rx_dropped;
-    uint32_t tx_dropped;
-} net_device_stats_t;
-
-#endif /* _NETWORK_DEVICE_H_ */
+#endif /* _NETWORK_IP_H_ */
