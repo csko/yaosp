@@ -26,6 +26,7 @@
 #include <mm/pages.h>
 #include <vfs/vfs.h>
 #include <network/interface.h>
+#include <network/route.h>
 #include <lib/string.h>
 
 #include <arch/fork.h>
@@ -107,6 +108,7 @@ __init static void mount_root_filesystem( void ) {
 
 __init static void init_network( void ) {
     init_network_interfaces();
+    init_routes();
     create_network_interfaces();
 }
 

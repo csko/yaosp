@@ -107,6 +107,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/arp.c</item>
         <item>src/network/ipv4.c</item>
         <item>src/network/icmp.c</item>
+        <item>src/network/route.c</item>
     </array>
 
     <array name="files_lib">

@@ -28,6 +28,7 @@
 #include <network/device.h>
 #include <network/arp.h>
 #include <network/ipv4.h>
+#include <network/route.h>
 #include <lib/string.h>
 
 static uint32_t interface_counter = 0;
@@ -135,10 +136,16 @@ static int start_network_interface( net_interface_t* interface ) {
     wake_up_thread( interface->rx_thread );
 
     /* TODO */
+    uint8_t netmask[4]={255,255,255,0};
+    uint8_t dummy[4]={0,0,0,0};
+    route_t* route;
     interface->ip_address[ 0 ] = 192;
     interface->ip_address[ 1 ] = 168;
     interface->ip_address[ 2 ] = 1;
     interface->ip_address[ 3 ] = 192;
+    route = create_route( interface->ip_address, netmask, dummy, 0 );
+    insert_route( route );
+    /* End of TODO */
 
     error = ioctl( interface->device, IOCTL_NET_GET_HW_ADDRESS, ( void* )interface->hw_address );
 
