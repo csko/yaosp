@@ -168,6 +168,7 @@ static int start_network_interface( net_interface_t* interface ) {
     interface->ip_address[ 2 ] = 1;
     interface->ip_address[ 3 ] = 192;
     route = create_route( interface->ip_address, netmask, dummy, 0 );
+    route->interface = interface;
     insert_route( route );
     /* End of TODO */
 
