@@ -18,11 +18,107 @@
 
 #include <console.h>
 #include <errno.h>
-#include <lib/string.h>
+#include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/arp.h>
 #include <network/ethernet.h>
 #include <network/device.h>
+#include <lib/string.h>
+
+static hashtable_t pending_requests;
+
+static arp_pending_request_t* arp_create_request( uint8_t* ip_address ) {
+    arp_pending_request_t* request;
+
+    request = ( arp_pending_request_t* )kmalloc( sizeof( arp_pending_request_t ) );
+
+    if ( request == NULL ) {
+        goto error1;
+    }
+
+    request->packet_queue = create_packet_queue();
+
+    if ( request->packet_queue == NULL ) {
+        goto error2;
+    }
+
+    memcpy( request->ip_address, ip_address, IPV4_ADDR_LEN );
+
+    return request;
+
+error2:
+    kfree( request );
+
+error1:
+    return NULL;
+}
+
+int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* packet ) {
+    bool send_request;
+    arp_pending_request_t* request;
+
+    request = ( arp_pending_request_t* )hashtable_get( &pending_requests, ( const void* )dest_ip );
+
+    if ( request == NULL ) {
+        send_request = true;
+
+        request = arp_create_request( dest_ip );
+
+        if ( request == NULL ) {
+            return -ENOMEM;
+        }
+
+        hashtable_add( &pending_requests, ( hashitem_t* )request );
+    } else {
+        send_request = false;
+    }
+
+    packet_queue_insert( request->packet_queue, packet );
+
+    if ( send_request ) {
+        int error;
+        packet_t* arp_request;
+        arp_header_t* arp_header;
+        arp_data_t* arp_data;
+        uint8_t hw_broadcast[ ETH_ADDR_LEN ] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+        arp_request = create_packet( ETH_HEADER_LEN + ARP_HEADER_LEN + ARP_DATA_LEN );
+
+        if ( arp_request == NULL ) {
+            return -ENOMEM;
+        }
+
+        arp_header = ( arp_header_t* )( arp_request->data + ETH_HEADER_LEN );
+
+        arp_header->hardware_addr_format = htonw( ARP_HEADER_ETHER );
+        arp_header->protocol_addr_format = htonw( ETH_P_IP );
+        arp_header->hardware_addr_size = ETH_ADDR_LEN;
+        arp_header->protocol_addr_size = IPV4_ADDR_LEN;
+        arp_header->command = htonw( ARP_CMD_REQUEST );
+
+        arp_data = ( arp_data_t* )( arp_header + 1 );
+
+        /* HW addresses */
+
+        memset( arp_data->hw_target, 0x00, ETH_ADDR_LEN );
+        memcpy( arp_data->hw_sender, interface->hw_address, ETH_ADDR_LEN );
+
+        /* IP addresses */
+
+        memcpy( arp_data->ip_target, dest_ip, IPV4_ADDR_LEN );
+        memcpy( arp_data->ip_sender, interface->ip_address, IPV4_ADDR_LEN );
+
+        error = ethernet_send_packet( interface, hw_broadcast, ETH_P_ARP, arp_request );
+
+        delete_packet( arp_request );
+
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+
+    return 0;
+}
 
 static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_header ) {
     int error;
@@ -103,6 +199,40 @@ int arp_input( net_interface_t* interface, packet_t* packet ) {
         default :
             kprintf( "Unknown ARP command: 0x%x\n", ntohw( arp_header->command ) );
             break;
+    }
+
+    return 0;
+}
+
+static void* pending_ip_key( hashitem_t* item ) {
+    arp_pending_request_t* request;
+
+    request = ( arp_pending_request_t* )item;
+
+    return &request->ip_address[ 0 ];
+}
+
+static uint32_t pending_ip_hash( const void* key ) {
+    return hash_number( ( uint8_t* )key, IPV4_ADDR_LEN );
+}
+
+static bool pending_ip_compare( const void* key1, const void* key2 ) {
+    return ( memcmp( key1, key2, IPV4_ADDR_LEN ) == 0 );
+}
+
+int init_arp( void ) {
+    int error;
+
+    error = init_hashtable(
+        &pending_requests,
+        32,
+        pending_ip_key,
+        pending_ip_hash,
+        pending_ip_compare
+    );
+
+    if ( error < 0 ) {
+        return error;
     }
 
     return 0;

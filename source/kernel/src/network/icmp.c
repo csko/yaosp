@@ -33,6 +33,7 @@ static int icmp_handle_echo( packet_t* packet ) {
     icmp_echo_t* echo;
     icmp_echo_reply_t* echo_reply;
     icmp_header_t* icmp_reply_header;
+    uint8_t dest_ip[ IPV4_ADDR_LEN ];
 
     ip_header = ( ipv4_header_t* )packet->network_data;
     icmp_header = ( icmp_header_t* )packet->transport_data;
@@ -83,19 +84,21 @@ static int icmp_handle_echo( packet_t* packet ) {
 
     data -= sizeof( icmp_header_t );
     icmp_reply_header = ( icmp_header_t* )data;
+    reply->transport_data = data;
 
     icmp_reply_header->type = ICMP_ECHO_REPLY;
     icmp_reply_header->code = icmp_header->code;
     icmp_reply_header->checksum = 0;
+
+    memcpy( dest_ip, ip_header->src_address, IPV4_ADDR_LEN );
 
     /* Now we can delete the original packet */
 
     delete_packet( packet );
 
     /* TODO: count checksum for the new packet */
-    /* TODO: send the new packet through the IP layer */
 
-    return 0;
+    return ipv4_send_packet( dest_ip, reply );
 }
 
 int icmp_input( packet_t* packet ) {

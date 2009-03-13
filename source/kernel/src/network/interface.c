@@ -81,6 +81,30 @@ static int insert_network_interface( net_interface_t* interface ) {
     return 0;
 }
 
+int ethernet_send_packet( net_interface_t* interface, uint8_t* hw_address, uint16_t protocol, packet_t* packet ) {
+    int error;
+    ethernet_header_t* eth_header;
+
+    eth_header = ( ethernet_header_t* )packet->data;
+
+    /* Build the ethernet header */
+
+    eth_header->proto = htonw( protocol );
+
+    memcpy( eth_header->dest, hw_address, ETH_ADDR_LEN );
+    memcpy( eth_header->src, interface->hw_address, ETH_ADDR_LEN );
+
+    /* Send the packet */
+
+    error = pwrite( interface->device, packet->data, packet->size, 0 );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
 static int network_rx_thread( void* data ) {
     packet_t* packet;
     net_interface_t* interface;

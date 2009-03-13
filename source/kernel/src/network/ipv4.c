@@ -19,9 +19,14 @@
 #include <types.h>
 #include <console.h>
 #include <errno.h>
+#include <macros.h>
 #include <network/ipv4.h>
 #include <network/ethernet.h>
 #include <network/icmp.h>
+#include <network/route.h>
+#include <network/arp.h>
+#include <network/device.h>
+#include <lib/string.h>
 
 #ifndef ARCH_HAVE_IP_CHECKSUM
 static uint16_t ip_checksum( uint16_t* data, uint16_t length ) {
@@ -46,6 +51,49 @@ static uint16_t ip_checksum( uint16_t* data, uint16_t length ) {
     return ~checksum;
 }
 #endif /* ARCH_HAVE_IP_CHECKSUM */
+
+int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet ) {
+    int error;
+    route_t* route;
+    ipv4_header_t* ip_header;
+
+    route = find_route( dest_ip );
+
+    if ( route == NULL ) {
+        kprintf( "NET: No route to address: %d.%d.%d.%d\n", dest_ip[ 0 ], dest_ip[ 1 ], dest_ip[ 2 ], dest_ip[ 3 ] );
+        return -EINVAL;
+    }
+
+    /* TODO: check MTU */
+
+    ip_header = ( ipv4_header_t* )( packet->transport_data - sizeof( ipv4_header_t ) );
+
+    ASSERT( ( ptr_t )ip_header >= ( ptr_t )packet->data );
+
+    packet->network_data = ( uint8_t* )ip_header;
+
+    ip_header->version_and_size = IPV4_HDR_MK_VER_AND_SIZE( 4, 5 );
+    ip_header->type_of_service = 0;
+    ip_header->packet_size = htonw( packet->size - ( ( uint32_t )ip_header - ( uint32_t )ip_header ) );
+    ip_header->packet_id = 0; /* TODO ??? */
+    ip_header->fragment_offset = 0;
+    ip_header->time_to_live = 255;
+    ip_header->protocol = IP_PROTO_ICMP;
+
+    memcpy( ip_header->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
+    memcpy( ip_header->dest_address, dest_ip, IPV4_ADDR_LEN );
+
+    ASSERT( ( sizeof( ipv4_header_t ) / 4 ) == 0 );
+
+    ip_header->checksum = 0;
+    ip_header->checksum = ip_checksum( ( uint16_t* )ip_header, sizeof( ipv4_header_t ) / 4 );
+
+    error = arp_send_packet( route->interface, dest_ip, packet );
+
+    put_route( route );
+
+    return error;
+}
 
 static int ipv4_handle_packet( packet_t* packet ) {
     ipv4_header_t* ip_header;

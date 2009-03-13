@@ -25,8 +25,9 @@
 #define IPV4_ADDR_LEN 4
 #define IPV4_HEADER_LEN 20
 
-#define IPV4_HDR_VERSION(n) ((((uint32_t)n)&0xF0)>>4)
-#define IPV4_HDR_SIZE(n)    (((uint32_t)n)&0x0F)
+#define IPV4_HDR_VERSION(n)           ((((uint32_t)n)&0xF0)>>4)
+#define IPV4_HDR_SIZE(n)              (((uint32_t)n)&0x0F)
+#define IPV4_HDR_MK_VER_AND_SIZE(v,s) (((v)<<4)|(s))
 
 #define IP_PROTO_ICMP 1
 #define IP_PROTO_TCP  6
@@ -45,6 +46,7 @@ typedef struct ipv4_header {
     uint8_t dest_address[ IPV4_ADDR_LEN ];
 } __attribute__(( packed )) ipv4_header_t;
 
+int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet );
 int ipv4_input( packet_t* packet );
 
 #endif /* _NETWORK_IP_H_ */

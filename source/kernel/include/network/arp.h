@@ -20,6 +20,7 @@
 #define _NETWORK_ARP_H_
 
 #include <types.h>
+#include <lib/hashtable.h>
 #include <network/packet.h>
 #include <network/ipv4.h>
 #include <network/ethernet.h>
@@ -48,6 +49,16 @@ typedef struct arp_data {
     uint8_t ip_target[ IPV4_ADDR_LEN ];
 } __attribute__(( packed )) arp_data_t;
 
+typedef struct arp_pending_request {
+    hashitem_t hash;
+
+    uint8_t ip_address[ IPV4_ADDR_LEN ];
+    packet_queue_t* packet_queue;
+} arp_pending_request_t;
+
+int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* packet );
 int arp_input( net_interface_t* interface, packet_t* packet );
+
+int init_arp( void );
 
 #endif /* _NETWORK_ARP_H_ */
