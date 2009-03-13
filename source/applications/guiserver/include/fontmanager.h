@@ -23,6 +23,42 @@
 #include FT_FREETYPE_H
 #include FT_SYNTHESIS_H
 
+#include <yaosp/semaphore.h>
+
+#include <ygui/font.h>
+#include <yutil/hashtable.h>
+
+typedef struct font_glyph {
+    int dummy;
+} font_glyph_t;
+
+typedef struct font_node {
+    hashitem_t hash;
+    int ascender;
+    int descender;
+    int line_gap;
+    int advance;
+    font_properties_t properties;
+    font_glyph_t** glyph_table;
+} font_node_t;
+
+typedef struct font_style {
+    hashitem_t hash;
+    const char* name;
+    FT_Face face;
+    int glyph_count;
+    int scalable;
+    int fixed_width;
+    semaphore_id lock;
+    hashtable_t nodes;
+} font_style_t;
+
+typedef struct font_family {
+    hashitem_t hash;
+    const char* name;
+    hashtable_t styles;
+} font_family_t;
+
 int init_font_manager( void );
 
 #endif /* _FONTMANAGER_H_ */
