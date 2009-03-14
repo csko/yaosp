@@ -22,6 +22,7 @@
 #include <vfs/vfs.h>
 #include <network/socket.h>
 #include <network/interface.h>
+#include <network/device.h>
 
 static semaphore_id socket_lock;
 static ino_t socket_inode_counter = 0;
@@ -187,6 +188,53 @@ error1:
 
 int sys_socket( int family, int type, int protocol ) {
     return do_socket( false, family, type, protocol );
+}
+
+int do_connect( bool kernel, int fd, const struct sockaddr* address, socklen_t addrlen ) {
+    int error;
+    file_t* file;
+    socket_t* socket;
+    io_context_t* io_context;
+    struct sockaddr_in* in_address;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    in_address = ( struct sockaddr_in* )address;
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto error1;
+    }
+
+    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
+
+    if ( socket == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    memcpy( socket->dest_address, &in_address->sin_addr.s_addr, IPV4_ADDR_LEN );
+    socket->dest_port = ntohw( in_address->sin_port );
+
+    /* TODO: call connect on the socket */
+
+    error = 0;
+
+error2:
+    io_context_put_file( io_context, file );
+
+error1:
+    return error;
+}
+
+int sys_connect( int fd, const struct sockaddr* address, socklen_t addrlen ) {
+    return do_connect( false, fd, address, addrlen );
 }
 
 static void* socket_key( hashitem_t* item ) {

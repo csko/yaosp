@@ -104,6 +104,15 @@ enum socket_type {
 #define SOCK_RAW SOCK_RAW
 };
 
+typedef unsigned short int sa_family_t;
+typedef unsigned int socklen_t;
+
+struct sockaddr {
+    sa_family_t sa_family;
+    char sa_data[ 14 ];
+};
+
 int socket( int domain, int type, int protocol );
+int connect( int fd, const struct sockaddr* address, socklen_t addrlen );
 
 #endif /* _SYS_SOCKET_H_ */
