@@ -18,6 +18,7 @@
 
 #include <console.h>
 #include <errno.h>
+#include <macros.h>
 #include <network/icmp.h>
 #include <network/ipv4.h>
 #include <network/device.h>
@@ -88,7 +89,6 @@ static int icmp_handle_echo( packet_t* packet ) {
 
     icmp_reply_header->type = ICMP_ECHO_REPLY;
     icmp_reply_header->code = icmp_header->code;
-    icmp_reply_header->checksum = 0;
 
     memcpy( dest_ip, ip_header->src_address, IPV4_ADDR_LEN );
 
@@ -96,7 +96,11 @@ static int icmp_handle_echo( packet_t* packet ) {
 
     delete_packet( packet );
 
-    /* TODO: count checksum for the new packet */
+    icmp_reply_header->checksum = 0;
+    icmp_reply_header->checksum = ip_checksum(
+        ( uint16_t* )icmp_reply_header, 
+        ICMP_HEADER_LEN + sizeof( icmp_echo_reply_t ) + echo_payload_size
+    );
 
     return ipv4_send_packet( dest_ip, reply );
 }

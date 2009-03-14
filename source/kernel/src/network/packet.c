@@ -74,6 +74,20 @@ error1:
     return NULL;
 }
 
+void delete_packet_queue( packet_queue_t* packet_queue ) {
+    packet_t* packet;
+
+    while ( packet_queue->first != NULL ) {
+        packet = packet_queue->first;
+        packet_queue->first = packet->next;
+
+        delete_packet( packet );
+    }
+
+    delete_semaphore( packet_queue->sync );
+    kfree( packet_queue );
+}
+
 int packet_queue_insert( packet_queue_t* queue, packet_t* packet ) {
     packet->next = NULL;
 

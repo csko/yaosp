@@ -28,6 +28,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/isr.S</item>
         <item>arch/i386/src/switch.S</item>
         <item>arch/i386/src/smp_entry.S</item>
+        <item>arch/i386/src/network/network.S</item>
         <item>arch/i386/src/lib/string.S</item>
     </array>
 

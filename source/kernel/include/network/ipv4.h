@@ -29,6 +29,10 @@
 #define IPV4_HDR_SIZE(n)              (((uint32_t)n)&0x0F)
 #define IPV4_HDR_MK_VER_AND_SIZE(v,s) (((v)<<4)|(s))
 
+#define IPV4_MORE_FRAGMENTS 0x2000
+#define IPV4_DONT_FRAGMENT  0x4000
+#define IPV4_FRAG_OFF_MASK  0x1FFF
+
 #define IP_PROTO_ICMP 1
 #define IP_PROTO_TCP  6
 #define IP_PROTO_UDP  17
@@ -45,6 +49,8 @@ typedef struct ipv4_header {
     uint8_t src_address[ IPV4_ADDR_LEN ];
     uint8_t dest_address[ IPV4_ADDR_LEN ];
 } __attribute__(( packed )) ipv4_header_t;
+
+uint16_t ip_checksum( uint16_t* data, uint16_t length );
 
 int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet );
 int ipv4_input( packet_t* packet );

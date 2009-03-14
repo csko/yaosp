@@ -28,8 +28,10 @@
 #include <network/device.h>
 #include <lib/string.h>
 
+#include <arch/network/network.h>
+
 #ifndef ARCH_HAVE_IP_CHECKSUM
-static uint16_t ip_checksum( uint16_t* data, uint16_t length ) {
+uint16_t ip_checksum( uint16_t* data, uint16_t length ) {
     uint32_t checksum;
 
     checksum = 0;
@@ -43,6 +45,11 @@ static uint16_t ip_checksum( uint16_t* data, uint16_t length ) {
 
         length -= 2;
     }
+
+    if ( length ) {
+        checksum += ( uint16_t )( *( ( uint8_t* )data ) );
+    }
+
 
     while ( checksum >> 16 ) {
         checksum = ( checksum & 0xFFFF ) + ( checksum >> 16 );
@@ -74,19 +81,17 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet ) {
 
     ip_header->version_and_size = IPV4_HDR_MK_VER_AND_SIZE( 4, 5 );
     ip_header->type_of_service = 0;
-    ip_header->packet_size = htonw( packet->size - ( ( uint32_t )ip_header - ( uint32_t )ip_header ) );
+    ip_header->packet_size = htonw( packet->size - ( ( uint32_t )ip_header - ( uint32_t )packet->data ) );
     ip_header->packet_id = 0; /* TODO ??? */
-    ip_header->fragment_offset = 0;
+    ip_header->fragment_offset = htonw( IPV4_DONT_FRAGMENT );
     ip_header->time_to_live = 255;
     ip_header->protocol = IP_PROTO_ICMP;
 
     memcpy( ip_header->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
     memcpy( ip_header->dest_address, dest_ip, IPV4_ADDR_LEN );
 
-    ASSERT( ( sizeof( ipv4_header_t ) / 4 ) == 0 );
-
     ip_header->checksum = 0;
-    ip_header->checksum = ip_checksum( ( uint16_t* )ip_header, sizeof( ipv4_header_t ) / 4 );
+    ip_header->checksum = ip_checksum( ( uint16_t*)ip_header, sizeof( ipv4_header_t ) );
 
     error = arp_send_packet( route->interface, dest_ip, packet );
 

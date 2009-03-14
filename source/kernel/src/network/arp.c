@@ -181,6 +181,39 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
     return error;
 }
 
+static int arp_handle_reply( net_interface_t* interface, arp_header_t* arp_header ) {
+    packet_t* packet;
+    arp_data_t* arp_reply;
+    arp_pending_request_t* request;
+
+    arp_reply = ( arp_data_t* )( arp_header + 1 );
+
+    request = ( arp_pending_request_t* )hashtable_get( &pending_requests, ( const void* )&arp_reply->ip_sender[ 0 ] );
+
+    if ( request == NULL ) {
+        return 0;
+    }
+
+    hashtable_remove( &pending_requests, ( const void* )&request->ip_address[ 0 ] );
+
+    while ( 1 ) {
+        packet = packet_queue_pop_head( request->packet_queue, 0 );
+
+        if ( packet == NULL ) {
+            break;
+        }
+
+        ethernet_send_packet( interface, arp_reply->hw_sender, ETH_P_IP, packet );
+
+        delete_packet( packet );
+    }
+
+    delete_packet_queue( request->packet_queue );
+    kfree( request );
+
+    return 0;
+}
+
 int arp_input( net_interface_t* interface, packet_t* packet ) {
     arp_header_t* arp_header;
 
@@ -194,6 +227,7 @@ int arp_input( net_interface_t* interface, packet_t* packet ) {
 
         case ARP_CMD_REPLY :
             kprintf( "ARP reply\n" );
+            arp_handle_reply( interface, arp_header );
             break;
 
         default :
