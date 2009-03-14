@@ -1,4 +1,4 @@
-/* Network interface handling
+/* Socket handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,37 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETWORK_INTERFACE_H_
-#define _NETWORK_INTERFACE_H_
+#ifndef _NETWORK_SOCKET_H_
+#define _NETWORK_SOCKET_H_
 
-#include <types.h>
-#include <thread.h>
-#include <network/packet.h>
-#include <network/ipv4.h>
-#include <network/ethernet.h>
+#include <vfs/inode.h>
 #include <lib/hashtable.h>
 
-#include <arch/atomic.h>
-
-typedef struct net_interface {
+typedef struct socket {
     hashitem_t hash;
 
-    char name[ 16 ];
-    atomic_t ref_count;
+    ino_t inode_number;
+} socket_t;
 
-    uint8_t hw_address[ ETH_ADDR_LEN ];
-    uint8_t ip_address[ IPV4_ADDR_LEN ];
+int sys_socket( int family, int type, int protocol );
 
-    int device;
-    uint32_t flags;
-    thread_id rx_thread;
-    packet_queue_t* input_queue;
-} net_interface_t;
+int init_socket( void );
 
-int create_network_interfaces( void );
-
-int network_interface_ioctl( int command, void* buffer, bool from_kernel );
-
-int init_network_interfaces( void );
-
-#endif /* _NETWORK_INTERFACE_H_ */
+#endif /* _NETWORK_SOCKET_H_ */

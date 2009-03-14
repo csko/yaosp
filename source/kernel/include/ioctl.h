@@ -1,4 +1,4 @@
-/* Terminal driver
+/* ioctl constant values
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,6 +18,12 @@
 
 #ifndef _IOCTL_H_
 #define _IOCTL_H_
+
+#define SIOCGIFCONF    0x89300003
+#define SIOCGIFCOUNT   0x89300004
+#define SIOCGIFADDR    0x89300005
+#define SIOCGIFNETMASK 0x89300006
+#define SIOCGIFHWADDR  0x89300007
 
 /* PS/2 driver ioctls */
 

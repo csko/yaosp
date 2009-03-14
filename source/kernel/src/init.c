@@ -1,6 +1,6 @@
 /* Init thread
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <network/interface.h>
 #include <network/route.h>
 #include <network/arp.h>
+#include <network/socket.h>
 #include <lib/string.h>
 
 #include <arch/fork.h>
@@ -111,6 +112,7 @@ __init static void init_network( void ) {
     init_network_interfaces();
     init_routes();
     init_arp();
+    init_socket();
     create_network_interfaces();
 }
 

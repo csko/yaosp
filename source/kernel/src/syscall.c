@@ -30,6 +30,7 @@
 #include <mm/userspace.h>
 #include <mm/pages.h>
 #include <vfs/vfs.h>
+#include <network/socket.h>
 
 static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK },
@@ -87,7 +88,8 @@ static system_call_entry_t system_call_table[] = {
     { "load_module", sys_load_module, 0 },
     { "utime", sys_utime, 0 },
     { "reboot", sys_reboot, 0 },
-    { "shutdown", sys_shutdown, 0 }
+    { "shutdown", sys_shutdown, 0 },
+    { "socket", sys_socket, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

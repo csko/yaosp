@@ -142,6 +142,18 @@ static int network_rx_thread( void* data ) {
     return 0;
 }
 
+static int get_interface_count( void ) {
+    int count;
+
+    LOCK( interface_lock );
+
+    count = hashtable_get_item_count( &interface_table );
+
+    UNLOCK( interface_lock );
+
+    return count;
+}
+
 static int start_network_interface( net_interface_t* interface ) {
     int error;
 
@@ -210,6 +222,22 @@ static int create_network_interface( int device ) {
     kprintf( "Created network interface: %s\n", interface->name );
 
     return 0;
+}
+
+int network_interface_ioctl( int command, void* buffer, bool from_kernel ) {
+    int error;
+
+    switch ( command ) {
+        case SIOCGIFCOUNT :
+            error = get_interface_count();
+            break;
+
+        default :
+            error = -ENOSYS;
+            break;
+    }
+
+    return error;
 }
 
 __init int create_network_interfaces( void ) {
