@@ -23,6 +23,7 @@
 #include <network/socket.h>
 #include <network/interface.h>
 #include <network/device.h>
+#include <network/tcp.h>
 
 static semaphore_id socket_lock;
 static ino_t socket_inode_counter = 0;
@@ -125,6 +126,10 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
     socket_t* socket;
     io_context_t* io_context;
 
+    if ( family != AF_INET ) {
+        return -EINVAL;
+    }
+
     if ( kernel ) {
         io_context = &kernel_io_context;
     } else {
@@ -135,6 +140,20 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
 
     if ( socket == NULL ) {
         goto error1;
+    }
+
+    switch ( type ) {
+        case SOCK_STREAM :
+            error = tcp_create_socket( socket );
+            break;
+
+        default :
+            error = -EINVAL;
+            break;
+    }
+
+    if ( error < 0 ) {
+        goto error2;
     }
 
     file = create_file();
@@ -190,7 +209,7 @@ int sys_socket( int family, int type, int protocol ) {
     return do_socket( false, family, type, protocol );
 }
 
-int do_connect( bool kernel, int fd, const struct sockaddr* address, socklen_t addrlen ) {
+int do_connect( bool kernel, int fd, struct sockaddr* address, socklen_t addrlen ) {
     int error;
     file_t* file;
     socket_t* socket;
@@ -222,9 +241,15 @@ int do_connect( bool kernel, int fd, const struct sockaddr* address, socklen_t a
     memcpy( socket->dest_address, &in_address->sin_addr.s_addr, IPV4_ADDR_LEN );
     socket->dest_port = ntohw( in_address->sin_port );
 
-    /* TODO: call connect on the socket */
-
-    error = 0;
+    if ( socket->operations->connect == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = socket->operations->connect(
+            socket,
+            address,
+            addrlen
+        );
+    }
 
 error2:
     io_context_put_file( io_context, file );
@@ -233,7 +258,7 @@ error1:
     return error;
 }
 
-int sys_connect( int fd, const struct sockaddr* address, socklen_t addrlen ) {
+int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen ) {
     return do_connect( false, fd, address, addrlen );
 }
 

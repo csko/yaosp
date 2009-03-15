@@ -23,6 +23,16 @@
 #include <network/ipv4.h>
 #include <lib/hashtable.h>
 
+#define AF_INET 2
+
+#define SOCK_STREAM 1
+#define SOCK_DGRAM  2
+#define SOCK_RAW    3
+
+#define IPPROTO_TCP 6
+#define IPPROTO_UDP 17
+#define IPPROTO_RAW 255
+
 typedef uint16_t sa_family_t;
 typedef uint32_t socklen_t;
 typedef uint16_t in_port_t;
@@ -65,16 +75,15 @@ typedef struct socket {
 
     void* data;
     struct socket_calls* operations;
-} socket_t;
+} __attribute__(( packed )) socket_t;
 
 typedef struct socket_calls {
-    int ( *open )( socket_t* socket );
     int ( *close )( socket_t* socket );
     int ( *connect )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
 } socket_calls_t;
 
 int sys_socket( int family, int type, int protocol );
-int sys_connect( int fd, const struct sockaddr* address, socklen_t addrlen );
+int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen );
 
 int init_socket( void );
 

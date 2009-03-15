@@ -102,7 +102,7 @@ static int icmp_handle_echo( packet_t* packet ) {
         ICMP_HEADER_LEN + sizeof( icmp_echo_reply_t ) + echo_payload_size
     );
 
-    return ipv4_send_packet( dest_ip, reply );
+    return ipv4_send_packet( dest_ip, reply, IP_PROTO_ICMP );
 }
 
 int icmp_input( packet_t* packet ) {

@@ -52,7 +52,7 @@ typedef struct ipv4_header {
 
 uint16_t ip_checksum( uint16_t* data, uint16_t length );
 
-int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet );
+int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol );
 int ipv4_input( packet_t* packet );
 
 #endif /* _NETWORK_IP_H_ */

@@ -26,6 +26,7 @@
 #include <network/route.h>
 #include <network/arp.h>
 #include <network/device.h>
+#include <network/tcp.h>
 #include <lib/string.h>
 
 #include <arch/network/network.h>
@@ -59,7 +60,7 @@ uint16_t ip_checksum( uint16_t* data, uint16_t length ) {
 }
 #endif /* ARCH_HAVE_IP_CHECKSUM */
 
-int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet ) {
+int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     int error;
     route_t* route;
     ipv4_header_t* ip_header;
@@ -85,7 +86,7 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet ) {
     ip_header->packet_id = 0; /* TODO ??? */
     ip_header->fragment_offset = htonw( IPV4_DONT_FRAGMENT );
     ip_header->time_to_live = 255;
-    ip_header->protocol = IP_PROTO_ICMP;
+    ip_header->protocol = protocol;
 
     memcpy( ip_header->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
     memcpy( ip_header->dest_address, dest_ip, IPV4_ADDR_LEN );
@@ -103,14 +104,14 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet ) {
 static int ipv4_handle_packet( packet_t* packet ) {
     ipv4_header_t* ip_header;
 
-    ip_header = ( ipv4_header_t* )( packet->data + ETH_HEADER_LEN );
+    ip_header = ( ipv4_header_t* )packet->network_data;
 
     packet->transport_data = ( uint8_t* )ip_header + IPV4_HDR_SIZE( ip_header->version_and_size ) * 4;
 
     switch ( ip_header->protocol ) {
         case IP_PROTO_TCP :
             kprintf( "TCP packet\n" );
-            break;
+            return tcp_input( packet );
 
         case IP_PROTO_UDP :
             kprintf( "UDP packet\n" );

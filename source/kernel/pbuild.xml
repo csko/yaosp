@@ -110,6 +110,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/icmp.c</item>
         <item>src/network/route.c</item>
         <item>src/network/socket.c</item>
+        <item>src/network/tcp.c</item>
     </array>
 
     <array name="files_lib">

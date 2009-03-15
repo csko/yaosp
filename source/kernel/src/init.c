@@ -29,6 +29,7 @@
 #include <network/route.h>
 #include <network/arp.h>
 #include <network/socket.h>
+#include <network/tcp.h>
 #include <lib/string.h>
 
 #include <arch/fork.h>
@@ -113,6 +114,7 @@ __init static void init_network( void ) {
     init_routes();
     init_arp();
     init_socket();
+    init_tcp();
     create_network_interfaces();
 }
 

@@ -34,6 +34,7 @@ typedef struct net_interface {
     char name[ 16 ];
     atomic_t ref_count;
 
+    int mtu;
     uint8_t hw_address[ ETH_ADDR_LEN ];
     uint8_t ip_address[ IPV4_ADDR_LEN ];
 

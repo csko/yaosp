@@ -214,6 +214,7 @@ static int create_network_interface( int device ) {
         return -ENOMEM;
     }
 
+    interface->mtu = 1500;
     interface->device = device;
 
     insert_network_interface( interface );
