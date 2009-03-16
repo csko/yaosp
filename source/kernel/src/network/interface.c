@@ -124,12 +124,10 @@ static int network_rx_thread( void* data ) {
 
         switch ( ntohw( eth_header->proto ) ) {
             case ETH_P_IP :
-                kprintf( "IP packet\n" );
                 ipv4_input( packet );
                 break;
 
             case ETH_P_ARP :
-                kprintf( "ARP packet\n" );
                 arp_input( interface, packet );
                 break;
 

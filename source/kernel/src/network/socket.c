@@ -62,11 +62,41 @@ static int socket_free_cookie( void* fs_cookie, void* node, void* file_cookie ) 
 }
 
 static int socket_read( void* fs_cookie, void* node, void* file_cookie, void* buffer, off_t pos, size_t size ) {
-    return -1;
+    int error;
+    socket_t* socket;
+
+    socket = ( socket_t* )node;
+
+    if ( socket->operations->read!= NULL ) {
+        error = socket->operations->read(
+            socket,
+            buffer,
+            size
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    return error;
 }
 
 static int socket_write( void* fs_cookie, void* node, void* file_cookie, const void* buffer, off_t pos, size_t size ) {
-    return -1;
+    int error;
+    socket_t* socket;
+
+    socket = ( socket_t* )node;
+
+    if ( socket->operations->write != NULL ) {
+        error = socket->operations->write(
+            socket,
+            buffer,
+            size
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    return error;
 }
 
 static int socket_ioctl( void* fs_cookie, void* node, void* file_cookie, int command, void* buffer, bool from_kernel ) {

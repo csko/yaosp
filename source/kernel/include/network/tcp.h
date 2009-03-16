@@ -69,14 +69,18 @@ typedef struct tcp_socket {
 
     int mss;
     uint8_t* rx_buffer;
+    uint8_t* rx_first_data;
+    size_t rx_buffer_data;
     size_t rx_buffer_size;
+
     uint8_t* tx_buffer;
+    uint8_t* tx_first_data;
+    size_t tx_buffer_data;
     size_t tx_buffer_size;
 
-    uint32_t rx_window_low;
-    uint32_t rx_window_high;
-    uint32_t tx_window_low;
-    uint32_t tx_window_high;
+    uint32_t last_seq;
+
+    semaphore_id rx_queue;
 } tcp_socket_t;
 
 typedef struct tcp_endpoint_key {

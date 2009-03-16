@@ -221,12 +221,10 @@ int arp_input( net_interface_t* interface, packet_t* packet ) {
 
     switch ( ntohw( arp_header->command ) ) {
         case ARP_CMD_REQUEST :
-            kprintf( "ARP request\n" );
             arp_handle_request( interface, arp_header );
             break;
 
         case ARP_CMD_REPLY :
-            kprintf( "ARP reply\n" );
             arp_handle_reply( interface, arp_header );
             break;
 

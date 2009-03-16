@@ -53,12 +53,20 @@ static uint16_t tcp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8
     checksum += htonw( IP_PROTO_TCP );
     checksum += htonw( tcp_size );
 
-    ASSERT( ( tcp_size % 2 ) == 0 );
-
     data = ( uint16_t* )tcp_header;
 
     for ( i = 0; i < tcp_size / 2; i++ ) {
         checksum += data[ i ];
+    }
+
+    if ( ( tcp_size % 2 ) != 0 ) {
+        uint8_t* tmp;
+        uint16_t tmp_data;
+
+        tmp = ( uint8_t* )( &data[ tcp_size / 2 ] );
+        tmp_data = ( uint16_t )*tmp;
+
+        checksum += tmp_data;
     }
 
     while ( checksum >> 16 ) {
@@ -68,16 +76,17 @@ static uint16_t tcp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8
     return ~checksum;
 }
 
-static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t flags, uint8_t* option_data, size_t option_size, uint32_t seq_number ) {
+static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t flags, uint8_t* payload, size_t payload_size, size_t option_size, uint32_t seq_number, uint32_t ack_number ) {
     uint8_t* data;
     packet_t* packet;
+    size_t window_size;
     tcp_header_t* tcp_header;
 
     packet = create_packet(
         ETH_HEADER_LEN +
         IPV4_HEADER_LEN +
         TCP_HEADER_LEN +
-        option_size
+        payload_size
     );
 
     if ( packet == NULL ) {
@@ -86,22 +95,27 @@ static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t 
 
     data = packet->data + packet->size;
 
-    data -= ( sizeof( tcp_header_t ) + option_size );
+    data -= ( sizeof( tcp_header_t ) + payload_size );
     packet->transport_data = data;
 
     tcp_header = ( tcp_header_t* )data;
 
+    /* Calculate our window size */
+
+    window_size = tcp_socket->rx_buffer_size - tcp_socket->rx_buffer_data;
+    window_size = MIN( window_size, 65535 );
+
     tcp_header->src_port = htonw( socket->src_port );
     tcp_header->dest_port = htonw( socket->dest_port );
     tcp_header->seq_number = htonl( seq_number );
-    tcp_header->ack_number = htonl( tcp_socket->rx_window_low );
+    tcp_header->ack_number = htonl( ack_number );
     tcp_header->data_offset = ( ( sizeof( tcp_header_t ) + option_size ) / 4 ) << 4;
     tcp_header->ctrl_flags = flags;
-    tcp_header->window_size = htonw( 32768 );
+    tcp_header->window_size = htonw( window_size );
     tcp_header->urgent_pointer = 0;
 
-    if ( option_data != NULL ) {
-        memcpy( ( void* )( tcp_header + 1 ), option_data, option_size );
+    if ( payload != NULL ) {
+        memcpy( ( void* )( tcp_header + 1 ), payload, payload_size );
     }
 
     tcp_header->checksum = 0;
@@ -109,7 +123,7 @@ static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t 
         socket->src_address,
         socket->dest_address,
         ( uint8_t* )tcp_header,
-        sizeof( tcp_header_t ) + option_size
+        sizeof( tcp_header_t ) + payload_size
     );
 
     return ipv4_send_packet( socket->dest_address, packet, IP_PROTO_TCP );
@@ -227,15 +241,68 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
         TCP_SYN,
         ( uint8_t* )&mss_option,
         sizeof( tcp_mss_option_t ),
-        tcp_socket->tx_window_low
+        sizeof( tcp_mss_option_t ),
+        tcp_socket->last_seq++,
+        0
     );
+
+    return 0;
+}
+
+static int tcp_read( socket_t* socket, void* data, size_t length ) {
+    size_t to_copy;
+    tcp_socket_t* tcp_socket;
+
+    tcp_socket = ( tcp_socket_t* )socket->data;
+
+    LOCK( tcp_socket->lock );
+
+    while ( tcp_socket->rx_buffer_data == 0 ) {
+        UNLOCK( tcp_socket->lock );
+        LOCK( tcp_socket->rx_queue );
+        LOCK( tcp_socket->lock );
+    }
+
+    to_copy = MIN( tcp_socket->rx_buffer_data, length );
+
+    memcpy( data, tcp_socket->rx_buffer, to_copy );
+    tcp_socket->rx_buffer_data -= to_copy;
+
+    UNLOCK( tcp_socket->lock );
+
+    return to_copy;
+}
+
+static int tcp_write( socket_t* socket, const void* data, size_t length ) {
+    tcp_socket_t* tcp_socket;
+
+    tcp_socket = ( tcp_socket_t* )socket->data;
+
+    LOCK( tcp_socket->lock );
+
+    tcp_send_packet(
+        socket,
+        tcp_socket,
+        TCP_PSH,
+        ( uint8_t* )data,
+        length,
+        0,
+        tcp_socket->last_seq,
+        0
+    );
+
+    tcp_socket->last_seq += length;
+
+    UNLOCK( tcp_socket->lock );
 
     return 0;
 }
 
 static socket_calls_t tcp_socket_calls = {
     .close = tcp_close,
-    .connect = tcp_connect
+    .connect = tcp_connect,
+    .read = tcp_read,
+    .write = tcp_write
 };
 
 int tcp_create_socket( socket_t* socket ) {
@@ -265,18 +332,29 @@ int tcp_create_socket( socket_t* socket ) {
         goto error4;
     }
 
+    tcp_socket->rx_queue = create_semaphore( "TCP RX queue", SEMAPHORE_COUNTING, 0, 0 );
+
+    if ( tcp_socket->rx_queue < 0 ) {
+        goto error5;
+    }
+
     tcp_socket->socket = socket;
     tcp_socket->mss = 0;
     tcp_socket->state = TCP_STATE_CLOSED;
-    tcp_socket->rx_window_low = 0;
-    tcp_socket->rx_window_high = 0;
-    tcp_socket->tx_window_low = ( uint32_t )get_system_time();
-    tcp_socket->tx_window_high = tcp_socket->tx_window_low;
+    tcp_socket->rx_buffer_data = 0;
+    tcp_socket->rx_buffer_size = TCP_RECV_BUFFER_SIZE;
+    tcp_socket->rx_first_data = tcp_socket->rx_buffer;
+    tcp_socket->tx_buffer_data = 0;
+    tcp_socket->tx_buffer_size = TCP_SEND_BUFFER_SIZE;
+    tcp_socket->last_seq = ( uint32_t )get_system_time();
 
     socket->data = ( void* )tcp_socket;
     socket->operations = &tcp_socket_calls;
 
     return 0;
+
+error5:
+    delete_semaphore( tcp_socket->lock );
 
 error4:
     kfree( tcp_socket->tx_buffer );
@@ -314,6 +392,100 @@ static tcp_socket_t* get_tcp_endpoint( packet_t* packet ) {
     return tcp_socket;
 }
 
+static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
+    socket_t* socket;
+    tcp_header_t* tcp_header;
+
+    tcp_header = ( tcp_header_t* )packet->transport_data;
+    socket = ( socket_t* )tcp_socket->socket;
+
+    if ( ( tcp_header->ctrl_flags & ( TCP_SYN | TCP_ACK ) ) != ( TCP_SYN | TCP_ACK ) ) {
+        tcp_send_reset( packet );
+        return -EINVAL;
+    }
+
+    tcp_socket->state = TCP_STATE_ESTABLISHED;
+
+    tcp_send_packet(
+        socket,
+        tcp_socket,
+        TCP_ACK,
+        NULL,
+        0,
+        0,
+        tcp_socket->last_seq,
+        ntohl( tcp_header->seq_number ) + 1
+    );
+
+    return 0;
+}
+
+static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) {
+    socket_t* socket;
+    tcp_header_t* tcp_header;
+
+    socket = ( socket_t* )tcp_socket->socket;
+    tcp_header = ( tcp_header_t* )packet->transport_data;
+
+    if ( tcp_header->ctrl_flags & TCP_PSH ) {
+        size_t tmp;
+        uint8_t* data;
+        size_t data_size;
+        size_t handled_data_size;
+
+        data = ( uint8_t* )tcp_header + ( tcp_header->data_offset >> 4 ) * 4;
+        data_size = ( packet->size -
+            ( ( ( uint32_t )packet->transport_data - ( uint32_t )packet->data ) +
+              ( tcp_header->data_offset >> 4 ) * 4 ) );
+        handled_data_size = 0;
+
+        /* TODO: rewrite this! */
+
+        /* Check the free space until the end of the buffer */
+
+        tmp = ( ( size_t )tcp_socket->rx_buffer + tcp_socket->rx_buffer_size ) -
+              ( ( size_t )tcp_socket->rx_first_data + tcp_socket->rx_buffer_data );
+        tmp = MIN( tmp, data_size );
+
+        memcpy( tcp_socket->rx_first_data + tcp_socket->rx_buffer_data, data, tmp );
+
+        data += tmp;
+        handled_data_size += tmp;
+        tcp_socket->rx_buffer_data += tmp;
+
+        /* Handle receive buffer wrap */
+
+        if ( handled_data_size < data_size ) {
+            tmp = ( size_t )tcp_socket->rx_first_data - ( size_t )tcp_socket->rx_buffer;
+            tmp = MIN( tmp, data_size - handled_data_size );
+
+            memcpy( tcp_socket->rx_buffer, data, tmp );
+
+            handled_data_size += tmp;
+            tcp_socket->rx_buffer_data += tmp;
+        }
+
+        /* Wake up waiters */
+
+        UNLOCK( tcp_socket->rx_queue );
+
+        /* ACK the received data */
+
+        tcp_send_packet(
+            socket,
+            tcp_socket,
+            TCP_ACK,
+            NULL,
+            0,
+            0,
+            tcp_socket->last_seq,
+            ntohl( tcp_header->seq_number ) + handled_data_size
+        );
+    }
+
+    return 0;
+}
+
 int tcp_input( packet_t* packet ) {
     tcp_socket_t* tcp_socket;
 
@@ -330,6 +502,11 @@ int tcp_input( packet_t* packet ) {
 
     switch ( ( int )tcp_socket->state ) {
         case TCP_STATE_SYN_SENT :
+            tcp_handle_syn_sent( tcp_socket, packet );
+            break;
+
+        case TCP_STATE_ESTABLISHED :
+            tcp_handle_established( tcp_socket, packet );
             break;
     }
 

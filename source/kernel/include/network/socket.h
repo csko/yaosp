@@ -80,6 +80,8 @@ typedef struct socket {
 typedef struct socket_calls {
     int ( *close )( socket_t* socket );
     int ( *connect )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
+    int ( *read )( socket_t* socket, void* data, size_t length );
+    int ( *write )( socket_t* socket, const void* data, size_t length );
 } socket_calls_t;
 
 int sys_socket( int family, int type, int protocol );

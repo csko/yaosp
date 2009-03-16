@@ -110,7 +110,6 @@ static int ipv4_handle_packet( packet_t* packet ) {
 
     switch ( ip_header->protocol ) {
         case IP_PROTO_TCP :
-            kprintf( "TCP packet\n" );
             return tcp_input( packet );
 
         case IP_PROTO_UDP :
@@ -118,7 +117,6 @@ static int ipv4_handle_packet( packet_t* packet ) {
             break;
 
         case IP_PROTO_ICMP :
-            kprintf( "ICMP packet\n" );
             return icmp_input( packet );
     }
 
