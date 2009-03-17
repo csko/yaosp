@@ -33,6 +33,7 @@ typedef struct circular_pointer {
 int init_circular_pointer( circular_buffer_t* buffer, circular_pointer_t* pointer, size_t offset );
 size_t circular_pointer_diff( circular_buffer_t* buffer, circular_pointer_t* ptr1, circular_pointer_t* ptr2 );
 void circular_pointer_move( circular_buffer_t* buffer, circular_pointer_t* pointer, size_t size );
+void* circular_pointer_get( circular_buffer_t* buffer, circular_pointer_t* pointer );
 
 int init_circular_buffer( circular_buffer_t* buffer, size_t buffer_size );
 void destroy_circular_buffer( circular_buffer_t* buffer );

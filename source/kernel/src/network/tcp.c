@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <console.h>
 #include <macros.h>
+#include <thread.h>
 #include <mm/kmalloc.h>
 #include <network/tcp.h>
 #include <network/ipv4.h>
@@ -29,6 +30,9 @@
 
 #include <arch/pit.h>
 
+#include <arch/interrupt.h>
+
+static thread_id tcp_timer_thread;
 static hashtable_t tcp_endpoint_table;
 static semaphore_id tcp_endpoint_lock;
 
@@ -244,9 +248,11 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
         ( uint8_t* )&mss_option,
         sizeof( tcp_mss_option_t ),
         sizeof( tcp_mss_option_t ),
-        tcp_socket->last_seq++,
+        tcp_socket->tx_last_sent_seq++,
         0
     );
+
+    LOCK( tcp_socket->sync );
 
     return 0;
 }
@@ -280,25 +286,53 @@ static int tcp_read( socket_t* socket, void* data, size_t length ) {
     return to_copy;
 }
 
-static int tcp_write( socket_t* socket, const void* data, size_t length ) {
+static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
+    uint8_t* data;
     tcp_socket_t* tcp_socket;
 
+    data = ( uint8_t* )_data;
     tcp_socket = ( tcp_socket_t* )socket->data;
 
     LOCK( tcp_socket->lock );
 
-    tcp_send_packet(
-        socket,
-        tcp_socket,
-        TCP_PSH,
-        ( uint8_t* )data,
-        length,
-        0,
-        tcp_socket->last_seq,
-        0
-    );
+    while ( length > 0 ) {
+        size_t to_copy;
+        size_t free_size;
 
-    tcp_socket->last_seq += length;
+        /* Wait until there is free space in the send buffer */
+
+        free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
+            &tcp_socket->tx_buffer,
+            &tcp_socket->tx_first_unacked,
+            &tcp_socket->tx_free_data
+        );
+
+        while ( free_size == 0 ) {
+            UNLOCK( tcp_socket->lock );
+            LOCK( tcp_socket->tx_queue );
+            LOCK( tcp_socket->lock );
+
+            free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
+                &tcp_socket->tx_buffer,
+                &tcp_socket->tx_first_unacked,
+                &tcp_socket->tx_free_data
+            );
+        }
+
+        /* Copy the data to the send buffer */
+
+        to_copy = MIN( length, free_size );
+
+        circular_buffer_write( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, data, to_copy );
+        circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, to_copy );
+
+        data += to_copy;
+        length -= to_copy;
+
+        /* Wake up the TCP timer thread to transmit the data */
+
+        wake_up_thread( tcp_timer_thread );
+    }
 
     UNLOCK( tcp_socket->lock );
 
@@ -331,11 +365,15 @@ int tcp_create_socket( socket_t* socket ) {
     init_circular_pointer( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, 0 );
     init_circular_pointer( &tcp_socket->rx_buffer, &tcp_socket->rx_free_data, 0 );
 
-    tcp_socket->tx_buffer = ( uint8_t* )kmalloc( TCP_SEND_BUFFER_SIZE );
+    error = init_circular_buffer( &tcp_socket->tx_buffer, TCP_SEND_BUFFER_SIZE );
 
-    if ( tcp_socket->tx_buffer == NULL ) {
+    if ( error < 0 ) {
         goto error3;
     }
+
+    init_circular_pointer( &tcp_socket->tx_buffer, &tcp_socket->tx_first_unacked, 0 );
+    init_circular_pointer( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent, 0 );
+    init_circular_pointer( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, 0 );
 
     tcp_socket->lock = create_semaphore( "TCP socket", SEMAPHORE_BINARY, 0, 1 );
 
@@ -349,23 +387,39 @@ int tcp_create_socket( socket_t* socket ) {
         goto error5;
     }
 
+    tcp_socket->tx_queue = create_semaphore( "TCP TX queue", SEMAPHORE_COUNTING, 0, 0 );
+
+    if ( tcp_socket->tx_queue < 0 ) {
+        goto error6;
+    }
+
+    tcp_socket->sync = create_semaphore( "TCP sync", SEMAPHORE_COUNTING, 0, 0 );
+
+    if ( tcp_socket->sync < 0 ) {
+        goto error7;
+    }
+
     tcp_socket->socket = socket;
     tcp_socket->mss = 0;
     tcp_socket->state = TCP_STATE_CLOSED;
-    tcp_socket->tx_buffer_data = 0;
-    tcp_socket->tx_buffer_size = TCP_SEND_BUFFER_SIZE;
-    tcp_socket->last_seq = ( uint32_t )get_system_time();
+    tcp_socket->tx_last_sent_seq = ( uint32_t )get_system_time();
 
     socket->data = ( void* )tcp_socket;
     socket->operations = &tcp_socket_calls;
 
     return 0;
 
+error7:
+    delete_semaphore( tcp_socket->tx_queue );
+
+error6:
+    delete_semaphore( tcp_socket->rx_queue );
+
 error5:
     delete_semaphore( tcp_socket->lock );
 
 error4:
-    kfree( tcp_socket->tx_buffer );
+    destroy_circular_buffer( &tcp_socket->tx_buffer );
 
 error3:
     destroy_circular_buffer( &tcp_socket->rx_buffer );
@@ -413,6 +467,8 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
     }
 
     tcp_socket->state = TCP_STATE_ESTABLISHED;
+    tcp_socket->tx_window_size = ntohw( tcp_header->window_size );
+    tcp_socket->tx_last_unacked_seq = tcp_socket->tx_last_sent_seq;
 
     tcp_send_packet(
         socket,
@@ -421,9 +477,11 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
         NULL,
         0,
         0,
-        tcp_socket->last_seq,
+        tcp_socket->tx_last_sent_seq,
         ntohl( tcp_header->seq_number ) + 1
     );
+
+    UNLOCK( tcp_socket->sync );
 
     return 0;
 }
@@ -474,10 +532,100 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
             NULL,
             0,
             0,
-            tcp_socket->last_seq,
+            tcp_socket->tx_last_sent_seq,
             ntohl( tcp_header->seq_number ) + handled_rx_size
         );
     }
+
+    if ( tcp_header->ctrl_flags & TCP_ACK ) {
+        uint32_t ack_number;
+        uint32_t acked_data_size;
+        uint32_t unacked_data_size;
+        uint16_t new_window_size;
+
+        /* TODO: Handle seq number wrapping here! */
+
+        ack_number = ntohl( tcp_header->ack_number );
+        acked_data_size = ack_number - tcp_socket->tx_last_unacked_seq;
+        unacked_data_size = circular_pointer_diff(
+            &tcp_socket->tx_buffer,
+            &tcp_socket->tx_first_unacked,
+            &tcp_socket->tx_last_sent
+        );
+
+        if ( acked_data_size > unacked_data_size ) {
+            /* TODO */
+            return 0;
+        }
+
+        /* Handle ACKed data */
+
+        tcp_socket->tx_last_unacked_seq = ack_number + 1;
+
+        if ( acked_data_size > 0 ) {
+            bool tx_buffer_full;
+
+            tx_buffer_full = ( circular_buffer_size( &tcp_socket->tx_buffer ) == circular_pointer_diff(
+                &tcp_socket->tx_buffer,
+                &tcp_socket->tx_first_unacked,
+                &tcp_socket->tx_free_data
+            ) );
+
+            circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_first_unacked, acked_data_size );
+
+            if ( tx_buffer_full ) {
+                UNLOCK( tcp_socket->tx_queue );
+            }
+        }
+
+        /* Handle new window size */
+
+        new_window_size = ntohw( tcp_header->window_size );
+
+        if ( ( tcp_socket->tx_window_size == 0 ) &&
+             ( new_window_size > 0 ) ) {
+            wake_up_thread( tcp_timer_thread );
+        }
+
+        tcp_socket->tx_window_size = new_window_size;
+    }
+
+    return 0;
+}
+
+static int tcp_handle_transmit( tcp_socket_t* tcp_socket ) {
+    socket_t* socket;
+    size_t data_to_send;
+
+    socket = ( socket_t* )tcp_socket->socket;
+
+    ASSERT( tcp_socket->tx_window_size > 0 );
+
+    data_to_send = circular_pointer_diff(
+        &tcp_socket->tx_buffer,
+        &tcp_socket->tx_last_sent,
+        &tcp_socket->tx_free_data
+    );
+
+    ASSERT( data_to_send > 0 );
+
+    data_to_send = MIN( data_to_send, tcp_socket->tx_window_size );
+
+    tcp_send_packet(
+        socket,
+        tcp_socket,
+        TCP_PSH,
+        ( uint8_t* )circular_pointer_get( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent ),
+        data_to_send,
+        0,
+        tcp_socket->tx_last_sent_seq,
+        0
+    );
+
+    circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent, data_to_send );
+
+    tcp_socket->tx_window_size -= data_to_send;
+    tcp_socket->tx_last_sent_seq += data_to_send;
 
     return 0;
 }
@@ -533,6 +681,72 @@ static bool tcp_endpoint_compare( const void* key1, const void* key2 ) {
     return ( memcmp( key1, key2, 2 * IPV4_ADDR_LEN + 2 * sizeof( uint16_t ) ) == 0 );
 }
 
+static int get_tcp_socket_iterator( hashitem_t* hash, void* _data ) {
+    bool found;
+    size_t data_to_send;
+    tcp_socket_t* tcp_socket;
+    tcp_socket_t** data;
+
+    tcp_socket = ( tcp_socket_t* )hash;
+    data = ( tcp_socket_t** )_data;
+
+    LOCK( tcp_socket->lock );
+
+    /* Check if we have something to send ... */
+
+    data_to_send = circular_pointer_diff(
+        &tcp_socket->tx_buffer,
+        &tcp_socket->tx_last_sent,
+        &tcp_socket->tx_free_data
+    );
+
+    found = ( ( data_to_send > 0 ) && ( tcp_socket->tx_window_size > 0 ) );
+
+    UNLOCK( tcp_socket->lock );
+
+    if ( found ) {
+        *data = tcp_socket;
+        return -1;
+    }
+
+    return 0;
+}
+
+static tcp_socket_t* get_tcp_socket_for_work( void ) {
+    int error;
+    tcp_socket_t* tcp_socket = NULL;
+
+    error = hashtable_iterate( &tcp_endpoint_table, get_tcp_socket_iterator, ( void* )&tcp_socket );
+
+    if ( error < 0 ) {
+        ASSERT( tcp_socket != NULL );
+    }
+
+    return tcp_socket;
+}
+
+static int tcp_timer_thread_entry( void* data ) {
+    tcp_socket_t* tcp_socket;
+
+    while ( 1 ) {
+        do {
+            LOCK( tcp_endpoint_lock );
+            tcp_socket = get_tcp_socket_for_work();
+            UNLOCK( tcp_endpoint_lock );
+
+            if ( tcp_socket != NULL ) {
+                LOCK( tcp_socket->lock );
+                tcp_handle_transmit( tcp_socket );
+                UNLOCK( tcp_socket->lock );
+            }
+        } while ( tcp_socket != NULL );
+
+        sleep_thread( 1 * 1000 * 1000 );
+    }
+
+    return 0;
+}
+
 int init_tcp( void ) {
     int error;
 
@@ -554,6 +768,14 @@ int init_tcp( void ) {
         destroy_hashtable( &tcp_endpoint_table );
         return tcp_endpoint_lock;
     }
+
+    tcp_timer_thread = create_kernel_thread( "tcp_timer", PRIORITY_NORMAL, tcp_timer_thread_entry, NULL, 0 );
+
+    if ( tcp_timer_thread < 0 ) {
+        return -1;
+    }
+
+    wake_up_thread( tcp_timer_thread );
 
     return 0;
 }

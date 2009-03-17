@@ -44,6 +44,10 @@ void circular_pointer_move( circular_buffer_t* buffer, circular_pointer_t* point
     pointer->offset = ( pointer->offset + size ) % buffer->buffer_size;
 }
 
+void* circular_pointer_get( circular_buffer_t* buffer, circular_pointer_t* pointer ) {
+    return ( void* )( buffer->buffer + pointer->offset );
+}
+
 int init_circular_buffer( circular_buffer_t* buffer, size_t buffer_size ) {
     buffer->buffer = ( uint8_t* )kmalloc( buffer_size );
 

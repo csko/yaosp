@@ -82,7 +82,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     }
 
     thread->id = -1;
-    thread->state = THREAD_READY;
+    thread->state = THREAD_NEW;
     thread->priority = priority;
     thread->process = process;
     thread->user_stack_end = NULL;
@@ -273,6 +273,7 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
 }
 
 int sleep_thread( uint64_t microsecs ) {
+    int error;
     thread_t* thread;
     waitnode_t node;
 
@@ -293,11 +294,19 @@ int sleep_thread( uint64_t microsecs ) {
 
     sched_preempt();
 
+    spinlock_disable( &scheduler_lock );
+
+    waitqueue_remove_node( &sleep_queue, &node );
+
+    spinunlock_enable( &scheduler_lock );
+
     if ( get_system_time() < node.wakeup_time ) {
-        return -ETIME;
+        error = -ETIME;
+    } else {
+        error = 0;
     }
 
-    return 0;
+    return error;
 }
 
 static int thread_info_process_filter( hashitem_t* item, void* data ) {
@@ -378,7 +387,10 @@ int wake_up_thread( thread_id id ) {
 
     thread = get_thread_by_id( id );
 
-    if ( thread != NULL ) {
+    if ( ( thread != NULL ) &&
+         ( ( thread->state == THREAD_NEW ) ||
+           ( thread->state == THREAD_WAITING ) ||
+           ( thread->state == THREAD_SLEEPING ) ) ) {
         add_thread_to_ready( thread );
         error = 0;
     } else {

@@ -66,22 +66,24 @@ typedef struct tcp_socket {
 
     socket_t* socket;
     semaphore_id lock;
+    semaphore_id sync;
     tcp_socket_state_t state;
 
     int mss;
 
+    semaphore_id rx_queue;
     circular_buffer_t rx_buffer;
     circular_pointer_t rx_user_data;
     circular_pointer_t rx_free_data;
 
-    uint8_t* tx_buffer;
-    uint8_t* tx_first_data;
-    size_t tx_buffer_data;
-    size_t tx_buffer_size;
-
-    uint32_t last_seq;
-
-    semaphore_id rx_queue;
+    semaphore_id tx_queue;
+    circular_buffer_t tx_buffer;
+    uint32_t tx_last_unacked_seq;
+    circular_pointer_t tx_first_unacked;
+    uint32_t tx_last_sent_seq;
+    circular_pointer_t tx_last_sent;
+    circular_pointer_t tx_free_data;
+    uint16_t tx_window_size;
 } tcp_socket_t;
 
 typedef struct tcp_endpoint_key {
