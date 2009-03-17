@@ -102,7 +102,9 @@ static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t 
 
     /* Calculate our window size */
 
-    window_size = tcp_socket->rx_buffer_size - tcp_socket->rx_buffer_data;
+    window_size =
+        circular_buffer_size( &tcp_socket->rx_buffer ) -
+        circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
     window_size = MIN( window_size, 65535 );
 
     tcp_header->src_port = htonw( socket->src_port );
@@ -251,22 +253,27 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
 static int tcp_read( socket_t* socket, void* data, size_t length ) {
     size_t to_copy;
+    size_t rx_data_size;
     tcp_socket_t* tcp_socket;
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
     LOCK( tcp_socket->lock );
 
-    while ( tcp_socket->rx_buffer_data == 0 ) {
+    rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
+
+    while ( rx_data_size == 0 ) {
         UNLOCK( tcp_socket->lock );
         LOCK( tcp_socket->rx_queue );
         LOCK( tcp_socket->lock );
+
+        rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
     }
 
-    to_copy = MIN( tcp_socket->rx_buffer_data, length );
+    to_copy = MIN( rx_data_size, length );
 
-    memcpy( data, tcp_socket->rx_buffer, to_copy );
-    tcp_socket->rx_buffer_data -= to_copy;
+    circular_buffer_read( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, data, to_copy );
+    circular_pointer_move( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, to_copy );
 
     UNLOCK( tcp_socket->lock );
 
@@ -306,6 +313,7 @@ static socket_calls_t tcp_socket_calls = {
 };
 
 int tcp_create_socket( socket_t* socket ) {
+    int error;
     tcp_socket_t* tcp_socket;
 
     tcp_socket = ( tcp_socket_t* )kmalloc( sizeof( tcp_socket_t ) );
@@ -314,11 +322,14 @@ int tcp_create_socket( socket_t* socket ) {
         goto error1;
     }
 
-    tcp_socket->rx_buffer = ( uint8_t* )kmalloc( TCP_RECV_BUFFER_SIZE );
+    error = init_circular_buffer( &tcp_socket->rx_buffer, TCP_RECV_BUFFER_SIZE );
 
-    if ( tcp_socket->rx_buffer == NULL ) {
+    if ( error < 0 ) {
         goto error2;
     }
+
+    init_circular_pointer( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, 0 );
+    init_circular_pointer( &tcp_socket->rx_buffer, &tcp_socket->rx_free_data, 0 );
 
     tcp_socket->tx_buffer = ( uint8_t* )kmalloc( TCP_SEND_BUFFER_SIZE );
 
@@ -341,9 +352,6 @@ int tcp_create_socket( socket_t* socket ) {
     tcp_socket->socket = socket;
     tcp_socket->mss = 0;
     tcp_socket->state = TCP_STATE_CLOSED;
-    tcp_socket->rx_buffer_data = 0;
-    tcp_socket->rx_buffer_size = TCP_RECV_BUFFER_SIZE;
-    tcp_socket->rx_first_data = tcp_socket->rx_buffer;
     tcp_socket->tx_buffer_data = 0;
     tcp_socket->tx_buffer_size = TCP_SEND_BUFFER_SIZE;
     tcp_socket->last_seq = ( uint32_t )get_system_time();
@@ -360,7 +368,7 @@ error4:
     kfree( tcp_socket->tx_buffer );
 
 error3:
-    kfree( tcp_socket->rx_buffer );
+    destroy_circular_buffer( &tcp_socket->rx_buffer );
 
 error2:
     kfree( tcp_socket );
@@ -428,46 +436,34 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
     tcp_header = ( tcp_header_t* )packet->transport_data;
 
     if ( tcp_header->ctrl_flags & TCP_PSH ) {
-        size_t tmp;
         uint8_t* data;
         size_t data_size;
-        size_t handled_data_size;
+        size_t handled_rx_size;
+
+        /* Calculate the data pointer and the data size in the incoming packet */
 
         data = ( uint8_t* )tcp_header + ( tcp_header->data_offset >> 4 ) * 4;
         data_size = ( packet->size -
             ( ( ( uint32_t )packet->transport_data - ( uint32_t )packet->data ) +
               ( tcp_header->data_offset >> 4 ) * 4 ) );
-        handled_data_size = 0;
 
-        /* TODO: rewrite this! */
+        /* Calculate the free size in the RX buffer */
 
-        /* Check the free space until the end of the buffer */
+        handled_rx_size =
+            circular_buffer_size( &tcp_socket->rx_buffer ) -
+            circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
+        handled_rx_size = MIN( handled_rx_size, data_size );
 
-        tmp = ( ( size_t )tcp_socket->rx_buffer + tcp_socket->rx_buffer_size ) -
-              ( ( size_t )tcp_socket->rx_first_data + tcp_socket->rx_buffer_data );
-        tmp = MIN( tmp, data_size );
+        if ( handled_rx_size > 0 ) {
+            /* Copy the data to the RX buffer */
 
-        memcpy( tcp_socket->rx_first_data + tcp_socket->rx_buffer_data, data, tmp );
+            circular_buffer_write( &tcp_socket->rx_buffer, &tcp_socket->rx_free_data, data, handled_rx_size );
+            circular_pointer_move( &tcp_socket->rx_buffer, &tcp_socket->rx_free_data, handled_rx_size );
 
-        data += tmp;
-        handled_data_size += tmp;
-        tcp_socket->rx_buffer_data += tmp;
+            /* Wake up waiters */
 
-        /* Handle receive buffer wrap */
-
-        if ( handled_data_size < data_size ) {
-            tmp = ( size_t )tcp_socket->rx_first_data - ( size_t )tcp_socket->rx_buffer;
-            tmp = MIN( tmp, data_size - handled_data_size );
-
-            memcpy( tcp_socket->rx_buffer, data, tmp );
-
-            handled_data_size += tmp;
-            tcp_socket->rx_buffer_data += tmp;
+            UNLOCK( tcp_socket->rx_queue );
         }
-
-        /* Wake up waiters */
-
-        UNLOCK( tcp_socket->rx_queue );
 
         /* ACK the received data */
 
@@ -479,7 +475,7 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
             0,
             0,
             tcp_socket->last_seq,
-            ntohl( tcp_header->seq_number ) + handled_data_size
+            ntohl( tcp_header->seq_number ) + handled_rx_size
         );
     }
 

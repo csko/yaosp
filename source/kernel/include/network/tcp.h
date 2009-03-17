@@ -23,6 +23,7 @@
 #include <semaphore.h>
 #include <network/socket.h>
 #include <lib/hashtable.h>
+#include <lib/circular.h>
 
 #define TCP_FIN 1
 #define TCP_SYN 2
@@ -68,10 +69,10 @@ typedef struct tcp_socket {
     tcp_socket_state_t state;
 
     int mss;
-    uint8_t* rx_buffer;
-    uint8_t* rx_first_data;
-    size_t rx_buffer_data;
-    size_t rx_buffer_size;
+
+    circular_buffer_t rx_buffer;
+    circular_pointer_t rx_user_data;
+    circular_pointer_t rx_free_data;
 
     uint8_t* tx_buffer;
     uint8_t* tx_first_data;
