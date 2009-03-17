@@ -40,10 +40,16 @@ route_t* create_route( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_ad
         return NULL;
     }
 
+    memset( route, 0, sizeof( route_t ) );
+
     atomic_set( &route->ref_count, 1 );
     memcpy( route->network_addr, net_addr, IPV4_ADDR_LEN );
     memcpy( route->network_mask, net_mask, IPV4_ADDR_LEN );
-    memcpy( route->gateway_addr, gateway_addr, IPV4_ADDR_LEN );
+
+    if ( flags & ROUTE_GATEWAY ) {
+        memcpy( route->gateway_addr, gateway_addr, IPV4_ADDR_LEN );
+    }
+
     route->flags = flags;
 
     return route;
@@ -87,7 +93,8 @@ static int route_iterator( hashitem_t* item, void* _data ) {
     dest_ip = *( ( uint32_t* )data->ipv4_address );
     net_mask = *( ( uint32_t* )route->network_mask );
 
-    if ( ( route_ip & net_mask ) == ( dest_ip & net_mask ) ) {
+    if ( ( ( route_ip & net_mask ) == ( dest_ip & net_mask ) ) ||
+         ( route->flags & ROUTE_GATEWAY ) ) {
         data->route = route;
         return -1;
     }

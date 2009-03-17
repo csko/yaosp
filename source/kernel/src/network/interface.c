@@ -177,7 +177,12 @@ static int start_network_interface( net_interface_t* interface ) {
     interface->ip_address[ 1 ] = 168;
     interface->ip_address[ 2 ] = 1;
     interface->ip_address[ 3 ] = 192;
+    uint8_t gateway[4]={192,168,1,1};
     route = create_route( interface->ip_address, netmask, dummy, 0 );
+    route->interface = interface;
+    insert_route( route );
+    dummy[1]=1;
+    route = create_route( interface->ip_address, netmask, gateway, ROUTE_GATEWAY );
     route->interface = interface;
     insert_route( route );
     /* End of TODO */

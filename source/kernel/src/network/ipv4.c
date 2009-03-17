@@ -94,7 +94,11 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     ip_header->checksum = 0;
     ip_header->checksum = ip_checksum( ( uint16_t*)ip_header, sizeof( ipv4_header_t ) );
 
-    error = arp_send_packet( route->interface, dest_ip, packet );
+    if ( route->flags & ROUTE_GATEWAY ) {
+        error = arp_send_packet( route->interface, route->gateway_addr, packet );
+    } else {
+        error = arp_send_packet( route->interface, dest_ip, packet );
+    }
 
     put_route( route );
 

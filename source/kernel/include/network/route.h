@@ -26,6 +26,8 @@
 
 #include <arch/atomic.h>
 
+#define ROUTE_GATEWAY 0x01
+
 typedef struct route {
     hashitem_t hash;
 

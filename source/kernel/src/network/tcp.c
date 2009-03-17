@@ -288,8 +288,10 @@ static int tcp_read( socket_t* socket, void* data, size_t length ) {
 
 static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
     uint8_t* data;
+    size_t data_written;
     tcp_socket_t* tcp_socket;
 
+    data_written = 0;
     data = ( uint8_t* )_data;
     tcp_socket = ( tcp_socket_t* )socket->data;
 
@@ -328,6 +330,7 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
 
         data += to_copy;
         length -= to_copy;
+        data_written += to_copy;
 
         /* Wake up the TCP timer thread to transmit the data */
 
@@ -336,7 +339,7 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
 
     UNLOCK( tcp_socket->lock );
 
-    return 0;
+    return data_written;
 }
 
 static socket_calls_t tcp_socket_calls = {
