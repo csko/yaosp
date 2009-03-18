@@ -32,10 +32,14 @@
 #define TCP_ACK 16
 #define TCP_URG 32
 
+#define TCP_OPTION_MSS 0x2
+
 #define TCP_HEADER_LEN 20
 
 #define TCP_RECV_BUFFER_SIZE 32768
 #define TCP_SEND_BUFFER_SIZE 32768
+
+#define TCP_SYN_TIMEOUT   (75 * 1000 * 1000)
 
 typedef struct tcp_header {
     uint16_t src_port;
@@ -61,6 +65,22 @@ typedef enum tcp_socket_state {
     TCP_STATE_ESTABLISHED
 } tcp_socket_state_t;
 
+typedef enum tcp_timer_type {
+    TCP_TIMER_SYN_TIMEOUT = 0,
+    TCP_TIMER_TRANSMIT,
+    TCP_TIMER_COUNT
+} tcp_timer_type_t;
+
+struct tcp_socket;
+
+typedef int tcp_timeout_callback_t( struct tcp_socket* tcp_socket );
+
+typedef struct tcp_timer {
+    bool running;
+    uint64_t expire_time;
+    tcp_timeout_callback_t* callback;
+} tcp_timer_t;
+
 typedef struct tcp_socket {
     hashitem_t hash;
 
@@ -84,6 +104,8 @@ typedef struct tcp_socket {
     circular_pointer_t tx_last_sent;
     circular_pointer_t tx_free_data;
     uint16_t tx_window_size;
+
+    tcp_timer_t timers[ TCP_TIMER_COUNT ];
 } tcp_socket_t;
 
 typedef struct tcp_endpoint_key {

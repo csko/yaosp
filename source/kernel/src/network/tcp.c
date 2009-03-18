@@ -194,10 +194,12 @@ static int tcp_close( socket_t* socket ) {
 }
 
 static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t addrlen ) {
+    int error;
     route_t* route;
     tcp_socket_t* tcp_socket;
     struct sockaddr_in* in_address;
     tcp_mss_option_t mss_option;
+    tcp_timer_t* syn_timeout_timer;
 
     tcp_socket = ( tcp_socket_t* )socket->data;
     in_address = ( struct sockaddr_in* )address;
@@ -211,6 +213,8 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     }
 
     tcp_socket->state = TCP_STATE_SYN_SENT;
+
+    /* Find out the MSS value to the destination */
 
     route = find_route( ( uint8_t* )&in_address->sin_addr.s_addr );
 
@@ -229,17 +233,30 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     put_route( route );
 
-    mss_option.kind = 0x2;
-    mss_option.length = 0x4;
+    /* Build our MSS option */
+
+    mss_option.kind = TCP_OPTION_MSS;
+    mss_option.length = sizeof( tcp_mss_option_t );
     mss_option.mss = htonw( tcp_socket->mss );
 
+    /* Make the SYN retransmit timer active */
+
+    syn_timeout_timer = &tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ];
+
+    syn_timeout_timer->running = true;
+    syn_timeout_timer->expire_time = get_system_time() + TCP_SYN_TIMEOUT;
+
     UNLOCK( tcp_socket->lock );
+
+    /* Put the new endpoint to the table */
 
     LOCK( tcp_endpoint_lock );
 
     hashtable_add( &tcp_endpoint_table, ( hashitem_t* )tcp_socket );
 
     UNLOCK( tcp_endpoint_lock );
+
+    /* Send the SYN packet */
 
     tcp_send_packet(
         socket,
@@ -252,9 +269,27 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
         0
     );
 
+    /* Wait until the connection is established */
+
     LOCK( tcp_socket->sync );
 
-    return 0;
+    /* Calculate the return value */
+
+    LOCK( tcp_socket->lock );
+
+    if ( tcp_socket->state == TCP_STATE_ESTABLISHED ) {
+        error = 0;
+    } else {
+        if ( get_system_time() >= syn_timeout_timer->expire_time ) {
+            error = -ETIMEDOUT;
+        } else {
+            error = -EINVAL; /* TODO: proper error code here? */
+        }
+    }
+
+    UNLOCK( tcp_socket->lock );
+
+    return error;
 }
 
 static int tcp_read( socket_t* socket, void* data, size_t length ) {
@@ -349,7 +384,59 @@ static socket_calls_t tcp_socket_calls = {
     .write = tcp_write
 };
 
+static int tcp_handle_syn_timeout( tcp_socket_t* tcp_socket ) {
+    /* Shut down the SYN retransmit timer */
+
+    tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].running = false;
+
+    /* Connection failed :( */
+
+    tcp_socket->state = TCP_STATE_CLOSED;
+
+    UNLOCK( tcp_socket->sync );
+
+    return 0;
+}
+
+static int tcp_handle_transmit( tcp_socket_t* tcp_socket ) {
+    socket_t* socket;
+    size_t data_to_send;
+
+    socket = ( socket_t* )tcp_socket->socket;
+
+    ASSERT( tcp_socket->tx_window_size > 0 );
+
+    data_to_send = circular_pointer_diff(
+        &tcp_socket->tx_buffer,
+        &tcp_socket->tx_last_sent,
+        &tcp_socket->tx_free_data
+    );
+
+    ASSERT( data_to_send > 0 );
+
+    data_to_send = MIN( data_to_send, tcp_socket->tx_window_size );
+
+    tcp_send_packet(
+        socket,
+        tcp_socket,
+        TCP_PSH,
+        ( uint8_t* )circular_pointer_get( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent ),
+        data_to_send,
+        0,
+        tcp_socket->tx_last_sent_seq,
+        0
+    );
+
+    circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent, data_to_send );
+
+    tcp_socket->tx_window_size -= data_to_send;
+    tcp_socket->tx_last_sent_seq += data_to_send;
+
+    return 0;
+}
+
 int tcp_create_socket( socket_t* socket ) {
+    int i;
     int error;
     tcp_socket_t* tcp_socket;
 
@@ -406,6 +493,13 @@ int tcp_create_socket( socket_t* socket ) {
     tcp_socket->mss = 0;
     tcp_socket->state = TCP_STATE_CLOSED;
     tcp_socket->tx_last_sent_seq = ( uint32_t )get_system_time();
+
+    for ( i = 0; i < TCP_TIMER_COUNT; i++ ) {
+        tcp_socket->timers[ i ].running = false;
+    }
+
+    tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].callback = tcp_handle_syn_timeout;
+    tcp_socket->timers[ TCP_TIMER_TRANSMIT ].callback = tcp_handle_transmit;
 
     socket->data = ( void* )tcp_socket;
     socket->operations = &tcp_socket_calls;
@@ -465,7 +559,11 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
     socket = ( socket_t* )tcp_socket->socket;
 
     if ( ( tcp_header->ctrl_flags & ( TCP_SYN | TCP_ACK ) ) != ( TCP_SYN | TCP_ACK ) ) {
+        tcp_socket->state = TCP_STATE_CLOSED;
         tcp_send_reset( packet );
+
+        UNLOCK( tcp_socket->sync );
+
         return -EINVAL;
     }
 
@@ -483,6 +581,8 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
         tcp_socket->tx_last_sent_seq,
         ntohl( tcp_header->seq_number ) + 1
     );
+
+    tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].running = false;
 
     UNLOCK( tcp_socket->sync );
 
@@ -592,43 +692,6 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
 
         tcp_socket->tx_window_size = new_window_size;
     }
-
-    return 0;
-}
-
-static int tcp_handle_transmit( tcp_socket_t* tcp_socket ) {
-    socket_t* socket;
-    size_t data_to_send;
-
-    socket = ( socket_t* )tcp_socket->socket;
-
-    ASSERT( tcp_socket->tx_window_size > 0 );
-
-    data_to_send = circular_pointer_diff(
-        &tcp_socket->tx_buffer,
-        &tcp_socket->tx_last_sent,
-        &tcp_socket->tx_free_data
-    );
-
-    ASSERT( data_to_send > 0 );
-
-    data_to_send = MIN( data_to_send, tcp_socket->tx_window_size );
-
-    tcp_send_packet(
-        socket,
-        tcp_socket,
-        TCP_PSH,
-        ( uint8_t* )circular_pointer_get( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent ),
-        data_to_send,
-        0,
-        tcp_socket->tx_last_sent_seq,
-        0
-    );
-
-    circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent, data_to_send );
-
-    tcp_socket->tx_window_size -= data_to_send;
-    tcp_socket->tx_last_sent_seq += data_to_send;
 
     return 0;
 }

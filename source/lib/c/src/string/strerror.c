@@ -44,7 +44,8 @@ static char* error_strings[] = {
     "Not a directory", /* ENOTDIR */
     "Directory not empty", /* ENOTEMPTY */
     "Resource temporarily unavailable", /* EAGAIN */
-    "Argument list too long" /* E2BIG */
+    "Argument list too long", /* E2BIG */
+    "Connection timed out" /* ETIMEDOUT */
 };
 
 char* strerror( int errnum ) {

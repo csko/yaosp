@@ -45,6 +45,7 @@
 #define ENOTEMPTY 24
 #define EAGAIN    25
 #define E2BIG     26
+#define ETIMEDOUT 27
 
 extern int errno;
 
