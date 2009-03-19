@@ -227,7 +227,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     }
 
     memcpy( socket->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
-    socket->src_port = 12345;
+    socket->src_port = ( get_system_time() % 65535 ) + 1;
 
     /* Calculate our MSS value */
 
@@ -568,23 +568,31 @@ static tcp_socket_t* get_tcp_endpoint( packet_t* packet ) {
 }
 
 void put_tcp_endpoint( tcp_socket_t* tcp_socket ) {
+    bool do_delete;
+
+    do_delete = false;
+
     LOCK( tcp_endpoint_lock );
 
     if ( atomic_dec_and_test( &tcp_socket->ref_count ) ) {
         hashtable_remove( &tcp_endpoint_table, ( const void* )&tcp_socket->endpoint_info );
+
+        do_delete = true;
     }
 
     UNLOCK( tcp_endpoint_lock );
 
-    delete_semaphore( tcp_socket->lock );
-    delete_semaphore( tcp_socket->sync );
-    delete_semaphore( tcp_socket->rx_queue );
-    delete_semaphore( tcp_socket->tx_queue );
+    if ( do_delete ) {
+        delete_semaphore( tcp_socket->lock );
+        delete_semaphore( tcp_socket->sync );
+        delete_semaphore( tcp_socket->rx_queue );
+        delete_semaphore( tcp_socket->tx_queue );
 
-    destroy_circular_buffer( &tcp_socket->rx_buffer );
-    destroy_circular_buffer( &tcp_socket->tx_buffer );
+        destroy_circular_buffer( &tcp_socket->rx_buffer );
+        destroy_circular_buffer( &tcp_socket->tx_buffer );
 
-    kfree( tcp_socket );
+        kfree( tcp_socket );
+    }
 }
 
 static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
