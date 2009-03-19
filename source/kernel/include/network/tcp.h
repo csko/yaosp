@@ -56,6 +56,11 @@ typedef struct tcp_header {
     uint16_t urgent_pointer;
 } __attribute__(( packed )) tcp_header_t;
 
+typedef struct tcp_option_header {
+    uint8_t kind;
+    uint8_t length;
+} __attribute__(( packed )) tcp_option_header_t;
+
 typedef struct tcp_mss_option {
     uint8_t kind;
     uint8_t length;

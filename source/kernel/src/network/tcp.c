@@ -711,7 +711,9 @@ void put_tcp_endpoint( tcp_socket_t* tcp_socket ) {
 
 static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
     socket_t* socket;
+    int option_size;
     tcp_header_t* tcp_header;
+    tcp_option_header_t* tcp_option_header;
 
     tcp_header = ( tcp_header_t* )packet->transport_data;
     socket = ( socket_t* )tcp_socket->socket;
@@ -723,6 +725,35 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
         UNLOCK( tcp_socket->sync );
 
         return -EINVAL;
+    }
+
+    /* Parse options in the TCP header */
+
+    option_size = ( tcp_header->data_offset >> 4 ) * 4 - sizeof( tcp_header_t );
+
+    if ( option_size > 0 ) {
+        uint8_t* data;
+
+        data = ( uint8_t* )( tcp_header + 1 );
+
+        while ( option_size > 0 ) {
+            tcp_option_header = ( tcp_option_header_t* )data;
+
+            switch ( tcp_option_header->kind ) {
+                case TCP_OPTION_MSS : {
+                    tcp_mss_option_t* mss_option;
+
+                    mss_option = ( tcp_mss_option_t* )tcp_option_header;
+
+                    kprintf( "MSS: %d\n", htonw( mss_option->mss ) );
+
+                    break;
+                }
+            }
+
+            data += tcp_option_header->length;
+            option_size -= tcp_option_header->length;
+        }
     }
 
     tcp_socket->state = TCP_STATE_ESTABLISHED;
