@@ -71,7 +71,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <gcc>
             <input>objs/*.o</input>
             <input>../../lib/start/objs/libstart.a</input>
-            <input>../../thirdparty/freetype-2.3.8/freetype-2.3.8/objs/libfreetype.a</input>
+            <input>../../thirdparty/freetype-2.3.9/freetype-2.3.9/objs/libfreetype.a</input>
             <input>../../lib/c/objs/libc.a</input>
             <input>../../lib/yutil/objs/libyutil.a</input>
             <output>objs/guiserver</output>
