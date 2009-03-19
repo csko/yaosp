@@ -22,6 +22,14 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#define ntohs(n) \
+    ((((uint16_t)(n) & 0xFF) << 8) | ((uint16_t)(n) >> 8))
+#define ntohl(n) \
+    (((uint32_t)(n) << 24) | (((uint32_t)(n) & 0xFF00) << 8) | (((uint32_t)(n) & 0x00FF0000) >> 8) | ((uint32_t)(n) >> 24))
+
+#define htons ntohs
+#define htonl ntohl
+
 /* Standard well-defined IP protocols. */
 
 enum {

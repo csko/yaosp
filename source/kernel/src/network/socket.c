@@ -134,11 +134,39 @@ static int socket_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
 }
 
 static int socket_add_select_request( void* fs_cookie, void* node, void* file_cookie, struct select_request* request ) {
-    return -1;
+    int error;
+    socket_t* socket;
+
+    socket = ( socket_t* )node;
+
+    if ( socket->operations->add_select_request != NULL ) {
+        error = socket->operations->add_select_request(
+            socket,
+            request
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    return error;
 }
 
 static int socket_remove_select_request( void* fs_cookie, void* node, void* file_cookie, struct select_request* request ) {
-    return -1;
+    int error;
+    socket_t* socket;
+
+    socket = ( socket_t* )node;
+
+    if ( socket->operations->remove_select_request != NULL ) {
+        error = socket->operations->remove_select_request(
+            socket,
+            request
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    return error;
 }
 
 filesystem_calls_t socket_calls = {

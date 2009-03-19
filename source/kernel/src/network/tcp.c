@@ -386,11 +386,122 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
     return data_written;
 }
 
+static int tcp_add_select_request( socket_t* socket, struct select_request* request ) {
+    tcp_socket_t* tcp_socket;
+
+    tcp_socket = ( tcp_socket_t* )socket->data;
+
+    LOCK( tcp_socket->lock );
+
+    switch ( ( int )request->type ) {
+        case SELECT_READ :
+            request->next = tcp_socket->first_read_select;
+            tcp_socket->first_read_select = request;
+
+            if ( circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data ) > 0 ) {
+                request->ready = true;
+                UNLOCK( request->sync );
+            }
+
+            break;
+
+        case SELECT_WRITE : {
+            size_t free_size;
+
+            request->next = tcp_socket->first_write_select;
+            tcp_socket->first_write_select = request;
+
+            free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
+                &tcp_socket->tx_buffer,
+                &tcp_socket->tx_first_unacked,
+                &tcp_socket->tx_free_data
+            );
+
+            if ( free_size > 0 ) {
+                request->ready = true;
+                UNLOCK( request->sync );
+            }
+            
+            break;
+        }
+
+        case SELECT_EXCEPT :
+            break;
+    }
+
+    UNLOCK( tcp_socket->lock );
+
+    return 0;
+}
+
+static int tcp_remove_select_request( socket_t* socket, struct select_request* request ) {
+    tcp_socket_t* tcp_socket;
+    select_request_t* prev;
+    select_request_t* tmp;
+
+    tcp_socket = ( tcp_socket_t* )socket->data;
+
+    LOCK( tcp_socket->lock );
+
+    switch ( ( int )request->type ) {
+        case SELECT_READ :
+            prev = NULL;
+            tmp = tcp_socket->first_read_select;
+
+            while ( tmp != NULL ) {
+                if ( tmp == request ) {
+                    if ( prev == NULL ) {
+                        tcp_socket->first_read_select = tmp->next;
+                    } else {
+                        prev->next = tmp->next;
+                    }
+
+                    break;
+                }
+
+                prev = tmp;
+                tmp = tmp->next;
+            }
+
+            break;
+
+        case SELECT_WRITE :
+            prev = NULL;
+            tmp = tcp_socket->first_write_select;
+
+            while ( tmp != NULL ) {
+                if ( tmp == request ) {
+                    if ( prev == NULL ) {
+                        tcp_socket->first_write_select = tmp->next;
+                    } else {
+                        prev->next = tmp->next;
+                    }
+
+                    break;
+                }
+
+                prev = tmp;
+                tmp = tmp->next;
+            }
+
+            break;
+
+        case SELECT_EXCEPT :
+            break;
+    }
+
+    UNLOCK( tcp_socket->lock );
+
+    return 0;
+}
+
 static socket_calls_t tcp_socket_calls = {
     .close = tcp_close,
     .connect = tcp_connect,
     .read = tcp_read,
-    .write = tcp_write
+    .write = tcp_write,
+    .add_select_request = tcp_add_select_request,
+    .remove_select_request = tcp_remove_select_request
 };
 
 static int tcp_handle_syn_timeout( tcp_socket_t* tcp_socket ) {
@@ -510,6 +621,9 @@ int tcp_create_socket( socket_t* socket ) {
 
     tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].callback = tcp_handle_syn_timeout;
     tcp_socket->timers[ TCP_TIMER_TRANSMIT ].callback = tcp_handle_transmit;
+
+    tcp_socket->first_read_select = NULL;
+    tcp_socket->first_write_select = NULL;
 
     socket->data = ( void* )tcp_socket;
     socket->operations = &tcp_socket_calls;
@@ -633,6 +747,23 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
     return 0;
 }
 
+static void tcp_notify_read_waiters( tcp_socket_t* tcp_socket ) {
+    select_request_t* tmp;
+
+    tmp = tcp_socket->first_read_select;
+
+    while ( tmp != NULL ) {
+        tmp->ready = true;
+        UNLOCK( tmp->sync );
+
+        tmp = tmp->next;
+    }
+
+    tcp_socket->first_read_select = NULL;
+    
+    UNLOCK( tcp_socket->rx_queue );
+}
+
 static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) {
     socket_t* socket;
     tcp_header_t* tcp_header;
@@ -667,7 +798,7 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
 
             /* Wake up waiters */
 
-            UNLOCK( tcp_socket->rx_queue );
+            tcp_notify_read_waiters( tcp_socket );
         }
 
         /* ACK the received data */

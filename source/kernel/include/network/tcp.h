@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <semaphore.h>
+#include <vfs/vfs.h>
 #include <network/socket.h>
 #include <lib/hashtable.h>
 #include <lib/circular.h>
@@ -118,6 +119,9 @@ typedef struct tcp_socket {
     uint16_t tx_window_size;
 
     tcp_timer_t timers[ TCP_TIMER_COUNT ];
+
+    select_request_t* first_read_select;
+    select_request_t* first_write_select;
 } tcp_socket_t;
 
 int tcp_create_socket( socket_t* socket );

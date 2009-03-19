@@ -224,6 +224,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/pwd/getpwent.c</item>
         <item>src/pwd/endpwent.c</item>
         <item>src/pwd/setpwent.c</item>
+        <item>src/network/inet_aton.c</item>
     </array>
 
     <target name="clean">
