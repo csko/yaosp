@@ -1,6 +1,6 @@
-diff -Nru freetype-2.3.8-orig/include/freetype/config/ftmodule.h freetype-2.3.8/include/freetype/config/ftmodule.h
---- freetype-2.3.8-orig/include/freetype/config/ftmodule.h	2008-12-21 11:10:21.000000000 +0100
-+++ freetype-2.3.8/include/freetype/config/ftmodule.h	2009-02-28 13:48:04.000000000 +0100
+diff -Nru freetype-2.3.9-orig/include/freetype/config/ftmodule.h freetype-2.3.9/include/freetype/config/ftmodule.h
+--- freetype-2.3.9-orig/include/freetype/config/ftmodule.h	2008-12-21 11:10:21.000000000 +0100
++++ freetype-2.3.9/include/freetype/config/ftmodule.h	2009-03-19 08:46:50.000000000 +0100
 @@ -12,21 +12,21 @@
  
  FT_USE_MODULE( FT_Module_Class, autofit_module_class )
@@ -35,9 +35,9 @@ diff -Nru freetype-2.3.8-orig/include/freetype/config/ftmodule.h freetype-2.3.8/
 +//FT_USE_MODULE( FT_Driver_ClassRec, bdf_driver_class )
  
  /* EOF */
-diff -Nru freetype-2.3.8-orig/pbuild.xml freetype-2.3.8/pbuild.xml
---- freetype-2.3.8-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ freetype-2.3.8/pbuild.xml	2009-03-01 16:53:22.000000000 +0100
+diff -Nru freetype-2.3.9-orig/pbuild.xml freetype-2.3.9/pbuild.xml
+--- freetype-2.3.9-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ freetype-2.3.9/pbuild.xml	2009-03-19 08:45:59.000000000 +0100
 @@ -0,0 +1,96 @@
 +<!--
 +
@@ -86,7 +86,7 @@ diff -Nru freetype-2.3.8-orig/pbuild.xml freetype-2.3.8/pbuild.xml
 +    <target name="compile">
 +        <call target="prepare"/>
 +
-+        <echo>Compiling freetype 2.3.8</echo>
++        <echo>Compiling freetype 2.3.9</echo>
 +
 +        <for var="i" array="${files}">
 +            <echo>-> ${i}</echo>
@@ -108,7 +108,7 @@ diff -Nru freetype-2.3.8-orig/pbuild.xml freetype-2.3.8/pbuild.xml
 +            </gcc>
 +        </for>
 +
-+        <echo>Linking freetype 2.3.8</echo>
++        <echo>Linking freetype 2.3.9</echo>
 +        <echo>-> objs/libfreetype.a</echo>
 +
 +        <exec executable="ar">
@@ -119,7 +119,7 @@ diff -Nru freetype-2.3.8-orig/pbuild.xml freetype-2.3.8/pbuild.xml
 +    </target>
 +
 +    <target name="install">
-+        <echo>Installing freetype 2.3.8 headers</echo>
++        <echo>Installing freetype 2.3.9 headers</echo>
 +
 +        <mkdir>../../../include/freetype</mkdir>
 +        <mkdir>../../../include/freetype/config</mkdir>
