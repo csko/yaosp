@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <smp.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
@@ -50,6 +51,24 @@ static int socket_read_inode( void* fs_cookie, ino_t inode_number, void** node )
 }
 
 static int socket_write_inode( void* fs_cookie, void* node ) {
+    socket_t* socket;
+
+    socket = ( socket_t* )node;
+
+    LOCK( socket_lock );
+
+    hashtable_remove( &socket_inode_table, ( const void* )&socket->inode_number );
+
+    UNLOCK( socket_lock );
+
+    switch ( socket->type ) {
+        case SOCK_STREAM :
+            put_tcp_endpoint( ( tcp_socket_t* )socket->data );
+            break;
+    }
+
+    kfree( socket );
+
     return 0;
 }
 
@@ -67,7 +86,7 @@ static int socket_read( void* fs_cookie, void* node, void* file_cookie, void* bu
 
     socket = ( socket_t* )node;
 
-    if ( socket->operations->read!= NULL ) {
+    if ( socket->operations->read != NULL ) {
         error = socket->operations->read(
             socket,
             buffer,
@@ -185,6 +204,9 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
     if ( error < 0 ) {
         goto error2;
     }
+
+    socket->family = family;
+    socket->type = type;
 
     file = create_file();
 

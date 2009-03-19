@@ -229,9 +229,18 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     memcpy( socket->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
     socket->src_port = 12345;
 
+    /* Calculate our MSS value */
+
     tcp_socket->mss = route->interface->mtu - ( IPV4_HEADER_LEN + TCP_HEADER_LEN );
 
     put_route( route );
+
+    /* Copy the endpoint information to the TCP socket structure */
+
+    memcpy( tcp_socket->endpoint_info.src_address, socket->src_address, IPV4_ADDR_LEN );
+    memcpy( tcp_socket->endpoint_info.dest_address, socket->dest_address, IPV4_ADDR_LEN );
+    tcp_socket->endpoint_info.src_port = socket->src_port;
+    tcp_socket->endpoint_info.dest_port = socket->dest_port;
 
     /* Build our MSS option */
 
@@ -489,6 +498,7 @@ int tcp_create_socket( socket_t* socket ) {
         goto error7;
     }
 
+    atomic_set( &tcp_socket->ref_count, 1 );
     tcp_socket->socket = socket;
     tcp_socket->mss = 0;
     tcp_socket->state = TCP_STATE_CLOSED;
@@ -546,9 +556,35 @@ static tcp_socket_t* get_tcp_endpoint( packet_t* packet ) {
 
     tcp_socket = ( tcp_socket_t* )hashtable_get( &tcp_endpoint_table, ( const void* )&endpoint_key );
 
+    if ( tcp_socket != NULL ) {
+        ASSERT( atomic_get( &tcp_socket->ref_count ) > 0 );
+
+        atomic_inc( &tcp_socket->ref_count );
+    }
+
     UNLOCK( tcp_endpoint_lock );
 
     return tcp_socket;
+}
+
+void put_tcp_endpoint( tcp_socket_t* tcp_socket ) {
+    LOCK( tcp_endpoint_lock );
+
+    if ( atomic_dec_and_test( &tcp_socket->ref_count ) ) {
+        hashtable_remove( &tcp_endpoint_table, ( const void* )&tcp_socket->endpoint_info );
+    }
+
+    UNLOCK( tcp_endpoint_lock );
+
+    delete_semaphore( tcp_socket->lock );
+    delete_semaphore( tcp_socket->sync );
+    delete_semaphore( tcp_socket->rx_queue );
+    delete_semaphore( tcp_socket->tx_queue );
+
+    destroy_circular_buffer( &tcp_socket->rx_buffer );
+    destroy_circular_buffer( &tcp_socket->tx_buffer );
+
+    kfree( tcp_socket );
 }
 
 static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
@@ -721,6 +757,8 @@ int tcp_input( packet_t* packet ) {
     }
 
     UNLOCK( tcp_socket->lock );
+
+    put_tcp_endpoint( tcp_socket );
 
 out:
     delete_packet( packet );

@@ -66,6 +66,9 @@ struct socket_calls;
 typedef struct socket {
     hashitem_t hash;
 
+    int family;
+    int type;
+
     ino_t inode_number;
 
     uint8_t src_address[ IPV4_ADDR_LEN ];

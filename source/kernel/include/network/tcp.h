@@ -25,6 +25,8 @@
 #include <lib/hashtable.h>
 #include <lib/circular.h>
 
+#include <arch/atomic.h>
+
 #define TCP_FIN 1
 #define TCP_SYN 2
 #define TCP_RST 4
@@ -81,8 +83,18 @@ typedef struct tcp_timer {
     tcp_timeout_callback_t* callback;
 } tcp_timer_t;
 
+typedef struct tcp_endpoint_key {
+    uint8_t src_address[ IPV4_ADDR_LEN ];
+    uint16_t src_port;
+    uint8_t dest_address[ IPV4_ADDR_LEN ];
+    uint16_t dest_port;
+} __attribute__(( packed )) tcp_endpoint_key_t;
+
 typedef struct tcp_socket {
     hashitem_t hash;
+
+    atomic_t ref_count;
+    tcp_endpoint_key_t endpoint_info;
 
     socket_t* socket;
     semaphore_id lock;
@@ -108,14 +120,8 @@ typedef struct tcp_socket {
     tcp_timer_t timers[ TCP_TIMER_COUNT ];
 } tcp_socket_t;
 
-typedef struct tcp_endpoint_key {
-    uint8_t src_address[ IPV4_ADDR_LEN ];
-    uint16_t src_port;
-    uint8_t dest_address[ IPV4_ADDR_LEN ];
-    uint16_t dest_port;
-} __attribute__(( packed )) tcp_endpoint_key_t;
-
 int tcp_create_socket( socket_t* socket );
+void put_tcp_endpoint( tcp_socket_t* tcp_socket );
 
 int tcp_input( packet_t* packet );
 
