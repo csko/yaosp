@@ -59,14 +59,20 @@ void* array_get_item( array_t* array, int index ) {
     return array->items[ index ];
 }
 
-void array_set_realloc_size( array_t* array, int realloc_size ) {
+int array_set_realloc_size( array_t* array, int realloc_size ) {
+    if ( realloc_size <= 0 ) {
+        return -EINVAL;
+    }
+
     array->realloc_size = realloc_size;
+
+    return 0;
 }
 
 int init_array( array_t* array ) {
     array->item_count = 0;
     array->max_item_count = 0;
-    array->realloc_size = 0;
+    array->realloc_size = 1;
     array->items = NULL;
 
     return 0;

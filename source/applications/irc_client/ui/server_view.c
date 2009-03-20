@@ -1,4 +1,4 @@
-/* Array implementation
+/* IRC client
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,22 +16,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YUTIL_ARRAY_H_
-#define _YUTIL_ARRAY_H_
+#include "ui.h"
+#include "view.h"
 
-typedef struct array {
-    int item_count;
-    int max_item_count;
-    int realloc_size;
-    void** items;
-} array_t;
+view_t server_view;
 
-int array_add_item( array_t* array, void* item );
-int array_get_size( array_t* array );
-void* array_get_item( array_t* array, int index );
+static const char* server_title = "::[ yaOSp IRC client ]::";
 
-int array_set_realloc_size( array_t* array, int realloc_size );
+static const char* server_get_title( void ) {
+    return server_title;
+}
 
-int init_array( array_t* array );
+static int server_handle_command( const char* command, const char* params ) {
+    view_add_text( &server_view, command );
 
-#endif /* _YUTIL_ARRAY_H_ */
+    return ui_handle_command( command, params );
+}
+
+static view_operations_t server_view_ops = {
+    .get_title = server_get_title,
+    .handle_command = server_handle_command
+};
+
+int init_server_view( void ) {
+    int error;
+
+    error = init_view( &server_view, &server_view_ops );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}

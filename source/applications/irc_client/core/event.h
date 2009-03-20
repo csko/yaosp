@@ -1,4 +1,4 @@
-/* Array implementation
+/* IRC client
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,22 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YUTIL_ARRAY_H_
-#define _YUTIL_ARRAY_H_
+#ifndef _CORE_EVENT_H_
+#define _CORE_EVENT_H_
 
-typedef struct array {
-    int item_count;
-    int max_item_count;
-    int realloc_size;
-    void** items;
-} array_t;
+enum {
+    EVENT_READ = 0,
+    EVENT_WRITE,
+    EVENT_EXCEPT,
+    EVENT_COUNT
+};
 
-int array_add_item( array_t* array, void* item );
-int array_get_size( array_t* array );
-void* array_get_item( array_t* array, int index );
+struct event;
 
-int array_set_realloc_size( array_t* array, int realloc_size );
+typedef int event_callback_t( struct event* event );
 
-int init_array( array_t* array );
+typedef struct event_type {
+    int interested;
+    event_callback_t* callback;
+} event_type_t;
 
-#endif /* _YUTIL_ARRAY_H_ */
+typedef struct event {
+    int fd;
+    event_type_t events[ EVENT_COUNT ];
+} event_t;
+
+#endif /* _CORE_EVENT_H_ */

@@ -1,4 +1,4 @@
-/* Array implementation
+/* IRC client
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,22 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YUTIL_ARRAY_H_
-#define _YUTIL_ARRAY_H_
+#ifndef _UI_VIEW_H_
+#define _UI_VIEW_H_
 
-typedef struct array {
-    int item_count;
-    int max_item_count;
-    int realloc_size;
-    void** items;
-} array_t;
+#include <yutil/array.h>
 
-int array_add_item( array_t* array, void* item );
-int array_get_size( array_t* array );
-void* array_get_item( array_t* array, int index );
+typedef struct view_operations {
+    const char* ( *get_title )( void );
+    int ( *handle_command )( const char* command, const char* params );
+} view_operations_t;
 
-int array_set_realloc_size( array_t* array, int realloc_size );
+typedef struct view {
+    array_t lines;
+    view_operations_t* operations;
+} view_t;
 
-int init_array( array_t* array );
+extern view_t server_view;
 
-#endif /* _YUTIL_ARRAY_H_ */
+int view_add_text( view_t* view, const char* text );
+
+int init_server_view( void );
+
+int init_view( view_t* view, view_operations_t* operations );
+
+#endif /* _UI_VIEW_H_ */
