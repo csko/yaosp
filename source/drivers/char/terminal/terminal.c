@@ -246,17 +246,17 @@ static inline void terminal_handle_new_line( terminal_t* terminal ) {
         tmp->data = new_data;
         tmp->last_dirty = -1;
     } else {
-        terminal->line_count++;
-
-        /* Update start line if needed */
-
-        if ( terminal->line_count > screen->height ) {
-            terminal->start_line++;
+        if ( terminal->cursor_row == terminal->line_count - 1 ) {
+            terminal->line_count++;
         }
     }
 
     if ( terminal->cursor_row < ( terminal->line_count - 1 ) ) {
         terminal->cursor_row++;
+    }
+
+    if ( terminal->start_line + screen->height == terminal->cursor_row ) {
+        terminal->start_line++;
     }
 }
 

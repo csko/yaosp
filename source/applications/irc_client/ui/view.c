@@ -22,6 +22,7 @@
 #include "ui.h"
 #include "view.h"
 
+extern int screen_w;
 extern view_t* active_view;
 
 static int view_add_line( view_t* view, const char* _line, size_t length ) {
@@ -55,6 +56,13 @@ int view_add_text( view_t* view, const char* text ) {
             length--;
         }
 
+        while ( length > screen_w ) {
+            view_add_line( view, text, screen_w );
+
+            length -= screen_w;
+            text += screen_w;
+        }
+
         view_add_line( view, text, length );
 
         text = end + 1;
@@ -68,6 +76,13 @@ int view_add_text( view_t* view, const char* text ) {
             length--;
         }
 
+        while ( length > screen_w ) {
+            view_add_line( view, text, screen_w );
+
+            length -= screen_w;
+            text += screen_w;
+        }
+
         view_add_line( view, text, length );
     }
 
@@ -78,7 +93,7 @@ int view_add_text( view_t* view, const char* text ) {
     return 0;
 }
 
-int init_view( view_t* view, view_operations_t* operations ) {
+int init_view( view_t* view, view_operations_t* operations, void* data ) {
     int error;
 
     error = init_array( &view->lines );
@@ -90,6 +105,7 @@ int init_view( view_t* view, view_operations_t* operations ) {
     array_set_realloc_size( &view->lines, 32 );
 
     view->operations = operations;
+    view->data = data;
 
     return 0;
 }

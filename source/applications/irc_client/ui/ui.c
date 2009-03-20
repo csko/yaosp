@@ -22,8 +22,10 @@
 #include <sys/ioctl.h>
 
 #include "view.h"
+#include "channel_view.h"
 #include "../core/event.h"
 #include "../core/eventmanager.h"
+#include "../network/irc.h"
 
 #define MAX_INPUT_SIZE 255
 
@@ -33,14 +35,18 @@ static WINDOW* win_main;
 static WINDOW* win_status;
 static WINDOW* win_input;
 
-static int screen_w = 0;
-static int screen_h = 0;
 static event_t stdin_event;
 
 static int cur_input_size = 0;
 static char input_line[ MAX_INPUT_SIZE + 1 ];
 
+int screen_w = 0;
+int screen_h = 0;
 view_t* active_view;
+
+static array_t channel_list;
+
+int ui_activate_view( view_t* view );
 
 static int get_terminal_size( int* width, int* height ) {
     int error;
@@ -56,9 +62,50 @@ static int get_terminal_size( int* width, int* height ) {
     return error;
 }
 
+view_t* ui_get_channel( const char* chan_name ) {
+    int i;
+    int count;
+    view_t* view;
+    channel_data_t* channel;
+
+    count = array_get_size( &channel_list );
+
+    for ( i = 0; i < count; i++ ) {
+        view = ( view_t* )array_get_item( &channel_list, i );
+        channel = ( channel_data_t* )view->data;
+
+        if ( strcmp( channel->name, chan_name ) == 0 ) {
+            return view;
+        }
+    }
+
+    return NULL;
+}
+
 int ui_handle_command( const char* command, const char* params ) {
     if ( strcmp( command, "/quit" ) == 0 ) {
         event_manager_quit();
+    } else if ( strcmp( command, "/join" ) == 0 ) {
+        if ( params != NULL ) {
+            view_t* view;
+
+            view = create_channel_view( params );
+            array_add_item( &channel_list, ( void* )view );
+
+            irc_join_channel( params );
+
+            ui_activate_view( view );
+        }
+    } else if ( strcmp( command, "/privmsg" ) == 0 ) {
+        if ( params != NULL ) {
+            char* msg = strchr( params, ' ' );
+
+            if ( msg != NULL ) {
+                *msg++ = 0;
+
+                irc_send_privmsg( params, msg );
+            }
+        }
     }
 
     return 0;
@@ -70,15 +117,29 @@ static int ui_stdin_event( event_t* event ) {
     while ( ( c = getch() ) != EOF ) {
         switch ( c ) {
             case '\n' : {
-                char* params;
-
-                params = strchr( input_line, ' ' );
-
-                if ( params != NULL ) {
-                    *params++ = 0;
+                if ( cur_input_size == 0 ) {
+                    break;
                 }
 
-                active_view->operations->handle_command( input_line, params );
+                if ( input_line[ 0 ] == '/' ) {
+                    char* params;
+
+                    params = strchr( input_line, ' ' );
+
+                    if ( params != NULL ) {
+                        *params++ = 0;
+                    }
+
+                    if ( active_view->operations->handle_command != NULL ) {
+                        active_view->operations->handle_command( active_view, input_line, params );
+                    } else {
+                        ui_handle_command( input_line, params );
+                    }
+                } else {
+                    if ( active_view->operations->handle_text != NULL ) {
+                        active_view->operations->handle_text( active_view, input_line );
+                    }
+                }
 
                 cur_input_size = 0;
                 input_line[ 0 ] = 0;
@@ -115,7 +176,7 @@ void ui_draw_view( view_t* view ) {
     int start_line;
     char* line;
 
-    start_line = array_get_size( &view->lines ) - ( screen_h - 2 );
+    start_line = array_get_size( &view->lines ) - ( screen_h - 3 );
 
     if ( start_line < 0 ) {
         start_line = 0;
@@ -143,7 +204,7 @@ int ui_activate_view( view_t* view ) {
 
     wclear( win_title );
 
-    title = view->operations->get_title();
+    title = view->operations->get_title( view );
     length = strlen( title );
 
     x = ( screen_w - length ) / 2;
@@ -163,6 +224,16 @@ int ui_activate_view( view_t* view ) {
 }
 
 int init_ui( void ) {
+    int error;
+
+    /* Initialize channel list */
+
+    error = init_array( &channel_list );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
     /* Initialize ncurses */
 
     screen = initscr();

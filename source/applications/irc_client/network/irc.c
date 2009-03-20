@@ -27,15 +27,162 @@
 
 #include "../core/event.h"
 #include "../core/eventmanager.h"
+#include "../ui/view.h"
+#include "../ui/ui.h"
+
+char* my_nick;
 
 static int s;
 static event_t irc_read;
 
+static size_t input_size = 0;
+static char* input_buffer = NULL;
+
+static void irc_handle_line( char* line ) {
+    char* tmp;
+    char* cmd;
+    char* chan;
+
+    view_add_text( &server_view, line );
+
+    cmd = strchr( line, ' ' );
+
+    if ( cmd == NULL ) {
+        return;
+    }
+
+    cmd++;
+
+    chan = strchr( cmd, ' ' );
+
+    if ( chan == NULL ) {
+        return;
+    }
+
+    *chan++ = 0;
+
+    tmp = strchr( chan, ' ' );
+
+    if ( tmp == NULL ) {
+        return;
+    }
+
+    *tmp = 0;
+
+    if ( strcmp( cmd, "PRIVMSG" ) == 0 ) {
+        char* msg;
+        char* nick;
+        char buf[ 256 ];
+        view_t* channel;
+
+        msg = strchr( tmp + 1, ':' );
+
+        if ( msg == NULL ) {
+            return;
+        }
+
+        msg++;
+
+        tmp = strchr( line + 1, '!' );
+
+        if ( tmp == NULL ) {
+            return;
+        }
+
+        *tmp = 0;
+        nick = line + 1;
+
+        channel = ui_get_channel( chan );
+
+        if ( channel == NULL ) {
+            return;
+        }
+
+        snprintf( buf, sizeof( buf ), "<%s> %s", nick, msg );
+
+        view_add_text( channel, buf );
+    }
+}
+
 static int irc_handle_incoming( event_t* event ) {
-    int data;
+    int size;
     char buffer[ 512 ];
 
-    data = read( s, b, sizeof( buffer ) );
+    size = read( s, buffer, sizeof( buffer ) - 1 );
+
+    if ( size > 0 ) {
+        char* tmp;
+        char* start;
+        size_t length;
+
+        buffer[ size ] = 0;
+
+        tmp = ( char* )malloc( input_size + size + 1 );
+
+        if ( tmp != NULL ) {
+            if ( input_size > 0 ) {
+                memcpy( tmp, input_buffer, input_size );
+            }
+
+            if ( input_buffer != NULL ) {
+                free( input_buffer );
+            }
+
+            input_buffer = tmp;
+        }
+
+        memcpy( input_buffer + input_size, buffer, size );
+
+        input_size += size;
+        tmp[ input_size ] = 0;
+
+        start = input_buffer;
+        tmp = strstr( start, "\r\n" );
+
+        while ( tmp != NULL ) {
+            *tmp = 0;
+
+            irc_handle_line( start );
+
+            start = tmp + 2;
+            tmp = strstr( start, "\r\n" );
+        }
+
+        if ( start > input_buffer ) {
+            length = strlen( start );
+
+            if ( start == 0 ) {
+                free( input_buffer );
+            } else {
+                memmove( input_buffer, start, length );
+                input_buffer = ( char* )realloc( input_buffer, length );
+            }
+
+            input_size = length;
+        }
+    }
+
+    return 0;
+}
+
+int irc_join_channel( const char* channel ) {
+    char buf[ 128 ];
+    size_t length;
+
+    length = snprintf( buf, sizeof( buf ), "JOIN %s\r\n", channel );
+
+    write( s, buf, length );
+
+    return 0;
+}
+
+int irc_send_privmsg( const char* channel, const char* message ) {
+    char buf[ 256 ];
+    size_t length;
+
+    length = snprintf( buf, sizeof( buf ), "PRIVMSG %s :%s\r\n", channel, message );
+
+    write( s, buf, length );
 
     return 0;
 }
@@ -64,7 +211,7 @@ void init_irc( void ) {
         return;
     }
 
-    snprintf( buffer, sizeof( buffer ), "NICK gisz0\r\nUSER gisz0 SERVER irc.atw.hu :giszo from yaOSp\r\n" );
+    snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER irc.atw.hu :giszo from yaOSp\r\n", my_nick, my_nick );
 
     write( s, buffer, strlen( buffer ) );
 

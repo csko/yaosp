@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdlib.h>
+
 #include "ui.h"
 #include "view.h"
 
@@ -23,11 +25,11 @@ view_t server_view;
 
 static const char* server_title = "::[ yaOSp IRC client ]::";
 
-static const char* server_get_title( void ) {
+static const char* server_get_title( view_t* view ) {
     return server_title;
 }
 
-static int server_handle_command( const char* command, const char* params ) {
+static int server_handle_command( view_t* view, const char* command, const char* params ) {
     view_add_text( &server_view, command );
 
     return ui_handle_command( command, params );
@@ -35,13 +37,14 @@ static int server_handle_command( const char* command, const char* params ) {
 
 static view_operations_t server_view_ops = {
     .get_title = server_get_title,
-    .handle_command = server_handle_command
+    .handle_command = server_handle_command,
+    .handle_text = NULL
 };
 
 int init_server_view( void ) {
     int error;
 
-    error = init_view( &server_view, &server_view_ops );
+    error = init_view( &server_view, &server_view_ops, NULL );
 
     if ( error < 0 ) {
         return error;

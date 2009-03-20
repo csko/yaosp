@@ -16,30 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef _NETWORK_IRC_H_
+#define _NETWORK_IRC_H_
 
-#include "ui/ui.h"
-#include "core/eventmanager.h"
-#include "network/irc.h"
+int irc_join_channel( const char* channel );
+int irc_send_privmsg( const char* channel, const char* message );
 
-extern char* my_nick;
+int init_irc( void );
 
-int main( int argc, char** argv ) {
-    if ( argc < 2 ) {
-        printf( "%s nick\n", argv[ 0 ] );
-        return EXIT_SUCCESS;
-    }
-
-    my_nick = argv[ 1 ];
-
-    init_event_manager();
-    init_ui();
-    init_irc();
-
-    event_manager_mainloop();
-
-    destroy_ui();
-
-    return EXIT_SUCCESS;
-}
+#endif /* _NETWORK_IRC_H_ */

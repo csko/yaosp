@@ -16,30 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef _UI_CHANNEL_VIEW_H_
+#define _UI_CHANNEL_VIEW_H_
 
-#include "ui/ui.h"
-#include "core/eventmanager.h"
-#include "network/irc.h"
+#include "view.h"
 
-extern char* my_nick;
+typedef struct channel_data {
+    char* name;
+} channel_data_t;
 
-int main( int argc, char** argv ) {
-    if ( argc < 2 ) {
-        printf( "%s nick\n", argv[ 0 ] );
-        return EXIT_SUCCESS;
-    }
+view_t* create_channel_view( const char* name );
 
-    my_nick = argv[ 1 ];
-
-    init_event_manager();
-    init_ui();
-    init_irc();
-
-    event_manager_mainloop();
-
-    destroy_ui();
-
-    return EXIT_SUCCESS;
-}
+#endif /* _UI_CHANNEL_VIEW_H_ */

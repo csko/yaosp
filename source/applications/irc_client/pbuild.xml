@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>ui/ui.c</item>
         <item>ui/view.c</item>
         <item>ui/server_view.c</item>
+        <item>ui/channel_view.c</item>
         <item>network/irc.c</item>
     </array>
 

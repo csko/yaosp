@@ -21,14 +21,18 @@
 
 #include <yutil/array.h>
 
+struct view;
+
 typedef struct view_operations {
-    const char* ( *get_title )( void );
-    int ( *handle_command )( const char* command, const char* params );
+    const char* ( *get_title )( struct view* view );
+    int ( *handle_command )( struct view* view, const char* command, const char* params );
+    int ( *handle_text )( struct view* view, const char* text );
 } view_operations_t;
 
 typedef struct view {
     array_t lines;
     view_operations_t* operations;
+    void* data;
 } view_t;
 
 extern view_t server_view;
@@ -37,6 +41,6 @@ int view_add_text( view_t* view, const char* text );
 
 int init_server_view( void );
 
-int init_view( view_t* view, view_operations_t* operations );
+int init_view( view_t* view, view_operations_t* operations, void* data );
 
 #endif /* _UI_VIEW_H_ */

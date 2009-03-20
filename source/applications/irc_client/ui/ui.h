@@ -21,6 +21,7 @@
 
 #include "view.h"
 
+view_t* ui_get_channel( const char* chan_name );
 int ui_handle_command( const char* command, const char* params );
 
 void ui_draw_view( view_t* view );
