@@ -901,6 +901,7 @@ static filesystem_calls_t pty_calls = {
     .isatty = pty_isatty,
     .symlink = NULL,
     .readlink = NULL,
+    .set_flags = NULL,
     .add_select_request = pty_add_select_request,
     .remove_select_request = pty_remove_select_request
 };

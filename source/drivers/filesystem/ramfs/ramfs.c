@@ -730,6 +730,7 @@ static filesystem_calls_t ramfs_calls = {
     .isatty = NULL,
     .symlink = ramfs_symlink,
     .readlink = ramfs_readlink,
+    .set_flags = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };

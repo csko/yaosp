@@ -106,6 +106,16 @@ int ui_handle_command( const char* command, const char* params ) {
                 irc_send_privmsg( params, msg );
             }
         }
+    } else if ( strcmp( command, "/server" ) == 0 ) {
+        ui_activate_view( &server_view );
+    } else if ( strcmp( command, "/chan" ) == 0 ) {
+        if ( params != NULL ) {
+            view_t* chan = ui_get_channel( params );
+
+            if ( chan != NULL ) {
+                ui_activate_view( chan );
+            }
+        }
     }
 
     return 0;

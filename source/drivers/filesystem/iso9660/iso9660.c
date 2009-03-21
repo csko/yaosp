@@ -731,6 +731,7 @@ static filesystem_calls_t iso9660_calls = {
     .isatty = NULL,
     .symlink = NULL,
     .readlink = NULL,
+    .set_flags = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };

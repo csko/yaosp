@@ -386,6 +386,12 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
     return data_written;
 }
 
+static int tcp_set_flags( socket_t* socket, int flags ) {
+    /* TODO */
+
+    return 0;
+}
+
 static int tcp_add_select_request( socket_t* socket, struct select_request* request ) {
     tcp_socket_t* tcp_socket;
 
@@ -500,6 +506,7 @@ static socket_calls_t tcp_socket_calls = {
     .connect = tcp_connect,
     .read = tcp_read,
     .write = tcp_write,
+    .set_flags = tcp_set_flags,
     .add_select_request = tcp_add_select_request,
     .remove_select_request = tcp_remove_select_request
 };

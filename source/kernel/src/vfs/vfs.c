@@ -334,6 +334,8 @@ static int do_open( bool kernel, const char* path, int flags, int perms ) {
         file->type = TYPE_FILE;
     }
 
+    file->flags = flags;
+
     /* Insert the new file to the I/O context */
 
     error = io_context_insert_file( io_context, file );
@@ -1255,10 +1257,58 @@ int sys_lseek( int fd, off_t* offset, int whence, off_t* new_offset ) {
     return do_lseek( false, fd, *offset, whence, new_offset );
 }
 
-int sys_fcntl( int fd, int cmd, int arg ) {
-    /* TODO */
+static int do_fcntl( bool kernel, int fd, int cmd, int arg ) {
+    int error;
+    file_t* file;
+    io_context_t* io_context;
 
-    return -ENOSYS;
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        return -EBADF;
+    }
+
+    switch ( cmd ) {
+        case F_GETFL :
+            error = file->flags;
+            break;
+
+        case F_SETFL :
+            if ( file->inode->mount_point->fs_calls->set_flags != NULL ) {
+                error = file->inode->mount_point->fs_calls->set_flags(
+                    file->inode->mount_point->fs_data,
+                    file->inode->fs_node,
+                    file->cookie,
+                    arg
+                );
+
+                if ( error >= 0 ) {
+                    file->flags = arg;
+                }
+            } else {
+                error = -ENOSYS;
+            }
+
+            break;
+
+        default :
+            error = -EINVAL;
+            break;
+    }
+
+    io_context_put_file( io_context, file );
+
+    return error;
+}
+
+int sys_fcntl( int fd, int cmd, int arg ) {
+    return do_fcntl( false, fd, cmd, arg );
 }
 
 static int do_readlink( bool kernel, const char* path, char* buffer, size_t length ) {

@@ -85,6 +85,7 @@ typedef struct socket_calls {
     int ( *connect )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
     int ( *read )( socket_t* socket, void* data, size_t length );
     int ( *write )( socket_t* socket, const void* data, size_t length );
+    int ( *set_flags )( socket_t* socket, int flags );
     int ( *add_select_request )( socket_t* socket, struct select_request* request );
     int ( *remove_select_request )( socket_t* socket, struct select_request* request );
 } socket_calls_t;

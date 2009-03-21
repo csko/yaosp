@@ -602,6 +602,7 @@ static filesystem_calls_t devfs_calls = {
     .isatty = NULL,
     .symlink = NULL,
     .readlink = NULL,
+    .set_flags = NULL,
     .add_select_request = devfs_add_select_request,
     .remove_select_request = devfs_remove_select_request
 };

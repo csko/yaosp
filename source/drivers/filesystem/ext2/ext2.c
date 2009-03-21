@@ -61,10 +61,12 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     }
 
     /* Mark the filesystem as in use and increment the mount counter */
-    if( flags & ~MOUNT_RO ){
+
+    if ( flags & ~MOUNT_RO ) {
         cookie->superblock.state = EXT2_ERROR_FS;
         cookie->superblock.mnt_count++;
-        if( pwrite( cookie->fd, &cookie->superblock, sizeof( ext2_superblock_t ), 1024 ) != sizeof( ext2_superblock_t ) ){
+
+        if ( pwrite( cookie->fd, &cookie->superblock, sizeof( ext2_superblock_t ), 1024 ) != sizeof( ext2_superblock_t ) ){
             kprintf( "ext2: Failed to write back superblock\n" );
             error = -EIO;
             goto error3;
@@ -127,6 +129,7 @@ static filesystem_calls_t ext2_calls = {
     .isatty = NULL,
     .symlink = NULL,
     .readlink = NULL,
+    .set_flags = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };

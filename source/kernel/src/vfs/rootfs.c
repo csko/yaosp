@@ -479,6 +479,7 @@ static filesystem_calls_t rootfs_calls = {
     .isatty = NULL,
     .symlink = rootfs_symlink,
     .readlink = rootfs_readlink,
+    .set_flags = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL
 };

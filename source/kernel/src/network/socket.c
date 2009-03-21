@@ -133,6 +133,24 @@ static int socket_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
     return 0;
 }
 
+static int socket_set_flags( void* fs_cookie, void* node, void* file_cookie, int flags ) {
+    int error;
+    socket_t* socket;
+
+    socket = ( socket_t* )node;
+
+    if ( socket->operations->add_select_request != NULL ) {
+        error = socket->operations->set_flags(
+            socket,
+            flags
+        );
+    } else {
+        error = -ENOSYS;
+    }
+
+    return error;
+}
+
 static int socket_add_select_request( void* fs_cookie, void* node, void* file_cookie, struct select_request* request ) {
     int error;
     socket_t* socket;
@@ -193,6 +211,7 @@ filesystem_calls_t socket_calls = {
     .isatty = NULL,
     .symlink = NULL,
     .readlink = NULL,
+    .set_flags = socket_set_flags,
     .add_select_request = socket_add_select_request,
     .remove_select_request = socket_remove_select_request
 };

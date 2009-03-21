@@ -30,8 +30,6 @@ static const char* server_get_title( view_t* view ) {
 }
 
 static int server_handle_command( view_t* view, const char* command, const char* params ) {
-    view_add_text( &server_view, command );
-
     return ui_handle_command( command, params );
 }
 

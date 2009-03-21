@@ -55,6 +55,7 @@ typedef struct filesystem_calls {
     int ( *isatty )( void* fs_cookie, void* node );
     int ( *symlink )( void* fs_cookie, void* node, const char* name, int name_length, const char* link_path );
     int ( *readlink )( void* fs_cookie, void* node, char* buffer, size_t length );
+    int ( *set_flags )( void* fs_cookie, void* node, void* file_cookie, int flags );
     int ( *add_select_request )( void* fs_cookie, void* node, void* file_cookie, struct select_request* request );
     int ( *remove_select_request )( void* fs_cookie, void* node, void* file_cookie, struct select_request* request );
 } filesystem_calls_t;
