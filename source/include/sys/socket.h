@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -114,5 +114,42 @@ struct sockaddr {
 
 int socket( int domain, int type, int protocol );
 int connect( int fd, const struct sockaddr* address, socklen_t addrlen );
+
+/* Not implemented functions
+int socketpair( int d, int type, int protocol, int sv[2] );
+
+int bind( int sockfd, const struct sockaddr *addr,
+          socklen_t addrlen );
+
+int getsockname( int s, struct sockaddr *name, socklen_t *namelen );
+
+int getpeername( int s, struct sockaddr *name, socklen_t *namelen );
+
+ssize_t send( int s, const void *buf, size_t len, int flags );
+
+ssize_t sendto( int s, const void *buf, size_t len, int flags,
+                const struct sockaddr *to, socklen_t tolen );
+
+ssize_t sendmsg( int s, const struct msghdr *msg, int flags );
+
+ssize_t recv( int s, void *buf, size_t len, int flags );
+
+ssize_t recvfrom( int s, void *buf, size_t len, int flags,
+                  struct sockaddr *from, socklen_t *fromlen );
+
+ssize_t recvmsg( int s, struct msghdr *msg, int flags );
+
+int getsockopt( int s, int level, int optname,
+                void *optval, socklen_t *optlen );
+
+int setsockopt( int s, int level, int optname,
+                const void *optval, socklen_t optlen );
+
+int listen( int sockfd, int backlog );
+
+int accept( int sockfd, struct sockaddr *addr, socklen_t *addrlen );
+
+int shutdown( int s, int how );
+*/
 
 #endif /* _SYS_SOCKET_H_ */

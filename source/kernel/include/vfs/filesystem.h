@@ -26,6 +26,7 @@
 
 #define MOUNT_NONE    0
 #define MOUNT_RO      1
+#define MOUNT_NOATIME 2
 
 struct dirent;
 struct select_request;
