@@ -107,8 +107,8 @@ static int setup_graphics_mode( void ) {
         return -ENOMEM;
     }
 
-    color_t tmp_color = { 0xAA, 0xBB, 0xCC, 0x00 };
-    rect_t tmp_rect = { 100, 100, 540, 380 };
+    color_t tmp_color = { 0x00, 0x00, 0x00, 0x00 };
+    rect_t tmp_rect = { 0, 0, 639, 479 };
 
     graphics_driver->fill_rect( screen_bitmap, &tmp_rect, &tmp_color );
 

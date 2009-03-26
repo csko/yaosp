@@ -26,6 +26,7 @@
 #include <ygui/color.h>
 
 #include <bitmap.h>
+#include <fontmanager.h>
 
 typedef struct screen_mode {
     uint32_t width;
@@ -42,6 +43,7 @@ typedef struct graphics_driver {
     int ( *set_screen_mode )( screen_mode_t* screen_mode );
     int ( *get_framebuffer_info )( void** address );
     int ( *fill_rect )( bitmap_t* bitmap, rect_t* rect, color_t* color );
+    int ( *draw_text )( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font_node_t* font, color_t* color, const char* text, int length );
 } graphics_driver_t;
 
 #if defined( USE_I386_ASM )
@@ -51,5 +53,7 @@ int i386_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color );
 int generic_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color );
 #define GFX_FILL_RECT generic_fill_rect
 #endif
+
+int generic_draw_text( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font_node_t* font, color_t* color, const char* text, int length );
 
 #endif /* _GRAPHICSDRIVER_H_ */

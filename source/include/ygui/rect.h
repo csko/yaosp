@@ -20,20 +20,54 @@
 #define _YGUI_RECT_H_
 
 #include <sys/types.h>
+#include <sys/param.h>
+
+#include <ygui/point.h>
 
 typedef struct rect {
-    uint32_t left;
-    uint32_t top;
-    uint32_t right;
-    uint32_t bottom;
+    int left;
+    int top;
+    int right;
+    int bottom;
 } rect_t;
 
-static inline uint32_t rect_width( rect_t* rect ) {
+static inline void rect_init( rect_t* rect, int left, int top, int right, int bottom ) {
+    rect->left = left;
+    rect->top = top;
+    rect->right = right;
+    rect->bottom = bottom;
+}
+
+static inline int rect_width( rect_t* rect ) {
     return ( rect->right - rect->left + 1 );
 }
 
-static inline uint32_t rect_height( rect_t* rect ) {
+static inline int rect_height( rect_t* rect ) {
     return ( rect->bottom - rect->top + 1 );
+}
+
+static inline void rect_bounds( rect_t* rect, int* w, int* h ) {
+    *w = rect->right - rect->left + 1;
+    *h = rect->bottom - rect->top + 1;
+}
+
+static inline void rect_add_point_n( rect_t* dst, rect_t* src1, point_t* src2 ) {
+    dst->left = src1->left + src2->x;
+    dst->right = src1->right + src2->x;
+    dst->top = src1->top + src2->y;
+    dst->bottom = src1->bottom + src2->y;
+}
+
+static inline void rect_and_n( rect_t* dst, rect_t* rect1, rect_t* rect2 ) {
+    dst->left = MAX( rect1->left, rect2->left );
+    dst->right = MIN( rect1->right, rect2->right );
+    dst->top = MAX( rect1->top, rect2->top );
+    dst->bottom = MIN( rect1->bottom, rect2->bottom );
+}
+
+static inline int rect_is_valid( rect_t* rect ) {
+    return ( ( rect->left <= rect->right ) &&
+             ( rect->top <= rect->bottom ) );
 }
 
 #endif /* _YGUI_RECT_H_ */

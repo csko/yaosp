@@ -38,6 +38,7 @@ typedef struct bitmap {
     int ref_count;
     uint32_t width;
     uint32_t height;
+    int bytes_per_line;
     color_space_t color_space;
     void* buffer;
 } bitmap_t;

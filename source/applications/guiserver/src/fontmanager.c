@@ -151,7 +151,21 @@ static font_style_t* create_font_style( const char* name, FT_Face face ) {
         goto error3;
     }
 
+    style->lock = create_semaphore( "Font style lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( style->lock < 0 ) {
+        goto error4;
+    }
+
+    style->face = face;
+    style->glyph_count = face->num_glyphs;
+    style->scalable = ( ( face->face_flags & FT_FACE_FLAG_SCALABLE ) != 0 );
+    style->fixed_width = ( ( face->face_flags & FT_FACE_FLAG_FIXED_WIDTH ) != 0 );
+
     return style;
+
+error4:
+    destroy_hashtable( &style->nodes );
 
 error3:
     free( ( void* )style->name );
@@ -169,6 +183,231 @@ static font_style_t* get_font_style( font_family_t* family, const char* name ) {
 
 static void insert_font_style( font_family_t* family, font_style_t* style ) {
     hashtable_add( &family->styles, ( hashitem_t* )style );
+}
+
+font_glyph_t* font_node_get_glyph( font_node_t* node, unsigned int character ) {
+    int top;
+    int left;
+    int index;
+    FT_Face face;
+    FT_Error error;
+    FT_GlyphSlot glyph;
+
+    int raster_size;
+    font_glyph_t* font_glyph;
+
+    face = node->style->face;
+    index = FT_Get_Char_Index( face, character );
+
+    if ( ( index < 0 ) || ( index >= node->style->glyph_count ) ) {
+        return NULL;
+    }
+
+    if ( node->glyph_table[ index ] != NULL ) {
+        return node->glyph_table[ index];
+    }
+
+    if ( node->style->scalable ) {
+        FT_Set_Char_Size( face, node->properties.point_size, node->properties.point_size, 96, 96 );
+    } else {
+        FT_Set_Pixel_Sizes( face, 0, ( node->properties.point_size * 96 / 72 ) / 64 );
+    }
+
+    FT_Set_Transform( face, NULL, NULL );
+
+    error = FT_Load_Glyph( face, index, FT_LOAD_DEFAULT );
+
+    if ( error != 0 ) {
+        dbprintf( "font_node_get_glyph(): Unable to load glyph char=%u index=%d (error=%d)\n", character, index, error );
+        return NULL;
+    }
+
+    glyph = face->glyph;
+
+    if ( node->style->scalable ) {
+        top = -( ( glyph->metrics.horiBearingY + 63 ) & -64 ) / 64;
+        left = ( glyph->metrics.horiBearingX & -64 ) / 64;
+    } else {
+        top = -glyph->bitmap_top;
+        left = glyph->bitmap_left;
+    }
+
+    if ( node->style->scalable ) {
+        if ( node->properties.flags & FONT_SMOOTHED ) {
+            error = FT_Render_Glyph( glyph, FT_RENDER_MODE_NORMAL );
+        } else {
+            error = FT_Render_Glyph( glyph, FT_RENDER_MODE_MONO );
+        }
+
+        if ( error != 0 ) {
+          dbprintf( "font_node_get_glyph(): Failed to render glyph: 0x%X\n", error );
+          return NULL;
+        }
+    }
+
+    if ( ( glyph->bitmap.width < 0 ) ||
+         ( glyph->bitmap.rows < 0 ) ||
+         ( glyph->bitmap.pitch < 0 ) ) {
+        dbprintf(
+            "font_node_get_glyph(): Glyph got invalid size %dx%d (%d)\n", 
+            glyph->bitmap.width,
+            glyph->bitmap.rows,
+            glyph->bitmap.pitch
+        );
+
+        return NULL;
+    }
+
+    if ( glyph->bitmap.pixel_mode == ft_pixel_mode_grays ) {
+        raster_size = glyph->bitmap.pitch * glyph->bitmap.rows;
+    } else if ( glyph->bitmap.pixel_mode == ft_pixel_mode_mono ) {
+        raster_size = glyph->bitmap.width * glyph->bitmap.rows;
+    } else {
+        dbprintf( "font_node_get_glyph(): Unknown pixel mode: %d\n", glyph->bitmap.pixel_mode );
+        return NULL;
+    }
+
+    font_glyph = ( font_glyph_t* )malloc( sizeof( font_glyph_t ) + raster_size );
+
+    if ( font_glyph == NULL ) {
+        return NULL;
+    }
+
+    node->glyph_table[ index ] = font_glyph;
+
+    font_glyph->raster = ( uint8_t* )( font_glyph + 1 );
+
+    rect_init(
+        &font_glyph->bounds,
+        left,
+        top,
+        left + glyph->bitmap.width - 1,
+        top + glyph->bitmap.rows - 1
+    );
+
+    if ( node->style->scalable ) {
+        if ( node->style->fixed_width ) {
+            font_glyph->advance.x = node->advance;
+        } else {
+            font_glyph->advance.x = ( glyph->metrics.horiAdvance + 32 ) / 64;
+            font_glyph->advance.y = ( glyph->metrics.vertAdvance + 32 ) / 64;
+        }
+    } else {
+        font_glyph->advance.x = glyph->bitmap.width;
+    }
+
+    if ( glyph->bitmap.pixel_mode == ft_pixel_mode_grays ) {
+        font_glyph->bytes_per_line = glyph->bitmap.pitch;
+
+        memcpy( font_glyph->raster, glyph->bitmap.buffer, raster_size );
+    } else {
+        int x;
+        int y;
+        int w;
+        int h;
+
+        font_glyph->bytes_per_line = glyph->bitmap.width;
+
+        rect_bounds( &font_glyph->bounds, &w, &h );
+
+        for ( y = 0; y < h; ++y ) {
+            for ( x = 0; x < w; ++x ) {
+                if ( glyph->bitmap.buffer[ x / 8 + y * glyph->bitmap.pitch ] & ( 1 << ( 7 - ( x % 8 ) ) ) ) {
+                    font_glyph->raster[ x + y * font_glyph->bytes_per_line ] = 255;
+                } else {
+                    font_glyph->raster[ x + y * font_glyph->bytes_per_line ] = 0;
+                }
+            } // for x
+        } // for y
+    }
+
+    return font_glyph;
+}
+
+font_node_t* create_font_node( font_style_t* style, font_properties_t* properties ) {
+    FT_Size size;
+    font_node_t* node;
+
+    node = ( font_node_t* )malloc( sizeof( font_node_t ) );
+
+    if ( node == NULL ) {
+        goto error1;
+    }
+
+    node->style = style;
+    memcpy( &node->properties, properties, sizeof( font_properties_t ) );
+
+    if ( style->glyph_count > 0 ) {
+        node->glyph_table = ( font_glyph_t** )malloc( sizeof( font_glyph_t* ) * style->glyph_count );
+
+        if ( node->glyph_table == NULL ) {
+            goto error2;
+        }
+
+        memset( node->glyph_table, 0, sizeof( font_glyph_t* ) * style->glyph_count );
+    } else {
+        node->glyph_table = NULL;
+    }
+
+    if ( style->scalable ) {
+        FT_Set_Char_Size( style->face, properties->point_size, properties->point_size, 96, 96 );
+    } else {
+        FT_Set_Pixel_Sizes( style->face, 0, ( properties->point_size * 96 / 72 ) / 64 );
+    }
+
+    size = style->face->size;
+
+    if ( size->metrics.descender > 0 ) {
+        node->descender = -( size->metrics.descender + 63 ) / 64;
+    } else {
+        node->descender = ( size->metrics.descender + 63 ) / 64;
+    }
+
+    node->ascender = ( size->metrics.ascender + 63 ) / 64;
+    node->line_gap = ( size->metrics.height + 63 ) / 64 - ( node->ascender - node->descender );
+    node->advance = ( size->metrics.max_advance + 63 ) / 64;
+
+    return node;
+
+error2:
+    free( node );
+
+error1:
+    return NULL;
+}
+
+font_node_t* get_font( const char* family_name, const char* style_name, font_properties_t* properties ) {
+    font_family_t* family;
+    font_style_t* style;
+    font_node_t* node;
+
+    family = ( font_family_t* )hashtable_get( &family_table, ( const void* )family_name );
+
+    if ( family == NULL ) {
+        return NULL;
+    }
+
+    style = ( font_style_t* )hashtable_get( &family->styles, ( const void* )style_name );
+
+    if ( style == NULL ) {
+        return NULL;
+    }
+
+    LOCK( style->lock );
+
+    node = ( font_node_t* )hashtable_get( &style->nodes, ( const void* )properties );
+
+    if ( node == NULL ) {
+        node = create_font_node( style, properties );
+
+        if ( node != NULL ) {
+            hashtable_add( &style->nodes, ( hashitem_t* )node );
+        }
+    }
+
+    UNLOCK( style->lock );
+
+    return node;
 }
 
 static void load_fonts( void ) {

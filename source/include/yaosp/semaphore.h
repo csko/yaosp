@@ -21,6 +21,12 @@
 
 #include <sys/types.h>
 
+#define LOCK(id) \
+    lock_semaphore( id, 1, INFINITE_TIMEOUT )
+
+#define UNLOCK(id) \
+    unlock_semaphore( id, 1 )
+
 typedef int semaphore_id;
 
 typedef enum semaphore_type {

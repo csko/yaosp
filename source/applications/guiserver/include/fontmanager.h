@@ -26,11 +26,18 @@
 #include <yaosp/semaphore.h>
 
 #include <ygui/font.h>
+#include <ygui/rect.h>
+#include <ygui/point.h>
 #include <yutil/hashtable.h>
 
 typedef struct font_glyph {
-    int dummy;
+    uint8_t* raster;
+    rect_t bounds;
+    point_t advance;
+    int bytes_per_line;
 } font_glyph_t;
+
+struct font_style;
 
 typedef struct font_node {
     hashitem_t hash;
@@ -38,6 +45,7 @@ typedef struct font_node {
     int descender;
     int line_gap;
     int advance;
+    struct font_style* style;
     font_properties_t properties;
     font_glyph_t** glyph_table;
 } font_node_t;
@@ -58,6 +66,10 @@ typedef struct font_family {
     const char* name;
     hashtable_t styles;
 } font_family_t;
+
+font_glyph_t* font_node_get_glyph( font_node_t* node, unsigned int character );
+
+font_node_t* get_font( const char* family_name, const char* style_name, font_properties_t* properties );
 
 int init_font_manager( void );
 

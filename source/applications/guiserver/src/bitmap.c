@@ -56,6 +56,7 @@ bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_spac
     bitmap->ref_count = 1;
     bitmap->width = width;
     bitmap->height = height;
+    bitmap->bytes_per_line = width * colorspace_to_bpp( color_space );
     bitmap->color_space = color_space;
     bitmap->buffer = buffer;
 

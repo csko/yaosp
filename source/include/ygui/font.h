@@ -19,6 +19,36 @@
 #ifndef _YGUI_FONT_H_
 #define _YGUI_FONT_H_
 
+#include <sys/types.h>
+
+static inline int utf8_char_length( uint8_t first_byte ) {
+    return ( ( ( 0xE5000000 >> ( ( first_byte >> 3 ) & 0x1E ) ) & 3 ) + 1 );
+}
+
+static inline int utf8_to_unicode( const char* text ) {
+    if ( ( text[ 0 ] & 0x80 ) == 0 ) {
+        return *text;
+    } else if ( ( text[ 1 ] & 0xC0 ) != 0x80 ) {
+        return 0xFFFD;
+    } else if ( ( text[ 0 ] & 0x20 ) == 0 ) {
+        return ( ( ( text[ 0 ] & 0x1F ) << 6 ) | ( text[ 1 ] & 0x3F ) );
+    } else if ( ( text[ 2 ] & 0xC0 ) != 0x80 ) {
+        return 0xFFFD;
+    } else if ( ( text[ 0 ] & 0x10 ) == 0 ) {
+        return ( ( ( text[ 0 ] & 0x0F ) << 12 ) | ( ( text[ 1 ] & 0x3F ) << 6 ) | ( text[ 2 ] & 0x3F ) );
+    } else if ( ( text[ 3 ] & 0xC0 ) != 0x80 ) {
+        return 0xFFFD;
+    } else {
+        int tmp;
+        tmp = ( ( text[ 0 ] & 0x07 ) << 18 ) | ( ( text[ 1 ] & 0x3F ) << 12 ) | ( ( text[ 2 ] & 0x3F ) << 6 ) | ( text[ 3 ] & 0x3F );
+        return ( ( ( 0xD7C0 + ( tmp >> 10 ) ) << 16 ) | ( 0xDC00 + ( tmp & 0x3FF ) ) );
+    }
+}
+
+enum {
+    FONT_SMOOTHED = 1
+};
+
 typedef struct font_properties {
     int point_size;
     int flags;
