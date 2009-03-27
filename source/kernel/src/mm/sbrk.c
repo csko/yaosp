@@ -32,7 +32,13 @@ void* sys_sbrk( int increment ) {
         /* Return the current location of the process break */
 
         if ( process->heap_region < 0 ) {
-            memory_context_find_unmapped_region( process->memory_context, PAGE_SIZE, false, ( ptr_t* )&pbreak );
+            memory_context_find_unmapped_region(
+                process->memory_context,
+                FIRST_USER_ADDRESS,
+                LAST_USER_ADDRESS,
+                PAGE_SIZE,
+                ( ptr_t* )&pbreak
+            );
         } else {
             region_info_t region_info;
 
@@ -64,7 +70,7 @@ void* sys_sbrk( int increment ) {
     } else {
         /* Increment the size of the heap */
 
-        increment = PAGE_ALIGN(increment);
+        increment = PAGE_ALIGN( increment );
 
         if ( process->heap_region < 0 ) {
             process->heap_region = create_region(

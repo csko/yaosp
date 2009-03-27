@@ -187,7 +187,8 @@ __init int init_apic( void ) {
         PAGE_SIZE,
         REGION_READ | REGION_WRITE | REGION_KERNEL,
         ALLOC_NONE,
-        ( void** )&local_apic_address
+        ( void** )&local_apic_address,
+        false
     );
 
     if ( local_apic_region < 0 ) {

@@ -65,12 +65,14 @@ region_t* memory_context_get_region_for( memory_context_t* context, ptr_t addres
  * memory context.
  *
  * @param context The memory context to search in
+ * @param start The start address of the range to search in
+ * @param end The end address of the range to search in
  * @param size The size (in bytes) of the unmapped region to look for
  * @param address A pointer where the start address of the found memory
                   region will be stored
  * @return On success true is returned
  */
-bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address );
+bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start, ptr_t end, uint32_t size, ptr_t* address );
 
 /**
  * Checks if a memory context can increase its size with the specified
@@ -106,5 +108,7 @@ int memory_context_fix_file_mapped_regions( memory_context_t* new_context, memor
 int memory_context_delete_regions( memory_context_t* context );
 
 void memory_context_destroy( memory_context_t* context );
+
+void memory_context_dump( memory_context_t* context );
 
 #endif // _MM_CONTEXT_H_

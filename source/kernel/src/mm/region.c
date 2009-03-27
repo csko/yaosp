@@ -130,7 +130,8 @@ region_id do_create_region(
     uint32_t size,
     region_flags_t flags,
     alloc_type_t alloc_method,
-    void** _address
+    void** _address,
+    bool call_from_userspace
 ) {
     int error = -1;
     bool found;
@@ -155,12 +156,23 @@ region_id do_create_region(
 
     /* Search for a suitable unmapped memory region */
 
-    found = memory_context_find_unmapped_region(
-        context,
-        size,
-        ( flags & REGION_KERNEL ) != 0,
-        &address
-    );
+    if ( ( flags & REGION_KERNEL ) != 0 ) {
+        found = memory_context_find_unmapped_region(
+            context,
+            FIRST_KERNEL_ADDRESS,
+            LAST_KERNEL_ADDRESS,
+            size,
+            &address
+        );
+    } else {
+        found = memory_context_find_unmapped_region(
+            context,
+            ( call_from_userspace ? FIRST_USER_REGION_ADDRESS : FIRST_USER_ADDRESS ),
+            LAST_USER_ADDRESS,
+            size,
+            &address
+        );
+    }
 
     /* Not found? :( */
 
@@ -239,7 +251,7 @@ region_id create_region(
 
     LOCK( region_lock );
 
-    region = do_create_region( name, size, flags, alloc_method, _address );
+    region = do_create_region( name, size, flags, alloc_method, _address, false );
 
     UNLOCK( region_lock );
 
@@ -259,7 +271,7 @@ region_id sys_create_region(
 
     LOCK( region_lock );
 
-    region = do_create_region( name, size, flags, alloc_method, _address );
+    region = do_create_region( name, size, flags, alloc_method, _address, true );
 
     UNLOCK( region_lock );
 

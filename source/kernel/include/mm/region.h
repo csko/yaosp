@@ -76,7 +76,8 @@ region_id do_create_region(
     uint32_t size,
     region_flags_t flags,
     alloc_type_t alloc_method,
-    void** _address
+    void** _address,
+    bool call_from_userspace
 );
 
 /**

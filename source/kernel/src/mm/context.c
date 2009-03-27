@@ -23,6 +23,7 @@
 #include <semaphore.h>
 #include <process.h>
 #include <scheduler.h>
+#include <console.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -140,91 +141,38 @@ region_t* memory_context_get_region_for( memory_context_t* context, ptr_t addres
     return region;
 }
 
-bool memory_context_find_unmapped_region( memory_context_t* context, uint32_t size, bool kernel_region, ptr_t* address ) {
+bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start, ptr_t end, uint32_t size, ptr_t* address ) {
     int i;
-    ptr_t start;
-    ptr_t end;
 
-    if ( kernel_region ) {
-        start = FIRST_KERNEL_ADDRESS;
-        end = LAST_KERNEL_ADDRESS;
+    if ( context->region_count == 0 ) {
+        if ( ( start + size - 1 ) <= end ) {
+            *address = start;
+
+            return true;
+        }
     } else {
-        start = FIRST_USER_ADDRESS;
-        end = LAST_USER_ADDRESS;
-    }
+        region_t* region;
 
-    /* Check free space before the first region */
+        for ( i = 0; i < context->region_count; i++ ) {
+            region = context->regions[ i ];
 
-    if ( ( context->region_count > 0 ) &&
-         ( start < context->regions[ 0 ]->start ) ) {
-        ptr_t tmp_end;
-        ptr_t free_size;
+            if ( start + size <= region->start ) {
+                *address = start;
 
-        tmp_end = MIN( end, context->regions[ 0 ]->start - 1 );
-        free_size = tmp_end - start + 1;
+                return true;
+            } else {
+                start = MAX( start, region->start + region->size );
+            }
+        }
 
-        if ( free_size >= size ) {
+        if ( ( start + size - 1 ) <= end ) {
             *address = start;
 
             return true;
         }
     }
 
-    for ( i = 0; i < context->region_count; i++ ) {
-        region_t* region;
-
-        region = context->regions[ i ];
-
-        if ( start < region->start ) {
-            /* The start address for the search is before the current region */
-
-            break;
-        }
-
-        if ( ( start >= region->start ) && ( start < region->start + region->size ) ) {
-            /* The start address is inside of the current region */
-
-            break;
-        }
-    }
-
-    for ( ; i < context->region_count - 1; i++ ) {
-        ptr_t tmp_end;
-        ptr_t free_size;
-
-        tmp_end = MIN( end, context->regions[ i + 1 ]->start );
-        free_size = tmp_end - ( context->regions[ i ]->start + context->regions[ i ]->size );
-
-        if ( free_size >= size ) {
-            *address = context->regions[ i ]->start + context->regions[ i ]->size;
-
-            return true;
-        }
-    }
-
-    ptr_t remaining_size;
-
-    if ( context->region_count > 0 ) {
-        region_t* last_region;
-
-        last_region = context->regions[ context->region_count - 1 ];
-
-        start = MAX( start, last_region->start + last_region->size );
-    }
-
-    if ( start >= end ) {
-        return false;
-    }
-
-    remaining_size = end - start;
-
-    if ( remaining_size < size ) {
-        return false;
-    }
-
-    *address = start;
-
-    return true;
+    return false;
 }
 
 bool memory_context_can_resize_region( memory_context_t* context, region_t* region, uint32_t new_size ) {
@@ -436,4 +384,21 @@ void memory_context_destroy( memory_context_t* context ) {
 
     kfree( context->regions );
     kfree( context );
+}
+
+void memory_context_dump( memory_context_t* context ) {
+    int i;
+    region_t* region;
+
+    kprintf( "Memory context dump:\n" );
+    kprintf( "  region count: %d\n", context->region_count );
+
+    for ( i = 0; i < context->region_count; i++ ) {
+        region = context->regions[ i ];
+
+        kprintf( "  region #%d\n", i );
+        kprintf( "    id: %d name: %s\n", region->id, region->name );
+        kprintf( "    start: %p size: %u\n", region->start, region->size );
+        kprintf( "    flags: %x alloc method: %x\n", ( int )region->flags, ( int )region->alloc_method );
+    }
 }

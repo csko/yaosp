@@ -442,7 +442,7 @@ static void load_fonts( void ) {
         error = FT_New_Face( ft_library, path, 0, &face );
 
         if ( error != 0 ) {
-            dbprintf( "Failed to open font: %s (%d)\n", path, error );
+            dbprintf( "Failed to load font: %s (%d)\n", path, error );
             continue;
         }
 
