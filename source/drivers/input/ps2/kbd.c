@@ -27,11 +27,7 @@
 
 #include "ps2.h"
 
-static int kbd_read_pos = 0;
-static int kbd_write_pos = 0;
-static int kbd_buffer_size = 0;
-static semaphore_id kbd_sync = -1;
-static uint8_t kbd_buffer[ PS2_KBD_BUFSIZE ];
+static ps2_buffer_t kbd_buffer;
 
 static int ps2kbd_interrupt( int irq, void* _data, registers_t* regs ) {
     uint8_t data;
@@ -44,14 +40,7 @@ static int ps2kbd_interrupt( int irq, void* _data, registers_t* regs ) {
 
     data = inb( PS2_PORT_DATA );
 
-    if ( kbd_buffer_size < PS2_KBD_BUFSIZE ) {
-        kbd_buffer[ kbd_write_pos ] = data;
-
-        kbd_write_pos = ( kbd_write_pos + 1 ) % PS2_KBD_BUFSIZE;
-        kbd_buffer_size++;
-
-        UNLOCK( kbd_sync );
-    }
+    ps2_buffer_add( &kbd_buffer, data );
 
 out:
     ps2_unlock();
@@ -72,10 +61,6 @@ static int ps2kbd_open( void* node, uint32_t flags, void** cookie ) {
     control |= PS2_CTR_KBDINT;
 
     ps2_write_command( PS2_CMD_WCTR, control );
-
-    kbd_read_pos = 0;
-    kbd_write_pos = 0;
-    kbd_buffer_size = 0;
 
     return 0;
 }
@@ -105,18 +90,16 @@ static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, 
 
     /* Lock while there is nothing to be read */
 
-    while ( kbd_buffer_size == 0 ) {
+    while ( ps2_buffer_size( &kbd_buffer ) == 0 ) {
         ps2_unlock();
-        LOCK( kbd_sync );
+        ps2_buffer_sync( &kbd_buffer );
         ps2_lock();
     }
 
     /* Buffer is not empty, there is something to be read */
 
-    while ( ( kbd_buffer_size > 0 ) && ( _size > 0 ) ) {
-        *data++ = kbd_buffer[ kbd_read_pos ];
-        kbd_read_pos = ( kbd_read_pos + 1 ) % PS2_KBD_BUFSIZE;
-        kbd_buffer_size--;
+    while ( ( ps2_buffer_size( &kbd_buffer ) > 0 ) && ( _size > 0 ) ) {
+        *data++ = ps2_buffer_get( &kbd_buffer );
         _size--;
         ret++;
     }
@@ -135,7 +118,9 @@ static device_calls_t ps2kbd_calls = {
     .close = ps2kbd_close,
     .ioctl = ps2kbd_ioctl,
     .read = ps2kbd_read,
-    .write = NULL
+    .write = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
 };
 
 int ps2_init_keyboard( void ) {
@@ -174,14 +159,18 @@ int ps2_init_keyboard( void ) {
         return -EIO;
     }
 
-    kbd_sync = create_semaphore( "PS2 keyboard sync", SEMAPHORE_COUNTING, 0, 0 );
+    error = ps2_buffer_init( &kbd_buffer );
 
-    if ( kbd_sync < 0 ) {
-        kprintf( "PS2: Failed to create keyboard sync semaphore!\n" );
-        return kbd_sync;
+    if ( error < 0 ) {
+        kprintf( "PS2: Failed to initialize keyboard buffer!\n" );
+        return error;
     }
 
-    create_device_node( "input/ps2kbd", &ps2kbd_calls, NULL );
+    error = create_device_node( "input/ps2kbd", &ps2kbd_calls, NULL );
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     kprintf( "PS2: Keyboard initialized!\n" );
 

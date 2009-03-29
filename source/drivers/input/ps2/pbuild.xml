@@ -23,6 +23,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="files">
         <item>ps2.c</item>
         <item>kbd.c</item>
+        <item>mouse.c</item>
+        <item>buffer.c</item>
     </array>
 
     <target name="clean">

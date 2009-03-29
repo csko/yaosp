@@ -64,7 +64,7 @@ int ps2_flush_buffer( void ) {
 
     spinlock_disable( &ps2_spinlock );
 
-    while ( ( inb( PS2_PORT_STATUS ) & PS2_STATUS_OBF ) && ( i < PS2_KBD_BUFSIZE ) ) {
+    while ( ( inb( PS2_PORT_STATUS ) & PS2_STATUS_OBF ) && ( i < PS2_BUFSIZE ) ) {
         //udelay( 50 );
         inb( PS2_PORT_DATA );
         i++;
@@ -73,6 +73,25 @@ int ps2_flush_buffer( void ) {
     spinunlock_enable( &ps2_spinlock );
 
     return 0;
+}
+
+int ps2_command( uint8_t command ) {
+    int error;
+
+    spinlock_disable( &ps2_spinlock );
+
+    error = ps2_wait_write();
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    outb( command, PS2_PORT_COMMAND );
+
+out:
+    spinunlock_enable( &ps2_spinlock );
+
+    return error;
 }
 
 int ps2_read_command( uint8_t command, uint8_t* data ) {
@@ -129,6 +148,41 @@ out:
     return error;
 }
 
+int ps2_write_read_command( uint8_t command, uint8_t* data ) {
+    int error;
+
+    spinlock_disable( &ps2_spinlock );
+
+    error = ps2_wait_write();
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    outb( command, PS2_PORT_COMMAND );
+
+    error = ps2_wait_write();
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    outb( *data, PS2_PORT_DATA );
+
+    error = ps2_wait_read();
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    *data = inb( PS2_PORT_DATA );
+
+out:
+    spinunlock_enable( &ps2_spinlock );
+
+    return error;
+}
+
 void ps2_lock( void ) {
     spinlock_disable( &ps2_spinlock );
 }
@@ -166,11 +220,8 @@ int init_module( void ) {
         return error;
     }
 
-    error = ps2_init_keyboard();
-
-    if ( error < 0 ) {
-        return error;
-    }
+    ps2_init_keyboard();
+    ps2_init_mouse();
 
     return 0;
 }
