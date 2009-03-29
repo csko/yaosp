@@ -23,18 +23,22 @@
 #include <graphicsdriver.h>
 
 static void fill_rect_rgb32( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
-    uint32_t h;
-    uint32_t w;
+    int x;
+    int y;
+    int height;
+    int width;
     uint32_t* data;
     uint32_t padding;
 
-    assert( bitmap->width >= rect_width( rect ) );
+    rect_bounds( rect, &width, &height );
+
+    assert( bitmap->width >= width );
 
     data = ( uint32_t* )bitmap->buffer + ( rect->top * bitmap->width + rect->left );
-    padding = bitmap->width - rect_width( rect );
+    padding = bitmap->width - width;
 
-    for ( h = 0; h < rect_height( rect ); h++ ) {
-        for ( w = 0; w < rect_width( rect ); w++ ) {
+    for ( y = 0; y < height; y++ ) {
+        for ( x = 0; x < width; x++ ) {
             *data++ = color;
         }
 
