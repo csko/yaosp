@@ -1,6 +1,6 @@
-/* Architecture specific thread functions
+/* GUI server
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,29 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_THREAD_H_
-#define _ARCH_THREAD_H_
+#ifndef _GUISERVER_INPUT_H_
+#define _GUISERVER_INPUT_H_
 
-#include <thread.h>
+typedef struct input_driver {
+    const char* name;
+    int ( *init )( void );
+    int ( *start )( void );
+} input_driver_t;
 
-#include <arch/fpu.h>
+extern input_driver_t ps2mouse_driver;
 
-enum {
-    THREAD_FPU_USED = 1,
-    THREAD_FPU_DIRTY = 2
-};
+int init_input_system( void );
 
-typedef struct i386_thread {
-    register_t esp;
-    uint32_t flags;
-    fpu_state_t* fpu_state;
-} i386_thread_t;
-
-int arch_allocate_thread( thread_t* thread );
-void arch_destroy_thread( thread_t* thread );
-
-int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg );
-int arch_create_user_thread( thread_t* thread, void* entry, void* arg );
-
-#endif /* _ARCH_THREAD_H_ */
+#endif /* _GUISERVER_INPUT_H_ */
 

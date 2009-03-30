@@ -90,7 +90,10 @@ static system_call_entry_t system_call_table[] = {
     { "reboot", sys_reboot, 0 },
     { "shutdown", sys_shutdown, 0 },
     { "socket", sys_socket, 0 },
-    { "connect", sys_connect, 0 }
+    { "connect", sys_connect, 0 },
+    { "create_thread", sys_create_thread, 0 },
+    { "wake_up_thread", sys_wake_up_thread, 0 },
+    { "exit_thread", sys_exit_thread, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

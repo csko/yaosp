@@ -25,6 +25,7 @@
 #include <graphicsdriver.h>
 #include <bitmap.h>
 #include <fontmanager.h>
+#include <input.h>
 
 #include "../driver/video/vesa/vesa.h"
 
@@ -145,6 +146,7 @@ int main( int argc, char** argv ) {
         return error;
     }
 
+#if 0
     error = init_font_manager();
 
     if ( error < 0 ) {
@@ -179,6 +181,14 @@ int main( int argc, char** argv ) {
 
     if ( error < 0 ) {
         dbprintf( "Failed to setup graphics mode!\n" );
+        return error;
+    }
+#endif
+
+    error = init_input_system();
+
+    if ( error < 0 ) {
+        dbprintf( "Failed to initialize input system!\n" );
         return error;
     }
 

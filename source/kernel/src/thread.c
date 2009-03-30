@@ -230,7 +230,7 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
         return -EINVAL;
     }
 
-    /* Calculate stack size */
+    /* Calculate kernel stack size */
 
     stack_size = PAGE_ALIGN( stack_size );
 
@@ -270,6 +270,83 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
     spinunlock_enable( &scheduler_lock );
 
     return error;
+}
+
+thread_id sys_create_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t user_stack_size ) {
+    int error;
+    thread_t* thread;
+    process_t* process;
+    uint8_t* user_stack;
+
+    /* Get the current process */
+
+    process = current_process();
+
+    /* Calculate user stack size */
+
+    if ( user_stack_size == 0 ) {
+        user_stack_size = USER_STACK_SIZE;
+    } else {
+        user_stack_size = PAGE_ALIGN( user_stack_size );
+    }
+
+    /* Allocate a new thread */
+
+    thread = allocate_thread( name, process, priority, KERNEL_STACK_PAGES );
+
+    if ( thread == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    thread->user_stack_region = create_region(
+        "stack",
+        user_stack_size,
+        REGION_READ | REGION_WRITE,
+        ALLOC_PAGES,
+        ( void** )&user_stack
+    );
+
+    if ( thread->user_stack_region < 0 ) {
+        error = thread->user_stack_region;
+        goto error2;
+    }
+
+    thread->user_stack_end = ( void* )( user_stack + user_stack_size );
+
+    /* Initialize the architecture dependent part of the thread */
+
+    error = arch_create_user_thread( thread, ( void* )entry, arg );
+
+    if ( error < 0 ) {
+        goto error2;
+    }
+
+    /* Get an unique ID to the new thread and add to the others */
+
+    spinlock_disable( &scheduler_lock );
+
+    error = insert_thread( thread );
+
+    if ( error >= 0 ) {
+        error = thread->id;
+    }
+
+    spinunlock_enable( &scheduler_lock );
+
+    return error;
+
+error2:
+    destroy_thread( thread );
+
+error1:
+    return error;
+}
+
+int sys_exit_thread( int exit_code ) {
+    thread_exit( exit_code );
+
+    return 0;
 }
 
 int sleep_thread( uint64_t microsecs ) {
@@ -379,7 +456,7 @@ int sys_sleep_thread( uint64_t* microsecs ) {
     return sleep_thread( *microsecs );
 }
 
-int wake_up_thread( thread_id id ) {
+static int do_wake_up_thread( thread_id id ) {
     int error;
     thread_t* thread;
 
@@ -400,6 +477,14 @@ int wake_up_thread( thread_id id ) {
     spinunlock_enable( &scheduler_lock );
 
     return error;
+}
+
+int wake_up_thread( thread_id id ) {
+    return do_wake_up_thread( id );
+}
+
+int sys_wake_up_thread( thread_id id ) {
+    return do_wake_up_thread( id );
 }
 
 uint32_t get_thread_count( void ) {

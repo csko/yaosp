@@ -20,6 +20,7 @@
 #include <thread.h>
 #include <config.h>
 #include <errno.h>
+#include <syscall_table.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -72,7 +73,7 @@ int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg ) {
     regs->es = KERNEL_DS;
     regs->ds = KERNEL_DS;
     regs->cs = KERNEL_CS;
-    regs->eip = ( unsigned long )entry;
+    regs->eip = ( register_t )entry;
     regs->eflags = 0x203246;
 
     /* We don't have to specify ESP and SS here because returning
@@ -81,6 +82,61 @@ int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg ) {
 
     *--stack = ( register_t )arg;
     *--stack = ( register_t )kernel_thread_exit;
+
+    arch_thread->esp = ( register_t )regs;
+
+    return 0;
+}
+
+int arch_create_user_thread( thread_t* thread, void* entry, void* arg ) {
+    register_t* stack;
+    registers_t* regs;
+    i386_thread_t* arch_thread;
+    uint8_t exit_code[ 9 ];
+    register_t exit_address;
+
+    arch_thread = ( i386_thread_t* )thread->arch_data;
+
+    stack = ( register_t* )thread->user_stack_end;
+    regs = ( registers_t* )( ( uint8_t* )stack - ( sizeof( registers_t ) + 8 /* arg + ret. addr */ + 12 /* exit code */ ) );
+
+    /* Create the exit code */
+
+    /* movl %%eax, %%ebx */
+    exit_code[ 0 ] = 0x89;
+    exit_code[ 1 ] = 0xC3;
+
+    /* movl $SYS_exit_thread, %%eax */
+    exit_code[ 2 ] = 0xB8;
+    *( ( register_t* )&exit_code[ 3 ] ) = SYS_exit_thread;
+
+    /* int $0x80 */
+    exit_code[ 7 ] = 0xCD;
+    exit_code[ 8 ] = 0x80;
+
+    /* Put the exit code to the stack */
+
+    stack -= 3;
+    exit_address = ( register_t )stack;
+    memcpy( ( void* )stack, exit_code, sizeof( exit_code ) );
+
+    /* Initialize the top of the user stack */
+
+    *--stack = ( register_t )arg;
+    *--stack = exit_address;
+
+    /* Prepare the registers on the top of the stack */
+
+    memset( regs, 0, sizeof( registers_t ) );
+
+    regs->fs = USER_DS | 3;
+    regs->es = USER_DS | 3;
+    regs->ds = USER_DS | 3;
+    regs->cs = USER_CS | 3;
+    regs->eip = ( register_t )entry;
+    regs->eflags = 0x203246;
+    regs->esp = ( register_t )( regs + 1 );
+    regs->ss = USER_DS | 3;
 
     arch_thread->esp = ( register_t )regs;
 

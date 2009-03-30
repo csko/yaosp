@@ -1,6 +1,6 @@
-/* Architecture specific thread functions
+/* yaosp C library
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,29 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_THREAD_H_
-#define _ARCH_THREAD_H_
+#ifndef _YAOSP_THREAD_H_
+#define _YAOSP_THREAD_H_
 
-#include <thread.h>
-
-#include <arch/fpu.h>
+#include <sys/types.h>
 
 enum {
-    THREAD_FPU_USED = 1,
-    THREAD_FPU_DIRTY = 2
+    PRIORITY_HIGH = 31,
+    PRIORITY_DISPLAY = 23,
+    PRIORITY_NORMAL = 15,
+    PRIORITY_LOW = 7,
+    PRIORITY_IDLE = 0
 };
 
-typedef struct i386_thread {
-    register_t esp;
-    uint32_t flags;
-    fpu_state_t* fpu_state;
-} i386_thread_t;
+typedef int thread_id;
+typedef int thread_entry_t( void* arg );
 
-int arch_allocate_thread( thread_t* thread );
-void arch_destroy_thread( thread_t* thread );
+thread_id create_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t user_stack_size );
+int wake_up_thread( thread_id id );
 
-int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg );
-int arch_create_user_thread( thread_t* thread, void* entry, void* arg );
-
-#endif /* _ARCH_THREAD_H_ */
-
+#endif /* _YAOSP_THREAD_H_ */
