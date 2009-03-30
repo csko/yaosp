@@ -40,7 +40,8 @@ typedef enum region_flags {
     REGION_READ = ( 1 << 0 ),
     REGION_WRITE = ( 1 << 1 ),
     REGION_KERNEL = ( 1 << 2 ),
-    REGION_REMAPPED = ( 1 << 3 )
+    REGION_REMAPPED = ( 1 << 3 ),
+    REGION_STACK = ( 1 << 4 )
 } region_flags_t;
 
 typedef struct region {

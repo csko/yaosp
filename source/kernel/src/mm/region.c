@@ -165,9 +165,17 @@ region_id do_create_region(
             &address
         );
     } else {
+        ptr_t start_address;
+
+        if ( ( flags & REGION_STACK ) != 0 ) {
+            start_address = FIRST_USER_STACK_ADDRESS;
+        } else {
+            start_address = ( call_from_userspace ? FIRST_USER_REGION_ADDRESS : FIRST_USER_ADDRESS );
+        }
+
         found = memory_context_find_unmapped_region(
             context,
-            ( call_from_userspace ? FIRST_USER_REGION_ADDRESS : FIRST_USER_ADDRESS ),
+            start_address,
             LAST_USER_ADDRESS,
             size,
             &address
@@ -247,7 +255,7 @@ region_id create_region(
         return -EINVAL;
     }
 
-    flags &= ( REGION_READ | REGION_WRITE | REGION_KERNEL );
+    flags &= ( REGION_READ | REGION_WRITE | REGION_KERNEL | REGION_STACK );
 
     LOCK( region_lock );
 

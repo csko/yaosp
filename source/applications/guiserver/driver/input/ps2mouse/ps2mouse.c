@@ -1,4 +1,4 @@
-/* GUI server
+/* PS/2 mouse driver for the GUI server
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -44,10 +44,8 @@
 static int mouse_device = -1;
 static thread_id mouse_thread = -1;
 
-static input_driver_t* input_drivers[] = {
-    &ps2mouse_driver,
-    NULL
-};
+static int mouse_packet_index = 0;
+static uint8_t mouse_buffer[ 3 ];
 
 static uint8_t basic_init[] = {
     PS2_AUX_ENABLE_DEV, PS2_AUX_SET_SAMPLE, 100
@@ -143,14 +141,55 @@ static int ps2mouse_init( void ) {
     return 0;
 }
 
+static void ps2mouse_handle_input( void ) {
+    int x;
+    int y;
+    input_event_t* event;
+
+    x = mouse_buffer[ 1 ];
+    y = mouse_buffer[ 2 ];
+
+    if ( mouse_buffer[ 0 ] & 0x10 ) {
+        x |= 0xFFFFFF00;
+    }
+
+    if ( mouse_buffer[ 0 ] & 0x20 ) {
+        y |= 0xFFFFFF00;
+    }
+
+    event = get_input_event( MOUSE_MOVED, x, -y );
+
+    if ( event != NULL ) {
+        insert_input_event( event );
+    }
+}
+
 static int ps2mouse_thread( void* arg ) {
-#if 0
     uint8_t data;
 
     while ( 1 ) {
-        read( mouse_device, &data, 1 );
+        if ( read( mouse_device, &data, 1 ) != 1 ) {
+            dbprintf( "PS2mouse: Failed to read data from the device!\n" );
+            break;
+        }
+
+        if ( ( mouse_packet_index >= 3 ) &&
+             ( data & 0x08 ) ) {
+            mouse_packet_index = 0;
+        }
+
+        switch ( mouse_packet_index ) {
+            case 0 :
+            case 1 :
+                mouse_buffer[ mouse_packet_index++ ] = data;
+                break;
+
+            case 2 :
+                mouse_buffer[ mouse_packet_index++ ] = data;
+                ps2mouse_handle_input();
+                break;
+        }
     }
-#endif
 
     return 0;
 }

@@ -232,7 +232,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     thread->user_stack_region = create_region(
         "stack",
         USER_STACK_PAGES * PAGE_SIZE,
-        REGION_READ | REGION_WRITE,
+        REGION_READ | REGION_WRITE | REGION_STACK,
         ALLOC_PAGES,
         &stack_address
     );

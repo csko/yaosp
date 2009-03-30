@@ -302,7 +302,7 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
     thread->user_stack_region = create_region(
         "stack",
         user_stack_size,
-        REGION_READ | REGION_WRITE,
+        REGION_READ | REGION_WRITE | REGION_STACK,
         ALLOC_PAGES,
         ( void** )&user_stack
     );
