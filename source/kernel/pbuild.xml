@@ -92,6 +92,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/time.c</item>
         <item>src/version.c</item>
         <item>src/interpreter.c</item>
+        <item>src/ipc.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>
@@ -216,7 +217,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-fno-strict-aliasing</flag>
             </gcc>
         </for>
-        
+
         <echo/>
         <echo>Compiling architecture independent files</echo>
         <echo/>

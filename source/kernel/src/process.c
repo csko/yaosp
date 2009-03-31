@@ -129,7 +129,7 @@ int insert_process( process_t* process ) {
         if ( process_id_counter < 0 ) {
             process_id_counter = 0;
         }
-    } while ( hashtable_get( &process_table, ( const void* )process->id ) != NULL );
+    } while ( hashtable_get( &process_table, ( const void* )&process->id ) != NULL );
 
     error = hashtable_add( &process_table, ( hashitem_t* )process );
 
@@ -142,7 +142,7 @@ int insert_process( process_t* process ) {
 
 void remove_process( process_t* process ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
-    hashtable_remove( &process_table, ( const void* )process->id );
+    hashtable_remove( &process_table, ( const void* )&process->id );
 }
 
 int rename_process( process_t* process, char* new_name ) {
@@ -169,7 +169,7 @@ uint32_t get_process_count( void ) {
 
 process_t* get_process_by_id( process_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
-    return ( process_t* )hashtable_get( &process_table, ( const void* )id );
+    return ( process_t* )hashtable_get( &process_table, ( const void* )&id );
 }
 
 uint32_t sys_get_process_count( void ) {
@@ -268,15 +268,21 @@ static void* process_key( hashitem_t* item ) {
 
     process = ( process_t* )item;
 
-    return ( void* )process->id;
+    return ( void* )&process->id;
 }
 
 static uint32_t process_hash( const void* key ) {
-    return ( uint32_t )key;
+    return hash_number( ( uint8_t* )key, sizeof( process_id ) );
 }
 
 static bool process_compare( const void* key1, const void* key2 ) {
-    return ( key1 == key2 );
+    process_id id1;
+    process_id id2;
+
+    id1 = *( ( process_id* )key1 );
+    id2 = *( ( process_id* )key2 );
+
+    return ( id1 == id2 );
 }
 
 int __init init_processes( void ) {

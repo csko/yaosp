@@ -156,7 +156,7 @@ int insert_thread( thread_t* thread ) {
         if ( thread_id_counter < 0 ) {
             thread_id_counter = 0;
         }
-    } while ( hashtable_get( &thread_table, ( const void* )thread->id ) != NULL );
+    } while ( hashtable_get( &thread_table, ( const void* )&thread->id ) != NULL );
 
     error = hashtable_add( &thread_table, ( hashitem_t* )thread );
 
@@ -500,7 +500,7 @@ uint32_t get_thread_count( void ) {
 
 thread_t* get_thread_by_id( thread_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
-    return ( thread_t* )hashtable_get( &thread_table, ( const void* )id );
+    return ( thread_t* )hashtable_get( &thread_table, ( const void* )&id );
 }
 
 static void* thread_key( hashitem_t* item ) {
@@ -508,15 +508,21 @@ static void* thread_key( hashitem_t* item ) {
 
     thread = ( thread_t* )item;
 
-    return ( void* )thread->id;
+    return ( void* )&thread->id;
 }
 
 static uint32_t thread_hash( const void* key ) {
-    return ( uint32_t )key;
+    return hash_number( ( uint8_t* )key, sizeof( thread_id ) );
 }
 
 static bool thread_compare( const void* key1, const void* key2 ) {
-    return ( key1 == key2 );
+    thread_id id1;
+    thread_id id2;
+
+    id1 = *( ( thread_id* )key1 );
+    id2 = *( ( thread_id* )key2 );
+
+    return ( id1 == id2 );
 }
 
 __init int init_threads( void ) {
@@ -557,7 +563,7 @@ static int thread_cleaner_entry( void* arg ) {
         if ( thread != NULL ) {
             thread_cleaner_list = thread->queue_next;
 
-            hashtable_remove( &thread_table, ( const void* )thread->id );
+            hashtable_remove( &thread_table, ( const void* )&thread->id );
         }
 
         spinunlock_enable( &scheduler_lock );
