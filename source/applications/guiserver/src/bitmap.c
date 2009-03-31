@@ -17,6 +17,8 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 #include <yaosp/semaphore.h>
 
 #include <bitmap.h>
@@ -26,7 +28,7 @@ static hashtable_t bitmap_table;
 static semaphore_id bitmap_lock;
 
 static int insert_bitmap( bitmap_t* bitmap ) {
-    lock_semaphore( bitmap_lock, 1, INFINITE_TIMEOUT );
+    int error;
 
     do {
         bitmap->id = bitmap_id_counter++;
@@ -36,11 +38,65 @@ static int insert_bitmap( bitmap_t* bitmap ) {
         }
     } while ( hashtable_get( &bitmap_table, ( const void* )&bitmap->id ) != NULL );
 
-    hashtable_add( &bitmap_table, ( hashitem_t* )bitmap );
+    error = hashtable_add( &bitmap_table, ( hashitem_t* )bitmap );
 
-    unlock_semaphore( bitmap_lock, 1 );
+    if ( error < 0 ) {
+        return error;
+    }
 
     return 0;
+}
+
+bitmap_t* create_bitmap( uint32_t width, uint32_t height, color_space_t color_space ) {
+    int error;
+    void* buffer;
+    bitmap_t* bitmap;
+    uint32_t buffer_size;
+
+    bitmap = ( bitmap_t* )malloc( sizeof( bitmap_t ) );
+
+    if ( bitmap == NULL ) {
+        goto error1;
+    }
+
+    bitmap->bytes_per_line = width * colorspace_to_bpp( color_space );
+    buffer_size = bitmap->bytes_per_line * height;
+
+    buffer = malloc( buffer_size );
+
+    if ( buffer == NULL ) {
+        goto error2;
+    }
+
+    memset( buffer, 0, buffer_size );
+
+    bitmap->ref_count = 1;
+    bitmap->width = width;
+    bitmap->height = height;
+    bitmap->color_space = color_space;
+    bitmap->buffer = buffer;
+    bitmap->flags = BITMAP_FREE_BUFFER;
+
+    LOCK( bitmap_lock );
+
+    error = insert_bitmap( bitmap );
+
+    UNLOCK( bitmap_lock );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    return bitmap;
+
+error3:
+    free( buffer );
+
+error2:
+    free( bitmap );
+
+error1:
+    return NULL;
 }
 
 bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_space_t color_space, void* buffer ) {
@@ -50,7 +106,7 @@ bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_spac
     bitmap = ( bitmap_t* )malloc( sizeof( bitmap_t ) );
 
     if ( bitmap == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     bitmap->ref_count = 1;
@@ -59,15 +115,53 @@ bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_spac
     bitmap->bytes_per_line = width * colorspace_to_bpp( color_space );
     bitmap->color_space = color_space;
     bitmap->buffer = buffer;
+    bitmap->flags = 0;
+
+    LOCK( bitmap_lock );
 
     error = insert_bitmap( bitmap );
 
+    UNLOCK( bitmap_lock );
+
     if ( error < 0 ) {
-        free( bitmap );
-        return NULL;
+        goto error2;
     }
 
     return bitmap;
+
+error2:
+    free( bitmap );
+
+error1:
+    return NULL;
+}
+
+int put_bitmap( bitmap_t* bitmap ) {
+    int do_delete;
+
+    do_delete = 0;
+
+    LOCK( bitmap_lock );
+
+    assert( bitmap->ref_count >= 0 );
+
+    if ( --bitmap->ref_count == 0 ) {
+        hashtable_remove( &bitmap_table, ( const void* )&bitmap->id );
+        do_delete = 1;
+    }
+
+    UNLOCK( bitmap_lock );
+
+    if ( do_delete ) {
+        if ( bitmap->flags & BITMAP_FREE_BUFFER ) {
+            free( bitmap->buffer );
+            bitmap->buffer = NULL;
+        }
+
+        free( bitmap );
+    }
+
+    return 0;
 }
 
 static void* bitmap_key( hashitem_t* item ) {

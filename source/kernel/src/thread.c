@@ -146,6 +146,8 @@ void destroy_thread( thread_t* thread ) {
 }
 
 int insert_thread( thread_t* thread ) {
+    int error;
+
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
 
     do {
@@ -156,7 +158,11 @@ int insert_thread( thread_t* thread ) {
         }
     } while ( hashtable_get( &thread_table, ( const void* )thread->id ) != NULL );
 
-    hashtable_add( &thread_table, ( hashitem_t* )thread );
+    error = hashtable_add( &thread_table, ( hashitem_t* )thread );
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     return 0;
 }

@@ -119,6 +119,8 @@ void destroy_process( process_t* process ) {
 }
 
 int insert_process( process_t* process ) {
+    int error;
+
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
 
     do {
@@ -129,7 +131,11 @@ int insert_process( process_t* process ) {
         }
     } while ( hashtable_get( &process_table, ( const void* )process->id ) != NULL );
 
-    hashtable_add( &process_table, ( hashitem_t* )process );
+    error = hashtable_add( &process_table, ( hashitem_t* )process );
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     return 0;
 }

@@ -58,6 +58,20 @@ static inline void rect_add_point_n( rect_t* dst, rect_t* src1, point_t* src2 ) 
     dst->bottom = src1->bottom + src2->y;
 }
 
+static inline void rect_sub_point( rect_t* rect, point_t* point ) {
+    rect->left -= point->x;
+    rect->right -= point->x;
+    rect->top -= point->y;
+    rect->bottom -= point->y;
+}
+
+static inline void rect_and( rect_t* rect1, rect_t* rect2 ) {
+    rect1->left = MAX( rect1->left, rect2->left );
+    rect1->right = MIN( rect1->right, rect2->right );
+    rect1->top = MAX( rect1->top, rect2->top );
+    rect1->bottom = MIN( rect1->bottom, rect2->bottom );
+}
+
 static inline void rect_and_n( rect_t* dst, rect_t* rect1, rect_t* rect2 ) {
     dst->left = MAX( rect1->left, rect2->left );
     dst->right = MIN( rect1->right, rect2->right );

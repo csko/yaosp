@@ -249,7 +249,7 @@ font_glyph_t* font_node_get_glyph( font_node_t* node, unsigned int character ) {
          ( glyph->bitmap.rows < 0 ) ||
          ( glyph->bitmap.pitch < 0 ) ) {
         dbprintf(
-            "font_node_get_glyph(): Glyph got invalid size %dx%d (%d)\n", 
+            "font_node_get_glyph(): Glyph got invalid size %dx%d (%d)\n",
             glyph->bitmap.width,
             glyph->bitmap.rows,
             glyph->bitmap.pitch
@@ -461,8 +461,6 @@ static void load_fonts( void ) {
 
 found:
         face->charmap = char_map;
-
-        dbprintf( "Font: %s %s\n", face->family_name, face->style_name );
 
         family = get_font_family( face->family_name );
 

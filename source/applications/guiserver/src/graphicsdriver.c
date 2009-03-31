@@ -22,6 +22,8 @@
 
 #include <graphicsdriver.h>
 
+#define BITMAP_OFFSET_32( ptr, x, y, bpl ) ((uint32_t*)(((uint8_t*)(ptr)) + (x*4) + (y) * (bpl)))
+
 static void fill_rect_rgb32( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
     int x;
     int y;
@@ -179,4 +181,149 @@ int generic_draw_text( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font
     UNLOCK( font->style->lock );
 
     return 0;
+}
+
+static int blit_bitmap_copy( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t* src_bitmap, rect_t* src_rect ) {
+    int width;
+    int height;
+
+    rect_bounds( src_rect, &width, &height );
+
+    if ( ( width == 0 ) || ( height == 0 ) ) {
+        return 0;
+    }
+
+    switch ( dst_bitmap->color_space ) {
+        case CS_RGB32 : {
+            int dst_modulo;
+            uint32_t* dst_buffer;
+
+            dst_buffer = BITMAP_OFFSET_32( dst_bitmap->buffer, dst_point->x, dst_point->y, dst_bitmap->bytes_per_line );
+            dst_modulo = dst_bitmap->bytes_per_line / 4;
+
+            switch ( src_bitmap->color_space ) {
+                case CS_RGB32 : {
+                    int y;
+                    int src_modulo;
+                    int data_to_copy;
+                    uint32_t* src_buffer;
+
+                    src_buffer = BITMAP_OFFSET_32( src_bitmap->buffer, src_rect->left, src_rect->top, src_bitmap->bytes_per_line );
+                    src_modulo = src_bitmap->bytes_per_line / 4;
+
+                    data_to_copy = width * 4;
+
+                    for ( y = 0; y < height; y++ ) {
+                        memcpy( dst_buffer, src_buffer, data_to_copy );
+
+                        dst_buffer += dst_modulo;
+                        src_buffer += src_modulo;
+                    } // for
+
+                    break;
+                } // case CS_RGB32
+
+                default :
+                    dbprintf( "blit_bitmap_copy(): Invalid src color space: %d\n", src_bitmap->color_space );
+                    break;
+            } // switch
+
+            break;
+        } // case CS_RGB32
+
+        default :
+            dbprintf( "blit_bitmap_copy(): Invalid dest color space: %d\n", dst_bitmap->color_space );
+            break;
+    } // switch
+
+    return 0;
+}
+
+static int blit_bitmap_blend( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t* src_bitmap, rect_t* src_rect ) {
+    int src_modulo;
+    int dst_modulo;
+    uint32_t src_alpha;
+    uint32_t src_color;
+    uint32_t* src_buffer;
+    uint32_t* dst_buffer;
+
+    int x;
+    int y;
+    int width;
+    int height;
+
+    rect_bounds( src_rect, &width, &height );
+
+    if ( ( width == 0 ) || ( height == 0 ) ) {
+        return 0;
+    }
+
+    src_buffer = BITMAP_OFFSET_32( src_bitmap->buffer, src_rect->left, src_rect->top, src_bitmap->bytes_per_line );
+    src_modulo = ( src_bitmap->bytes_per_line - width * 4 ) / 4;
+
+    dst_buffer = BITMAP_OFFSET_32( dst_bitmap->buffer, dst_point->x, dst_point->y, dst_bitmap->bytes_per_line );
+    dst_modulo = ( dst_bitmap->bytes_per_line - width * 4 ) / 4;
+
+    dbprintf( "%s() src_modulo=%d dst_modulo=%d\n", __FUNCTION__, src_modulo, dst_modulo );
+
+    for ( y = 0; y < height; y++ ) {
+        for ( x = 0; x < width; x++ ) {
+            src_color = *src_buffer++;
+            src_alpha = src_color >> 24;
+
+            if ( src_alpha == 0xFF ) {
+                *dst_buffer = ( *dst_buffer & 0xFF000000 ) | ( src_color & 0x00FFFFFF );
+            } else if( src_alpha != 0x00 ) {
+                uint32_t src1;
+                uint32_t dst1;
+                uint32_t dst_alpha;
+                uint32_t dst_color;
+
+                dst_color = *dst_buffer;
+                dst_alpha = dst_color & 0xFF000000;
+
+                src1 = src_color & 0xFF00FF;
+                dst1 = dst_color & 0xFF00FF;
+                dst1 = ( dst1 + ( ( src1 - dst1 ) * src_alpha >> 8 ) ) & 0xFF00FF;
+                src_color &= 0xFF00;
+                dst_color &= 0xFF00;
+                dst_color = ( dst_color + ( ( src_color - dst_color ) * src_alpha >> 8 ) ) & 0xFF00;
+
+                *dst_buffer = dst1 | dst_color | dst_alpha;
+            }
+
+            dst_buffer++;
+        } // for
+
+        dst_buffer += dst_modulo;
+        src_buffer += src_modulo;
+    } // for
+
+    return 0;
+}
+
+int generic_blit_bitmap( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t* src_bitmap, rect_t* src_rect, drawing_mode_t mode ) {
+    int error;
+
+    switch ( mode ) {
+        case DM_COPY :
+            error = blit_bitmap_copy( dst_bitmap, dst_point, src_bitmap, src_rect );
+            break;
+
+        case DM_BLEND :
+            if ( ( dst_bitmap->color_space != CS_RGB32 ) ||
+                 ( src_bitmap->color_space != CS_RGB32 ) ) {
+                error = -EINVAL;
+            } else {
+                error = blit_bitmap_blend( dst_bitmap, dst_point, src_bitmap, src_rect );
+            }
+
+            break;
+
+        default :
+            error = -EINVAL;
+            break;
+    }
+
+    return error;
 }

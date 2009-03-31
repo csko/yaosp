@@ -157,10 +157,12 @@ static void ps2mouse_handle_input( void ) {
         y |= 0xFFFFFF00;
     }
 
-    event = get_input_event( MOUSE_MOVED, x, -y );
+    if ( ( x != 0 ) || ( y != 0 ) ) {
+        event = get_input_event( MOUSE_MOVED, x, -y );
 
-    if ( event != NULL ) {
-        insert_input_event( event );
+        if ( event != NULL ) {
+            insert_input_event( event );
+        }
     }
 }
 

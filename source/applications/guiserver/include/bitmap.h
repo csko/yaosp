@@ -31,6 +31,10 @@ typedef enum color_space {
 
 typedef int bitmap_id;
 
+enum bitmap_flags {
+    BITMAP_FREE_BUFFER = ( 1 << 0 )
+};
+
 typedef struct bitmap {
     hashitem_t hash;
 
@@ -41,6 +45,7 @@ typedef struct bitmap {
     int bytes_per_line;
     color_space_t color_space;
     void* buffer;
+    uint32_t flags;
 } bitmap_t;
 
 static inline int colorspace_to_bpp( color_space_t color_space ) {
@@ -63,7 +68,9 @@ static inline color_space_t bpp_to_colorspace( int bits_per_pixel ) {
     }
 }
 
+bitmap_t* create_bitmap( uint32_t width, uint32_t height, color_space_t color_space );
 bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_space_t color_space, void* buffer );
+int put_bitmap( bitmap_t* bitmap );
 
 int init_bitmap( void );
 

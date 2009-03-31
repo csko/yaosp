@@ -26,12 +26,14 @@
 #include <bitmap.h>
 #include <fontmanager.h>
 #include <input.h>
+#include <mouse.h>
 
 #include "../driver/video/vesa/vesa.h"
 
-static bitmap_t* screen_bitmap;
-static screen_mode_t active_screen_mode;
-static graphics_driver_t* graphics_driver = NULL;
+rect_t screen_rect;
+bitmap_t* screen_bitmap;
+screen_mode_t active_screen_mode;
+graphics_driver_t* graphics_driver;
 
 static graphics_driver_t* graphics_drivers[] = {
     &vesa_graphics_driver,
@@ -108,10 +110,11 @@ static int setup_graphics_mode( void ) {
         return -ENOMEM;
     }
 
-    color_t tmp_color = { 0x00, 0x00, 0x00, 0x00 };
-    rect_t tmp_rect = { 0, 0, 639, 479 };
+    rect_init( &screen_rect, 0, 0, active_screen_mode.width - 1, active_screen_mode.height - 1 );
 
-    graphics_driver->fill_rect( screen_bitmap, &tmp_rect, &tmp_color );
+    color_t tmp_color = { 0x11, 0x22, 0x33, 0x00 };
+
+    graphics_driver->fill_rect( screen_bitmap, &screen_rect, &tmp_color );
 
     font_properties_t properties = { .point_size = 18 * 64, .flags = FONT_SMOOTHED };
     font_node_t* font_node = get_font( "DejaVu Sans", "Book", &properties );
@@ -125,7 +128,7 @@ static int setup_graphics_mode( void ) {
         graphics_driver->draw_text(
             screen_bitmap,
             &p,
-            &tmp_rect,
+            &screen_rect,
             font_node,
             &tmp_color,
             "Hello World",
@@ -146,11 +149,17 @@ int main( int argc, char** argv ) {
         return error;
     }
 
-#if 0
     error = init_font_manager();
 
     if ( error < 0 ) {
         printf( "Failed to initialize font manager\n" );
+        return error;
+    }
+
+    error = init_mouse_manager();
+
+    if ( error < 0 ) {
+        printf( "Failed to initialize mouse manager\n" );
         return error;
     }
 
@@ -183,7 +192,8 @@ int main( int argc, char** argv ) {
         dbprintf( "Failed to setup graphics mode!\n" );
         return error;
     }
-#endif
+
+    show_mouse_pointer();
 
     error = init_input_system();
 

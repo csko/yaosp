@@ -24,9 +24,15 @@
 
 #include <ygui/rect.h>
 #include <ygui/color.h>
+#include <ygui/point.h>
 
 #include <bitmap.h>
 #include <fontmanager.h>
+
+typedef enum drawing_mode {
+    DM_COPY,
+    DM_BLEND
+} drawing_mode_t;
 
 typedef struct screen_mode {
     uint32_t width;
@@ -44,7 +50,13 @@ typedef struct graphics_driver {
     int ( *get_framebuffer_info )( void** address );
     int ( *fill_rect )( bitmap_t* bitmap, rect_t* rect, color_t* color );
     int ( *draw_text )( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font_node_t* font, color_t* color, const char* text, int length );
+    int ( *blit_bitmap )( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t* src_bitmap, rect_t* src_rect, drawing_mode_t mode );
 } graphics_driver_t;
+
+extern rect_t screen_rect;
+extern bitmap_t* screen_bitmap;
+extern screen_mode_t active_screen_mode;
+extern graphics_driver_t* graphics_driver;
 
 #if defined( USE_I386_ASM )
 int i386_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color );
@@ -55,5 +67,6 @@ int generic_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color );
 #endif
 
 int generic_draw_text( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font_node_t* font, color_t* color, const char* text, int length );
+int generic_blit_bitmap( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t* src_bitmap, rect_t* src_rect, drawing_mode_t mode );
 
 #endif /* _GRAPHICSDRIVER_H_ */
