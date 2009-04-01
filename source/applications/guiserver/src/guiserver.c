@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <yaosp/debug.h>
+#include <yaosp/ipc.h>
 
 #include <graphicsdriver.h>
 #include <bitmap.h>
@@ -139,6 +140,42 @@ static int setup_graphics_mode( void ) {
     return 0;
 }
 
+#define MAX_GUISERVER_BUFSIZE 512
+
+static int guiserver_mainloop( void ) {
+    int error;
+    ipc_port_id guiserver_port;
+
+    uint32_t code;
+    void* buffer;
+
+    buffer = malloc( MAX_GUISERVER_BUFSIZE );
+
+    if ( buffer == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    guiserver_port = create_ipc_port();
+
+    if ( guiserver_port < 0 ) {
+        error = guiserver_port;
+        goto error2;
+    }
+
+    while ( 1 ) {
+        error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, 1000000 );
+    }
+
+    return 0;
+
+error2:
+    free( buffer );
+
+error1:
+    return error;
+}
+
 int main( int argc, char** argv ) {
     int error;
 
@@ -199,6 +236,12 @@ int main( int argc, char** argv ) {
 
     if ( error < 0 ) {
         dbprintf( "Failed to initialize input system!\n" );
+        return error;
+    }
+
+    error = guiserver_mainloop();
+
+    if ( error < 0 ) {
         return error;
     }
 

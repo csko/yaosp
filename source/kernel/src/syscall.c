@@ -97,7 +97,7 @@ static system_call_entry_t system_call_table[] = {
     { "exit_thread", sys_exit_thread, 0 },
     { "create_ipc_port", sys_create_ipc_port, 0 },
     { "send_ipc_message", sys_send_ipc_message, 0 },
-    { "recV_ipc_message", sys_recv_ipc_message, 0 }
+    { "recv_ipc_message", sys_recv_ipc_message, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

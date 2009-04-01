@@ -264,8 +264,6 @@ static int blit_bitmap_blend( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t
     dst_buffer = BITMAP_OFFSET_32( dst_bitmap->buffer, dst_point->x, dst_point->y, dst_bitmap->bytes_per_line );
     dst_modulo = ( dst_bitmap->bytes_per_line - width * 4 ) / 4;
 
-    dbprintf( "%s() src_modulo=%d dst_modulo=%d\n", __FUNCTION__, src_modulo, dst_modulo );
-
     for ( y = 0; y < height; y++ ) {
         for ( x = 0; x < width; x++ ) {
             src_color = *src_buffer++;
