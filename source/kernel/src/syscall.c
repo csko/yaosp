@@ -27,6 +27,7 @@
 #include <time.h>
 #include <thread.h>
 #include <module.h>
+#include <ipc.h>
 #include <mm/userspace.h>
 #include <mm/pages.h>
 #include <vfs/vfs.h>
@@ -93,7 +94,10 @@ static system_call_entry_t system_call_table[] = {
     { "connect", sys_connect, 0 },
     { "create_thread", sys_create_thread, 0 },
     { "wake_up_thread", sys_wake_up_thread, 0 },
-    { "exit_thread", sys_exit_thread, 0 }
+    { "exit_thread", sys_exit_thread, 0 },
+    { "create_ipc_port", sys_create_ipc_port, 0 },
+    { "send_ipc_message", sys_send_ipc_message, 0 },
+    { "recV_ipc_message", sys_recv_ipc_message, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

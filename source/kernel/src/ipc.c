@@ -19,8 +19,211 @@
 #include <ipc.h>
 #include <config.h>
 #include <macros.h>
+#include <errno.h>
+#include <mm/kmalloc.h>
+#include <lib/string.h>
 
+static int ipc_port_id_counter;
 static hashtable_t ipc_port_table;
+static semaphore_id ipc_port_lock;
+
+static int insert_ipc_port( ipc_port_t* port ) {
+    int error;
+
+    do {
+        port->id = ipc_port_id_counter++;
+
+        if ( ipc_port_id_counter < 0 ) {
+            ipc_port_id_counter = 0;
+        }
+    } while ( hashtable_get( &ipc_port_table, ( const void* )&port->id ) != NULL );
+
+    error = hashtable_add( &ipc_port_table, ( hashitem_t* )port );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+ipc_port_id sys_create_ipc_port( void ) {
+    int error;
+    ipc_port_t* port;
+
+    port = ( ipc_port_t* )kmalloc( sizeof( ipc_port_t ) );
+
+    if ( port == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    port->queue_sync = create_semaphore( "IPC queue sync", SEMAPHORE_COUNTING, 0, 0 );
+
+    if ( port->queue_sync < 0 ) {
+        error = port->queue_sync;
+        goto error2;
+    }
+
+    port->queue_size = 0;
+    port->message_queue = NULL;
+    port->message_queue_tail = NULL;
+
+    LOCK( ipc_port_lock );
+
+    error = insert_ipc_port( port );
+
+    UNLOCK( ipc_port_lock );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    return port->id;
+
+error3:
+    delete_semaphore( port->queue_sync );
+
+error2:
+    kfree( port );
+
+error1:
+    return error;
+}
+
+int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size ) {
+    int error;
+    ipc_port_t* port;
+    ipc_message_t* message;
+
+    LOCK( ipc_port_lock );
+
+    port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
+
+    if ( port == NULL ) {
+        error = -EINVAL;
+        goto error1;
+    }
+
+    if ( ( port->queue_size + size ) > MAX_IPC_MSG_QUEUE_SIZE ) {
+        error = -E2BIG;
+        goto error1;
+    }
+
+    message = ( ipc_message_t* )kmalloc( sizeof( ipc_message_t ) + size );
+
+    if ( message == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    message->code = code;
+    message->size = size;
+
+    if ( size > 0 ) {
+        memcpy( ( void* )( message + 1 ), data, size );
+    }
+
+    message->next = NULL;
+
+    if ( port->message_queue == NULL ) {
+        ASSERT( port->message_queue_tail == NULL );
+
+        port->message_queue = message;
+        port->message_queue_tail = message;
+    } else {
+        ASSERT( port->message_queue_tail != NULL );
+
+        port->message_queue_tail->next = message;
+        port->message_queue_tail = message;
+    }
+
+    UNLOCK( port->queue_sync );
+
+    UNLOCK( ipc_port_lock );
+
+    return 0;
+
+error1:
+    UNLOCK( ipc_port_lock );
+
+    return error;
+}
+
+int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t* timeout ) {
+    int error;
+    ipc_port_t* port;
+    semaphore_id queue_sync;
+    ipc_message_t* message;
+
+    LOCK( ipc_port_lock );
+
+    port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
+
+    if ( port == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    queue_sync = port->queue_sync;
+
+    UNLOCK( ipc_port_lock );
+
+    error = lock_semaphore( queue_sync, 1, *timeout );
+
+    if ( error < 0 ) {
+        goto error1;
+    }
+
+    LOCK( ipc_port_lock );
+
+    port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
+
+    if ( port == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    if ( port->message_queue == NULL ) {
+        error = -ENOENT;
+        goto error2;
+    }
+
+    message = port->message_queue;
+
+    if ( message->size > size ) {
+        error = -E2BIG;
+        goto error2;
+    }
+
+    port->message_queue = message->next;
+
+    if ( port->message_queue == NULL ) {
+        port->message_queue_tail = NULL;
+    }
+
+    UNLOCK( ipc_port_lock );
+
+    *code = message->code;
+
+    if ( message->size > 0 ) {
+        ASSERT( message->size <= size );
+
+        memcpy( buffer, ( void* )( message + 1 ), message->size );
+    }
+
+    error = message->size;
+
+    kfree( message );
+
+    return error;
+
+error2:
+    UNLOCK( ipc_port_lock );
+
+error1:
+    return error;
+}
 
 static void* ipc_port_key( hashitem_t* item ) {
     ipc_port_t* port;
@@ -56,8 +259,23 @@ __init int init_ipc( void ) {
     );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
+    ipc_port_lock = create_semaphore( "IPC port table lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( ipc_port_lock < 0 ) {
+        error = ipc_port_lock;
+        goto error2;
+    }
+
+    ipc_port_id_counter = 0;
+
     return 0;
+
+error2:
+    destroy_hashtable( &ipc_port_table );
+
+error1:
+    return error;
 }

@@ -25,6 +25,7 @@
 typedef int ipc_port_id;
 
 typedef struct ipc_message {
+    uint32_t code;
     size_t size;
     struct ipc_message* next;
 } ipc_message_t;
@@ -39,6 +40,10 @@ typedef struct ipc_port {
     ipc_message_t* message_queue;
     ipc_message_t* message_queue_tail;
 } ipc_port_t;
+
+ipc_port_id sys_create_ipc_port( void );
+int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
+int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t* timeout );
 
 int init_ipc( void );
 
