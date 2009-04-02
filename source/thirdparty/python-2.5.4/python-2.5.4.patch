@@ -356,7 +356,7 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +        <gcc>
 +            <input>objs/*.o</input>
 +            <input>../../../lib/start/objs/libstart.a</input>
-+            <input>../../../thirdparty/readline-5.2/readline-5.2/objs/libreadline.a</input>
++            <input>../../../thirdparty/readline-6.0/readline-6.0/objs/libreadline.a</input>
 +            <input>../../../thirdparty/ncurses-5.7/ncurses-5.7/objs/libncurses.a</input>
 +            <input>../../../lib/c/objs/libc.a</input>
 +            <output>objs/python</output>

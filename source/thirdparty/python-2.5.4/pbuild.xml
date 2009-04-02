@@ -21,8 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <target name="clean">
-        <cleandir>python-2.5.4</cleandir>
-        <rmdir>python-2.5.4</rmdir>
+        <cleandir>Python-2.5.4</cleandir>
+        <rmdir>Python-2.5.4</rmdir>
     </target>
 
     <target name="get_source">

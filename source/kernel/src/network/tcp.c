@@ -427,7 +427,7 @@ static int tcp_add_select_request( socket_t* socket, struct select_request* requ
                 request->ready = true;
                 UNLOCK( request->sync );
             }
-            
+
             break;
         }
 
@@ -798,7 +798,7 @@ static void tcp_notify_read_waiters( tcp_socket_t* tcp_socket ) {
     }
 
     tcp_socket->first_read_select = NULL;
-    
+
     UNLOCK( tcp_socket->rx_queue );
 }
 
