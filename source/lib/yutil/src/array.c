@@ -22,27 +22,66 @@
 
 #include <yutil/array.h>
 
+static int check_array_buffer( array_t* array, int new_item_count ) {
+    void** new_items;
+
+    if ( ( array->item_count + new_item_count ) <= array->max_item_count ) {
+        return 0;
+    }
+
+    new_items = ( void** )malloc( sizeof( void* ) * ( array->max_item_count + array->realloc_size ) );
+
+    if ( new_items == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy( new_items, array->items, sizeof( void* ) * array->max_item_count );
+
+    if ( array->items != NULL ) {
+        free( array->items );
+    }
+
+    array->items = new_items;
+    array->max_item_count += array->realloc_size;
+
+    return 0;
+}
+
 int array_add_item( array_t* array, void* item ) {
-    if ( ( array->item_count + 1 ) >= array->max_item_count ) {
-        void** new_items;
+    int error;
 
-        new_items = ( void** )malloc( sizeof( void* ) * ( array->max_item_count + array->realloc_size ) );
+    error = check_array_buffer( array, 1 );
 
-        if ( new_items == NULL ) {
-            return -ENOMEM;
-        }
-
-        memcpy( new_items, array->items, sizeof( void* ) * array->max_item_count );
-
-        if ( array->items != NULL ) {
-            free( array->items );
-        }
-
-        array->items = new_items;
-        array->max_item_count += array->realloc_size;
+    if ( error < 0 ) {
+        return error;
     }
 
     array->items[ array->item_count++ ] = item;
+
+    return 0;
+}
+
+int array_insert_item( array_t* array, int index, void* item ) {
+    int error;
+    int count;
+
+    if ( ( index < 0 ) || ( index > array->item_count ) ) {
+        return -EINVAL;
+    }
+
+    error = check_array_buffer( array, 1 );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    count = array->item_count - index;
+
+    if ( count > 0 ) {
+        memmove( &array->items[ index + 1 ], &array->items[ index ], count * sizeof( void* ) );
+    }
+
+    array->items[ index ] = item;
 
     return 0;
 }

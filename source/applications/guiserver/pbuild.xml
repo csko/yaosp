@@ -27,6 +27,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/fontmanager.c</item>
         <item>src/input.c</item>
         <item>src/mouse.c</item>
+        <item>src/application.c</item>
+        <item>src/window.c</item>
+        <item>src/windowmanager.c</item>
         <item>src/arch/i386/graphicsdriver_i386.c</item>
         <item>driver/video/vesa/vesa.c</item>
         <item>driver/input/ps2mouse/ps2mouse.c</item>

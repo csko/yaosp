@@ -23,11 +23,15 @@
 #include <yaosp/debug.h>
 #include <yaosp/ipc.h>
 
+#include <ygui/protocol.h>
+
 #include <graphicsdriver.h>
 #include <bitmap.h>
 #include <fontmanager.h>
 #include <input.h>
 #include <mouse.h>
+#include <application.h>
+#include <windowmanager.h>
 
 #include "../driver/video/vesa/vesa.h"
 
@@ -170,13 +174,17 @@ static int guiserver_mainloop( void ) {
     }
 
     while ( 1 ) {
-        error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, 1000000 );
+        error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, INFINITE_TIMEOUT );
 
         if ( error < 0 ) {
             continue;
         }
 
         switch ( code ) {
+            case MSG_CREATE_APPLICATION :
+                handle_create_application( ( msg_create_app_t* )buffer );
+                break;
+
             default :
                 dbprintf( "guiserver_mainloop(): Unknown message code: %x\n", code );
                 break;
@@ -218,6 +226,13 @@ int main( int argc, char** argv ) {
 
     if ( error < 0 ) {
         printf( "Failed to initialize mouse manager\n" );
+        return error;
+    }
+
+    error = init_windowmanager();
+
+    if ( error < 0 ) {
+        printf( "Failed to initialize window manager\n" );
         return error;
     }
 

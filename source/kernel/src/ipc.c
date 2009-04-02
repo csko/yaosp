@@ -207,7 +207,9 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
 
     UNLOCK( ipc_port_lock );
 
-    *code = message->code;
+    if ( code != NULL ) {
+        *code = message->code;
+    }
 
     if ( message->size > 0 ) {
         ASSERT( message->size <= size );

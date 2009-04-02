@@ -1,4 +1,4 @@
-/* Array implementation
+/* GUI server
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YUTIL_ARRAY_H_
-#define _YUTIL_ARRAY_H_
+#ifndef _WINDOWMANAGER_H_
+#define _WINDOWMANAGER_H_
 
-typedef struct array {
-    int item_count;
-    int max_item_count;
-    int realloc_size;
-    void** items;
-} array_t;
+#include <window.h>
 
-int array_add_item( array_t* array, void* item );
-int array_insert_item( array_t* array, int index, void* item );
-int array_get_size( array_t* array );
-void* array_get_item( array_t* array, int index );
+int wm_register_window( window_t* window );
 
-int array_set_realloc_size( array_t* array, int realloc_size );
+int init_windowmanager( void );
 
-int init_array( array_t* array );
-
-#endif /* _YUTIL_ARRAY_H_ */
+#endif /* _WINDOWMANAGER_H_ */

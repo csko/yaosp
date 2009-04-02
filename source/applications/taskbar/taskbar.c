@@ -20,9 +20,11 @@
 #include <yaosp/debug.h>
 
 #include <ygui/application.h>
+#include <ygui/window.h>
 
 int main( int argc, char** argv ) {
     int error;
+    window_t* win;
 
     error = create_application();
 
@@ -30,6 +32,12 @@ int main( int argc, char** argv ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
         return error;
     }
+
+    point_t point = { .x = 50, .y = 50 };
+    point_t size = { .x = 100, .y = 100 };
+
+    win = create_window( "Taskbar", &point, &size, 0 );
+    show_window( win );
 
     run_application();
 
