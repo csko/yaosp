@@ -25,6 +25,7 @@
 typedef struct waitnode {
     thread_id thread;
     uint64_t wakeup_time;
+    bool in_queue;
 
     struct waitnode* prev;
     struct waitnode* next;

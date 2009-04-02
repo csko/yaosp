@@ -23,6 +23,10 @@
 int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
     waitnode_t* current;
 
+    ASSERT( node->in_queue == false );
+
+    node->in_queue = true;
+
     /* Insert the new node as the first or before the first node if the
        waitqueue is empty or the wakeup time of the new node is less than
        the wakeup time of the first node */
@@ -59,7 +63,7 @@ int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
             return 0;
         }
 
-        node = node->next;
+        current = current->next;
     }
 
     /* If we get here we have to insert the new node to the end of the queue */
@@ -76,6 +80,10 @@ int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
 }
 
 int waitqueue_add_node_tail( waitqueue_t* queue, waitnode_t* node ) {
+    ASSERT( node->in_queue == false );
+
+    node->in_queue = true;
+
     /* If the queue is empty simply make this the first node */
 
     if ( queue->first_node == NULL ) {
@@ -105,6 +113,11 @@ int waitqueue_add_node_tail( waitqueue_t* queue, waitnode_t* node ) {
 }
 
 int waitqueue_remove_node( waitqueue_t* queue, waitnode_t* node ) {
+    if ( !node->in_queue ) {
+        ASSERT( ( node->prev == NULL ) && ( node->next == NULL ) );
+        return 0;
+    }
+
     if ( queue->first_node == node ) {
         queue->first_node = node->next;
         ASSERT( node->prev == NULL );
@@ -125,6 +138,7 @@ int waitqueue_remove_node( waitqueue_t* queue, waitnode_t* node ) {
 
     node->prev = NULL;
     node->next = NULL;
+    node->in_queue = false;
 
     return 0;
 }
@@ -156,6 +170,7 @@ int waitqueue_wake_up( waitqueue_t* queue, uint64_t now ) {
 
         node->prev = NULL;
         node->next = NULL;
+        node->in_queue = false;
 
         node = next;
     }
@@ -200,6 +215,7 @@ int waitqueue_wake_up_head( waitqueue_t* queue, int count ) {
 
         node->prev = NULL;
         node->next = NULL;
+        node->in_queue = false;
 
         node = next;
     }
@@ -242,6 +258,7 @@ int waitqueue_wake_up_all( waitqueue_t* queue ) {
 
         node->prev = NULL;
         node->next = NULL;
+        node->in_queue = false;
 
         node = next;
     }

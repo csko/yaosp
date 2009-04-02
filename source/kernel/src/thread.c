@@ -364,6 +364,7 @@ static int do_sleep_thread( uint64_t microsecs, uint64_t* remaining ) {
     ASSERT( !is_interrupts_disabled() );
 
     node.wakeup_time = get_system_time() + microsecs;
+    node.in_queue = false;
 
     spinlock_disable( &scheduler_lock );
 

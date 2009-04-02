@@ -248,12 +248,14 @@ try_again:
         thread = current_thread();
 
         waitnode.thread = thread->id;
+        waitnode.in_queue = false;
 
         waitqueue_add_node_tail( &semaphore->waiters, &waitnode );
 
         if ( timeout != INFINITE_TIMEOUT ) {
             sleepnode.thread = thread->id;
             sleepnode.wakeup_time = wakeup_time;
+            sleepnode.in_queue = false;
 
             waitqueue_add_node( &sleep_queue, &sleepnode );
         }

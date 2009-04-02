@@ -46,7 +46,9 @@ static int pit_irq( int irq, void* data, registers_t* regs ) {
     /* Wake up sleeper threads */
 
     spinlock( &scheduler_lock );
+
     waitqueue_wake_up( &sleep_queue, system_time );
+
     spinunlock( &scheduler_lock );
 
     if ( !apic_present ) {
