@@ -26,7 +26,7 @@ unsigned int sleep( unsigned int seconds ) {
 
     time = seconds * 1000000;
 
-    syscall1( SYS_sleep_thread, ( int )&time );
+    syscall2( SYS_sleep_thread, ( int )&time, ( int )NULL );
 
     return 0;
 }

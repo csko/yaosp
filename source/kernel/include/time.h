@@ -35,6 +35,11 @@ typedef struct timezone {
     int tz_dsttime;
 } timezone_t;
 
+struct timespec {
+    time_t tv_sec;  /* Seconds */
+    long   tv_nsec; /* Nanoseconds */
+};
+
 typedef struct tm {
     int tm_sec;    /* Seconds. [0-60] (1 leap second) */
     int tm_min;    /* Minutes. [0-59] */

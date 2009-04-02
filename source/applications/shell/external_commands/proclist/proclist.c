@@ -73,7 +73,20 @@ static void format_size( char* buffer, size_t length, uint64_t size ) {
 }
 
 static void print_thread( thread_info_t* thread ) {
-    printf( "%4s %4d                  `- %s\n", "", thread->id, thread->name );
+    const char* state;
+
+    switch ( thread->state ) {
+        case THREAD_NEW : state = "new  "; break;
+        case THREAD_READY : state = "ready"; break;
+        case THREAD_RUNNING : state = "run  "; break;
+        case THREAD_WAITING : state = "wait "; break;
+        case THREAD_SLEEPING : state = "sleep"; break;
+        case THREAD_ZOMBIE : state = "zmb  "; break;
+        default :
+        case THREAD_UNKNOWN : state = "unkn "; break;
+    }
+
+    printf( "%4s %4d                 %s  `- %s\n", "", thread->id, state, thread->name );
 }
 
 static void print_process( process_info_t* process ) {
@@ -85,7 +98,7 @@ static void print_process( process_info_t* process ) {
     format_size( vmem_str, sizeof( vmem_str ), process->vmem_size );
     format_size( pmem_str, sizeof( pmem_str ), process->pmem_size );
 
-    printf( "%4d %4s %s %s %s\n", process->id, "-", vmem_str, pmem_str, process->name );
+    printf( "%4d %4s %s %s       %s\n", process->id, "-", vmem_str, pmem_str, process->name );
 
     thread_count = get_thread_count_for_process( process->id );
 
@@ -139,7 +152,7 @@ int main( int argc, char** argv ) {
 
         /* Print the header */
 
-        printf( " PID  TID VIRTMEM PHYSMEM NAME\n" );
+        printf( " PID  TID VIRTMEM PHYSMEM STATE NAME\n" );
 
         /* Print the process list */
 

@@ -1,4 +1,4 @@
-/* IPC functions
+/* Taskbar application
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,18 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_IPC_H_
-#define _YAOSP_IPC_H_
+#include <stdio.h>
+#include <yaosp/debug.h>
 
-#include <sys/types.h>
+#include <ygui/application.h>
 
-typedef int ipc_port_id;
+int main( int argc, char** argv ) {
+    int error;
 
-ipc_port_id create_ipc_port( void );
-int send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
-int recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t timeout );
+    error = create_application();
 
-int register_named_ipc_port( const char* name, ipc_port_id port_id );
-int get_named_ipc_port( const char* name, ipc_port_id* port_id );
+    if ( error < 0 ) {
+        dbprintf( "Failed to initialize taskbar application!\n" );
+        return error;
+    }
 
-#endif /* _YAOSP_IPC_H_ */
+    run_application();
+
+    return 0;
+}

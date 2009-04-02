@@ -26,6 +26,16 @@
 #define MAX_THREAD_NAME_LENGTH    64
 #define MAX_PROCESSOR_NAME_LENGTH 64
 
+enum {
+    THREAD_UNKNOWN = 0,
+    THREAD_NEW,
+    THREAD_READY,
+    THREAD_RUNNING,
+    THREAD_WAITING,
+    THREAD_SLEEPING,
+    THREAD_ZOMBIE
+};
+
 typedef int process_id;
 typedef int thread_id;
 
@@ -52,6 +62,7 @@ typedef struct process_info {
 typedef struct thread_info {
     thread_id id;
     char name[ MAX_THREAD_NAME_LENGTH ];
+    int state;
     uint64_t cpu_time;
 } thread_info_t;
 

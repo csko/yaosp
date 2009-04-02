@@ -121,7 +121,7 @@ thread_t* do_schedule( void ) {
                         /* 0 as a quantum is used to tell the wakeup functions
                            that this thread has to be added to the expired list
                            instead of the ready */
-                          
+
                         current->quantum = 0;
                     } else {
                         current->quantum -= runtime;
@@ -140,6 +140,8 @@ thread_t* do_schedule( void ) {
                     );
                     break;
             }
+        } else {
+            current->state = THREAD_WAITING;
         }
     }
 

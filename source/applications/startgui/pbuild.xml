@@ -1,0 +1,86 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2009 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <array name="files">
+        <item>startgui.c</item>
+    </array>
+
+    <target name="clean">
+        <delete>objs/*</delete>
+        <rmdir>objs</rmdir>
+    </target>
+
+    <target name="prepare" type="private">
+        <mkdir>objs</mkdir>
+    </target>
+
+    <target name="compile">
+        <call target="prepare"/>
+
+        <echo>Compiling startgui application</echo>
+        <echo></echo>
+
+        <for var="i" array="${files}">
+            <echo>[GCC    ] source/applications/startgui/${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/filename(${i}).o</output>
+                <include>../../include</include>
+                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
+                <flag>-c</flag>
+                <flag>-O2</flag>
+                <flag>-m32</flag>
+                <flag>-Wall</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-fno-builtin</flag>
+            </gcc>
+        </for>
+
+        <echo></echo>
+        <echo>Linking startgui application</echo>
+        <echo></echo>
+        <echo>[GCC    ] source/applications/startgui/objs/startgui</echo>
+
+        <gcc>
+            <input>objs/*.o</input>
+            <input>../../lib/start/objs/libstart.a</input>
+            <input>../../lib/c/objs/libc.a</input>
+            <output>objs/startgui</output>
+            <flag>-m32</flag>
+            <flag>-Xlinker</flag>
+            <flag>--script=../../../scripts/i386_app.lnk</flag>
+            <flag>-nostartfiles</flag>
+            <flag>-nodefaultlibs</flag>
+        </gcc>
+    </target>
+
+    <target name="install">
+        <copy from="objs/startgui" to="../../../build/image/application/startgui"/>
+    </target>
+
+    <target name="all">
+        <call target="clean"/>
+        <call target="compile"/>
+        <call target="install"/>
+    </target>
+</build>

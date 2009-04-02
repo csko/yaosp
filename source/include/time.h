@@ -25,14 +25,19 @@
 #define suseconds_t int
 
 typedef struct timeval {
-    time_t      tv_sec;    /* Seconds */
-    suseconds_t tv_usec;   /* Microseconds */
+    time_t      tv_sec;  /* Seconds */
+    suseconds_t tv_usec; /* Microseconds */
 } timeval_t ;
 
 typedef struct timezone {
     int tz_minuteswest;
     int tz_dsttime;
 } timezone_t;
+
+struct timespec {
+    time_t tv_sec;  /* Seconds */
+    long   tv_nsec; /* Nanoseconds */
+};
 
 typedef struct tm {
     int tm_sec;    /* Seconds. [0-60] (1 leap second) */
@@ -66,5 +71,7 @@ tm_t* localtime_r(const time_t* timep, tm_t* result);
 
 char* ctime( const time_t* timep );
 char* ctime_r( const time_t* timep, char* buf );
+
+int nanosleep( const struct timespec* req, struct timespec* rem );
 
 #endif // _TIME_H_

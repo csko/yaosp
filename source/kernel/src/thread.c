@@ -355,10 +355,11 @@ int sys_exit_thread( int exit_code ) {
     return 0;
 }
 
-int sleep_thread( uint64_t microsecs ) {
+static int do_sleep_thread( uint64_t microsecs, uint64_t* remaining ) {
     int error;
     thread_t* thread;
     waitnode_t node;
+    uint64_t now;
 
     ASSERT( !is_interrupts_disabled() );
 
@@ -383,13 +384,23 @@ int sleep_thread( uint64_t microsecs ) {
 
     spinunlock_enable( &scheduler_lock );
 
-    if ( get_system_time() < node.wakeup_time ) {
+    now = get_system_time();
+
+    if ( now < node.wakeup_time ) {
+        if ( remaining != NULL ) {
+            *remaining = node.wakeup_time - now;
+        }
+
         error = -ETIME;
     } else {
         error = 0;
     }
 
     return error;
+}
+
+int sleep_thread( uint64_t microsecs ) {
+    return do_sleep_thread( microsecs, NULL );
 }
 
 static int thread_info_process_filter( hashitem_t* item, void* data ) {
@@ -423,6 +434,7 @@ static int get_thread_info_iterator( hashitem_t* item, void* _data ) {
     info->id = thread->id;
     strncpy( info->name, thread->name, MAX_THREAD_NAME_LENGTH );
     info->name[ MAX_THREAD_NAME_LENGTH - 1 ] = 0;
+    info->state = thread->state;
     info->cpu_time = 0;
 
     data->curr_index++;
@@ -458,8 +470,8 @@ uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_tab
     return data.curr_index;
 }
 
-int sys_sleep_thread( uint64_t* microsecs ) {
-    return sleep_thread( *microsecs );
+int sys_sleep_thread( uint64_t* microsecs, uint64_t* remaining ) {
+    return do_sleep_thread( *microsecs, remaining );
 }
 
 static int do_wake_up_thread( thread_id id ) {

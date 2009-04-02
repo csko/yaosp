@@ -27,6 +27,9 @@ static int ipc_port_id_counter;
 static hashtable_t ipc_port_table;
 static semaphore_id ipc_port_lock;
 
+static hashtable_t named_ipc_port_table;
+static semaphore_id named_ipc_port_lock;
+
 static int insert_ipc_port( ipc_port_t* port ) {
     int error;
 
@@ -225,6 +228,78 @@ error1:
     return error;
 }
 
+int sys_register_named_ipc_port( const char* name, ipc_port_id port_id ) {
+    int error;
+    named_ipc_port_t* port;
+
+    LOCK( named_ipc_port_lock );
+
+    port = ( named_ipc_port_t* )hashtable_get( &named_ipc_port_table, ( const void* )name );
+
+    if ( port != NULL ) {
+        error = -EEXIST;
+        goto error1;
+    }
+
+    port = ( named_ipc_port_t* )kmalloc( sizeof( named_ipc_port_t ) );
+
+    if ( port == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    port->name = strdup( name );
+
+    if ( port->name == NULL ) {
+        error = -ENOMEM;
+        goto error2;
+    }
+
+    port->port_id = port_id;
+
+    error = hashtable_add( &named_ipc_port_table, ( hashitem_t* )port );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    UNLOCK( named_ipc_port_lock );
+
+    return 0;
+
+error3:
+    kfree( ( void* )port->name );
+
+error2:
+    kfree( port );
+
+error1:
+    UNLOCK( named_ipc_port_lock );
+
+    return error;
+}
+
+int sys_get_named_ipc_port( const char* name, ipc_port_id* port_id ) {
+    int error;
+    named_ipc_port_t* port;
+
+    LOCK( named_ipc_port_lock );
+
+    port = ( named_ipc_port_t* )hashtable_get( &named_ipc_port_table, ( const void* )name );
+
+    if ( port != NULL ) {
+        *port_id = port->port_id;
+
+        error = 0;
+    } else {
+        error = -ENOENT;
+    }
+
+    UNLOCK( named_ipc_port_lock );
+
+    return error;
+}
+
 static void* ipc_port_key( hashitem_t* item ) {
     ipc_port_t* port;
 
@@ -245,6 +320,22 @@ static bool ipc_port_compare( const void* key1, const void* key2 ) {
     id2 = *( ( ipc_port_id* )key2 );
 
     return ( id1 == id2 );
+}
+
+static void* named_ipc_port_key( hashitem_t* item ) {
+    named_ipc_port_t* port;
+
+    port = ( named_ipc_port_t* )item;
+
+    return ( void* )port->name;
+}
+
+static uint32_t named_ipc_port_hash( const void* key ) {
+    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
+}
+
+static bool named_ipc_port_compare( const void* key1, const void* key2 ) {
+    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
 }
 
 __init int init_ipc( void ) {
@@ -269,9 +360,33 @@ __init int init_ipc( void ) {
         goto error2;
     }
 
+    error = init_hashtable(
+        &named_ipc_port_table,
+        8,
+        named_ipc_port_key,
+        named_ipc_port_hash,
+        named_ipc_port_compare
+    );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    named_ipc_port_lock = create_semaphore( "Named IPC port table lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( named_ipc_port_lock < 0 ) {
+        goto error4;
+    }
+
     ipc_port_id_counter = 0;
 
     return 0;
+
+error4:
+    destroy_hashtable( &named_ipc_port_table );
+
+error3:
+    delete_semaphore( ipc_port_lock );
 
 error2:
     destroy_hashtable( &ipc_port_table );

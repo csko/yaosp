@@ -25,6 +25,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>shell</item>
         <item>guiserver</item>
         <item>irc_client</item>
+        <item>startgui</item>
+        <item>taskbar</item>
     </array>
 
     <target name="all">

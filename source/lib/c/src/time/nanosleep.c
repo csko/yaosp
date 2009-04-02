@@ -1,4 +1,4 @@
-/* IPC functions
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,18 +16,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_IPC_H_
-#define _YAOSP_IPC_H_
-
+#include <time.h>
+#include <errno.h>
 #include <sys/types.h>
 
-typedef int ipc_port_id;
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-ipc_port_id create_ipc_port( void );
-int send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
-int recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t timeout );
+int nanosleep( const struct timespec* req, struct timespec* rem ) {
+    int error;
+    uint64_t microsecs;
+    uint64_t remaining;
 
-int register_named_ipc_port( const char* name, ipc_port_id port_id );
-int get_named_ipc_port( const char* name, ipc_port_id* port_id );
+    microsecs = ( uint64_t )req->tv_sec * 1000000 + ( uint64_t )req->tv_nsec / 1000;
 
-#endif /* _YAOSP_IPC_H_ */
+    if ( microsecs == 0 ) {
+        microsecs = 1;
+    }
+
+    error = syscall2( SYS_sleep_thread, ( int )&microsecs, ( int )&remaining );
+
+    if ( error < 0 ) {
+        errno = -error;
+
+        if ( rem != NULL ) {
+            rem->tv_sec = remaining / 1000000;
+            rem->tv_nsec = ( remaining % 1000000 ) * 1000;
+        }
+
+        return -1;
+    }
+
+    return 0;
+}

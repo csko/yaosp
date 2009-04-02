@@ -1,4 +1,4 @@
-/* IPC functions
+/* Startgui application
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,18 +16,37 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_IPC_H_
-#define _YAOSP_IPC_H_
+#include <unistd.h>
+#include <stdio.h>
 
-#include <sys/types.h>
+int main( int argc, char** argv ) {
+    pid_t pid;
 
-typedef int ipc_port_id;
+    /* Start the guiserver */
 
-ipc_port_id create_ipc_port( void );
-int send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
-int recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t timeout );
+    pid = fork();
 
-int register_named_ipc_port( const char* name, ipc_port_id port_id );
-int get_named_ipc_port( const char* name, ipc_port_id* port_id );
+    if ( pid == 0 ) {
+        char* const argv[] = { "guiserver", NULL };
 
-#endif /* _YAOSP_IPC_H_ */
+        execv( "/application/guiserver", argv );
+        _exit( 0 );
+    } else {
+        printf( "Guiserver started with pid: #%d\n", pid );
+    }
+
+    /* Start the taskbar */
+
+    pid = fork();
+
+    if ( pid == 0 ) {
+        char* const argv[] = { "taskbar", NULL };
+
+        execv( "/application/taskbar", argv );
+        _exit( 0 );
+    } else {
+        printf( "Taskbar started with pid: #%d\n", pid );
+    }
+
+    return 0;
+}

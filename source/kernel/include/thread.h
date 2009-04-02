@@ -80,6 +80,7 @@ typedef struct thread {
 typedef struct thread_info {
     thread_id id;
     char name[ MAX_THREAD_NAME_LENGTH ];
+    int state;
     uint64_t cpu_time;
 } thread_info_t;
 
@@ -151,7 +152,7 @@ int sys_wake_up_thread( thread_id id );
 uint32_t sys_get_thread_count_for_process( process_id id );
 uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count );
 
-int sys_sleep_thread( uint64_t* microsecs );
+int sys_sleep_thread( uint64_t* microsecs, uint64_t* remaining );
 
 int init_threads( void );
 int init_thread_cleaner( void );

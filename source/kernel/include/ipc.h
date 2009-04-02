@@ -41,9 +41,19 @@ typedef struct ipc_port {
     ipc_message_t* message_queue_tail;
 } ipc_port_t;
 
+typedef struct named_ipc_port_t {
+    hashitem_t hash;
+
+    const char* name;
+    ipc_port_id port_id;
+} named_ipc_port_t;
+
 ipc_port_id sys_create_ipc_port( void );
 int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
 int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t* timeout );
+
+int sys_register_named_ipc_port( const char* name, ipc_port_id port_id );
+int sys_get_named_ipc_port( const char* name, ipc_port_id* port_id );
 
 int init_ipc( void );
 

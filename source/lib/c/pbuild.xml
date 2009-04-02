@@ -167,6 +167,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/time/gettimeofday.c</item>
         <item>src/time/ctime.c</item>
         <item>src/time/time.c</item>
+        <item>src/time/nanosleep.c</item>
         <item>src/getopt/getopt.c</item>
         <item>src/getopt/getopt_long.c</item>
         <item>src/getopt/getopt_long_only.c</item>

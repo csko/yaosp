@@ -163,11 +163,32 @@ static int guiserver_mainloop( void ) {
         goto error2;
     }
 
-    while ( 1 ) {
-        error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, 1000000 );
+    error = register_named_ipc_port( "guiserver", guiserver_port );
+
+    if ( error < 0 ) {
+        goto error3;
     }
 
+    while ( 1 ) {
+        error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, 1000000 );
+
+        if ( error < 0 ) {
+            continue;
+        }
+
+        switch ( code ) {
+            default :
+                dbprintf( "guiserver_mainloop(): Unknown message code: %x\n", code );
+                break;
+        }
+    }
+
+    free( buffer );
+
     return 0;
+
+error3:
+    /* TOOD: delete the guiserver port! */
 
 error2:
     free( buffer );

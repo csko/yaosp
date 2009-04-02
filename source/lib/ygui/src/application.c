@@ -1,4 +1,4 @@
-/* IPC functions
+/* yaosp GUI library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,18 +16,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_IPC_H_
-#define _YAOSP_IPC_H_
+#include <time.h>
+#include <yaosp/ipc.h>
+#include <yaosp/debug.h>
 
-#include <sys/types.h>
+ipc_port_id guiserver_port = -1;
 
-typedef int ipc_port_id;
+int create_application( void ) {
+    int error;
+    struct timespec slp_time;
 
-ipc_port_id create_ipc_port( void );
-int send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
-int recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t timeout );
+    dbprintf( "Waiting for guiserver to start ...\n" );
 
-int register_named_ipc_port( const char* name, ipc_port_id port_id );
-int get_named_ipc_port( const char* name, ipc_port_id* port_id );
+    while ( 1 ) {
+        error = get_named_ipc_port( "guiserver", &guiserver_port );
 
-#endif /* _YAOSP_IPC_H_ */
+        if ( error == 0 ) {
+            break;
+        }
+
+        slp_time.tv_sec = 1;
+        slp_time.tv_nsec = 0;
+
+        nanosleep( &slp_time, NULL );
+    }
+
+    dbprintf( "Guiserver port: %d\n", guiserver_port );
+
+    return 0;
+}
+
+int run_application( void ) {
+    return 0;
+}

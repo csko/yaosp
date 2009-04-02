@@ -1,6 +1,6 @@
 /* Wait queue implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -123,11 +123,15 @@ int waitqueue_remove_node( waitqueue_t* queue, waitnode_t* node ) {
         node->prev->next = node->next;
     }
 
+    node->prev = NULL;
+    node->next = NULL;
+
     return 0;
 }
 
 int waitqueue_wake_up( waitqueue_t* queue, uint64_t now ) {
     waitnode_t* node;
+    waitnode_t* next;
 
     node = queue->first_node;
 
@@ -148,7 +152,12 @@ int waitqueue_wake_up( waitqueue_t* queue, uint64_t now ) {
             }
         }
 
-        node = node->next;
+        next = node->next;
+
+        node->prev = NULL;
+        node->next = NULL;
+
+        node = next;
     }
 
     queue->first_node = node;
@@ -164,6 +173,7 @@ int waitqueue_wake_up( waitqueue_t* queue, uint64_t now ) {
 
 int waitqueue_wake_up_head( waitqueue_t* queue, int count ) {
     waitnode_t* node;
+    waitnode_t* next;
 
     node = queue->first_node;
 
@@ -185,7 +195,13 @@ int waitqueue_wake_up_head( waitqueue_t* queue, int count ) {
         }
 
         count--;
-        node = node->next;
+
+        next = node->next;
+
+        node->prev = NULL;
+        node->next = NULL;
+
+        node = next;
     }
 
     queue->first_node = node;
@@ -201,6 +217,7 @@ int waitqueue_wake_up_head( waitqueue_t* queue, int count ) {
 
 int waitqueue_wake_up_all( waitqueue_t* queue ) {
     waitnode_t* node;
+    waitnode_t* next;
 
     node = queue->first_node;
 
@@ -221,7 +238,12 @@ int waitqueue_wake_up_all( waitqueue_t* queue ) {
             }
         }
 
-        node = node->next;
+        next = node->next;
+
+        node->prev = NULL;
+        node->next = NULL;
+
+        node = next;
     }
 
     queue->first_node = NULL;

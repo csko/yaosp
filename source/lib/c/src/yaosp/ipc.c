@@ -47,3 +47,19 @@ int recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t 
         ( int )&timeout
     );
 }
+
+int register_named_ipc_port( const char* name, ipc_port_id port_id ) {
+    return syscall2(
+        SYS_register_named_ipc_port,
+        ( int )name,
+        port_id
+    );
+}
+
+int get_named_ipc_port( const char* name, ipc_port_id* port_id ) {
+    return syscall2(
+        SYS_get_named_ipc_port,
+        ( int )name,
+        ( int )port_id
+    );
+}
