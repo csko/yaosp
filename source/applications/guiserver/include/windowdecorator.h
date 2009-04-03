@@ -16,27 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _WINDOW_H_
-#define _WINDOW_H_
+#ifndef _WINDOWDECORATOR_H_
+#define _WINDOWDECORATOR_H_
 
-#include <ygui/protocol.h>
+#include <ygui/point.h>
 
-#include <region.h>
-#include <bitmap.h>
+#include <window.h>
 
-typedef struct window {
-    char* title;
-    int flags;
-    rect_t screen_rect;
-    rect_t client_rect;
+typedef struct window_decorator {
+    point_t border_size;
+    point_t lefttop_offset;
+    int ( *update_border )( window_t* window );
+} window_decorator_t;
 
-    ipc_port_id client_port;
-    ipc_port_id server_port;
+extern window_decorator_t default_decorator;
+extern window_decorator_t* window_decorator;
 
-    bitmap_t* bitmap;
-    region_t visible_regions;
-} window_t;
-
-int handle_create_window( msg_create_win_t* request );
-
-#endif /* _WINDOW_H_ */
+#endif /* _WINDOWDECORATOR_H_ */

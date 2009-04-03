@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
+#include <string.h>
 #include <yaosp/semaphore.h>
 
 #include <region.h>
@@ -87,6 +88,10 @@ int init_region( region_t* region ) {
 }
 
 int destroy_region( region_t* region ) {
+    return region_clear( region );
+}
+
+int region_clear( region_t* region ) {
     clip_rect_t* rect;
 
     while ( region->rects != NULL ) {
@@ -95,6 +100,29 @@ int destroy_region( region_t* region ) {
 
         put_clip_rect( rect );
     }
+
+    return 0;
+}
+
+int region_add( region_t* region, rect_t* rect ) {
+    clip_rect_t* clip_rect;
+
+    clip_rect = get_clip_rect();
+
+    if ( clip_rect == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy( &clip_rect->rect, rect, sizeof( rect_t ) );
+
+    clip_rect->next = region->rects;
+    region->rects = clip_rect;
+
+    return 0;
+}
+
+int region_exclude( region_t* region, rect_t* rect ) {
+    /* TODO */
 
     return 0;
 }

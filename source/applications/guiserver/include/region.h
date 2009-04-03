@@ -33,6 +33,10 @@ typedef struct region {
 int init_region( region_t* region );
 int destroy_region( region_t* region );
 
+int region_clear( region_t* region );
+int region_add( region_t* region, rect_t* rect );
+int region_exclude( region_t* region, rect_t* rect );
+
 int init_region_manager( void );
 
 #endif /* _REGION_H_ */

@@ -51,6 +51,11 @@ static inline void rect_bounds( rect_t* rect, int* w, int* h ) {
     *h = rect->bottom - rect->top + 1;
 }
 
+static inline void rect_lefttop( rect_t* rect, point_t* lefttop ) {
+    lefttop->x = rect->left;
+    lefttop->y = rect->top;
+}
+
 static inline void rect_add_point_n( rect_t* dst, rect_t* src1, point_t* src2 ) {
     dst->left = src1->left + src2->x;
     dst->right = src1->right + src2->x;
