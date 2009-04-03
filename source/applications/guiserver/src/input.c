@@ -24,7 +24,7 @@
 #include <yaosp/thread.h>
 
 #include <input.h>
-#include <mouse.h>
+#include <windowmanager.h>
 
 static int free_event_count;
 static semaphore_id free_list_lock;
@@ -139,9 +139,13 @@ static int input_thread_entry( void* arg ) {
 
         if ( event != NULL ) {
             switch ( event->type ) {
-                case MOUSE_MOVED :
-                    mouse_moved( event->param1, event->param2 );
+                case MOUSE_MOVED : {
+                    point_t delta = { .x = event->param1, .y = event->param2 };
+
+                    wm_mouse_moved( &delta );
+
                     break;
+                }
             }
 
             put_input_event( event );

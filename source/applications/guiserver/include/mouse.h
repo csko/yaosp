@@ -21,6 +21,7 @@
 
 #include <sys/types.h>
 #include <ygui/rect.h>
+#include <ygui/point.h>
 #include <yutil/hashtable.h>
 
 #include <bitmap.h>
@@ -45,7 +46,7 @@ int activate_mouse_pointer( mouse_pointer_t* pointer );
 int show_mouse_pointer( void );
 int hide_mouse_pointer( void );
 
-int mouse_moved( int delta_x, int delta_y );
+int mouse_moved( point_t* delta );
 
 int init_mouse_manager( void );
 

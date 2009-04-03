@@ -228,11 +228,10 @@ int hide_mouse_pointer( void ) {
     return 0;
 }
 
-int mouse_moved( int delta_x, int delta_y ) {
+int mouse_moved( point_t* delta ) {
     hide_mouse_pointer();
 
-    mouse_position.x += delta_x;
-    mouse_position.y += delta_y;
+    point_add( &mouse_position, delta );
 
     if ( mouse_position.x < 0 ) {
         mouse_position.x = 0;

@@ -43,6 +43,7 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
 
     if ( thread != NULL ) {
         kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
+        memory_context_dump( thread->process->memory_context );
         thread_exit( 0 );
     } else {
         disable_interrupts();

@@ -470,6 +470,13 @@ int elf32_application_execute( void ) {
 
     regs = ( registers_t* )( thread->syscall_stack );
 
+    regs->eax = 0;
+    regs->ebx = 0;
+    regs->ecx = 0;
+    regs->edx = 0;
+    regs->esi = 0;
+    regs->edi = 0;
+    regs->ebp = 0;
     regs->cs = USER_CS | 3;
     regs->ds = USER_DS | 3;
     regs->es = USER_DS | 3;

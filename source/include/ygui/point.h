@@ -26,4 +26,9 @@ typedef struct point {
     int y;
 } point_t;
 
+static inline void point_add( point_t* point1, point_t* point2 ) {
+    point1->x += point2->x;
+    point1->y += point2->y;
+}
+
 #endif /* _YGUI_POINT_H_ */

@@ -122,7 +122,76 @@ int region_add( region_t* region, rect_t* rect ) {
 }
 
 int region_exclude( region_t* region, rect_t* rect ) {
-    /* TODO */
+    int i;
+    rect_t hide;
+    rect_t new_rects[ 4 ];
+    clip_rect_t* new_list;
+    clip_rect_t* current;
+
+    new_list = NULL;
+
+    while ( region->rects != NULL  ){
+        current = region->rects;
+        region->rects = current->next;
+
+        rect_and_n( &hide, &current->rect, rect );
+
+        if ( !rect_is_valid( &hide ) ) {
+            current->next = new_list;
+            new_list = current;
+
+            continue;
+        }
+
+        rect_init( &new_rects[ 0 ],
+            current->rect.left,
+            current->rect.top,
+            current->rect.right,
+            hide.top - 1
+        );
+
+        rect_init( &new_rects[ 1 ],
+            current->rect.left,
+            hide.bottom + 1,
+            current->rect.right,
+            current->rect.bottom
+        );
+
+        rect_init( &new_rects[ 2 ],
+            current->rect.left,
+            current->rect.top,
+            hide.left - 1,
+            hide.bottom
+        );
+
+        rect_init( &new_rects[ 3 ],
+            hide.right + 1,
+            hide.top,
+            current->rect.right,
+            current->rect.bottom
+        );
+
+        put_clip_rect( current );
+
+        for ( i = 0; i < 4; i++ ) {
+            if ( !rect_is_valid( &new_rects[ i ] ) ) {
+                continue;
+            }
+
+            current = get_clip_rect();
+
+            if ( current == NULL ) {
+                continue;
+            }
+
+            memcpy( &current->rect, &new_rects[ i ], sizeof( rect_t ) );
+
+            current->next = new_list;
+            new_list = current;
+        }
+    }
+
+    region->rects = new_list;
 
     return 0;
 }

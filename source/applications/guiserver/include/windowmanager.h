@@ -23,6 +23,8 @@
 
 int wm_register_window( window_t* window );
 
+int wm_mouse_moved( point_t* delta );
+
 int init_windowmanager( void );
 
 #endif /* _WINDOWMANAGER_H_ */

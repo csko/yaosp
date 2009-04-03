@@ -297,7 +297,7 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
             goto error;
         }
     }
-  
+
     UNLOCK( region_lock );
 
     return new_context;

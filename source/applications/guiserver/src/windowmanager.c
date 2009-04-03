@@ -16,13 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yaosp/semaphore.h>
 #include <yutil/array.h>
 
 #include <windowmanager.h>
 #include <graphicsdriver.h>
 #include <windowdecorator.h>
+#include <mouse.h>
 
 static array_t window_stack;
+static semaphore_id wm_lock;
 
 window_decorator_t* window_decorator = &default_decorator;
 
@@ -36,12 +39,14 @@ int wm_register_window( window_t* window ) {
     window_t* tmp;
     window_t* tmp2;
 
+    LOCK( wm_lock );
+
     /* Insert the new window to the window stack */
 
     error = array_insert_item( &window_stack, 0, window );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     /* Regenerate visible regions of other windows */
@@ -61,6 +66,8 @@ int wm_register_window( window_t* window ) {
         }
     }
 
+    /* Update the decoration of the window */
+
     window_decorator->update_border( window );
 
     rect_lefttop( &window->screen_rect, &lefttop );
@@ -76,6 +83,23 @@ int wm_register_window( window_t* window ) {
         DM_COPY
     );
 
+    UNLOCK( wm_lock );
+
+    return 0;
+
+error1:
+    UNLOCK( wm_lock );
+
+    return error;
+}
+
+int wm_mouse_moved( point_t* delta ) {
+    LOCK( wm_lock );
+
+    mouse_moved( delta );
+
+    UNLOCK( wm_lock );
+
     return 0;
 }
 
@@ -85,10 +109,23 @@ int init_windowmanager( void ) {
     error = init_array( &window_stack );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     array_set_realloc_size( &window_stack, 32 );
 
+    wm_lock = create_semaphore( "Window manager lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( wm_lock < 0 ) {
+        error = wm_lock;
+        goto error2;
+    }
+
     return 0;
+
+error2:
+    /* TODO: Delete the window stack array */
+
+error1:
+    return error;
 }

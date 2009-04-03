@@ -66,7 +66,7 @@ int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg ) {
 
     stack = ( register_t* )thread->kernel_stack_end;
     regs = ( registers_t* )( ( uint8_t* )stack - sizeof( registers_t ) );
-    
+
     memset( regs, 0, sizeof( registers_t ) );
 
     regs->fs = KERNEL_DS;
