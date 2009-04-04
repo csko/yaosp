@@ -68,7 +68,7 @@
 /**
  * The default size of the user stack for threads.
  */
-#define USER_STACK_SIZE ( 32 * 1024 )
+#define USER_STACK_SIZE ( 128 * 1024 )
 
 #define KERNEL_PARAM_BUF_SIZE 4096
 #define MAX_KERNEL_PARAMS 64

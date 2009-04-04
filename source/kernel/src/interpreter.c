@@ -27,7 +27,7 @@
 static bool interpreter_check( int fd ) {
     char buf[ 3 ];
 
-    if ( pread( fd, buf, 3, 0 ) != 3 ) {
+    if ( sys_pread( fd, buf, 3, 0 ) != 3 ) {
         return false;
     }
 
@@ -42,7 +42,7 @@ static int interpreter_execute( int fd, const char* name, char** argv, char** en
     char** new_argv;
     char interpreter[ 128 ];
 
-    data = pread( fd, interpreter, sizeof( interpreter ) - 1, 3 );
+    data = sys_pread( fd, interpreter, sizeof( interpreter ) - 1, 3 );
 
     if ( data < 2 ) {
         return -EIO;
