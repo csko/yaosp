@@ -1,6 +1,6 @@
 /* IRC client
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -37,7 +37,7 @@ static event_t irc_read;
 
 static size_t input_size = 0;
 static char* input_buffer = NULL;
-
+/* TODO: proper parameter handling */
 static void irc_handle_line( char* line ) {
     char* tmp;
     char* cmd;
@@ -101,6 +101,10 @@ static void irc_handle_line( char* line ) {
         snprintf( buf, sizeof( buf ), "<%s> %s", nick, msg );
 
         view_add_text( channel, buf );
+    }else if ( strcmp( cmd, "PING" ) == 0 ) { /* TODO: this is not working */
+        char buf[64];
+        snprintf( buf, sizeof(buf), "PONG :%s\r\n", chan );
+        write( s, buf, strlen(buf) );
     }
 }
 
@@ -187,6 +191,17 @@ int irc_send_privmsg( const char* channel, const char* message ) {
     return 0;
 }
 
+int irc_raw_command( const char* command ) {
+    char buf[ 256 ];
+    size_t length;
+
+    length = snprintf( buf, sizeof( buf ), "%s\r\n", command );
+
+    write( s, buf, length );
+
+    return 0;
+}
+
 void init_irc( void ) {
     int error;
     char buffer[ 256 ];
@@ -211,7 +226,8 @@ void init_irc( void ) {
         return;
     }
 
-    snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER irc.atw.hu :giszo from yaOSp\r\n", my_nick, my_nick );
+    snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER irc.atw.hu :yaOSp IRC client\r\n", my_nick, my_nick );
+    /* TODO: handle "nickname already in use" */
 
     write( s, buffer, strlen( buffer ) );
 

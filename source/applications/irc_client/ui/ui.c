@@ -1,6 +1,6 @@
 /* IRC client
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -83,9 +83,11 @@ view_t* ui_get_channel( const char* chan_name ) {
 }
 
 int ui_handle_command( const char* command, const char* params ) {
-    if ( strcmp( command, "/quit" ) == 0 ) {
+    if ( strcasecmp( command, "/quit" ) == 0 ) {
+        /* TODO: quit from server */
         event_manager_quit();
-    } else if ( strcmp( command, "/join" ) == 0 ) {
+    } else if ( strcasecmp( command, "/join" ) == 0 ) {
+        /* TODO: password */
         if ( params != NULL ) {
             view_t* view;
 
@@ -96,7 +98,16 @@ int ui_handle_command( const char* command, const char* params ) {
 
             ui_activate_view( view );
         }
-    } else if ( strcmp( command, "/privmsg" ) == 0 ) {
+    } else if ( strcasecmp( command, "/part" ) == 0 ) {
+        if ( params != NULL ) { /* Leave defined channel */
+            view_t* view = ui_get_channel( params );
+            if ( view != NULL ) {
+                
+            }
+
+        }else{ /* Leave current channel */
+        }
+    } else if ( strcasecmp( command, "/privmsg" ) == 0 ) {
         if ( params != NULL ) {
             char* msg = strchr( params, ' ' );
 
@@ -106,15 +117,19 @@ int ui_handle_command( const char* command, const char* params ) {
                 irc_send_privmsg( params, msg );
             }
         }
-    } else if ( strcmp( command, "/server" ) == 0 ) {
+    } else if ( strcasecmp( command, "/server" ) == 0 ) {
         ui_activate_view( &server_view );
-    } else if ( strcmp( command, "/chan" ) == 0 ) {
+    } else if ( strcasecmp( command, "/chan" ) == 0 ) {
         if ( params != NULL ) {
             view_t* chan = ui_get_channel( params );
 
             if ( chan != NULL ) {
                 ui_activate_view( chan );
             }
+        }
+    } else if ( strcasecmp( command, "/raw" ) == 0 ) {
+        if ( params != NULL ) {
+            irc_raw_command( params );
         }
     }
 

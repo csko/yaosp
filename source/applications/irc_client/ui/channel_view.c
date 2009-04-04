@@ -1,6 +1,6 @@
 /* IRC client
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "view.h"
 #include "channel_view.h"
@@ -36,6 +37,10 @@ static const char* channel_get_title( view_t* view ) {
 
 static int channel_handle_text( view_t* view, const char* text ) {
     char buf[ 256 ];
+    char timestamp[ 128 ];
+    struct tm* tmval;
+    time_t now;
+    char* timestamp_format = "%D %T"; /* TODO: make global variable */
 
     channel_data_t* channel;
 
@@ -43,7 +48,20 @@ static int channel_handle_text( view_t* view, const char* text ) {
 
     irc_send_privmsg( channel->name, text );
 
-    snprintf( buf, sizeof( buf ), "<%s> %s", my_nick, text );
+    /* Create timestamp */
+    time( &now );
+
+    if( now != (time_t) -1 ){
+        tmval = ( struct tm* )malloc( sizeof( struct tm ) );
+        gmtime_r( &now, tmval );
+
+        if ( tmval != NULL ) {
+            strftime( ( char* )timestamp, 128, timestamp_format, tmval );
+        }
+        free( tmval );
+    }
+
+    snprintf( buf, sizeof( buf ), "%s <%s> %s", timestamp, my_nick, text );
     view_add_text( view, buf );
 
     return 0;
