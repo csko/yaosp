@@ -29,5 +29,6 @@ typedef struct channel_data {
 } channel_data_t;
 
 view_t* create_channel_view( const char* name );
+void destroy_channel_view( view_t* view );
 
 #endif /* _UI_CHANNEL_VIEW_H_ */

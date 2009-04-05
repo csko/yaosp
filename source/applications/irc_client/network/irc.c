@@ -180,6 +180,17 @@ int irc_join_channel( const char* channel ) {
     return 0;
 }
 
+int irc_part_channel( const char* channel, const char* message ) {
+    char buf[ 256 ];
+    size_t length;
+
+    length = snprintf( buf, sizeof( buf ), "PART %s :%s\r\n", channel, msg );
+
+    write( s, buf, length );
+
+    return 0;
+}
+
 int irc_send_privmsg( const char* channel, const char* message ) {
     char buf[ 256 ];
     size_t length;
@@ -215,8 +226,8 @@ void init_irc( void ) {
     }
 
     address.sin_family = AF_INET;
-    //inet_aton( "94.125.176.255", &address.sin_addr ); /* irc.atw.hu */
-    inet_aton( "157.181.1.129", &address.sin_addr ); /* irc.elte.hu */
+    //inet_aton( "94.125.176.255", &address.sin_addr ); /* atw.irc.hu */
+    inet_aton( "157.181.1.129", &address.sin_addr ); /* elte.irc.hu */
     //inet_aton( "192.168.1.101", &address.sin_addr );
     address.sin_port = htons( 6667 );
 
@@ -226,7 +237,7 @@ void init_irc( void ) {
         return;
     }
 
-    snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER irc.atw.hu :yaOSp IRC client\r\n", my_nick, my_nick );
+    snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER \"elte.irc.hu\" :yaOSp IRC client\r\n", my_nick, my_nick );
     /* TODO: handle "nickname already in use" */
 
     write( s, buffer, strlen( buffer ) );
@@ -238,4 +249,19 @@ void init_irc( void ) {
     irc_read.events[ EVENT_EXCEPT ].interested = 0;
 
     event_manager_add_event( &irc_read );
+}
+
+int irc_quit_server( const char* reason ) {
+    char buf[ 256 ];
+    size_t length;
+
+    if ( reason == NULL ) {
+        length = snprintf( buf, sizeof( buf ), "QUIT :Leaving...\r\n" );
+    } else {
+        length = snprintf( buf, sizeof( buf ), "QUIT :%s\r\n", reason );
+    }
+
+    write( s, buf, length );
+
+    return 0;
 }

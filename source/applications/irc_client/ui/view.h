@@ -39,6 +39,8 @@ extern view_t server_view;
 
 int view_add_text( view_t* view, const char* text );
 
+int active_view_add_text( const char* text );
+
 int init_server_view( void );
 
 int init_view( view_t* view, view_operations_t* operations, void* data );

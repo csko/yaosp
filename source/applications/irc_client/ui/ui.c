@@ -22,12 +22,14 @@
 #include <sys/ioctl.h>
 
 #include "view.h"
+#include "ui.h"
 #include "channel_view.h"
 #include "../core/event.h"
 #include "../core/eventmanager.h"
 #include "../network/irc.h"
 
 #define MAX_INPUT_SIZE 255
+#define WITH_DEBUG
 
 static WINDOW* screen;
 static WINDOW* win_title;
@@ -45,8 +47,6 @@ int screen_h = 0;
 view_t* active_view;
 
 static array_t channel_list;
-
-int ui_activate_view( view_t* view );
 
 static int get_terminal_size( int* width, int* height ) {
     int error;
@@ -84,10 +84,11 @@ view_t* ui_get_channel( const char* chan_name ) {
 
 int ui_handle_command( const char* command, const char* params ) {
     if ( strcasecmp( command, "/quit" ) == 0 ) {
-        /* TODO: quit from server */
+        irc_quit_server( params );
         event_manager_quit();
     } else if ( strcasecmp( command, "/join" ) == 0 ) {
         /* TODO: password */
+        /* TODO: join more channels */
         if ( params != NULL ) {
             view_t* view;
 
@@ -99,14 +100,41 @@ int ui_handle_command( const char* command, const char* params ) {
             ui_activate_view( view );
         }
     } else if ( strcasecmp( command, "/part" ) == 0 ) {
-        if ( params != NULL ) { /* Leave defined channel */
-            view_t* view = ui_get_channel( params );
-            if ( view != NULL ) {
-                
-            }
+        view_t* view;
+        /* TODO: part message */
+        /* TODO: part more channels */
+        char* msg = "";
 
+        if ( params != NULL && params[0] == '#' ) { /* Leave defined channel */
+            view = ui_get_channel( params );
+            if ( view == NULL ) {
+                ui_error_message("Not in that channel.");
+                return 1;
+            }
         }else{ /* Leave current channel */
+            view = active_view;
         }
+
+        if ( active_view == &server_view ){
+            ui_error_message("Cannot close the server window.");
+            return 1;
+        }
+
+        /* view != NULL */
+
+        /* Leave channel */
+        channel_data_t* chan = ( channel_data_t* ) view->data;
+        irc_part_channel( chan->name, msg );
+
+        /* TODO: switch to last used view instead */
+        ui_activate_view( &server_view );
+
+        /* TODO: remove view from array */
+        // array_remove_item( view );
+
+        /* Destroy channel view */
+        destroy_channel_view( view );
+
     } else if ( strcasecmp( command, "/privmsg" ) == 0 ) {
         if ( params != NULL ) {
             char* msg = strchr( params, ' ' );
@@ -126,6 +154,8 @@ int ui_handle_command( const char* command, const char* params ) {
             if ( chan != NULL ) {
                 ui_activate_view( chan );
             }
+        } else {
+            ui_error_message("Syntax: /chan CHANNEL");
         }
     } else if ( strcasecmp( command, "/raw" ) == 0 ) {
         if ( params != NULL ) {
@@ -246,6 +276,26 @@ int ui_activate_view( view_t* view ) {
     ui_draw_view( view );
 
     return 0;
+}
+
+int ui_error_message( const char* errormsg ){
+    char _errormsg[ 256 ];
+
+    snprintf(_errormsg, 256, "ERROR: %s", errormsg );
+
+    return active_view_add_text( _errormsg );
+}
+
+int ui_debug_message( const char* debugmsg ){
+#ifdef WITH_DEBUG
+    char _debugmsg[ 256 ];
+
+    snprintf(_debugmsg, 256, "DEBUG: %s", debugmsg );
+
+    return active_view_add_text( _debugmsg );
+#else
+    return 0;
+#endif
 }
 
 int init_ui( void ) {

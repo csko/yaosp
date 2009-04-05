@@ -1,6 +1,6 @@
-/* IRC client
+/* inet_ntoa function
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,15 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETWORK_IRC_H_
-#define _NETWORK_IRC_H_
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
 
-int irc_join_channel( const char* channel );
-int irc_part_channel( const char* channel, const char* message );
-int irc_send_privmsg( const char* channel, const char* message );
-int irc_raw_command( const char* channel );
-int irc_quit_server( const char* reason );
+char* inet_ntoa( struct in_addr in ) {
+    unsigned int ip;
+    static char* __inet_ntoa_result;
+    int i;
+    uint8_t bytes[4];
+    uint8_t* addrbyte;
 
-int init_irc( void );
+    ip = ntohl(in.s_addr);
 
-#endif /* _NETWORK_IRC_H_ */
+    addrbyte = (uint8_t *)&ip;
+
+    for(i = 0; i < 4; i++) {
+        bytes[i] = *addrbyte;
+    }
+
+    snprintf (__inet_ntoa_result, 18, "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
+
+    return __inet_ntoa_result;
+}

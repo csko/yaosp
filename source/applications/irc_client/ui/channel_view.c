@@ -116,3 +116,10 @@ error2:
 error1:
     return NULL;
 }
+
+void destroy_channel_view( view_t* view ) {
+    channel_data_t* channel = ( channel_data_t* ) view->data;
+    free( channel->name );
+    free( channel );
+    free( view );
+}

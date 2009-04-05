@@ -93,6 +93,10 @@ int view_add_text( view_t* view, const char* text ) {
     return 0;
 }
 
+int active_view_add_text( const char* text ) {
+    return view_add_text( active_view, text );
+}
+
 int init_view( view_t* view, view_operations_t* operations, void* data ) {
     int error;
 
