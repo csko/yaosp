@@ -30,6 +30,7 @@
 #include "../core/eventmanager.h"
 #include "../ui/view.h"
 #include "../ui/ui.h"
+#include "irc.h"
 
 char* my_nick;
 
@@ -38,94 +39,119 @@ static event_t irc_read;
 
 static size_t input_size = 0;
 static char* input_buffer = NULL;
-/* TODO: proper parameter handling */
-static void irc_handle_line( char* line ) {
-    char* tmp;
-    char* cmd;
-    char* chan;
 
-    view_add_text( &server_view, line );
+static void parse_line1(const char* line){
+    char tmp[256];
+    char* cmd = NULL;
+    char* param1 = NULL;
+    char* param2 = NULL;
 
     cmd = strchr( line, ' ' );
+    if(cmd != NULL){ /* found command */
+        *cmd++ = '\0';
 
-    if ( cmd == NULL ) {
-        return;
-    }
+        param1 = strchr( cmd, ' ' );
 
-    cmd++;
+        if(param1 != NULL){ /* found param1 */
+            *param1++ = '\0';
 
-    chan = strchr( cmd, ' ' );
+            /* Look for a one-parameter command */
+            if(strcmp(cmd, "whatever") == 0){
+//                irc_handle_whatever(param1);
+            }else{ /* Command not found */
+                param2 = strchr( param1, ' ' );
 
-    if ( chan == NULL ) {
-        return;
-    }
+                if(param2 != NULL){ /* found param2 */
+                *param2++ = '\0';
 
-    *chan++ = 0;
-
-    tmp = strchr( chan, ' ' );
-
-    if ( tmp == NULL ) {
-        return;
-    }
-
-    *tmp = 0;
-
-    if ( strcmp( cmd, "PRIVMSG" ) == 0 ) {
-        char* msg;
-        char* nick;
-        char buf[ 256 ];
-        view_t* channel;
-        char timestamp[ 128 ];
-        struct tm* tmval;
-        time_t now;
-        char* timestamp_format = "%D %T"; /* TODO: make global variable */
-
-
-        msg = strchr( tmp + 1, ':' );
-
-        if ( msg == NULL ) {
-            return;
-        }
-
-        msg++;
-
-        tmp = strchr( line + 1, '!' );
-
-        if ( tmp == NULL ) {
-            return;
-        }
-
-        *tmp = 0;
-        nick = line + 1;
-
-        channel = ui_get_channel( chan );
-
-        if ( channel == NULL ) {
-            return;
-        }
-
-
-        /* Create timestamp */
-        time( &now );
-
-        if( now != (time_t) -1 ){
-            tmval = ( struct tm* )malloc( sizeof( struct tm ) );
-            gmtime_r( &now, tmval );
-
-            if ( tmval != NULL ) {
-                strftime( ( char* )timestamp, 128, timestamp_format, tmval );
+                /* Look for a two-parameter command */
+                if(strcmp(cmd, "PRIVMSG") == 0){
+                    irc_handle_privmsg(line, param1, param2 + 1);
+                }
+                    
+                }
             }
-            free( tmval );
         }
-
-        snprintf( buf, sizeof( buf ), "%s <%s> %s", timestamp, nick, msg );
-
-        view_add_text( channel, buf );
-    }else if ( strcmp( cmd, "PING" ) == 0 ) { /* TODO: this is not working */
-        char buf[64];
-        snprintf( buf, sizeof(buf), "PONG :%s\r\n", chan );
-        write( s, buf, strlen(buf) );
     }
+
+    snprintf(tmp, 256, "line1 sender='%s' cmd='%s', param1='%s', param2='%s'", line, cmd, param1, param2);
+    ui_debug_message( tmp );
+
+}
+
+static void parse_line2(const char* line){
+    char tmp[256];
+    char* params;
+
+    params = strchr( line, ' ' );
+    if(params != NULL){
+        *params++ = '\0';
+    }
+
+    snprintf(tmp, 256, "line2 cmd='%s' params='%s'", line, params);
+    ui_debug_message( tmp );
+}
+
+
+static void irc_handle_line( char* line ) {
+    char tmp[ 256 ];
+
+    snprintf(tmp, 256, "<< %s", line);
+    ui_debug_message( tmp );
+
+    if(line[0] == 0) {
+        return;
+    } else if(line[0] == ':') {
+        parse_line1(++line);
+    } else {
+        parse_line2(line);
+    }
+    return;
+}
+
+
+int irc_handle_privmsg( const char* sender, const char* chan, const char* msg){
+
+    char buf[ 256 ];
+    view_t* channel;
+    struct client _sender;
+    int error;
+
+    char timestamp[ 128 ];
+    struct tm* tmval;
+    time_t now;
+    char* timestamp_format = "%D %T"; /* TODO: make global variable */
+
+    error = parse_client(sender, &_sender);
+
+    if(error < 0){
+        return error;
+    }
+
+    channel = ui_get_channel( chan );
+
+    if ( channel == NULL ) {
+        return -1;
+    }
+
+    /* Create timestamp */
+    time( &now );
+
+    if( now != (time_t) -1 ){
+        tmval = ( struct tm* )malloc( sizeof( struct tm ) );
+        gmtime_r( &now, tmval );
+
+        if ( tmval != NULL ) {
+            strftime( ( char* )timestamp, 128, timestamp_format, tmval );
+        }
+    free( tmval );
+    }
+
+    snprintf( buf, sizeof( buf ), "%s <%s> %s", timestamp, _sender.nick, msg );
+
+    view_add_text( channel, buf );
+
+    return 0;
 }
 
 static int irc_handle_incoming( event_t* event ) {
@@ -195,7 +221,7 @@ int irc_join_channel( const char* channel ) {
 
     length = snprintf( buf, sizeof( buf ), "JOIN %s\r\n", channel );
 
-    write( s, buf, length );
+    irc_write( s, buf, length );
 
     return 0;
 }
@@ -206,7 +232,7 @@ int irc_part_channel( const char* channel, const char* message ) {
 
     length = snprintf( buf, sizeof( buf ), "PART %s :%s\r\n", channel, message );
 
-    write( s, buf, length );
+    irc_write( s, buf, length );
 
     return 0;
 }
@@ -217,7 +243,7 @@ int irc_send_privmsg( const char* channel, const char* message ) {
 
     length = snprintf( buf, sizeof( buf ), "PRIVMSG %s :%s\r\n", channel, message );
 
-    write( s, buf, length );
+    irc_write( s, buf, length );
 
     return 0;
 }
@@ -228,12 +254,12 @@ int irc_raw_command( const char* command ) {
 
     length = snprintf( buf, sizeof( buf ), "%s\r\n", command );
 
-    write( s, buf, length );
+    irc_write( s, buf, length );
 
     return 0;
 }
 
-void init_irc( void ) {
+int init_irc( void ) {
     int error;
     char buffer[ 256 ];
 
@@ -242,25 +268,24 @@ void init_irc( void ) {
     s = socket( AF_INET, SOCK_STREAM, 0 );
 
     if ( s < 0 ) {
-        return;
+        return s;
     }
 
     address.sin_family = AF_INET;
-    //inet_aton( "94.125.176.255", &address.sin_addr ); /* atw.irc.hu */
     inet_aton( "157.181.1.129", &address.sin_addr ); /* elte.irc.hu */
-    //inet_aton( "192.168.1.101", &address.sin_addr );
     address.sin_port = htons( 6667 );
 
     error = connect( s, ( struct sockaddr* )&address, sizeof( struct sockaddr_in ) );
 
     if ( error < 0 ) {
-        return;
+        return error;
     }
 
+    /* TODO: parameterize */
     snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER \"elte.irc.hu\" :yaOSp IRC client\r\n", my_nick, my_nick );
-    /* TODO: handle "nickname already in use" */
+    irc_write( s, buffer, strlen( buffer ) );
 
-    write( s, buffer, strlen( buffer ) );
+    /* TODO: handle "nickname already in use" */
 
     irc_read.fd = s;
     irc_read.events[ EVENT_READ ].interested = 1;
@@ -269,6 +294,8 @@ void init_irc( void ) {
     irc_read.events[ EVENT_EXCEPT ].interested = 0;
 
     event_manager_add_event( &irc_read );
+
+    return 0;
 }
 
 int irc_quit_server( const char* reason ) {
@@ -281,7 +308,28 @@ int irc_quit_server( const char* reason ) {
         length = snprintf( buf, sizeof( buf ), "QUIT :%s\r\n", reason );
     }
 
-    write( s, buf, length );
+    irc_write( s, buf, length );
+
+    return 0;
+}
+
+ssize_t irc_write(int fd, const void *buf, size_t count) {
+    char tmp[256];
+
+    /* NOTE: size of buf unknown, '\0' is delimiter */
+    snprintf(tmp, 256, ">> %s", (char*) buf);
+    return write(fd, buf, count);
+}
+
+int parse_client(const char* str, client_t* sender){
+    char* tmp;
+    
+    tmp = strchr(str, '!');
+    if(tmp != NULL){
+        strncpy(sender->nick, str, tmp - str);
+        sender->ident[0] = '\0';
+        sender->host[0] = '\0';
+    }
 
     return 0;
 }

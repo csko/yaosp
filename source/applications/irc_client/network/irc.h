@@ -18,13 +18,33 @@
 
 #ifndef _NETWORK_IRC_H_
 #define _NETWORK_IRC_H_
+#include <unistd.h>
 
+typedef struct client {
+    /* TODO: better lengths */
+    char nick[32];
+    char ident[32];
+    char host[256];
+} client_t;
+
+/* User commands */
 int irc_join_channel( const char* channel );
 int irc_part_channel( const char* channel, const char* message );
 int irc_send_privmsg( const char* channel, const char* message );
 int irc_raw_command( const char* channel );
 int irc_quit_server( const char* reason );
 
+/* Handlers */
+/* one-parameter */
+
+/* two-parameter */
+int irc_handle_privmsg( const char* sender, const char* chan, const char* msg);
+
 int init_irc( void );
+
+/* Wrapper for write() */
+ssize_t irc_write(int fd, const void *buf, size_t count);
+
+int parse_client(const char* str, client_t* sender);
 
 #endif /* _NETWORK_IRC_H_ */
