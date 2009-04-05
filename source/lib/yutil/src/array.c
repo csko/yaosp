@@ -61,6 +61,29 @@ int array_add_item( array_t* array, void* item ) {
     return 0;
 }
 
+int array_remove_item( array_t* array, void* item ) {
+    int i;
+    int asize = array->item_count;
+
+    /* Find the first hit */
+    for ( i = 0; i < asize; i++) {
+        if ( array->items[i] == item ) {
+            break;
+        }
+    }
+
+    if ( i == asize ) { /* Item not found */
+        return -ENOENT;
+    }
+
+    array->item_count--;
+
+    /* Shift elements */
+    memmove(array->items[ i ], array->items[ i + 1 ], asize - i - 1);
+
+    return 0;
+}
+
 int array_insert_item( array_t* array, int index, void* item ) {
     int error;
     int count;

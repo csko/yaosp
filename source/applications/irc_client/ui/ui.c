@@ -129,13 +129,14 @@ int ui_handle_command( const char* command, const char* params ) {
         /* TODO: switch to last used view instead */
         ui_activate_view( &server_view );
 
-        /* TODO: remove view from array */
-        // array_remove_item( view );
+        /* Remove the view from the array */
+        array_remove_item( &channel_list, ( void* ) view );
 
         /* Destroy channel view */
         destroy_channel_view( view );
 
-    } else if ( strcasecmp( command, "/privmsg" ) == 0 ) {
+    } else if ( strcasecmp( command, "/privmsg" ) == 0 ||
+                strcasecmp( command, "/msg" ) == 0 ) {
         if ( params != NULL ) {
             char* msg = strchr( params, ' ' );
 
@@ -147,7 +148,8 @@ int ui_handle_command( const char* command, const char* params ) {
         }
     } else if ( strcasecmp( command, "/server" ) == 0 ) {
         ui_activate_view( &server_view );
-    } else if ( strcasecmp( command, "/chan" ) == 0 ) {
+    } else if ( strcasecmp( command, "/chan" ) == 0 ||
+                strcasecmp( command, "/channel" ) == 0) {
         if ( params != NULL ) {
             view_t* chan = ui_get_channel( params );
 

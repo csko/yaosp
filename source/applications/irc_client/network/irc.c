@@ -23,6 +23,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 #include <yaosp/debug.h>
 
 #include "../core/event.h"
@@ -74,6 +75,11 @@ static void irc_handle_line( char* line ) {
         char* nick;
         char buf[ 256 ];
         view_t* channel;
+        char timestamp[ 128 ];
+        struct tm* tmval;
+        time_t now;
+        char* timestamp_format = "%D %T"; /* TODO: make global variable */
+
 
         msg = strchr( tmp + 1, ':' );
 
@@ -98,7 +104,21 @@ static void irc_handle_line( char* line ) {
             return;
         }
 
-        snprintf( buf, sizeof( buf ), "<%s> %s", nick, msg );
+
+        /* Create timestamp */
+        time( &now );
+
+        if( now != (time_t) -1 ){
+            tmval = ( struct tm* )malloc( sizeof( struct tm ) );
+            gmtime_r( &now, tmval );
+
+            if ( tmval != NULL ) {
+                strftime( ( char* )timestamp, 128, timestamp_format, tmval );
+            }
+            free( tmval );
+        }
+
+        snprintf( buf, sizeof( buf ), "%s <%s> %s", timestamp, nick, msg );
 
         view_add_text( channel, buf );
     }else if ( strcmp( cmd, "PING" ) == 0 ) { /* TODO: this is not working */
@@ -184,7 +204,7 @@ int irc_part_channel( const char* channel, const char* message ) {
     char buf[ 256 ];
     size_t length;
 
-    length = snprintf( buf, sizeof( buf ), "PART %s :%s\r\n", channel, msg );
+    length = snprintf( buf, sizeof( buf ), "PART %s :%s\r\n", channel, message );
 
     write( s, buf, length );
 
