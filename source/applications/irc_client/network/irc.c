@@ -85,8 +85,13 @@ static void parse_line2(const char* line){
 
     params = strchr( line, ' ' );
 
-    if ( params != NULL ) {
+    if ( params != NULL ) { /* found params */
         *params++ = '\0';
+
+        if(strcmp(line, "PING") == 0){
+            irc_handle_ping( params );
+
+        }
     }
 
     snprintf(tmp, sizeof( tmp ), "line2 cmd='%s' params='%s'", line, params);
@@ -153,6 +158,15 @@ int irc_handle_privmsg( const char* sender, const char* chan, const char* msg ) 
     view_add_text( channel, buf );
 
     return 0;
+}
+
+int irc_handle_ping(const char* params){
+    char buf[256];
+    int length;
+
+    length = snprintf(buf, sizeof(buf), "PONG %s\n", params);
+
+    return irc_write(s, buf, length);
 }
 
 static int irc_handle_incoming( event_t* event ) {
@@ -321,6 +335,8 @@ ssize_t irc_write(int fd, const void *buf, size_t count) {
     /* NOTE: size of buf unknown, '\0' is delimiter */
     snprintf(tmp, sizeof( tmp ), ">> %s", ( char* )buf );
 
+    ui_debug_message( tmp );
+
     return write(fd, buf, count);
 }
 
@@ -334,6 +350,8 @@ int parse_client(const char* str, client_t* sender){
         strncpy(sender->nick, str, tmp - str);
         sender->ident[0] = '\0';
         sender->host[0] = '\0';
+    }else{
+        strcpy(sender->nick, str); /* TODO: MAX(strlen(str), sizeof(sender->nick)) ??? */
     }
 
     return 0;

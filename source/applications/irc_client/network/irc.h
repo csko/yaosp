@@ -36,6 +36,7 @@ int irc_quit_server( const char* reason );
 
 /* Handlers */
 /* one-parameter */
+int irc_handle_ping( const char* msg);
 
 /* two-parameter */
 int irc_handle_privmsg( const char* sender, const char* chan, const char* msg);
