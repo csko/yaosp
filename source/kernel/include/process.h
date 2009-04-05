@@ -21,6 +21,7 @@
 
 #include <semaphore.h>
 #include <config.h>
+#include <loader.h>
 #include <mm/context.h>
 #include <mm/region.h>
 #include <vfs/io_context.h>
@@ -46,6 +47,7 @@ typedef struct process {
     uint64_t pmem_size;
 
     void* loader_data;
+    application_loader_t* loader;
 
     semaphore_id waiters;
 } process_t;

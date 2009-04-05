@@ -23,9 +23,15 @@
 
 /* Application loader calls */
 
+typedef struct symbol_info {
+    const char* name;
+    ptr_t address;
+} symbol_info_t;
+
 typedef bool check_application_t( int fd );
 typedef int load_application_t( int fd );
 typedef int execute_application_t( void );
+typedef int get_symbol_info_t( ptr_t address, symbol_info_t* info );
 
 typedef struct application_loader {
     const char* name;
@@ -33,6 +39,7 @@ typedef struct application_loader {
     check_application_t* check;
     load_application_t* load;
     execute_application_t* execute;
+    get_symbol_info_t* get_symbol_info;
 
     struct application_loader* next;
 } application_loader_t;
@@ -50,6 +57,8 @@ typedef struct interpreter_loader {
 
     struct interpreter_loader* next;
 } interpreter_loader_t;
+
+int get_symbol_info( ptr_t address, symbol_info_t* info );
 
 int do_execve( char* path, char** argv, char** envp, bool free_argv );
 int sys_execve( char* path, char** argv, char** envp );

@@ -40,6 +40,34 @@ static bool elf32_application_check( int fd ) {
     return elf32_check( &header );
 }
 
+static int elf32_parse_strtab_section(
+    int fd,
+    elf_application_t* elf_application,
+    elf_section_header_t* strtab_section
+) {
+    /* Load the string section */
+
+    elf_application->strings = ( char* )kmalloc( strtab_section->size );
+
+    if ( elf_application->strings == NULL ) {
+        return -ENOMEM;
+    }
+
+    if ( sys_pread(
+        fd,
+        ( void* )elf_application->strings,
+        strtab_section->size,
+        strtab_section->offset
+    ) != strtab_section->size ) {
+        kfree( elf_application->strings );
+        elf_application->strings = NULL;
+        return -EIO;
+    }
+
+    return 0;
+}
+
+#if 0
 static int elf32_parse_dynsym_section(
     int fd,
     elf_application_t* elf_application,
@@ -122,6 +150,56 @@ static int elf32_parse_dynsym_section(
     kfree( symbols );
 
     return 0;
+}
+#endif
+
+static int elf32_parse_symtab_section (
+    int fd,
+    elf_application_t* elf_application,
+    elf_section_header_t* symtab_section
+) {
+    int i;
+    elf_symbol_t* elf_symbols;
+
+    elf_application->symbol_count = symtab_section->size / symtab_section->entsize;
+
+    elf_symbols = ( elf_symbol_t* )kmalloc( sizeof( elf_symbol_t ) * elf_application->symbol_count );
+
+    if ( elf_symbols == NULL ) {
+        goto error1;
+    }
+
+    if ( sys_pread( fd, elf_symbols, symtab_section->size, symtab_section->offset ) != symtab_section->size ) {
+        goto error2;
+    }
+
+    elf_application->symbols = ( my_elf_symbol_t* )kmalloc( sizeof( my_elf_symbol_t ) * elf_application->symbol_count );
+
+    if ( elf_application->symbols == NULL ) {
+        goto error2;
+    }
+
+    for ( i = 0; i < elf_application->symbol_count; i++ ) {
+        my_elf_symbol_t* my_symbol;
+        elf_symbol_t* elf_symbol;
+
+        my_symbol = &elf_application->symbols[ i ];
+        elf_symbol = &elf_symbols[ i ];
+
+        my_symbol->name = elf_application->strings + elf_symbol->name;
+        my_symbol->address = elf_symbol->value;
+        my_symbol->info = elf_symbol->info;
+    }
+
+    kfree( elf_symbols );
+
+    return 0;
+
+error2:
+    kfree( elf_symbols );
+
+error1:
+    return -ENOMEM;
 }
 
 static int elf32_parse_dynamic_section(
@@ -224,6 +302,8 @@ static int elf32_parse_section_headers( int fd, elf_application_t* elf_applicati
     elf_section_header_t* dynsym_section;
     elf_section_header_t* dynamic_section;
     elf_section_header_t* section_header;
+    elf_section_header_t* symtab_section;
+    elf_section_header_t* strtab_section;
 
     dynsym_section = NULL;
     dynamic_section = NULL;
@@ -242,13 +322,41 @@ static int elf32_parse_section_headers( int fd, elf_application_t* elf_applicati
             case SECTION_DYNAMIC :
                 dynamic_section = section_header;
                 break;
+
+            case SECTION_SYMTAB :
+                symtab_section = section_header;
+                break;
+
+            case SECTION_STRTAB :
+                strtab_section = section_header;
+                break;
         }
     }
 
+    if ( strtab_section != NULL ) {
+        error = elf32_parse_strtab_section( fd, elf_application, strtab_section );
+
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+
+#if 0
     /* Handle dynsym section */
 
     if ( dynsym_section != NULL ) {
         error = elf32_parse_dynsym_section( fd, elf_application, dynsym_section );
+
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+#endif
+
+    /* Handle symtab section */
+
+    if ( symtab_section != NULL ) {
+        error = elf32_parse_symtab_section( fd, elf_application, symtab_section );
 
         if ( error < 0 ) {
             return error;
@@ -488,11 +596,52 @@ int elf32_application_execute( void ) {
     return 0;
 }
 
+static int elf32_application_get_symbol_info( ptr_t address, symbol_info_t* info ) {
+    uint32_t i;
+    long best_diff;
+    my_elf_symbol_t* symbol;
+    my_elf_symbol_t* best_symbol;
+    elf_application_t* elf_application;
+
+    elf_application = ( elf_application_t* )current_thread()->process->loader_data;
+
+    if ( elf_application->symbol_count == 0 ) {
+        return -EINVAL;
+    }
+
+    best_diff = 0;
+    best_symbol = NULL;
+
+    for ( i = 0, symbol = &elf_application->symbols[ 0 ]; i < elf_application->symbol_count; i++, symbol++ ) {
+        if ( symbol->address > address ) {
+            continue;
+        }
+
+        if ( best_symbol == NULL ) {
+            best_symbol = symbol;
+            best_diff = address - symbol->address;
+        } else {
+            long current_diff = address - symbol->address;
+
+            if ( current_diff < best_diff ) {
+                best_diff = current_diff;
+                best_symbol = symbol;
+            }
+        }
+    }
+
+    info->name = best_symbol->name;
+    info->address = best_symbol->address;
+
+    return 0;
+}
+
 static application_loader_t elf32_application_loader = {
     .name = "ELF32",
     .check = elf32_application_check,
     .load = elf32_application_load,
-    .execute = elf32_application_execute
+    .execute = elf32_application_execute,
+    .get_symbol_info = elf32_application_get_symbol_info
 };
 
 __init int init_elf32_application_loader( void ) {

@@ -19,6 +19,7 @@
 #include <types.h>
 #include <console.h>
 #include <scheduler.h>
+#include <loader.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
@@ -27,11 +28,21 @@
 #include <arch/fpu.h>
 
 void dump_registers( registers_t* regs ) {
+    int error;
+    symbol_info_t symbol_info;
+
+    error = get_symbol_info( regs->eip, &symbol_info );
+
     kprintf( "Error code: %d\n", regs->error_code );
     kprintf( "EAX=%x EBX=%x ECX=%x EDX=%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx );
     kprintf( "ESI=%x EDI=%x\n", regs->esi, regs->edi );
     kprintf( "EBP=%x\n", regs->ebp );
-    kprintf( "CS:EIP=%x:%x\n", regs->cs, regs->eip );
+
+    if ( error == 0 ) {
+        kprintf( "CS:EIP=%x:%x (%s+0x%x)\n", regs->cs, regs->eip, symbol_info.name, regs->eip - symbol_info.address );
+    } else {
+        kprintf( "CS:EIP=%x:%x (no symbol)\n", regs->cs, regs->eip );
+    }
 
     if ( regs->cs & 3 ) {
         kprintf( "SS:ESP=%x:%x\n", regs->ss, regs->esp );

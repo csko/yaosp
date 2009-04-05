@@ -22,6 +22,7 @@
 #include <smp.h>
 #include <scheduler.h>
 #include <kernel.h>
+#include <macros.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
@@ -133,6 +134,16 @@ static uint8_t* copy_param_array_to_user( char** array, char** user_array, int c
     }
 
     return stack;
+}
+
+int get_symbol_info( ptr_t address, symbol_info_t* info ) {
+    application_loader_t* loader;
+
+    loader = current_thread()->process->loader;
+
+    ASSERT( loader != NULL );
+
+    return loader->get_symbol_info( address, info );
 }
 
 int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
@@ -290,6 +301,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     /* Save the modified stack pointer in the thread structure */
 
     thread->user_stack_end = ( void* )stack;
+    thread->process->loader = loader;
 
     /* Start the executable */
 
