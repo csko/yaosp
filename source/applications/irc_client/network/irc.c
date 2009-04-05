@@ -47,6 +47,7 @@ static void parse_line1(const char* line){
     char* param2 = NULL;
 
     cmd = strchr( line, ' ' );
+
     if(cmd != NULL){ /* found command */
         *cmd++ = '\0';
 
@@ -62,21 +63,20 @@ static void parse_line1(const char* line){
                 param2 = strchr( param1, ' ' );
 
                 if(param2 != NULL){ /* found param2 */
-                *param2++ = '\0';
+                    *param2++ = '\0';
 
-                /* Look for a two-parameter command */
-                if(strcmp(cmd, "PRIVMSG") == 0){
-                    irc_handle_privmsg(line, param1, param2 + 1);
-                }
-                    
+                    /* Look for a two-parameter command */
+                    if(strcmp(cmd, "PRIVMSG") == 0){
+                        irc_handle_privmsg(line, param1, param2 + 1);
+                    }
                 }
             }
         }
     }
 
-    snprintf(tmp, 256, "line1 sender='%s' cmd='%s', param1='%s', param2='%s'", line, cmd, param1, param2);
-    ui_debug_message( tmp );
+    snprintf( tmp, sizeof( tmp ), "line1 sender='%s' cmd='%s', param1='%s', param2='%s'", line, cmd, param1, param2 );
 
+    ui_debug_message( tmp );
 }
 
 static void parse_line2(const char* line){
@@ -84,11 +84,13 @@ static void parse_line2(const char* line){
     char* params;
 
     params = strchr( line, ' ' );
-    if(params != NULL){
+
+    if ( params != NULL ) {
         *params++ = '\0';
     }
 
-    snprintf(tmp, 256, "line2 cmd='%s' params='%s'", line, params);
+    snprintf(tmp, sizeof( tmp ), "line2 cmd='%s' params='%s'", line, params);
+
     ui_debug_message( tmp );
 }
 
@@ -96,35 +98,34 @@ static void parse_line2(const char* line){
 static void irc_handle_line( char* line ) {
     char tmp[ 256 ];
 
-    snprintf(tmp, 256, "<< %s", line);
+    snprintf(tmp, sizeof( tmp ), "<< %s", line);
     ui_debug_message( tmp );
 
     if(line[0] == 0) {
         return;
-    } else if(line[0] == ':') {
+    }
+
+    if(line[0] == ':') {
         parse_line1(++line);
     } else {
         parse_line2(line);
     }
-    return;
 }
 
 
-int irc_handle_privmsg( const char* sender, const char* chan, const char* msg){
-
+int irc_handle_privmsg( const char* sender, const char* chan, const char* msg ) {
     char buf[ 256 ];
     view_t* channel;
     struct client _sender;
     int error;
 
-    char timestamp[ 128 ];
-    struct tm* tmval;
     time_t now;
+    char timestamp[ 128 ];
     char* timestamp_format = "%D %T"; /* TODO: make global variable */
 
     error = parse_client(sender, &_sender);
 
-    if(error < 0){
+    if ( error < 0 ) {
         return error;
     }
 
@@ -135,16 +136,16 @@ int irc_handle_privmsg( const char* sender, const char* chan, const char* msg){
     }
 
     /* Create timestamp */
+
     time( &now );
 
-    if( now != (time_t) -1 ){
-        tmval = ( struct tm* )malloc( sizeof( struct tm ) );
-        gmtime_r( &now, tmval );
+    if ( now != ( time_t )-1 ) {
+        struct tm tmval;
 
-        if ( tmval != NULL ) {
-            strftime( ( char* )timestamp, 128, timestamp_format, tmval );
-        }
-    free( tmval );
+        gmtime_r( &now, &tmval );
+        strftime( ( char* )timestamp, sizeof( timestamp ), timestamp_format, &tmval );
+    } else {
+        timestamp[ 0 ] = 0;
     }
 
     snprintf( buf, sizeof( buf ), "%s <%s> %s", timestamp, _sender.nick, msg );
@@ -203,6 +204,7 @@ static int irc_handle_incoming( event_t* event ) {
 
             if ( start == 0 ) {
                 free( input_buffer );
+                input_buffer = NULL;
             } else {
                 memmove( input_buffer, start, length );
                 input_buffer = ( char* )realloc( input_buffer, length );
@@ -317,14 +319,17 @@ ssize_t irc_write(int fd, const void *buf, size_t count) {
     char tmp[256];
 
     /* NOTE: size of buf unknown, '\0' is delimiter */
-    snprintf(tmp, 256, ">> %s", (char*) buf);
+    snprintf(tmp, sizeof( tmp ), ">> %s", ( char* )buf );
+
     return write(fd, buf, count);
 }
 
 int parse_client(const char* str, client_t* sender){
     char* tmp;
-    
+
+
     tmp = strchr(str, '!');
+
     if(tmp != NULL){
         strncpy(sender->nick, str, tmp - str);
         sender->ident[0] = '\0';
