@@ -1,7 +1,328 @@
+diff -Nru Python-2.5.4-orig/Modules/_yaospmodule.c Python-2.5.4/Modules/_yaospmodule.c
+--- Python-2.5.4-orig/Modules/_yaospmodule.c	1970-01-01 01:00:00.000000000 +0100
++++ Python-2.5.4/Modules/_yaospmodule.c	2009-04-05 10:57:08.000000000 +0200
+@@ -0,0 +1,317 @@
++/* yaosp bindings for python
++ *
++ * Copyright (c) 2009 Attila Magyar
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License
++ * as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ */
++
++#include <Python.h>
++#include <yaosp/sysinfo.h>
++#include <yaosp/time.h>
++#include <yaosp/debug.h>
++
++#define 	MODULE_NAME 	"_yaosp"
++#define 	EXCEPTION_NAME	"_yaosp.error"
++
++static PyObject *yaospError; // Exception object
++
++static PyObject *yaosp_get_memory_info( PyObject *self, PyObject *args ) {
++	int error;
++	memory_info_t memory_info;
++
++	error = get_memory_info( &memory_info );
++
++	if ( error < 0 ) {
++		PyErr_SetString(yaospError, "Can't get memory information");
++		return NULL;
++	}
++
++	uint32_t total_mem = memory_info.total_page_count * getpagesize();
++	uint32_t free_mem = memory_info.free_page_count * getpagesize();
++
++	return Py_BuildValue("(ii)", total_mem, free_mem) ;
++}
++
++static PyObject *yaosp_get_processor_info( PyObject *self, PyObject *args ) {
++	uint32_t i;
++	uint32_t processor_count;
++
++	processor_info_t* info;
++	processor_info_t* info_table;
++
++	PyObject *pylist, *item;
++
++	processor_count = get_processor_count();
++
++	if ( processor_count == 0 ) {
++		Py_RETURN_NONE;
++	}
++
++	info_table = ( processor_info_t* )malloc( sizeof( processor_info_t ) * processor_count );
++
++	if ( info_table == NULL ) {
++		return PyErr_NoMemory();
++	}
++
++	processor_count = get_processor_info( info_table, processor_count );
++
++	pylist = PyList_New(0);
++
++	if ( pylist == NULL ) {
++		goto cp_err;
++	}
++
++	for ( i = 0, info = info_table; i < processor_count; i++, info++ ) {
++		if ( ( !info->present ) || ( !info->running ) ) {
++			continue;
++		}
++
++		item = Py_BuildValue("{s:s,s:i}",
++			"model", info->name,
++			"speed", ( uint32_t )( info->core_speed / 1000000 ) );
++
++		PyList_Append( pylist, item );
++	}
++
++cp_err:
++	free( info_table );
++
++	return pylist;
++}
++
++static PyObject *yaosp_get_kernel_info( PyObject *self, PyObject *args ) {
++	int error;
++    char ver[ 32 ];
++    char build[ 128 ];
++	kernel_info_t kernel_info;
++
++	error = get_kernel_info( &kernel_info );
++
++	if ( error < 0 ) {
++		PyErr_SetString(yaospError, "Can't get kernel information");
++		return NULL;
++	}
++
++	snprintf( ver, sizeof(ver), "%d.%d.%d",
++		kernel_info.major_version,
++		kernel_info.minor_version,
++		kernel_info.release_version
++	);
++	snprintf( build, sizeof(build), "%s %s",
++		kernel_info.build_date,
++		kernel_info.build_time
++	);
++
++	return Py_BuildValue("{s:s,s:s}", "version", ver, "build", build  );
++}
++
++static PyObject *yaosp_get_module_info( PyObject *self, PyObject *args ) {
++	int error;
++	uint32_t i;
++	uint32_t module_count;
++    module_info_t* info;
++	module_info_t* info_table;
++	PyObject *pylist, *item;
++
++	module_count = get_module_count();
++
++	if ( module_count > 0 ) {
++		info_table = ( module_info_t* )malloc( sizeof( module_info_t ) * module_count );
++
++		if ( info_table == NULL ) {
++			return PyErr_NoMemory();
++		}
++
++		error = get_module_info( info_table, module_count );
++
++		if ( error < 0 ) {
++			free( info_table );
++			PyErr_SetString(yaospError, "Can't get module information");
++			return NULL;
++		}
++
++		pylist = PyList_New( module_count );
++
++		if ( pylist == NULL ) {
++			free( info_table );
++			return NULL;
++		}
++
++		for ( i = 0, info = info_table; i < module_count; i++, info++ ) {
++			item = Py_BuildValue( "s", info->name );
++			PyList_SetItem( pylist, i, item );
++		}
++
++		free( info_table );
++
++		return pylist;
++    }
++
++    return Py_BuildValue( "()" );
++}
++
++static PyObject *yaosp_get_process_info( PyObject *self, PyObject *args ) {
++	uint32_t process_count;
++    process_info_t* process;
++	process_info_t* process_table;
++	PyObject *pylist, *item;
++
++	process_count = get_process_count();
++
++	if ( process_count > 0 ) {
++		uint32_t i;
++
++		process_table = ( process_info_t* )malloc( sizeof( process_info_t ) * process_count );
++		if ( process_table == NULL ) {
++			return PyErr_NoMemory();
++		}
++
++		process_count = get_process_info( process_table, process_count ); // TODO check return
++
++		pylist = PyList_New( process_count );
++
++		if (pylist == NULL ) {
++			free( process_table );
++			return NULL;
++		}
++
++		for ( i = 0, process = process_table; i < process_count; i++, process++ ) {
++			item = Py_BuildValue("{s:i,s:s,s:K,s:K}", // TODO warning 'K' is an undocumented format string value
++				"id", process->id,
++				"name", process->name,
++				"vmem",	process->vmem_size,
++				"pmem", process->pmem_size
++			);
++
++			PyList_SetItem( pylist, i, item );
++		}
++
++		free( process_table );
++
++		return pylist;
++	}
++
++	return Py_BuildValue("()");
++}
++
++static PyObject *yaosp_get_thread_info( PyObject *self, PyObject *args ) {
++	uint32_t thread_count;
++    thread_info_t* thread;
++	thread_info_t* thread_table;
++	int pid;
++	PyObject *pylist, *item;
++
++	if (!PyArg_ParseTuple( args, "i", &pid ) ) {
++		return NULL;
++	}
++
++	thread_count = get_thread_count_for_process( pid );
++
++	if ( thread_count > 0 ) {
++		uint32_t i;
++
++		thread_table = ( thread_info_t* )malloc( sizeof( thread_info_t ) * thread_count );
++
++		if ( thread_table == NULL ) {
++			return PyErr_NoMemory();
++		}
++
++		thread_count = get_thread_info_for_process( pid, thread_table, thread_count ); // TODO check return
++
++		pylist = PyList_New(thread_count);
++
++		if ( pylist == NULL ) {
++			free( thread_table );
++			return NULL;
++		}
++
++		for ( i = 0, thread = thread_table; i < thread_count; i++, thread++ ) {
++			item = Py_BuildValue("{s:i,s:s,s:i,s:K}", // TODO warning 'K' is an undocumented format string value
++				"id", thread->id,
++				"name",	thread->name,
++				"state", thread->state,
++				"cputime", thread->cpu_time
++			);
++
++			PyList_SetItem(pylist, i, item);
++		}
++
++		free( thread_table );
++
++		return pylist;
++	}
++
++	return Py_BuildValue("()");
++}
++
++static PyObject *yaosp_dbprint( PyObject *self, PyObject *args ) {
++	const char* txt;
++
++	if ( !PyArg_ParseTuple(args, "s", &txt) ) {
++		return NULL;
++	}
++
++	dbprintf( "%s\n", txt );
++
++	Py_RETURN_NONE;
++}
++
++static PyObject *yaosp_system_time( PyObject *self, PyObject *args ) {
++	time_t sys_time = get_system_time();
++
++	return Py_BuildValue("K", sys_time) ;
++}
++
++static PyObject *yaosp_boot_time( PyObject *self, PyObject *args ) {
++	time_t boot_time = get_boot_time();
++
++	return Py_BuildValue("K", boot_time) ;
++}
++
++static PyObject *yaosp_uptime( PyObject *self, PyObject *args ) {
++	time_t sys_time = get_system_time();
++	time_t boot_time = get_boot_time();
++
++	return Py_BuildValue("K", sys_time - boot_time) ;
++}
++
++// TODO convert boottime, systemtime, uptime to datetime format
++
++static PyMethodDef yaospMethods[] = {
++	{"memory_info", yaosp_get_memory_info, METH_VARARGS, "Get total and free memory"},
++	{"processor_info", yaosp_get_processor_info, METH_VARARGS, "Get processor information"},
++	{"kernel_info", yaosp_get_kernel_info, METH_VARARGS, "Get kernel information"},
++	{"module_info", yaosp_get_module_info, METH_VARARGS, "Get module information"},
++	{"process_info", yaosp_get_process_info, METH_VARARGS, "Get process list"},
++	{"thread_info", yaosp_get_thread_info, METH_VARARGS, "Get thread info for the specified pid"},
++	{"dbprint", yaosp_dbprint, METH_VARARGS, "Debug print"},
++	{"boot_time", yaosp_boot_time, METH_VARARGS, "Boot time"},
++	{"system_time", yaosp_system_time, METH_VARARGS, "System time"},
++	{"uptime", yaosp_uptime, METH_VARARGS, "System uptime"},
++	{NULL, NULL, 0, NULL}
++};
++
++PyMODINIT_FUNC inityaosp(void) {
++	PyObject *module = Py_InitModule( MODULE_NAME , yaospMethods );
++
++	if (module == NULL) {
++		return;
++	}
++
++	// Create and register yaosp exception class
++	yaospError = PyErr_NewException( EXCEPTION_NAME , NULL, NULL);
++	Py_INCREF( yaospError );
++
++	PyModule_AddObject( module, "error", yaospError );
++}
 diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 --- Python-2.5.4-orig/Modules/config.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Modules/config.c	2009-02-19 16:30:18.000000000 +0100
-@@ -0,0 +1,91 @@
++++ Python-2.5.4/Modules/config.c	2009-04-05 09:13:13.000000000 +0200
+@@ -0,0 +1,94 @@
 +/* Generated automatically from ./Modules/config.c.in by makesetup. */
 +/* -*- C -*- ***********************************************
 +Copyright (c) 2000, BeOpen.com.
@@ -38,6 +359,7 @@ diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 +extern void init_symtable(void);
 +extern void initxxsubtype(void);
 +extern void initreadline(void);
++extern void inityaosp(void);
 +
 +/* -- ADDMODULE MARKER 1 -- */
 +
@@ -48,6 +370,8 @@ diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 +extern void init_types(void);
 +
 +struct _inittab _PyImport_Inittab[] = {
++
++  {"_yaosp", inityaosp },
 +
 +//  {"thread", initthread},
 +//  {"signal", initsignal},
@@ -93,9 +417,597 @@ diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 +}
 +#endif
 +
+diff -Nru Python-2.5.4-orig/Modules/getpath.c Python-2.5.4/Modules/getpath.c
+--- Python-2.5.4-orig/Modules/getpath.c	2006-07-10 03:18:57.000000000 +0200
++++ Python-2.5.4/Modules/getpath.c	2009-04-05 08:44:45.000000000 +0200
+@@ -6,102 +6,12 @@
+ #include <sys/types.h>
+ #include <string.h>
+ 
+-#ifdef __APPLE__
+-#include <mach-o/dyld.h>
+-#endif
+-
+-/* Search in some common locations for the associated Python libraries.
+- *
+- * Two directories must be found, the platform independent directory
+- * (prefix), containing the common .py and .pyc files, and the platform
+- * dependent directory (exec_prefix), containing the shared library
+- * modules.  Note that prefix and exec_prefix can be the same directory,
+- * but for some installations, they are different.
+- *
+- * Py_GetPath() carries out separate searches for prefix and exec_prefix.
+- * Each search tries a number of different locations until a ``landmark''
+- * file or directory is found.  If no prefix or exec_prefix is found, a
+- * warning message is issued and the preprocessor defined PREFIX and
+- * EXEC_PREFIX are used (even though they will not work); python carries on
+- * as best as is possible, but most imports will fail.
+- *
+- * Before any searches are done, the location of the executable is
+- * determined.  If argv[0] has one or more slashs in it, it is used
+- * unchanged.  Otherwise, it must have been invoked from the shell's path,
+- * so we search $PATH for the named executable and use that.  If the
+- * executable was not found on $PATH (or there was no $PATH environment
+- * variable), the original argv[0] string is used.
+- *
+- * Next, the executable location is examined to see if it is a symbolic
+- * link.  If so, the link is chased (correctly interpreting a relative
+- * pathname if one is found) and the directory of the link target is used.
+- *
+- * Finally, argv0_path is set to the directory containing the executable
+- * (i.e. the last component is stripped).
+- *
+- * With argv0_path in hand, we perform a number of steps.  The same steps
+- * are performed for prefix and for exec_prefix, but with a different
+- * landmark.
+- *
+- * Step 1. Are we running python out of the build directory?  This is
+- * checked by looking for a different kind of landmark relative to
+- * argv0_path.  For prefix, the landmark's path is derived from the VPATH
+- * preprocessor variable (taking into account that its value is almost, but
+- * not quite, what we need).  For exec_prefix, the landmark is
+- * Modules/Setup.  If the landmark is found, we're done.
+- *
+- * For the remaining steps, the prefix landmark will always be
+- * lib/python$VERSION/os.py and the exec_prefix will always be
+- * lib/python$VERSION/lib-dynload, where $VERSION is Python's version
+- * number as supplied by the Makefile.  Note that this means that no more
+- * build directory checking is performed; if the first step did not find
+- * the landmarks, the assumption is that python is running from an
+- * installed setup.
+- *
+- * Step 2. See if the $PYTHONHOME environment variable points to the
+- * installed location of the Python libraries.  If $PYTHONHOME is set, then
+- * it points to prefix and exec_prefix.  $PYTHONHOME can be a single
+- * directory, which is used for both, or the prefix and exec_prefix
+- * directories separated by a colon.
+- *
+- * Step 3. Try to find prefix and exec_prefix relative to argv0_path,
+- * backtracking up the path until it is exhausted.  This is the most common
+- * step to succeed.  Note that if prefix and exec_prefix are different,
+- * exec_prefix is more likely to be found; however if exec_prefix is a
+- * subdirectory of prefix, both will be found.
+- *
+- * Step 4. Search the directories pointed to by the preprocessor variables
+- * PREFIX and EXEC_PREFIX.  These are supplied by the Makefile but can be
+- * passed in as options to the configure script.
+- *
+- * That's it!
+- *
+- * Well, almost.  Once we have determined prefix and exec_prefix, the
+- * preprocessor variable PYTHONPATH is used to construct a path.  Each
+- * relative path on PYTHONPATH is prefixed with prefix.  Then the directory
+- * containing the shared library modules is appended.  The environment
+- * variable $PYTHONPATH is inserted in front of it all.  Finally, the
+- * prefix and exec_prefix globals are tweaked so they reflect the values
+- * expected by other code, by stripping the "lib/python$VERSION/..." stuff
+- * off.  If either points to the build directory, the globals are reset to
+- * the corresponding preprocessor variables (so sys.prefix will reflect the
+- * installation location, even though sys.path points into the build
+- * directory).  This seems to make more sense given that currently the only
+- * known use of sys.prefix and sys.exec_prefix is for the ILU installation
+- * process to find the installed Python tree.
+- */
+-
+ #ifdef __cplusplus
+  extern "C" {
+ #endif
+ 
+-
+ #ifndef VERSION
+-#define VERSION "2.1"
+-#endif
+-
+-#ifndef VPATH
+-#define VPATH "."
++#define VERSION "2.2"
+ #endif
+ 
+ #ifndef PREFIX
+@@ -121,53 +31,10 @@
+               EXEC_PREFIX "/lib/python" VERSION "/lib-dynload"
+ #endif
+ 
+-#ifndef LANDMARK
+-#define LANDMARK "os.py"
+-#endif
+-
+ static char prefix[MAXPATHLEN+1];
+ static char exec_prefix[MAXPATHLEN+1];
+ static char progpath[MAXPATHLEN+1];
+ static char *module_search_path = NULL;
+-static char lib_python[] = "lib/python" VERSION;
+-
+-static void
+-reduce(char *dir)
+-{
+-    size_t i = strlen(dir);
+-    while (i > 0 && dir[i] != SEP)
+-        --i;
+-    dir[i] = '\0';
+-}
+-
+-
+-static int
+-isfile(char *filename)          /* Is file, not directory */
+-{
+-    struct stat buf;
+-    if (stat(filename, &buf) != 0)
+-        return 0;
+-    if (!S_ISREG(buf.st_mode))
+-        return 0;
+-    return 1;
+-}
+-
+-
+-static int
+-ismodule(char *filename)        /* Is module -- check for .pyc/.pyo too */
+-{
+-    if (isfile(filename))
+-        return 1;
+-
+-    /* Check for the compiled version of prefix. */
+-    if (strlen(filename) < MAXPATHLEN) {
+-        strcat(filename, Py_OptimizeFlag ? "o" : "c");
+-        if (isfile(filename))
+-            return 1;
+-    }
+-    return 0;
+-}
+-
+ 
+ static int
+ isxfile(char *filename)         /* Is executable file */
+@@ -177,20 +44,8 @@
+         return 0;
+     if (!S_ISREG(buf.st_mode))
+         return 0;
+-    if ((buf.st_mode & 0111) == 0)
+-        return 0;
+-    return 1;
+-}
+-
+-
+-static int
+-isdir(char *filename)                   /* Is directory */
+-{
+-    struct stat buf;
+-    if (stat(filename, &buf) != 0)
+-        return 0;
+-    if (!S_ISDIR(buf.st_mode))
+-        return 0;
++    //if ((buf.st_mode & 0111) == 0) // TODO not implemented yet
++    //   return 0;
+     return 1;
+ }
+ 
+@@ -251,169 +106,26 @@
+     strcpy(path, buffer);
+ }
+ 
+-/* search_for_prefix requires that argv0_path be no more than MAXPATHLEN
+-   bytes long.
+-*/
+-static int
+-search_for_prefix(char *argv0_path, char *home)
+-{
+-    size_t n;
+-    char *vpath;
+-
+-    /* If PYTHONHOME is set, we believe it unconditionally */
+-    if (home) {
+-        char *delim;
+-        strncpy(prefix, home, MAXPATHLEN);
+-        delim = strchr(prefix, DELIM);
+-        if (delim)
+-            *delim = '\0';
+-        joinpath(prefix, lib_python);
+-        joinpath(prefix, LANDMARK);
+-        return 1;
+-    }
+-
+-    /* Check to see if argv[0] is in the build directory */
+-    strcpy(prefix, argv0_path);
+-    joinpath(prefix, "Modules/Setup");
+-    if (isfile(prefix)) {
+-        /* Check VPATH to see if argv0_path is in the build directory. */
+-        vpath = VPATH;
+-        strcpy(prefix, argv0_path);
+-        joinpath(prefix, vpath);
+-        joinpath(prefix, "Lib");
+-        joinpath(prefix, LANDMARK);
+-        if (ismodule(prefix))
+-            return -1;
+-    }
+-
+-    /* Search from argv0_path, until root is found */
+-    copy_absolute(prefix, argv0_path);
+-    do {
+-        n = strlen(prefix);
+-        joinpath(prefix, lib_python);
+-        joinpath(prefix, LANDMARK);
+-        if (ismodule(prefix))
+-            return 1;
+-        prefix[n] = '\0';
+-        reduce(prefix);
+-    } while (prefix[0]);
+-
+-    /* Look at configure's PREFIX */
+-    strncpy(prefix, PREFIX, MAXPATHLEN);
+-    joinpath(prefix, lib_python);
+-    joinpath(prefix, LANDMARK);
+-    if (ismodule(prefix))
+-        return 1;
+-
+-    /* Fail */
+-    return 0;
+-}
+-
+-
+-/* search_for_exec_prefix requires that argv0_path be no more than
+-   MAXPATHLEN bytes long.
+-*/
+-static int
+-search_for_exec_prefix(char *argv0_path, char *home)
+-{
+-    size_t n;
+-
+-    /* If PYTHONHOME is set, we believe it unconditionally */
+-    if (home) {
+-        char *delim;
+-        delim = strchr(home, DELIM);
+-        if (delim)
+-            strncpy(exec_prefix, delim+1, MAXPATHLEN);
+-        else
+-            strncpy(exec_prefix, home, MAXPATHLEN);
+-        joinpath(exec_prefix, lib_python);
+-        joinpath(exec_prefix, "lib-dynload");
+-        return 1;
+-    }
+-
+-    /* Check to see if argv[0] is in the build directory */
+-    strcpy(exec_prefix, argv0_path);
+-    joinpath(exec_prefix, "Modules/Setup");
+-    if (isfile(exec_prefix)) {
+-        reduce(exec_prefix);
+-        return -1;
+-    }
+-
+-    /* Search from argv0_path, until root is found */
+-    copy_absolute(exec_prefix, argv0_path);
+-    do {
+-        n = strlen(exec_prefix);
+-        joinpath(exec_prefix, lib_python);
+-        joinpath(exec_prefix, "lib-dynload");
+-        if (isdir(exec_prefix))
+-            return 1;
+-        exec_prefix[n] = '\0';
+-        reduce(exec_prefix);
+-    } while (exec_prefix[0]);
+-
+-    /* Look at configure's EXEC_PREFIX */
+-    strncpy(exec_prefix, EXEC_PREFIX, MAXPATHLEN);
+-    joinpath(exec_prefix, lib_python);
+-    joinpath(exec_prefix, "lib-dynload");
+-    if (isdir(exec_prefix))
+-        return 1;
+-
+-    /* Fail */
+-    return 0;
+-}
+-
+ 
+-static void
+-calculate_path(void)
++static void calculate_path(void)
+ {
+-    extern char *Py_GetProgramName(void);
++	extern char *Py_GetProgramName(void);
+ 
+-    static char delimiter[2] = {DELIM, '\0'};
+-    static char separator[2] = {SEP, '\0'};
+-    char *pythonpath = PYTHONPATH;
+-    char *rtpypath = Py_GETENV("PYTHONPATH");
+-    char *home = Py_GetPythonHome();
+-    char *path = getenv("PATH");
+-    char *prog = Py_GetProgramName();
+-    char argv0_path[MAXPATHLEN+1];
+-    char zip_path[MAXPATHLEN+1];
+-    int pfound, efound; /* 1 if found; -1 if found build directory */
+-    char *buf;
+-    size_t bufsz;
+-    size_t prefixsz;
+-    char *defpath = pythonpath;
+-#ifdef WITH_NEXT_FRAMEWORK
+-    NSModule pythonModule;
+-#endif
+-#ifdef __APPLE__
+-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
+-    uint32_t nsexeclength = MAXPATHLEN;
+-#else
+-    unsigned long nsexeclength = MAXPATHLEN;
+-#endif
+-#endif
++	char *path = getenv("PATH");
++	char *prog = Py_GetProgramName();
+ 
++	strncpy(prefix, PREFIX, MAXPATHLEN);
++	strncpy(exec_prefix, EXEC_PREFIX, MAXPATHLEN);
++	module_search_path = PYTHONPATH;
++	
+ 	/* If there is no slash in the argv0 path, then we have to
+ 	 * assume python is on the user's $PATH, since there's no
+ 	 * other way to find a directory to start the search from.  If
+ 	 * $PATH isn't exported, you lose.
+ 	 */
+-	if (strchr(prog, SEP))
+-		strncpy(progpath, prog, MAXPATHLEN);
+-#ifdef __APPLE__
+-     /* On Mac OS X, if a script uses an interpreter of the form
+-      * "#!/opt/python2.3/bin/python", the kernel only passes "python"
+-      * as argv[0], which falls through to the $PATH search below.
+-      * If /opt/python2.3/bin isn't in your path, or is near the end,
+-      * this algorithm may incorrectly find /usr/bin/python. To work
+-      * around this, we can use _NSGetExecutablePath to get a better
+-      * hint of what the intended interpreter was, although this
+-      * will fail if a relative path was used. but in that case,
+-      * absolutize() should help us out below
+-      */
+-     else if(0 == _NSGetExecutablePath(progpath, &nsexeclength) && progpath[0] == SEP)
+-       ;
+-#endif /* __APPLE__ */
++	if (strchr(prog, SEP)) {		
++		strncpy(progpath, prog, MAXPATHLEN);		
++	}
+ 	else if (path) {
+ 		while (1) {
+ 			char *delim = strchr(path, DELIM);
+@@ -421,7 +133,7 @@
+ 			if (delim) {
+ 				size_t len = delim - path;
+ 				if (len > MAXPATHLEN)
+-					len = MAXPATHLEN;
++					len = MAXPATHLEN;				
+ 				strncpy(progpath, path, len);
+ 				*(progpath + len) = '\0';
+ 			}
+@@ -443,213 +155,6 @@
+ 		progpath[0] = '\0';
+ 	if (progpath[0] != SEP)
+ 		absolutize(progpath);
+-	strncpy(argv0_path, progpath, MAXPATHLEN);
+-	argv0_path[MAXPATHLEN] = '\0';
+-
+-#ifdef WITH_NEXT_FRAMEWORK
+-	/* On Mac OS X we have a special case if we're running from a framework.
+-	** This is because the python home should be set relative to the library,
+-	** which is in the framework, not relative to the executable, which may
+-	** be outside of the framework. Except when we're in the build directory...
+-	*/
+-    pythonModule = NSModuleForSymbol(NSLookupAndBindSymbol("_Py_Initialize"));
+-    /* Use dylib functions to find out where the framework was loaded from */
+-    buf = (char *)NSLibraryNameForModule(pythonModule);
+-    if (buf != NULL) {
+-        /* We're in a framework. */
+-        /* See if we might be in the build directory. The framework in the
+-        ** build directory is incomplete, it only has the .dylib and a few
+-        ** needed symlinks, it doesn't have the Lib directories and such.
+-        ** If we're running with the framework from the build directory we must
+-        ** be running the interpreter in the build directory, so we use the
+-        ** build-directory-specific logic to find Lib and such.
+-        */
+-        strncpy(argv0_path, buf, MAXPATHLEN);
+-        reduce(argv0_path);
+-        joinpath(argv0_path, lib_python);
+-        joinpath(argv0_path, LANDMARK);
+-        if (!ismodule(argv0_path)) {
+-                /* We are in the build directory so use the name of the
+-                   executable - we know that the absolute path is passed */
+-                strncpy(argv0_path, prog, MAXPATHLEN);
+-        }
+-        else {
+-                /* Use the location of the library as the progpath */
+-                strncpy(argv0_path, buf, MAXPATHLEN);
+-        }
+-    }
+-#endif
+-
+-#if HAVE_READLINK
+-    {
+-        char tmpbuffer[MAXPATHLEN+1];
+-        int linklen = readlink(progpath, tmpbuffer, MAXPATHLEN);
+-        while (linklen != -1) {
+-            /* It's not null terminated! */
+-            tmpbuffer[linklen] = '\0';
+-            if (tmpbuffer[0] == SEP)
+-                /* tmpbuffer should never be longer than MAXPATHLEN,
+-                   but extra check does not hurt */
+-                strncpy(argv0_path, tmpbuffer, MAXPATHLEN);
+-            else {
+-                /* Interpret relative to progpath */
+-                reduce(argv0_path);
+-                joinpath(argv0_path, tmpbuffer);
+-            }
+-            linklen = readlink(argv0_path, tmpbuffer, MAXPATHLEN);
+-        }
+-    }
+-#endif /* HAVE_READLINK */
+-
+-    reduce(argv0_path);
+-    /* At this point, argv0_path is guaranteed to be less than
+-       MAXPATHLEN bytes long.
+-    */
+-
+-    if (!(pfound = search_for_prefix(argv0_path, home))) {
+-        if (!Py_FrozenFlag)
+-            fprintf(stderr,
+-                "Could not find platform independent libraries <prefix>\n");
+-        strncpy(prefix, PREFIX, MAXPATHLEN);
+-        joinpath(prefix, lib_python);
+-    }
+-    else
+-        reduce(prefix);
+-
+-    strncpy(zip_path, prefix, MAXPATHLEN);
+-    zip_path[MAXPATHLEN] = '\0';
+-    if (pfound > 0) { /* Use the reduced prefix returned by Py_GetPrefix() */
+-        reduce(zip_path);
+-        reduce(zip_path);
+-    }
+-    else
+-        strncpy(zip_path, PREFIX, MAXPATHLEN);
+-    joinpath(zip_path, "lib/python00.zip");
+-    bufsz = strlen(zip_path);	/* Replace "00" with version */
+-    zip_path[bufsz - 6] = VERSION[0];
+-    zip_path[bufsz - 5] = VERSION[2];
+-
+-    if (!(efound = search_for_exec_prefix(argv0_path, home))) {
+-        if (!Py_FrozenFlag)
+-            fprintf(stderr,
+-                "Could not find platform dependent libraries <exec_prefix>\n");
+-        strncpy(exec_prefix, EXEC_PREFIX, MAXPATHLEN);
+-        joinpath(exec_prefix, "lib/lib-dynload");
+-    }
+-    /* If we found EXEC_PREFIX do *not* reduce it!  (Yet.) */
+-
+-    if ((!pfound || !efound) && !Py_FrozenFlag)
+-        fprintf(stderr,
+-                "Consider setting $PYTHONHOME to <prefix>[:<exec_prefix>]\n");
+-
+-    /* Calculate size of return buffer.
+-     */
+-    bufsz = 0;
+-
+-    if (rtpypath)
+-        bufsz += strlen(rtpypath) + 1;
+-
+-    prefixsz = strlen(prefix) + 1;
+-
+-    while (1) {
+-        char *delim = strchr(defpath, DELIM);
+-
+-        if (defpath[0] != SEP)
+-            /* Paths are relative to prefix */
+-            bufsz += prefixsz;
+-
+-        if (delim)
+-            bufsz += delim - defpath + 1;
+-        else {
+-            bufsz += strlen(defpath) + 1;
+-            break;
+-        }
+-        defpath = delim + 1;
+-    }
+-
+-    bufsz += strlen(zip_path) + 1;
+-    bufsz += strlen(exec_prefix) + 1;
+-
+-    /* This is the only malloc call in this file */
+-    buf = (char *)PyMem_Malloc(bufsz);
+-
+-    if (buf == NULL) {
+-        /* We can't exit, so print a warning and limp along */
+-        fprintf(stderr, "Not enough memory for dynamic PYTHONPATH.\n");
+-        fprintf(stderr, "Using default static PYTHONPATH.\n");
+-        module_search_path = PYTHONPATH;
+-    }
+-    else {
+-        /* Run-time value of $PYTHONPATH goes first */
+-        if (rtpypath) {
+-            strcpy(buf, rtpypath);
+-            strcat(buf, delimiter);
+-        }
+-        else
+-            buf[0] = '\0';
+-
+-        /* Next is the default zip path */
+-        strcat(buf, zip_path);
+-        strcat(buf, delimiter);
+-
+-        /* Next goes merge of compile-time $PYTHONPATH with
+-         * dynamically located prefix.
+-         */
+-        defpath = pythonpath;
+-        while (1) {
+-            char *delim = strchr(defpath, DELIM);
+-
+-            if (defpath[0] != SEP) {
+-                strcat(buf, prefix);
+-                strcat(buf, separator);
+-            }
+-
+-            if (delim) {
+-                size_t len = delim - defpath + 1;
+-                size_t end = strlen(buf) + len;
+-                strncat(buf, defpath, len);
+-                *(buf + end) = '\0';
+-            }
+-            else {
+-                strcat(buf, defpath);
+-                break;
+-            }
+-            defpath = delim + 1;
+-        }
+-        strcat(buf, delimiter);
+-
+-        /* Finally, on goes the directory for dynamic-load modules */
+-        strcat(buf, exec_prefix);
+-
+-        /* And publish the results */
+-        module_search_path = buf;
+-    }
+-
+-    /* Reduce prefix and exec_prefix to their essence,
+-     * e.g. /usr/local/lib/python1.5 is reduced to /usr/local.
+-     * If we're loading relative to the build directory,
+-     * return the compiled-in defaults instead.
+-     */
+-    if (pfound > 0) {
+-        reduce(prefix);
+-        reduce(prefix);
+-	/* The prefix is the root directory, but reduce() chopped
+-	 * off the "/". */
+-	if (!prefix[0])
+-		strcpy(prefix, separator);
+-    }
+-    else
+-        strncpy(prefix, PREFIX, MAXPATHLEN);
+-
+-    if (efound > 0) {
+-        reduce(exec_prefix);
+-        reduce(exec_prefix);
+-        reduce(exec_prefix);
+-	if (!exec_prefix[0])
+-		strcpy(exec_prefix, separator);
+-    }
+-    else
+-        strncpy(exec_prefix, EXEC_PREFIX, MAXPATHLEN);
+ }
+ 
+ 
 diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodule.c
 --- Python-2.5.4-orig/Modules/posixmodule.c	2008-12-13 16:14:30.000000000 +0100
-+++ Python-2.5.4/Modules/posixmodule.c	2009-02-16 11:27:40.000000000 +0100
++++ Python-2.5.4/Modules/posixmodule.c	2009-04-05 09:11:05.000000000 +0200
 @@ -2457,6 +2457,7 @@
  }
  
@@ -178,7 +1090,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  "pipe() -> (read_end, write_end)\n\n\
 diff -Nru Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform.c
 --- Python-2.5.4-orig/Python/getplatform.c	2000-09-02 01:29:29.000000000 +0200
-+++ Python-2.5.4/Python/getplatform.c	2009-02-16 11:27:40.000000000 +0100
++++ Python-2.5.4/Python/getplatform.c	2009-04-05 09:11:05.000000000 +0200
 @@ -2,7 +2,7 @@
  #include "Python.h"
  
@@ -190,8 +1102,8 @@ diff -Nru Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform
  const char *
 diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 --- Python-2.5.4-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pbuild.xml	2009-02-19 16:28:44.000000000 +0100
-@@ -0,0 +1,186 @@
++++ Python-2.5.4/pbuild.xml	2009-04-05 10:42:33.000000000 +0200
+@@ -0,0 +1,214 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -217,6 +1129,7 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +    <array name="files">
 +        <item>Modules/_typesmodule.c</item>
 +        <item>Modules/getbuildinfo.c</item>
++	    <item>Modules/_yaospmodule.c</item>
 +        <item>Parser/acceler.c</item>
 +        <item>Parser/grammar1.c</item>
 +        <item>Parser/listnode.c</item>
@@ -315,6 +1228,15 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +        <item>Modules/readline.c</item>
 +    </array>
 +
++    <array name="libs_to_install">
++        <item>site.py</item>
++        <item>os.py</item>
++        <item>copy_reg.py</item>
++        <item>posixpath.py</item>
++        <item>stat.py</item>
++        <item>types.py</item>
++    </array>
++
 +    <target name="clean">
 +        <delete>objs/*</delete>
 +        <rmdir>objs</rmdir>
@@ -329,7 +1251,7 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +
 +        <echo>Compiling Python 2.5.4</echo>
 +
-+        <for var="i" array="${files}">
++	    <for var="i" array="${files}">
 +            <echo>-> ${i}</echo>
 +            <gcc>
 +                <input>${i}</input>
@@ -347,6 +1269,10 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +                <flag>-fno-builtin</flag>
 +                <flag>-fno-strict-aliasing</flag>
 +                <define key="Py_BUILD_CORE"/>
++	            <define key="PREFIX">"/yaosp/package"</define>
++ 	            <define key="EXEC_PREFIX">"/yaosp/package"</define>
++	            <define key="VERSION">"2.5.4"</define>
++		        <define key="PYTHONPATH">"/yaosp/package/python-2.5.4/lib:/package/python-2.5.4/lib-dynload"</define>
 +            </gcc>
 +        </for>
 +
@@ -369,7 +1295,21 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +    </target>
 +
 +    <target name="install">
-+        <copy from="objs/python" to="../../../../build/image/application/python"/>
++        <mkdir>../../../../build/image/package/python-2.5.4</mkdir>
++        <mkdir>../../../../build/image/package/python-2.5.4/lib</mkdir>
++        <mkdir>../../../../build/image/package/python-2.5.4/lib-dynload</mkdir>
++
++        <echo>Installing python binary</echo>
++
++        <copy from="objs/python" to="../../../../build/image/package/python-2.5.4/python"/>
++
++        <echo>Installing python libraries ...</echo>
++
++        <for var="i" array="${libs_to_install}">
++            <echo>-> ${i}</echo>
++
++            <copy from="Lib/${i}" to="../../../../build/image/package/python-2.5.4/lib/${i}"/>
++        </for>
 +    </target>
 +
 +    <target name="all">
@@ -380,7 +1320,7 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +</build>
 diff -Nru Python-2.5.4-orig/pyconfig.h Python-2.5.4/pyconfig.h
 --- Python-2.5.4-orig/pyconfig.h	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pyconfig.h	2009-02-16 11:27:40.000000000 +0100
++++ Python-2.5.4/pyconfig.h	2009-04-05 09:11:05.000000000 +0200
 @@ -0,0 +1,1001 @@
 +/* pyconfig.h.  Generated from pyconfig.h.in by configure.  */
 +/* pyconfig.h.in.  Generated from configure.in by autoheader.  */

@@ -606,7 +606,7 @@ static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) 
     node = ( iso9660_inode_t* )_node;
 
     stat->st_ino = POSITION_TO_INODE( node->start_block, 0 );
-    stat->st_mode = 0;
+    stat->st_mode = 0777;
     stat->st_size = node->length;
     stat->st_blksize = BLOCK_SIZE;
     stat->st_blocks = node->length / BLOCK_SIZE;
@@ -686,7 +686,7 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
     iso9660_inode_t* tmp_inode;
 
     tmp_inode_number = POSITION_TO_INODE( dir_cookie->current_block, dir_cookie->block_position );
-    
+
     iso9660_read_inode( fs_cookie, tmp_inode_number, ( void** )&tmp_inode );
     entry->inode_number = POSITION_TO_INODE( tmp_inode->start_block, 0 );
     iso9660_write_inode( fs_cookie, tmp_inode );

@@ -308,7 +308,7 @@ static int ramfs_open_directory( ramfs_inode_t* inode, void** _cookie ) {
 }
 
 static int ramfs_open_file( ramfs_inode_t* inode, void** _cookie, int flags ) {
-    ramfs_file_cookie_t* cookie; 
+    ramfs_file_cookie_t* cookie;
 
     cookie = ( ramfs_file_cookie_t* )kmalloc( sizeof( ramfs_file_cookie_t ) );
 
@@ -452,7 +452,7 @@ static int ramfs_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
 
     stat->st_ino = inode->inode_number;
     stat->st_size = inode->size;
-    stat->st_mode = 0;
+    stat->st_mode = 0777;
 
     if ( inode->is_directory ) {
         stat->st_mode |= S_IFDIR;
