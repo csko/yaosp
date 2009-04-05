@@ -28,6 +28,7 @@
 .global is_interrupts_disabled
 .global reload_segment_descriptors
 .global get_cr2
+.global set_cr2
 .global get_cr3
 .global set_cr3
 .global clear_task_switched
@@ -84,6 +85,14 @@ get_cr2:
     movl %cr2, %eax
     ret
 .size get_cr2,.-get_cr2
+
+/* void set_cr2( register_t ) */
+
+set_cr2:
+    movl 4(%esp), %eax
+    movl %eax, %cr2
+    ret
+.size set_cr2,.-set_cr2
 
 /* register_t get_cr3( void ) */
 

@@ -111,6 +111,11 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
         }
     }
 
+    /* Invalidate the TLB because we just mapped a new page */
+
+    /* TOOD: use invlpg instead of flush_tlb()! */
+    flush_tlb();
+
     /* Update pmem of the current process */
 
     spinlock_disable( &scheduler_lock );

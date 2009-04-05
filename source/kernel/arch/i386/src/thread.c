@@ -45,6 +45,7 @@ int arch_allocate_thread( thread_t* thread ) {
     tmp = ( tmp + 15 ) & ~15;
 
     arch_thread->esp = 0;
+    arch_thread->cr2 = 0;
     arch_thread->flags = 0;
     arch_thread->fpu_state = ( fpu_state_t* )tmp;
 

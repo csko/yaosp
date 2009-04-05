@@ -44,9 +44,10 @@ int schedule( registers_t* regs ) {
     if ( current != NULL ) {
         arch_thread = ( i386_thread_t* )current->arch_data;
 
-        /* Save the current ESP value */
+        /* Save the current ESP and CR2 value */
 
         arch_thread->esp = ( register_t )regs;
+        arch_thread->cr2 = get_cr2();
 
         /* Save the FPU state if it is dirty */
 
@@ -69,6 +70,10 @@ int schedule( registers_t* regs ) {
     arch_cpu = ( i386_cpu_t* )get_processor()->arch_data;
 
     arch_cpu->tss.esp0 = ( register_t )( ( uint8_t* )next->kernel_stack_end - sizeof( register_t ) );
+
+    /* Load the CR2 register of the new thread */
+
+    set_cr2( arch_thread->cr2 );
 
     /* Set the new memory context if needed */
 

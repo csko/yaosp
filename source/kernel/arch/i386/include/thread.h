@@ -30,6 +30,7 @@ enum {
 
 typedef struct i386_thread {
     register_t esp;
+    register_t cr2;
     uint32_t flags;
     fpu_state_t* fpu_state;
 } i386_thread_t;

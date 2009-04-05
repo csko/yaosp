@@ -69,6 +69,8 @@ static inline uint64_t rdtsc( void ) {
 }
 
 register_t get_cr2( void );
+void set_cr2( register_t cr2 );
+
 register_t get_cr3( void );
 
 /**
@@ -76,7 +78,7 @@ register_t get_cr3( void );
  *
  * @param cr3 The value to set the cr3 register to
  */
-void set_cr3( uint32_t cr3 );
+void set_cr3( register_t cr3 );
 
 void clear_task_switched( void );
 void set_task_switched( void );
