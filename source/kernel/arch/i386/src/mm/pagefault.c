@@ -95,72 +95,119 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
     return 0;
 }
 
+#define MAX_PAGES_PER_LOAD 6
+
 static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_t* pages_loaded ) {
+    int i;
     void* p;
-    uint32_t* pgd_entry;
-    uint32_t* pt_entry;
+    int error;
+    uint32_t* pt;
+    uint32_t pt_index;
+    uint32_t pgd_index;
+    uint32_t page_count;
+    uint32_t region_offset;
     memory_context_t* context;
     i386_memory_context_t* arch_context;
-
-    int data;
-    size_t to_read;
-    off_t file_read_offset;
-    uint32_t region_offset;
 
     context = region->context;
     arch_context = ( i386_memory_context_t* )context->arch_data;
 
-    pgd_entry = page_directory_entry( arch_context, address );
+    address &= PAGE_MASK;
+    ASSERT( address >= region->start );
 
-    if ( *pgd_entry == 0 ) {
-        p = alloc_pages( 1, MEM_COMMON );
+    region_offset = address - region->start;
 
-        if ( p == NULL ) {
-            return -ENOMEM;
-        }
+    /* Calculate the number of pages that we can load */
 
-        memsetl( p, 0, PAGE_SIZE / 4 );
+    page_count = PAGE_ALIGN( region->size - region_offset ) / PAGE_SIZE;
+    page_count = MIN( page_count, MAX_PAGES_PER_LOAD );
 
-        *pgd_entry = ( uint32_t )p | PRESENT | WRITE | USER;
+    /* Map the page tables */
+
+    error = map_region_page_tables( arch_context, address, page_count * PAGE_SIZE, false );
+
+    if ( error < 0 ) {
+        return error;
     }
 
-    pt_entry = page_table_entry( *pgd_entry, address );
+    /* Count the unmapped pages */
 
-    p = alloc_pages( 1, MEM_COMMON );
+    pgd_index = address >> PGDIR_SHIFT;
+    pt_index = ( address >> PAGE_SHIFT ) & 1023;
+    pt = ( uint32_t* )( arch_context->page_directory[ pgd_index ] & PAGE_MASK );
+
+    for ( i = 0; i < page_count; i++ ) {
+        if ( pt[ pt_index ] != 0 ) {
+            break;
+        }
+
+        if ( pt_index == 1023 ) {
+            pgd_index++;
+            pt_index = 0;
+
+            pt = ( uint32_t* )( arch_context->page_directory[ pgd_index ] & PAGE_MASK );
+        } else {
+            pt_index++;
+        }
+    }
+
+    ASSERT( i > 0 );
+
+    page_count = i;
+
+    /* Allocate memory for the new pages */
+
+    p = alloc_pages( page_count, MEM_COMMON );
 
     if ( p == NULL ) {
         return -ENOMEM;
     }
 
-    *pt_entry = ( uint32_t )p | PRESENT | WRITE | USER;
+    /* Load the data to the newly allocated pages */
 
-    /* Handle memory mapped files */
+    if ( region_offset >= region->file_size ) {
+        memsetl( p, 0, page_count * PAGE_SIZE / 4 );
+    } else {
+        off_t file_read_offset;
+        uint32_t file_data_size;
 
-    ASSERT( address >= region->start );
+        file_read_offset = region->file_offset + region_offset;
+        file_data_size = region->file_size - region_offset;
+        file_data_size = MIN( file_data_size, page_count * PAGE_SIZE );
 
-    region_offset = address - region->start;
+        ASSERT( file_data_size > 0 );
+        ASSERT( file_data_size <= page_count * PAGE_SIZE );
 
-    if ( ( region_offset & PAGE_MASK ) < region->file_size ) {
-        file_read_offset = region->file_offset + ( region_offset & PAGE_MASK );
-        to_read = MIN( PAGE_SIZE, ( region->file_offset + region->file_size - file_read_offset ) );
-
-        data = do_pread_helper( region->file, p, to_read, file_read_offset );
-
-        if ( data != to_read ) {
+        if ( do_pread_helper( region->file, p, file_data_size, file_read_offset ) != file_data_size ) {
+            free_pages( p, page_count );
             return -EIO;
         }
 
-        memset( ( uint8_t* )p + to_read, 0, PAGE_SIZE - to_read );
-    } else {
-        memsetl( p, 0, PAGE_SIZE / 4 );
+        if ( file_data_size < page_count * PAGE_SIZE ) {
+            memset( ( uint8_t* )p + file_data_size, 0, page_count * PAGE_SIZE - file_data_size );
+        }
     }
 
-    /* Invalidate the TLB because we just mapped a new page */
+    /* Map the new pages */
 
-    /* TOOD: use invlpg instead of flush_tlb()! */
+    error = map_region_pages(
+        arch_context,
+        address,
+        ( ptr_t )p,
+        page_count * PAGE_SIZE,
+        false,
+        ( region->flags & REGION_WRITE ) != 0
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Invalidate the TLB */
+
     flush_tlb();
 
-    *pages_loaded = 1;
+    *pages_loaded = page_count;
 
     return 0;
 }

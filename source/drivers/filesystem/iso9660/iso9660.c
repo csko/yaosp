@@ -482,10 +482,10 @@ static int iso9660_free_cookie( void* fs_cookie, void* _node, void* file_cookie 
 
 static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* _buffer, off_t pos, size_t size ) {
     int error;
+    char* block;
     char* buffer;
     size_t saved_size;
     uint64_t block_index;
-    off_t current_pos = pos;
     iso9660_cookie_t* cookie;
     iso9660_inode_t* node;
 
@@ -520,7 +520,6 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
        only the interested parts of it to the destination buffer. */
 
     if ( ( pos % BLOCK_SIZE ) != 0 ) {
-        char* block;
         int to_read;
         int rem_block_length;
 
@@ -531,14 +530,12 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
         }
 
         rem_block_length = BLOCK_SIZE - ( pos % BLOCK_SIZE );
-
         to_read = MIN( rem_block_length, size );
 
         memcpy( buffer, block + pos % BLOCK_SIZE, to_read );
 
         block_cache_put_block( cookie->block_cache, block_index );
 
-        current_pos = ( ( pos + BLOCK_SIZE - 1 ) & ~( BLOCK_SIZE - 1 ) );
         block_index++;
 
         buffer += to_read;
@@ -550,9 +547,11 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
 
     if ( size >= BLOCK_SIZE ) {
         size_t i;
-        void* block;
+        size_t block_count;
 
-        for ( i = 0; i < size / BLOCK_SIZE; i++, block_index++ ) {
+        block_count = size / BLOCK_SIZE;
+
+        for ( i = 0; i < block_count; i++, block_index++ ) {
             error = block_cache_get_block( cookie->block_cache, block_index, ( void** )&block );
 
             if ( error < 0 ) {
@@ -571,8 +570,6 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     /* Handle the case where the size is not block aligned. */
 
     if ( size > 0 ) {
-        char* block;
-
         error = block_cache_get_block( cookie->block_cache, block_index, ( void** )&block );
 
         if ( error < 0 ) {
