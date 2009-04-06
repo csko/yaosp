@@ -87,28 +87,72 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
 
     *pt_entry = ( uint32_t )p | PRESENT | WRITE | USER;
 
+    /* Invalidate the TLB because we just mapped a new page */
+
+    /* TOOD: use invlpg instead of flush_tlb()! */
+    flush_tlb();
+
+    return 0;
+}
+
+static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_t* pages_loaded ) {
+    void* p;
+    uint32_t* pgd_entry;
+    uint32_t* pt_entry;
+    memory_context_t* context;
+    i386_memory_context_t* arch_context;
+
+    int data;
+    size_t to_read;
+    off_t file_read_offset;
+    uint32_t region_offset;
+
+    context = region->context;
+    arch_context = ( i386_memory_context_t* )context->arch_data;
+
+    pgd_entry = page_directory_entry( arch_context, address );
+
+    if ( *pgd_entry == 0 ) {
+        p = alloc_pages( 1, MEM_COMMON );
+
+        if ( p == NULL ) {
+            return -ENOMEM;
+        }
+
+        memsetl( p, 0, PAGE_SIZE / 4 );
+
+        *pgd_entry = ( uint32_t )p | PRESENT | WRITE | USER;
+    }
+
+    pt_entry = page_table_entry( *pgd_entry, address );
+
+    p = alloc_pages( 1, MEM_COMMON );
+
+    if ( p == NULL ) {
+        return -ENOMEM;
+    }
+
+    *pt_entry = ( uint32_t )p | PRESENT | WRITE | USER;
+
     /* Handle memory mapped files */
 
-    if ( region->file != NULL ) {
-        int data;
-        size_t to_read;
-        off_t file_read_offset;
-        uint32_t region_offset;
+    ASSERT( address >= region->start );
 
-        ASSERT( address >= region->start );
+    region_offset = address - region->start;
 
-        region_offset = address - region->start;
+    if ( ( region_offset & PAGE_MASK ) < region->file_size ) {
+        file_read_offset = region->file_offset + ( region_offset & PAGE_MASK );
+        to_read = MIN( PAGE_SIZE, ( region->file_offset + region->file_size - file_read_offset ) );
 
-        if ( ( region_offset & PAGE_MASK ) < region->file_size ) {
-            file_read_offset = region->file_offset + ( region_offset & PAGE_MASK );
-            to_read = MIN( PAGE_SIZE, ( region->file_offset + region->file_size - file_read_offset ) );
+        data = do_pread_helper( region->file, p, to_read, file_read_offset );
 
-            data = do_pread_helper( region->file, p, to_read, file_read_offset );
-
-            if ( data != to_read ) {
-                return -EIO;
-            }
+        if ( data != to_read ) {
+            return -EIO;
         }
+
+        memset( ( uint8_t* )p + to_read, 0, PAGE_SIZE - to_read );
+    } else {
+        memsetl( p, 0, PAGE_SIZE / 4 );
     }
 
     /* Invalidate the TLB because we just mapped a new page */
@@ -116,13 +160,7 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
     /* TOOD: use invlpg instead of flush_tlb()! */
     flush_tlb();
 
-    /* Update pmem of the current process */
-
-    spinlock_disable( &scheduler_lock );
-
-    context->process->pmem_size += PAGE_SIZE;
-
-    spinunlock_enable( &scheduler_lock );
+    *pages_loaded = 1;
 
     return 0;
 }
@@ -152,12 +190,28 @@ void handle_page_fault( registers_t* regs ) {
     }
 
     if ( region->alloc_method == ALLOC_LAZY ) {
-        error = handle_lazy_page_allocation( region, cr2 );
+        uint32_t pages_loaded;
+
+        if ( region->file == NULL ) {
+            error = handle_lazy_page_allocation( region, cr2 );
+
+            pages_loaded = 1;
+        } else {
+            error = handle_lazy_page_loading( region, cr2, &pages_loaded );
+        }
 
         if ( error < 0 ) {
             message = "lazy page allocation failed";
             goto invalid;
         }
+
+        /* Update pmem of the current process */
+
+        spinlock_disable( &scheduler_lock );
+
+        thread->process->pmem_size += pages_loaded * PAGE_SIZE;
+
+        spinunlock_enable( &scheduler_lock );
     } else {
         message = "unknown";
         goto invalid;
