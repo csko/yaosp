@@ -21,11 +21,10 @@
 
 #include "view.h"
 
+/* TODO: rename to window maybe */
 typedef struct channel_data {
     char* name;
     char* title;
-    char* modes;
-    /* TODO: invites, bans, exceptions */
 } channel_data_t;
 
 view_t* create_channel_view( const char* name );

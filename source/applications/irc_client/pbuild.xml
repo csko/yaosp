@@ -28,6 +28,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>ui/server_view.c</item>
         <item>ui/channel_view.c</item>
         <item>network/irc.c</item>
+        <item>network/chan.c</item>
     </array>
 
     <target name="clean">

@@ -46,7 +46,7 @@ int screen_w = 0;
 int screen_h = 0;
 view_t* active_view;
 
-static array_t channel_list;
+static array_t view_list; /* view_t* */
 
 static int get_terminal_size( int* width, int* height ) {
     int error;
@@ -68,10 +68,10 @@ view_t* ui_get_channel( const char* chan_name ) {
     view_t* view;
     channel_data_t* channel;
 
-    count = array_get_size( &channel_list );
+    count = array_get_size( &view_list );
 
     for ( i = 0; i < count; i++ ) {
-        view = ( view_t* )array_get_item( &channel_list, i );
+        view = ( view_t* )array_get_item( &view_list, i );
         channel = ( channel_data_t* )view->data;
 
         if ( strcmp( channel->name, chan_name ) == 0 ) {
@@ -93,7 +93,7 @@ int ui_handle_command( const char* command, const char* params ) {
             view_t* view;
 
             view = create_channel_view( params );
-            array_add_item( &channel_list, ( void* )view );
+            array_add_item( &view_list, ( void* )view );
 
             irc_join_channel( params );
 
@@ -130,7 +130,7 @@ int ui_handle_command( const char* command, const char* params ) {
         ui_activate_view( &server_view );
 
         /* Remove the view from the array */
-        array_remove_item( &channel_list, ( void* ) view );
+        array_remove_item( &view_list, ( void* ) view );
 
         /* Destroy channel view */
         destroy_channel_view( view );
@@ -305,7 +305,7 @@ int init_ui( void ) {
 
     /* Initialize channel list */
 
-    error = init_array( &channel_list );
+    error = init_array( &view_list );
 
     if ( error < 0 ) {
         return error;

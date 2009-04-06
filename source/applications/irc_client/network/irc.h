@@ -20,6 +20,10 @@
 #define _NETWORK_IRC_H_
 #include <unistd.h>
 
+#include "yutil/array.h"
+
+array_t chan_list; /* chan_t* */
+
 typedef struct client {
     /* TODO: better lengths */
     char nick[32];
@@ -37,9 +41,15 @@ int irc_quit_server( const char* reason );
 /* Handlers */
 /* one-parameter */
 int irc_handle_ping( const char* msg);
+int irc_handle_join( const char* client, const char* chan);
 
 /* two-parameter */
 int irc_handle_privmsg( const char* sender, const char* chan, const char* msg);
+int irc_handle_notice( const char* sender, const char* chan, const char* msg);
+int irc_handle_mode( const char* sender, const char* chan, const char* msg);
+int irc_handle_topic( const char* sender, const char* chan, const char* msg);
+int irc_handle_names( const char* sender, const char* chan, const char* msg);
+int irc_handle_part( const char* sender, const char* chan, const char* msg);
 
 int init_irc( void );
 

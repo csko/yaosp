@@ -31,6 +31,7 @@
 #include "../ui/view.h"
 #include "../ui/ui.h"
 #include "irc.h"
+#include "chan.h"
 
 char* my_nick;
 
@@ -57,8 +58,8 @@ static void parse_line1(const char* line){
             *param1++ = '\0';
 
             /* Look for a one-parameter command */
-            if(strcmp(cmd, "whatever") == 0){
-//                irc_handle_whatever(param1);
+            if(strcmp(cmd, "JOIN") == 0){
+                irc_handle_join(line, param1);
             }else{ /* Command not found */
                 param2 = strchr( param1, ' ' );
 
@@ -68,6 +69,16 @@ static void parse_line1(const char* line){
                     /* Look for a two-parameter command */
                     if(strcmp(cmd, "PRIVMSG") == 0){
                         irc_handle_privmsg(line, param1, param2 + 1);
+                    }else if(strcmp(cmd, "NOTICE") == 0){
+                        irc_handle_notice(line, param1, param2 + 1);
+                    }else if(strcmp(cmd, "MODE") == 0){
+                        irc_handle_mode(line, param1, param2 + 1);
+                    }else if(strcmp(cmd, "TOPIC") == 0){
+                        irc_handle_topic(line, param1, param2 + 1);
+                    }else if(strcmp(cmd, "NAMES") == 0){
+                        irc_handle_names(line, param1, param2 + 1);
+                    }else if(strcmp(cmd, "PART") == 0){
+                        irc_handle_part(line, param1, param2 + 1);
                     }
                 }
             }
@@ -159,6 +170,130 @@ int irc_handle_privmsg( const char* sender, const char* chan, const char* msg ) 
 
     return 0;
 }
+
+int irc_handle_notice( const char* sender, const char* chan, const char* msg){
+    char buf[ 256 ];
+    view_t* channel;
+    struct client _sender;
+    int error;
+
+    time_t now;
+    char timestamp[ 128 ];
+    char* timestamp_format = "%D %T"; /* TODO: make global variable */
+
+    error = parse_client(sender, &_sender);
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    channel = ui_get_channel( chan );
+
+    if ( channel == NULL ) {
+        return -1;
+    }
+
+    /* Create timestamp */
+
+    time( &now );
+
+    if ( now != ( time_t )-1 ) {
+        struct tm tmval;
+
+        gmtime_r( &now, &tmval );
+        strftime( ( char* )timestamp, sizeof( timestamp ), timestamp_format, &tmval );
+    } else {
+        timestamp[ 0 ] = 0;
+    }
+
+    snprintf( buf, sizeof( buf ), "%s {%s} %s", timestamp, _sender.nick, msg );
+
+    view_add_text( channel, buf );
+
+    return 0;
+}
+
+int irc_handle_mode( const char* sender, const char* chan, const char* msg){
+    char buf[ 256 ];
+    view_t* channel;
+    struct client _sender;
+    int error;
+
+    time_t now;
+    char timestamp[ 128 ];
+    char* timestamp_format = "%D %T"; /* TODO: make global variable */
+
+    error = parse_client(sender, &_sender);
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    channel = ui_get_channel( chan );
+
+    if ( channel == NULL ) {
+        return -1;
+    }
+
+    /* Create timestamp */
+
+    time( &now );
+
+    if ( now != ( time_t )-1 ) {
+        struct tm tmval;
+
+        gmtime_r( &now, &tmval );
+        strftime( ( char* )timestamp, sizeof( timestamp ), timestamp_format, &tmval );
+    } else {
+        timestamp[ 0 ] = 0;
+    }
+
+    snprintf( buf, sizeof( buf ), "%s {%s} %s", timestamp, _sender.nick, msg );
+
+    view_add_text( channel, buf );
+
+    return 0;
+}
+
+int irc_handle_topic( const char* sender, const char* chan, const char* msg){
+    
+    return 0;
+}
+
+int irc_handle_names( const char* sender, const char* chan, const char* msg){
+    return 0;
+}
+
+int irc_handle_join( const char* client, const char* chan){
+    int error;
+    client_t _client;
+
+    error = parse_client(client, &_client);
+
+    if(error != 0){
+        return error;
+    }
+
+    /* If we join a channel, create a new channel in our internal array */
+    if(strcmp(_client.nick, my_nick) == 0){
+        error = create_chan(chan);
+
+        if(error != 0){
+            return error;
+        }
+        
+    }
+
+    /* Add new user to the user list of channel */
+    addclient_chan(chan, _client.nick, 0);
+
+    return 0;
+}
+
+int irc_handle_part( const char* sender, const char* chan, const char* msg){
+    return 0;
+}
+
 
 int irc_handle_ping(const char* params){
     char buf[256];
@@ -281,6 +416,11 @@ int init_irc( void ) {
 
     struct sockaddr_in address;
 
+    /* Initialize the channels */
+
+    init_array( &chan_list );
+
+    /* Initialize the connection */
     s = socket( AF_INET, SOCK_STREAM, 0 );
 
     if ( s < 0 ) {
@@ -341,17 +481,29 @@ ssize_t irc_write(int fd, const void *buf, size_t count) {
 }
 
 int parse_client(const char* str, client_t* sender){
-    char* tmp;
+    char* nick;
+    char* ident;
 
+    if(str == NULL){
+        return 1;
+    }
 
-    tmp = strchr(str, '!');
+    nick = strchr(str, '!');
+    if(nick != NULL){
+        strncpy(sender->nick, str, nick - str);
+        ident = strchr(nick, '@');
 
-    if(tmp != NULL){
-        strncpy(sender->nick, str, tmp - str);
-        sender->ident[0] = '\0';
-        sender->host[0] = '\0';
+        if(ident != NULL){
+            strncpy(sender->ident, nick, ident - nick);
+            strcpy(sender->host, ident);
+        }else{
+            sender->ident[0] = '\0';
+            sender->host[0] = '\0';
+            return 1;
+        }
     }else{
-        strcpy(sender->nick, str); /* TODO: MAX(strlen(str), sizeof(sender->nick)) ??? */
+        strcpy(sender->nick, str); // TODO: MAX(strlen(str), sizeof(sender->nick)) ???
+        return 1;
     }
 
     return 0;
