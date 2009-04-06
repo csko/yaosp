@@ -20,6 +20,7 @@
 #define _ISO9660_H_
 
 #include <types.h>
+#include <vfs/blockcache.h>
 
 #define ISO9660_VD_PRIMARY 0x01
 
@@ -76,6 +77,7 @@ typedef struct iso9660_inode {
 
 typedef struct iso9660_cookie {
     int fd;
+    block_cache_t* block_cache;
     ino_t root_inode_number;
     iso9660_inode_t root_inode;
 } iso9660_cookie_t;

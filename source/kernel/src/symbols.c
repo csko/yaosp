@@ -31,6 +31,7 @@
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
 #include <vfs/vfs.h>
+#include <vfs/blockcache.h>
 #include <network/packet.h>
 #include <lib/string.h>
 #include <lib/hashtable.h>
@@ -98,6 +99,9 @@ static kernel_symbol_t symbols[] = {
     { "mount", ( ptr_t )mount },
     { "select", ( ptr_t )select },
     { "getdents", ( ptr_t )getdents },
+    { "init_block_cache", ( ptr_t )init_block_cache },
+    { "block_cache_get_block", ( ptr_t )block_cache_get_block },
+    { "block_cache_put_block", ( ptr_t )block_cache_put_block },
 
     /* Semaphore functions */
     { "create_semaphore", ( ptr_t )create_semaphore },

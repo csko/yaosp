@@ -95,6 +95,14 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
         goto error3;
     }
 
+    /* TODO: Calculate real block count here! */
+    cookie->block_cache = init_block_cache( fd, BLOCK_SIZE, 1000000000ULL );
+
+    if ( cookie->block_cache == NULL ) {
+        error = -ENOMEM;
+        goto error4;
+    }
+
     cookie->fd = fd;
     cookie->root_inode_number = POSITION_TO_INODE(root_entry->location_le,0);
     cookie->root_inode.inode_number = cookie->root_inode_number;
@@ -115,6 +123,9 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
 
     return 0;
 
+error4:
+    kfree( cookie );
+
 error3:
     kfree( block );
 
@@ -131,7 +142,7 @@ static int iso9660_unmount( void* fs_cookie ) {
     return 0;
 }
 
-static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
+static int iso9660_read_inode( void* fs_cookie, ino_t inode_number, void** node ) {
     iso9660_cookie_t* cookie;
 
     cookie = ( iso9660_cookie_t* )fs_cookie;
@@ -140,39 +151,34 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
        it as a special inode. In this case we can load it simply
        with a memcpy. Otherwise we have to load it from the device. */
 
-    if ( inode_num == cookie->root_inode_number ) {
+    if ( inode_number == cookie->root_inode_number ) {
         *node = ( void* )&cookie->root_inode;
     } else {
+        tm_t tm;
+        int error;
         char* block;
+        uint64_t block_index;
         iso9660_inode_t* inode;
         iso9660_directory_entry_t* iso_dir;
 
-        block = ( char* )kmalloc( BLOCK_SIZE );
+        block_index = INODE_TO_BLOCK( inode_number );
 
-        if ( block == NULL ) {
-            return -ENOMEM;
+        error = block_cache_get_block( cookie->block_cache, block_index, ( void** )&block );
+
+        if ( error < 0 ) {
+            return error;
         }
 
-        if ( pread(
-            cookie->fd,
-            block,
-            BLOCK_SIZE,
-            INODE_TO_BLOCK(inode_num) * BLOCK_SIZE
-        ) != BLOCK_SIZE ) {
-            kfree( block );
-            return -EIO;
-        }
-
-        iso_dir = ( iso9660_directory_entry_t* )( block + INODE_TO_OFFSET(inode_num) );
+        iso_dir = ( iso9660_directory_entry_t* )( block + INODE_TO_OFFSET( inode_number ) );
 
         inode = ( iso9660_inode_t* )kmalloc( sizeof( iso9660_inode_t ) );
 
         if ( inode == NULL ) {
-            kfree( block );
+            block_cache_put_block( cookie->block_cache, block_index );
             return -ENOMEM;
         }
 
-        inode->inode_number = inode_num;
+        inode->inode_number = inode_number;
         inode->flags = iso_dir->flags;
         inode->start_block = iso_dir->location_le;
         inode->length = iso_dir->length_le;
@@ -190,7 +196,6 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
           west of Greenwich
         */
 
-        tm_t tm;
         tm.tm_year = 1900 + iso_dir->datetime[ 0 ];
         tm.tm_mon = iso_dir->datetime[ 1 ] - 1;
         tm.tm_mday = iso_dir->datetime[ 2 ];
@@ -199,9 +204,9 @@ static int iso9660_read_inode( void* fs_cookie, ino_t inode_num, void** node ) {
         tm.tm_sec = iso_dir->datetime[ 5 ];
         /* TODO: Timezone */
 
-        inode->created = mktime( &tm );
+        block_cache_put_block( cookie->block_cache, block_index );
 
-        kfree( block );
+        inode->created = mktime( &tm );
 
         *node = ( void* )inode;
     }
@@ -364,20 +369,15 @@ static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* nam
     parent = ( iso9660_inode_t* )_parent;
     iso_cookie = ( iso9660_cookie_t* )fs_cookie;
 
-    block = ( char* )kmalloc( BLOCK_SIZE );
-
-    if ( block == NULL ) {
-        return -ENOMEM;
-    }
-
     start_block = parent->start_block;
     current_block = start_block;
 
     error = 0;
 
     while ( ( current_block - start_block ) * BLOCK_SIZE < parent->length ) {
-        if ( pread( iso_cookie->fd, block, BLOCK_SIZE, current_block * BLOCK_SIZE ) != BLOCK_SIZE ) {
-            error = -EIO;
+        error = block_cache_get_block( iso_cookie->block_cache, current_block, ( void** )&block );
+
+        if ( error < 0 ) {
             goto out;
         }
 
@@ -407,11 +407,15 @@ static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* nam
                     *inode_num = POSITION_TO_INODE( current_block, block_position );
                 }
 
+                block_cache_put_block( iso_cookie->block_cache, current_block );
+
                 goto out;
             }
 
             block_position += size;
         }
+
+        block_cache_put_block( iso_cookie->block_cache, current_block );
 
         current_block++;
     }
@@ -419,8 +423,6 @@ static int iso9660_lookup_inode( void* fs_cookie, void* _parent, const char* nam
     error = -ENOENT;
 
 out:
-    kfree( block );
-
     return error;
 }
 
@@ -479,8 +481,10 @@ static int iso9660_free_cookie( void* fs_cookie, void* _node, void* file_cookie 
 }
 
 static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* _buffer, off_t pos, size_t size ) {
+    int error;
     char* buffer;
     size_t saved_size;
+    uint64_t block_index;
     off_t current_pos = pos;
     iso9660_cookie_t* cookie;
     iso9660_inode_t* node;
@@ -509,6 +513,8 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     buffer = ( char* )_buffer;
     saved_size = size;
 
+    block_index = node->start_block + ( pos / BLOCK_SIZE );
+
     /* Check if the start position is aligned to the blocksize.
        If it isn't aligned we have to read the whole block and copy
        only the interested parts of it to the destination buffer. */
@@ -518,20 +524,10 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
         int to_read;
         int rem_block_length;
 
-        block = ( char* )kmalloc( BLOCK_SIZE );
+        error = block_cache_get_block( cookie->block_cache, block_index, ( void** )&block );
 
-        if ( block == NULL ) {
-            return -ENOMEM;
-        }
-
-        if ( pread(
-            cookie->fd,
-            block,
-            BLOCK_SIZE,
-            node->start_block * BLOCK_SIZE + ( pos & ~( BLOCK_SIZE - 1 ) )
-        ) != BLOCK_SIZE ) {
-            kfree( block );
-            return -EIO;
+        if ( error < 0 ) {
+            return error;
         }
 
         rem_block_length = BLOCK_SIZE - ( pos % BLOCK_SIZE );
@@ -540,9 +536,10 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
 
         memcpy( buffer, block + pos % BLOCK_SIZE, to_read );
 
-        kfree( block );
+        block_cache_put_block( cookie->block_cache, block_index );
 
         current_pos = ( ( pos + BLOCK_SIZE - 1 ) & ~( BLOCK_SIZE - 1 ) );
+        block_index++;
 
         buffer += to_read;
         size -= to_read;
@@ -552,23 +549,23 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
        can read full blocks to the final buffer, do it! */
 
     if ( size >= BLOCK_SIZE ) {
-        int to_read;
+        size_t i;
+        void* block;
 
-        to_read = size & ~( BLOCK_SIZE - 1 );
+        for ( i = 0; i < size / BLOCK_SIZE; i++, block_index++ ) {
+            error = block_cache_get_block( cookie->block_cache, block_index, ( void** )&block );
 
-        if ( pread(
-            cookie->fd,
-            buffer,
-            to_read,
-            node->start_block * BLOCK_SIZE + ( ( pos + ( BLOCK_SIZE - 1 ) ) & ~( BLOCK_SIZE - 1 ) )
-        ) != to_read ) {
-            return -EIO;
+            if ( error < 0 ) {
+                return error;
+            }
+
+            memcpy( buffer, block, BLOCK_SIZE );
+
+            block_cache_put_block( cookie->block_cache, block_index );
+
+            buffer += BLOCK_SIZE;
+            size -= BLOCK_SIZE;
         }
-
-        current_pos = ( ( pos + BLOCK_SIZE - 1 ) & ~( BLOCK_SIZE - 1 ) ) + ( size & ~( BLOCK_SIZE - 1 ) );
-
-        buffer += to_read;
-        size -= to_read;
     }
 
     /* Handle the case where the size is not block aligned. */
@@ -576,25 +573,15 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     if ( size > 0 ) {
         char* block;
 
-        block = ( char* )kmalloc( BLOCK_SIZE );
+        error = block_cache_get_block( cookie->block_cache, block_index, ( void** )&block );
 
-        if ( block == NULL ) {
-            return -ENOMEM;
-        }
-
-        if ( pread(
-            cookie->fd,
-            block,
-            BLOCK_SIZE,
-            node->start_block * BLOCK_SIZE + current_pos
-        ) != BLOCK_SIZE ) {
-            kfree( block );
-            return -EIO;
+        if ( error < 0 ) {
+            return error;
         }
 
         memcpy( buffer, block, size );
 
-        kfree( block );
+        block_cache_put_block( cookie->block_cache, block_index );
     }
 
     return saved_size;
@@ -635,22 +622,19 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
     iso_cookie = ( iso9660_cookie_t* )fs_cookie;
     dir_cookie = ( iso9660_dir_cookie_t* )file_cookie;
 
-    block = ( char* )kmalloc( BLOCK_SIZE );
-
-    if ( block == NULL ) {
-        return -ENOMEM;
-    }
-
     while ( true ) {
-        if ( pread( iso_cookie->fd, block, BLOCK_SIZE, dir_cookie->current_block * BLOCK_SIZE ) != BLOCK_SIZE ) {
-            kfree( block );
-            return -EIO;
+        error = block_cache_get_block( iso_cookie->block_cache, dir_cookie->current_block, ( void** )&block );
+
+        if ( error < 0 ) {
+            return error;
         }
 
         dir_entry = ( iso9660_directory_entry_t* )( block + dir_cookie->block_position );
 
         if ( dir_entry->record_length == 0 ) {
             uint32_t data_size;
+
+            block_cache_put_block( iso_cookie->block_cache, dir_cookie->current_block );
 
             dir_cookie->current_block++;
             dir_cookie->block_position = 0;
@@ -660,7 +644,6 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
             data_size = ( dir_cookie->current_block - dir_cookie->start_block ) * BLOCK_SIZE;
 
             if ( data_size >= dir_cookie->size ) {
-                kfree( block );
                 return 0;
             }
         } else {
@@ -670,7 +653,7 @@ static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cooki
 
     error = iso9660_parse_directory_entry( ( char* )dir_entry, entry );
 
-    kfree( block );
+    block_cache_put_block( iso_cookie->block_cache, dir_cookie->current_block );
 
     if ( error < 0 ) {
         return error;

@@ -104,6 +104,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/vfs/inode.c</item>
         <item>src/vfs/io_context.c</item>
         <item>src/vfs/filesystem.c</item>
+        <item>src/vfs/blockcache.c</item>
         <item>src/network/interface.c</item>
         <item>src/network/packet.c</item>
         <item>src/network/arp.c</item>
