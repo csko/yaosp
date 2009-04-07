@@ -80,6 +80,8 @@ register_t get_cr3( void );
  */
 void set_cr3( register_t cr3 );
 
+register_t get_ebp( void );
+
 void clear_task_switched( void );
 void set_task_switched( void );
 

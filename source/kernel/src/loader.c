@@ -141,7 +141,9 @@ int get_symbol_info( ptr_t address, symbol_info_t* info ) {
 
     loader = current_thread()->process->loader;
 
-    ASSERT( loader != NULL );
+    if ( loader == NULL ) {
+        return -EINVAL;
+    }
 
     return loader->get_symbol_info( address, info );
 }

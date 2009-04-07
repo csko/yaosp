@@ -19,8 +19,35 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/mount.h>
+#include <sys/stat.h>
 
 #include <yaosp/debug.h>
+#include <yaosp/module.h>
+
+static int create_temp_directory( void ) {
+    int error;
+
+    error = mkdir( "/temp", 0777 );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = load_module( "ramfs" );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = mount( "", "/temp", "ramfs", 0, NULL );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
 
 int main( int argc, char** argv ) {
     int i;
@@ -28,6 +55,8 @@ int main( int argc, char** argv ) {
 
     symlink( "/application", "/yaosp/application" );
     symlink( "/system", "/yaosp/system" );
+
+    create_temp_directory();
 
     for ( i = 0; i < 5; i++ ) {
         child = fork();
@@ -42,6 +71,7 @@ int main( int argc, char** argv ) {
                 "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
                 "HOME=/",
                 "TERM=vt100",
+                "TEMP=/temp",
                 NULL
             };
 

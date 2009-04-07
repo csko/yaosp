@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <config.h>
 #include <ipc.h>
+#include <debug.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>
 
@@ -171,12 +172,7 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
         kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
     }
 
-    kprintf(
-        "Coming from: %x %x %x\n",
-        __builtin_return_address( 0 ),
-        __builtin_return_address( 1 ),
-        __builtin_return_address( 2 )
-    );
+    debug_print_stack_trace();
 
     memory_context_dump( &kernel_memory_context );
 

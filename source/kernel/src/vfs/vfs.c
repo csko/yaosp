@@ -1772,6 +1772,11 @@ static int do_dup2( bool kernel, int old_fd, int new_fd ) {
                 new_file->cookie
             );
         }
+
+        put_inode( inode );
+
+        new_file->inode = NULL;
+        new_file->cookie = NULL;
     }
 
     new_file->type = old_file->type;

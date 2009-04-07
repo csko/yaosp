@@ -31,6 +31,7 @@
 .global set_cr2
 .global get_cr3
 .global set_cr3
+.global get_ebp
 .global clear_task_switched
 .global set_task_switched
 .global flush_tlb
@@ -101,13 +102,20 @@ get_cr3:
     ret
 .size get_cr3,.-get_cr3
 
-/* void set_cr3( uint32_t cr3 ) */
+/* void set_cr3( register_t cr3 ) */
 
 set_cr3:
     movl 4(%esp), %eax
     movl %eax, %cr3
     ret
 .size set_cr3,.-set_cr3
+
+/* register_t get_ebp( void ) */
+
+get_ebp:
+    movl %ebp, %eax
+    ret
+.size get_ebp,.-get_ebp
 
 /* void clear_task_switched( void ) */
 

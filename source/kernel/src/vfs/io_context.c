@@ -168,6 +168,7 @@ int io_context_file_clone_iterator( hashitem_t* item, void* data ) {
     }
 
     new_file->type = old_file->type;
+    new_file->flags = old_file->flags;
     new_file->inode = old_file->inode;
     new_file->cookie = old_file->cookie;
     new_file->position = old_file->position;
