@@ -81,8 +81,6 @@ int sys_fork( void ) {
         goto error2;
     }
 
-    memory_context_fix_file_mapped_regions( new_process->memory_context, this_process->memory_context );
-
     /* Clone the semaphore context */
 
     new_process->semaphore_context = semaphore_context_clone( this_process->semaphore_context );

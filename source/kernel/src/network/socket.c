@@ -281,13 +281,13 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
         goto error4;
     }
 
-    error = io_context_insert_file( io_context, file );
+    error = io_context_insert_file( io_context, file, 3 );
 
     if ( error < 0 ) {
         goto error4;
     }
 
-    return file->fd;
+    return error;
 
 error4:
     LOCK( socket_lock );

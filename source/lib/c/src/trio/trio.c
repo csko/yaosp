@@ -4665,7 +4665,7 @@ TRIO_ARGS2((format, args),
  */
 #if TRIO_FEATURE_DYNAMICSTRING
 TRIO_PUBLIC int
-trio_asprintf
+asprintf
 TRIO_VARGS3((result, format, va_alist),
 	    char **result,
 	    TRIO_CONST char *format,

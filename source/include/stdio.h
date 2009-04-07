@@ -112,6 +112,7 @@ int puts( const char* s );
 int putchar( int c );
 
 #define setbuf(stream,buf) setvbuf(stream,buf,buf?_IOFBF:_IONBF,BUFSIZ)
+#define setbuffer(stream,buf,size) setvbuf(stream,buf,buf?_IOFBF:_IONBF,size)
 int setvbuf( FILE* stream, char* buf, int flags, size_t size );
 
 int rename( const char* oldpath, const char* newpath );

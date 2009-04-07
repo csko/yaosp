@@ -48,43 +48,96 @@ void delete_file( file_t* file ) {
     kfree( file );
 }
 
-int io_context_insert_file( io_context_t* io_context, file_t* file ) {
-    atomic_set( &file->ref_count, 1 );
-
-    LOCK( io_context->lock );
-
-    do {
-        file->fd = io_context->fd_counter++;
-
-        if ( io_context->fd_counter < 0 ) {
-            io_context->fd_counter = 3;
-        }
-    } while ( hashtable_get( &io_context->file_table, ( const void* )file->fd ) != NULL );
-
-    hashtable_add( &io_context->file_table, ( hashitem_t* )file );
-
-    UNLOCK( io_context->lock );
-
-    return 0;
-}
-
-int io_context_insert_file_with_fd( io_context_t* io_context, file_t* file, int fd ) {
+int io_context_insert_file( io_context_t* io_context, file_t* file, int start_fd ) {
+    size_t i;
     int error;
 
-    atomic_set( &file->ref_count, 1 );
+    LOCK( io_context->lock );
+
+    for ( i = start_fd; i < io_context->file_table_size; i++ ) {
+        if ( io_context->file_table[ i ] == NULL ) {
+            break;
+        }
+    }
+
+    if ( i == io_context->file_table_size ) {
+        error = -ENOMEM;
+        goto out;
+    }
+
+    io_context->file_table[ i ] = file;
+
+    atomic_inc( &file->ref_count );
+
+    error = ( int )i;
+
+out:
+    UNLOCK( io_context->lock );
+
+    return error;
+}
+
+int io_context_insert_file_at( io_context_t* io_context, file_t* file, int fd, bool close_existing ) {
+    int error;
+
+    atomic_inc( &file->ref_count );
 
     LOCK( io_context->lock );
 
-    if ( hashtable_get( &io_context->file_table, ( const void* )fd ) != NULL ) {
-        error = -EEXIST;
-    } else {
-        error = 0;
-        file->fd = fd;
-
-        hashtable_add( &io_context->file_table, ( hashitem_t* )file );
+    if ( ( fd < 0 ) || ( fd >= io_context->file_table_size ) ) {
+        error = -EINVAL;
+        goto out;
     }
 
+    if ( io_context->file_table[ fd ] != NULL ) {
+        if ( close_existing ) {
+            io_context_put_file( io_context, io_context->file_table[ fd ] );
+        } else {
+            error = -EEXIST;
+            goto out;
+        }
+    }
+
+    io_context->file_table[ fd ] = file;
+
+    error = 0;
+
+out:
     UNLOCK( io_context->lock );
+
+    return error;
+}
+
+int io_context_remove_file( io_context_t* io_context, int fd ) {
+    int error;
+    file_t* file;
+
+    file = NULL;
+
+    LOCK( io_context->lock );
+
+    if ( ( fd < 0 ) || ( fd >= io_context->file_table_size ) ) {
+        error = -EBADF;
+        goto out;
+    }
+
+    file = io_context->file_table[ fd ];
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto out;
+    }
+
+    io_context->file_table[ fd ] = NULL;
+
+    error = 0;
+
+out:
+    UNLOCK( io_context->lock );
+
+    if ( file != NULL ) {
+        io_context_put_file( io_context, file );
+    }
 
     return error;
 }
@@ -94,98 +147,65 @@ file_t* io_context_get_file( io_context_t* io_context, int fd ) {
 
     LOCK( io_context->lock );
 
-    file = ( file_t* )hashtable_get( &io_context->file_table, ( const void* )fd );
-
-    if ( file != NULL ) {
-        atomic_inc( &file->ref_count );
+    if ( ( fd < 0 ) || ( fd >= io_context->file_table_size ) ) {
+        file = NULL;
+        goto out;
     }
 
+    file = io_context->file_table[ fd ];
+
+    if ( file == NULL ) {
+        goto out;
+    }
+
+    atomic_inc( &file->ref_count );
+
+ out:
     UNLOCK( io_context->lock );
 
     return file;
 }
 
 void io_context_put_file( io_context_t* io_context, file_t* file ) {
-    bool do_delete = false;
+    inode_t* inode;
 
-    ASSERT( file != NULL );
-
-    LOCK( io_context->lock );
-
-    ASSERT( atomic_get( &file->ref_count ) > 0 );
-
-    if ( atomic_dec_and_test( &file->ref_count ) ) {
-        hashtable_remove( &io_context->file_table, ( const void* )file->fd );
-        do_delete = true;
+    if ( !atomic_dec_and_test( &file->ref_count ) ) {
+        return;
     }
 
-    UNLOCK( io_context->lock );
 
-    if ( do_delete ) {
-        inode_t* tmp;
+    ASSERT( file->inode != NULL );
 
-        ASSERT( file->inode != NULL );
+    inode = file->inode;
 
-        tmp = file->inode;
+    /* Close the file  */
 
-        /* Close the file */
-
-        if ( tmp->mount_point->fs_calls->close != NULL ) {
-            tmp->mount_point->fs_calls->close(
-                tmp->mount_point->fs_data,
-                tmp->fs_node,
-                file->cookie
-            );
-        }
-
-        /* Free the cookie */
-
-        if ( tmp->mount_point->fs_calls->free_cookie != NULL ) {
-            tmp->mount_point->fs_calls->free_cookie(
-                tmp->mount_point->fs_data,
-                tmp->fs_node,
-                file->cookie
-            );
-        }
-
-        /* Delete the file */
-
-        delete_file( file );
-    }
-}
-
-int io_context_file_clone_iterator( hashitem_t* item, void* data ) {
-    int error;
-    file_t* old_file;
-    file_t* new_file;
-
-    old_file = ( file_t* )item;
-
-    new_file = create_file();
-
-    if ( new_file == NULL ) {
-        return 0;
+    if ( inode->mount_point->fs_calls->close != NULL ) {
+        inode->mount_point->fs_calls->close(
+            inode->mount_point->fs_data,
+            inode->fs_node,
+            file->cookie
+        );
     }
 
-    new_file->type = old_file->type;
-    new_file->flags = old_file->flags;
-    new_file->inode = old_file->inode;
-    new_file->cookie = old_file->cookie;
-    new_file->position = old_file->position;
+    /* Free the cookie */
 
-    atomic_inc( &new_file->inode->ref_count );
-
-    error = io_context_insert_file_with_fd( ( io_context_t* )data, new_file, old_file->fd );
-
-    if ( error < 0 ) {
-        delete_file( new_file );
+    if ( inode->mount_point->fs_calls->free_cookie != NULL ) {
+        inode->mount_point->fs_calls->free_cookie(
+            inode->mount_point->fs_data,
+            inode->fs_node,
+            file->cookie
+        );
     }
 
-    return 0;
+    /* Delete the file */
+
+    delete_file( file );
 }
 
 io_context_t* io_context_clone( io_context_t* old_io_context ) {
     int error;
+    size_t i;
     io_context_t* new_io_context;
 
     new_io_context = ( io_context_t* )kmalloc( sizeof( io_context_t ) );
@@ -194,7 +214,7 @@ io_context_t* io_context_clone( io_context_t* old_io_context ) {
         return NULL;
     }
 
-    error = init_io_context( new_io_context );
+    error = init_io_context( new_io_context, old_io_context->file_table_size );
 
     if ( error < 0 ) {
         kfree( new_io_context );
@@ -213,76 +233,69 @@ io_context_t* io_context_clone( io_context_t* old_io_context ) {
 
     /* Clone file handles */
 
-    hashtable_iterate(
-        &old_io_context->file_table,
-        io_context_file_clone_iterator,
-        ( void* )new_io_context
-    );
+    memcpy( new_io_context->file_table, old_io_context->file_table, sizeof( file_t* ) * old_io_context->file_table_size );
+
+    for ( i = 0; i < new_io_context->file_table_size; i++ ) {
+        if ( new_io_context->file_table[ i ] == NULL ) {
+            continue;
+        }
+
+        atomic_inc( &new_io_context->file_table[ i ]->ref_count );
+    }
 
     UNLOCK( old_io_context->lock );
 
     return new_io_context;
 }
 
-static void* file_key( hashitem_t* item ) {
-    file_t* file;
-
-    file = ( file_t* )item;
-
-    return ( void* )file->fd;
-}
-
-static uint32_t file_hash( const void* key ) {
-    return hash_number( ( uint8_t* )&key, sizeof( int ) );
-}
-
-static bool file_compare( const void* key1, const void* key2 ) {
-    return key1 == key2;
-}
-
-int init_io_context( io_context_t* io_context ) {
+int init_io_context( io_context_t* io_context, size_t file_table_size ) {
     int error;
-
-    /* Initialize the file table */
-
-    error = init_hashtable(
-        &io_context->file_table,
-        32,
-        file_key,
-        file_hash,
-        file_compare
-    );
-
-    io_context->fd_counter = 3;
 
     /* Create the I/O context lock */
 
     io_context->lock = create_semaphore( "I/O context lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( io_context->lock < 0 ) {
-        destroy_hashtable( &io_context->file_table );
-        return io_context->lock;
+        error = io_context->lock;
+        goto error1;
     }
 
+    /* Create the file table */
+
+    io_context->file_table = ( file_t** )kmalloc( sizeof( file_t* ) * file_table_size );
+
+    if ( io_context->file_table == NULL ) {
+        error = -ENOMEM;
+        goto error2;
+    }
+
+    memset( io_context->file_table, 0, sizeof( file_t* ) * file_table_size );
+
+    io_context->file_table_size = file_table_size;
+
     return 0;
-}
 
-static int destroy_file_callback( hashitem_t* item, void* data ) {
-    file_t* file;
+error2:
+    delete_semaphore( io_context->lock );
 
-    /* Destroy the current file */
-
-    file = ( file_t* )item;
-    delete_file( file );
-
-    return 0;
+error1:
+    return error;
 }
 
 void destroy_io_context( io_context_t* io_context ) {
-    /* Delete all files and the hashtable */
+    size_t i;
 
-    hashtable_iterate( &io_context->file_table, destroy_file_callback, NULL );
-    destroy_hashtable( &io_context->file_table );
+    /* Delete all files and the file table */
+
+    for ( i = 0; i < io_context->file_table_size; i++ ) {
+        if ( io_context->file_table[ i ] == NULL ) {
+            continue;
+        }
+
+        io_context_put_file( io_context, io_context->file_table[ i ] );
+    }
+
+    kfree( io_context->file_table );
 
     /* Put the inodes in the I/O context */
 

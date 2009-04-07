@@ -267,19 +267,11 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
         new_region->size = region->size;
         new_region->context = new_context;
 
-        /* NOTE: Here we only put the file pointer to the new region but
-                 this is not fully correct because the file structures are
-                 different for different processes, so later we have to
-                 replace the file pointer of the new region with it's cloned
-                 version from the new process after the I/O context cloning
-                 is done as well. */
-
         new_region->file = region->file;
         new_region->file_offset = region->file_offset;
         new_region->file_size = region->file_size;
 
-        /* Make sure the file won't be deleted until we can fix the above
-           mentioned stuff. */
+        /* Increase the reference count of the file because the new region will use it as well */
 
         if ( new_region->file != NULL ) {
             atomic_inc( &new_region->file->ref_count );
@@ -308,38 +300,6 @@ error:
     UNLOCK( region_lock );
 
     return NULL;
-}
-
-int memory_context_fix_file_mapped_regions( memory_context_t* new_context, memory_context_t* old_context ) {
-    int i;
-    file_t* new_file;
-    region_t* region;
-
-    LOCK( region_lock );
-
-    for ( i = 0; i < new_context->region_count; i++ ) {
-        region = new_context->regions[ i ];
-
-        if ( region->file == NULL ) {
-            continue;
-        }
-
-        new_file = io_context_get_file( new_context->process->io_context, region->file->fd );
-
-        if ( new_file == NULL ) {
-            UNLOCK( region_lock );
-
-            return -EBADF;
-        }
-
-        io_context_put_file( old_context->process->io_context, region->file );
-
-        region->file = new_file;
-    }
-
-    UNLOCK( region_lock );
-
-    return 0;
 }
 
 int memory_context_delete_regions( memory_context_t* context ) {

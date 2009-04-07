@@ -24,15 +24,14 @@
 
 #include <arch/atomic.h>
 
+#define INIT_FILE_TABLE_SIZE 1024
+
 typedef enum file_type {
     TYPE_FILE,
     TYPE_DIRECTORY
 } file_type_t;
 
 typedef struct file {
-    hashitem_t hash;
-
-    int fd;
     int flags;
     off_t position;
     inode_t* inode;
@@ -42,25 +41,28 @@ typedef struct file {
 } file_t;
 
 typedef struct io_context {
-    inode_t* root_directory;
-    inode_t* current_directory;
     semaphore_id lock;
 
-    int fd_counter;
-    hashtable_t file_table;
+    inode_t* root_directory;
+    inode_t* current_directory;
+
+    file_t** file_table;
+    size_t file_table_size;
 } io_context_t;
 
 file_t* create_file( void );
 void delete_file( file_t* file );
 
-int io_context_insert_file( io_context_t* io_context, file_t* file );
-int io_context_insert_file_with_fd( io_context_t* io_context, file_t* file, int fd );
+int io_context_insert_file( io_context_t* io_context, file_t* file, int start_fd );
+int io_context_insert_file_at( io_context_t* io_context, file_t* file, int fd, bool close_existing );
+int io_context_remove_file( io_context_t* io_context, int fd );
+
 file_t* io_context_get_file( io_context_t* io_context, int fd );
 void io_context_put_file( io_context_t* io_context, file_t* file );
 
 io_context_t* io_context_clone( io_context_t* old_io_context );
 
-int init_io_context( io_context_t* io_context );
+int init_io_context( io_context_t* io_context, size_t file_table_size );
 void destroy_io_context( io_context_t* io_context );
 
 #endif // _VFS_IO_CONTEXT_H_

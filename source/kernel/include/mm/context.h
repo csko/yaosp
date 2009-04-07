@@ -94,8 +94,6 @@ bool memory_context_can_resize_region( memory_context_t* context, region_t* regi
  */
 memory_context_t* memory_context_clone( memory_context_t* old_context, struct process* new_process );
 
-int memory_context_fix_file_mapped_regions( memory_context_t* new_context, memory_context_t* old_context );
-
 /**
  * Deletes all regions from the specified memory context. If the
  * user_only parameter is true then the kernel regions won't be

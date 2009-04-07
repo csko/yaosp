@@ -339,14 +339,13 @@ static int do_open( bool kernel, const char* path, int flags, int perms ) {
 
     /* Insert the new file to the I/O context */
 
-    error = io_context_insert_file( io_context, file );
+    error = io_context_insert_file( io_context, file, 3 );
 
     if ( error < 0 ) {
         delete_file( file );
-        return error;
     }
 
-    return file->fd;
+    return error;
 }
 
 int open( const char* path, int flags ) {
@@ -358,7 +357,7 @@ int sys_open( const char* path, int flags ) {
 }
 
 static int do_close( bool kernel, int fd ) {
-    file_t* file;
+    int error;
     io_context_t* io_context;
 
     /* Decide which I/O context to use */
@@ -369,16 +368,11 @@ static int do_close( bool kernel, int fd ) {
         io_context = current_process()->io_context;
     }
 
-    file = io_context_get_file( io_context, fd );
+    error = io_context_remove_file( io_context, fd );
 
-    if ( file == NULL ) {
-        return -EBADF;
+    if ( error < 0 ) {
+        return error;
     }
-
-    ASSERT( atomic_get( &file->ref_count ) >= 2 );
-
-    io_context_put_file( io_context, file ); /* this is for io_contetx_get_file() */
-    io_context_put_file( io_context, file ); /* this will close the file */
 
     return 0;
 }
@@ -1224,12 +1218,16 @@ static int do_lseek( bool kernel, int fd, off_t offset, int whence, off_t* new_o
             break;
 
         case SEEK_CUR :
+            kprintf( "SEEK_CUR before file->position=%llu\n", file->position );
+
             if ( ( file->position + offset ) < 0 ) {
                 error = -EINVAL;
                 goto out;
             } else {
                 file->position += offset;
             }
+
+            kprintf( "SEEK_CUR after file->position=%llu\n", file->position );
 
             break;
 
@@ -1673,8 +1671,7 @@ int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
 
 static int do_dup( bool kernel, int old_fd ) {
     int error;
-    file_t* old_file;
-    file_t* new_file;
+    file_t* file;
     io_context_t* io_context;
 
     if ( kernel ) {
@@ -1683,35 +1680,17 @@ static int do_dup( bool kernel, int old_fd ) {
         io_context = current_process()->io_context;
     }
 
-    old_file = io_context_get_file( io_context, old_fd );
+    file = io_context_get_file( io_context, old_fd );
 
-    if ( old_file == NULL ) {
+    if ( file == NULL ) {
         return -EBADF;
     }
 
-    new_file = create_file();
+    error = io_context_insert_file( io_context, file, 3 );
 
-    if ( new_file == NULL ) {
-        io_context_put_file( io_context, old_file );
-        return -ENOMEM;
-    }
+    io_context_put_file( io_context, file );
 
-    new_file->type = old_file->type;
-    new_file->inode = old_file->inode;
-    new_file->cookie = old_file->cookie;
-
-    atomic_inc( &new_file->inode->ref_count );
-
-    io_context_put_file( io_context, old_file );
-
-    error = io_context_insert_file( io_context, new_file );
-
-    if ( error < 0 ) {
-        delete_file( new_file );
-        return error;
-    }
-
-    return new_file->fd;
+    return error;
 }
 
 int sys_dup( int old_fd ) {
@@ -1720,9 +1699,7 @@ int sys_dup( int old_fd ) {
 
 static int do_dup2( bool kernel, int old_fd, int new_fd ) {
     int error;
-    bool do_insert;
-    file_t* old_file;
-    file_t* new_file;
+    file_t* file;
     io_context_t* io_context;
 
     if ( kernel ) {
@@ -1731,87 +1708,24 @@ static int do_dup2( bool kernel, int old_fd, int new_fd ) {
         io_context = current_process()->io_context;
     }
 
-    old_file = io_context_get_file( io_context, old_fd );
+    file = io_context_get_file( io_context, old_fd );
 
-    if ( old_file == NULL ) {
+    if ( file == NULL ) {
         return -EBADF;
     }
 
-    new_file = io_context_get_file( io_context, new_fd );
-
-    do_insert = ( new_file == NULL );
-
-    if ( do_insert ) {
-        new_file = create_file();
-
-        if ( new_file == NULL ) {
-            io_context_put_file( io_context, old_file );
-            return -ENOMEM;
-        }
-    } else {
-        inode_t* inode;
-
-        inode = new_file->inode;
-
-        /* Close the file */
-
-        if ( inode->mount_point->fs_calls->close != NULL ) {
-            inode->mount_point->fs_calls->close(
-                inode->mount_point->fs_data,
-                inode->fs_node,
-                new_file->cookie
-            );
-        }
-
-        /* Free the cookie */
-
-        if ( inode->mount_point->fs_calls->free_cookie != NULL ) {
-            inode->mount_point->fs_calls->free_cookie(
-                inode->mount_point->fs_data,
-                inode->fs_node,
-                new_file->cookie
-            );
-        }
-
-        put_inode( inode );
-
-        new_file->inode = NULL;
-        new_file->cookie = NULL;
-    }
-
-    new_file->type = old_file->type;
-    new_file->flags = old_file->flags;
-    new_file->inode = old_file->inode;
-    atomic_inc( &new_file->inode->ref_count );
-
-    io_context_put_file( io_context, old_file );
-
-    /* Open the new inode */
-
-    error = new_file->inode->mount_point->fs_calls->open(
-        new_file->inode->mount_point->fs_data,
-        new_file->inode,
-        new_file->flags,
-        &new_file->cookie
-    );
+    error = io_context_insert_file_at( io_context, file, new_fd, true );
 
     if ( error < 0 ) {
-        /* TODO: cleanup! */
-        return error;
+        goto out;
     }
 
-    if ( do_insert ) {
-        error = io_context_insert_file_with_fd( io_context, new_file, new_fd );
+    error = new_fd;
 
-        if ( error < 0 ) {
-            delete_file( new_file );
-            return error;
-        }
-    } else {
-        io_context_put_file( io_context, new_file );
-    }
+out:
+    io_context_put_file( io_context, file );
 
-    return 0;
+    return error;
 }
 
 int sys_dup2( int old_fd, int new_fd ) {
@@ -1867,7 +1781,7 @@ __init int init_vfs( void ) {
 
     /* Initialize the kernel I/O context */
 
-    error = init_io_context( &kernel_io_context );
+    error = init_io_context( &kernel_io_context, INIT_FILE_TABLE_SIZE );
 
     if ( error < 0 ) {
         goto error1;
