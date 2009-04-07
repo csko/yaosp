@@ -91,12 +91,18 @@ static int do_list( char* dirname ) {
                 snprintf( full_path, sizeof( full_path ), "%s/%s", dirname, entry->d_name );
             }
 
-            if ( stat( full_path, &entry_stat ) != 0 ) {
+            if ( lstat( full_path, &entry_stat ) != 0 ) {
                 continue;
             }
 
             if ( S_ISDIR( entry_stat.st_mode ) ) {
                 printf( "directory %s\n", entry->d_name );
+            } else if ( S_ISLNK( entry_stat.st_mode ) ) {
+                char link[ 256 ];
+
+                readlink( full_path, link, sizeof( link ) );
+
+                printf( "  symlink %s -> %s\n", entry->d_name, link );
             } else {
                 unit = 0;
 

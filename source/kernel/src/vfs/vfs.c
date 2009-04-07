@@ -1350,7 +1350,7 @@ static int do_readlink( bool kernel, const char* path, char* buffer, size_t leng
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode, true );
+    error = lookup_inode( io_context, NULL, path, &inode, false );
 
     if ( error < 0 ) {
         return error;
