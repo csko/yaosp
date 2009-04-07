@@ -18,8 +18,12 @@
 
 #include <unistd.h>
 
+#include <yaosp/debug.h>
+
 int pipe( int pipefd[2] ) {
     /* TODO */
+
+    dbprintf( "TODO: pipe() not yet implemented!\n" );
 
     return -1;
 }

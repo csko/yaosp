@@ -18,8 +18,12 @@
 
 #include <unistd.h>
 
+#include <yaosp/debug.h>
+
 unsigned int alarm( unsigned int seconds ) {
     /* TODO */
+
+    dbprintf( "TODO: alarm() not yet implemented!\n" );
 
     return 0;
 }

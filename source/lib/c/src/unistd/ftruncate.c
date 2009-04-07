@@ -21,7 +21,9 @@
 #include <yaosp/debug.h>
 
 int ftruncate( int fd, off_t length ) {
-    dbprintf( "ftruncate() called!\n" );
     /* TODO */
+
+    dbprintf( "TODO: ftruncate() not yet implemented!\n" );
+
     return -1;
 }

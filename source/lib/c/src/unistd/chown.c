@@ -18,8 +18,12 @@
 
 #include <unistd.h>
 
+#include <yaosp/debug.h>
+
 int chown( const char* path, uid_t owner, gid_t group ) {
     /* TODO */
+
+    dbprintf( "TODO: chown() not yet implemented!\n" );
 
     return 0;
 }

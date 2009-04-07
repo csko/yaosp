@@ -18,8 +18,12 @@
 
 #include <unistd.h>
 
+#include <yaosp/debug.h>
+
 int link( const char* oldpath, const char* newpath ) {
     /* TODO */
+
+    dbprintf( "TODO: link() not yet implemented!\n" );
 
     return 0;
 }

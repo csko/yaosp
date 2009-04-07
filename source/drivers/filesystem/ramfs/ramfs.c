@@ -478,15 +478,15 @@ static int ramfs_write_stat( void* fs_cookie, void* node, struct stat* stat, uin
 
     LOCK( cookie->lock );
 
-    if(mask & WSTAT_ATIME){
+    if ( mask & WSTAT_ATIME ) {
         inode->atime = stat->st_atime;
     }
 
-    if(mask & WSTAT_MTIME){
+    if ( mask & WSTAT_MTIME ) {
         inode->mtime = stat->st_mtime;
     }
 
-    if(mask & WSTAT_CTIME){
+    if ( mask & WSTAT_CTIME ) {
         inode->ctime = stat->st_ctime;
     }
 

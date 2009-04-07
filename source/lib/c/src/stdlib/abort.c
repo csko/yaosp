@@ -16,12 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <yaosp/debug.h>
-
 void abort( void ) {
-    dbprintf( "Abort called!\n" );
+    fprintf( stderr, "Application aborted!\n" );
     _exit( -1 );
 }
