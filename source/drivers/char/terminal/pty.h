@@ -53,8 +53,6 @@ typedef struct pty_node {
     size_t read_position;
     size_t write_position;
 
-    bool open;
-
     select_request_t* read_requests;
     select_request_t* write_requests;
 

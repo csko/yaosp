@@ -88,7 +88,6 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
     }
 
     node->mode = mode;
-    node->open = false;
     node->buffer_size = buffer_size;
 
     node->size = 0;
@@ -237,18 +236,6 @@ static int pty_open( void* fs_cookie, void* _node, int mode, void** file_cookie 
     if ( pty_is_master( node ) ) {
         return -EINVAL;
     }
-
-    LOCK( node->lock );
-
-    if ( node->open ) {
-        UNLOCK( node->lock );
-
-        return -EBUSY;
-    }
-
-    node->open = true;
-
-    UNLOCK( node->lock );
 
     return 0;
 }

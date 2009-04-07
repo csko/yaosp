@@ -1720,6 +1720,7 @@ int sys_dup( int old_fd ) {
 
 static int do_dup2( bool kernel, int old_fd, int new_fd ) {
     int error;
+    bool do_insert;
     file_t* old_file;
     file_t* new_file;
     io_context_t* io_context;
@@ -1736,26 +1737,73 @@ static int do_dup2( bool kernel, int old_fd, int new_fd ) {
         return -EBADF;
     }
 
-    new_file = create_file();
+    new_file = io_context_get_file( io_context, new_fd );
 
-    if ( new_file == NULL ) {
-        io_context_put_file( io_context, old_file );
-        return -ENOMEM;
+    do_insert = ( new_file == NULL );
+
+    if ( do_insert ) {
+        new_file = create_file();
+
+        if ( new_file == NULL ) {
+            io_context_put_file( io_context, old_file );
+            return -ENOMEM;
+        }
+    } else {
+        inode_t* inode;
+
+        inode = new_file->inode;
+
+        /* Close the file */
+
+        if ( inode->mount_point->fs_calls->close != NULL ) {
+            inode->mount_point->fs_calls->close(
+                inode->mount_point->fs_data,
+                inode->fs_node,
+                new_file->cookie
+            );
+        }
+
+        /* Free the cookie */
+
+        if ( inode->mount_point->fs_calls->free_cookie != NULL ) {
+            inode->mount_point->fs_calls->free_cookie(
+                inode->mount_point->fs_data,
+                inode->fs_node,
+                new_file->cookie
+            );
+        }
     }
 
     new_file->type = old_file->type;
+    new_file->flags = old_file->flags;
     new_file->inode = old_file->inode;
-    new_file->cookie = old_file->cookie;
-
     atomic_inc( &new_file->inode->ref_count );
 
     io_context_put_file( io_context, old_file );
 
-    io_context_insert_file_with_fd( io_context, new_file, new_fd );
+    /* Open the new inode */
+
+    error = new_file->inode->mount_point->fs_calls->open(
+        new_file->inode->mount_point->fs_data,
+        new_file->inode,
+        new_file->flags,
+        &new_file->cookie
+    );
 
     if ( error < 0 ) {
-        delete_file( new_file );
+        /* TODO: cleanup! */
         return error;
+    }
+
+    if ( do_insert ) {
+        error = io_context_insert_file_with_fd( io_context, new_file, new_fd );
+
+        if ( error < 0 ) {
+            delete_file( new_file );
+            return error;
+        }
+    } else {
+        io_context_put_file( io_context, new_file );
     }
 
     return 0;
