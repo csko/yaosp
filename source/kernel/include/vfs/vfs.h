@@ -192,6 +192,7 @@ int sys_lstat( const char* path, struct stat* stat );
 int sys_fstat( int fd, struct stat* stat );
 int sys_lseek( int fd, off_t* offset, int whence, off_t* result );
 int sys_fcntl( int fd, int cmd, int arg );
+int sys_access( const char* path, int mode );
 int sys_mkdir( const char* path, int perms );
 int sys_rmdir( const char* path );
 int sys_unlink( const char* path );

@@ -21,6 +21,7 @@
 #include <smp.h>
 #include <macros.h>
 #include <kernel.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <vfs/rootfs.h>
@@ -784,6 +785,32 @@ int sys_isatty( int fd ) {
     return do_isatty( false, fd );
 }
 
+static int do_access( bool kernel, const char* path, int mode ) {
+    int error;
+    inode_t* inode;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, NULL, path, &inode, true );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    put_inode( inode );
+
+    return 0;
+}
+
+int sys_access( const char* path, int mode ) {
+    return do_access( false, path, mode );
+}
+
 static int do_mkdir( bool kernel, const char* path, int permissions ) {
     int error;
     char* name;
@@ -1298,6 +1325,7 @@ static int do_fcntl( bool kernel, int fd, int cmd, int arg ) {
             break;
 
         default :
+            kprintf( "%s(): Unhandled fcntl command: %x\n", __FUNCTION__, cmd );
             error = -EINVAL;
             break;
     }
@@ -1723,7 +1751,7 @@ static int do_dup2( bool kernel, int old_fd, int new_fd ) {
 
     io_context_put_file( io_context, old_file );
 
-    error = io_context_insert_file_with_fd( io_context, new_file, new_fd );
+    io_context_insert_file_with_fd( io_context, new_file, new_fd );
 
     if ( error < 0 ) {
         delete_file( new_file );

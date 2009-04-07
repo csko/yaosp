@@ -173,14 +173,14 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
 
 #if 0
     kprintf(
-        "Coming from: %x %x %x %x %x\n",
+        "Coming from: %x %x %x\n",
         __builtin_return_address( 0 ),
         __builtin_return_address( 1 ),
-        __builtin_return_address( 2 ),
-        __builtin_return_address( 3 ),
-        __builtin_return_address( 4 )
+        __builtin_return_address( 2 )
     );
 #endif
+
+    memory_context_dump( &kernel_memory_context );
 
     halt_loop();
 }
