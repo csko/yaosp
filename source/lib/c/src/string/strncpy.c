@@ -1,6 +1,6 @@
 /* strncpy function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,11 +19,13 @@
 #include <string.h>
 
 char* strncpy( char* d, const char* s, size_t c ) {
-  char* tmp = d;
+    char* tmp = d;
 
-  if ( c > 0 ) {
-    while ( ( c-- ) && ( *d++ = *s++ ) != 0 ) { }
-  }
+    if ( c > 0 ) {
+        while ( ( c-- ) && ( *d++ = *s++ ) != 0 ) { }
+    }
 
-  return tmp;
+    *d = '\0';
+
+    return tmp;
 }

@@ -41,6 +41,8 @@ static event_t irc_read;
 static size_t input_size = 0;
 static char* input_buffer = NULL;
 
+static const char* timestamp_format = "%D %T";
+
 static void parse_line1(const char* line){
     char tmp[256];
     char* cmd = NULL;
@@ -137,7 +139,6 @@ int irc_handle_privmsg( const char* sender, const char* chan, const char* msg ) 
 
     time_t now;
     char timestamp[ 128 ];
-    char* timestamp_format = "%D %T"; /* TODO: make global variable */
 
     error = parse_client(sender, &_sender);
 
@@ -179,7 +180,6 @@ int irc_handle_notice( const char* sender, const char* chan, const char* msg){
 
     time_t now;
     char timestamp[ 128 ];
-    char* timestamp_format = "%D %T"; /* TODO: make global variable */
 
     error = parse_client(sender, &_sender);
 
@@ -221,7 +221,6 @@ int irc_handle_mode( const char* sender, const char* chan, const char* msg){
 
     time_t now;
     char timestamp[ 128 ];
-    char* timestamp_format = "%D %T"; /* TODO: make global variable */
 
     error = parse_client(sender, &_sender);
 
@@ -285,7 +284,7 @@ int irc_handle_join( const char* client, const char* chan){
     }
 
     /* Add new user to the user list of channel */
-    addclient_chan(chan, _client.nick, 0);
+    addnick_chan(chan, _client.nick, 0);
 
     return 0;
 }

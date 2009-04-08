@@ -48,7 +48,7 @@ int create_chan(const char* name){
 
         strncpy(chan->name, name, 256);
         chan->topic[0] = '\0';
-        init_array(&chan->clients);
+        init_array(&chan->nicks);
         init_array(&chan->bans);
         init_array(&chan->invites);
         init_array(&chan->exemptions);
@@ -74,10 +74,32 @@ int destroy_chan(const char* name){
     }
 }
 
-int addclient_chan(const char* chan, const char* client, int mode){
+int addnick_chan(const char* chan, const char* nick, int mode){
+    chan_t* channel;
+
+    channel  = get_chan(chan);
+
+    if(nick_in_channel(channel, nick)){
+        return 1;
+    }
+
+    // TODO: add item
     return 0;
 }
 
-int removeclient_chan(const char* chan, const char* client){
+int removenick_chan(const char* chan, const char* nick){
+    chan_t* channel;
+
+    channel = get_chan(chan);
+
+    if(!nick_in_channel(channel, nick)){
+        return 1;
+    }
+
+    // TODO: remove item
+    return 0;
+}
+
+int nick_in_channel(chan_t* chan, const char* nick){
     return 0;
 }
