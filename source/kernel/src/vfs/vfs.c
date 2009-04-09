@@ -1218,16 +1218,12 @@ static int do_lseek( bool kernel, int fd, off_t offset, int whence, off_t* new_o
             break;
 
         case SEEK_CUR :
-            kprintf( "SEEK_CUR before file->position=%llu\n", file->position );
-
             if ( ( file->position + offset ) < 0 ) {
                 error = -EINVAL;
                 goto out;
             } else {
                 file->position += offset;
             }
-
-            kprintf( "SEEK_CUR after file->position=%llu\n", file->position );
 
             break;
 

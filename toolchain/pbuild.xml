@@ -12,10 +12,10 @@
     </target>
 
     <target name="get_sources" type="private">
-        <httpget address="http://ftp.gnu.org/gnu/binutils/binutils-2.19.tar.bz2"
+        <httpget address="http://files.yaosp.org/source/binutils/binutils-2.19.tar.bz2"
                  to="binutils-2.19.tar.bz2"
                  md5="17a52219dee5a76c1a9d9b0bfd337d66"/>
-        <httpget address="http://ftp.gnu.org/gnu/gcc/gcc-4.3.3/gcc-4.3.3.tar.bz2"
+        <httpget address="http://files.yaosp.org/source/gcc/gcc-4.3.3.tar.bz2"
                  to="gcc-4.3.3.tar.bz2"
                  md5="cc3c5565fdb9ab87a05ddb106ba0bd1f"/>
 

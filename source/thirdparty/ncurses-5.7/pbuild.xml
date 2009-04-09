@@ -26,7 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="get_source">
-        <httpget address="http://ftp.gnu.org/gnu/ncurses/ncurses-5.7.tar.gz"
+        <httpget address="http://files.yaosp.org/source/ncurses/ncurses-5.7.tar.gz"
                  to="ncurses-5.7.tar.gz"
                  md5="cce05daf61a64501ef6cd8da1f727ec6"/>
 

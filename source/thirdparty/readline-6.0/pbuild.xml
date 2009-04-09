@@ -26,7 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="get_source">
-        <httpget address="http://ftp.gnu.org/gnu/readline/readline-6.0.tar.gz"
+        <httpget address="http://files.yaosp.org/source/readline/readline-6.0.tar.gz"
                  to="readline-6.0.tar.gz"
                  md5="b7f65a48add447693be6e86f04a63019"/>
 

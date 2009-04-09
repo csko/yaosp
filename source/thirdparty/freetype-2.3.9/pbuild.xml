@@ -26,7 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="get_source">
-        <httpget address="http://ftp.cc.uoc.gr/mirrors/nongnu.org/freetype/freetype-2.3.9.tar.bz2"
+        <httpget address="http://files.yaosp.org/source/freetype/freetype-2.3.9.tar.bz2"
                  to="freetype-2.3.9.tar.bz2"
                  md5="d76233108aca9c9606cdbd341562ad9a"/>
 
