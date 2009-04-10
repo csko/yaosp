@@ -23,10 +23,20 @@
 
 static int set_flags( FILE* stream, int flags ) {
     switch ( flags ) {
-        case _IONBF: stream->flags = ( stream->flags & ~( __FILE_BUFLINEWISE ) ) | __FILE_NOBUF; return 0;
-        case _IOLBF: stream->flags = ( stream->flags & ~( __FILE_NOBUF ) ) | __FILE_BUFLINEWISE; return 0;
-        case _IOFBF: stream->flags = stream->flags & ~( __FILE_NOBUF | __FILE_BUFLINEWISE ); return 0;
-        default: return -1;
+        case _IONBF :
+            stream->flags = ( stream->flags & ~( __FILE_BUFLINEWISE ) ) | __FILE_NOBUF;
+            return 0;
+
+        case _IOLBF :
+            stream->flags = ( stream->flags & ~( __FILE_NOBUF ) ) | __FILE_BUFLINEWISE;
+            return 0;
+
+        case _IOFBF :
+            stream->flags = stream->flags & ~( __FILE_NOBUF | __FILE_BUFLINEWISE );
+            return 0;
+
+        default :
+            return -1;
     }
 }
 
@@ -36,7 +46,8 @@ int setvbuf( FILE* stream, char* buf, int flags, size_t size ) {
             free( stream->buffer );
         }
 
-      stream->buffer = buf;
+        stream->buffer = buf;
+        stream->flags |= __FILE_DONTFREEBUF;
     } else {
         char *tmp;
 

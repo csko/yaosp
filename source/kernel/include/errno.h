@@ -47,5 +47,6 @@
 #define EAGAIN    25
 #define E2BIG     26
 #define ETIMEDOUT 27
+#define EOVERFLOW 28
 
 #endif // _ERRNO_H_

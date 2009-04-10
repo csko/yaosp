@@ -65,7 +65,7 @@ FILE* __init_file( int fd, int close_on_error, int mode ) {
     }
 
     stream->fd = fd;
-    stream->flags = __FILE_BUFINPUT;
+    stream->flags = 0;
     stream->buffer_pos = 0;
     stream->buffer_size = _IO_BUFSIZE;
     stream->buffer_data_size = 0;

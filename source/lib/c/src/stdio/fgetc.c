@@ -19,12 +19,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "stdio_internal.h"
+
 int fgetc( FILE* stream ) {
     unsigned char c;
 
     /* Check if we can read from the stream */
 
-    if ( ( stream->flags & __FILE_CAN_READ ) == 0 ) {
+    if ( ( ( stream->flags & __FILE_CAN_READ ) == 0 ) ||
+         ( __set_stream_flags( stream, __FILE_BUFINPUT ) ) ) {
         stream->flags |= __FILE_ERROR;
         return EOF;
     }

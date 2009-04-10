@@ -58,6 +58,8 @@ int main( int argc, char** argv ) {
 
     create_temp_directory();
 
+    dbprintf( "Starting shells ...\n" );
+
     for ( i = 0; i < 5; i++ ) {
         child = fork();
 
@@ -68,7 +70,7 @@ int main( int argc, char** argv ) {
 
             char* argv[] = { "shell", NULL };
             char* envv[] = {
-                "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
+                "PATH=/yaosp/application:/yaosp/package/python-2.5.4:/yaosp/package/binutils-2.17/bin:/yaosp/package/gcc-4.1.2/bin:/yaosp/package/gcc-4.1.2/libexec/gcc/i686-pc-yaosp/4.1.2",
                 "HOME=/",
                 "TERM=vt100",
                 "TEMP=/temp",
@@ -76,8 +78,6 @@ int main( int argc, char** argv ) {
             };
 
             snprintf( tty_path, sizeof( tty_path ), "/device/terminal/tty%d", i );
-
-            dbprintf( "Executing shell #%d! (tty=%s)\n", i, tty_path );
 
             slave_tty = open( tty_path, O_RDWR );
 
@@ -94,9 +94,7 @@ int main( int argc, char** argv ) {
             dbprintf( "Failed to execute shell: %d\n", error );
 
             _exit( -1 );
-        } else if ( child > 0 ) {
-            dbprintf( "Child process for shell #%d is %d\n", i, child );
-        } else {
+        } else if ( child < 0 ) {
             dbprintf( "Failed to create child process for shell #%d (error=%d)\n", i, child );
         }
     }

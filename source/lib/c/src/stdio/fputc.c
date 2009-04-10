@@ -19,10 +19,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "stdio_internal.h"
+
 int fputc( int c, FILE* stream ) {
     /* Check if we can write to the stream */
 
-    if ( ( stream->flags & __FILE_CAN_WRITE ) == 0 ) {
+    if ( ( ( stream->flags & __FILE_CAN_WRITE ) == 0 ) ||
+         ( __set_stream_flags( stream, 0 ) ) ) {
         stream->flags |= __FILE_ERROR;
         return EOF;
     }

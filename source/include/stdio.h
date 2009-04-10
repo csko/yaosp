@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include <stdarg.h>
+#include <sys/types.h>
 
 #define _IONBF 0
 #define _IOLBF 1
@@ -74,7 +75,9 @@ int ferror( FILE* stream );
 int fileno( FILE* stream );
 int fflush( FILE* stream );
 int fseek( FILE* stream, long offset, int whence );
+int fseeko( FILE* stream, off_t offset, int whence );
 long ftell( FILE* stream );
+off_t ftello( FILE* stream );
 size_t fread( void* ptr, size_t size, size_t nmemb, FILE* stream );
 size_t fwrite( const void* ptr, size_t size, size_t nmemb, FILE* stream );
 void rewind( FILE* stream );
@@ -91,6 +94,8 @@ int vprintf( const char* format, va_list ap ) __attribute__(( __format__( __prin
 int vfprintf( FILE* stream, const char* format, va_list ap ) __attribute__(( __format__( __printf__, 2, 0 ) ));
 int vsprintf( char *str, const char *format, va_list ap ) __attribute__(( __format__( __printf__, 2, 0 ) ));
 int vsnprintf( char* str, size_t size, const char* format, va_list ap ) __attribute__(( __format__( __printf__, 3, 0 ) ));
+
+int asprintf(char **strp, const char *fmt, ...) __attribute__(( __format__( __printf__, 2, 3 ) ));
 
 int scanf( const char* format, ... );
 int fscanf( FILE* stream, const char* format, ... );
@@ -111,8 +116,8 @@ int fputs( const char* s, FILE* stream );
 int puts( const char* s );
 int putchar( int c );
 
-#define setbuf(stream,buf) setvbuf(stream,buf,buf?_IOFBF:_IONBF,BUFSIZ)
-#define setbuffer(stream,buf,size) setvbuf(stream,buf,buf?_IOFBF:_IONBF,size)
+#define setbuf(stream,buf) setvbuf(stream,buf,(buf!=NULL)?_IOFBF:_IONBF,BUFSIZ)
+#define setbuffer(stream,buf,size) setvbuf(stream,buf,(buf!=NULL)?_IOFBF:_IONBF,size)
 int setvbuf( FILE* stream, char* buf, int flags, size_t size );
 
 int rename( const char* oldpath, const char* newpath );

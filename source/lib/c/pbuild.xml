@@ -125,6 +125,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/fcntl/open.c</item>
         <item>src/fcntl/creat.c</item>
         <item>src/fcntl/fcntl.c</item>
+        <item>src/stdio/stdio_internal.c</item>
         <item>src/stdio/streams.c</item>
         <item>src/stdio/ferror.c</item>
         <item>src/stdio/fgetc.c</item>

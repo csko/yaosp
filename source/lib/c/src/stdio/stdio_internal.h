@@ -1,4 +1,4 @@
-/* ftell function
+/* fopen function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,40 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <limits.h>
+#ifndef _STDIO_INTERNAL_H_
+#define _STDIO_INTERNAL_H_
 
-off_t ftello( FILE* stream ) {
-    off_t l;
+int __set_stream_flags( FILE* stream, int new_flags );
 
-    if ( stream->flags & ( __FILE_EOF | __FILE_ERROR ) ) {
-        return -1;
-    }
-
-    l = lseek( stream->fd, 0, SEEK_CUR );
-
-    if ( l == ( off_t )-1 ) {
-        return -1;
-    }
-
-    if ( stream->flags & __FILE_BUFINPUT ) {
-        return l - ( stream->buffer_data_size - stream->buffer_pos ) - stream->has_ungotten;
-    } else {
-        return l + stream->buffer_pos;
-    }
-}
-
-long ftell( FILE* stream ) {
-    off_t l;
-
-    l = ftello( stream );
-
-    if ( l > LONG_MAX ) {
-        errno = EOVERFLOW;
-        return -1;
-    }
-
-    return ( long )l;
-}
+#endif /* _STDIO_INTERNAL_H_ */

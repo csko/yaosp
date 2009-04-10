@@ -19,7 +19,12 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <yaosp/debug.h>
+
 int rename( const char* oldpath, const char* newpath ) {
+    dbprintf( "TODO: rename not yet implemented! (from: %s to: %s)\n", oldpath, newpath );
+
     errno = -ENOSYS;
+
     return -1;
 }
