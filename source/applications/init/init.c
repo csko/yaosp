@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 
 #include <yaosp/debug.h>
 #include <yaosp/module.h>
@@ -51,12 +52,19 @@ static int create_temp_directory( void ) {
 
 int main( int argc, char** argv ) {
     int i;
+    int f;
     pid_t child;
+
+    /* Create symbolic links */
 
     symlink( "/application", "/yaosp/application" );
     symlink( "/system", "/yaosp/system" );
 
+    /* Create and mount the /temp directory */
+
     create_temp_directory();
+
+    /* Start shells */
 
     dbprintf( "Starting shells ...\n" );
 
@@ -70,7 +78,7 @@ int main( int argc, char** argv ) {
 
             char* argv[] = { "shell", NULL };
             char* envv[] = {
-                "PATH=/yaosp/application:/yaosp/package/python-2.5.4:/yaosp/package/binutils-2.17/bin:/yaosp/package/gcc-4.1.2/bin:/yaosp/package/gcc-4.1.2/libexec/gcc/i686-pc-yaosp/4.1.2",
+                "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
                 "HOME=/",
                 "TERM=vt100",
                 "TEMP=/temp",
@@ -90,6 +98,8 @@ int main( int argc, char** argv ) {
             dup2( slave_tty, 1 );
             dup2( slave_tty, 2 );
 
+            close( slave_tty );
+
             error = execve( "/yaosp/application/shell", argv, envv );
             dbprintf( "Failed to execute shell: %d\n", error );
 
@@ -97,6 +107,20 @@ int main( int argc, char** argv ) {
         } else if ( child < 0 ) {
             dbprintf( "Failed to create child process for shell #%d (error=%d)\n", i, child );
         }
+    }
+
+    dbprintf( "Shells started!\n" );
+
+    /* Switch to the first terminal */
+
+    f = open( "/device/term_ctrl", O_RDONLY );
+
+    if ( f >= 0 ) {
+        int tmp = 0;
+
+        ioctl( f, IOCTL_TERM_SET_ACTIVE, &tmp );
+
+        close( f );
     }
 
     return 0;

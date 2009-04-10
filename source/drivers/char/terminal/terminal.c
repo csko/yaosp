@@ -992,6 +992,12 @@ int init_module( void ) {
         }
     }
 
+    error = init_terminal_ctrl_device();
+
+    if ( error < 0 ) {
+        return error;
+    }
+
     return 0;
 }
 

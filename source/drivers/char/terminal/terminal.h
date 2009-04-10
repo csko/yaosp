@@ -20,6 +20,7 @@
 #define _TERMINAL_TERMINAL_H_
 
 #include <types.h>
+#include <console.h>
 
 #define MAX_TERMINAL_COUNT 6
 
@@ -81,5 +82,7 @@ void terminal_put_char( terminal_t* terminal, char c );
 
 int terminal_scroll( int offset );
 int terminal_switch_to( int index );
+
+int init_terminal_ctrl_device( void );
 
 #endif // _TERMINAL_TERMINAL_H_

@@ -48,4 +48,8 @@
 #define IOCTL_NET_START          0x00000301
 #define IOCTL_NET_GET_HW_ADDRESS 0x00000302
 
+/* Terminal control ioctls */
+
+#define IOCTL_TERM_SET_ACTIVE    0x00000400
+
 #endif // _IOCTL_H_
