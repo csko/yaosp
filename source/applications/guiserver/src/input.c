@@ -146,6 +146,14 @@ static int input_thread_entry( void* arg ) {
 
                     break;
                 }
+
+                case MOUSE_PRESSED :
+                    wm_mouse_pressed( event->param1 );
+                    break;
+
+                case MOUSE_RELEASED :
+                    wm_mouse_released( event->param1 );
+                    break;
             }
 
             put_input_event( event );

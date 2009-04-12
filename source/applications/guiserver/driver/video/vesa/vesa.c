@@ -184,7 +184,7 @@ graphics_driver_t vesa_graphics_driver = {
     .get_screen_mode_info = vesa_get_mode_info,
     .set_screen_mode = vesa_set_mode,
     .get_framebuffer_info = vesa_get_framebuffer_info,
-    .fill_rect = GFX_FILL_RECT,
+    .fill_rect = generic_fill_rect,
     .draw_text = generic_draw_text,
     .blit_bitmap = generic_blit_bitmap
 };

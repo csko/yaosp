@@ -31,4 +31,14 @@ static inline void point_add( point_t* point1, point_t* point2 ) {
     point1->y += point2->y;
 }
 
+static inline void point_sub_n( point_t* dest, point_t* src1, point_t* src2 ) {
+    dest->x = src1->x - src2->x;
+    dest->y = src1->y - src2->y;
+}
+
+static inline void point_sub_xy_n( point_t* dest, point_t* point, int x, int y ) {
+    dest->x = point->x - x;
+    dest->y = point->y - y;
+}
+
 #endif /* _YGUI_POINT_H_ */

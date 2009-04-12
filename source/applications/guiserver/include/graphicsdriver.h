@@ -31,7 +31,8 @@
 
 typedef enum drawing_mode {
     DM_COPY,
-    DM_BLEND
+    DM_BLEND,
+    DM_INVERT
 } drawing_mode_t;
 
 typedef struct screen_mode {
@@ -48,7 +49,7 @@ typedef struct graphics_driver {
     int ( *get_screen_mode_info )( uint32_t index, screen_mode_t* screen_mode );
     int ( *set_screen_mode )( screen_mode_t* screen_mode );
     int ( *get_framebuffer_info )( void** address );
-    int ( *fill_rect )( bitmap_t* bitmap, rect_t* rect, color_t* color );
+    int ( *fill_rect )( bitmap_t* bitmap, rect_t* rect, color_t* color, drawing_mode_t mode );
     int ( *draw_text )( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font_node_t* font, color_t* color, const char* text, int length );
     int ( *blit_bitmap )( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t* src_bitmap, rect_t* src_rect, drawing_mode_t mode );
 } graphics_driver_t;
@@ -58,14 +59,7 @@ extern bitmap_t* screen_bitmap;
 extern screen_mode_t active_screen_mode;
 extern graphics_driver_t* graphics_driver;
 
-#if defined( USE_I386_ASM )
-int i386_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color );
-#define GFX_FILL_RECT i386_fill_rect
-#else
-int generic_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color );
-#define GFX_FILL_RECT generic_fill_rect
-#endif
-
+int generic_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color, drawing_mode_t mode );
 int generic_draw_text( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font_node_t* font, color_t* color, const char* text, int length );
 int generic_blit_bitmap( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t* src_bitmap, rect_t* src_rect, drawing_mode_t mode );
 

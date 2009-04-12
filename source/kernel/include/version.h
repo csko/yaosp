@@ -21,7 +21,7 @@
 
 #define KERNEL_MAJOR_VERSION   0
 #define KERNEL_MINOR_VERSION   0
-#define KERNEL_RELEASE_VERSION 2
+#define KERNEL_RELEASE_VERSION 3
 
 extern const char* build_date;
 extern const char* build_time;

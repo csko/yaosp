@@ -23,8 +23,16 @@
 #define MAX_FREE_EVENT_COUNT  64
 
 typedef enum input_event_type {
-    MOUSE_MOVED
+    MOUSE_MOVED,
+    MOUSE_PRESSED,
+    MOUSE_RELEASED
 } input_event_type_t;
+
+enum {
+    MOUSE_BTN_LEFT,
+    MOUSE_BTN_RIGHT,
+    MOUSE_BTN_MIDDLE
+};
 
 typedef struct input_event {
     input_event_type_t type;

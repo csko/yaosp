@@ -32,4 +32,17 @@ static inline uint32_t color_to_uint32( color_t* color ) {
     return ( ( color->alpha << 24 ) | ( color->red << 16 ) | ( color->green << 8 ) | ( color->blue ) );
 }
 
+static inline void color_from_uint32( color_t* color, uint32_t data ) {
+    color->red = ( data >> 16 ) & 0xFF;
+    color->green = ( data >> 8 ) & 0xFF;
+    color->blue = data & 0xFF;
+    color->alpha = ( data >> 24 ) & 0xFF;
+}
+
+static inline void color_invert( color_t* color ) {
+    color->red = 255 - color->red;
+    color->green = 255 - color->green;
+    color->blue = 255 - color->blue;
+}
+
 #endif /* _YGUI_COLOR_H_ */

@@ -24,7 +24,10 @@
 
 #define BITMAP_OFFSET_32( ptr, x, y, bpl ) ((uint32_t*)(((uint8_t*)(ptr)) + (x*4) + (y) * (bpl)))
 
-static void fill_rect_rgb32( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
+#if defined( USE_I386_ASM )
+int i386_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32_t color );
+#else
+static void generic_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
     int x;
     int y;
     int height;
@@ -33,6 +36,10 @@ static void fill_rect_rgb32( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
     uint32_t padding;
 
     rect_bounds( rect, &width, &height );
+
+    if ( ( width == 0 ) || ( height == 0 ) ) {
+        return;
+    }
 
     assert( bitmap->width >= width );
 
@@ -47,15 +54,63 @@ static void fill_rect_rgb32( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
         data += padding;
     }
 }
+#endif
 
-int generic_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color ) {
-    switch ( bitmap->color_space ) {
-        case CS_RGB32 :
-            fill_rect_rgb32( bitmap, rect, color_to_uint32( color ) );
+static void generic_fill_rect_rgb32_invert( bitmap_t* bitmap, rect_t* rect ) {
+    int x;
+    int y;
+    int height;
+    int width;
+    uint32_t* data;
+    uint32_t padding;
+    color_t color;
+
+    rect_bounds( rect, &width, &height );
+
+    if ( ( width == 0 ) || ( height == 0 ) ) {
+        return;
+    }
+
+    assert( bitmap->width >= width );
+
+    data = ( uint32_t* )bitmap->buffer + ( rect->top * bitmap->width + rect->left );
+    padding = bitmap->width - width;
+
+    for ( y = 0; y < height; y++ ) {
+        for ( x = 0; x < width; x++ ) {
+            color_from_uint32( &color, *data );
+            color_invert( &color );
+            *data++ = color_to_uint32( &color );
+        }
+
+        data += padding;
+    }
+}
+
+int generic_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color, drawing_mode_t mode ) {
+    switch ( mode ) {
+        case DM_COPY :
+            switch ( bitmap->color_space ) {
+                case CS_RGB32 :
+#if defined( USE_I386_ASM )
+                    i386_fill_rect_rgb32_copy( bitmap, rect, color_to_uint32( color ) );
+#else
+                    generic_fill_rect_rgb32_copy( bitmap, rect, color_to_uint32( color ) );
+#endif
+                    break;
+
+                default :
+                    dbprintf( "generic_fill_rect(): Not supported for color space: %d\n", bitmap->color_space );
+                    break;
+            }
+
             break;
 
-        default :
-            dbprintf( "generic_fill_rect(): Not supported for color space: %d\n", bitmap->color_space );
+        case DM_BLEND :
+            break;
+
+        case DM_INVERT :
+            generic_fill_rect_rgb32_invert( bitmap, rect );
             break;
     }
 

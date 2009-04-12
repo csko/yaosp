@@ -229,8 +229,6 @@ int hide_mouse_pointer( void ) {
 }
 
 int mouse_moved( point_t* delta ) {
-    hide_mouse_pointer();
-
     point_add( &mouse_position, delta );
 
     if ( mouse_position.x < 0 ) {
@@ -245,7 +243,11 @@ int mouse_moved( point_t* delta ) {
         mouse_position.y = screen_rect.bottom;
     }
 
-    show_mouse_pointer();
+    return 0;
+}
+
+int mouse_get_position( point_t* position ) {
+    memcpy( position, &mouse_position, sizeof( point_t ) );
 
     return 0;
 }

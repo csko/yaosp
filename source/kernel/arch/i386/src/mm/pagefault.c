@@ -23,6 +23,7 @@
 #include <semaphore.h>
 #include <macros.h>
 #include <scheduler.h>
+#include <debug.h>
 #include <mm/region.h>
 #include <mm/context.h>
 #include <mm/pages.h>
@@ -40,6 +41,7 @@ void dump_registers( registers_t* regs );
 static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr2, const char* message ) {
     kprintf( "Invalid page fault at 0x%x (%s)\n", cr2, message );
     dump_registers( regs );
+    debug_print_stack_trace();
 
     if ( thread != NULL ) {
         kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );

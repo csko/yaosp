@@ -56,6 +56,13 @@ static inline void rect_lefttop( rect_t* rect, point_t* lefttop ) {
     lefttop->y = rect->top;
 }
 
+static inline void rect_add_point( rect_t* rect, point_t* point ) {
+    rect->left = rect->left + point->x;
+    rect->right = rect->right + point->x;
+    rect->top = rect->top + point->y;
+    rect->bottom = rect->bottom + point->y;
+}
+
 static inline void rect_add_point_n( rect_t* dst, rect_t* src1, point_t* src2 ) {
     dst->left = src1->left + src2->x;
     dst->right = src1->right + src2->x;
@@ -87,6 +94,11 @@ static inline void rect_and_n( rect_t* dst, rect_t* rect1, rect_t* rect2 ) {
 static inline int rect_is_valid( rect_t* rect ) {
     return ( ( rect->left <= rect->right ) &&
              ( rect->top <= rect->bottom ) );
+}
+
+static inline int rect_has_point( rect_t* rect, point_t* point ) {
+    return ( ( rect->left <= point->x ) && ( point->x <= rect->right ) &&
+             ( rect->top <= point->y ) && ( point->y <= rect->bottom ) );
 }
 
 #endif /* _YGUI_RECT_H_ */

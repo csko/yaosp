@@ -102,6 +102,8 @@ int handle_create_window( msg_create_win_t* request ) {
 
     window->client_port = request->client_port;
     window->flags = request->flags;
+    window->is_moving = 0;
+    window->mouse_on_decorator = 0;
 
     rect_init(
         &window->screen_rect,
@@ -126,6 +128,14 @@ int handle_create_window( msg_create_win_t* request ) {
         goto error5;
     }
 
+    error = window_decorator->initialize( window );
+
+    if ( error < 0 ) {
+        goto error6;
+    }
+
+    window_decorator->calculate_regions( window );
+
     thread = create_thread(
         "window",
         PRIORITY_DISPLAY,
@@ -135,7 +145,7 @@ int handle_create_window( msg_create_win_t* request ) {
     );
 
     if ( thread < 0 ) {
-        goto error6;
+        goto error7;
     }
 
     wake_up_thread( thread );
@@ -143,6 +153,9 @@ int handle_create_window( msg_create_win_t* request ) {
     reply.server_port = window->server_port;
 
     goto out;
+
+error7:
+    window_decorator->destroy( window );
 
 error6:
     put_bitmap( window->bitmap );
@@ -164,6 +177,74 @@ error1:
 
 out:
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_win_reply_t ) );
+
+    return 0;
+}
+
+int window_mouse_entered( window_t* window, point_t* mouse_position ) {
+    point_t window_position;
+
+    point_sub_xy_n( &window_position, mouse_position, window->screen_rect.left, window->screen_rect.top );
+
+    window->mouse_on_decorator = window_decorator->border_has_position( window, mouse_position );
+
+    if ( window->mouse_on_decorator ) {
+        window_decorator->mouse_entered( window, mouse_position );
+    } else {
+        /* TODO: Tell the window, the mouse entered */
+    }
+
+    return 0;
+}
+
+int window_mouse_exited( window_t* window ) {
+    if ( window->mouse_on_decorator ) {
+        window_decorator->mouse_exited( window );
+    } else {
+        /* TODO: Tell the window, the mouse is exited */
+    }
+
+    return 0;
+}
+
+int window_mouse_moved( window_t* window, point_t* mouse_position ) {
+    int on_decorator;
+
+    on_decorator = window_decorator->border_has_position( window, mouse_position );
+
+    if ( on_decorator ) {
+        if ( window->mouse_on_decorator ) {
+            window_decorator->mouse_moved( window, mouse_position );
+        } else {
+            window_decorator->mouse_entered( window, mouse_position );
+        }
+    } else {
+        if ( window->mouse_on_decorator ) {
+            /* TODO: Tell the window, the mouse is exited */
+
+            window_decorator->mouse_exited( window );
+        } else {
+            /* TODO: Tell the window, the mouse is moved */
+        }
+    }
+
+    window->mouse_on_decorator = on_decorator;
+
+    return 0;
+}
+
+int window_mouse_pressed( window_t* window, int button ) {
+    if ( window->mouse_on_decorator ) {
+        window_decorator->mouse_pressed( window, button );
+    }
+
+    return 0;
+}
+
+int window_mouse_released( window_t* window, int button ) {
+    if ( window->mouse_on_decorator ) {
+        window_decorator->mouse_released( window, button );
+    }
 
     return 0;
 }

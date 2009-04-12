@@ -119,7 +119,7 @@ static int setup_graphics_mode( void ) {
 
     color_t tmp_color = { 0x11, 0x22, 0x33, 0x00 };
 
-    graphics_driver->fill_rect( screen_bitmap, &screen_rect, &tmp_color );
+    graphics_driver->fill_rect( screen_bitmap, &screen_rect, &tmp_color, DM_COPY );
 
     font_properties_t properties = { .point_size = 18 * 64, .flags = FONT_SMOOTHED };
     font_node_t* font_node = get_font( "DejaVu Sans", "Book", &properties );

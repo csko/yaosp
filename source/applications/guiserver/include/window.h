@@ -35,8 +35,18 @@ typedef struct window {
 
     bitmap_t* bitmap;
     region_t visible_regions;
+
+    int is_moving;
+    int mouse_on_decorator;
+    void* decorator_data;
 } window_t;
 
 int handle_create_window( msg_create_win_t* request );
+
+int window_mouse_entered( window_t* window, point_t* mouse_position );
+int window_mouse_exited( window_t* window );
+int window_mouse_moved( window_t* window, point_t* mouse_position );
+int window_mouse_pressed( window_t* window, int button );
+int window_mouse_released( window_t* window, int button );
 
 #endif /* _WINDOW_H_ */

@@ -16,8 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
+#include <errno.h>
+
 #include <windowdecorator.h>
 #include <graphicsdriver.h>
+#include <mouse.h>
+#include <windowmanager.h>
 
 #define BORDER_SIZE 5
 
@@ -58,6 +63,89 @@ static color_t top_border_colors[] = {
     { 0x5C, 0x5C, 0x5B, 0xFF }
 };
 
+typedef struct decorator_data {
+    rect_t header;
+    rect_t left_border;
+    rect_t right_border;
+    rect_t bottom_border;
+} decorator_data_t;
+
+static int decorator_initialize( window_t* window ) {
+    decorator_data_t* data;
+
+    data = ( decorator_data_t* )malloc( sizeof( decorator_data_t ) );
+
+    if ( data == NULL ) {
+        return -ENOMEM;
+    }
+
+    window->decorator_data = ( void* )data;
+
+    return 0;
+}
+
+static int decorator_destroy( window_t* window ) {
+    assert( window->decorator_data != NULL );
+
+    free( window->decorator_data );
+    window->decorator_data = NULL;
+
+    return 0;
+}
+
+static int decorator_calculate_regions( window_t* window ) {
+    rect_t* screen_rect;
+    decorator_data_t* data;
+
+    assert( window->decorator_data != NULL );
+
+    data = window->decorator_data;
+
+    screen_rect = &window->screen_rect;
+
+    /* Header rect */
+
+    rect_init(
+        &data->header,
+        screen_rect->left,
+        screen_rect->top,
+        screen_rect->right,
+        screen_rect->top + 25
+    );
+
+    /* Left border */
+
+    rect_init(
+        &data->left_border,
+        screen_rect->left,
+        screen_rect->top,
+        screen_rect->left + 4,
+        screen_rect->bottom
+    );
+
+    /* Right border */
+
+    rect_init(
+        &data->right_border,
+        screen_rect->right - 4,
+        screen_rect->top,
+        screen_rect->right,
+        screen_rect->bottom
+    );
+
+    /* Bottom border */
+
+    rect_init(
+        &data->bottom_border,
+        screen_rect->left,
+        screen_rect->bottom - 4,
+        screen_rect->right,
+        screen_rect->bottom
+    );
+
+    return 0;
+}
+
 static int decorator_update_border( window_t* window ) {
     int i;
     int width;
@@ -76,17 +164,17 @@ static int decorator_update_border( window_t* window ) {
         /* Left | */
 
         rect_init( &rect, i, i, i, height - ( i + 1 ) );
-        graphics_driver->fill_rect( bitmap, &rect, color );
+        graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
 
         /* Right | */
 
         rect_init( &rect, width - ( i + 1 ), i, width - ( i + 1 ), height - ( i + 1 ) );
-        graphics_driver->fill_rect( bitmap, &rect, color );
+        graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
 
         /* Bottom - */
 
         rect_init( &rect, i, height - ( i + 1 ), width - ( i + 1 ), height - ( i + 1 ) );
-        graphics_driver->fill_rect( bitmap, &rect, color );
+        graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
     }
 
     /* Top - */
@@ -95,12 +183,66 @@ static int decorator_update_border( window_t* window ) {
 
     for ( i = 0; i < 4; i++, color++ ) {
         rect_init( &rect, i, i, width - ( i + 1 ), i );
-        graphics_driver->fill_rect( bitmap, &rect, color );
+        graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
     }
 
     for ( i = 4; i < 26; i++, color++ ) {
         rect_init( &rect, 4, i, width - 5, i );
-        graphics_driver->fill_rect( bitmap, &rect, color );
+        graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
+    }
+
+    return 0;
+}
+
+static int decorator_border_has_position( window_t* window, point_t* position ) {
+    decorator_data_t* data;
+
+    assert( window->decorator_data != NULL );
+
+    data = ( decorator_data_t* )window->decorator_data;
+
+    if ( ( rect_has_point( &data->header, position ) ) ||
+         ( rect_has_point( &data->left_border, position ) ) ||
+         ( rect_has_point( &data->right_border, position ) ) ||
+         ( rect_has_point( &data->bottom_border, position ) ) ) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static int decorator_mouse_entered( window_t* window, point_t* position ) {
+    return 0;
+}
+
+static int decorator_mouse_exited( window_t* window ) {
+    return 0;
+}
+
+static int decorator_mouse_moved( window_t* window, point_t* position ) {
+    return 0;
+}
+
+static int decorator_mouse_pressed( window_t* window, int button ) {
+    decorator_data_t* data;
+    point_t mouse_position;
+
+    assert( window->decorator_data != NULL );
+
+    data = ( decorator_data_t* )window->decorator_data;
+
+    mouse_get_position( &mouse_position );
+
+    if ( rect_has_point( &data->header, &mouse_position ) ) {
+        wm_set_moving_window( window );
+    }
+
+    return 0;
+}
+
+static int decorator_mouse_released( window_t* window, int button ) {
+    if ( window->is_moving ) {
+        wm_set_moving_window( NULL );
     }
 
     return 0;
@@ -115,5 +257,14 @@ window_decorator_t default_decorator = {
         .x = 5,
         .y = 26
     },
-    .update_border = decorator_update_border
+    .initialize = decorator_initialize,
+    .destroy = decorator_destroy,
+    .calculate_regions = decorator_calculate_regions,
+    .update_border = decorator_update_border,
+    .border_has_position = decorator_border_has_position,
+    .mouse_entered = decorator_mouse_entered,
+    .mouse_exited = decorator_mouse_exited,
+    .mouse_moved = decorator_mouse_moved,
+    .mouse_pressed = decorator_mouse_pressed,
+    .mouse_released = decorator_mouse_released
 };

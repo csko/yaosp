@@ -21,7 +21,7 @@ import sys
 import urllib
 import xml.sax
 import subprocess
-import md5
+import hashlib
 import definitions
 import handler as hndlr
 import context as ctx
@@ -152,7 +152,7 @@ class GccWork( Work ) :
                 real_defines.append( "-D" + key + "=" + value )
             else :
                 real_defines.append( "-D" + key )
-                
+
         # Build the command
 
         command = [ "gcc" ] + real_flags + real_inputs + real_includes
@@ -343,7 +343,7 @@ class CopyWork( Work ) :
                 df = dest
 
             self._do_copy_file( sf, df )
-        
+
     def _do_copy_file( self, src, dest ) :
         src_file = open( src, "r" )
         dest_file = open( dest, "w" )
@@ -421,7 +421,7 @@ class HTTPGetWork( Work ) :
 
     def execute( self, context ) :
         if os.path.isfile( self.dest ) :
-            m = md5.md5()
+            m = hashlib.md5()
 
             localfile = open( self.dest, "r" )
             data = localfile.read( 4096 )

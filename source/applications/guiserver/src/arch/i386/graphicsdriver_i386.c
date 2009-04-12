@@ -21,7 +21,7 @@
 
 #include <graphicsdriver.h>
 
-static void fill_rect_rgb32( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
+void i386_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
     uint32_t h;
     uint32_t w;
     uint32_t* data;
@@ -51,18 +51,4 @@ static void fill_rect_rgb32( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
         : "a" ( color ), "b" ( w ), "d" ( h ), "S" ( padding * 4 ), "D" ( data )
         : "ecx", "memory"
     );
-}
-
-int i386_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color ) {
-    switch ( bitmap->color_space ) {
-        case CS_RGB32 :
-            fill_rect_rgb32( bitmap, rect, color_to_uint32( color ) );
-            break;
-
-        default :
-            dbprintf( "%s() Not supported for color space: %d\n", __FUNCTION__, bitmap->color_space );
-            break;
-    }
-
-    return 0;
 }

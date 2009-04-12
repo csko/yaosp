@@ -41,11 +41,19 @@
 #define PS2_AUX_ID_PS2   0
 #define PS2_AUX_ID_IMPS2 3
 
+enum {
+    PS2_BUTTON_LEFT = ( 1 << 0 ),
+    PS2_BUTTON_RIGHT = ( 1 << 1 ),
+    PS2_BUTTON_MIDDLE = ( 1 << 2 )
+};
+
 static int mouse_device = -1;
 static thread_id mouse_thread = -1;
 
 static int mouse_packet_index = 0;
 static uint8_t mouse_buffer[ 3 ];
+
+static int mouse_buttons = 0;
 
 static uint8_t basic_init[] = {
     PS2_AUX_ENABLE_DEV, PS2_AUX_SET_SAMPLE, 100
@@ -144,6 +152,8 @@ static int ps2mouse_init( void ) {
 static void ps2mouse_handle_input( void ) {
     int x;
     int y;
+    int buttons;
+    int act_buttons;
     input_event_t* event;
 
     x = mouse_buffer[ 1 ];
@@ -162,6 +172,31 @@ static void ps2mouse_handle_input( void ) {
 
         if ( event != NULL ) {
             insert_input_event( event );
+        }
+    }
+
+    buttons = mouse_buffer[ 0 ] & 0x7;
+
+    act_buttons = buttons ^ mouse_buttons;
+    mouse_buttons = buttons;
+
+    /* Check if any button state changed */
+
+    if ( act_buttons != 0 ) {
+        if ( act_buttons & PS2_BUTTON_LEFT ) {
+            input_event_type_t event_type;
+
+            if ( buttons & PS2_BUTTON_LEFT ) {
+                event_type = MOUSE_PRESSED;
+            } else {
+                event_type = MOUSE_RELEASED;
+            }
+
+            event = get_input_event( event_type, MOUSE_BTN_LEFT, 0 );
+
+            if ( event != NULL ) {
+                insert_input_event( event );
+            }
         }
     }
 }

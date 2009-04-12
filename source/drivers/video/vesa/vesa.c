@@ -67,7 +67,7 @@ static int detect_vesa( void ) {
         return -ENOENT;
     }
 
-    kprintf( "Detected VESA %d.%d\n", vesa_info->version >> 8, vesa_info->version & 0xF );
+    kprintf( "Detected VESA %d.%d compatible graphics card.\n", vesa_info->version >> 8, vesa_info->version & 0xF );
 
     mode_ptr = ( uint16_t* )( ( ( vesa_info->video_mode_ptr & 0xFFFF0000 ) >> 12 ) |
                               ( vesa_info->video_mode_ptr & 0xFFFF ) );

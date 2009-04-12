@@ -27,8 +27,8 @@ typedef struct array {
 } array_t;
 
 int array_add_item( array_t* array, void* item );
-int array_remove_item( array_t* array, void* item );
 int array_insert_item( array_t* array, int index, void* item );
+int array_remove_item( array_t* array, void* item );
 int array_get_size( array_t* array );
 void* array_get_item( array_t* array, int index );
 

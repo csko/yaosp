@@ -47,6 +47,7 @@ int show_mouse_pointer( void );
 int hide_mouse_pointer( void );
 
 int mouse_moved( point_t* delta );
+int mouse_get_position( point_t* position );
 
 int init_mouse_manager( void );
 
