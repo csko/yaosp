@@ -24,10 +24,18 @@
 
 #include <ygui/window.h>
 #include <ygui/protocol.h>
+#include <ygui/panel.h>
+#include <ygui/render/render.h>
+
+#include "internal.h"
 
 extern ipc_port_id app_server_port;
 
 #define MAX_WINDOW_BUFSIZE 512
+
+widget_t* window_get_container( window_t* window ) {
+    return window->container;
+}
 
 static int window_thread( void* arg ) {
     int error;
@@ -52,6 +60,21 @@ static int window_thread( void* arg ) {
         }
 
         switch ( code ) {
+            case MSG_DO_SHOW_WINDOW :
+                /* Paint all the widgets */
+
+                widget_paint( window->container );
+
+                /* Send the rendering commands to the guiserver */
+
+                flush_render_buffer( window );
+
+                /* Show the window */
+
+                send_ipc_message( window->server_port, MSG_SHOW_WINDOW, NULL, 0 );
+
+                break;
+
             default :
                 dbprintf( "window_thread(): Received unknown message: %x\n", code );
                 break;
@@ -70,6 +93,8 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     thread_id thread;
 
+    /* Do some sanity checking */
+
     if ( ( title == NULL ) ||
          ( position == NULL ) ||
          ( size == NULL ) ) {
@@ -77,6 +102,8 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     }
 
     title_size = strlen( title );
+
+    /* Create the window object */
 
     window = ( window_t* )malloc( sizeof( window_t ) );
 
@@ -96,10 +123,32 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
         goto error3;
     }
 
+    window->container = create_panel();
+
+    if ( window->container == NULL ) {
+        goto error4;
+    }
+
+    widget_set_window( window->container, window );
+
+    point_init( &window->container->position, 0, 0 );
+    point_init( &window->container->size, size->x, size->y );
+
+    window->render_buffer = ( uint8_t* )malloc( DEFAULT_RENDER_BUFFER_SIZE );
+
+    if ( window->render_buffer == NULL ) {
+        goto error5;
+    }
+
+    initialize_render_buffer( window );
+    window->render_buffer_max_size = DEFAULT_RENDER_BUFFER_SIZE;
+
+    /* Register the window to the guiserver */
+
     request = ( msg_create_win_t* )malloc( sizeof( msg_create_win_t ) + title_size + 1 );
 
     if ( request == NULL ) {
-        goto error4;
+        goto error5;
     }
 
     request->reply_port = window->reply_port;
@@ -114,17 +163,17 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     free( request );
 
     if ( error < 0 ) {
-        goto error4;
+        goto error5;
     }
 
     error = recv_ipc_message( window->reply_port, NULL, &reply, sizeof( msg_create_win_reply_t ), INFINITE_TIMEOUT );
 
     if ( error < 0 ) {
-        goto error4;
+        goto error5;
     }
 
     if ( reply.server_port < 0 ) {
-        goto error4;
+        goto error5;
     }
 
     window->server_port = reply.server_port;
@@ -138,15 +187,18 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     );
 
     if ( thread < 0 ) {
-        goto error5;
+        goto error6;
     }
 
     wake_up_thread( thread );
 
     return window;
 
-error5:
+error6:
     /* TODO: Unregister the window from the guiserver */
+
+error5:
+    /* TODO: free the container */
 
 error4:
     /* TODO: Delete the client port */
@@ -168,7 +220,7 @@ int show_window( window_t* window ) {
         return -EINVAL;
     }
 
-    error = send_ipc_message( window->server_port, MSG_SHOW_WINDOW, NULL, 0 );
+    error = send_ipc_message( window->client_port, MSG_DO_SHOW_WINDOW, NULL, 0 );
 
     if ( error < 0 ) {
         return error;
@@ -184,7 +236,7 @@ int hide_window( window_t* window ) {
         return -EINVAL;
     }
 
-    error = send_ipc_message( window->server_port, MSG_HIDE_WINDOW, NULL, 0 );
+    error = send_ipc_message( window->client_port, MSG_DO_HIDE_WINDOW, NULL, 0 );
 
     if ( error < 0 ) {
         return error;

@@ -65,6 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../lib/start/objs/libstart.a</input>
             <input>../../lib/ygui/objs/libygui.a</input>
+            <input>../../lib/yutil/objs/libyutil.a</input>
             <input>../../lib/c/objs/libc.a</input>
             <output>objs/taskbar</output>
             <flag>-m32</flag>

@@ -16,34 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_POINT_H_
-#define _YGUI_POINT_H_
+#ifndef _YAOSP_RENDER_H_
+#define _YAOSP_RENDER_H_
 
 #include <sys/types.h>
 
-typedef struct point {
-    int x;
-    int y;
-} point_t;
+#include <ygui/rect.h>
+#include <ygui/color.h>
 
-static inline void point_init( point_t* point, int x, int y ) {
-    point->x = x;
-    point->y = y;
-}
+#define DEFAULT_RENDER_BUFFER_SIZE 8192
 
-static inline void point_add( point_t* point1, point_t* point2 ) {
-    point1->x += point2->x;
-    point1->y += point2->y;
-}
+enum {
+    R_SET_PEN_COLOR = 1,
+    R_FILL_RECT
+};
 
-static inline void point_sub_n( point_t* dest, point_t* src1, point_t* src2 ) {
-    dest->x = src1->x - src2->x;
-    dest->y = src1->y - src2->y;
-}
+typedef struct render_header {
+    uint8_t command;
+} __attribute__(( packed )) render_header_t;
 
-static inline void point_sub_xy_n( point_t* dest, point_t* point, int x, int y ) {
-    dest->x = point->x - x;
-    dest->y = point->y - y;
-}
+typedef struct r_set_pen_color {
+    render_header_t header;
+    color_t color;
+} __attribute__(( packed )) r_set_pen_color_t;
 
-#endif /* _YGUI_POINT_H_ */
+typedef struct r_fill_rect {
+    render_header_t header;
+    rect_t rect;
+} __attribute__(( packed )) r_fill_rect_t;
+
+#endif /* _YAOSP_RENDER_H_ */

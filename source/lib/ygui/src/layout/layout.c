@@ -16,34 +16,43 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_POINT_H_
-#define _YGUI_POINT_H_
+#include <stdlib.h>
+#include <assert.h>
 
-#include <sys/types.h>
+#include <ygui/layout/layout.h>
 
-typedef struct point {
-    int x;
-    int y;
-} point_t;
+int layout_inc_ref( layout_t* layout ) {
+    layout->ref_count++;
 
-static inline void point_init( point_t* point, int x, int y ) {
-    point->x = x;
-    point->y = y;
+    return 0;
 }
 
-static inline void point_add( point_t* point1, point_t* point2 ) {
-    point1->x += point2->x;
-    point1->y += point2->y;
+int layout_dec_ref( layout_t* layout ) {
+    assert( layout->ref_count > 0 );
+
+    if ( --layout->ref_count == 0 ) {
+        layout->ops = NULL;
+
+        free( layout );
+    }
+
+    return 0;
 }
 
-static inline void point_sub_n( point_t* dest, point_t* src1, point_t* src2 ) {
-    dest->x = src1->x - src2->x;
-    dest->y = src1->y - src2->y;
-}
+layout_t* create_layout( layout_operations_t* ops ) {
+    layout_t* layout;
 
-static inline void point_sub_xy_n( point_t* dest, point_t* point, int x, int y ) {
-    dest->x = point->x - x;
-    dest->y = point->y - y;
-}
+    layout = ( layout_t* )malloc( sizeof( layout_t ) );
 
-#endif /* _YGUI_POINT_H_ */
+    if ( layout == NULL ) {
+        goto error1;
+    }
+
+    layout->ops = ops;
+    layout->ref_count = 1;
+
+    return layout;
+
+error1:
+    return NULL;
+}

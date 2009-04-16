@@ -23,6 +23,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="files">
         <item>src/application.c</item>
         <item>src/window.c</item>
+        <item>src/widget.c</item>
+        <item>src/panel.c</item>
+        <item>src/layout/layout.c</item>
+        <item>src/layout/borderlayout.c</item>
+        <item>src/render/render.c</item>
     </array>
 
     <target name="clean">

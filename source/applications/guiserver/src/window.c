@@ -26,9 +26,25 @@
 #include <windowdecorator.h>
 #include <windowmanager.h>
 
-#define MAX_WINDOW_BUFSIZE 512
+#define MAX_WINDOW_BUFSIZE 8192
+
+typedef struct r_buf_header {
+    ipc_port_id reply_port;
+} __attribute__(( packed )) r_buf_header_t;
 
 extern window_decorator_t* window_decorator;
+
+static int window_do_render( window_t* window, uint8_t* buffer, int size ) {
+    r_buf_header_t* header;
+
+    header = ( r_buf_header_t* )buffer;
+
+    /* Tell the window that rendering is done */
+
+    send_ipc_message( header->reply_port, 0, NULL, 0 );
+
+    return 0;
+}
 
 static int window_thread( void* arg ) {
     int error;
@@ -53,6 +69,10 @@ static int window_thread( void* arg ) {
         }
 
         switch ( code ) {
+            case MSG_RENDER_COMMANDS :
+                window_do_render( window, ( uint8_t* )buffer, error );
+                break;
+
             case MSG_SHOW_WINDOW :
                 wm_register_window( window );
                 break;

@@ -21,6 +21,8 @@
 
 #include <ygui/application.h>
 #include <ygui/window.h>
+#include <ygui/panel.h>
+#include <ygui/layout/borderlayout.h>
 
 int main( int argc, char** argv ) {
     int error;
@@ -34,9 +36,22 @@ int main( int argc, char** argv ) {
     }
 
     point_t point = { .x = 50, .y = 50 };
-    point_t size = { .x = 100, .y = 100 };
+    point_t size = { .x = 300, .y = 300 };
+
+    /* Create a window */
 
     win = create_window( "Taskbar", &point, &size, 0 );
+
+    widget_t* container = window_get_container( win );
+
+    /* Set the layout of the window */
+
+    layout_t* layout = create_border_layout();
+    panel_set_layout( container, layout );
+    layout_dec_ref( layout );
+
+    /* Show the window */
+
     show_window( win );
 
     run_application();

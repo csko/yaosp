@@ -57,9 +57,59 @@ static window_t* get_window_at( point_t* position ) {
 static int invert_moving_rect( void ) {
     rect_t tmp;
 
+    /* Top line */
+
     rect_init(
         &tmp,
         moving_rect.left,
+        moving_rect.top,
+        moving_rect.right,
+        moving_rect.top
+    );
+
+    rect_and( &tmp, &screen_rect );
+
+    if ( rect_is_valid( &tmp ) ) {
+        graphics_driver->fill_rect( screen_bitmap, &tmp, NULL, DM_INVERT );
+    }
+
+    /* Bottom line */
+
+    rect_init(
+        &tmp,
+        moving_rect.left,
+        moving_rect.bottom,
+        moving_rect.right,
+        moving_rect.bottom
+    );
+
+    rect_and( &tmp, &screen_rect );
+
+    if ( rect_is_valid( &tmp ) ) {
+        graphics_driver->fill_rect( screen_bitmap, &tmp, NULL, DM_INVERT );
+    }
+
+    /* Left line */
+
+    rect_init(
+        &tmp,
+        moving_rect.left,
+        moving_rect.top,
+        moving_rect.left,
+        moving_rect.bottom
+    );
+
+    rect_and( &tmp, &screen_rect );
+
+    if ( rect_is_valid( &tmp ) ) {
+        graphics_driver->fill_rect( screen_bitmap, &tmp, NULL, DM_INVERT );
+    }
+
+    /* Right line */
+
+    rect_init(
+        &tmp,
+        moving_rect.right,
         moving_rect.top,
         moving_rect.right,
         moving_rect.bottom
