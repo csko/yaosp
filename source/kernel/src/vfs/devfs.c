@@ -301,7 +301,7 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
     LOCK( devfs_lock );
 
     stat->st_ino = node->inode_number;
-    stat->st_mode = 0;
+    stat->st_mode = 0777;
     stat->st_size = 0;
     stat->st_atime = node->atime;
     stat->st_mtime = node->mtime;

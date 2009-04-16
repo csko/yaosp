@@ -49,4 +49,4 @@
 #define ETIMEDOUT 27
 #define EOVERFLOW 28
 
-#endif // _ERRNO_H_
+#endif /* _ERRNO_H_ */

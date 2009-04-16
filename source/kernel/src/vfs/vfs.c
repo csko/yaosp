@@ -100,7 +100,7 @@ int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t**
         return error;
     }
 
-    while ( st.st_mode & S_IFLNK ) {
+    while ( ( st.st_mode & S_IFMT ) == S_IFLNK ) {
         char* name;
         int name_length;
         inode_t* new_parent;
