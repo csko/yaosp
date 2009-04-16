@@ -339,6 +339,10 @@ int wm_set_moving_window( window_t* window ) {
 
         invert_moving_rect();
 
+        if ( rect_is_equal( &moving_window->screen_rect, &moving_rect ) ) {
+            goto done;
+        }
+
         wm_hide_window_region( moving_window, &moving_window->screen_rect );
 
         /* Draw the window */
@@ -363,6 +367,7 @@ int wm_set_moving_window( window_t* window ) {
             DM_COPY
         );
 
+done:
         show_mouse_pointer();
     }
 

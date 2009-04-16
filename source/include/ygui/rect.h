@@ -19,6 +19,7 @@
 #ifndef _YGUI_RECT_H_
 #define _YGUI_RECT_H_
 
+#include <string.h>
 #include <sys/types.h>
 #include <sys/param.h>
 
@@ -99,6 +100,10 @@ static inline int rect_is_valid( rect_t* rect ) {
 static inline int rect_has_point( rect_t* rect, point_t* point ) {
     return ( ( rect->left <= point->x ) && ( point->x <= rect->right ) &&
              ( rect->top <= point->y ) && ( point->y <= rect->bottom ) );
+}
+
+static inline int rect_is_equal( rect_t* rect1, rect_t* rect2 ) {
+    return ( memcmp( rect1, rect2, sizeof( rect_t ) ) == 0 );
 }
 
 #endif /* _YGUI_RECT_H_ */
