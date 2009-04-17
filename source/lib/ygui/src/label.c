@@ -21,10 +21,13 @@
 
 #include <ygui/label.h>
 #include <ygui/font.h>
+#include <ygui/yconstants.h>
 
 typedef struct label {
     char* text;
     font_t* font;
+    h_alignment_t h_align;
+    v_alignment_t v_align;
 } label_t;
 
 static int label_paint( widget_t* widget ) {
@@ -42,7 +45,54 @@ static int label_paint( widget_t* widget ) {
     widget_set_pen_color( widget, &bg_color );
     widget_fill_rect( widget, &bounds );
 
-    point_init( &text_position, 5, 20 );
+    switch ( label->h_align ) {
+        case H_ALIGN_LEFT :
+            text_position.x = 0;
+            break;
+
+        case H_ALIGN_CENTER : {
+            int text_width;
+
+            text_width = font_get_string_width( label->font, label->text, -1 );
+
+            text_position.x = ( rect_width( &bounds ) - text_width ) / 2;
+
+            if ( text_position.x < 0 ) {
+                text_position.x = 0;
+            }
+
+            break;
+        }
+
+        case H_ALIGN_RIGHT : {
+            int text_width;
+
+            text_width = font_get_string_width( label->font, label->text, -1 );
+
+            text_position.x = bounds.right - text_width + 1;
+
+            if ( text_position.x < 0 ) {
+                text_position.x = 0;
+            }
+
+            break;
+        }
+    }
+
+    switch ( label->v_align ) {
+        case V_ALIGN_TOP :
+            text_position.y = font_get_ascender( label->font );
+            break;
+
+        case V_ALIGN_CENTER :
+            text_position.y = bounds.bottom -
+                ( ( rect_height( &bounds ) - ( font_get_ascender( label->font ) - font_get_descender( label->font ) ) ) / 2 - font_get_descender( label->font ) );
+            break;
+
+        case V_ALIGN_BOTTOM :
+            text_position.y = bounds.bottom - ( font_get_line_gap( label->font ) - font_get_descender( label->font ) );
+            break;
+    }
 
     widget_set_pen_color( widget, &fg_color );
     widget_set_font( widget, label->font );
@@ -86,6 +136,9 @@ widget_t* create_label( const char* text ) {
     if ( widget == NULL ) {
         goto error4;
     }
+
+    label->h_align = H_ALIGN_CENTER;
+    label->v_align = V_ALIGN_CENTER;
 
     return widget;
 

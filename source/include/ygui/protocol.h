@@ -37,7 +37,8 @@ enum {
     MSG_HIDE_WINDOW,
     MSG_DO_HIDE_WINDOW,
     MSG_RENDER_COMMANDS,
-    MSG_CREATE_FONT
+    MSG_CREATE_FONT,
+    MSG_GET_STRING_WIDTH
 };
 
 /* MSG_CREATE_APPLICATION */
@@ -76,6 +77,21 @@ typedef struct msg_create_font {
 
 typedef struct msg_create_font_reply {
     int handle;
+    int ascender;
+    int descender;
+    int line_gap;
 } msg_create_font_reply_t;
+
+/* MSG_GET_STRING_WIDTH */
+
+typedef struct msg_get_str_width {
+    ipc_port_id reply_port;
+    int font_handle;
+    int length;
+} msg_get_str_width_t;
+
+typedef struct msg_get_str_width_reply {
+    int width;
+} msg_get_str_width_reply_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

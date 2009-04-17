@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <yaosp/semaphore.h>
 #include <yaosp/ipc.h>
 
@@ -28,6 +29,90 @@ extern ipc_port_id app_reply_port;
 extern ipc_port_id app_server_port;
 
 extern semaphore_id app_lock;
+
+int font_get_ascender( font_t* font ) {
+    if ( font == NULL ) {
+        return -EINVAL;
+    }
+
+    return font->ascender;
+}
+
+int font_get_descender( font_t* font ) {
+    if ( font == NULL ) {
+        return -EINVAL;
+    }
+
+    return font->descender;
+}
+
+int font_get_line_gap( font_t* font ) {
+    if ( font == NULL ) {
+        return -EINVAL;
+    }
+
+    return font->line_gap;
+}
+
+int font_get_string_width( font_t* font, const char* text, int length ) {
+    int error;
+    int request_len;
+    msg_get_str_width_t* request;
+    msg_get_str_width_reply_t reply;
+
+    if ( ( font == NULL ) ||
+         ( text == NULL ) ) {
+        return -EINVAL;
+    }
+
+    if ( length == -1 ) {
+        length = strlen( text );
+    }
+
+    if ( length == 0 ) {
+        return 0;
+    }
+
+    request_len = sizeof( msg_get_str_width_t ) + length;
+
+    request = ( msg_get_str_width_t* )malloc( request_len );
+
+    if ( request == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    request->reply_port = app_reply_port;
+    request->font_handle = font->handle;
+    request->length = length;
+
+    memcpy( ( void* )( request + 1 ), text, length );
+
+    LOCK( app_lock );
+
+    error = send_ipc_message( app_server_port, MSG_GET_STRING_WIDTH, request, request_len );
+
+    free( request );
+
+    if ( error < 0 ) {
+        UNLOCK( app_lock );
+
+        goto error1;
+    }
+
+    error = recv_ipc_message( app_reply_port, NULL, &reply, sizeof( msg_get_str_width_reply_t ), INFINITE_TIMEOUT );
+
+    UNLOCK( app_lock );
+
+    if ( error < 0 ) {
+        goto error1;
+    }
+
+    return reply.width;
+
+error1:
+    return error;
+}
 
 font_t* create_font( const char* family, const char* style, font_properties_t* properties ) {
     int error;

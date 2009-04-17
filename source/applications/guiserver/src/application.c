@@ -44,9 +44,25 @@ static int handle_create_font( msg_create_font_t* request ) {
         reply.handle = -1;
     } else {
         reply.handle = ( int )font;
+        reply.ascender = font->ascender;
+        reply.descender = font->descender;
+        reply.line_gap = font->line_gap;
     }
 
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_font_reply_t ) );
+
+    return 0;
+}
+
+static int handle_get_string_width( msg_get_str_width_t* request ) {
+    font_node_t* font;
+    msg_get_str_width_reply_t reply;
+
+    font = ( font_node_t* )request->font_handle;
+
+    reply.width = font_node_get_string_width( font, ( const char* )( request + 1 ), request->length );
+
+    send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_get_str_width_reply_t ) );
 
     return 0;
 }
@@ -80,6 +96,10 @@ static int application_thread( void* arg ) {
 
             case MSG_CREATE_FONT :
                 handle_create_font( ( msg_create_font_t* )buffer );
+                break;
+
+            case MSG_GET_STRING_WIDTH :
+                handle_get_string_width( ( msg_get_str_width_t* )buffer );
                 break;
 
             default :

@@ -410,6 +410,38 @@ font_node_t* get_font( const char* family_name, const char* style_name, font_pro
     return node;
 }
 
+int font_node_get_string_width( font_node_t* font, const char* text, int length ) {
+    int width;
+    font_glyph_t* glyph;
+
+    width = 0;
+
+    LOCK( font->style->lock );
+
+    while ( length > 0 ) {
+        int char_length = utf8_char_length( *text );
+
+        if ( char_length > length ) {
+            break;
+        }
+
+        glyph = font_node_get_glyph( font, utf8_to_unicode( text ) );
+
+        text += char_length;
+        length -= char_length;
+
+        if ( glyph == NULL ) {
+            continue;
+        }
+
+        width += glyph->advance.x;
+    }
+
+    UNLOCK( font->style->lock );
+
+    return width;
+}
+
 static void load_fonts( void ) {
     int i;
     DIR* dir;

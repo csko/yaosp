@@ -56,7 +56,16 @@ typedef struct font_properties {
 
 typedef struct font {
     int handle;
+    int ascender;
+    int descender;
+    int line_gap;
 } font_t;
+
+int font_get_ascender( font_t* font );
+int font_get_descender( font_t* font );
+int font_get_line_gap( font_t* font );
+
+int font_get_string_width( font_t* font, const char* text, int length );
 
 font_t* create_font( const char* family, const char* style, font_properties_t* properties );
 
