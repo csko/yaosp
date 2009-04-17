@@ -54,4 +54,10 @@ typedef struct font_properties {
     int flags;
 } font_properties_t;
 
+typedef struct font {
+    int handle;
+} font_t;
+
+font_t* create_font( const char* family, const char* style, font_properties_t* properties );
+
 #endif /* _YGUI_FONT_H_ */

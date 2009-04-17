@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <yaosp/ipc.h>
 #include <yaosp/debug.h>
+#include <yaosp/semaphore.h>
 
 #include <ygui/protocol.h>
 
@@ -30,6 +31,8 @@ ipc_port_id guiserver_port = -1;
 ipc_port_id app_reply_port = -1;
 ipc_port_id app_client_port = -1;
 ipc_port_id app_server_port = -1;
+
+semaphore_id app_lock = -1;
 
 int create_application( void ) {
     int error;
@@ -69,6 +72,12 @@ int create_application( void ) {
 
     if ( app_reply_port < 0 ) {
         return app_reply_port;
+    }
+
+    app_lock = create_semaphore( "application lock", SEMAPHORE_BINARY, 0, 1 );
+
+    if ( app_lock < 0 ) {
+        return app_lock;
     }
 
     request.reply_port = app_reply_port;

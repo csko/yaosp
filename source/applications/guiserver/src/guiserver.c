@@ -121,26 +121,6 @@ static int setup_graphics_mode( void ) {
 
     graphics_driver->fill_rect( screen_bitmap, &screen_rect, &tmp_color, DM_COPY );
 
-    font_properties_t properties = { .point_size = 18 * 64, .flags = FONT_SMOOTHED };
-    font_node_t* font_node = get_font( "DejaVu Sans", "Book", &properties );
-
-    if ( font_node == NULL ) {
-        dbprintf( "Font node not found!\n" );
-    } else {
-        point_t p = { .x = 100, .y = 100 };
-        tmp_color.red = 0xff; tmp_color.green = 0xff; tmp_color.blue = 0xff;
-
-        graphics_driver->draw_text(
-            screen_bitmap,
-            &p,
-            &screen_rect,
-            font_node,
-            &tmp_color,
-            "Hello World",
-            -1
-        );
-    }
-
     return 0;
 }
 

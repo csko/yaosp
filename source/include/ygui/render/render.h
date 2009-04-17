@@ -28,7 +28,9 @@
 
 enum {
     R_SET_PEN_COLOR = 1,
-    R_FILL_RECT
+    R_SET_FONT,
+    R_FILL_RECT,
+    R_DRAW_TEXT
 };
 
 typedef struct render_header {
@@ -40,9 +42,20 @@ typedef struct r_set_pen_color {
     color_t color;
 } __attribute__(( packed )) r_set_pen_color_t;
 
+typedef struct r_set_font {
+    render_header_t header;
+    int font_handle;
+} __attribute__(( packed )) r_set_font_t;
+
 typedef struct r_fill_rect {
     render_header_t header;
     rect_t rect;
 } __attribute__(( packed )) r_fill_rect_t;
+
+typedef struct r_draw_text {
+    render_header_t header;
+    point_t position;
+    int length;
+} __attribute__(( packed )) r_draw_text_t;
 
 #endif /* _YAOSP_RENDER_H_ */

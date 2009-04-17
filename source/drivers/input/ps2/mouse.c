@@ -153,13 +153,13 @@ int ps2_init_mouse( void ) {
     /* Flush the buffer */
 
     ps2_flush_buffer();
-        
+
     /* Test loop command */
 
     data = 0x5A;
-        
+
     error = ps2_write_read_command( PS2_CMD_AUX_LOOP, &data );
-        
+
     if ( ( error < 0 ) || ( data != 0x5A ) ) {
         kprintf( "PS2: AUX loop test failed (error=%d, data=%x)!\n", error, ( uint32_t )data );
 
@@ -175,7 +175,7 @@ int ps2_init_mouse( void ) {
             return -ENOENT;
         }
     }
-        
+
     /* Disable and then enable the auxport */
 
     if ( ps2_command( PS2_CMD_AUX_DISABLE ) < 0 ) {
@@ -190,7 +190,7 @@ int ps2_init_mouse( void ) {
          ( ( data & PS2_CTR_AUXDIS ) != 0 ) ) {
         return -EIO;
     }
-                
+
     /* Disable aux port */
 
     data |= PS2_CTR_AUXDIS;

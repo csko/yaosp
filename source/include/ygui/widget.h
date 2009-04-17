@@ -24,9 +24,11 @@
 #include <ygui/point.h>
 #include <ygui/rect.h>
 #include <ygui/color.h>
+#include <ygui/font.h>
 
 enum {
-    W_PANEL = 1
+    W_PANEL = 1,
+    W_LABEL
 };
 
 struct window;
@@ -39,6 +41,8 @@ typedef struct widget_operations {
 typedef struct widget {
     int id;
     void* data;
+    int ref_count;
+
     struct window* window;
     widget_operations_t* ops;
 
@@ -55,11 +59,17 @@ void* widget_get_data( widget_t* widget );
 int widget_get_bounds( widget_t* widget, rect_t* bounds );
 
 int widget_set_window( widget_t* widget, struct window* window );
+int widget_set_position( widget_t* widget, point_t* position );
+int widget_set_size( widget_t* widget, point_t* size );
 
+int widget_inc_ref( widget_t* widget );
+int widget_dec_ref( widget_t* widget );
 int widget_paint( widget_t* widget );
 
 int widget_set_pen_color( widget_t* widget, color_t* color );
+int widget_set_font( widget_t* widget, font_t* font );
 int widget_fill_rect( widget_t* widget, rect_t* rect );
+int widget_draw_text( widget_t* widget, point_t* position, const char* text, int length );
 
 widget_t* create_widget( int id, widget_operations_t* ops, void* data );
 

@@ -25,8 +25,31 @@
 
 #include <application.h>
 #include <window.h>
+#include <fontmanager.h>
 
 #define MAX_APPLICATION_BUFSIZE 512
+
+static int handle_create_font( msg_create_font_t* request ) {
+    char* family;
+    char* style;
+    font_node_t* font;
+    msg_create_font_reply_t reply;
+
+    family = ( char* )( request + 1 );
+    style = family + strlen( family ) + 1;
+
+    font = get_font( family, style, &request->properties );
+
+    if ( font == NULL ) {
+        reply.handle = -1;
+    } else {
+        reply.handle = ( int )font;
+    }
+
+    send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_font_reply_t ) );
+
+    return 0;
+}
 
 static int application_thread( void* arg ) {
     int error;
@@ -53,6 +76,10 @@ static int application_thread( void* arg ) {
         switch ( code ) {
             case MSG_CREATE_WINDOW :
                 handle_create_window( ( msg_create_win_t* )buffer );
+                break;
+
+            case MSG_CREATE_FONT :
+                handle_create_font( ( msg_create_font_t* )buffer );
                 break;
 
             default :

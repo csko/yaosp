@@ -21,10 +21,12 @@
 #include <errno.h>
 #include <yaosp/thread.h>
 #include <yaosp/debug.h>
+#include <ygui/render/render.h>
 
 #include <window.h>
 #include <windowdecorator.h>
 #include <windowmanager.h>
+#include <graphicsdriver.h>
 
 #define MAX_WINDOW_BUFSIZE 8192
 
@@ -38,6 +40,95 @@ static int window_do_render( window_t* window, uint8_t* buffer, int size ) {
     r_buf_header_t* header;
 
     header = ( r_buf_header_t* )buffer;
+
+    size -= sizeof( r_buf_header_t );
+    buffer += sizeof( r_buf_header_t );
+
+    while ( size > 0 ) {
+        render_header_t* r_header;
+
+        r_header = ( render_header_t* )buffer;
+
+        switch ( r_header->command ) {
+            case R_SET_PEN_COLOR : {
+                r_set_pen_color_t* cmd;
+
+                cmd = ( r_set_pen_color_t* )buffer;
+
+                memcpy( &window->pen_color, &cmd->color, sizeof( color_t ) );
+
+                buffer += sizeof( r_set_pen_color_t );
+                size -= sizeof( r_set_pen_color_t );
+
+                break;
+            }
+
+            case R_SET_FONT : {
+                r_set_font_t* cmd;
+
+                cmd = ( r_set_font_t* )buffer;
+
+                window->font = ( font_node_t* )cmd->font_handle;
+
+                buffer += sizeof( r_set_font_t );
+                size -= sizeof( r_set_font_t );
+
+                break;
+            }
+
+            case R_FILL_RECT : {
+                r_fill_rect_t* cmd;
+
+                cmd = ( r_fill_rect_t* )buffer;
+
+                rect_add_point( &cmd->rect, &window_decorator->lefttop_offset );
+
+                graphics_driver->fill_rect(
+                    window->bitmap,
+                    &cmd->rect,
+                    &window->pen_color,
+                    DM_COPY
+                );
+
+                buffer += sizeof( r_fill_rect_t );
+                size -= sizeof( r_fill_rect_t );
+
+                break;
+            }
+
+            case R_DRAW_TEXT : {
+                r_draw_text_t* cmd;
+
+                cmd = ( r_draw_text_t* )buffer;
+
+                if ( window->font == NULL ) {
+                    goto r_draw_text_done;
+                }
+
+                point_add( &cmd->position, &window_decorator->lefttop_offset );
+
+                graphics_driver->draw_text(
+                    window->bitmap,
+                    &cmd->position,
+                    &screen_rect,
+                    window->font,
+                    &window->pen_color,
+                    ( const char* )( cmd + 1 ),
+                    cmd->length
+                );
+
+r_draw_text_done:
+                buffer += sizeof( r_draw_text_t ) + cmd->length;
+                size -= ( sizeof( r_draw_text_t ) + cmd->length );
+
+                break;
+            }
+
+            default :
+                dbprintf( "window_do_render(): Invalid render command: %x\n", r_header->command );
+                break;
+        }
+    }
 
     /* Tell the window that rendering is done */
 
@@ -124,6 +215,10 @@ int handle_create_window( msg_create_win_t* request ) {
     window->flags = request->flags;
     window->is_moving = 0;
     window->mouse_on_decorator = 0;
+
+    /* Initialize rendering stuffs */
+
+    window->font = NULL;
 
     rect_init(
         &window->screen_rect,

@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <assert.h>
 
 #include <ygui/widget.h>
 #include <ygui/render/render.h>
@@ -26,6 +27,8 @@
 #include "internal.h"
 
 int widget_add( widget_t* parent, widget_t* child ) {
+    widget_inc_ref( child );
+
     array_add_item( &parent->children, ( void* )child );
 
     if ( parent->window != NULL ) {
@@ -73,9 +76,51 @@ int widget_set_window( widget_t* widget, struct window* window ) {
     return 0;
 }
 
+int widget_set_position( widget_t* widget, point_t* position ) {
+    memcpy( &widget->position, position, sizeof( point_t ) );
+
+    return 0;
+}
+
+int widget_set_size( widget_t* widget, point_t* size ) {
+    memcpy( &widget->size, size, sizeof( point_t ) );
+
+    return 0;
+}
+
+int widget_inc_ref( widget_t* widget ) {
+    assert( widget->ref_count > 0 );
+
+    widget->ref_count++;
+
+    return 0;
+}
+
+int widget_dec_ref( widget_t* widget ) {
+    assert( widget->ref_count > 0 );
+
+    if ( --widget->ref_count == 0 ) {
+        /* TODO: free the widget! */
+    }
+
+    return 0;
+}
+
 int widget_paint( widget_t* widget ) {
+    int i;
+    int size;
+    widget_t* child;
+
     if ( widget->ops->paint != NULL ) {
         widget->ops->paint( widget );
+    }
+
+    size = array_get_size( &widget->children );
+
+    for ( i = 0; i < size; i++ ) {
+        child = ( widget_t* )array_get_item( &widget->children, i );
+
+        widget_paint( child );
     }
 
     return 0;
@@ -104,6 +149,29 @@ int widget_set_pen_color( widget_t* widget, color_t* color ) {
     return 0;
 }
 
+int widget_set_font( widget_t* widget, font_t* font ) {
+    int error;
+    window_t* window;
+    r_set_font_t* packet;
+
+    window = widget->window;
+
+    if ( window == NULL ) {
+        return -EINVAL;
+    }
+
+    error = allocate_render_packet( window, sizeof( r_set_font_t ), ( void** )&packet );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    packet->header.command = R_SET_FONT;
+    packet->font_handle = font->handle;
+
+    return 0;
+}
+
 int widget_fill_rect( widget_t* widget, rect_t* rect ) {
     int error;
     window_t* window;
@@ -123,6 +191,48 @@ int widget_fill_rect( widget_t* widget, rect_t* rect ) {
 
     packet->header.command = R_FILL_RECT;
     memcpy( &packet->rect, rect, sizeof( rect_t ) );
+
+    rect_add_point( &packet->rect, &widget->position );
+
+    return 0;
+}
+
+int widget_draw_text( widget_t* widget, point_t* position, const char* text, int length ) {
+    int error;
+    window_t* window;
+    r_draw_text_t* packet;
+
+    if ( text == NULL ) {
+        return -EINVAL;
+    }
+
+    if ( length == -1 ) {
+        length = strlen( text );
+    }
+
+    if ( length == 0 ) {
+        return 0;
+    }
+
+    window = widget->window;
+
+    if ( window == NULL ) {
+        return -EINVAL;
+    }
+
+    error = allocate_render_packet( window, sizeof( r_draw_text_t ) + length, ( void** )&packet );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    packet->header.command = R_DRAW_TEXT;
+    packet->length = length;
+
+    memcpy( &packet->position, position, sizeof( point_t ) );
+    memcpy( ( void* )( packet + 1 ), text, length );
+
+    point_add( &packet->position, &widget->position );
 
     return 0;
 }
@@ -146,6 +256,7 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
     array_set_realloc_size( &widget->children, 8 );
 
     widget->id = id;
+    widget->ref_count = 1;
     widget->ops = ops;
     widget->data = data;
     widget->window = NULL;

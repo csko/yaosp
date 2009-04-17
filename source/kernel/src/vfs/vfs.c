@@ -329,7 +329,7 @@ static int do_open( bool kernel, const char* path, int flags, int perms ) {
         return error;
     }
 
-    if ( st.st_mode & S_IFDIR ) {
+    if ( ( st.st_mode & S_IFMT ) == S_IFDIR ) {
         file->type = TYPE_DIRECTORY;
     } else {
         file->type = TYPE_FILE;

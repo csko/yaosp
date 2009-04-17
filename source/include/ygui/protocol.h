@@ -27,6 +27,7 @@
 
 #include <ygui/point.h>
 #include <ygui/rect.h>
+#include <ygui/font.h>
 
 enum {
     MSG_CREATE_APPLICATION = 1,
@@ -35,10 +36,11 @@ enum {
     MSG_DO_SHOW_WINDOW,
     MSG_HIDE_WINDOW,
     MSG_DO_HIDE_WINDOW,
-    MSG_RENDER_COMMANDS
+    MSG_RENDER_COMMANDS,
+    MSG_CREATE_FONT
 };
 
-/* MSG_CREATE_APPLICATION request and reply */
+/* MSG_CREATE_APPLICATION */
 
 typedef struct msg_create_app {
     ipc_port_id reply_port;
@@ -49,7 +51,7 @@ typedef struct msg_create_app_reply {
     ipc_port_id server_port;
 } msg_create_app_reply_t;
 
-/* MSG_CREATE_WINDOW request and reply */
+/* MSG_CREATE_WINDOW */
 
 /* NOTE: The title of the window is added to the message after this structure */
 typedef struct msg_create_win {
@@ -63,5 +65,17 @@ typedef struct msg_create_win {
 typedef struct msg_create_win_reply {
     ipc_port_id server_port;
 } msg_create_win_reply_t;
+
+/* MSG_CREATE_FONT */
+
+/* NOTE: The family and style name of the font is added to the payload, after this structure */
+typedef struct msg_create_font {
+    ipc_port_id reply_port;
+    font_properties_t properties;
+} msg_create_font_t;
+
+typedef struct msg_create_font_reply {
+    int handle;
+} msg_create_font_reply_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

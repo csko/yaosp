@@ -137,6 +137,7 @@ static int ps2mouse_init( void ) {
     id = ps2mouse_read_id();
 
     if ( id == PS2_AUX_ID_ERROR ) {
+        dbprintf( "PS/2 mouse: Invalid mouse ID: %x\n", id );
         return -EINVAL;
     }
 

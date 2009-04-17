@@ -22,6 +22,7 @@
 #include <ygui/application.h>
 #include <ygui/window.h>
 #include <ygui/panel.h>
+#include <ygui/label.h>
 #include <ygui/layout/borderlayout.h>
 
 int main( int argc, char** argv ) {
@@ -49,6 +50,17 @@ int main( int argc, char** argv ) {
     layout_t* layout = create_border_layout();
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
+
+    /* Create a test label */
+
+    point_t p = { 25, 25 };
+    point_t s = { 100, 25 };
+
+    widget_t* label = create_label( "Hello World" );
+    widget_add( container, label );
+    widget_set_position( label, &p );
+    widget_set_size( label, &s );
+    widget_dec_ref( label );
 
     /* Show the window */
 
