@@ -380,7 +380,7 @@ static int ext2_read_directory( void* fs_cookie, void* node, void* file_cookie, 
         entry = ( ext2_dir_entry_t* ) ( data + ( dir_cookie->dir_offset % cookie->blocksize ) ); // location of entry inside the block
 
         if ( entry->rec_len == 0 ) {
-            // FS erro
+            // FS error
             return -EINVAL;
         }
 
@@ -399,7 +399,7 @@ static int ext2_read_directory( void* fs_cookie, void* node, void* file_cookie, 
 }
 
 static int ext2_rewind_directory( void* fs_cookie, void* node, void* file_cookie ) {
-    ext2_dir_cookie_t* dir_cookie= ( ext2_dir_cookie_t* )file_cookie;
+    ext2_dir_cookie_t* dir_cookie = ( ext2_dir_cookie_t* )file_cookie;
 
     dir_cookie->position = 0;
     dir_cookie->dir_offset = 0;
@@ -453,8 +453,8 @@ static int ext2_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
     ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
     vfs_inode_t* vinode = ( vfs_inode_t* )node;
 
-    stat->st_ino = vinode->inode_number;
-    stat->st_size = vinode->fs_inode.i_size;
+    stat->st_ino     = vinode->inode_number;
+    stat->st_size    = vinode->fs_inode.i_size;
     stat->st_mode    = vinode->fs_inode.i_mode;
     stat->st_atime   = vinode->fs_inode.i_atime;
     stat->st_mtime   = vinode->fs_inode.i_mtime;
@@ -486,6 +486,7 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
         return -ENOMEM;
     }
 
+    cookie->flags = flags;
     cookie->fd = open( device, O_RDONLY );
 
     if ( cookie->fd < 0 ) {
@@ -503,7 +504,7 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
     // validate superblock
 
     if ( cookie->super_block.s_magic != EXT2_SUPER_MAGIC) {
-        kprintf("Ext2 bad magic: 0x%x\n", cookie->super_block.s_magic);
+        kprintf("ext2: bad magic number: 0x%x\n", cookie->super_block.s_magic);
         result = -EINVAL;
         goto error2;
     }
@@ -516,16 +517,6 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
         goto error2;
     }
 
-    if ( flags & ~MOUNT_RO ) {
-        cookie->super_block.s_state = EXT2_ERROR_FS;
-        cookie->super_block.s_mnt_count++;
-
-        if ( pwrite( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), sb_offset ) != sizeof( ext2_super_block_t ) ){
-            kprintf( "ext2: failed to write back superblock\n" );
-            result = -EIO;
-            goto error2;
-        }
-    }
 
     cookie->ngroups = (cookie->super_block.s_blocks_count - cookie->super_block.s_first_data_block +
         cookie->super_block.s_blocks_per_group - 1) / cookie->super_block.s_blocks_per_group;
@@ -556,10 +547,23 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
 
     cookie->gds = gds;
 
+    // increase mount count and mark fs in use only in RW mode
+
+    if ( cookie->flags & ~MOUNT_RO ) {
+        cookie->super_block.s_state = EXT2_ERROR_FS;
+        cookie->super_block.s_mnt_count++;
+
+        if ( pwrite( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), sb_offset ) != sizeof( ext2_super_block_t ) ){
+            kprintf( "ext2: failed to write back superblock\n" );
+            result = -EIO;
+            goto error3;
+        }
+    }
+
     *root_inode_number = EXT2_ROOT_INO;
     *fs_cookie = (void*) cookie;
 
-    kprintf("EXT2 mount: OK\n");
+    kprintf("ext2: mount OK\n");
 
     return 0;
 
@@ -576,6 +580,21 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
 }
 
 static int ext2_unmount( void* fs_cookie ) {
+    ext2_cookie_t *cookie = (ext2_cookie_t*)fs_cookie;
+
+    // mark filesystem as it is not more in use
+
+    if ( cookie->flags & ~MOUNT_RO ) {
+        cookie->super_block.s_state = EXT2_VALID_FS;
+
+        if ( pwrite( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), 1 * EXT2_MIN_BLOCK_SIZE ) != sizeof( ext2_super_block_t ) ){
+            kprintf( "ext2: failed to write back superblock\n" );
+            return -EIO;
+        }
+    }
+
+    // TODO
+
     return -ENOSYS;
 }
 
@@ -611,7 +630,7 @@ static filesystem_calls_t ext2_calls = {
 int init_module( void ) {
     int error;
 
-    kprintf( "EXT2: Registering filesystem driver\n" );
+    kprintf( "ext2: Registering filesystem driver\n" );
 
     error = register_filesystem( "ext2", &ext2_calls );
 
