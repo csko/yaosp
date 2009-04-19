@@ -1,6 +1,6 @@
 /* Common macro definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -34,5 +34,14 @@
             #exp, __FILE__, __LINE__ \
         ); \
     }
+
+#if __GNUC__ < 3
+#define __expect(foo,bar) (foo)
+#else
+#define __expect(foo,bar) __builtin_expect((long)(foo),bar)
+#endif
+
+#define __likely(foo) __expect((foo),1)
+#define __unlikely(foo) __expect((foo),0)
 
 #endif // _MACROS_H_

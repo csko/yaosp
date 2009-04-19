@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>ext2.c</item>
         <item>inode.c</item>
         <item>directory.c</item>
+        <item>block.c</item>
     </array>
 
     <target name="clean">

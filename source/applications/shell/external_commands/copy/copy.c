@@ -21,6 +21,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <sys/param.h>
 
@@ -48,40 +49,44 @@ static int do_copy( const char* from, const char* to ) {
     from_fd = open( from, O_RDONLY );
 
     if ( from_fd < 0 ) {
-        return EXIT_FAILURE;
+        goto error1;
     }
 
     if ( fstat( from_fd, &from_stat ) != 0 ) {
         fprintf( stderr, "%s: Failed to stat %s.\n", argv0, from );
-        close( from_fd );
-        return EXIT_FAILURE;
+        goto error2;
     }
 
     if ( S_ISDIR( from_stat.st_mode ) ) {
         fprintf( stderr, "%s: %s is a directory.\n", argv0, from );
-        close( from_fd );
-        return EXIT_FAILURE;
+        goto error2;
     }
 
     to_fd = open( to, O_WRONLY | O_CREAT );
 
     if ( to_fd < 0 ) {
-        fprintf( stderr, "%s: Failed to open destination file: %s\n", argv0, to );
-        close( from_fd );
-        return EXIT_FAILURE;
+        fprintf( stderr, "%s: Failed to open destination file: %s (%s)\n", argv0, to, strerror( errno ) );
+        goto error2;
     }
 
     while ( from_stat.st_size > 0 ) {
+        int written;
         int data_size;
         size_t to_copy = MIN( COPY_BUFFER_SIZE, from_stat.st_size );
 
         data_size = read( from_fd, copy_buffer, to_copy );
 
         if ( data_size < 0 ) {
-            break;
+            printf( "%s: Failed to read data: %s (%d)\n", argv0, strerror( errno ), errno );
+            goto error3;
         }
 
-        write( to_fd, copy_buffer, data_size );
+        written = write( to_fd, copy_buffer, data_size );
+
+        if ( written < 0 ) {
+            printf( "%s: Failed to write data: %s (%d)\n", argv0, strerror( errno ), errno );
+            goto error3;
+        }
 
         from_stat.st_size -= data_size;
     }
@@ -90,6 +95,15 @@ static int do_copy( const char* from, const char* to ) {
     close( to_fd );
 
     return EXIT_SUCCESS;
+
+error3:
+    close( to_fd );
+
+error2:
+    close( from_fd );
+
+error1:
+    return EXIT_FAILURE;
 }
 
 int main( int argc, char** argv ) {

@@ -19,6 +19,7 @@
 #include <types.h>
 #include <errno.h>
 #include <macros.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
@@ -33,6 +34,73 @@
  * @return On success 0 is returned
  */
 int ext2_do_read_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
+    int error;
+    uint8_t* buffer;
+    uint32_t offset;
+    uint32_t real_offset;
+    uint32_t block_offset;
+    uint32_t group;
+    uint32_t inode_table_offset;
+
+    ASSERT( cookie != NULL );
+    ASSERT( inode != NULL );
+
+    if ( inode->inode_number < EXT2_ROOT_INO ) {
+        error = -EINVAL;
+        goto error1;
+    }
+
+    buffer = ( uint8_t* )kmalloc( cookie->blocksize );
+
+    if ( buffer == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    /* The s_inodes_per_group field in the superblock structure tells us how many inodes are defined per group.
+       block group = (inode - 1) / s_inodes_per_group */
+
+    group = ( inode->inode_number - 1 ) / cookie->super_block.s_inodes_per_group;
+
+    ASSERT( group < cookie->ngroups );
+
+    /* Once the block is identified, the local inode index for the local inode table can be identified using:
+       local inode index = (inode - 1) % s_inodes_per_group */
+
+    inode_table_offset = cookie->groups[ group ].descriptor.bg_inode_table * cookie->blocksize;
+
+    offset = inode_table_offset + ( ( ( inode->inode_number - 1 ) % cookie->super_block.s_inodes_per_group ) * cookie->super_block.s_inode_size );
+
+    real_offset = offset & ~( cookie->blocksize - 1 );
+    block_offset = offset % cookie->blocksize;
+
+    /* Make sure all calculation was right */
+
+    ASSERT( ( block_offset + cookie->super_block.s_inode_size ) <= cookie->blocksize );
+
+    /* Read the block in */
+
+    error = pread( cookie->fd, buffer, cookie->blocksize, real_offset );
+
+    if ( __unlikely( error != cookie->blocksize ) ) {
+        error = -EIO;
+        goto error2;
+    }
+
+    /* Copy the inode structure to the wrapper structure */
+
+    memcpy( &inode->fs_inode, buffer + block_offset, sizeof( ext2_inode_t ) );
+
+    error = 0;
+
+error2:
+    kfree( buffer );
+
+error1:
+    return error;
+}
+
+int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
     int error;
     uint8_t* buffer;
     uint32_t offset;
@@ -74,14 +142,25 @@ int ext2_do_read_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
 
     /* Read the block in */
 
-    if ( pread( cookie->fd, buffer, cookie->blocksize, real_offset ) != cookie->blocksize ) {
+    error = pread( cookie->fd, buffer, cookie->blocksize, real_offset );
+
+    if ( __unlikely( error != cookie->blocksize ) ) {
         error = -EIO;
         goto error2;
     }
 
-    /* Copy the inode structure to the wrapper structure */
+    /* Copy the inode structure from the wrapper structure */
 
-    memcpy( &inode->fs_inode, buffer + block_offset, sizeof( ext2_inode_t ) );
+    memcpy( buffer + block_offset, &inode->fs_inode, sizeof( ext2_inode_t ) );
+
+    /* Write the inode table block back */
+
+    error = pwrite( cookie->fd, buffer, cookie->blocksize, real_offset );
+
+    if ( __unlikely( error != cookie->blocksize ) ) {
+        error = -EIO;
+        goto error2;
+    }
 
     error = 0;
 
@@ -92,18 +171,25 @@ error1:
     return error;
 }
 
-int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
-    return -ENOSYS;
-}
-
-int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
+int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode, bool for_directory ) {
     uint32_t i, j, k;
     uint32_t mask;
     uint32_t entry;
     uint32_t* bitmap;
+    ext2_group_t* group;
+
+    if ( cookie->super_block.s_free_inodes_count == 0 ) {
+        return -ENOMEM;
+    }
 
     for ( i = 0; i < cookie->ngroups; i++ ) {
-        bitmap = cookie->groups[ i ].inode_bitmap;
+        group = &cookie->groups[ i ];
+
+        if ( group->descriptor.bg_free_inodes_count == 0 ) {
+            continue;
+        }
+
+        bitmap = group->inode_bitmap;
 
         for ( j = 0; j < ( cookie->blocksize * 8 ) / 32; j++, bitmap++ ) {
             entry = *bitmap;
@@ -116,7 +202,16 @@ int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
                 if ( ( entry & mask ) == 0 ) {
                     cookie->groups[ i ].inode_bitmap[ j ] |= mask;
 
+                    group->descriptor.bg_free_inodes_count--;
+                    cookie->super_block.s_free_inodes_count--;
+
+                    if ( for_directory ) {
+                        group->descriptor.bg_used_dirs_count++;
+                    }
+
                     inode->inode_number = i * cookie->super_block.s_inodes_per_group + ( j * 32 + k ) + 1;
+
+                    group->flags |= EXT2_INODE_BITMAP_DIRTY;
 
                     return 0;
                 }
@@ -125,4 +220,373 @@ int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
     }
 
     return -ENOMEM;
+}
+
+int ext2_do_read_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t block_number, void* buffer ) {
+    int error;
+    uint32_t real_block_number;
+
+    error = ext2_calc_block_num( cookie, inode, block_number, &real_block_number );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    error = pread( cookie->fd, buffer, cookie->blocksize, real_block_number * cookie->blocksize );
+
+    if ( __unlikely( error != cookie->blocksize ) ) {
+        return -EIO;
+    }
+
+    return 0;
+}
+
+int ext2_do_write_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t block_number, void* buffer ) {
+    int error;
+    uint32_t real_block_number;
+
+    error = ext2_calc_block_num( cookie, inode, block_number, &real_block_number );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    error = pwrite( cookie->fd, buffer, cookie->blocksize, real_block_number * cookie->blocksize );
+
+    if ( __unlikely( error != cookie->blocksize ) ) {
+        return -EIO;
+    }
+
+    return 0;
+}
+
+int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t* new_block_number ) {
+    int error;
+    uint32_t* block = NULL;
+    uint32_t new_index;
+    uint32_t new_block;
+
+    /* Calculate the next index for the new block */
+
+    if ( inode->fs_inode.i_size != 0 ) {
+        new_index = ( inode->fs_inode.i_size / cookie->blocksize ) + ( inode->fs_inode.i_size % cookie->blocksize ? 1 : 0 );
+    } else {
+        new_index = 0;
+    }
+
+    /* Check if the new block is already allocated, just not used */
+
+    if ( new_index < inode->fs_inode.i_blocks ) {
+        error = ext2_calc_block_num( cookie, inode, new_index, &new_block );
+
+        if ( error < 0 ) {
+            return error;
+        }
+
+        *new_block_number = new_block;
+
+        return 0;
+    }
+
+    /* Allocate a new block */
+
+    error = ext2_do_alloc_block( cookie, &new_block );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* First check direct blocks */
+
+    if ( new_index < EXT2_NDIR_BLOCKS ) {
+        inode->fs_inode.i_block[ new_index ] = new_block;
+
+        goto out;
+    }
+
+    /* Try indirect block */
+
+    new_index -= EXT2_NDIR_BLOCKS;
+
+    if ( new_index < cookie->ptr_per_block ) {
+        uint32_t ind_block;
+
+        block = ( uint32_t* )kmalloc( cookie->blocksize );
+
+        if ( __unlikely( block == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        ind_block = inode->fs_inode.i_block[ EXT2_IND_BLOCK ];
+
+        if ( ind_block == 0 ) {
+            memset( block, 0, cookie->blocksize );
+
+            /* Allocate a new block for the indirect block */
+
+            error = ext2_do_alloc_block( cookie, &ind_block );
+
+            if ( error < 0 ) {
+                goto error1;
+            }
+
+            inode->fs_inode.i_block[ EXT2_IND_BLOCK ] = ind_block;
+        } else {
+            error = pread( cookie->fd, block, cookie->blocksize, ind_block * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+        }
+
+        /* Update the indirect block */
+
+        block[ new_index ] = new_block;
+
+        /* Write the indirect block back to the disk */
+
+        error = pwrite( cookie->fd, block, cookie->blocksize, ind_block * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            error = -EIO;
+            goto error1;
+        }
+
+        goto out;
+    }
+
+    /* Try double indirect block */
+
+    new_index -= cookie->ptr_per_block;
+
+    if ( new_index < cookie->doubly_indirect_block_count ) {
+        uint32_t idx1;
+        uint32_t idx2;
+        uint32_t block_lvl1;
+        uint32_t block_lvl2;
+
+        block = ( uint32_t* )kmalloc( cookie->blocksize );
+
+        if ( __unlikely( block == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        block_lvl1 = inode->fs_inode.i_block[ EXT2_DIND_BLOCK ];
+
+        if ( block_lvl1 == 0 ) {
+            memset( block, 0, cookie->blocksize );
+
+            /* Allocate a new block for the double indirect block */
+
+            error = ext2_do_alloc_block( cookie, &block_lvl1 );
+
+            if ( error < 0 ) {
+                goto error1;
+            }
+
+            inode->fs_inode.i_block[ EXT2_DIND_BLOCK ] = block_lvl1;
+        } else {
+            error = pread( cookie->fd, block, cookie->blocksize, block_lvl1 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+        }
+
+        idx1 = new_index / cookie->ptr_per_block;
+        idx2 = new_index % cookie->ptr_per_block;
+
+        if ( block[ idx1 ] == 0 ) {
+            /* Allocate a new block for the double indirect block */
+
+            error = ext2_do_alloc_block( cookie, &block_lvl2 );
+
+            if ( error < 0 ) {
+                goto error1;
+            }
+
+            block[ idx1 ] = block_lvl2;
+
+            /* Write it back to the disk */
+
+            error = pwrite( cookie->fd, block, cookie->blocksize, block_lvl1 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+
+            memset( block, 0, cookie->blocksize );
+        } else {
+            block_lvl2 = block[ idx1 ];
+
+            error = pread( cookie->fd, block, cookie->blocksize, block_lvl2 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+        }
+
+        /* Update the index */
+
+        block[ idx2 ] = new_block;
+
+        /* Write the block to the disk */
+
+        error = pwrite( cookie->fd, block, cookie->blocksize, block_lvl2 * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            error = -EIO;
+            goto error1;
+        }
+
+        goto out;
+    }
+
+    /* Try triple indirect block */
+
+    new_index -= cookie->doubly_indirect_block_count;
+
+    if ( new_index < cookie->triply_indirect_block_count ) {
+        uint32_t idx1;
+        uint32_t idx2;
+        uint32_t idx3;
+        uint32_t block_lvl1;
+        uint32_t block_lvl2;
+        uint32_t block_lvl3;
+
+        block = ( uint32_t* )kmalloc( cookie->blocksize );
+
+        if ( __unlikely( block == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        block_lvl1 = inode->fs_inode.i_block[ EXT2_TIND_BLOCK ];
+
+        if ( block_lvl1 == 0 ) {
+            memset( block, 0, cookie->blocksize );
+
+            /* Allocate a new block for the double indirect block */
+
+            error = ext2_do_alloc_block( cookie, &block_lvl1 );
+
+            if ( error < 0 ) {
+                goto error1;
+            }
+
+            inode->fs_inode.i_block[ EXT2_DIND_BLOCK ] = block_lvl1;
+        } else {
+            error = pread( cookie->fd, block, cookie->blocksize, block_lvl1 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+        }
+
+        idx1 = new_index / cookie->doubly_indirect_block_count;
+        new_index %= cookie->doubly_indirect_block_count;
+        idx2 = new_index / cookie->ptr_per_block;
+        idx3 = new_index % cookie->ptr_per_block;
+
+        if ( block[ idx1 ] == 0 ) {
+            /* Allocate a new block for the double indirect block */
+
+            error = ext2_do_alloc_block( cookie, &block_lvl2 );
+
+            if ( error < 0 ) {
+                goto error1;
+            }
+
+            block[ idx1 ] = block_lvl2;
+
+            /* Write it back to the disk */
+
+            error = pwrite( cookie->fd, block, cookie->blocksize, block_lvl1 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+
+            memset( block, 0, cookie->blocksize );
+        } else {
+            block_lvl2 = block[ idx1 ];
+
+            error = pread( cookie->fd, block, cookie->blocksize, block_lvl2 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+        }
+
+        if ( block[ idx2 ] == 0 ) {
+            /* Allocate a new block for the double indirect block */
+
+            error = ext2_do_alloc_block( cookie, &block_lvl3 );
+
+            if ( error < 0 ) {
+                goto error1;
+            }
+
+            block[ idx2 ] = block_lvl3;
+
+            /* Write it back to the disk */
+
+            error = pwrite( cookie->fd, block, cookie->blocksize, block_lvl2 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+
+            memset( block, 0, cookie->blocksize );
+        } else {
+            block_lvl3 = block[ idx2 ];
+
+            error = pread( cookie->fd, block, cookie->blocksize, block_lvl3 * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                error = -EIO;
+                goto error1;
+            }
+        }
+
+        /* Update the index */
+
+        block[ idx3 ] = new_block;
+
+        /* Write the block to the disk */
+
+        error = pwrite( cookie->fd, block, cookie->blocksize, block_lvl3 * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            error = -EIO;
+            goto error1;
+        }
+
+        goto out;
+    }
+
+    error = -ENOMEM;
+
+    goto error1;
+
+out:
+    inode->fs_inode.i_blocks++;
+
+    *new_block_number = new_block;
+
+    return 0;
+
+error1:
+    /* TODO: free the new block */
+
+    kfree( block );
+
+    return error;
 }

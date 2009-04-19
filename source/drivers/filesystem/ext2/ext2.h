@@ -51,6 +51,11 @@
 #define EXT2_S_IFCHR    0x2000  // character device
 #define EXT2_S_IFIFO    0x1000  // fifo
 
+/* file types */
+
+#define EXT2_FT_REG_FILE  0x1
+#define EXT2_FT_DIRECTORY 0x2
+
 #define IS_DIR(i)       ( ((i->fs_inode.i_mode) & (EXT2_S_IFDIR)) == (EXT2_S_IFDIR))
 
 typedef struct ext2_super_block {
@@ -146,7 +151,13 @@ typedef struct ext2_group {
     ext2_group_desc_t descriptor;
     uint32_t* inode_bitmap;
     uint32_t* block_bitmap;
+    uint32_t flags;
 } ext2_group_t;
+
+enum {
+    EXT2_INODE_BITMAP_DIRTY = ( 1 << 0 ),
+    EXT2_BLOCK_BITMAP_DIRTY = ( 1 << 1 )
+};
 
 /*
  * Structure of an inode on the disk
@@ -211,7 +222,6 @@ typedef struct ext2_dir_entry {
     uint16_t    rec_len;                /* Directory entry length */
     uint8_t     name_len;           /* Name length */                  //TODO check
     uint8_t     file_type;
-    char    name[EXT2_NAME_LEN];    /* File name */
 } __attribute__(( packed )) ext2_dir_entry_t;
 
 typedef struct ext2_cookie {
@@ -227,7 +237,6 @@ typedef struct ext2_cookie {
 } ext2_cookie_t;
 
 typedef struct ext2_dir_cookie {
-    int position;
     uint32_t dir_offset;
 } ext2_dir_cookie_t;
 
@@ -248,16 +257,28 @@ typedef struct ext2_lookup_data {
 
 typedef bool ext2_walk_callback_t( ext2_dir_entry_t* entry, void* data );
 
+int ext2_calc_block_num( ext2_cookie_t *cookie, const vfs_inode_t *vinode, uint32_t block_num, uint32_t* out );
+
 /* Inode handling functions */
 
 int ext2_do_read_inode( ext2_cookie_t *cookie, vfs_inode_t* inode );
 int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode );
-int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode );
+int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode, bool for_directory );
+
+int ext2_do_read_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t block_number, void* buffer );
+int ext2_do_write_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t block_number, void* buffer );
+
+int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t* new_block_number );
 
 int ext2_get_inode_data( ext2_cookie_t* cookie, const vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer );
+
+/* Block handling functions */
+
+int ext2_do_alloc_block( ext2_cookie_t* cookie, uint32_t* block_number );
 
 /* Directory handling functions */
 
 int ext2_do_walk_directory( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_walk_callback_t* callback, void* data );
+int ext2_do_insert_entry( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_dir_entry_t* new_entry, int new_entry_size );
 
 #endif // _EXT2_H_
