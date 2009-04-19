@@ -22,6 +22,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build default="all">
     <array name="files">
         <item>ext2.c</item>
+        <item>inode.c</item>
+        <item>directory.c</item>
     </array>
 
     <target name="clean">

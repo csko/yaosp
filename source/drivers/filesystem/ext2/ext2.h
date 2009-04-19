@@ -20,6 +20,7 @@
 #define _EXT2_H_
 
 #include <types.h>
+#include <vfs/inode.h>
 
 #define EXT2_MIN_BLOCK_SIZE     1024                    // minimum block size
 #define EXT2_NAME_LEN           255                     // maximum file name
@@ -141,6 +142,12 @@ typedef struct ext2_group_desc {
     uint32_t    bg_reserved[3];
 } __attribute__(( packed )) ext2_group_desc_t;
 
+typedef struct ext2_group {
+    ext2_group_desc_t descriptor;
+    uint32_t* inode_bitmap;
+    uint32_t* block_bitmap;
+} ext2_group_t;
+
 /*
  * Structure of an inode on the disk
  */
@@ -215,7 +222,7 @@ typedef struct ext2_cookie {
     uint32_t doubly_indirect_block_count;
     uint32_t triply_indirect_block_count;
     ext2_super_block_t super_block;   // superblock
-    ext2_group_desc_t *gds;           // group descriptors
+    ext2_group_t* groups;
     int flags;                                // mount flags
 } ext2_cookie_t;
 
@@ -232,5 +239,25 @@ typedef struct vfs_inode {
     ext2_inode_t fs_inode;
     ino_t inode_number;
 } vfs_inode_t;
+
+typedef struct ext2_lookup_data {
+    char* name;
+    int name_length;
+    ino_t inode_number;
+} ext2_lookup_data_t;
+
+typedef bool ext2_walk_callback_t( ext2_dir_entry_t* entry, void* data );
+
+/* Inode handling functions */
+
+int ext2_do_read_inode( ext2_cookie_t *cookie, vfs_inode_t* inode );
+int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode );
+int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode );
+
+int ext2_get_inode_data( ext2_cookie_t* cookie, const vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer );
+
+/* Directory handling functions */
+
+int ext2_do_walk_directory( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_walk_callback_t* callback, void* data );
 
 #endif // _EXT2_H_

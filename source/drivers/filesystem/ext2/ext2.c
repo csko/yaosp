@@ -153,66 +153,35 @@ static int ext2_calc_block_num( ext2_cookie_t *cookie, const vfs_inode_t *vinode
     return -EINVAL; // block number is too large
 }
 
-/**
- * This functions reads inode structure from the file system, and wraps it into a vfs_inode
- */
-static int ext2_get_inode( ext2_cookie_t *cookie, ino_t inode_number, vfs_inode_t** out) {
-    vfs_inode_t *vinode;
-    char buffer[ cookie->blocksize ];
-    uint32_t offset, real_offset, block_offset, group, inode_table_ofs;
-
-    if ( inode_number < EXT2_ROOT_INO ) {
-        return -EINVAL;
-    }
-
-    vinode = (vfs_inode_t*) kmalloc( sizeof( vfs_inode_t ) );
-
-    if ( vinode == NULL ) {
-        return -ENOMEM;
-    }
-
-    vinode->inode_number = inode_number;
-
-    // The s_inodes_per_group field in the superblock structure tells us how many inodes are defined per group.
-    // block group = (inode - 1) / s_inodes_per_group
-
-    group = (inode_number - 1) / cookie->super_block.s_inodes_per_group;
-
-    // Once the block is identified, the local inode index for the local inode table can be identified using:
-    // local inode index = (inode - 1) % s_inodes_per_group
-
-    inode_table_ofs = cookie->gds[group].bg_inode_table * cookie->blocksize;
-
-    offset = inode_table_ofs + ( ( (inode_number - 1) % cookie->super_block.s_inodes_per_group) * cookie->super_block.s_inode_size );
-
-    real_offset = offset & ~( cookie->blocksize - 1 );
-    block_offset = offset % cookie->blocksize;
-
-    ASSERT( ( block_offset + cookie->super_block.s_inode_size ) <= cookie->blocksize );
-
-    if ( pread( cookie->fd, buffer, cookie->blocksize, real_offset ) != cookie->blocksize ) {
-        kfree( vinode );
-        return -EIO;
-    }
-
-    memcpy( &vinode->fs_inode, buffer + block_offset, sizeof( ext2_inode_t ) );
-
-    *out = vinode;
-
-    return 0;
-}
-
 static int ext2_read_inode( void *fs_cookie, ino_t inode_number, void** out) {
     int error;
-    ext2_cookie_t *cookie = (ext2_cookie_t*)fs_cookie;
+    ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
+    vfs_inode_t* inode;
 
-    error = ext2_get_inode( cookie, inode_number, (vfs_inode_t**)out );
+    inode = ( vfs_inode_t* )kmalloc( sizeof( vfs_inode_t ) );
 
-    if ( error < 0 ) {
-        return error;
+    if ( inode == NULL ) {
+        error = -ENOMEM;
+        goto error1;
     }
 
+    inode->inode_number = inode_number;
+
+    error = ext2_do_read_inode( cookie, inode );
+
+    if ( error < 0 ) {
+        goto error2;
+    }
+
+    *out = ( void* )inode;
+
     return 0;
+
+error2:
+    kfree( inode );
+
+error1:
+    return error;
 }
 
 static int ext2_write_inode( void* fs_cookie, void* node ) {
@@ -224,7 +193,7 @@ static int ext2_write_inode( void* fs_cookie, void* node ) {
 /**
  * Read inode data
  */
-static int ext2_get_inode_data( ext2_cookie_t* cookie, const vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer ) {
+int ext2_get_inode_data( ext2_cookie_t* cookie, const vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer ) {
     int result;
     uint32_t offset, block_num, i;
     uint32_t leftover, start_block, end_block, trunc;
@@ -370,32 +339,32 @@ static int ext2_read_directory( void* fs_cookie, void* node, void* file_cookie, 
     vfs_inode_t *vparent = (vfs_inode_t*) node;
     char data[ cookie->blocksize ];
 
-    if ( dir_cookie->dir_offset < vparent->fs_inode.i_size ) {
-        uint32_t block_num = dir_cookie->dir_offset / cookie->blocksize;
-
-        if ( ( result = ext2_get_inode_data( cookie, vparent, block_num * cookie->blocksize, cookie->blocksize, data ) ) < 0 ) {
-            return result;
-        }
-
-        entry = ( ext2_dir_entry_t* ) ( data + ( dir_cookie->dir_offset % cookie->blocksize ) ); // location of entry inside the block
-
-        if ( entry->rec_len == 0 ) {
-            // FS error
-            return -EINVAL;
-        }
-
-        dir_cookie->dir_offset += entry->rec_len; // next entry
-        dir_cookie->position++;
-
-        direntry->inode_number = entry->inode;
-        int nsize = entry->name_len > sizeof(direntry->name) -1 ? sizeof(direntry->name) -1 : entry->name_len;
-        strncpy( direntry->name, entry->name, nsize );
-        direntry->name[ nsize ] = 0;
-
-        return 1;
+    if ( __unlikely( dir_cookie->dir_offset >= vparent->fs_inode.i_size ) ) {
+        return 0;
     }
 
-    return 0;
+    uint32_t block_num = dir_cookie->dir_offset / cookie->blocksize;
+
+    if ( ( result = ext2_get_inode_data( cookie, vparent, block_num * cookie->blocksize, cookie->blocksize, data ) ) < 0 ) {
+        return result;
+    }
+
+    entry = ( ext2_dir_entry_t* ) ( data + ( dir_cookie->dir_offset % cookie->blocksize ) ); // location of entry inside the block
+
+    if ( __unlikely( entry->rec_len == 0 ) ) {
+        // FS error
+        return -EINVAL;
+    }
+
+    dir_cookie->dir_offset += entry->rec_len; // next entry
+    dir_cookie->position++;
+
+    direntry->inode_number = entry->inode;
+    int nsize = entry->name_len > sizeof(direntry->name) -1 ? sizeof(direntry->name) -1 : entry->name_len;
+    strncpy( direntry->name, entry->name, nsize );
+    direntry->name[ nsize ] = 0;
+
+    return 1;
 }
 
 static int ext2_rewind_directory( void* fs_cookie, void* node, void* file_cookie ) {
@@ -407,44 +376,67 @@ static int ext2_rewind_directory( void* fs_cookie, void* node, void* file_cookie
     return 0;
 }
 
-static int ext2_do_lookup_inode( ext2_cookie_t *cookie, vfs_inode_t* vparent, const char* name, int name_length, ino_t *out ) {
-    struct dirent dent;
-    int result;
-    ext2_dir_cookie_t dir_cookie;
+static bool ext2_lookup_inode_helper( ext2_dir_entry_t* entry, void* _data ) {
+    ext2_lookup_data_t* data;
 
-    dir_cookie.position = 0;
-    dir_cookie.dir_offset = 0;
+    data = ( ext2_lookup_data_t* )_data;
 
-    if ( !IS_DIR( vparent ) ) {
-        return -EINVAL;
+    if ( ( entry->name_len != data->name_length ) ||
+         ( strncmp( entry->name, data->name, data->name_length ) != 0 ) ) {
+        return true;
     }
 
-    result = ext2_read_directory( cookie, vparent, &dir_cookie, &dent );
+    data->inode_number = entry->inode;
 
-    while ( result > 0 ) {
-        if ( ( strlen( dent.name ) == name_length ) &&
-             ( strncmp( dent.name, name, name_length ) == 0 ) ) {
-            *out = dent.inode_number;
-            return 0;
-        }
-
-        result = ext2_read_directory( cookie, vparent, &dir_cookie, &dent );
-    }
-
-    return -ENOENT;
+    return false;
 }
 
-static int ext2_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* out ) {
+static int ext2_create( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_num, void** file_cookie ) {
     int error;
+    ext2_cookie_t* cookie;
+    vfs_inode_t* parent;
+    vfs_inode_t child;
+    ext2_lookup_data_t lookup_data;
 
-    ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
-    vfs_inode_t* vparent  = ( vfs_inode_t* )_parent;
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    parent = ( vfs_inode_t* )node;
 
-    error = ext2_do_lookup_inode( cookie, vparent, name, name_length, out );
+    lookup_data.name = ( char* )name;
+    lookup_data.name_length = name_length;
+
+    error = ext2_do_walk_directory( fs_cookie, node, ext2_lookup_inode_helper, ( void* )&lookup_data );
+
+    if ( error == 0 ) {
+        return -EEXIST;
+    }
+
+    error = ext2_do_alloc_inode( fs_cookie, &child );
 
     if ( error < 0 ) {
         return error;
     }
+
+    kprintf( "%s() child.inode_number=%llu\n", __FUNCTION__, child.inode_number );
+
+    return -EINVAL;
+}
+
+static int ext2_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
+    int error;
+    ext2_lookup_data_t lookup_data;
+    ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
+    vfs_inode_t* parent  = ( vfs_inode_t* )_parent;
+
+    lookup_data.name = ( char* )name;
+    lookup_data.name_length = name_length;
+
+    error = ext2_do_walk_directory( cookie, parent, ext2_lookup_inode_helper, &lookup_data );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    *inode_number = lookup_data.inode_number;
 
     return 0;
 }
@@ -475,18 +467,28 @@ static int ext2_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
 }
 
 int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {
-    uint32_t sb_offset = 1 * EXT2_MIN_BLOCK_SIZE; // offset of the superblock (1024)
+    int i;
     int result;
+    uint32_t gd_size;
+    uint32_t gd_offset;
+    uint32_t ptr_per_block;
+
+    ext2_group_t* group;
     ext2_cookie_t *cookie;
     ext2_group_desc_t *gds;
 
-    cookie = (ext2_cookie_t*) kmalloc( sizeof( ext2_cookie_t ) );
+    uint32_t sb_offset = 1 * EXT2_MIN_BLOCK_SIZE; // offset of the superblock (1024)
+
+    cookie = ( ext2_cookie_t* )kmalloc( sizeof( ext2_cookie_t ) );
 
     if ( cookie == NULL ) {
         return -ENOMEM;
     }
 
     cookie->flags = flags;
+
+    /* Open the device */
+
     cookie->fd = open( device, O_RDONLY );
 
     if ( cookie->fd < 0 ) {
@@ -494,14 +496,14 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
         goto error1;
     }
 
-    // read the superblock
+    /* Read the superblock */
 
     if ( pread( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), sb_offset ) != sizeof( ext2_super_block_t ) ) {
         result = -EIO;
         goto error2;
     }
 
-    // validate superblock
+    /* Validate the superblock */
 
     if ( cookie->super_block.s_magic != EXT2_SUPER_MAGIC) {
         kprintf("ext2: bad magic number: 0x%x\n", cookie->super_block.s_magic);
@@ -509,7 +511,7 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
         goto error2;
     }
 
-    // check fs state
+    /* Check fs state */
 
     if ( cookie->super_block.s_state != EXT2_VALID_FS ) {
         kprintf( "ext2: partition is damaged or was not cleanly unmounted!\n" );
@@ -517,37 +519,63 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
         goto error2;
     }
 
-
-    cookie->ngroups = (cookie->super_block.s_blocks_count - cookie->super_block.s_first_data_block +
-        cookie->super_block.s_blocks_per_group - 1) / cookie->super_block.s_blocks_per_group;
-
+    cookie->ngroups = ( cookie->super_block.s_blocks_count - cookie->super_block.s_first_data_block +
+        cookie->super_block.s_blocks_per_group - 1 ) / cookie->super_block.s_blocks_per_group;
     cookie->blocksize = EXT2_MIN_BLOCK_SIZE << cookie->super_block.s_log_block_size;
-    uint32_t ppb = cookie->blocksize / sizeof( uint32_t );
-    cookie->ptr_per_block = ppb;
-    cookie->doubly_indirect_block_count = ppb * ppb;
-    cookie->triply_indirect_block_count = cookie->doubly_indirect_block_count * ppb;
 
-    uint32_t gd_offs = (EXT2_MIN_BLOCK_SIZE / cookie->blocksize +1) * cookie->blocksize;
+    ptr_per_block = cookie->blocksize / sizeof( uint32_t );
 
-    // allocate group descriptor array
-    int gds_size = cookie->ngroups * sizeof( ext2_group_desc_t );
-    gds = (ext2_group_desc_t*) kmalloc( gds_size );
+    cookie->ptr_per_block = ptr_per_block;
+    cookie->doubly_indirect_block_count = ptr_per_block * ptr_per_block;
+    cookie->triply_indirect_block_count = cookie->doubly_indirect_block_count * ptr_per_block;
+
+    gd_offset = ( EXT2_MIN_BLOCK_SIZE / cookie->blocksize + 1 ) * cookie->blocksize;
+    gd_size = cookie->ngroups * sizeof( ext2_group_desc_t );
+
+    gds = ( ext2_group_desc_t* )kmalloc( gd_size );
 
     if ( gds == NULL ) {
         result = -ENOMEM;
         goto error2;
     }
 
-    // read the group descriptors
+    /* Read the group descriptors */
 
-    if ( pread( cookie->fd, gds, gds_size, gd_offs ) != gds_size ) {
+    if ( pread( cookie->fd, gds, gd_size, gd_offset ) != gd_size ) {
         result = -EIO;
         goto error3;
     }
 
-    cookie->gds = gds;
+    cookie->groups = ( ext2_group_t* )kmalloc( sizeof( ext2_group_t ) * cookie->ngroups );
 
-    // increase mount count and mark fs in use only in RW mode
+    if ( cookie->groups == NULL ) {
+        /* TODO: cleanup! */
+        result = -ENOMEM;
+        goto error3;
+    }
+
+    for ( i = 0, group = &cookie->groups[ 0 ]; i < cookie->ngroups; i++, group++ ) {
+        memcpy( &group->descriptor, &gds[ i ], sizeof( ext2_group_desc_t ) );
+
+        group->inode_bitmap = ( uint32_t* )kmalloc( cookie->blocksize );
+        group->block_bitmap = ( uint32_t* )kmalloc( cookie->blocksize );
+
+        /* TODO: error handling */
+
+        if ( pread( cookie->fd, group->inode_bitmap, cookie->blocksize, group->descriptor.bg_inode_bitmap * cookie->blocksize ) != cookie->blocksize ) {
+            result = -EIO;
+            goto error3;
+        }
+
+        if ( pread( cookie->fd, group->block_bitmap, cookie->blocksize, group->descriptor.bg_block_bitmap * cookie->blocksize ) != cookie->blocksize ) {
+            result = -EIO;
+            goto error3;
+        }
+    }
+
+    kfree( gds );
+
+    /* increase mount count and mark fs in use only in RW mode */
 
     if ( cookie->flags & ~MOUNT_RO ) {
         cookie->super_block.s_state = EXT2_ERROR_FS;
@@ -561,7 +589,7 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
     }
 
     *root_inode_number = EXT2_ROOT_INO;
-    *fs_cookie = (void*) cookie;
+    *fs_cookie = ( void* )cookie;
 
     kprintf("ext2: mount OK\n");
 
@@ -615,7 +643,7 @@ static filesystem_calls_t ext2_calls = {
     .write_stat = NULL,
     .read_directory = ext2_read_directory,
     .rewind_directory = ext2_rewind_directory,
-    .create = NULL,
+    .create = ext2_create,
     .unlink = NULL,
     .mkdir = NULL,
     .rmdir = NULL,
