@@ -130,7 +130,7 @@ static int pata_disk_do_transfer( pata_port_t* port, void* buffer, uint64_t offs
     if ( error < 0 ) {
       return error;
     }
-    
+
     return 0;
 }
 
@@ -298,7 +298,7 @@ int pata_create_ata_device_node( pata_port_t* port ) {
         device,
         sizeof( device ),
         "disk/hd%c",
-        'a' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
+        '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 
     kprintf( "PATA: Creating device node: /device/%s\n", device );

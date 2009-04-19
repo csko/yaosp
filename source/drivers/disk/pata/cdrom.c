@@ -218,8 +218,8 @@ int pata_create_atapi_device_node( pata_port_t* port ) {
     snprintf(
         device,
         sizeof( device ),
-        "disk/hd%c",
-        'a' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
+        "disk/op%c",
+        '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 
     kprintf( "PATA: Creating device node: /device/%s\n", device );

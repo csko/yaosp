@@ -86,8 +86,7 @@ __init static void mount_root_filesystem( void ) {
             continue;
         }
 
-        if ( ( strlen( entry.name ) < 2 ) ||
-             ( strncmp( entry.name, "hd", 2 ) != 0 ) ) {
+        if ( strlen( entry.name ) < 2 ) {
             continue;
         }
 
