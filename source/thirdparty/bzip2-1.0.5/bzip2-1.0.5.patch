@@ -1,0 +1,93 @@
+diff -Nru bzip2-1.0.5-orig/pbuild.xml bzip2-1.0.5/pbuild.xml
+--- bzip2-1.0.5-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ bzip2-1.0.5/pbuild.xml	2009-04-20 17:29:11.000000000 +0200
+@@ -0,0 +1,89 @@
++<!--
++
++This file is part of the yaosp build system
++
++Copyright (c) 2009 Zoltan Kovacs
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of version 2 of the GNU General Public License
++as published by the Free Software Foundation.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along
++with this program; if not, write to the Free Software Foundation, Inc.,
++51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++
++-->
++
++<build default="all">
++    <array name="files">
++        <item>blocksort.c</item>
++        <item>huffman.c</item>
++        <item>crctable.c</item>
++        <item>randtable.c</item>
++        <item>compress.c</item>
++        <item>decompress.c</item>
++        <item>bzlib.c</item>
++    </array>
++
++    <array name="headers_to_install">
++    </array>
++
++    <target name="clean">
++        <delete>objs/*</delete>
++        <rmdir>objs</rmdir>
++    </target>
++
++    <target name="prepare" type="private">
++        <mkdir>objs</mkdir>
++    </target>
++
++    <target name="compile">
++        <call target="prepare"/>
++
++        <echo>Compiling bzip2 1.0.5</echo>
++
++        <for var="i" array="${files}">
++            <echo>-> ${i}</echo>
++            <gcc>
++                <input>${i}</input>
++                <output>objs/filename(${i}).o</output>
++                <include>../../../include</include>
++                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
++                <include>./</include>
++                <flag>-c</flag>
++                <flag>-O2</flag>
++                <flag>-m32</flag>
++                <flag>-Wall</flag>
++                <flag>-nostdinc</flag>
++                <flag>-nostdlib</flag>
++                <flag>-fno-builtin</flag>
++                <flag>-fno-strict-aliasing</flag>
++            </gcc>
++        </for>
++
++        <echo>Linking bzip2 1.0.5</echo>
++        <echo>-> objs/libbzip2.a</echo>
++
++        <exec executable="ar">
++            <arg>-rc</arg>
++            <arg>objs/libbzip2.a</arg>
++            <arg>objs/*.o</arg>
++        </exec>
++    </target>
++
++    <target name="install">
++        <echo>Installing bzip2 1.0.5 header</echo>
++        <copy from="bzlib.h" to="../../../include/bzlib.h"/>
++    </target>
++
++    <target name="all">
++        <call target="clean"/>
++        <call target="compile"/>
++        <call target="install"/>
++    </target>
++</build>
