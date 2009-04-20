@@ -756,7 +756,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
 
     new_entry_size = sizeof( ext2_dir_entry_t ) + name_length;
 
-    new_entry = ( ext2_dir_entry_t* )kmalloc( new_entry_size );
+    new_entry = ( ext2_dir_entry_t* )kmalloc( ( new_entry_size + 3 ) & ~3 );
 
     if ( new_entry == NULL ) {
         return -ENOMEM;
@@ -866,7 +866,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
 
     new_entry_size = sizeof( ext2_dir_entry_t ) + MAX( name_length, 2 );
 
-    new_entry = ( ext2_dir_entry_t* )kmalloc( new_entry_size );
+    new_entry = ( ext2_dir_entry_t* )kmalloc( ( new_entry_size + 3 ) & ~3 );
 
     if ( new_entry == NULL ) {
         return -ENOMEM;
@@ -890,7 +890,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     inode->i_atime = time( NULL );
     inode->i_ctime = inode->i_atime;
     inode->i_mtime = inode->i_atime;
-    inode->i_links_count = 1;
+    inode->i_links_count = 2; /* 1 from parent and 1 from "." :) */
 
     /* Write the inode to the disk */
 
@@ -920,7 +920,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     new_entry->inode = child.inode_number;
     new_entry->name_len = 1;
 
-    memcpy( ( void* )( new_entry + 1 ), ".", 1 );
+    memcpy( ( void* )( new_entry + 1 ), ".", 2 /* copy the ending \0 as well */ );
 
     error = ext2_do_insert_entry( cookie, &child, new_entry, sizeof( ext2_dir_entry_t ) + 1 );
 
@@ -933,7 +933,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     new_entry->inode = parent->inode_number;
     new_entry->name_len = 2;
 
-    memcpy( ( void* )( new_entry + 1 ), "..", 2 );
+    memcpy( ( void* )( new_entry + 1 ), "..", 3 /* copy the ending \0 as well */ );
 
     error = ext2_do_insert_entry( cookie, &child, new_entry, sizeof( ext2_dir_entry_t ) + 2 );
 
@@ -942,6 +942,17 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     }
 
     kfree( new_entry );
+
+    /* Increment the link count of the parent */
+
+    parent->fs_inode.i_links_count++;
+
+    error = ext2_do_write_inode( fs_cookie, parent );
+
+    if ( error < 0 ) {
+        /* TODO: cleanup */
+        return error;
+    }
 
     /* Write dirty group descriptors and bitmaps to the disk */
 
