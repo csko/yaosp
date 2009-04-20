@@ -113,7 +113,7 @@ int main( int argc, char** argv ) {
 
     /* Switch to the first terminal */
 
-    f = open( "/device/term_ctrl", O_RDONLY );
+    f = open( "/device/control/terminal", O_RDONLY );
 
     if ( f >= 0 ) {
         int tmp = 0;

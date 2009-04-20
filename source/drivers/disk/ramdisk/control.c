@@ -60,7 +60,7 @@ static device_calls_t ramdisk_control_calls = {
 int init_ramdisk_control_device( void ) {
     int error;
 
-    error = create_device_node( "ramdisk_ctrl", &ramdisk_control_calls, NULL );
+    error = create_device_node( "control/ramdisk", &ramdisk_control_calls, NULL );
 
     if ( error < 0 ) {
         return error;

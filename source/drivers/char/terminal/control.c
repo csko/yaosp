@@ -58,7 +58,7 @@ static device_calls_t term_ctrl_calls = {
 int init_terminal_ctrl_device( void ) {
     int error;
 
-    error = create_device_node( "term_ctrl", &term_ctrl_calls, NULL );
+    error = create_device_node( "control/terminal", &term_ctrl_calls, NULL );
 
     if ( error < 0 ) {
         return error;

@@ -140,7 +140,7 @@ int main( int argc, char** argv ) {
 
     /* Open the ramdisk controller device */
 
-    ramdiskctrl_device = open( "/device/ramdisk_ctrl", O_RDONLY );
+    ramdiskctrl_device = open( "/device/control/ramdisk", O_RDONLY );
 
     if ( ramdiskctrl_device < 0 ) {
         fprintf( stderr, "%s: RAMDisk module not loaded!\n", argv0 );
