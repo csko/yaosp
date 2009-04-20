@@ -55,10 +55,12 @@ int main( int argc, char** argv ) {
     int f;
     pid_t child;
 
-    /* Create symbolic links */
+    /* Create symbolic links and directories */
 
     symlink( "/application", "/yaosp/application" );
     symlink( "/system", "/yaosp/system" );
+
+    mkdir( "/media", 0777 );
 
     /* Create and mount the /temp directory */
 
