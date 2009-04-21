@@ -29,6 +29,7 @@
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
 
 #define ROUND_UP(n,a) (((n)+(a)-1) & ~((a)-1))
+#define ROUND_DOWN(n,a) ((n) & ~((a)-1))
 
 #define ASSERT(exp) \
     if ( !( exp ) ) { \

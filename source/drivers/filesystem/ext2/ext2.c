@@ -383,9 +383,6 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
     return ext2_get_inode_data( cookie, vinode, pos, size, buffer );
 }
 
-#define ROUND_DOWN(s,bs) \
-    ( (s) & ~((bs) - 1) )
-
 static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const void* buffer, off_t pos, size_t size ) {
     int error;
     uint8_t* data;
