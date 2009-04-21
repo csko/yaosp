@@ -65,12 +65,26 @@ __init static void mount_root_filesystem( void ) {
     int error;
     dirent_t entry;
     char path[ 255 ];
+    const char* root;
+
+    /* Create the directory where we'll mount the root */
 
     error = mkdir( "/yaosp", 0 );
 
     if ( error < 0 ) {
         panic( "Failed to mount root filesystem: failed to create mount point!\n" );
     }
+
+    /* Try root= kernel parameter */
+
+    error = get_kernel_param_as_string( "root", &root );
+
+    if ( error == 0 ) {
+        error = mount( root, "/yaosp", "ext2", MOUNT_NONE );
+        goto done;
+    }
+
+    /* Check all storage nodes and try to find out which one is the root */
 
     dir = open( "/device/storage", O_RDONLY );
 
@@ -101,6 +115,7 @@ __init static void mount_root_filesystem( void ) {
 
     close( dir );
 
+done:
     if ( error < 0 ) {
         panic( "Failed to mount root filesystem!\n" );
     }

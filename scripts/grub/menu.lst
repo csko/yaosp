@@ -2,6 +2,7 @@ title yaOSp
 kernel /system/kernel
 module /system/module/bus/pci
 module /system/module/disk/pata
+module /system/module/disk/partition
 module /system/module/filesystem/iso9660
 module /system/module/input/ps2kbd
 module /system/module/network/pcnet32

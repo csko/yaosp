@@ -26,6 +26,7 @@
 #include <irq.h>
 #include <scheduler.h>
 #include <process.h>
+#include <debug.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <vfs/devfs.h>
@@ -167,6 +168,7 @@ static kernel_symbol_t symbols[] = {
     { "handle_panic", ( ptr_t )handle_panic },
     { "lock_scheduler", ( ptr_t )lock_scheduler },
     { "unlock_scheduler", ( ptr_t )unlock_scheduler },
+    { "debug_print_stack_trace", ( ptr_t )debug_print_stack_trace },
     { "__moddi3", ( ptr_t )__moddi3 },
     { "__divdi3", ( ptr_t )__divdi3 },
     { "__umoddi3", ( ptr_t )__umoddi3 },
