@@ -135,6 +135,7 @@ static int pata_disk_do_transfer( pata_port_t* port, void* buffer, uint64_t offs
 }
 
 static int pata_disk_open( void* node, uint32_t flags, void** cookie ) {
+#if 0
     pata_port_t* port;
 
     port = ( pata_port_t* )node;
@@ -150,11 +151,13 @@ static int pata_disk_open( void* node, uint32_t flags, void** cookie ) {
     port->open = true;
 
     UNLOCK( port->lock );
+#endif
 
     return 0;
 }
 
 static int pata_disk_close( void* node, void* cookie ) {
+#if 0
     pata_port_t* port;
 
     port = ( pata_port_t* )node;
@@ -164,6 +167,7 @@ static int pata_disk_close( void* node, void* cookie ) {
     port->open = false;
 
     UNLOCK( port->lock );
+#endif
 
     return 0;
 }
@@ -297,7 +301,7 @@ int pata_create_ata_device_node( pata_port_t* port ) {
     snprintf(
         device,
         sizeof( device ),
-        "disk/hd%c",
+        "storage/hd%c",
         '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 

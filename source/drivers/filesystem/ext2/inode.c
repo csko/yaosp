@@ -284,22 +284,6 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
         new_index = 0;
     }
 
-    /* Check if the new block is already allocated, just not used */
-
-    ASSERT( ( inode->fs_inode.i_blocks % cookie->sectors_per_block ) == 0 );
-
-    if ( new_index < ( inode->fs_inode.i_blocks / cookie->sectors_per_block ) ) {
-        error = ext2_calc_block_num( cookie, inode, new_index, &new_block );
-
-        if ( error < 0 ) {
-            return error;
-        }
-
-        *new_block_number = new_block;
-
-        return 0;
-    }
-
     /* Allocate a new block */
 
     error = ext2_do_alloc_block( cookie, &new_block );
@@ -308,9 +292,13 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
         return error;
     }
 
+    ASSERT( ( inode->fs_inode.i_blocks % cookie->sectors_per_block ) == 0 );
+
     /* First check direct blocks */
 
     if ( new_index < EXT2_NDIR_BLOCKS ) {
+        ASSERT( inode->fs_inode.i_block[ new_index ] == 0 );
+
         inode->fs_inode.i_block[ new_index ] = new_block;
 
         goto out;
@@ -343,6 +331,7 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             }
 
             inode->fs_inode.i_block[ EXT2_IND_BLOCK ] = ind_block;
+            inode->fs_inode.i_blocks += cookie->sectors_per_block;
         } else {
             error = pread( cookie->fd, block, cookie->blocksize, ind_block * cookie->blocksize );
 
@@ -353,6 +342,8 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
         }
 
         /* Update the indirect block */
+
+        ASSERT( block[ new_index ] == 0 );
 
         block[ new_index ] = new_block;
 
@@ -398,6 +389,7 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             }
 
             inode->fs_inode.i_block[ EXT2_DIND_BLOCK ] = block_lvl1;
+            inode->fs_inode.i_blocks += cookie->sectors_per_block;
         } else {
             error = pread( cookie->fd, block, cookie->blocksize, block_lvl1 * cookie->blocksize );
 
@@ -420,6 +412,7 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             }
 
             block[ idx1 ] = block_lvl2;
+            inode->fs_inode.i_blocks += cookie->sectors_per_block;
 
             /* Write it back to the disk */
 
@@ -443,6 +436,8 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
         }
 
         /* Update the index */
+
+        ASSERT( block[ idx2 ] == 0 );
 
         block[ idx2 ] = new_block;
 
@@ -490,6 +485,7 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             }
 
             inode->fs_inode.i_block[ EXT2_DIND_BLOCK ] = block_lvl1;
+            inode->fs_inode.i_blocks += cookie->sectors_per_block;
         } else {
             error = pread( cookie->fd, block, cookie->blocksize, block_lvl1 * cookie->blocksize );
 
@@ -514,6 +510,7 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             }
 
             block[ idx1 ] = block_lvl2;
+            inode->fs_inode.i_blocks += cookie->sectors_per_block;
 
             /* Write it back to the disk */
 
@@ -546,6 +543,7 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             }
 
             block[ idx2 ] = block_lvl3;
+            inode->fs_inode.i_blocks += cookie->sectors_per_block;
 
             /* Write it back to the disk */
 
@@ -569,6 +567,8 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
         }
 
         /* Update the index */
+
+        ASSERT( block[ idx3 ] == 0 );
 
         block[ idx3 ] = new_block;
 

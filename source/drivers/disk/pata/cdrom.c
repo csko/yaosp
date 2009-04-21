@@ -218,7 +218,7 @@ int pata_create_atapi_device_node( pata_port_t* port ) {
     snprintf(
         device,
         sizeof( device ),
-        "disk/od%c",
+        "storage/od%c",
         '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 

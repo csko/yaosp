@@ -72,7 +72,7 @@ __init static void mount_root_filesystem( void ) {
         panic( "Failed to mount root filesystem: failed to create mount point!\n" );
     }
 
-    dir = open( "/device/disk", O_RDONLY );
+    dir = open( "/device/storage", O_RDONLY );
 
     if ( dir < 0 ) {
         panic( "Failed to mount root filesystem: no disk(s) available!\n" );
@@ -90,7 +90,7 @@ __init static void mount_root_filesystem( void ) {
             continue;
         }
 
-        snprintf( path, sizeof( path ), "/device/disk/%s", entry.name );
+        snprintf( path, sizeof( path ), "/device/storage/%s", entry.name );
 
         error = mount( path, "/yaosp", "iso9660", MOUNT_RO );
 

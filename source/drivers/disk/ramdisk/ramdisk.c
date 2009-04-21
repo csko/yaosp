@@ -135,7 +135,7 @@ ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info ) {
 
     UNLOCK( ramdisk_lock );
 
-    snprintf( path, sizeof( path ), "disk/ram%d", node->id );
+    snprintf( path, sizeof( path ), "storage/ram%d", node->id );
 
     error = create_device_node( path, &ramdisk_calls, ( void* )node );
 
