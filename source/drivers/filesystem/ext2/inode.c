@@ -153,6 +153,16 @@ int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
 
     memcpy( buffer + block_offset, &inode->fs_inode, sizeof( ext2_inode_t ) );
 
+    /* If the inode size on the disk is bigger than our struct then we fill the rest of it with 0s */
+
+    if ( cookie->super_block.s_inode_size > sizeof( ext2_inode_t ) ) {
+        memset(
+            buffer + block_offset + sizeof( ext2_inode_t ),
+            0,
+            cookie->super_block.s_inode_size - sizeof( ext2_inode_t )
+        );
+    }
+
     /* Write the inode table block back */
 
     error = pwrite( cookie->fd, buffer, cookie->blocksize, real_offset );

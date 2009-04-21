@@ -281,4 +281,6 @@ int ext2_do_alloc_block( ext2_cookie_t* cookie, uint32_t* block_number );
 int ext2_do_walk_directory( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_walk_callback_t* callback, void* data );
 int ext2_do_insert_entry( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_dir_entry_t* new_entry, int new_entry_size );
 
-#endif // _EXT2_H_
+ext2_dir_entry_t* ext2_do_alloc_dir_entry( int name_length );
+
+#endif /* _EXT2_H_ */

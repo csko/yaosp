@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>ncurses-5.7</item>
         <item>readline-6.0</item>
         <item>freetype-2.3.9</item>
+        <item>bzip2-1.0.5</item>
         <item>python-2.5.4</item>
     </array>
 

@@ -386,9 +386,6 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
 #define ROUND_DOWN(s,bs) \
     ( (s) & ~((bs) - 1) )
 
-#define ROUND_UP(s,bs) \
-    ( ( (s) + (bs) - 1 ) & ~((bs) - 1) )
-
 static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const void* buffer, off_t pos, size_t size ) {
     int error;
     uint8_t* data;
@@ -731,7 +728,6 @@ static bool ext2_lookup_inode_helper( ext2_dir_entry_t* entry, void* _data ) {
 
 static int ext2_create( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_number, void** _file_cookie ) {
     int error;
-    int new_entry_size;
     ext2_cookie_t* cookie;
     vfs_inode_t* parent;
     vfs_inode_t child;
@@ -742,6 +738,10 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
 
     cookie = ( ext2_cookie_t* )fs_cookie;
     parent = ( vfs_inode_t* )node;
+
+    if ( name_length <= 0 ) {
+        return -EINVAL;
+    }
 
     lookup_data.name = ( char* )name;
     lookup_data.name_length = name_length;
@@ -754,9 +754,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
         return -EEXIST;
     }
 
-    new_entry_size = sizeof( ext2_dir_entry_t ) + name_length;
-
-    new_entry = ( ext2_dir_entry_t* )kmalloc( ( new_entry_size + 3 ) & ~3 );
+    new_entry = ext2_do_alloc_dir_entry( name_length );
 
     if ( new_entry == NULL ) {
         return -ENOMEM;
@@ -802,12 +800,11 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     /* Link the new file to the directory */
 
     new_entry->inode = child.inode_number;
-    new_entry->name_len = name_length;
     new_entry->file_type = EXT2_FT_REG_FILE;
 
     memcpy( ( void* )( new_entry + 1 ), name, name_length );
 
-    error = ext2_do_insert_entry( cookie, parent, new_entry, new_entry_size );
+    error = ext2_do_insert_entry( cookie, parent, new_entry, sizeof( ext2_dir_entry_t ) + name_length );
 
     if ( error < 0 ) {
         return error;
@@ -840,7 +837,6 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
 
 static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_length, int perms ) {
     int error;
-    int new_entry_size;
     ext2_cookie_t* cookie;
     vfs_inode_t* parent;
     ext2_lookup_data_t lookup_data;
@@ -850,6 +846,10 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
 
     cookie = ( ext2_cookie_t* )fs_cookie;
     parent = ( vfs_inode_t* )node;
+
+    if ( name_length <= 0 ) {
+        return -EINVAL;
+    }
 
     lookup_data.name = ( char* )name;
     lookup_data.name_length = name_length;
@@ -864,9 +864,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
 
     /* Create the new directory node */
 
-    new_entry_size = sizeof( ext2_dir_entry_t ) + MAX( name_length, 2 );
-
-    new_entry = ( ext2_dir_entry_t* )kmalloc( ( new_entry_size + 3 ) & ~3 );
+    new_entry = ext2_do_alloc_dir_entry( name_length );
 
     if ( new_entry == NULL ) {
         return -ENOMEM;
@@ -904,12 +902,11 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     /* Link the new directory to the parent */
 
     new_entry->inode = child.inode_number;
-    new_entry->name_len = name_length;
     new_entry->file_type = EXT2_FT_DIRECTORY;
 
     memcpy( ( void* )( new_entry + 1 ), name, name_length );
 
-    error = ext2_do_insert_entry( cookie, parent, new_entry, new_entry_size );
+    error = ext2_do_insert_entry( cookie, parent, new_entry, sizeof( ext2_dir_entry_t ) + name_length );
 
     if ( error < 0 ) {
         return error;
@@ -920,7 +917,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     new_entry->inode = child.inode_number;
     new_entry->name_len = 1;
 
-    memcpy( ( void* )( new_entry + 1 ), ".", 2 /* copy the ending \0 as well */ );
+    memcpy( ( void* )( new_entry + 1 ), ".\0\0", 4 /* Copy the padding \0s as well */ );
 
     error = ext2_do_insert_entry( cookie, &child, new_entry, sizeof( ext2_dir_entry_t ) + 1 );
 
@@ -933,7 +930,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     new_entry->inode = parent->inode_number;
     new_entry->name_len = 2;
 
-    memcpy( ( void* )( new_entry + 1 ), "..", 3 /* copy the ending \0 as well */ );
+    memcpy( ( void* )( new_entry + 1 ), "..\0", 4 /* Copy the padding \0s as well */ );
 
     error = ext2_do_insert_entry( cookie, &child, new_entry, sizeof( ext2_dir_entry_t ) + 2 );
 

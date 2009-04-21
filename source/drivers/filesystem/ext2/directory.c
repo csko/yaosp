@@ -117,7 +117,7 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_dir_e
         }
 
         real_size = sizeof( ext2_dir_entry_t ) + entry->name_len;
-        real_size = ( real_size + 3 ) & ~3;
+        real_size = ROUND_UP( real_size, 4 );
         free_size = entry->rec_len - real_size;
 
         /* Truncate an existing entry if possible */
@@ -151,7 +151,7 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_dir_e
 
     /* Add a new block to the inode */
 
-    memcpy( block, new_entry, ( new_entry_size + 3 ) & ~3 );
+    memcpy( block, new_entry, ROUND_UP( new_entry_size, 4 ) );
 
     tmp = ( ext2_dir_entry_t* )block;
 
@@ -190,4 +190,22 @@ out:
     kfree( block );
 
     return error;
+}
+
+ext2_dir_entry_t* ext2_do_alloc_dir_entry( int name_length ) {
+    int real_length;
+    ext2_dir_entry_t* entry;
+
+    real_length = sizeof( ext2_dir_entry_t ) + name_length;
+    real_length = ROUND_UP( real_length, 4 );
+
+    entry = ( ext2_dir_entry_t* )kmalloc( real_length );
+
+    if ( entry == NULL ) {
+        return NULL;
+    }
+
+    entry->name_len = name_length;
+
+    return entry;
 }
