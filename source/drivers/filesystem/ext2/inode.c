@@ -286,7 +286,9 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
 
     /* Check if the new block is already allocated, just not used */
 
-    if ( new_index < inode->fs_inode.i_blocks ) {
+    ASSERT( ( inode->fs_inode.i_blocks % cookie->sectors_per_block ) == 0 );
+
+    if ( new_index < ( inode->fs_inode.i_blocks / cookie->sectors_per_block ) ) {
         error = ext2_calc_block_num( cookie, inode, new_index, &new_block );
 
         if ( error < 0 ) {
@@ -587,7 +589,7 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
     goto error1;
 
 out:
-    inode->fs_inode.i_blocks++;
+    inode->fs_inode.i_blocks += cookie->sectors_per_block;
 
     *new_block_number = new_block;
 

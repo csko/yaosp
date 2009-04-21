@@ -1077,6 +1077,7 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
     cookie->ngroups = ( cookie->super_block.s_blocks_count - cookie->super_block.s_first_data_block +
         cookie->super_block.s_blocks_per_group - 1 ) / cookie->super_block.s_blocks_per_group;
     cookie->blocksize = EXT2_MIN_BLOCK_SIZE << cookie->super_block.s_log_block_size;
+    cookie->sectors_per_block = cookie->blocksize / 512;
 
     ptr_per_block = cookie->blocksize / sizeof( uint32_t );
 

@@ -228,6 +228,7 @@ typedef struct ext2_cookie {
     int fd;
     uint32_t ngroups;                         // number of block groups
     uint32_t blocksize;                       // size of one block (default: 1024)
+    uint32_t sectors_per_block;
     uint32_t ptr_per_block;                   // pointer per block (default: 256)
     uint32_t doubly_indirect_block_count;
     uint32_t triply_indirect_block_count;
