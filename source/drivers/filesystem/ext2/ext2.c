@@ -182,7 +182,7 @@ static int ext2_flush_group_descriptors( ext2_cookie_t* cookie ) {
                 goto out;
             }
 
-            group->flags &= EXT2_INODE_BITMAP_DIRTY;
+            group->flags &= ~EXT2_INODE_BITMAP_DIRTY;
             do_flush_gd = true;
         }
 
@@ -195,7 +195,7 @@ static int ext2_flush_group_descriptors( ext2_cookie_t* cookie ) {
                 goto out;
             }
 
-            group->flags &= EXT2_BLOCK_BITMAP_DIRTY;
+            group->flags &= ~EXT2_BLOCK_BITMAP_DIRTY;
             do_flush_gd = true;
         }
 
