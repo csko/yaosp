@@ -169,6 +169,7 @@ int ioctl( int fd, int command, void* buffer );
 int getdents( int fd, dirent_t* entry, unsigned int count );
 int fstat( int fd, struct stat* stat );
 off_t lseek( int fd, off_t offset, int whence );
+int dup( int old_fd );
 int mkdir( const char* path, int permissions );
 int symlink( const char* src, const char* dest );
 int mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags );

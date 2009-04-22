@@ -19,6 +19,7 @@
 #include <semaphore.h>
 #include <errno.h>
 #include <console.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <network/route.h>
 #include <lib/string.h>
@@ -157,7 +158,7 @@ static bool route_compare( const void* key1, const void* key2 ) {
     return ( memcmp( key1, key2, 3 * IPV4_ADDR_LEN ) == 0 );
 }
 
-int init_routes( void ) {
+__init int init_routes( void ) {
     int error;
 
     error = init_hashtable(

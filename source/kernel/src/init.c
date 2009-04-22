@@ -23,6 +23,7 @@
 #include <module.h>
 #include <loader.h>
 #include <config.h>
+#include <errno.h>
 #include <mm/pages.h>
 #include <vfs/vfs.h>
 #include <network/interface.h>
@@ -60,29 +61,11 @@ __init static void load_bootmodules( void ) {
     }
 }
 
-__init static void mount_root_filesystem( void ) {
+__init static int scan_and_mount_root_filesystem( void ) {
     int dir;
     int error;
     dirent_t entry;
-    char path[ 255 ];
-    const char* root;
-
-    /* Create the directory where we'll mount the root */
-
-    error = mkdir( "/yaosp", 0 );
-
-    if ( error < 0 ) {
-        panic( "Failed to mount root filesystem: failed to create mount point!\n" );
-    }
-
-    /* Try root= kernel parameter */
-
-    error = get_kernel_param_as_string( "root", &root );
-
-    if ( error == 0 ) {
-        error = mount( root, "/yaosp", "ext2", MOUNT_NONE );
-        goto done;
-    }
+    char path[ 128 ];
 
     /* Check all storage nodes and try to find out which one is the root */
 
@@ -92,7 +75,7 @@ __init static void mount_root_filesystem( void ) {
         panic( "Failed to mount root filesystem: no disk(s) available!\n" );
     }
 
-    error = -1;
+    error = -ENOENT;
 
     while ( getdents( dir, &entry, sizeof( dirent_t ) ) == 1 ) {
         if ( ( strcmp( entry.name, "." ) == 0 ) ||
@@ -115,7 +98,31 @@ __init static void mount_root_filesystem( void ) {
 
     close( dir );
 
-done:
+    return error;
+}
+
+__init static void mount_root_filesystem( void ) {
+    int error;
+    const char* root;
+
+    /* Create the directory where we'll mount the root */
+
+    error = mkdir( "/yaosp", 0777 );
+
+    if ( error < 0 ) {
+        panic( "Failed to mount root filesystem: failed to create mount point!\n" );
+    }
+
+    /* Try root= kernel parameter */
+
+    error = get_kernel_param_as_string( "root", &root );
+
+    if ( error == 0 ) {
+        error = mount( root, "/yaosp", "ext2", MOUNT_NONE );
+    } else {
+        error = scan_and_mount_root_filesystem();
+    }
+
     if ( error < 0 ) {
         panic( "Failed to mount root filesystem!\n" );
     }

@@ -1689,6 +1689,10 @@ static int do_dup( bool kernel, int old_fd ) {
     return error;
 }
 
+int dup( int old_fd ) {
+    return do_dup( true, old_fd );
+}
+
 int sys_dup( int old_fd ) {
     return do_dup( false, old_fd );
 }

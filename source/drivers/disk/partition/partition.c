@@ -25,30 +25,18 @@
 #include <vfs/devfs.h>
 #include <lib/string.h>
 
-typedef struct partition {
-    uint8_t bootable;
-    uint8_t start_head;
-    uint8_t start_sector;
-    uint8_t start_cylinder;
-    uint8_t type;
-    uint8_t end_head;
-    uint8_t end_sector;
-    uint8_t end_cylinder;
-    uint32_t start_lba;
-    uint32_t num_sectorss;
-} __attribute__(( packed )) partition_t;
-
-typedef struct partition_table {
-    uint8_t bootcode[ 446 ];
-    partition_t partitions[ 4 ];
-    uint16_t signature;
-} __attribute__(( packed )) partition_table_t;
+#include "partition.h"
 
 typedef struct partition_node {
     int fd;
     off_t offset;
     uint64_t size;
 } partition_node_t;
+
+static partition_type_t* partition_types[] = {
+    &msdos_partition,
+    NULL
+};
 
 static int partition_read( void* _node, void* cookie, void* buffer, off_t position, size_t size ) {
     partition_node_t* node;
@@ -100,7 +88,7 @@ static device_calls_t partition_calls = {
     .remove_select_request = NULL
 };
 
-static int create_device_partition( int fd, const char* device, int index, off_t offset, uint64_t size ) {
+int create_device_partition( int fd, const char* device, int index, off_t offset, uint64_t size ) {
     int error;
     char path[ 128 ];
     partition_node_t* node;
@@ -128,59 +116,14 @@ static int create_device_partition( int fd, const char* device, int index, off_t
 
 static int check_device_partitions( const char* device ) {
     int i;
-    int fd;
     int error;
-    char path[ 128 ];
-    char buffer[ 512 ];
-    int partitions_created;
-    partition_t* partition;
-    partition_table_t* table;
 
-    snprintf( path, sizeof( path ), "/device/storage/%s", device );
-
-    fd = open( path, O_RDWR );
-
-    if ( fd < 0 ) {
-        return fd;
-    }
-
-    if ( pread( fd, buffer, 512, 0 ) != 512 ) {
-        close( fd );
-        return -EIO;
-    }
-
-    table = ( partition_table_t* )buffer;
-
-    if ( table->signature != 0xAA55 ) {
-        kprintf( "Invalid partition signature on %s\n", device );
-        close( fd );
-        return -EIO;
-    }
-
-    partitions_created;
-
-    for ( i = 0; i < 4; i++ ) {
-        partition = &table->partitions[ i ];
-
-        if ( partition->type == 0 ) {
-            continue;
-        }
-
-        error = create_device_partition(
-            fd,
-            device,
-            i,
-            ( off_t )partition->start_lba * 512,
-            ( uint64_t )partition->num_sectorss * 512
-        );
+    for ( i = 0; partition_types[ i ] != NULL; i++ ) {
+        error = partition_types[ i ]->scan( device );
 
         if ( error == 0 ) {
-            partitions_created++;
+            break;
         }
-    }
-
-    if ( partitions_created == 0 ) {
-        close( fd );
     }
 
     return 0;
@@ -190,6 +133,8 @@ int init_module( void ) {
     int dir;
     dirent_t entry;
     int error;
+
+    mkdir( "/device/storage/partition", 0777 );
 
     dir = open( "/device/storage", O_RDONLY );
 

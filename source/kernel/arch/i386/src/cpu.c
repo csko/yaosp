@@ -22,6 +22,7 @@
 #include <smp.h>
 #include <kernel.h>
 #include <lib/string.h>
+#include <lib/ctype.h>
 
 #include <arch/cpu.h>
 #include <arch/gdt.h>
@@ -136,9 +137,29 @@ __init int detect_cpu( void ) {
     }
 
     if ( largest_func_num >= 0x80000004 ) {
+        size_t j;
+
         cpuid( 0x80000002, ( register_t* )&name[ 0 ] );
         cpuid( 0x80000003, ( register_t* )&name[ 16 ] );
         cpuid( 0x80000004, ( register_t* )&name[ 32 ] );
+
+        for ( j = 0; j < 48; j++ ) {
+            if ( !isspace( name[ j ] ) ) {
+                break;
+            }
+        }
+
+        /* Some CPU names has whitespace characters at the beginning, let's strip them */
+
+        if ( j > 0 ) {
+            size_t length;
+
+            length = strlen( &name[ j ] );
+
+            memmove( &name[ 0 ], &name[ j ], length );
+
+            name[ length ] = 0;
+        }
     }
 
     /* Put the boot processor information to the screen */

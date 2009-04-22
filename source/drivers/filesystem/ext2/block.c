@@ -64,5 +64,5 @@ int ext2_do_alloc_block( ext2_cookie_t* cookie, uint32_t* block_number ) {
         }
     }
 
-    return -ENOMEM;
+    return -ENOSPC;
 }

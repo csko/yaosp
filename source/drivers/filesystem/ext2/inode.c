@@ -229,7 +229,7 @@ int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode, bool for_dir
         }
     }
 
-    return -ENOMEM;
+    return -ENOSPC;
 }
 
 int ext2_do_read_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t block_number, void* buffer ) {

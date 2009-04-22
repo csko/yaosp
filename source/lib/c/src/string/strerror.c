@@ -45,7 +45,9 @@ static char* error_strings[] = {
     "Directory not empty", /* ENOTEMPTY */
     "Resource temporarily unavailable", /* EAGAIN */
     "Argument list too long", /* E2BIG */
-    "Connection timed out" /* ETIMEDOUT */
+    "Connection timed out", /* ETIMEDOUT */
+    "Value too large for defined data type", /* EOVERFLOW */
+    "No space left on device" /* ENOSPC */
 };
 
 char* strerror( int errnum ) {

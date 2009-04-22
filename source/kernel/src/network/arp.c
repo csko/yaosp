@@ -18,6 +18,7 @@
 
 #include <console.h>
 #include <errno.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/arp.h>
@@ -252,7 +253,7 @@ static bool pending_ip_compare( const void* key1, const void* key2 ) {
     return ( memcmp( key1, key2, IPV4_ADDR_LEN ) == 0 );
 }
 
-int init_arp( void ) {
+__init int init_arp( void ) {
     int error;
 
     error = init_hashtable(

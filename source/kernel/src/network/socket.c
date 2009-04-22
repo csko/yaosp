@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <smp.h>
 #include <console.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
@@ -383,7 +384,7 @@ static bool socket_compare( const void* key1, const void* key2 ) {
     return ( *inode_num_1 == *inode_num_2 );
 }
 
-int init_socket( void ) {
+__init int init_socket( void ) {
     int error;
 
     socket_lock = create_semaphore( "socket table", SEMAPHORE_BINARY, 0, 1 );

@@ -96,6 +96,7 @@ static kernel_symbol_t symbols[] = {
     { "pwrite", ( ptr_t )pwrite },
     { "ioctl", ( ptr_t )ioctl },
     { "fstat", ( ptr_t )fstat },
+    { "dup", ( ptr_t )dup },
     { "mkdir", ( ptr_t )mkdir },
     { "mount", ( ptr_t )mount },
     { "select", ( ptr_t )select },

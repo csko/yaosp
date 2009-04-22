@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build default="all">
     <array name="files">
         <item>partition.c</item>
+        <item>msdos.c</item>
     </array>
 
     <target name="clean">

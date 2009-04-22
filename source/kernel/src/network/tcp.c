@@ -20,6 +20,7 @@
 #include <console.h>
 #include <macros.h>
 #include <thread.h>
+#include <kernel.h>
 #include <mm/kmalloc.h>
 #include <network/tcp.h>
 #include <network/ipv4.h>
@@ -1028,7 +1029,7 @@ static int tcp_timer_thread_entry( void* data ) {
     return 0;
 }
 
-int init_tcp( void ) {
+__init int init_tcp( void ) {
     int error;
 
     error = init_hashtable(

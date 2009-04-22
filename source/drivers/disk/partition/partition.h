@@ -1,4 +1,4 @@
-/* Ctype macros and functions
+/* Partition table parser
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,17 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LIB_CTYPE_H_
-#define _LIB_CTYPE_H_
+#ifndef _PARTITION_H_
+#define _PARTITION_H_
 
-#define isalnum(c) ( isalpha(c) || isdigit(c) )
-#define isalpha(c) ( ( 'A' <= c && c <= 'Z' ) || ( 'a' <= c && c <= 'z' ) )
-#define isdigit(c) ( '0' <= c && c <= '9' )
-#define islower(c) ( 'a' <= c && c <= 'z' )
-#define isupper(c) ( 'A' <= c && c <= 'Z' )
-#define isspace(c) ( ( c == ' ' ) || ( c == '\t' ) )
+#include <types.h>
 
-int toupper( int c );
-int tolower( int c );
+typedef struct partition_type {
+    const char* name;
+    int ( *scan )( const char* device );
+} partition_type_t;
 
-#endif // _LIB_CTYPE_H_
+extern partition_type_t msdos_partition;
+
+int create_device_partition( int fd, const char* device, int index, off_t offset, uint64_t size );
+
+#endif /* _PARTITION_H_ */
