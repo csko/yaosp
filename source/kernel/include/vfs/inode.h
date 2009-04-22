@@ -78,7 +78,8 @@ int lookup_inode(
     inode_t* parent,
     const char* path,
     inode_t** _inode,
-    bool follow_symlink
+    bool follow_symlink,
+    bool follow_mount
 );
 
 int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes );

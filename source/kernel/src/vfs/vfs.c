@@ -790,7 +790,7 @@ static int do_access( bool kernel, const char* path, int mode ) {
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode, true );
+    error = lookup_inode( io_context, NULL, path, &inode, true, true );
 
     if ( error < 0 ) {
         return error;
@@ -1100,7 +1100,7 @@ static int do_stat( bool kernel, const char* path, struct stat* stat ) {
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode, true );
+    error = lookup_inode( io_context, NULL, path, &inode, true, true );
 
     if ( error < 0 ) {
         return error;
@@ -1128,7 +1128,7 @@ static int do_lstat( bool kernel, const char* path, struct stat* stat ) {
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode, false );
+    error = lookup_inode( io_context, NULL, path, &inode, false, true );
 
     if ( error < 0 ) {
         return error;
@@ -1344,7 +1344,7 @@ static int do_readlink( bool kernel, const char* path, char* buffer, size_t leng
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode, false );
+    error = lookup_inode( io_context, NULL, path, &inode, false, true );
 
     if ( error < 0 ) {
         return error;
@@ -1384,7 +1384,7 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, dir, &dir_inode, true );
+    error = lookup_inode( io_context, NULL, dir, &dir_inode, true, false );
 
     if ( error < 0 ) {
         return error;
@@ -1748,7 +1748,7 @@ static int do_utime( bool kernel, const char* path, const struct utimbuf* times)
         io_context = current_process()->io_context;
     }
 
-    error = lookup_inode( io_context, NULL, path, &inode, true );
+    error = lookup_inode( io_context, NULL, path, &inode, true, true );
 
     if ( error < 0 ) {
         return error;

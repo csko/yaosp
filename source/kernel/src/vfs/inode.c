@@ -243,7 +243,7 @@ int do_lookup_inode( io_context_t* io_context, inode_t* parent, const char* name
         &inode_number
     );
 
-    if ( error < 0 ) {    
+    if ( error < 0 ) {
         goto out;
     }
 
@@ -353,7 +353,7 @@ next:
     return 0;
 }
 
-int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, inode_t** _inode, bool follow_symlink ) {
+int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, inode_t** _inode, bool follow_symlink, bool follow_mount ) {
     int error;
     char* name;
     int length;
@@ -373,7 +373,7 @@ int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, i
 
         atomic_inc( &inode->ref_count );
     } else {
-        error = do_lookup_inode( io_context, new_parent, name, length, true, &inode );
+        error = do_lookup_inode( io_context, new_parent, name, length, follow_mount, &inode );
     }
 
     if ( ( error == 0 ) && ( follow_symlink ) ) {
