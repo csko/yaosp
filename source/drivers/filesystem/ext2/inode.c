@@ -356,6 +356,8 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             goto error1;
         }
 
+        kfree( block );
+
         goto out;
     }
 
@@ -449,6 +451,8 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             error = -EIO;
             goto error1;
         }
+
+        kfree( block );
 
         goto out;
     }
@@ -580,6 +584,8 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint
             error = -EIO;
             goto error1;
         }
+
+        kfree( block );
 
         goto out;
     }
