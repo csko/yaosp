@@ -1,4 +1,4 @@
-/* yaosp C library
+/* unmount shell command
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,22 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_MOUNT_H_
-#define _SYS_MOUNT_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/mount.h>
 
-#define MOUNT_NONE 0
-#define MOUNT_RO   1
+static char* argv0 = NULL;
 
-int mount(
-    const char* source,
-    const char* target,
-    const char* filesystemtype,
-    unsigned long mountflags,
-    const void* data
-);
+int main( int argc, char** argv ) {
+    int error;
 
-int umount(
-    const char* dir
-);
+    argv0 = argv[ 0 ];
 
-#endif /* _SYS_MOUNT_H_ */
+    if ( argc < 2 ) {
+        fprintf( stderr, "usage: %s: path\n", argv0 );
+
+        return EXIT_FAILURE;
+    }
+
+    error = umount(
+        argv[ 1 ]
+    );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to unmount %s: %s\n", argv0, argv[ 1 ], strerror( errno ) );
+
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}

@@ -82,6 +82,8 @@ int lookup_inode(
     bool follow_mount
 );
 
+uint32_t get_inode_cache_size( inode_cache_t* cache );
+
 int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes );
 void destroy_inode_cache( inode_cache_t* cache );
 

@@ -19,6 +19,7 @@
 
 #include <macros.h>
 #include <errno.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <vfs/inode.h>
 #include <vfs/vfs.h>
@@ -177,6 +178,28 @@ int put_inode( inode_t* inode ) {
     UNLOCK( cache->lock );
 
     return 0;
+}
+
+static int inode_table_unmount_iterator( hashitem_t* item, void* data ) {
+    inode_t* inode;
+    mount_point_t* mount_point;
+
+    inode = ( inode_t* )item;
+    mount_point = ( mount_point_t* )data;
+
+    /* The filesystem is unmountable only if the root inode is the only one
+       in the cache, and it has only 1 reference! */
+
+    if ( ( inode->inode_number != mount_point->root_inode_number ) ||
+         ( atomic_get( &inode->ref_count ) > 1 ) ) {
+        return -EBUSY;
+    }
+
+    return 0;
+}
+
+int mount_point_can_unmount( mount_point_t* mount_point ) {
+    return hashtable_iterate( &mount_point->inode_cache.inode_table, inode_table_unmount_iterator, ( void* )mount_point );
 }
 
 static void* inode_key( hashitem_t* item ) {
@@ -395,6 +418,18 @@ int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, i
     *_inode = inode;
 
     return 0;
+}
+
+uint32_t get_inode_cache_size( inode_cache_t* cache ) {
+    uint32_t size;
+
+    LOCK( cache->lock );
+
+    size = hashtable_get_item_count( &cache->inode_table );
+
+    UNLOCK( cache->lock );
+
+    return size;
 }
 
 int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes ) {

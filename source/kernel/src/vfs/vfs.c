@@ -84,6 +84,31 @@ int insert_mount_point( mount_point_t* mount_point ) {
     return 0;
 }
 
+int remove_mount_point( mount_point_t* mount_point ) {
+    mount_point_t* prev;
+    mount_point_t* current;
+
+    prev = NULL;
+    current = mount_points;
+
+    while ( current != NULL ) {
+        if ( current == mount_point ) {
+            if ( prev == NULL ) {
+                mount_points = current->next;
+            } else {
+                prev->next = current->next;
+            }
+
+            break;
+        }
+
+        prev = current;
+        current = current->next;
+    }
+
+    return 0;
+}
+
 static int do_read_stat( inode_t* inode, struct stat* stat );
 
 int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t** _inode ) {
@@ -1459,6 +1484,79 @@ int mount( const char* device, const char* dir, const char* filesystem, uint32_t
 
 int sys_mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags ) {
     return do_mount( false, device, dir, filesystem, mountflags );
+}
+
+static int do_unmount( bool kernel, const char* dir ) {
+    int error;
+    inode_t* inode;
+    inode_t* mount_root;
+    io_context_t* io_context;
+    mount_point_t* mount_point;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    error = lookup_inode( io_context, NULL, dir, &inode, true, false );
+
+    if ( error < 0 ) {
+        goto error1;
+    }
+
+    if ( inode->mount == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    /* Make sure only the root inode is in the cache, otherwise
+       we can't unmount the filesystem because it's busy! */
+
+    mount_point = inode->mount->mount_point;
+
+    if ( mount_point_can_unmount( mount_point ) != 0 ) {
+        return -EBUSY;
+    }
+
+    /* Release the last reference to the root inode */
+
+    mount_root = inode->mount;
+    inode->mount = NULL;
+
+    put_inode( mount_root );
+
+    /* The inode cache of the mount point should be empty now ... */
+
+    ASSERT( get_inode_cache_size( &mount_point->inode_cache ) == 0 );
+
+    /* Remove the mount point */
+
+    remove_mount_point( mount_point );
+
+    /* Call the unmount on the filesystem */
+
+    if ( mount_point->fs_calls->unmount != NULL ) {
+        mount_point->fs_calls->unmount(
+            mount_point->fs_data
+        );
+    }
+
+    /* Delete the mount point */
+
+    delete_mount_point( mount_point );
+
+    return 0;
+
+error2:
+    put_inode( inode );
+
+error1:
+    return error;
+}
+
+int sys_unmount( const char* dir ) {
+    return do_unmount( false, dir );
 }
 
 int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {

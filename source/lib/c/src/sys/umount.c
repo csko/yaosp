@@ -16,22 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_MOUNT_H_
-#define _SYS_MOUNT_H_
+#include <errno.h>
+#include <sys/mount.h>
 
-#define MOUNT_NONE 0
-#define MOUNT_RO   1
-
-int mount(
-    const char* source,
-    const char* target,
-    const char* filesystemtype,
-    unsigned long mountflags,
-    const void* data
-);
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
 int umount(
     const char* dir
-);
+) {
+    int error;
 
-#endif /* _SYS_MOUNT_H_ */
+    error = syscall1(
+        SYS_unmount,
+        ( int )dir
+    );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
+}

@@ -18,6 +18,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 
@@ -56,7 +58,7 @@ int main( int argc, char** argv ) {
     );
 
     if ( error < 0 ) {
-        fprintf( stderr, "%s: Failed to mount %s to %s\n", argv0, argv[ 1 ], argv[ 2 ] );
+        fprintf( stderr, "%s: Failed to mount %s to %s: %s\n", argv0, argv[ 1 ], argv[ 2 ], strerror( errno ) );
 
         return EXIT_FAILURE;
     }

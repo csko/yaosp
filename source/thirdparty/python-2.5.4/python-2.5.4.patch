@@ -1,6 +1,6 @@
 diff -Nru Python-2.5.4-orig/Lib/yaosp.py Python-2.5.4/Lib/yaosp.py
 --- Python-2.5.4-orig/Lib/yaosp.py	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Lib/yaosp.py	2009-04-20 20:15:38.000000000 +0200
++++ Python-2.5.4/Lib/yaosp.py	2009-04-22 21:09:39.000000000 +0200
 @@ -0,0 +1,139 @@
 +# yaosp bindings for python
 +#
@@ -143,7 +143,7 @@ diff -Nru Python-2.5.4-orig/Lib/yaosp.py Python-2.5.4/Lib/yaosp.py
 +				self._notify_msg_listeners( message, code, result )
 diff -Nru Python-2.5.4-orig/Modules/_yaospmodule.c Python-2.5.4/Modules/_yaospmodule.c
 --- Python-2.5.4-orig/Modules/_yaospmodule.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Modules/_yaospmodule.c	2009-04-20 20:21:29.000000000 +0200
++++ Python-2.5.4/Modules/_yaospmodule.c	2009-04-22 21:09:39.000000000 +0200
 @@ -0,0 +1,415 @@
 +/* yaosp bindings for python
 + *
@@ -562,7 +562,7 @@ diff -Nru Python-2.5.4-orig/Modules/_yaospmodule.c Python-2.5.4/Modules/_yaospmo
 +}
 diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 --- Python-2.5.4-orig/Modules/config.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Modules/config.c	2009-04-20 20:15:38.000000000 +0200
++++ Python-2.5.4/Modules/config.c	2009-04-22 21:09:39.000000000 +0200
 @@ -0,0 +1,101 @@
 +/* Generated automatically from ./Modules/config.c.in by makesetup. */
 +/* -*- C -*- ***********************************************
@@ -667,7 +667,7 @@ diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 +
 diff -Nru Python-2.5.4-orig/Modules/getpath.c Python-2.5.4/Modules/getpath.c
 --- Python-2.5.4-orig/Modules/getpath.c	2006-07-10 03:18:57.000000000 +0200
-+++ Python-2.5.4/Modules/getpath.c	2009-04-20 20:15:38.000000000 +0200
++++ Python-2.5.4/Modules/getpath.c	2009-04-22 21:09:39.000000000 +0200
 @@ -6,102 +6,12 @@
  #include <sys/types.h>
  #include <string.h>
@@ -1255,7 +1255,7 @@ diff -Nru Python-2.5.4-orig/Modules/getpath.c Python-2.5.4/Modules/getpath.c
  
 diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodule.c
 --- Python-2.5.4-orig/Modules/posixmodule.c	2008-12-13 16:14:30.000000000 +0100
-+++ Python-2.5.4/Modules/posixmodule.c	2009-04-20 20:29:11.000000000 +0200
++++ Python-2.5.4/Modules/posixmodule.c	2009-04-22 21:17:11.000000000 +0200
 @@ -15,7 +15,7 @@
  
  #ifdef __APPLE__
@@ -1392,7 +1392,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_SYSTEM
  PyDoc_STRVAR(posix_system__doc__,
  "system(command) -> exit_status\n\n\
-@@ -2476,6 +2477,29 @@
+@@ -2476,6 +2477,51 @@
  }
  #endif
  
@@ -1419,10 +1419,32 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
 +
 +    return PyInt_FromLong( ( long )error );
 +}
++
++PyDoc_STRVAR(posix_umount__doc__,
++    "umount(dir) -> return value\n");
++
++static PyObject *
++posix_umount(PyObject *self, PyObject *args)
++{
++    int error;
++    char* dir;
++
++    if ( !PyArg_ParseTuple( args, "s", &dir ) ) {
++        return NULL;
++    }
++
++    error = umount( dir );
++
++    if ( error < 0 ) {
++        return posix_error();
++    }
++
++    return PyInt_FromLong( ( long )error );
++}
  
  PyDoc_STRVAR(posix_umask__doc__,
  "umask(new_mask) -> old_mask\n\n\
-@@ -2615,7 +2639,7 @@
+@@ -2615,7 +2661,7 @@
  		}
  		PyMem_Free(apath);
  	}
@@ -1431,7 +1453,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  	if (arg == Py_None) {
  		SYSTEMTIME now;
  		GetSystemTime(&now);
-@@ -3583,6 +3607,7 @@
+@@ -3583,6 +3629,7 @@
  }
  #endif
  
@@ -1439,7 +1461,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_GETEGID
  PyDoc_STRVAR(posix_getegid__doc__,
  "getegid() -> egid\n\n\
-@@ -3596,6 +3621,7 @@
+@@ -3596,6 +3643,7 @@
  #endif
  
  
@@ -1447,7 +1469,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_GETEUID
  PyDoc_STRVAR(posix_geteuid__doc__,
  "geteuid() -> euid\n\n\
-@@ -3609,6 +3635,7 @@
+@@ -3609,6 +3657,7 @@
  #endif
  
  
@@ -1455,7 +1477,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_GETGID
  PyDoc_STRVAR(posix_getgid__doc__,
  "getgid() -> gid\n\n\
-@@ -3731,6 +3758,7 @@
+@@ -3731,6 +3780,7 @@
  
  #endif /* HAVE_SETPGRP */
  
@@ -1463,7 +1485,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_GETPPID
  PyDoc_STRVAR(posix_getppid__doc__,
  "getppid() -> ppid\n\n\
-@@ -3773,6 +3801,7 @@
+@@ -3773,6 +3823,7 @@
  }
  #endif
  
@@ -1471,7 +1493,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_GETUID
  PyDoc_STRVAR(posix_getuid__doc__,
  "getuid() -> uid\n\n\
-@@ -3786,6 +3815,7 @@
+@@ -3786,6 +3837,7 @@
  #endif
  
  
@@ -1479,7 +1501,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_KILL
  PyDoc_STRVAR(posix_kill__doc__,
  "kill(pid, sig)\n\n\
-@@ -3861,6 +3891,7 @@
+@@ -3861,6 +3913,7 @@
  #endif
  
  
@@ -1487,7 +1509,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_POPEN
  PyDoc_STRVAR(posix_popen__doc__,
  "popen(command [, mode='r' [, bufsize]]) -> pipe\n\n\
-@@ -5478,7 +5509,7 @@
+@@ -5478,7 +5531,7 @@
  			} else {
  				unsigned long x = PyLong_AsUnsignedLong(elem);
  				if (PyErr_Occurred()) {
@@ -1496,7 +1518,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  							"group id too big");
  					Py_DECREF(elem);
  					return NULL;
-@@ -5669,6 +5700,7 @@
+@@ -5669,6 +5722,7 @@
  }
  #endif /* HAVE_WAITPID || HAVE_CWAIT */
  
@@ -1504,7 +1526,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_WAIT
  PyDoc_STRVAR(posix_wait__doc__,
  "wait() -> (pid, status)\n\n\
-@@ -6230,6 +6262,7 @@
+@@ -6230,6 +6284,7 @@
  	return PyBool_FromLong(isatty(fd));
  }
  
@@ -1512,7 +1534,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_PIPE
  PyDoc_STRVAR(posix_pipe__doc__,
  "pipe() -> (read_end, write_end)\n\n\
-@@ -7900,10 +7933,10 @@
+@@ -7900,10 +7955,10 @@
  			PyErr_Clear();
  			goto normal;
  		}
@@ -1525,7 +1547,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  						       strlen(operation), NULL);
  		    if (!woperation) {
  			    PyErr_Clear();
-@@ -7911,7 +7944,7 @@
+@@ -7911,7 +7966,7 @@
  			    goto normal;
  		    }
  		}
@@ -1534,7 +1556,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  		Py_BEGIN_ALLOW_THREADS
  		rc = ShellExecuteW((HWND)0, woperation ? PyUnicode_AS_UNICODE(woperation) : 0,
  			PyUnicode_AS_UNICODE(unipath),
-@@ -7930,12 +7963,12 @@
+@@ -7930,12 +7985,12 @@
  #endif
  
  normal:
@@ -1550,15 +1572,16 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  			  NULL, NULL, SW_SHOWNORMAL);
  	Py_END_ALLOW_THREADS
  	if (rc <= (HINSTANCE)32) {
-@@ -8125,6 +8158,7 @@
+@@ -8125,6 +8180,8 @@
  	{"system",	posix_system, METH_VARARGS, posix_system__doc__},
  #endif
  	{"umask",	posix_umask, METH_VARARGS, posix_umask__doc__},
-+    {"mount",   posix_mount, METH_VARARGS, posix_mount__doc__},
++	{"mount",	posix_mount, METH_VARARGS, posix_mount__doc__},
++	{"umount",	posix_umount, METH_VARARGS, posix_umount__doc__},
  #ifdef HAVE_UNAME
  	{"uname",	posix_uname, METH_NOARGS, posix_uname__doc__},
  #endif /* HAVE_UNAME */
-@@ -8727,10 +8761,10 @@
+@@ -8727,10 +8784,10 @@
  	 * Step 2 of weak-linking support on Mac OS X.
  	 *
  	 * The code below removes functions that are not available on the
@@ -1573,7 +1596,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_FSTATVFS
 diff -Nru Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform.c
 --- Python-2.5.4-orig/Python/getplatform.c	2000-09-02 01:29:29.000000000 +0200
-+++ Python-2.5.4/Python/getplatform.c	2009-04-20 20:15:38.000000000 +0200
++++ Python-2.5.4/Python/getplatform.c	2009-04-22 21:09:39.000000000 +0200
 @@ -2,7 +2,7 @@
  #include "Python.h"
  
@@ -1585,7 +1608,7 @@ diff -Nru Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform
  const char *
 diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 --- Python-2.5.4-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pbuild.xml	2009-04-20 20:15:38.000000000 +0200
++++ Python-2.5.4/pbuild.xml	2009-04-22 21:09:39.000000000 +0200
 @@ -0,0 +1,231 @@
 +<!--
 +
@@ -1820,7 +1843,7 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +</build>
 diff -Nru Python-2.5.4-orig/pyconfig.h Python-2.5.4/pyconfig.h
 --- Python-2.5.4-orig/pyconfig.h	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pyconfig.h	2009-04-20 20:15:38.000000000 +0200
++++ Python-2.5.4/pyconfig.h	2009-04-22 21:09:39.000000000 +0200
 @@ -0,0 +1,1001 @@
 +/* pyconfig.h.  Generated from pyconfig.h.in by configure.  */
 +/* pyconfig.h.in.  Generated from configure.in by autoheader.  */

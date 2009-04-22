@@ -180,6 +180,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/ioctl.c</item>
         <item>src/sys/select.c</item>
         <item>src/sys/mount.c</item>
+        <item>src/sys/umount.c</item>
         <item>src/sys/lstat.c</item>
         <item>src/sys/umask.c</item>
         <item>src/sys/chmod.c</item>

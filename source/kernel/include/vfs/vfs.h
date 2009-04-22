@@ -157,6 +157,7 @@ mount_point_t* create_mount_point(
 );
 void delete_mount_point( mount_point_t* mount_point );
 int insert_mount_point( mount_point_t* mount_point );
+int mount_point_can_unmount( mount_point_t* mount_point );
 
 int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t** _inode );
 
@@ -201,6 +202,7 @@ int sys_unlink( const char* path );
 int sys_symlink( const char* src, const char* dest );
 int sys_readlink( const char* path, char* buffer, size_t length );
 int sys_mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags );
+int sys_unmount( const char* dir );
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout );
 int sys_utime( const char* filename, const struct utimbuf* times );
 
