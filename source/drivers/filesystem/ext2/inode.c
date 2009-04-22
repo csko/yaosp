@@ -1,6 +1,6 @@
 /* ext2 filesystem driver (inode handling)
  *
- * Copyright (c) 2009 Attila Magyar, Zoltan Kovacs
+ * Copyright (c) 2009 Attila Magyar, Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -57,15 +57,19 @@ int ext2_do_read_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
         goto error1;
     }
 
-    /* The s_inodes_per_group field in the superblock structure tells us how many inodes are defined per group.
-       block group = (inode - 1) / s_inodes_per_group */
+    /**
+     * The s_inodes_per_group field in the superblock structure tells us how many inodes are defined per group.
+     * block group = (inode - 1) / s_inodes_per_group
+     */
 
     group = ( inode->inode_number - 1 ) / cookie->super_block.s_inodes_per_group;
 
     ASSERT( group < cookie->ngroups );
 
-    /* Once the block is identified, the local inode index for the local inode table can be identified using:
-       local inode index = (inode - 1) % s_inodes_per_group */
+    /**
+     * Once the block is identified, the local inode index for the local inode table can be identified using:
+     * local inode index = (inode - 1) % s_inodes_per_group
+     */
 
     inode_table_offset = cookie->groups[ group ].descriptor.bg_inode_table * cookie->blocksize;
 
@@ -74,7 +78,7 @@ int ext2_do_read_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
     real_offset = offset & ~( cookie->blocksize - 1 );
     block_offset = offset % cookie->blocksize;
 
-    /* Make sure all calculation was right */
+    /* Make sure all calculations were right */
 
     ASSERT( ( block_offset + cookie->super_block.s_inode_size ) <= cookie->blocksize );
 
@@ -121,13 +125,17 @@ int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
         goto error1;
     }
 
-    /* The s_inodes_per_group field in the superblock structure tells us how many inodes are defined per group.
-       block group = (inode - 1) / s_inodes_per_group */
+    /**
+     * The s_inodes_per_group field in the superblock structure tells us how many inodes are defined per group.
+     * block group = (inode - 1) / s_inodes_per_group
+     */
 
     group = ( inode->inode_number - 1 ) / cookie->super_block.s_inodes_per_group;
 
-    /* Once the block is identified, the local inode index for the local inode table can be identified using:
-       local inode index = (inode - 1) % s_inodes_per_group */
+    /**
+     * Once the block is identified, the local inode index for the local inode table can be identified using:
+     * local inode index = (inode - 1) % s_inodes_per_group
+     */
 
     inode_table_offset = cookie->groups[ group ].descriptor.bg_inode_table * cookie->blocksize;
 
@@ -136,7 +144,7 @@ int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
     real_offset = offset & ~( cookie->blocksize - 1 );
     block_offset = offset % cookie->blocksize;
 
-    /* Make sure all calculation was right */
+    /* Make sure all calculations were right */
 
     ASSERT( ( block_offset + cookie->super_block.s_inode_size ) <= cookie->blocksize );
 

@@ -271,7 +271,7 @@ int ext2_do_write_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32
 
 int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t* new_block_number );
 
-int ext2_get_inode_data( ext2_cookie_t* cookie, const vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer );
+int ext2_get_inode_data( ext2_cookie_t* cookie, vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer );
 
 /* Block handling functions */
 

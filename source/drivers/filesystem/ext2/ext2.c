@@ -243,6 +243,7 @@ static int ext2_flush_superblock( ext2_cookie_t* cookie ) {
     error = pwrite( cookie->fd, ( void* )&cookie->super_block, sizeof( ext2_super_block_t ), 1024 );
 
     if ( __unlikely( error != sizeof( ext2_super_block_t ) ) ) {
+        kprintf( "ext2: Failed to flush superblock\n" );
         return -EIO;
     }
 
@@ -266,17 +267,16 @@ static int ext2_read_inode( void *fs_cookie, ino_t inode_number, void** out) {
     error = ext2_do_read_inode( cookie, inode );
 
     if ( error < 0 ) {
-        goto error2;
+        goto error1;
     }
 
     *out = ( void* )inode;
 
     return 0;
 
-error2:
+error1:
     kfree( inode );
 
-error1:
     return error;
 }
 
@@ -289,7 +289,7 @@ static int ext2_write_inode( void* fs_cookie, void* node ) {
 /**
  * Read inode data
  */
-int ext2_get_inode_data( ext2_cookie_t* cookie, const vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer ) {
+int ext2_get_inode_data( ext2_cookie_t* cookie, vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer ) {
     int result;
     uint32_t offset, block_num, i;
     uint32_t leftover, start_block, end_block, trunc;
@@ -365,6 +365,9 @@ int ext2_get_inode_data( ext2_cookie_t* cookie, const vfs_inode_t* vinode, off_t
 
         offset += leftover;
     }
+
+    // TODO: noatime; write back with pwrite
+    vinode->fs_inode.i_atime = time( NULL );
 
     return offset;
 
@@ -602,6 +605,9 @@ out:
         return error;
     }
 
+    // TODO: write back with pwrite
+    inode->fs_inode.i_mtime = time( NULL );
+
     return saved_size;
 }
 
@@ -770,7 +776,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     error = ext2_do_alloc_inode( fs_cookie, &child, false );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     /* Fill the inode fields */
@@ -780,9 +786,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     memset( inode, 0, sizeof( ext2_inode_t ) );
 
     inode->i_mode = S_IFREG | 0777;
-    inode->i_atime = time( NULL );
-    inode->i_ctime = inode->i_atime;
-    inode->i_mtime = inode->i_atime;
+    inode->i_atime = inode->i_mtime = inode->i_ctime = time( NULL );
     inode->i_links_count = 1;
 
     /* Write the inode to the disk */
@@ -790,8 +794,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     error = ext2_do_write_inode( fs_cookie, &child );
 
     if ( error < 0 ) {
-        /* TODO: release the allocated inode */
-        return error;
+        goto error2;
     }
 
     /* Link the new file to the directory */
@@ -804,7 +807,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     error = ext2_do_insert_entry( cookie, parent, new_entry, sizeof( ext2_dir_entry_t ) + name_length );
 
     if ( error < 0 ) {
-        return error;
+        goto error2;
     }
 
     kfree( new_entry );
@@ -814,8 +817,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     error = ext2_flush_group_descriptors( fs_cookie );
 
     if ( error < 0 ) {
-        /* TODO: cleanup */
-        return error;
+        goto error3;
     }
 
     /* Write the updated superblock to the disk */
@@ -823,13 +825,27 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     error = ext2_flush_superblock( fs_cookie );
 
     if ( error < 0 ) {
-        return error;
+        goto error3;
     }
 
     *inode_number = child.inode_number;
     *_file_cookie = ( void* )file_cookie;
 
     return 0;
+
+error3:
+
+    /* TODO: cleanup */
+
+error2:
+
+    /* TODO: release the allocated inode */
+
+error1:
+
+    kfree( file_cookie );
+
+    return error;
 }
 
 static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_length, int perms ) {
@@ -882,9 +898,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     memset( inode, 0, sizeof( ext2_inode_t ) );
 
     inode->i_mode = S_IFDIR | 0777;
-    inode->i_atime = time( NULL );
-    inode->i_ctime = inode->i_atime;
-    inode->i_mtime = inode->i_atime;
+    inode->i_atime = inode->i_mtime = inode->i_ctime = time( NULL );
     inode->i_links_count = 2; /* 1 from parent and 1 from "." :) */
 
     /* Write the inode to the disk */
@@ -892,8 +906,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     error = ext2_do_write_inode( fs_cookie, &child );
 
     if ( error < 0 ) {
-        /* TODO: release the allocated inode */
-        return error;
+        goto error2;
     }
 
     /* Link the new directory to the parent */
@@ -906,7 +919,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     error = ext2_do_insert_entry( cookie, parent, new_entry, sizeof( ext2_dir_entry_t ) + name_length );
 
     if ( error < 0 ) {
-        return error;
+        goto error2;
     }
 
     /* Insert "." node */
@@ -919,7 +932,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     error = ext2_do_insert_entry( cookie, &child, new_entry, sizeof( ext2_dir_entry_t ) + 1 );
 
     if ( error < 0 ) {
-        return error;
+        goto error2;
     }
 
     /* Insert ".." node */
@@ -932,7 +945,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     error = ext2_do_insert_entry( cookie, &child, new_entry, sizeof( ext2_dir_entry_t ) + 2 );
 
     if ( error < 0 ) {
-        return error;
+        goto error2;
     }
 
     kfree( new_entry );
@@ -944,7 +957,6 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     error = ext2_do_write_inode( fs_cookie, parent );
 
     if ( error < 0 ) {
-        /* TODO: cleanup */
         return error;
     }
 
@@ -966,6 +978,9 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
     }
 
     return 0;
+
+error2:
+    /* TODO: release the allocated inode */
 
 error1:
     kfree( new_entry );
@@ -1020,7 +1035,7 @@ static int ext2_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
 
 int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {
     int i;
-    int result;
+    int result = 0;
     uint32_t gd_size;
     uint32_t gd_offset;
     uint32_t ptr_per_block;
@@ -1142,22 +1157,19 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
     kfree( gds );
 
     /* increase mount count and mark fs in use only in RW mode */
-
+/* TODO: need unmount
     if ( cookie->flags & ~MOUNT_RO ) {
         cookie->super_block.s_state = EXT2_ERROR_FS;
         cookie->super_block.s_mnt_count++;
 
-        if ( pwrite( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), sb_offset ) != sizeof( ext2_super_block_t ) ){
-            kprintf( "ext2: Failed to write back superblock\n" );
-            result = -EIO;
-            goto error3;
-        }
+        result = ext2_flush_superblock( cookie );
     }
+*/
 
     *root_inode_number = EXT2_ROOT_INO;
     *fs_cookie = ( void* )cookie;
 
-    return 0;
+    return result;
 
  error3:
     kfree( gds );
@@ -1172,22 +1184,20 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
 }
 
 static int ext2_unmount( void* fs_cookie ) {
+    int error = 0;
+/* TODO: need unmount
     ext2_cookie_t *cookie = (ext2_cookie_t*)fs_cookie;
 
     // mark filesystem as it is not more in use
-
     if ( cookie->flags & ~MOUNT_RO ) {
         cookie->super_block.s_state = EXT2_VALID_FS;
-
-        if ( pwrite( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), 1 * EXT2_MIN_BLOCK_SIZE ) != sizeof( ext2_super_block_t ) ){
-            kprintf( "ext2: Failed to write back superblock\n" );
-            return -EIO;
-        }
+        error = ext2_flush_superblock(cookie);
     }
-
+*/
     // TODO
+    error = -ENOSYS;
 
-    return -ENOSYS;
+    return error;
 }
 
 static filesystem_calls_t ext2_calls = {
