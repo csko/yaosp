@@ -129,7 +129,7 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_dir_e
 
             tmp = ( ext2_dir_entry_t* )( ( uint8_t* )entry + real_size );
 
-            memcpy( tmp, new_entry, ( new_entry_size + 3 ) & ~3 );
+            memcpy( tmp, new_entry, ROUND_UP( new_entry_size, 4 ) );
 
             tmp->rec_len = free_size;
 
@@ -184,9 +184,9 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_dir_e
         goto out;
     }
 
-out:
     error = 0;
 
+out:
     kfree( block );
 
     return error;
