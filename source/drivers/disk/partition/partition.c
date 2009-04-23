@@ -20,6 +20,8 @@
 #include <errno.h>
 #include <module.h>
 #include <console.h>
+#include <ioctl.h>
+#include <devices.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <vfs/devfs.h>
@@ -37,6 +39,34 @@ static partition_type_t* partition_types[] = {
     &msdos_partition,
     NULL
 };
+
+static int partition_ioctl ( void* _node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
+    int error;
+    partition_node_t* node;
+
+    node = ( partition_node_t* )_node;
+
+    switch ( command ) {
+        case IOCTL_DISK_GET_GEOMETRY : {
+            device_geometry_t* geometry;
+
+            geometry = ( device_geometry_t* )args;
+
+            geometry->bytes_per_sector = 512;
+            geometry->sector_count = node->size / 512;
+
+            error = 0;
+
+            break;
+        }
+
+        default :
+            error = -ENOSYS;
+            break;
+    }
+
+    return error;
+}
 
 static int partition_read( void* _node, void* cookie, void* buffer, off_t position, size_t size ) {
     partition_node_t* node;
@@ -81,7 +111,7 @@ static int partition_write( void* _node, void* cookie, const void* buffer, off_t
 static device_calls_t partition_calls = {
     .open = NULL,
     .close = NULL,
-    .ioctl = NULL,
+    .ioctl = partition_ioctl,
     .read = partition_read,
     .write = partition_write,
     .add_select_request = NULL,

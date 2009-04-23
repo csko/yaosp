@@ -1,6 +1,6 @@
-/* Device management
+/* pwrite function
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,29 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DEVICES_H_
-#define _DEVICES_H_
+#include <errno.h>
+#include <unistd.h>
 
-#include <types.h>
-#include <lib/hashtable.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-typedef struct bus_driver {
-    hashitem_t hash;
+ssize_t pwrite( int fd, const void* buf, size_t count, off_t offset ) {
+    int error;
 
-    char* name;
-    void* bus;
-} bus_driver_t;
+    error = syscall4( SYS_pwrite, fd, ( int )buf, count, ( int )&offset );
 
-typedef struct device_geometry {
-    uint32_t bytes_per_sector;
-    uint64_t sector_count;
-} device_geometry_t;
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
 
-int register_bus_driver( const char* name, void* bus );
-int unregister_bus_driver( const char* name );
-
-void* get_bus_driver( const char* name );
-
-int init_devices( void );
-
-#endif // _DEVICES_H_
+    return error;
+}

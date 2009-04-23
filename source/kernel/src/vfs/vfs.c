@@ -453,8 +453,8 @@ int pread( int fd, void* buffer, size_t count, off_t offset ) {
     return do_pread( true, fd, buffer, count, offset );
 }
 
-int sys_pread( int fd, void* buffer, size_t count, off_t offset ) {
-    return do_pread( false, fd, buffer, count, offset );
+int sys_pread( int fd, void* buffer, size_t count, off_t* offset ) {
+    return do_pread( false, fd, buffer, count, *offset );
 }
 
 static int do_read( bool kernel, int fd, void* buffer, size_t count ) {
@@ -553,8 +553,8 @@ int pwrite( int fd, const void* buffer, size_t count, off_t offset ) {
     return do_pwrite( true, fd, buffer, count, offset );
 }
 
-int sys_pwrite( int fd, const void* buffer, size_t count, off_t offset ) {
-    return do_pwrite( false, fd, buffer, count, offset );
+int sys_pwrite( int fd, const void* buffer, size_t count, off_t* offset ) {
+    return do_pwrite( false, fd, buffer, count, *offset );
 }
 
 static int do_write( bool kernel, int fd, const void* buffer, size_t count ) {

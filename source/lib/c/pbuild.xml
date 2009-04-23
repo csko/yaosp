@@ -100,6 +100,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/dup2.c</item>
         <item>src/unistd/write.c</item>
         <item>src/unistd/read.c</item>
+        <item>src/unistd/pwrite.c</item>
+        <item>src/unistd/pread.c</item>
         <item>src/unistd/exit.c</item>
         <item>src/unistd/getdents.c</item>
         <item>src/unistd/close.c</item>

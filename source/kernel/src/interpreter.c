@@ -38,11 +38,14 @@ static int interpreter_execute( int fd, const char* name, char** argv, char** en
     int i;
     int data;
     int argc;
+    off_t pos;
     char* end;
     char** new_argv;
     char interpreter[ 128 ];
 
-    data = sys_pread( fd, interpreter, sizeof( interpreter ) - 1, 3 );
+    pos = 3;
+
+    data = sys_pread( fd, interpreter, sizeof( interpreter ) - 1, &pos );
 
     if ( data < 2 ) {
         return -EIO;

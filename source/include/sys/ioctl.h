@@ -19,6 +19,8 @@
 #ifndef _SYS_IOCTL_H_
 #define _SYS_IOCTL_H_
 
+#include <sys/types.h>
+
 #define SIOCGIFCONF    0x89300003
 #define SIOCGIFCOUNT   0x89300004
 #define SIOCGIFADDR    0x89300005
@@ -46,6 +48,15 @@
 
 #define IOCTL_TERM_SET_ACTIVE    0x00000400
 
+/* Disk ioctls */
+
+#define IOCTL_DISK_GET_GEOMETRY  0x00000500
+
+typedef struct device_geometry {
+    uint32_t bytes_per_sector;
+    uint64_t sector_count;
+} device_geometry_t;
+
 int ioctl( int fd, int request, ... );
 
-#endif // _SYS_IOCTL_H_
+#endif /* _SYS_IOCTL_H_ */

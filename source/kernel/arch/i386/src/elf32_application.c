@@ -31,9 +31,10 @@
 #include <arch/mm/paging.h>
 
 static bool elf32_application_check( int fd ) {
+    off_t pos = 0;
     elf_header_t header;
 
-    if ( sys_pread( fd, &header, sizeof( elf_header_t ), 0 ) != sizeof( elf_header_t ) ) {
+    if ( sys_pread( fd, &header, sizeof( elf_header_t ), &pos ) != sizeof( elf_header_t ) ) {
         return false;
     }
 
@@ -45,6 +46,8 @@ static int elf32_parse_strtab_section(
     elf_application_t* elf_application,
     elf_section_header_t* strtab_section
 ) {
+    off_t pos;
+
     /* Load the string section */
 
     elf_application->strings = ( char* )kmalloc( strtab_section->size );
@@ -53,11 +56,13 @@ static int elf32_parse_strtab_section(
         return -ENOMEM;
     }
 
+    pos = strtab_section->offset;
+
     if ( sys_pread(
         fd,
         ( void* )elf_application->strings,
         strtab_section->size,
-        strtab_section->offset
+        &pos
     ) != strtab_section->size ) {
         kfree( elf_application->strings );
         elf_application->strings = NULL;
@@ -74,6 +79,7 @@ static int elf32_parse_dynsym_section(
     elf_section_header_t* dynsym_section
 ) {
     uint32_t i;
+    off_t pos;
     elf_symbol_t* symbols;
     elf_section_header_t* string_section;
 
@@ -87,11 +93,13 @@ static int elf32_parse_dynsym_section(
         return -ENOMEM;
     }
 
+    pos = string_section->offset;
+
     if ( sys_pread(
         fd,
         ( void* )elf_application->strings,
         string_section->size,
-        string_section->offset
+        &pos
     ) != string_section->size ) {
         kfree( elf_application->strings );
         elf_application->strings = NULL;
@@ -108,11 +116,13 @@ static int elf32_parse_dynsym_section(
         return -ENOMEM;
     }
 
+    pos = dynsym_section->offset;
+
     if ( sys_pread(
         fd,
         ( void* )symbols,
         dynsym_section->size,
-        dynsym_section->offset
+        &pos
     ) != dynsym_section->size ) {
         kfree( symbols );
         kfree( elf_application->strings );
@@ -159,6 +169,7 @@ static int elf32_parse_symtab_section (
     elf_section_header_t* symtab_section
 ) {
     int i;
+    off_t pos;
     elf_symbol_t* elf_symbols;
 
     elf_application->symbol_count = symtab_section->size / symtab_section->entsize;
@@ -169,7 +180,9 @@ static int elf32_parse_symtab_section (
         goto error1;
     }
 
-    if ( sys_pread( fd, elf_symbols, symtab_section->size, symtab_section->offset ) != symtab_section->size ) {
+    pos = symtab_section->offset;
+
+    if ( sys_pread( fd, elf_symbols, symtab_section->size, &pos ) != symtab_section->size ) {
         goto error2;
     }
 
@@ -257,6 +270,7 @@ static int elf32_parse_dynamic_section(
     kfree( dyns );
 
     if ( ( rel_size > 0 ) || ( pltrel_size > 0 ) ) {
+        off_t pos;
         uint32_t reloc_size = rel_size + pltrel_size;
 
         elf_application->reloc_count = reloc_size / sizeof( elf_reloc_t );
@@ -267,11 +281,13 @@ static int elf32_parse_dynamic_section(
         }
 
         if ( rel_size > 0 ) {
+            pos = rel_address;
+
             if ( sys_pread(
                 fd,
                 ( void* )elf_application->relocs,
                 rel_size,
-                rel_address
+                &pos
             ) != rel_size ) {
                 kfree( elf_application->relocs );
                 elf_application->relocs = NULL;
@@ -280,11 +296,13 @@ static int elf32_parse_dynamic_section(
         }
 
         if ( pltrel_size > 0 ) {
+            pos = pltrel_address;
+
             if ( sys_pread(
                 fd,
                 ( char* )elf_application->relocs + rel_size,
                 pltrel_size,
-                pltrel_address
+                &pos
             ) != pltrel_size ) {
                 kfree( elf_application->relocs );
                 elf_application->relocs = NULL;
@@ -491,11 +509,14 @@ static int elf32_application_map( int fd, elf_application_t* elf_application ) {
 }
 
 static int elf32_application_load( int fd ) {
+    off_t pos;
     int error;
     elf_header_t header;
     elf_application_t* elf_application;
 
-    if ( sys_pread( fd, &header, sizeof( elf_header_t ), 0 ) != sizeof( elf_header_t ) ) {
+    pos = 0;
+
+    if ( sys_pread( fd, &header, sizeof( elf_header_t ), &pos ) != sizeof( elf_header_t ) ) {
         return -EIO;
     }
 
@@ -526,11 +547,13 @@ static int elf32_application_load( int fd ) {
         return -ENOMEM;
     }
 
+    pos = header.shoff;
+
     if ( sys_pread(
         fd,
         ( void* )elf_application->sections,
         sizeof( elf_section_header_t ) * elf_application->section_count,
-        header.shoff
+        &pos
     ) != sizeof( elf_section_header_t ) * elf_application->section_count ) {
         kfree( elf_application->sections );
         kfree( elf_application );
