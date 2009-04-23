@@ -240,6 +240,8 @@ out:
 static int ext2_flush_superblock( ext2_cookie_t* cookie ) {
     int error;
 
+    /* Write the superblock back to the disk */
+
     error = pwrite( cookie->fd, ( void* )&cookie->super_block, sizeof( ext2_super_block_t ), 1024 );
 
     if ( __unlikely( error != sizeof( ext2_super_block_t ) ) ) {
@@ -281,109 +283,128 @@ error1:
 }
 
 static int ext2_write_inode( void* fs_cookie, void* node ) {
-    kfree( node );
+    int error;
+    ext2_cookie_t* cookie;
+    vfs_inode_t* inode;
+
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    inode = ( vfs_inode_t* )node;
+
+    error = ext2_do_write_inode( cookie, inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    kfree( inode );
 
     return 0;
 }
 
-/**
- * Read inode data
- */
-int ext2_get_inode_data( ext2_cookie_t* cookie, vfs_inode_t* vinode, off_t begin_offs, size_t size, void* buffer ) {
-    int result;
-    uint32_t offset, block_num, i;
-    uint32_t leftover, start_block, end_block, trunc;
-
-    if ( begin_offs < 0 ) {
-        return -EINVAL;
-    }
-
-    if ( begin_offs >= vinode->fs_inode.i_size ) {
-        return 0;
-    }
-
-    if ( begin_offs + size > vinode->fs_inode.i_size ) {
-        size = vinode->fs_inode.i_size - begin_offs;
-    }
-
-    char block_buf[cookie->blocksize];
-    start_block = begin_offs / cookie->blocksize;
-    end_block = (begin_offs + size) / cookie->blocksize; // rest of..
-    offset   = 0;
-
-    if ( (trunc = begin_offs % cookie->blocksize) != 0 ) {
-        // handle the first block
-
-        if ( ( result = ext2_calc_block_num( cookie, vinode, start_block, &block_num ) ) < 0 ) {
-            goto error1;
-        }
-
-        if ( pread( cookie->fd, block_buf, cookie->blocksize, block_num * cookie->blocksize ) != cookie->blocksize ) {
-            result = -EIO;
-            goto error1;
-        }
-
-        if ( sizeof(block_buf) - trunc >= size ) {
-            memcpy( buffer, block_buf + trunc, size );
-            offset += size;
-        } else {
-            memcpy( buffer, block_buf + trunc, sizeof(block_buf) - trunc );
-            offset += (sizeof(block_buf) - trunc);
-        }
-
-        start_block++;
-    }
-
-    for ( i = start_block; i < end_block; ++i ) {
-        if ( ( result = ext2_calc_block_num( cookie, vinode, i, &block_num ) ) < 0 ) {
-            goto error1;
-        }
-
-        if ( pread( cookie->fd, (buffer + offset), cookie->blocksize, block_num * cookie->blocksize ) != cookie->blocksize ) {
-            result = -EIO;
-            goto error1;
-        }
-
-        offset += cookie->blocksize;
-    }
-
-    leftover = (size - offset) % cookie->blocksize;
-
-    if ( leftover > 0 ) {   // read the rest of the data
-        if ( ( result = ext2_calc_block_num( cookie, vinode, i, &block_num ) ) < 0 ) {
-            goto error1;
-        }
-
-        if ( pread( cookie->fd, block_buf, sizeof(block_buf), block_num * cookie->blocksize ) != sizeof(block_buf) ) {
-            result = -EIO;
-            goto error1;
-        }
-
-        // copy the remainder to the buffer
-
-        memcpy( buffer + offset, block_buf, leftover );
-
-        offset += leftover;
-    }
-
-    // TODO: noatime; write back with pwrite
-    vinode->fs_inode.i_atime = time( NULL );
-
-    return offset;
-
-error1:
-    return result;
-}
-
 static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buffer, off_t pos, size_t size ) {
-    ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
-    vfs_inode_t* vinode = ( vfs_inode_t* )node;
+    int error;
+    uint32_t i;
+    uint8_t* data;
+    uint8_t* block;
+    uint32_t trunc;
+    size_t saved_size;
+    uint32_t start_block;
+    uint32_t end_block;
+    vfs_inode_t* inode;
+    ext2_cookie_t* cookie;
 
     if ( size == 0 ) {
         return 0;
     }
 
-    return ext2_get_inode_data( cookie, vinode, pos, size, buffer );
+    if ( pos < 0 ) {
+        return -EINVAL;
+    }
+
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    inode = ( vfs_inode_t* )node;
+
+    if ( pos >= inode->fs_inode.i_size ) {
+        return 0;
+    }
+
+    if ( ( pos + size ) > inode->fs_inode.i_size ) {
+        size = inode->fs_inode.i_size - pos;
+    }
+
+    data = ( uint8_t* )buffer;
+
+    start_block = pos / cookie->blocksize;
+    end_block = ( pos + size ) / cookie->blocksize;
+
+    trunc = pos % cookie->blocksize;
+
+    saved_size = size;
+
+    /* Handle the first block */
+
+    if ( trunc != 0 ) {
+        uint32_t to_copy;
+
+        block = ( uint8_t* )kmalloc( cookie->blocksize );
+
+        if ( __unlikely( block == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        error = ext2_do_read_inode_block( cookie, inode, start_block, block );
+
+        if ( __unlikely( error < 0 ) ) {
+            kfree( block );
+            return error;
+        }
+
+        to_copy = MIN( size, cookie->blocksize - trunc );
+
+        memcpy( data, block + trunc, to_copy );
+
+        kfree( block );
+
+        data += to_copy;
+        size -= to_copy;
+
+        start_block++;
+    }
+
+    /* Handle full blocks */
+
+    for ( i = start_block; i < end_block; ++i, data += cookie->blocksize, size -= cookie->blocksize ) {
+        error = ext2_do_read_inode_block( cookie, inode, i, data );
+
+        if ( __unlikely( error < 0 ) ) {
+            return error;
+        }
+    }
+
+    /* Handle the last block */
+
+    if ( size > 0 ) {
+        block = ( uint8_t* )kmalloc( cookie->blocksize );
+
+        if ( __unlikely( block == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        error = ext2_do_read_inode_block( cookie, inode, end_block, block );
+
+        if ( __unlikely( error < 0 ) ) {
+            kfree( block );
+            return error;
+        }
+
+        memcpy( data, block, size );
+    }
+
+    /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
+
+    inode->fs_inode.i_atime = time( NULL );
+
+    return saved_size;
 }
 
 static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const void* buffer, off_t pos, size_t size ) {
@@ -605,7 +626,8 @@ out:
         return error;
     }
 
-    // TODO: write back with pwrite
+    /* Update the modification time of the inode, ext2_write_inode() will flush it to the disk */
+
     inode->fs_inode.i_mtime = time( NULL );
 
     return saved_size;

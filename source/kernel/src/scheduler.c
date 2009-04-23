@@ -90,7 +90,7 @@ thread_t* do_schedule( void ) {
     now = get_system_time();
     current = current_thread();
 
-    if ( current != NULL ) {
+    if ( __likely( current != NULL ) ) {
         /* Calculate the time how long the previous thread
            was running */
 

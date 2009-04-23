@@ -1,6 +1,6 @@
-/* Architecture part of the scheduler
+/* Architecture specific part of the scheduler
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +19,7 @@
 #include <types.h>
 #include <scheduler.h>
 #include <smp.h>
+#include <macros.h>
 
 #include <arch/thread.h>
 #include <arch/cpu.h>
@@ -41,7 +42,7 @@ int schedule( registers_t* regs ) {
 
     current = current_thread();
 
-    if ( current != NULL ) {
+    if ( __likely( current != NULL ) ) {
         arch_thread = ( i386_thread_t* )current->arch_data;
 
         /* Save the current ESP and CR2 value */
