@@ -51,7 +51,13 @@ enum {
     CPU_FEATURE_APIC = ( 1 << 2 ),
     CPU_FEATURE_MTRR = ( 1 << 3 ),
     CPU_FEATURE_SYSCALL = ( 1 << 4 ),
-    CPU_FEATURE_TSC = ( 1 << 5 )
+    CPU_FEATURE_TSC = ( 1 << 5 ),
+    CPU_FEATURE_SSE2 = ( 1 << 6 ),
+    CPU_FEATURE_HTT = ( 1 << 7 ),
+    CPU_FEATURE_SSE3 = ( 1 << 8 ),
+    CPU_FEATURE_PAE = ( 1 << 9 ),
+    CPU_FEATURE_IA64 = ( 1 << 10 ),
+    CPU_FEATURE_EST = ( 1 << 11 )
 };
 
 extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];

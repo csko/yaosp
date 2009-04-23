@@ -1,6 +1,6 @@
 /* System information definitions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -34,6 +34,21 @@ enum {
     THREAD_WAITING,
     THREAD_SLEEPING,
     THREAD_ZOMBIE
+};
+
+enum {
+    CPU_FEATURE_MMX = ( 1 << 0 ),
+    CPU_FEATURE_SSE = ( 1 << 1 ),
+    CPU_FEATURE_APIC = ( 1 << 2 ),
+    CPU_FEATURE_MTRR = ( 1 << 3 ),
+    CPU_FEATURE_SYSCALL = ( 1 << 4 ),
+    CPU_FEATURE_TSC = ( 1 << 5 ),
+    CPU_FEATURE_SSE2 = ( 1 << 6 ),
+    CPU_FEATURE_HTT = ( 1 << 7 ),
+    CPU_FEATURE_SSE3 = ( 1 << 8 ),
+    CPU_FEATURE_PAE = ( 1 << 9 ),
+    CPU_FEATURE_IA64 = ( 1 << 10 ),
+    CPU_FEATURE_EST = ( 1 << 11 )
 };
 
 typedef int process_id;
@@ -71,6 +86,7 @@ typedef struct processor_info {
     uint64_t core_speed;
     int present;
     int running;
+    uint32_t features;
 } processor_info_t;
 
 typedef struct memory_info {

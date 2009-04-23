@@ -1,6 +1,7 @@
 /* Processor detection code
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -38,6 +39,12 @@ i386_feature_t i386_features[] = {
     { CPU_FEATURE_MTRR, "mtrr" },
     { CPU_FEATURE_SYSCALL, "syscall" },
     { CPU_FEATURE_TSC, "tsc" },
+    { CPU_FEATURE_SSE2, "sse2" },
+    { CPU_FEATURE_HTT, "htt" },
+    { CPU_FEATURE_SSE3, "sse3" },
+    { CPU_FEATURE_PAE, "pae" },
+    { CPU_FEATURE_IA64, "ia64" },
+    { CPU_FEATURE_EST, "est" },
     { 0, "" }
 };
 
@@ -94,6 +101,10 @@ __init int detect_cpu( void ) {
             features |= CPU_FEATURE_TSC;
         }
 
+        if ( regs[ 3 ] & ( 1 << 6 ) ) {
+            features |= CPU_FEATURE_PAE;
+        }
+
         if ( regs[ 3 ] & ( 1 << 9 ) ) {
             features |= CPU_FEATURE_APIC;
         }
@@ -113,6 +124,27 @@ __init int detect_cpu( void ) {
 
         if ( regs[ 3 ] & ( 1 << 25 ) ) {
             features |= CPU_FEATURE_SSE;
+        }
+
+        if ( regs[ 3 ] & ( 1 << 26 ) ) {
+            features |= CPU_FEATURE_SSE2;
+        }
+
+        if ( regs[ 3 ] & ( 1 << 28 ) ) {
+            /* TODO: check ebx[23:16]>1 */
+            features |= CPU_FEATURE_HTT;
+        }
+
+        if ( regs[ 3 ] & ( 1 << 30 ) ) {
+            features |= CPU_FEATURE_IA64;
+        }
+
+        if ( regs[ 2 ] & ( 1 ) ) {
+            features |= CPU_FEATURE_SSE3;
+        }
+
+        if ( regs[ 2 ] & ( 1 << 7) ) {
+            features |= CPU_FEATURE_EST;
         }
     }
 
@@ -149,7 +181,7 @@ __init int detect_cpu( void ) {
             }
         }
 
-        /* Some CPU names has whitespace characters at the beginning, let's strip them */
+        /* Some CPU names have whitespace characters at the beginning, let's strip them */
 
         if ( j > 0 ) {
             size_t length;
@@ -208,12 +240,12 @@ __init int detect_cpu( void ) {
     for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
         strncpy( processor_table[ i ].name, name, MAX_PROCESSOR_NAME_LENGTH );
         processor_table[ i ].name[ MAX_PROCESSOR_NAME_LENGTH - 1 ] = 0;
+        processor_table[ i ].features = features;
 
         processor_table[ i ].arch_data = ( void* )&arch_processor_table[ i ];
 
         arch_processor_table[ i ].family = family;
         arch_processor_table[ i ].model = model;
-        arch_processor_table[ i ].features = features;
     }
 
     return 0;

@@ -1,6 +1,7 @@
 /* Symmetric multi-processing
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -36,6 +37,7 @@ typedef struct cpu {
     thread_t* idle_thread;
 
     void* arch_data;
+    uint32_t features;
 } cpu_t;
 
 typedef struct processor_info {
@@ -43,6 +45,7 @@ typedef struct processor_info {
     uint64_t core_speed;
     int present;
     int running;
+    uint32_t features;
 } processor_info_t;
 
 extern int processor_count;

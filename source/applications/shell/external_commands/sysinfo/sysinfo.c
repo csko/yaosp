@@ -24,6 +24,27 @@
 
 char* argv0 = NULL;
 
+typedef struct i386_feature {
+    int feature;
+    const char* name;
+} i386_feature_t;
+
+i386_feature_t i386_features[] = {
+    { CPU_FEATURE_MMX, "mmx" },
+    { CPU_FEATURE_SSE, "sse" },
+    { CPU_FEATURE_APIC, "apic" },
+    { CPU_FEATURE_MTRR, "mtrr" },
+    { CPU_FEATURE_SYSCALL, "syscall" },
+    { CPU_FEATURE_TSC, "tsc" },
+    { CPU_FEATURE_SSE2, "sse2" },
+    { CPU_FEATURE_HTT, "htt" },
+    { CPU_FEATURE_SSE3, "sse3" },
+    { CPU_FEATURE_PAE, "pae" },
+    { CPU_FEATURE_IA64, "ia64" },
+    { CPU_FEATURE_EST, "est" },
+    { 0, "" }
+};
+
 static void print_usage( void ) {
     printf( "%s INFO_TYPE ...\n", argv0 );
     printf( "\n" );
@@ -129,6 +150,15 @@ static int do_get_processor_info( void ) {
         printf( "Processor:    %u\n", i );
         printf( "Model name:   %s\n", info->name );
         printf( "Speed:        %u MHz\n", ( uint32_t )( info->core_speed / 1000000 ) );
+        printf( "Features:" );
+
+        for ( i = 0; i386_features[ i ].feature != 0; i++ ) {
+            if ( ( info->features & i386_features[ i ].feature ) != 0 ) {
+                printf( " %s", i386_features[ i ].name );
+            }
+        }
+
+        printf( "\n" );
     }
 
     free( info_table );

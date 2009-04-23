@@ -1,6 +1,7 @@
 /* Symmetric multi-processing
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -74,6 +75,7 @@ uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_coun
         processor_info->present = cpu->present;
         processor_info->running = cpu->running;
         processor_info->core_speed = cpu->core_speed;
+        processor_info->features = cpu->features;
     }
 
     return max;
