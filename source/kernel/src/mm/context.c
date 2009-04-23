@@ -292,6 +292,14 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
 
     UNLOCK( region_lock );
 
+    /* Clone the vmem_size of the old process as well ;) */
+
+    spinlock_disable( &scheduler_lock );
+
+    new_process->vmem_size = old_context->process->vmem_size;
+
+    spinunlock_enable( &scheduler_lock );
+
     return new_context;
 
 error:
