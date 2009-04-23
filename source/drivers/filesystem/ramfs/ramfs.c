@@ -193,8 +193,36 @@ error1:
     return error;
 }
 
+static int ramfs_unmount_inode_iterator( hashitem_t* item, void* data ) {
+    ramfs_inode_t* inode;
+
+    inode = ( ramfs_inode_t* )item;
+
+    kfree( inode->name );
+    kfree( inode->data );
+
+    return 0;
+}
+
 static int ramfs_unmount( void* fs_cookie ) {
-    return -ENOSYS;
+    ramfs_cookie_t* cookie;
+
+    cookie = ( ramfs_cookie_t* )fs_cookie;
+
+    /* Delete the lock */
+
+    delete_semaphore( cookie->lock );
+
+    /* Delete all inodes and the inode table */
+
+    hashtable_iterate( &cookie->inode_table, ramfs_unmount_inode_iterator, NULL );
+    destroy_hashtable( &cookie->inode_table );
+
+    /* Finally free the ramfs cookie :) */
+
+    kfree( fs_cookie );
+
+    return 0;
 }
 
 static int ramfs_read_inode( void* fs_cookie, ino_t inode_number, void** node ) {

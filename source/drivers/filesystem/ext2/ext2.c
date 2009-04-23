@@ -1156,15 +1156,18 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
 
     kfree( gds );
 
-    /* increase mount count and mark fs in use only in RW mode */
-/* TODO: need unmount
+    /* Increase mount count and mark fs in use only in RW mode */
+
     if ( cookie->flags & ~MOUNT_RO ) {
         cookie->super_block.s_state = EXT2_ERROR_FS;
         cookie->super_block.s_mnt_count++;
 
         result = ext2_flush_superblock( cookie );
+
+        if ( result < 0 ) {
+            goto error3;
+        }
     }
-*/
 
     *root_inode_number = EXT2_ROOT_INO;
     *fs_cookie = ( void* )cookie;
@@ -1184,19 +1187,43 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
 }
 
 static int ext2_unmount( void* fs_cookie ) {
-    int error = 0;
-/* TODO: need unmount
-    ext2_cookie_t *cookie = (ext2_cookie_t*)fs_cookie;
+    int i;
+    int error;
+    ext2_cookie_t* cookie;
+    ext2_group_t* group;
 
-    // mark filesystem as it is not more in use
+    cookie = ( ext2_cookie_t* )fs_cookie;
+
+    /* Free group descriptors and inode/block bitmaps */
+
+    for ( i = 0; i < cookie->ngroups; i++ ) {
+        group = &cookie->groups[ i ];
+
+        kfree( group->inode_bitmap );
+        kfree( group->block_bitmap );
+    }
+
+    kfree( cookie->groups );
+
+    /* Mark filesystem as it is not more in use */
+
     if ( cookie->flags & ~MOUNT_RO ) {
         cookie->super_block.s_state = EXT2_VALID_FS;
-        error = ext2_flush_superblock(cookie);
-    }
-*/
-    // TODO
-    error = -ENOSYS;
 
+        error = ext2_flush_superblock( cookie );
+
+        if ( error < 0 ) {
+            goto error1;
+        }
+    }
+
+    /* Close the device */
+
+    close( cookie->fd );
+
+    error = 0;
+
+error1:
     return error;
 }
 

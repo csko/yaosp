@@ -137,7 +137,12 @@ error1:
 }
 
 static int iso9660_unmount( void* fs_cookie ) {
-    /* TODO */
+    iso9660_cookie_t* cookie;
+
+    cookie = ( iso9660_cookie_t* )fs_cookie;
+
+    close( cookie->fd );
+    kfree( cookie );
 
     return 0;
 }
