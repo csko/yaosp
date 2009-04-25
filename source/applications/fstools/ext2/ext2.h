@@ -1,6 +1,6 @@
-/* ext2 filesystem driver
+/* Ext2 filesystem implementation
  *
- * Copyright (c) 2009 Attila Magyar, Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,11 +19,24 @@
 #ifndef _EXT2_H_
 #define _EXT2_H_
 
-#include <types.h>
-#include <vfs/inode.h>
+#include <sys/types.h>
 
-#define EXT2_MIN_BLOCK_SIZE     1024                    // minimum block size
-#define EXT2_NAME_LEN           255                     // maximum file name
+/* ext2 magic number */
+
+#define EXT2_SUPER_MAGIC        0xEF53
+
+/* s_state value(s) */
+
+#define EXT2_VALID_FS           0x0001
+
+/* s_errors value(s) */
+
+#define EXT2_ERRORS_CONTINUE    0x0001
+
+/* file_type values in ext2_dir_entry_t */
+
+#define EXT2_FT_REG_FILE        0x1
+#define EXT2_FT_DIRECTORY       0x2
 
 /* block indexes */
 
@@ -33,18 +46,7 @@
 #define EXT2_TIND_BLOCK         (EXT2_DIND_BLOCK + 1)   // index of the triply-indirect block (14)
 #define EXT2_N_BLOCKS           (EXT2_TIND_BLOCK + 1)
 
-/* FS states */
-
-#define EXT2_VALID_FS           0x0001  /* Unmounted cleanly */
-#define EXT2_ERROR_FS           0x0002  /* Errors detected */
-
-#define EXT2_ROOT_INO           2                       // root inode number
-#define EXT2_SUPER_MAGIC        0xEF53                  // magic indentifier
-
-/* file types */
-
-#define EXT2_FT_REG_FILE  0x1
-#define EXT2_FT_DIRECTORY 0x2
+#define EXT2_FEATURE_INCOMPAT_FILETYPE 0x0002
 
 typedef struct ext2_super_block {
     uint32_t    s_inodes_count;         /* Inodes count */
@@ -125,44 +127,32 @@ typedef struct ext2_super_block {
 } __attribute__(( packed )) ext2_super_block_t;
 
 typedef struct ext2_group_desc {
-    uint32_t    bg_block_bitmap;        /* Blocks bitmap block */
-    uint32_t    bg_inode_bitmap;        /* Inodes bitmap block */
-    uint32_t    bg_inode_table;     /* Inodes table block */
-    uint16_t    bg_free_blocks_count;   /* Free blocks count */
-    uint16_t    bg_free_inodes_count;   /* Free inodes count */
-    uint16_t    bg_used_dirs_count; /* Directories count */
-    uint16_t    bg_pad;
-    uint32_t    bg_reserved[3];
+    uint32_t bg_block_bitmap;        /* Blocks bitmap block */
+    uint32_t bg_inode_bitmap;        /* Inodes bitmap block */
+    uint32_t bg_inode_table;     /* Inodes table block */
+    uint16_t bg_free_blocks_count;   /* Free blocks count */
+    uint16_t bg_free_inodes_count;   /* Free inodes count */
+    uint16_t bg_used_dirs_count; /* Directories count */
+    uint16_t bg_pad;
+    uint32_t bg_reserved[ 3 ];
 } __attribute__(( packed )) ext2_group_desc_t;
-
-typedef struct ext2_group {
-    ext2_group_desc_t descriptor;
-    uint32_t* inode_bitmap;
-    uint32_t* block_bitmap;
-    uint32_t flags;
-} ext2_group_t;
-
-enum {
-    EXT2_INODE_BITMAP_DIRTY = ( 1 << 0 ),
-    EXT2_BLOCK_BITMAP_DIRTY = ( 1 << 1 )
-};
 
 /*
  * Structure of an inode on the disk
  */
 
 typedef struct ext2_fs_inode {
-    uint16_t    i_mode;         /* File mode */
-    uint16_t    i_uid;          /* Low 16 bits of Owner Uid */
-    uint32_t    i_size;         /* Size in bytes */
-    uint32_t    i_atime;        /* Access time */
-    uint32_t    i_ctime;        /* Creation time */
-    uint32_t    i_mtime;        /* Modification time */
-    uint32_t    i_dtime;        /* Deletion Time */
-    uint16_t    i_gid;          /* Low 16 bits of Group Id */
-    uint16_t    i_links_count;  /* Links count */
-    uint32_t    i_blocks;       /* Blocks count */
-    uint32_t    i_flags;        /* File flags */
+    uint16_t i_mode;         /* File mode */
+    uint16_t i_uid;          /* Low 16 bits of Owner Uid */
+    uint32_t i_size;         /* Size in bytes */
+    uint32_t i_atime;        /* Access time */
+    uint32_t i_ctime;        /* Creation time */
+    uint32_t i_mtime;        /* Modification time */
+    uint32_t i_dtime;        /* Deletion Time */
+    uint16_t i_gid;          /* Low 16 bits of Group Id */
+    uint16_t i_links_count;  /* Links count */
+    uint32_t i_blocks;       /* Blocks count */
+    uint32_t i_flags;        /* File flags */
     union {
         struct {
             uint32_t  l_i_reserved1;
@@ -208,66 +198,8 @@ typedef struct ext2_fs_inode {
 typedef struct ext2_dir_entry {
     uint32_t    inode;              /* Inode number */
     uint16_t    rec_len;                /* Directory entry length */
-    uint8_t     name_len;           /* Name length */                  //TODO check
+    uint8_t     name_len;           /* Name length */
     uint8_t     file_type;
 } __attribute__(( packed )) ext2_dir_entry_t;
-
-typedef struct ext2_cookie {
-    int fd;
-    uint32_t ngroups;                         // number of block groups
-    uint32_t blocksize;                       // size of one block (default: 1024)
-    uint32_t sectors_per_block;
-    uint32_t ptr_per_block;                   // pointer per block (default: 256)
-    uint32_t doubly_indirect_block_count;
-    uint32_t triply_indirect_block_count;
-    ext2_super_block_t super_block;   // superblock
-    ext2_group_t* groups;
-    int flags;                                // mount flags
-} ext2_cookie_t;
-
-typedef struct ext2_dir_cookie {
-    uint32_t dir_offset;
-} ext2_dir_cookie_t;
-
-typedef struct ext2_file_cookie {
-    int open_flags;
-} ext2_file_cookie_t;
-
-typedef struct ext2_inode {
-    ino_t inode_number;
-    ext2_fs_inode_t fs_inode;
-} ext2_inode_t;
-
-typedef struct ext2_lookup_data {
-    char* name;
-    int name_length;
-    ino_t inode_number;
-} ext2_lookup_data_t;
-
-typedef bool ext2_walk_callback_t( ext2_dir_entry_t* entry, void* data );
-
-int ext2_calc_block_num( ext2_cookie_t *cookie, ext2_inode_t *vinode, uint32_t block_num, uint32_t* out );
-
-/* Inode handling functions */
-
-int ext2_do_read_inode( ext2_cookie_t *cookie, ext2_inode_t* inode );
-int ext2_do_write_inode( ext2_cookie_t* cookie, ext2_inode_t* inode );
-int ext2_do_alloc_inode( ext2_cookie_t* cookie, ext2_inode_t* inode, bool for_directory );
-
-int ext2_do_read_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t block_number, void* buffer );
-int ext2_do_write_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t block_number, void* buffer );
-
-int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t* new_block_number );
-
-/* Block handling functions */
-
-int ext2_do_alloc_block( ext2_cookie_t* cookie, uint32_t* block_number );
-
-/* Directory handling functions */
-
-int ext2_do_walk_directory( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_walk_callback_t* callback, void* data );
-int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_entry_t* new_entry, int new_entry_size );
-
-ext2_dir_entry_t* ext2_do_alloc_dir_entry( int name_length );
 
 #endif /* _EXT2_H_ */

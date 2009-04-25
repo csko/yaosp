@@ -30,6 +30,8 @@ DIR* opendir( const char* name );
 int closedir( DIR* dir );
 
 struct dirent* readdir( DIR* dir );
+int readdir_r( DIR* dir, struct dirent* entry, struct dirent** result );
+
 void rewinddir( DIR* dir );
 
-#endif // _DIRENT_H_
+#endif /* _DIRENT_H_ */

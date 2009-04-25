@@ -141,3 +141,12 @@ int init_array( array_t* array ) {
 
     return 0;
 }
+
+int destroy_array( array_t* array ) {
+    if ( array->items != NULL ) {
+        free( array->items );
+        array->items = NULL;
+    }
+
+    return 0;
+}

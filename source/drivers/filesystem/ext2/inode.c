@@ -33,7 +33,7 @@
  * @param inode The wrapper of the filesystem inode, this struct has to have a valid inode number
  * @return On success 0 is returned
  */
-int ext2_do_read_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
+int ext2_do_read_inode( ext2_cookie_t* cookie, ext2_inode_t* inode ) {
     int error;
     uint8_t* buffer;
     uint32_t offset;
@@ -93,7 +93,7 @@ int ext2_do_read_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
 
     /* Copy the inode structure to the wrapper structure */
 
-    memcpy( &inode->fs_inode, buffer + block_offset, sizeof( ext2_inode_t ) );
+    memcpy( &inode->fs_inode, buffer + block_offset, sizeof( ext2_fs_inode_t ) );
 
     error = 0;
 
@@ -104,7 +104,7 @@ error1:
     return error;
 }
 
-int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
+int ext2_do_write_inode( ext2_cookie_t* cookie, ext2_inode_t* inode ) {
     int error;
     uint8_t* buffer;
     uint32_t offset;
@@ -159,15 +159,15 @@ int ext2_do_write_inode( ext2_cookie_t* cookie, vfs_inode_t* inode ) {
 
     /* Copy the inode structure from the wrapper structure */
 
-    memcpy( buffer + block_offset, &inode->fs_inode, sizeof( ext2_inode_t ) );
+    memcpy( buffer + block_offset, &inode->fs_inode, sizeof( ext2_fs_inode_t ) );
 
     /* If the inode size on the disk is bigger than our struct then we fill the rest of it with 0s */
 
-    if ( cookie->super_block.s_inode_size > sizeof( ext2_inode_t ) ) {
+    if ( cookie->super_block.s_inode_size > sizeof( ext2_fs_inode_t ) ) {
         memset(
-            buffer + block_offset + sizeof( ext2_inode_t ),
+            buffer + block_offset + sizeof( ext2_fs_inode_t ),
             0,
-            cookie->super_block.s_inode_size - sizeof( ext2_inode_t )
+            cookie->super_block.s_inode_size - sizeof( ext2_fs_inode_t )
         );
     }
 
@@ -189,7 +189,7 @@ error1:
     return error;
 }
 
-int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode, bool for_directory ) {
+int ext2_do_alloc_inode( ext2_cookie_t* cookie, ext2_inode_t* inode, bool for_directory ) {
     uint32_t i, j, k;
     uint32_t mask;
     uint32_t entry;
@@ -208,6 +208,8 @@ int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode, bool for_dir
         }
 
         bitmap = group->inode_bitmap;
+
+        /* TODO: Handle superblock.s_first_ino here */
 
         for ( j = 0; j < ( cookie->blocksize * 8 ) / 32; j++, bitmap++ ) {
             entry = *bitmap;
@@ -240,7 +242,7 @@ int ext2_do_alloc_inode( ext2_cookie_t* cookie, vfs_inode_t* inode, bool for_dir
     return -ENOSPC;
 }
 
-int ext2_do_read_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t block_number, void* buffer ) {
+int ext2_do_read_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t block_number, void* buffer ) {
     int error;
     uint32_t real_block_number;
 
@@ -259,7 +261,7 @@ int ext2_do_read_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_
     return 0;
 }
 
-int ext2_do_write_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t block_number, void* buffer ) {
+int ext2_do_write_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t block_number, void* buffer ) {
     int error;
     uint32_t real_block_number;
 
@@ -278,7 +280,7 @@ int ext2_do_write_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32
     return 0;
 }
 
-int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, vfs_inode_t* inode, uint32_t* new_block_number ) {
+int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t* new_block_number ) {
     int error;
     uint32_t* block = NULL;
     uint32_t new_index;

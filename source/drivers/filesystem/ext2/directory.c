@@ -24,7 +24,7 @@
 
 #include "ext2.h"
 
-int ext2_do_walk_directory( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_walk_callback_t* callback, void* data ) {
+int ext2_do_walk_directory( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_walk_callback_t* callback, void* data ) {
     int error;
     bool result;
     uint8_t* block;
@@ -77,7 +77,7 @@ out:
     return error;
 }
 
-int ext2_do_insert_entry( ext2_cookie_t* cookie, vfs_inode_t* parent, ext2_dir_entry_t* new_entry, int new_entry_size ) {
+int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_entry_t* new_entry, int new_entry_size ) {
     int error;
     uint8_t* block;
     uint32_t offset;

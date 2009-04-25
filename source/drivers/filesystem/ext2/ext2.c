@@ -30,10 +30,10 @@
  * The input parameter can be either direct, indirect, 2x indirect, 3x indirect block number.
  * The output is the number of the direct data block.
  */
-int ext2_calc_block_num( ext2_cookie_t *cookie, const vfs_inode_t *vinode, uint32_t block_num, uint32_t* out ) {
+int ext2_calc_block_num( ext2_cookie_t *cookie, ext2_inode_t* vinode, uint32_t block_num, uint32_t* out ) {
     uint32_t ind_block;
     uint32_t buffer[cookie->ptr_per_block];
-    ext2_inode_t *inode = (ext2_inode_t*) &vinode->fs_inode;
+    ext2_fs_inode_t* inode = ( ext2_fs_inode_t* )&vinode->fs_inode;
 
     // direct
 
@@ -249,15 +249,17 @@ static int ext2_flush_superblock( ext2_cookie_t* cookie ) {
         return -EIO;
     }
 
+    /* TODO: Write the superblock to all groups (if required) */
+
     return 0;
 }
 
 static int ext2_read_inode( void *fs_cookie, ino_t inode_number, void** out) {
     int error;
     ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
-    vfs_inode_t* inode;
+    ext2_inode_t* inode;
 
-    inode = ( vfs_inode_t* )kmalloc( sizeof( vfs_inode_t ) );
+    inode = ( ext2_inode_t* )kmalloc( sizeof( ext2_inode_t ) );
 
     if ( inode == NULL ) {
         error = -ENOMEM;
@@ -285,10 +287,10 @@ error1:
 static int ext2_write_inode( void* fs_cookie, void* node ) {
     int error;
     ext2_cookie_t* cookie;
-    vfs_inode_t* inode;
+    ext2_inode_t* inode;
 
     cookie = ( ext2_cookie_t* )fs_cookie;
-    inode = ( vfs_inode_t* )node;
+    inode = ( ext2_inode_t* )node;
 
     error = ext2_do_write_inode( cookie, inode );
 
@@ -310,7 +312,7 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
     size_t saved_size;
     uint32_t start_block;
     uint32_t end_block;
-    vfs_inode_t* inode;
+    ext2_inode_t* inode;
     ext2_cookie_t* cookie;
 
     if ( size == 0 ) {
@@ -322,7 +324,7 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
     }
 
     cookie = ( ext2_cookie_t* )fs_cookie;
-    inode = ( vfs_inode_t* )node;
+    inode = ( ext2_inode_t* )node;
 
     if ( pos >= inode->fs_inode.i_size ) {
         return 0;
@@ -411,7 +413,7 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
     int error;
     uint8_t* data;
     ext2_cookie_t* cookie;
-    vfs_inode_t* inode;
+    ext2_inode_t* inode;
     uint32_t block_number;
     size_t saved_size;
     off_t saved_pos;
@@ -423,7 +425,7 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
     }
 
     cookie = ( ext2_cookie_t* )fs_cookie;
-    inode = ( vfs_inode_t* )node;
+    inode = ( ext2_inode_t* )node;
     file_cookie = ( ext2_file_cookie_t* )_file_cookie;
     data = ( uint8_t* )buffer;
 
@@ -633,7 +635,7 @@ out:
     return saved_size;
 }
 
-static int ext2_open_directory( vfs_inode_t* vinode, void** out ) {
+static int ext2_open_directory( ext2_inode_t* vinode, void** out ) {
     ext2_dir_cookie_t* cookie;
 
     cookie = ( ext2_dir_cookie_t* )kmalloc( sizeof( ext2_dir_cookie_t ) );
@@ -649,7 +651,7 @@ static int ext2_open_directory( vfs_inode_t* vinode, void** out ) {
     return 0;
 }
 
-static int ext2_open_file( vfs_inode_t* vinode, void** out, int flags ) {
+static int ext2_open_file( ext2_inode_t* vinode, void** out, int flags ) {
     ext2_file_cookie_t* cookie;
 
     cookie = ( ext2_file_cookie_t* )kmalloc( sizeof( ext2_file_cookie_t ) );
@@ -666,12 +668,14 @@ static int ext2_open_file( vfs_inode_t* vinode, void** out, int flags ) {
 }
 
 static int ext2_open( void* fs_cookie, void* node, int mode, void** file_cookie ) {
-    vfs_inode_t* vinode = ( vfs_inode_t* )node;
+    ext2_inode_t* inode;
 
-    if ( IS_DIR( vinode )  ) {
-        return ext2_open_directory( vinode, file_cookie );
+    inode = ( ext2_inode_t* )node;
+
+    if ( ( inode->fs_inode.i_mode & S_IFDIR ) == S_IFDIR ) {
+        return ext2_open_directory( inode, file_cookie );
     } else {
-        return ext2_open_file( vinode, file_cookie, mode );
+        return ext2_open_file( inode, file_cookie, mode );
     }
 }
 
@@ -681,7 +685,7 @@ static int ext2_read_directory( void* fs_cookie, void* node, void* file_cookie, 
     uint8_t* block;
     uint32_t block_number;
     ext2_dir_entry_t *entry;
-    vfs_inode_t *vparent = (vfs_inode_t*) node;
+    ext2_inode_t* vparent = ( ext2_inode_t* )node;
     ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
     ext2_dir_cookie_t*  dir_cookie = ( ext2_dir_cookie_t* )file_cookie;
 
@@ -754,15 +758,15 @@ static bool ext2_lookup_inode_helper( ext2_dir_entry_t* entry, void* _data ) {
 static int ext2_create( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_number, void** _file_cookie ) {
     int error;
     ext2_cookie_t* cookie;
-    vfs_inode_t* parent;
-    vfs_inode_t child;
-    ext2_inode_t* inode;
+    ext2_inode_t* parent;
+    ext2_inode_t child;
+    ext2_fs_inode_t* inode;
     ext2_file_cookie_t* file_cookie;
     ext2_lookup_data_t lookup_data;
     ext2_dir_entry_t* new_entry;
 
     cookie = ( ext2_cookie_t* )fs_cookie;
-    parent = ( vfs_inode_t* )node;
+    parent = ( ext2_inode_t* )node;
 
     if ( name_length <= 0 ) {
         return -EINVAL;
@@ -805,7 +809,7 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
 
     inode = &child.fs_inode;
 
-    memset( inode, 0, sizeof( ext2_inode_t ) );
+    memset( inode, 0, sizeof( ext2_fs_inode_t ) );
 
     inode->i_mode = S_IFREG | 0777;
     inode->i_atime = inode->i_mtime = inode->i_ctime = time( NULL );
@@ -873,14 +877,14 @@ error1:
 static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_length, int perms ) {
     int error;
     ext2_cookie_t* cookie;
-    vfs_inode_t* parent;
+    ext2_inode_t* parent;
     ext2_lookup_data_t lookup_data;
     ext2_dir_entry_t* new_entry;
-    vfs_inode_t child;
-    ext2_inode_t* inode;
+    ext2_inode_t child;
+    ext2_fs_inode_t* inode;
 
     cookie = ( ext2_cookie_t* )fs_cookie;
-    parent = ( vfs_inode_t* )node;
+    parent = ( ext2_inode_t* )node;
 
     if ( name_length <= 0 ) {
         return -EINVAL;
@@ -917,7 +921,7 @@ static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_l
 
     inode = &child.fs_inode;
 
-    memset( inode, 0, sizeof( ext2_inode_t ) );
+    memset( inode, 0, sizeof( ext2_fs_inode_t ) );
 
     inode->i_mode = S_IFDIR | 0777;
     inode->i_atime = inode->i_mtime = inode->i_ctime = time( NULL );
@@ -1014,7 +1018,7 @@ static int ext2_lookup_inode( void* fs_cookie, void* _parent, const char* name, 
     int error;
     ext2_lookup_data_t lookup_data;
     ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
-    vfs_inode_t* parent  = ( vfs_inode_t* )_parent;
+    ext2_inode_t* parent  = ( ext2_inode_t* )_parent;
 
     lookup_data.name = ( char* )name;
     lookup_data.name_length = name_length;
@@ -1032,7 +1036,7 @@ static int ext2_lookup_inode( void* fs_cookie, void* _parent, const char* name, 
 
 static int ext2_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
     ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
-    vfs_inode_t* vinode = ( vfs_inode_t* )node;
+    ext2_inode_t* vinode = ( ext2_inode_t* )node;
 
     stat->st_ino     = vinode->inode_number;
     stat->st_size    = vinode->fs_inode.i_size;

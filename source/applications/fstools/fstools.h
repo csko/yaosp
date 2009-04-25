@@ -1,4 +1,4 @@
-/* closedir function
+/* Filesystem tools
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,19 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <dirent.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
+#ifndef _FSTOOLS_H_
+#define _FSTOOLS_H_
 
-int closedir( DIR* dir ) {
-    if ( dir == NULL ) {
-        errno = EBADF;
-        return -1;
-    }
+typedef struct filesystem_calls {
+    const char* name;
+    int ( *create )( const char* device );
+} filesystem_calls_t;
 
-    close( dir->fd );
-    free( dir );
-
-    return 0;
-}
+#endif /* _FSTOOLS_H_ */

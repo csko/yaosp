@@ -35,5 +35,6 @@ void* array_get_item( array_t* array, int index );
 int array_set_realloc_size( array_t* array, int realloc_size );
 
 int init_array( array_t* array );
+int destroy_array( array_t* array );
 
 #endif /* _YUTIL_ARRAY_H_ */
