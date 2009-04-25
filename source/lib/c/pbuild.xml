@@ -156,6 +156,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/putchar.c</item>
         <item>src/stdio/rename.c</item>
         <item>src/stdio/remove.c</item>
+        <item>src/time/tzset.c</item>
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
         <item>src/time/mktime.c</item>

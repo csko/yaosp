@@ -51,6 +51,8 @@ typedef struct tm {
     int tm_isdst;  /* Daylight saving [-1/0/1] */
 } tm_t;
 
+void tzset( void );
+
 time_t time(time_t* tloc);
 int stime(time_t* tptr);
 
