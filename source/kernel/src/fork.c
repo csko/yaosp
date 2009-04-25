@@ -141,6 +141,8 @@ int sys_fork( void ) {
         error = insert_thread( new_thread );
 
         if ( error >= 0 ) {
+            semaphore_context_update( new_process->semaphore_context, new_thread->id );
+
             add_thread_to_ready( new_thread );
 
             error = new_process->id;

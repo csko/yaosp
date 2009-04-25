@@ -24,6 +24,7 @@
 #include <scheduler.h>
 #include <macros.h>
 #include <kernel.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -37,12 +38,13 @@ semaphore_context_t global_semaphore_context;
 semaphore_context_t kernel_semaphore_context;
 
 static semaphore_t* allocate_semaphore( const char* name ) {
+    int error;
     semaphore_t* semaphore;
 
     semaphore = ( semaphore_t* )kmalloc( sizeof( semaphore_t ) );
 
     if ( semaphore == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     memset( semaphore, 0, sizeof( semaphore_t ) );
@@ -50,11 +52,27 @@ static semaphore_t* allocate_semaphore( const char* name ) {
     semaphore->name = strdup( name );
 
     if ( semaphore->name == NULL ) {
-        kfree( semaphore );
-        return NULL;
+        goto error2;
     }
 
+    error = init_waitqueue( &semaphore->waiters );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    semaphore->holder = -1;
+
     return semaphore;
+
+error3:
+    kfree( semaphore->name );
+
+error2:
+    kfree( semaphore );
+
+error1:
+    return NULL;
 }
 
 static void free_semaphore( semaphore_t* semaphore ) {
@@ -63,7 +81,6 @@ static void free_semaphore( semaphore_t* semaphore ) {
 }
 
 semaphore_id do_create_semaphore( bool kernel, const char* name, semaphore_type_t type, uint32_t flags, int count ) {
-    int error;
     semaphore_id id;
     semaphore_t* semaphore;
     semaphore_context_t* context;
@@ -74,15 +91,6 @@ semaphore_id do_create_semaphore( bool kernel, const char* name, semaphore_type_
 
     if ( semaphore == NULL ) {
         return -ENOMEM;
-    }
-
-    /* Initialize other parts of the semaphore */
-
-    error = init_waitqueue( &semaphore->waiters );
-
-    if ( error < 0 ) {
-        free_semaphore( semaphore );
-        return error;
     }
 
     semaphore->type = type;
@@ -191,6 +199,7 @@ int sys_delete_semaphore( semaphore_id id ) {
 }
 
 static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t timeout ) {
+    thread_t* current;
     uint64_t wakeup_time;
     semaphore_t* semaphore;
     semaphore_context_t* context;
@@ -225,9 +234,25 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
         return -EINVAL;
     }
 
+    current = current_thread();
+
     switch ( ( int )semaphore->type ) {
         case SEMAPHORE_BINARY :
             count = 1;
+
+            if ( semaphore->count == 0 ) {
+                ASSERT( semaphore->holder != -1 );
+
+                if ( ( current->id == semaphore->holder ) &&
+                     ( timeout == INFINITE_TIMEOUT ) ) {
+                    kprintf(
+                        "Detected a deadlock while thread %s tried to lock semaphore %s.\n",
+                        current->name,
+                        semaphore->name
+                    );
+                }
+            }
+
             break;
     }
 
@@ -292,12 +317,22 @@ try_again:
 
     semaphore->count -= count;
 
+    switch ( ( int )semaphore->type ) {
+        case SEMAPHORE_BINARY :
+            ASSERT( semaphore->holder == -1 );
+
+            semaphore->holder = current->id;
+
+            break;
+    }
+
     spinunlock_enable( &context->lock );
 
     return 0;
 }
 
 static int do_unlock_semaphore( bool kernel, semaphore_id id, int count ) {
+    thread_t* current;
     semaphore_t* semaphore;
     semaphore_context_t* context;
 
@@ -327,9 +362,28 @@ static int do_unlock_semaphore( bool kernel, semaphore_id id, int count ) {
         return -EINVAL;
     }
 
+    current = current_thread();
+
     switch ( ( int )semaphore->type ) {
         case SEMAPHORE_BINARY :
             count = 1;
+
+            if ( semaphore->count == 0 ) {
+                ASSERT( semaphore->holder != -1 );
+
+                if ( semaphore->holder != current->id ) {
+                    kprintf(
+                        "Thread %s (%d) tried to unlock semaphore %s but it's held by thread %d!\n",
+                        current->name,
+                        current->id,
+                        semaphore->name,
+                        semaphore->holder
+                    );
+                }
+
+                semaphore->holder = -1;
+            }
+
             break;
     }
 
@@ -456,6 +510,53 @@ void destroy_semaphore_context( semaphore_context_t* context ) {
     kfree( context );
 }
 
+static int semaphore_context_clone_iterator( hashitem_t* item, void* data ) {
+    semaphore_t* semaphore;
+    semaphore_t* new_semaphore;
+    semaphore_context_t* context;
+
+    semaphore = ( semaphore_t* )item;
+    context = ( semaphore_context_t* )data;
+
+    new_semaphore = allocate_semaphore( semaphore->name );
+
+    if ( new_semaphore== NULL ) {
+        return -ENOMEM;
+    }
+
+    new_semaphore->id = semaphore->id;
+    new_semaphore->type = semaphore->type;
+    new_semaphore->flags = semaphore->flags;
+
+    switch ( new_semaphore->type ) {
+        case SEMAPHORE_BINARY :
+            if ( semaphore->count == 0 ) {
+                ASSERT( semaphore->holder != -1 );
+
+                if ( current_thread()->id == semaphore->holder ) {
+                    new_semaphore->holder = 0; /* This will tell update_semaphore_context() to do update :) */
+                } else {
+                    new_semaphore->count = 1;
+                    new_semaphore->holder = -1;
+                }
+            } else {
+                new_semaphore->count = semaphore->count;
+                new_semaphore->holder = -1;
+            }
+
+            break;
+
+        case SEMAPHORE_COUNTING :
+            new_semaphore->count = 1; /* TODO: This is a HACK! */
+
+            break;
+    }
+
+    hashtable_add( &context->semaphore_table, ( hashitem_t* )new_semaphore );
+
+    return 0;
+}
+
 semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context ) {
     int error;
     semaphore_context_t* new_context;
@@ -473,9 +574,50 @@ semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context )
         return NULL;
     }
 
-    /* TODO: clone semaphores */
+    spinlock_disable( &old_context->lock );
+
+    error = hashtable_iterate( &old_context->semaphore_table, semaphore_context_clone_iterator, ( void* )new_context );
+
+    spinunlock_enable( &old_context->lock );
+
+    if ( error < 0 ) {
+        /* TODO: cleanup */
+        return NULL;
+    }
 
     return new_context;
+}
+
+static int semaphore_context_update_iterator( hashitem_t* item, void* data ) {
+    thread_id new_thread;
+    semaphore_t* semaphore;
+
+    new_thread = *( ( thread_id* )data );
+    semaphore = ( semaphore_t* )item;
+
+    switch ( ( int )semaphore->type ) {
+        case SEMAPHORE_BINARY :
+            if ( semaphore->holder != -1 ) {
+                ASSERT( semaphore->count == 0 );
+
+                semaphore->holder = new_thread;
+            }
+
+            break;
+    }
+
+    return 0;
+}
+
+int semaphore_context_update( semaphore_context_t* context, thread_id new_thread ) {
+    int error;
+    spinlock_disable( &context->lock );
+
+    error = hashtable_iterate( &context->semaphore_table, semaphore_context_update_iterator, ( void* )&new_thread );
+
+    spinunlock_enable( &context->lock );
+
+    return 0;
 }
 
 __init int init_semaphores( void ) {

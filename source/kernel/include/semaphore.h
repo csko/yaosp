@@ -50,6 +50,8 @@ typedef struct semaphore {
     semaphore_type_t type;
     uint32_t flags;
 
+    thread_id holder;
+
     waitqueue_t waiters;
 } semaphore_t;
 
@@ -115,6 +117,7 @@ int sys_unlock_semaphore( semaphore_id id, int count );
 int init_semaphore_context( semaphore_context_t* context );
 void destroy_semaphore_context( semaphore_context_t* context );
 semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context );
+int semaphore_context_update( semaphore_context_t* context, thread_id new_thread );
 
 int init_semaphores( void );
 
