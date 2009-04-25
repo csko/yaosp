@@ -364,25 +364,6 @@ void memory_context_dump( memory_context_t* context ) {
     for ( i = 0; i < context->region_count; i++ ) {
         region = context->regions[ i ];
 
-        kprintf( "  region #%d\n", i );
-        kprintf( "    id: %d name: %s\n", region->id, region->name );
-        kprintf( "    start: %p size: %u\n", region->start, region->size );
-        kprintf( "    flags:" );
-
-        if ( region->flags & REGION_READ ) { kprintf( " read" ); }
-        if ( region->flags & REGION_WRITE ) { kprintf( " write" ); }
-        if ( region->flags & REGION_STACK ) { kprintf( " stack" ); }
-        if ( region->flags & REGION_REMAPPED ) { kprintf( " remapped" ); }
-
-        kprintf( "\n    alloc method: " );
-
-        switch ( region->alloc_method ) {
-            case ALLOC_NONE : kprintf( "none" ); break;
-            case ALLOC_LAZY : kprintf( "lazy" ); break;
-            case ALLOC_PAGES : kprintf( "pages" ); break;
-            case ALLOC_CONTIGUOUS : kprintf( "cont" ); break;
-        }
-
-        kprintf( "\n" );
+        memory_region_dump( region, i );
     }
 }

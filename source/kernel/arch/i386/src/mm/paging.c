@@ -45,7 +45,10 @@ int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, ui
         flags |= USER;
     }
 
-    for ( addr = start; addr < ( start + size ); addr += PGDIR_SIZE ) {
+    uint32_t i;
+    uint32_t count = ( ( start & ( PGDIR_SIZE - 1 ) ) + size + PGDIR_SIZE - 1 ) / PGDIR_SIZE;
+
+    for ( i = 0, addr = start; i < count; i++, addr += PGDIR_SIZE ) {
         pgd_entry = page_directory_entry( arch_context, addr );
 
         if ( *pgd_entry == 0 ) {
@@ -340,7 +343,7 @@ int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtu
     return 0;
 }
 
-static int clone_user_region_pages( 
+static int clone_user_region_pages(
     i386_memory_context_t* old_arch_context,
     region_t* old_region,
     i386_memory_context_t* new_arch_context,
@@ -388,7 +391,7 @@ static int clone_user_region_pages(
     return 0;
 }
 
-static int clone_user_region_contiguous( 
+static int clone_user_region_contiguous(
     i386_memory_context_t* old_arch_context,
     region_t* old_region,
     i386_memory_context_t* new_arch_context,
@@ -436,7 +439,7 @@ static int clone_user_region_contiguous(
     return 0;
 }
 
-static int clone_user_region_lazy( 
+static int clone_user_region_lazy(
     i386_memory_context_t* old_arch_context,
     region_t* old_region,
     i386_memory_context_t* new_arch_context,

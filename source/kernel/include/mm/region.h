@@ -144,6 +144,8 @@ int sys_delete_region( region_id id );
 
 int sys_remap_region( region_id id, ptr_t address );
 
+void memory_region_dump( region_t* region, int index );
+
 int preinit_regions( void );
 int init_regions( void );
 

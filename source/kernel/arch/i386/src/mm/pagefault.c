@@ -262,6 +262,24 @@ void handle_page_fault( registers_t* regs ) {
 
         spinunlock_enable( &scheduler_lock );
     } else {
+        uint32_t* pgd_entry;
+        uint32_t* pt_entry;
+
+        i386_memory_context_t* arch_context;
+
+        memory_region_dump( region, -1 );
+
+        arch_context = ( i386_memory_context_t* )thread->process->memory_context->arch_data;
+        pgd_entry = page_directory_entry( arch_context, cr2 );
+
+        kprintf( "Page directory entry: %x\n", *pgd_entry );
+
+        if ( *pgd_entry != 0 ) {
+            pt_entry = page_table_entry( *pgd_entry, cr2 );
+
+            kprintf( "Page table entry: %x\n", *pt_entry );
+        }
+
         message = "unknown";
         goto invalid;
     }

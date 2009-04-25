@@ -1062,13 +1062,15 @@ static int ext2_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
 int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {
     int i;
     int result = 0;
+    uint8_t* tmp;
+    uint8_t* block;
     uint32_t gd_size;
     uint32_t gd_offset;
+    uint32_t gd_read_size;
     uint32_t ptr_per_block;
 
     ext2_group_t* group;
-    ext2_cookie_t *cookie;
-    ext2_group_desc_t *gds;
+    ext2_cookie_t* cookie;
 
     uint32_t sb_offset = 1 * EXT2_MIN_BLOCK_SIZE; // offset of the superblock (1024)
 
@@ -1125,17 +1127,18 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
 
     gd_offset = ( EXT2_MIN_BLOCK_SIZE / cookie->blocksize + 1 ) * cookie->blocksize;
     gd_size = cookie->ngroups * sizeof( ext2_group_desc_t );
+    gd_read_size = ROUND_UP( gd_size, cookie->blocksize );
 
-    gds = ( ext2_group_desc_t* )kmalloc( gd_size );
+    block = ( uint8_t* )kmalloc( gd_read_size );
 
-    if ( gds == NULL ) {
+    if ( block == NULL ) {
         result = -ENOMEM;
         goto error2;
     }
 
     /* Read the group descriptors */
 
-    if ( pread( cookie->fd, gds, gd_size, gd_offset ) != gd_size ) {
+    if ( pread( cookie->fd, block, gd_read_size, gd_offset ) != gd_read_size ) {
         result = -EIO;
         goto error3;
     }
@@ -1148,8 +1151,8 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
         goto error3;
     }
 
-    for ( i = 0, group = &cookie->groups[ 0 ]; i < cookie->ngroups; i++, group++ ) {
-        memcpy( &group->descriptor, &gds[ i ], sizeof( ext2_group_desc_t ) );
+    for ( i = 0, group = &cookie->groups[ 0 ], tmp = block; i < cookie->ngroups; i++, group++, tmp += sizeof( ext2_group_desc_t ) ) {
+        memcpy( &group->descriptor, tmp, sizeof( ext2_group_desc_t ) );
 
         group->inode_bitmap = ( uint32_t* )kmalloc( cookie->blocksize );
 
@@ -1180,7 +1183,7 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
         group->flags = 0;
     }
 
-    kfree( gds );
+    kfree( block );
 
     /* Increase mount count and mark fs in use only in RW mode */
 
@@ -1201,7 +1204,7 @@ int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* roo
     return result;
 
  error3:
-    kfree( gds );
+    kfree( block );
 
  error2:
     close( cookie->fd );
