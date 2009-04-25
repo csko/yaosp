@@ -1,6 +1,6 @@
 /* Filesystem tools
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,9 +19,18 @@
 #ifndef _FSTOOLS_H_
 #define _FSTOOLS_H_
 
+typedef int fstools_action_func_t( void );
+
 typedef struct filesystem_calls {
     const char* name;
     int ( *create )( const char* device );
 } filesystem_calls_t;
+
+typedef struct fstools_action {
+    const char* name;
+    fstools_action_func_t* function;
+} fstools_action_t;
+
+int fstools_do_create();
 
 #endif /* _FSTOOLS_H_ */
