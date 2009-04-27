@@ -25,9 +25,12 @@
 #include <lib/string.h>
 
 static bool interpreter_check( int fd ) {
+    off_t pos;
     char buf[ 3 ];
 
-    if ( sys_pread( fd, buf, 3, 0 ) != 3 ) {
+    pos = 0;
+
+    if ( sys_pread( fd, buf, 3, &pos ) != 3 ) {
         return false;
     }
 
