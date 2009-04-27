@@ -25,7 +25,5 @@ char* strncpy( char* d, const char* s, size_t c ) {
         while ( ( c-- ) && ( *d++ = *s++ ) != 0 ) { }
     }
 
-    *d = '\0';
-
     return tmp;
 }
