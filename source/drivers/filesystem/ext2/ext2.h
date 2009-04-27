@@ -222,7 +222,7 @@ typedef struct ext2_cookie {
     uint32_t triply_indirect_block_count;
     ext2_super_block_t super_block;   // superblock
     ext2_group_t* groups;
-    int flags;                                // mount flags
+    uint32_t flags;                                // mount flags
 } ext2_cookie_t;
 
 typedef struct ext2_dir_cookie {

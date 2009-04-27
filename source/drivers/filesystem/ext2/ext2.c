@@ -400,11 +400,17 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
         }
 
         memcpy( data, block, size );
+
+        if ( ! ( cookie->flags & MOUNT_RO ) ){
+    
+            /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
+
+            /* TODO: noatime */
+            inode->fs_inode.i_atime = time( NULL );
+
+        }
+
     }
-
-    /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
-
-    inode->fs_inode.i_atime = time( NULL );
 
     return saved_size;
 }
@@ -1059,7 +1065,7 @@ static int ext2_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
     return 0;
 }
 
-int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {
+static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {
     int i;
     int result = 0;
     uint8_t* tmp;
