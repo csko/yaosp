@@ -575,10 +575,12 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                             for ( i = terminal->cursor_row; i < terminal->start_line + screen->height; i++, buffer++ ) {
                                 terminal_buffer_item_t* data_item;
 
-                                data_item = &buffer->data[ 0 ];
+                                if ( buffer->data != NULL ) {
+                                    data_item = &buffer->data[ 0 ];
 
-                                for ( j = 0; j < screen->width; j++, data_item++ ) {
-                                    data_item->character = ' ';
+                                    for ( j = 0; j < screen->width; j++, data_item++ ) {
+                                        data_item->character = ' ';
+                                    }
                                 }
 
                                 buffer->last_dirty = -1;
@@ -601,10 +603,12 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                             for ( i = terminal->cursor_row; i >= terminal->start_line; i--, buffer-- ) {
                                 terminal_buffer_item_t* data_item;
 
-                                data_item = &buffer->data[ 0 ];
+                                if ( buffer->data != NULL ) {
+                                    data_item = &buffer->data[ 0 ];
 
-                                for ( j = 0; j < screen->width; j++, data_item++ ) {
-                                    data_item->character = ' ';
+                                    for ( j = 0; j < screen->width; j++, data_item++ ) {
+                                        data_item->character = ' ';
+                                    }
                                 }
 
                                 buffer->last_dirty = -1;

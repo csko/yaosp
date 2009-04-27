@@ -454,6 +454,10 @@ int pread( int fd, void* buffer, size_t count, off_t offset ) {
 }
 
 int sys_pread( int fd, void* buffer, size_t count, off_t* offset ) {
+    if ( offset == NULL ) {
+        return -EINVAL;
+    }
+
     return do_pread( false, fd, buffer, count, *offset );
 }
 

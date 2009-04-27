@@ -260,7 +260,9 @@ int sys_waitpid( process_id pid, int* status, int options ) {
 
     LOCK( process->waiters );
 
-    *status = 0;
+    if ( status != NULL ) {
+        *status = 0;
+    }
 
     return 0;
 }
