@@ -21,7 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>sysinfo.c</item>
+        <item>listpci.c</item>
+        <item>deviceid.c</item>
     </array>
 
     <target name="clean">
@@ -37,16 +38,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo></echo>
-        <echo>Compiling sysinfo shell command</echo>
+        <echo>Compiling listpci shell command</echo>
         <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/shell/external_commands/sysinfo/${i}</echo>
+            <echo>[GCC    ] source/applications/listpci/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../../../include</include>
-                <include>../../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
+                <include>../../include</include>
+                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-m32</flag>
@@ -58,25 +59,25 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo></echo>
-        <echo>Linking sysinfo application</echo>
+        <echo>Linking listpci application</echo>
         <echo></echo>
-        <echo>[GCC   ] source/applications/shell/external_commands/sysinfo/objs/sysinfo</echo>
+        <echo>[GCC    ] source/applications/listpci/objs/listpci</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../../lib/start/objs/libstart.a</input>
-            <input>../../../../lib/c/objs/libc.a</input>
-            <output>objs/sysinfo</output>
+            <input>../../lib/start/objs/libstart.a</input>
+            <input>../../lib/c/objs/libc.a</input>
+            <output>objs/listpci</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
-            <flag>--script=../../../../../scripts/i386_app.lnk</flag>
+            <flag>--script=../../../scripts/i386_app.lnk</flag>
             <flag>-nostartfiles</flag>
             <flag>-nodefaultlibs</flag>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/sysinfo" to="../../../../../build/image/application/sysinfo"/>
+        <copy from="objs/listpci" to="../../../build/image/application/listpci"/>
     </target>
 
     <target name="all">

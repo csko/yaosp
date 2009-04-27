@@ -255,7 +255,7 @@ int irc_handle_mode( const char* sender, const char* chan, const char* msg){
 }
 
 int irc_handle_topic( const char* sender, const char* chan, const char* msg){
-    
+
     return 0;
 }
 
@@ -280,7 +280,7 @@ int irc_handle_join( const char* client, const char* chan){
         if(error != 0){
             return error;
         }
-        
+
     }
 
     /* Add new user to the user list of channel */
@@ -479,29 +479,43 @@ ssize_t irc_write(int fd, const void *buf, size_t count) {
     return write(fd, buf, count);
 }
 
-int parse_client(const char* str, client_t* sender){
+int parse_client( const char* str, client_t* sender ) {
     char* nick;
     char* ident;
+    size_t length;
 
-    if(str == NULL){
+    if ( str == NULL ) {
         return 1;
     }
 
-    nick = strchr(str, '!');
-    if(nick != NULL){
-        strncpy(sender->nick, str, nick - str);
-        ident = strchr(nick, '@');
+    nick = strchr( str, '!' );
 
-        if(ident != NULL){
-            strncpy(sender->ident, nick, ident - nick);
-            strcpy(sender->host, ident);
-        }else{
-            sender->ident[0] = '\0';
-            sender->host[0] = '\0';
+    if ( nick != NULL ) {
+        length = nick - str;
+
+        strncpy( sender->nick, str, length );
+        sender->nick[ length ] = 0;
+
+        ident = strchr( nick, '@' );
+
+        if ( ident != NULL ) {
+            length = ident - nick;
+
+            strncpy( sender->ident, nick, ident - nick );
+            sender->ident[ length ] = 0;
+
+            strcpy( sender->host, ident );
+        } else {
+            sender->ident[ 0 ] = 0;
+            sender->host[ 0 ] = 0;
+
             return 1;
         }
-    }else{
-        strcpy(sender->nick, str); // TODO: MAX(strlen(str), sizeof(sender->nick)) ???
+    } else {
+        /* TODO: MAX(strlen(str), sizeof(sender->nick)) ??? */
+
+        strcpy( sender->nick, str );
+
         return 1;
     }
 

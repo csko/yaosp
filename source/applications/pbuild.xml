@@ -23,6 +23,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="subdirs">
         <item>init</item>
         <item>shell</item>
+        <item>listpci</item>
+        <item>systeminfo</item>
         <item>guiserver</item>
         <item>irc_client</item>
         <item>startgui</item>
