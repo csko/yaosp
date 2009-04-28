@@ -18,8 +18,10 @@
 
 #include <signal.h>
 
+#include <yaosp/debug.h>
+
 int kill( pid_t pid, int signal ) {
-    /* TODO */
+    dbprintf( "kill(): Not yet implemented!\n" );
 
     return -1;
 }

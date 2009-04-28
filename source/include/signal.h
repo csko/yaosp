@@ -68,4 +68,4 @@ sighandler_t signal( int signum, sighandler_t handler );
 int kill( pid_t pid, int signal );
 int raise( int signal );
 
-#endif // _SIGNAL_H_
+#endif /* _SIGNAL_H_ */
