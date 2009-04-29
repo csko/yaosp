@@ -19,6 +19,8 @@
 #ifndef _SIGNAL_H_
 #define _SIGNAL_H_
 
+#include <types.h>
+
 #define SIGHUP    1       /* Hangup (POSIX).  */
 #define SIGINT    2       /* Interrupt (ANSI).  */
 #define SIGQUIT   3       /* Quit (POSIX).  */
@@ -62,15 +64,67 @@ typedef void ( *sighandler_t )( int );
 #define SIG_DFL ((sighandler_t)0) /* Default action.  */
 #define SIG_IGN ((sighandler_t)1) /* Ignore signal.  */
 
+#define SA_NOCLDSTOP 1 /* Don't send SIGCHLD when children stop.  */
+#define SA_NOCLDWAIT 2 /* Don't create zombie on child death.  */
+#define SA_SIGINFO   4 /* Invoke signal-catching function with three arguments instead of one.  */
+#define SA_ONSTACK   0x08000000 /* Use signal stack by using `sa_restorer'. */
+#define SA_STACK     SA_ONSTACK
+#define SA_RESTART   0x10000000 /* Restart syscall on signal return.  */
+#define SA_NODEFER   0x40000000 /* Don't automatically block the signal when its handler is being executed.  */
+#define SA_NOMASK    SA_NODEFER
+#define SA_RESETHAND 0x80000000 /* Reset to SIG_DFL on entry to handler.  */
+#define SA_ONESHOT   SA_RESETHAND
+
+typedef struct siginfo {
+    int      si_signo;    /* Signal number */
+    int      si_errno;    /* An errno value */
+    int      si_code;     /* Signal code */
+    int      si_trapno;   /* Trap number that caused
+                                        hardware-generated signal
+                                        (unused on most architectures) */
+#if 0
+    pid_t    si_pid;      /* Sending process ID */
+    uid_t    si_uid;      /* Real user ID of sending process */
+    int      si_status;   /* Exit value or signal */
+    clock_t  si_utime;    /* User time consumed */
+    clock_t  si_stime;    /* System time consumed */
+    sigval_t si_value;    /* Signal value */
+    int      si_int;      /* POSIX.1b signal */
+    void    *si_ptr;      /* POSIX.1b signal */
+    int      si_overrun;  /* Timer overrun count; POSIX.1b timers */
+    int      si_timerid;  /* Timer ID; POSIX.1b timers */
+    void    *si_addr;     /* Memory location which caused fault */
+    int      si_band;     /* Band event */
+    int      si_fd;       /* File descriptor */
+#endif
+} siginfo_t;
+
+typedef int sigset_t;
+
+struct sigaction {
+    void ( *sa_handler )( int );
+    void ( *sa_sigaction )( int, siginfo_t*, void* );
+    sigset_t sa_mask;
+    int sa_flags;
+    void ( *sa_restorer )( void );
+};
+
 typedef struct signal_handler {
     sighandler_t handler;
+    int flags;
 } signal_handler_t;
 
 struct thread;
+
+int arch_handle_userspace_signal( struct thread* thread, int signal, signal_handler_t* handler );
 
 int is_signal_pending( struct thread* thread );
 
 int handle_signals( struct thread* thread );
 int send_signal( struct thread* thread, int signal );
+
+int sys_sigaction( int signal, struct sigaction* act, struct sigaction* oldact );
+int sys_kill_thread( thread_id tid, int signal );
+int sys_signal_return( void );
 
 #endif /* _SIGNAL_H_ */

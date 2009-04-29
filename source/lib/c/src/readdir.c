@@ -18,6 +18,7 @@
 
 #include <dirent.h>
 #include <unistd.h>
+#include <errno.h>
 
 struct dirent* readdir( DIR* dir ) {
     int error;
@@ -40,7 +41,8 @@ int readdir_r( DIR* dir, struct dirent* entry, struct dirent** result ) {
 
     if ( ( dir == NULL ) ||
          ( entry == NULL ) ) {
-        return NULL;
+        errno = -EINVAL;
+        return -1;
     }
 
     error = getdents( dir->fd, entry, sizeof( struct dirent ) );

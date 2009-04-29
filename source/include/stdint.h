@@ -69,4 +69,4 @@ typedef unsigned long uintmax_t;
 
 #endif
 
-#endif // _STDINT_H_
+#endif /* _STDINT_H_ */

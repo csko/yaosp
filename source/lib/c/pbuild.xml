@@ -117,6 +117,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/chdir.c</item>
         <item>src/unistd/ftruncate.c</item>
         <item>src/unistd/getpid.c</item>
+        <item>src/unistd/gettid.c</item>
         <item>src/unistd/link.c</item>
         <item>src/unistd/rmdir.c</item>
         <item>src/unistd/chown.c</item>
@@ -209,6 +210,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/ispunct.c</item>
         <item>src/ctype/isascii.c</item>
         <item>src/signal/signal.c</item>
+        <item>src/signal/sigaction.c</item>
         <item>src/signal/kill.c</item>
         <item>src/signal/raise.c</item>
         <item>src/locale/localeconv.c</item>

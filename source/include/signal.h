@@ -19,6 +19,7 @@
 #ifndef _SIGNAL_H_
 #define _SIGNAL_H_
 
+#include <time.h>
 #include <sys/types.h>
 
 #define SIGHUP    1       /* Hangup (POSIX).  */
@@ -62,10 +63,54 @@
 #define SIG_DFL ((sighandler_t)0) /* Default action.  */
 #define SIG_IGN ((sighandler_t)1) /* Ignore signal.  */
 
+#define SA_NOCLDSTOP 1 /* Don't send SIGCHLD when children stop.  */
+#define SA_NOCLDWAIT 2 /* Don't create zombie on child death.  */
+#define SA_SIGINFO   4 /* Invoke signal-catching function with three arguments instead of one.  */
+#define SA_ONSTACK   0x08000000 /* Use signal stack by using `sa_restorer'. */
+#define SA_STACK     SA_ONSTACK
+#define SA_RESTART   0x10000000 /* Restart syscall on signal return.  */
+#define SA_NODEFER   0x40000000 /* Don't automatically block the signal when its handler is being executed.  */
+#define SA_NOMASK    SA_NODEFER
+#define SA_RESETHAND 0x80000000 /* Reset to SIG_DFL on entry to handler.  */
+#define SA_ONESHOT   SA_RESETHAND
+
 typedef int sig_atomic_t;
+typedef int sigset_t;
+typedef int sigval_t;
 typedef void ( *sighandler_t )( int );
 
+typedef struct siginfo {
+    int      si_signo;   /* Signal number */
+    int      si_errno;   /* An errno value */
+    int      si_code;    /* Signal code */
+    int      si_trapno;  /* Trap number that caused
+                                 hardware-generated signal
+                                 (unused on most architectures) */
+    pid_t    si_pid;     /* Sending process ID */
+    uid_t    si_uid;     /* Real user ID of sending process */
+    int      si_status;  /* Exit value or signal */
+    clock_t  si_utime;   /* User time consumed */
+    clock_t  si_stime;   /* System time consumed */
+    sigval_t si_value;   /* Signal value */
+    int      si_int;     /* POSIX.1b signal */
+    void    *si_ptr;     /* POSIX.1b signal */
+    int      si_overrun; /* Timer overrun count; POSIX.1b timers */
+    int      si_timerid; /* Timer ID; POSIX.1b timers */
+    void    *si_addr;    /* Memory location which caused fault */
+    int      si_band;    /* Band event */
+    int      si_fd;      /* File descriptor */
+} siginfo_t;
+
+struct sigaction {
+    void ( *sa_handler )( int );
+    void ( *sa_sigaction )( int, siginfo_t*, void* );
+    sigset_t sa_mask;
+    int sa_flags;
+    void ( *sa_restorer )( void );
+};
+
 sighandler_t signal( int signum, sighandler_t handler );
+int sigaction( int signum, const struct sigaction* act, struct sigaction* oldact );
 
 int kill( pid_t pid, int signal );
 int raise( int signal );

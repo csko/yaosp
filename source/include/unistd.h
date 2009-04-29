@@ -80,6 +80,7 @@ char* ttyname( int fd );
 int ttyname_r( int fd, char* buf, size_t buflen );
 
 pid_t getpid( void );
+pid_t gettid( void );
 int getpagesize( void );
 
 unsigned int sleep( unsigned int seconds );

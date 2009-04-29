@@ -28,6 +28,7 @@
 #include <thread.h>
 #include <module.h>
 #include <ipc.h>
+#include <syscall.h>
 #include <mm/userspace.h>
 #include <mm/pages.h>
 #include <vfs/vfs.h>
@@ -103,7 +104,11 @@ static system_call_entry_t system_call_table[] = {
     { "send_ipc_message", sys_send_ipc_message, 0 },
     { "recv_ipc_message", sys_recv_ipc_message, 0 },
     { "register_named_ipc_port", sys_register_named_ipc_port, 0 },
-    { "get_named_ipc_port", sys_get_named_ipc_port, 0 }
+    { "get_named_ipc_port", sys_get_named_ipc_port, 0 },
+    { "signal_return", sys_signal_return, SYSCALL_SAVE_STACK },
+    { "sigaction", sys_sigaction, 0 },
+    { "kill_thread", sys_kill_thread, 0 },
+    { "gettid", sys_gettid, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

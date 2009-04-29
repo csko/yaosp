@@ -163,6 +163,8 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
 int sys_exit_thread( int exit_code );
 int sys_wake_up_thread( thread_id id );
 
+thread_id sys_gettid( void );
+
 uint32_t sys_get_thread_count_for_process( process_id id );
 uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_table, uint32_t max_count );
 

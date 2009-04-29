@@ -25,7 +25,11 @@
 #include <stddef.h>
 
 #ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
 #define NULL ((void*)0)
+#endif /* __cplusplus */
 #endif /* NULL */
 
 #define INFINITE_TIMEOUT 18446744073709551615ULL
@@ -42,4 +46,4 @@ typedef int gid_t;
 typedef int blksize_t;
 typedef int64_t blkcnt_t;
 
-#endif // _SYS_TYPES_H_
+#endif /* _SYS_TYPES_H_ */

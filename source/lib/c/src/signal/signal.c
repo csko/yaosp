@@ -21,7 +21,7 @@
 #include <yaosp/debug.h>
 
 sighandler_t signal( int signum, sighandler_t handler ) {
-    dbprintf( "signal(): Not yet implemented!\n" );
+    //dbprintf( "signal(): Not yet implemented!\n" );
 
     return SIG_DFL;
 }

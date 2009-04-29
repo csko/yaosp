@@ -24,10 +24,12 @@
 #define time_t uint64_t
 #define suseconds_t int
 
+typedef unsigned int clock_t;
+
 typedef struct timeval {
     time_t      tv_sec;  /* Seconds */
     suseconds_t tv_usec; /* Microseconds */
-} timeval_t ;
+} timeval_t;
 
 typedef struct timezone {
     int tz_minuteswest;

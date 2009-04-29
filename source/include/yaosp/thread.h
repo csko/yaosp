@@ -35,4 +35,6 @@ typedef int thread_entry_t( void* arg );
 thread_id create_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t user_stack_size );
 int wake_up_thread( thread_id id );
 
+int kill_thread( thread_id id, int signal );
+
 #endif /* _YAOSP_THREAD_H_ */

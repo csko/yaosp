@@ -98,6 +98,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
 
     for ( i = 0; i < _NSIG - 1; i++ ) {
         thread->signal_handlers[ i ].handler = SIG_DFL;
+        thread->signal_handlers[ i ].flags = 0;
     }
 
     return thread;
@@ -536,6 +537,10 @@ int sys_wake_up_thread( thread_id id ) {
     spinunlock_enable( &scheduler_lock );
 
     return error;
+}
+
+thread_id sys_gettid( void ) {
+    return current_thread()->id;
 }
 
 uint32_t get_thread_count( void ) {
