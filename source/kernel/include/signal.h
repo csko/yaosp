@@ -1,4 +1,4 @@
-/* yaosp C library
+/* Signal handling functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,8 +18,6 @@
 
 #ifndef _SIGNAL_H_
 #define _SIGNAL_H_
-
-#include <sys/types.h>
 
 #define SIGHUP    1       /* Hangup (POSIX).  */
 #define SIGINT    2       /* Interrupt (ANSI).  */
@@ -58,16 +56,21 @@
 
 #define _NSIG     65      /* Biggest signal number + 1 (including real-time signals). */
 
+typedef void ( *sighandler_t )( int );
+
 #define SIG_ERR ((sighandler_t)-1) /* Error return.  */
 #define SIG_DFL ((sighandler_t)0) /* Default action.  */
 #define SIG_IGN ((sighandler_t)1) /* Ignore signal.  */
 
-typedef int sig_atomic_t;
-typedef void ( *sighandler_t )( int );
+typedef struct signal_handler {
+    sighandler_t handler;
+} signal_handler_t;
 
-sighandler_t signal( int signum, sighandler_t handler );
+struct thread;
 
-int kill( pid_t pid, int signal );
-int raise( int signal );
+int is_signal_pending( struct thread* thread );
+
+int handle_signals( struct thread* thread );
+int send_signal( struct thread* thread, int signal );
 
 #endif /* _SIGNAL_H_ */

@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <config.h>
+#include <signal.h>
 #include <mm/region.h>
 #include <lib/hashtable.h>
 
@@ -60,10 +61,13 @@ typedef struct thread {
     int priority;
     struct process* process;
 
+    /* Scheduling time stuffs */
+
     uint64_t quantum;
     uint64_t exec_time;
-
     uint64_t cpu_time;
+
+    /* Kernel & user stack */
 
     uint32_t kernel_stack_pages;
     void* kernel_stack;
@@ -73,6 +77,14 @@ typedef struct thread {
     region_id user_stack_region;
 
     void* syscall_stack;
+
+    /* Signal handling */
+
+    uint64_t pending_signals;
+    uint64_t blocked_signals;
+    signal_handler_t signal_handlers[ _NSIG - 1 ];
+
+    /* Architecture specific data */
 
     void* arch_data;
 } thread_t;
@@ -119,6 +131,8 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
  */
 int sleep_thread( uint64_t microsecs );
 
+int do_wake_up_thread( thread_t* thread );
+
 /**
  * Wakes up a waiting, sleeping or not yet started thread.
  *
@@ -157,4 +171,4 @@ int sys_sleep_thread( uint64_t* microsecs, uint64_t* remaining );
 int init_threads( void );
 int init_thread_cleaner( void );
 
-#endif // _THREAD_H_
+#endif /* _THREAD_H_ */

@@ -55,6 +55,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/mp.c</item>
         <item>arch/i386/src/smp.c</item>
         <item>arch/i386/src/bios.c</item>
+        <item>arch/i386/src/signal.c</item>
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
@@ -93,6 +94,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/version.c</item>
         <item>src/interpreter.c</item>
         <item>src/ipc.c</item>
+        <item>src/signal.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

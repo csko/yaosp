@@ -1,6 +1,6 @@
 /* Architecture specific type definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,7 +20,6 @@
 #define _ARCH_TYPES_H_
 
 typedef signed long long int int64_t;
-
 typedef unsigned long long int uint64_t;
 
 typedef unsigned int ptr_t;
@@ -28,11 +27,14 @@ typedef unsigned int register_t;
 
 typedef struct registers {
     /* Saved segment registers */
+
     register_t fs;
     register_t es;
     register_t ds;
+
     /* General-purpose registers pushed by the pusha
        instruction */
+
     register_t edi;
     register_t esi;
     register_t ebp;
@@ -41,12 +43,16 @@ typedef struct registers {
     register_t edx;
     register_t ecx;
     register_t eax;
+
     /* Interrupt number and error code pushed by the
        ISR macros */
+
     register_t int_number;
     register_t error_code;
+
     /* These are pushed to the stack by the CPU when
        an interrupt is fired */
+
     register_t eip;
     register_t cs;
     register_t eflags;
@@ -95,4 +101,4 @@ typedef struct tss {
     unsigned short io_bitmap;
 } __attribute__(( packed )) tss_t;
 
-#endif // _ARCH_TYPES_H_
+#endif /* _ARCH_TYPES_H_ */

@@ -24,6 +24,7 @@
 #include <macros.h>
 #include <scheduler.h>
 #include <debug.h>
+#include <signal.h>
 #include <mm/region.h>
 #include <mm/context.h>
 #include <mm/pages.h>
@@ -46,7 +47,8 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
     if ( thread != NULL ) {
         kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
         memory_context_dump( thread->process->memory_context );
-        thread_exit( 0 );
+
+        send_signal( thread, SIGSEGV );
     } else {
         disable_interrupts();
         halt_loop();
@@ -214,7 +216,7 @@ static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_
     return 0;
 }
 
-void handle_page_fault( registers_t* regs ) {
+int handle_page_fault( registers_t* regs ) {
     int error;
     uint32_t cr2;
     region_t* region;
@@ -281,15 +283,18 @@ void handle_page_fault( registers_t* regs ) {
         }
 
         message = "unknown";
+
         goto invalid;
     }
 
     UNLOCK( region_lock );
 
-    return;
+    return 0;
 
 invalid:
     UNLOCK( region_lock );
 
     invalid_page_fault( thread, regs, cr2, message );
+
+    return 0;
 }

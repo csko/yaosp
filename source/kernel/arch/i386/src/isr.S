@@ -1,6 +1,6 @@
 /* i386 specific interrupt service routines
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -46,6 +46,33 @@
     addl $8, %esp; \
     iret
 
+#define ISR_SIGCHECK(num,handler) \
+    .global isr##num; \
+    isr##num:; \
+    pushl $0; \
+    pushl $##num; \
+    pusha; \
+    push %ds; \
+    andl $0xFFFF, (%esp); \
+    push %es; \
+    andl $0xFFFF, (%esp); \
+    push %fs; \
+    andl $0xFFFF, (%esp); \
+    mov $KERNEL_DS, %ax; \
+    mov %ax, %ds; \
+    mov %ax, %es; \
+    mov %ax, %fs; \
+    pushl %esp; \
+    call handler; \
+    call arch_handle_signals; \
+    addl $4, %esp; \
+    pop %fs; \
+    pop %es; \
+    pop %ds; \
+    popa; \
+    addl $8, %esp; \
+    iret
+
 #define ISR_WITH_ERROR(num,handler) \
     .global isr##num; \
     isr##num:; \
@@ -71,17 +98,43 @@
     addl $8, %esp; \
     iret
 
+#define ISR_WITH_ERROR_SIGCHECK(num,handler) \
+    .global isr##num; \
+    isr##num:; \
+    pushl $##num; \
+    pusha; \
+    push %ds; \
+    andl $0xFFFF, (%esp); \
+    push %es; \
+    andl $0xFFFF, (%esp); \
+    push %fs; \
+    andl $0xFFFF, (%esp); \
+    mov $KERNEL_DS, %ax; \
+    mov %ax, %ds; \
+    mov %ax, %es; \
+    mov %ax, %fs; \
+    pushl %esp; \
+    call handler; \
+    call arch_handle_signals; \
+    addl $4, %esp; \
+    pop %fs; \
+    pop %es; \
+    pop %ds; \
+    popa; \
+    addl $8, %esp; \
+    iret
+
 /* exception handlers */
 
-ISR(0,handle_division_by_zero)
+ISR_SIGCHECK(0,handle_division_by_zero)
 ISR(1,handle_debug_exception)
 ISR(3,handle_debug_exception)
-ISR(6,handle_invalid_opcode)
+ISR_SIGCHECK(6,handle_invalid_opcode)
 ISR(7,handle_device_not_available)
-ISR_WITH_ERROR(13,handle_general_protection_fault)
-ISR_WITH_ERROR(14,handle_page_fault)
-ISR(16,handle_fpu_exception)
-ISR(19,handle_sse_exception)
+ISR_WITH_ERROR_SIGCHECK(13,handle_general_protection_fault)
+ISR_WITH_ERROR_SIGCHECK(14,handle_page_fault)
+ISR_SIGCHECK(16,handle_fpu_exception)
+ISR_SIGCHECK(19,handle_sse_exception)
 
 /* interrupt handlers */
 
@@ -102,7 +155,7 @@ ISR(45,irq_handler)
 ISR(46,irq_handler)
 ISR(47,irq_handler)
 
-ISR(128,system_call_entry)
+ISR_SIGCHECK(128,system_call_entry)
 
 ISR(240,apic_timer_irq)
 ISR(241,apic_spurious_irq)

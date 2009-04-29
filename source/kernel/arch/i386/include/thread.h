@@ -33,6 +33,8 @@ typedef struct i386_thread {
     register_t cr2;
     uint32_t flags;
     fpu_state_t* fpu_state;
+
+    void* signal_stack;
 } i386_thread_t;
 
 int arch_allocate_thread( thread_t* thread );

@@ -48,6 +48,7 @@ int arch_allocate_thread( thread_t* thread ) {
     arch_thread->cr2 = 0;
     arch_thread->flags = 0;
     arch_thread->fpu_state = ( fpu_state_t* )tmp;
+    arch_thread->signal_stack = NULL;
 
     thread->arch_data = ( void* )arch_thread;
 

@@ -25,6 +25,7 @@
 #include <waitqueue.h>
 #include <macros.h>
 #include <console.h>
+#include <signal.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
@@ -49,6 +50,7 @@ static thread_t* thread_cleaner_list;
 static semaphore_id thread_cleaner_sync;
 
 thread_t* allocate_thread( const char* name, process_t* process, int priority, uint32_t kernel_stack_pages ) {
+    int i;
     int error;
     thread_t* thread;
 
@@ -91,6 +93,12 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     atomic_inc( &process->thread_count );
 
     reset_thread_quantum( thread );
+
+    /* Set signal handlers to default */
+
+    for ( i = 0; i < _NSIG - 1; i++ ) {
+        thread->signal_handlers[ i ].handler = SIG_DFL;
+    }
 
     return thread;
 
@@ -475,7 +483,24 @@ int sys_sleep_thread( uint64_t* microsecs, uint64_t* remaining ) {
     return do_sleep_thread( *microsecs, remaining );
 }
 
-static int do_wake_up_thread( thread_id id ) {
+int do_wake_up_thread( thread_t* thread ) {
+    int error;
+
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
+    if ( ( thread->state == THREAD_NEW ) ||
+         ( thread->state == THREAD_WAITING ) ||
+         ( thread->state == THREAD_SLEEPING ) ) {
+        add_thread_to_ready( thread );
+        error = 0;
+    } else {
+        error = -EINVAL;
+    }
+
+    return error;
+}
+
+int wake_up_thread( thread_id id ) {
     int error;
     thread_t* thread;
 
@@ -483,12 +508,8 @@ static int do_wake_up_thread( thread_id id ) {
 
     thread = get_thread_by_id( id );
 
-    if ( ( thread != NULL ) &&
-         ( ( thread->state == THREAD_NEW ) ||
-           ( thread->state == THREAD_WAITING ) ||
-           ( thread->state == THREAD_SLEEPING ) ) ) {
-        add_thread_to_ready( thread );
-        error = 0;
+    if ( thread != NULL ) {
+        error = do_wake_up_thread( thread );
     } else {
         error = -EINVAL;
     }
@@ -498,21 +519,34 @@ static int do_wake_up_thread( thread_id id ) {
     return error;
 }
 
-int wake_up_thread( thread_id id ) {
-    return do_wake_up_thread( id );
-}
-
 int sys_wake_up_thread( thread_id id ) {
-    return do_wake_up_thread( id );
+    int error;
+    thread_t* thread;
+
+    spinlock_disable( &scheduler_lock );
+
+    thread = get_thread_by_id( id );
+
+    if ( thread != NULL ) {
+        error = do_wake_up_thread( thread );
+    } else {
+        error = -EINVAL;
+    }
+
+    spinunlock_enable( &scheduler_lock );
+
+    return error;
 }
 
 uint32_t get_thread_count( void ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     return hashtable_get_item_count( &thread_table );
 }
 
 thread_t* get_thread_by_id( thread_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     return ( thread_t* )hashtable_get( &thread_table, ( const void* )&id );
 }
 
