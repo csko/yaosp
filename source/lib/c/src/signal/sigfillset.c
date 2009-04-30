@@ -1,4 +1,4 @@
-/* signal function
+/* sigfillset function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,38 +18,15 @@
 
 #include <signal.h>
 #include <errno.h>
+#include <string.h>
 
-sighandler_t signal( int signum, sighandler_t handler ) {
-    int error;
-    struct sigaction act;
-    struct sigaction oldact;
-
-    if ( ( handler == SIG_ERR ) ||
-         ( signum < 0 ) ||
-         ( signum >= _NSIG ) ) {
+int sigfillset( sigset_t* set ) {
+    if ( set == NULL ) {
         errno = -EINVAL;
-        return SIG_ERR;
+        return -1;
     }
 
-    act.sa_handler = handler;
+    memset( ( void* )set, 0xFF, sizeof( sigset_t ) );
 
-    error = sigemptyset( &act.sa_mask );
-
-    if ( error < 0 ) {
-        return SIG_ERR;
-    }
-
-    error = sigaddset( &act.sa_mask, signum );
-
-    if ( error < 0 ) {
-        return SIG_ERR;
-    }
-
-    act.sa_flags = SA_RESTART;
-
-    if ( sigaction( signum, &act, &oldact ) < 0 ) {
-        return SIG_ERR;
-    }
-
-    return oldact.sa_handler;
+    return 0;
 }

@@ -75,7 +75,7 @@
 #define SA_ONESHOT   SA_RESETHAND
 
 typedef int sig_atomic_t;
-typedef int sigset_t;
+typedef uint64_t sigset_t;
 typedef int sigval_t;
 typedef void ( *sighandler_t )( int );
 
@@ -108,6 +108,12 @@ struct sigaction {
     int sa_flags;
     void ( *sa_restorer )( void );
 };
+
+int sigemptyset( sigset_t* set );
+int sigfillset( sigset_t* set );
+int sigaddset( sigset_t* set, int signum );
+int sigdelset( sigset_t* set, int signum );
+int sigismember( const sigset_t* set, int signum );
 
 sighandler_t signal( int signum, sighandler_t handler );
 int sigaction( int signum, const struct sigaction* act, struct sigaction* oldact );

@@ -50,7 +50,7 @@ int sys_signal_return( void ) {
     return 0;
 }
 
-int arch_handle_userspace_signal( thread_t* thread, int signal, signal_handler_t* handler ) {
+int arch_handle_userspace_signal( thread_t* thread, int signal, struct sigaction* handler ) {
     uint8_t* code;
     uint32_t* stack;
     registers_t* regs;
@@ -103,7 +103,7 @@ int arch_handle_userspace_signal( thread_t* thread, int signal, signal_handler_t
     stack[ 0 ] = ( uint32_t )code;
     stack[ 1 ] = ( uint32_t )( signal * 4 );
 
-    regs->eip = ( register_t )handler->handler;
+    regs->eip = ( register_t )handler->sa_handler;
     regs->esp = ( register_t )stack;
 
     return 0;

@@ -23,6 +23,7 @@
 #include <console.h>
 #include <errno.h>
 #include <smp.h>
+#include <lib/string.h>
 
 int is_signal_pending( thread_t* thread ) {
     return ( ( thread->pending_signals & ~thread->blocked_signals ) != 0 );
@@ -31,7 +32,7 @@ int is_signal_pending( thread_t* thread ) {
 int handle_signals( thread_t* thread ) {
     int i;
     int signal;
-    signal_handler_t* handler;
+    struct sigaction* handler;
 
     for ( i = 0; i < _NSIG - 1; i++ ) {
         signal = i + 1;
@@ -48,11 +49,9 @@ int handle_signals( thread_t* thread ) {
 
         handler = &thread->signal_handlers[ i ];
 
-        kprintf( "Handling signal %d in thread %s with %p handler\n", signal, thread->name, handler->handler );
-
-        if ( handler->handler == SIG_IGN ) {
+        if ( handler->sa_handler == SIG_IGN ) {
             continue;
-        } else if ( handler->handler == SIG_DFL ) {
+        } else if ( handler->sa_handler == SIG_DFL ) {
             switch ( signal ) {
                 case SIGCHLD :
                 case SIGWINCH :
@@ -75,8 +74,8 @@ int handle_signals( thread_t* thread ) {
 
             /* Reset the signal handler to SIG_DFL in case of SA_ONESHOT is set in flags */
 
-            if ( ( handler->flags & SA_ONESHOT ) != 0 ) {
-                handler->handler = SIG_DFL;
+            if ( ( handler->sa_flags & SA_ONESHOT ) != 0 ) {
+                handler->sa_handler = SIG_DFL;
             }
         }
     }
@@ -108,17 +107,28 @@ int send_signal( thread_t* thread, int signal ) {
 
 int sys_sigaction( int signal, struct sigaction* act, struct sigaction* oldact ) {
     thread_t* thread;
-    signal_handler_t* handler;
+    struct sigaction* handler;
 
     if ( ( signal < 1 ) || ( signal >= _NSIG ) ) {
         return -EINVAL;
     }
 
+    signal--;
+
     thread = current_thread();
+    handler = &thread->signal_handlers[ signal ];
 
-    handler = &thread->signal_handlers[ signal - 1 ];
+    if ( oldact != NULL ) {
+        memcpy( oldact, handler, sizeof( struct sigaction ) );
+    }
 
-    handler->handler = ( sighandler_t )act->sa_handler;
+    if ( act != NULL ) {
+        memcpy( handler, act, sizeof( struct sigaction ) );
+
+        if ( handler->sa_handler == SIG_IGN ) {
+            thread->pending_signals &= ~( 1ULL << signal );
+        }
+    }
 
     return 0;
 }

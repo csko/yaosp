@@ -99,7 +99,7 @@ typedef struct siginfo {
 #endif
 } siginfo_t;
 
-typedef int sigset_t;
+typedef uint64_t sigset_t;
 
 struct sigaction {
     void ( *sa_handler )( int );
@@ -109,14 +109,9 @@ struct sigaction {
     void ( *sa_restorer )( void );
 };
 
-typedef struct signal_handler {
-    sighandler_t handler;
-    int flags;
-} signal_handler_t;
-
 struct thread;
 
-int arch_handle_userspace_signal( struct thread* thread, int signal, signal_handler_t* handler );
+int arch_handle_userspace_signal( struct thread* thread, int signal, struct sigaction* handler );
 
 int is_signal_pending( struct thread* thread );
 

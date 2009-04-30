@@ -53,6 +53,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     int i;
     int error;
     thread_t* thread;
+    struct sigaction* handler;
 
     thread = ( thread_t* )kmalloc( sizeof( thread_t ) );
 
@@ -96,9 +97,9 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
 
     /* Set signal handlers to default */
 
-    for ( i = 0; i < _NSIG - 1; i++ ) {
-        thread->signal_handlers[ i ].handler = SIG_DFL;
-        thread->signal_handlers[ i ].flags = 0;
+    for ( i = 0, handler = &thread->signal_handlers[ 0 ]; i < _NSIG - 1; i++, handler++ ) {
+        handler->sa_handler = SIG_DFL;
+        handler->sa_flags = 0;
     }
 
     return thread;

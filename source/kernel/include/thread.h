@@ -82,7 +82,7 @@ typedef struct thread {
 
     uint64_t pending_signals;
     uint64_t blocked_signals;
-    signal_handler_t signal_handlers[ _NSIG - 1 ];
+    struct sigaction signal_handlers[ _NSIG - 1 ];
 
     /* Architecture specific data */
 

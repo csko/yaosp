@@ -213,6 +213,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/signal/sigaction.c</item>
         <item>src/signal/kill.c</item>
         <item>src/signal/raise.c</item>
+        <item>src/signal/sigemptyset.c</item>
+        <item>src/signal/sigfillset.c</item>
+        <item>src/signal/sigaddset.c</item>
+        <item>src/signal/sigdelset.c</item>
+        <item>src/signal/sigismember.c</item>
         <item>src/locale/localeconv.c</item>
         <item>src/termios/tcflush.c</item>
         <item>src/termios/tcgetattr.c</item>
