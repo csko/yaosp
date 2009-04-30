@@ -36,6 +36,51 @@
 #define _D_EXACT_NAMLEN(d) (strlen((d)->d_name))
 #define _D_ALLOC_NAMLEN(d) (NAME_MAX+1)
 
+enum {
+    _PC_LINK_MAX,
+#define _PC_LINK_MAX                    _PC_LINK_MAX
+    _PC_MAX_CANON,
+#define _PC_MAX_CANON                   _PC_MAX_CANON
+    _PC_MAX_INPUT,
+#define _PC_MAX_INPUT                   _PC_MAX_INPUT
+    _PC_NAME_MAX,
+#define _PC_NAME_MAX                    _PC_NAME_MAX
+    _PC_PATH_MAX,
+#define _PC_PATH_MAX                    _PC_PATH_MAX
+    _PC_PIPE_BUF,
+#define _PC_PIPE_BUF                    _PC_PIPE_BUF
+    _PC_CHOWN_RESTRICTED,
+#define _PC_CHOWN_RESTRICTED            _PC_CHOWN_RESTRICTED
+    _PC_NO_TRUNC,
+#define _PC_NO_TRUNC                    _PC_NO_TRUNC
+    _PC_VDISABLE,
+#define _PC_VDISABLE                    _PC_VDISABLE
+    _PC_SYNC_IO,
+#define _PC_SYNC_IO                     _PC_SYNC_IO
+    _PC_ASYNC_IO,
+#define _PC_ASYNC_IO                    _PC_ASYNC_IO
+    _PC_PRIO_IO,
+#define _PC_PRIO_IO                     _PC_PRIO_IO
+    _PC_SOCK_MAXBUF,
+#define _PC_SOCK_MAXBUF                 _PC_SOCK_MAXBUF
+    _PC_FILESIZEBITS,
+#define _PC_FILESIZEBITS                _PC_FILESIZEBITS
+    _PC_REC_INCR_XFER_SIZE,
+#define _PC_REC_INCR_XFER_SIZE          _PC_REC_INCR_XFER_SIZE
+    _PC_REC_MAX_XFER_SIZE,
+#define _PC_REC_MAX_XFER_SIZE           _PC_REC_MAX_XFER_SIZE
+    _PC_REC_MIN_XFER_SIZE,
+#define _PC_REC_MIN_XFER_SIZE           _PC_REC_MIN_XFER_SIZE
+    _PC_REC_XFER_ALIGN,
+#define _PC_REC_XFER_ALIGN              _PC_REC_XFER_ALIGN
+    _PC_ALLOC_SIZE_MIN,
+#define _PC_ALLOC_SIZE_MIN              _PC_ALLOC_SIZE_MIN
+    _PC_SYMLINK_MAX,
+#define _PC_SYMLINK_MAX                 _PC_SYMLINK_MAX
+    _PC_2_SYMLINKS
+#define _PC_2_SYMLINKS                  _PC_2_SYMLINKS
+};
+
 struct dirent {
     ino_t d_ino;
     char d_name[ NAME_MAX + 1 ];
@@ -48,6 +93,7 @@ pid_t fork( void );
 int execv( const char* file, char* const argv[] );
 int execve( const char* filename, char* const argv[], char* const envp[] );
 int execvp( const char* filename, char* const argv[] );
+int execlp( const char* file, const char* arg, ... );
 
 void* sbrk( int increment );
 
@@ -86,4 +132,9 @@ int getpagesize( void );
 unsigned int sleep( unsigned int seconds );
 unsigned int alarm( unsigned int seconds );
 
-#endif // _UNISTD_H_
+long fpathconf( int fd, int name );
+
+uid_t getuid( void );
+uid_t geteuid( void );
+
+#endif /* _UNISTD_H_ */

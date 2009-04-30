@@ -63,6 +63,10 @@
 #define SIG_DFL ((sighandler_t)0) /* Default action.  */
 #define SIG_IGN ((sighandler_t)1) /* Ignore signal.  */
 
+#define SIG_BLOCK   0 /* Block signals.  */
+#define SIG_UNBLOCK 1 /* Unblock signals.  */
+#define SIG_SETMASK 2 /* Set the set of blocked signals.  */
+
 #define SA_NOCLDSTOP 1 /* Don't send SIGCHLD when children stop.  */
 #define SA_NOCLDWAIT 2 /* Don't create zombie on child death.  */
 #define SA_SIGINFO   4 /* Invoke signal-catching function with three arguments instead of one.  */
@@ -117,6 +121,7 @@ int sigismember( const sigset_t* set, int signum );
 
 sighandler_t signal( int signum, sighandler_t handler );
 int sigaction( int signum, const struct sigaction* act, struct sigaction* oldact );
+int sigprocmask( int how, const sigset_t* set, sigset_t* oldset );
 
 int kill( pid_t pid, int signal );
 int raise( int signal );

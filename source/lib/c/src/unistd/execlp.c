@@ -1,4 +1,4 @@
-/* sigismember function
+/* execlp function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,20 +16,47 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <signal.h>
+#include <unistd.h>
+#include <stdarg.h>
 #include <errno.h>
+#include <alloca.h>
 
-int sigismember( const sigset_t* set, int signum ) {
-    if ( ( set == NULL ) ||
-         ( signum < 1 ) ||
-         ( signum >= _NSIG ) ) {
-        errno = -EINVAL;
-        return -1;
+int execlp( const char* file, const char* arg, ... ) {
+    int i;
+    int n;
+    va_list ap;
+    va_list bak;
+    char* tmp;
+    char** argv;
+
+    va_start( ap, arg );
+    __va_copy( bak, ap );
+
+    n = 2;
+
+    while ( ( tmp = va_arg( ap, char* ) ) != NULL ) {
+        ++n;
     }
 
-    if ( ( ( *set ) & ( 1ULL << ( signum - 1 ) ) ) != 0 ) {
-        return 1;
+    va_end( ap );
+
+    argv = ( char** )alloca( n * sizeof( char* ) );
+
+    if ( argv != NULL ) {
+        argv[ 0 ]= ( char* )arg;
+
+        for ( i = 0 ; i < n; ++i ) {
+            argv[ i + 1 ] = va_arg( bak, char* );
+        }
+
+        va_end( bak );
+
+        return execvp( file, argv );
     }
 
-    return 0;
+    va_end( bak );
+
+    errno = ENOMEM;
+
+    return -1;
 }

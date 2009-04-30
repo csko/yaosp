@@ -20,7 +20,7 @@
 
 int _passwd_db_position = 0;
 
-static struct passwd _passwd = {
+struct passwd __tmp_passwd = {
     .pw_name = "root",
     .pw_name = "password",
     .pw_uid = 0,
@@ -34,7 +34,7 @@ struct passwd* getpwent( void ) {
     if ( _passwd_db_position == 0 ) {
         _passwd_db_position++;
 
-        return &_passwd;
+        return &__tmp_passwd;
     } else {
         return NULL;
     }

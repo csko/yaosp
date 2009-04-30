@@ -1,4 +1,4 @@
-/* sigismember function
+/* getpwuid function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,20 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <signal.h>
-#include <errno.h>
+#include <pwd.h>
 
-int sigismember( const sigset_t* set, int signum ) {
-    if ( ( set == NULL ) ||
-         ( signum < 1 ) ||
-         ( signum >= _NSIG ) ) {
-        errno = -EINVAL;
-        return -1;
-    }
+extern struct passwd __tmp_passwd;
 
-    if ( ( ( *set ) & ( 1ULL << ( signum - 1 ) ) ) != 0 ) {
-        return 1;
-    }
-
-    return 0;
+struct passwd* getpwuid( uid_t uid ) {
+    return &__tmp_passwd;
 }

@@ -96,6 +96,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>
         <item>src/unistd/execv.c</item>
+        <item>src/unistd/execlp.c</item>
         <item>src/unistd/dup.c</item>
         <item>src/unistd/dup2.c</item>
         <item>src/unistd/write.c</item>
@@ -125,6 +126,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/ttyname.c</item>
         <item>src/unistd/pipe.c</item>
         <item>src/unistd/alarm.c</item>
+        <item>src/unistd/fpathconf.c</item>
+        <item>src/unistd/getuid.c</item>
+        <item>src/unistd/geteuid.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/fcntl/creat.c</item>
         <item>src/fcntl/fcntl.c</item>
@@ -218,7 +222,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/signal/sigaddset.c</item>
         <item>src/signal/sigdelset.c</item>
         <item>src/signal/sigismember.c</item>
+        <item>src/signal/sigprocmask.c</item>
         <item>src/locale/localeconv.c</item>
+        <item>src/locale/setlocale.c</item>
         <item>src/termios/tcflush.c</item>
         <item>src/termios/tcgetattr.c</item>
         <item>src/termios/tcsetattr.c</item>
@@ -236,6 +242,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/trio/trio.c</item>
         <item>src/trio/trionan.c</item>
         <item>src/trio/triostr.c</item>
+        <item>src/pwd/getpwuid.c</item>
         <item>src/pwd/getpwent.c</item>
         <item>src/pwd/endpwent.c</item>
         <item>src/pwd/setpwent.c</item>

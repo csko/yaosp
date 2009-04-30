@@ -28,4 +28,4 @@
     ((expr) ? ((void)0) : abort())
 #endif // NDEBUG
 
-#endif // _ASSERT_H_
+#endif /* _ASSERT_H_ */

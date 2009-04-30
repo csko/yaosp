@@ -26,6 +26,11 @@
 
 #define ATEXIT_MAX 32
 
+#define WEXITSTATUS(status) (((status) & 0xFF00) >> 8)
+#define WTERMSIG(status)    ((status) & 0x7F)
+
+#define WIFEXITED(status)   (WTERMSIG(status) == 0)
+
 int abs( int j );
 long labs( long j );
 long long llabs( long long j );

@@ -1,4 +1,4 @@
-/* sigismember function
+/* sigemptyset function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -19,16 +19,22 @@
 #include <signal.h>
 #include <errno.h>
 
-int sigismember( const sigset_t* set, int signum ) {
-    if ( ( set == NULL ) ||
-         ( signum < 1 ) ||
-         ( signum >= _NSIG ) ) {
-        errno = -EINVAL;
-        return -1;
-    }
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-    if ( ( ( *set ) & ( 1ULL << ( signum - 1 ) ) ) != 0 ) {
-        return 1;
+int sigprocmask( int how, const sigset_t* set, sigset_t* oldset ) {
+    int error;
+
+    error = syscall3(
+        SYS_sigprocmask,
+        how,
+        ( int )set,
+        ( int )oldset
+    );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
     }
 
     return 0;

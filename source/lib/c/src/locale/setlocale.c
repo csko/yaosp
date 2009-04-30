@@ -1,6 +1,6 @@
-/* sigismember function
+/* setlocale function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,20 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <signal.h>
-#include <errno.h>
+#include <locale.h>
+#include <stdlib.h>
 
-int sigismember( const sigset_t* set, int signum ) {
-    if ( ( set == NULL ) ||
-         ( signum < 1 ) ||
-         ( signum >= _NSIG ) ) {
-        errno = -EINVAL;
-        return -1;
-    }
+char* setlocale( int category, const char* locale ) {
+    /* TODO */
 
-    if ( ( ( *set ) & ( 1ULL << ( signum - 1 ) ) ) != 0 ) {
-        return 1;
-    }
-
-    return 0;
+    return NULL;
 }

@@ -64,6 +64,10 @@ typedef void ( *sighandler_t )( int );
 #define SIG_DFL ((sighandler_t)0) /* Default action.  */
 #define SIG_IGN ((sighandler_t)1) /* Ignore signal.  */
 
+#define SIG_BLOCK   0 /* Block signals.  */
+#define SIG_UNBLOCK 1 /* Unblock signals.  */
+#define SIG_SETMASK 2 /* Set the set of blocked signals.  */
+
 #define SA_NOCLDSTOP 1 /* Don't send SIGCHLD when children stop.  */
 #define SA_NOCLDWAIT 2 /* Don't create zombie on child death.  */
 #define SA_SIGINFO   4 /* Invoke signal-catching function with three arguments instead of one.  */
@@ -119,6 +123,7 @@ int handle_signals( struct thread* thread );
 int send_signal( struct thread* thread, int signal );
 
 int sys_sigaction( int signal, struct sigaction* act, struct sigaction* oldact );
+int sys_sigprocmask( int how, sigset_t* set, sigset_t* oldset );
 int sys_kill_thread( thread_id tid, int signal );
 int sys_signal_return( void );
 

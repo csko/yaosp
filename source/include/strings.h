@@ -1,4 +1,4 @@
-/* sigismember function
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,20 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <signal.h>
-#include <errno.h>
+#ifndef _STRINGS_H_
+#define _STRINGS_H_
 
-int sigismember( const sigset_t* set, int signum ) {
-    if ( ( set == NULL ) ||
-         ( signum < 1 ) ||
-         ( signum >= _NSIG ) ) {
-        errno = -EINVAL;
-        return -1;
-    }
-
-    if ( ( ( *set ) & ( 1ULL << ( signum - 1 ) ) ) != 0 ) {
-        return 1;
-    }
-
-    return 0;
-}
+#endif /* _STRINGS_H_ */

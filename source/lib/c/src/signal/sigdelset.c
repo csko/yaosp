@@ -27,7 +27,7 @@ int sigdelset( sigset_t* set, int signum ) {
         return -1;
     }
 
-    *set &= ~( 1ULL << signum );
+    *set &= ~( 1ULL << ( signum - 1 ) );
 
     return 0;
 }

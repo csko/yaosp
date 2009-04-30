@@ -133,6 +133,37 @@ int sys_sigaction( int signal, struct sigaction* act, struct sigaction* oldact )
     return 0;
 }
 
+int sys_sigprocmask( int how, sigset_t* set, sigset_t* oldset ) {
+    thread_t* thread;
+
+    thread = current_thread();
+
+    if ( oldset != NULL ) {
+        *oldset = thread->blocked_signals;
+    }
+
+    if ( set != NULL ) {
+        switch ( how ) {
+            case SIG_BLOCK :
+                thread->blocked_signals |= *set;
+                break;
+
+            case SIG_UNBLOCK :
+                thread->blocked_signals &= ~( *set );
+                break;
+
+            case SIG_SETMASK :
+                thread->blocked_signals = *set;
+                break;
+
+            default :
+                return -EINVAL;
+        }
+    }
+
+    return 0;
+}
+
 int sys_kill_thread( thread_id tid, int signal ) {
     thread_t* thread;
 
