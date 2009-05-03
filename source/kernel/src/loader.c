@@ -305,6 +305,8 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     thread->user_stack_end = ( void* )stack;
     thread->process->loader = loader;
 
+    /* TODO: close those files that have close_on_exec flag turned on! */
+
     /* Start the executable */
 
     error = loader->execute();

@@ -1,4 +1,4 @@
-/* yaosp C library
+/* fpurge function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PWD_H_
-#define _PWD_H_
+#include <stdio.h>
 
-#include <sys/types.h>
+#include <yaosp/debug.h>
 
-struct passwd {
-    char* pw_name;
-    char* pw_passwd;
-    uid_t pw_uid;
-    gid_t pw_gid;
-    char* pw_gecos;
-    char* pw_dir;
-    char* pw_shell;
-};
+int fpurge( FILE* stream ) {
+    if ( stream->flags & __FILE_NOBUF ) {
+        return 0;
+    }
 
-struct passwd* getpwnam( const char* name );
-struct passwd* getpwent( void );
-struct passwd* getpwuid( uid_t uid );
+    stream->has_ungotten = 0;
 
-void setpwent( void );
-void endpwent( void );
+    if ( stream->flags & __FILE_BUFINPUT ) {
+        stream->buffer_pos = stream->buffer_data_size;
+    } else {
+        stream->buffer_pos = 0;
+    }
 
-#endif /* _PWD_H_ */
+    return 0;
+}

@@ -108,6 +108,7 @@ static system_call_entry_t system_call_table[] = {
     { "get_named_ipc_port", sys_get_named_ipc_port, 0 },
     { "sigaction", sys_sigaction, 0 },
     { "sigprocmask", sys_sigprocmask, 0 },
+    { "kill", sys_kill, 0 },
     { "kill_thread", sys_kill_thread, 0 },
     { "signal_return", sys_signal_return, SYSCALL_SAVE_STACK }
 };

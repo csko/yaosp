@@ -43,4 +43,4 @@ int open( const char* filename, int flags, ... ) __nonnull((1));
 int creat( const char* pathname, mode_t mode ) __nonnull((1));
 int fcntl( int fd, int cmd, ... );
 
-#endif // _FCNTL_H_
+#endif /* _FCNTL_H_ */

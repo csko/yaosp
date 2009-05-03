@@ -124,6 +124,8 @@ int sigaction( int signum, const struct sigaction* act, struct sigaction* oldact
 int sigprocmask( int how, const sigset_t* set, sigset_t* oldset );
 
 int kill( pid_t pid, int signal );
+int killpg( int pgrp, int signal );
+
 int raise( int signal );
 
 #endif /* _SIGNAL_H_ */

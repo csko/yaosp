@@ -1,4 +1,4 @@
-/* yaosp C library
+/* getppid function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PWD_H_
-#define _PWD_H_
+#include <unistd.h>
 
-#include <sys/types.h>
+pid_t getppid( void ) {
+    /* TODO! */
 
-struct passwd {
-    char* pw_name;
-    char* pw_passwd;
-    uid_t pw_uid;
-    gid_t pw_gid;
-    char* pw_gecos;
-    char* pw_dir;
-    char* pw_shell;
-};
-
-struct passwd* getpwnam( const char* name );
-struct passwd* getpwent( void );
-struct passwd* getpwuid( uid_t uid );
-
-void setpwent( void );
-void endpwent( void );
-
-#endif /* _PWD_H_ */
+    return 0;
+}

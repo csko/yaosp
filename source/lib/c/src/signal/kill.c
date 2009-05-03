@@ -17,11 +17,24 @@
  */
 
 #include <signal.h>
+#include <errno.h>
 
-#include <yaosp/debug.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
 int kill( pid_t pid, int signal ) {
-    dbprintf( "kill(): Not yet implemented!\n" );
+    int error;
 
-    return -1;
+    error = syscall2(
+        SYS_kill,
+        pid,
+        signal
+    );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return 0;
 }

@@ -19,6 +19,7 @@
 #ifndef _VFS_IO_CONTEXT_H_
 #define _VFS_IO_CONTEXT_H_
 
+#include <types.h>
 #include <vfs/inode.h>
 #include <lib/hashtable.h>
 
@@ -38,6 +39,7 @@ typedef struct file {
     file_type_t type;
     void* cookie;
     atomic_t ref_count;
+    bool close_on_exec;
 } file_t;
 
 typedef struct io_context {

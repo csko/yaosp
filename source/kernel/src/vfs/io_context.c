@@ -34,6 +34,7 @@ file_t* create_file( void ) {
 
     memset( file, 0, sizeof( file_t ) );
 
+    file->close_on_exec = false;
     atomic_set( &file->ref_count, 0 );
 
     return file;

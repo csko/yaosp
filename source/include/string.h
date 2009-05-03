@@ -55,5 +55,6 @@ char* strdup( const char* s );
 char* strndup( const char* s, size_t n);
 
 char* strerror( int errnum );
+char* strsignal( int signum );
 
-#endif // _STRING_H_
+#endif /* _STRING_H_ */

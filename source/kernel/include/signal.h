@@ -124,6 +124,7 @@ int send_signal( struct thread* thread, int signal );
 
 int sys_sigaction( int signal, struct sigaction* act, struct sigaction* oldact );
 int sys_sigprocmask( int how, sigset_t* set, sigset_t* oldset );
+int sys_kill( process_id pid, int signal );
 int sys_kill_thread( thread_id tid, int signal );
 int sys_signal_return( void );
 

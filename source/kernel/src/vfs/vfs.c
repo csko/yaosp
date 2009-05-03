@@ -1347,8 +1347,24 @@ static int do_fcntl( bool kernel, int fd, int cmd, int arg ) {
 
             break;
 
+        case F_GETFD :
+            error = ( file->close_on_exec ? 0x01 : 0x00 );
+
+            break;
+
+        case F_SETFD :
+            if ( arg & 0x01 ) {
+                file->close_on_exec = true;
+            } else {
+                file->close_on_exec = false;
+            }
+
+            error = 0;
+
+            break;
+
         default :
-            kprintf( "%s(): Unhandled fcntl command: %x\n", __FUNCTION__, cmd );
+            kprintf( "do_fcntl(): Unhandled fcntl command: %x\n", cmd );
             error = -EINVAL;
             break;
     }

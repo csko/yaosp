@@ -126,6 +126,7 @@ char* ttyname( int fd );
 int ttyname_r( int fd, char* buf, size_t buflen );
 
 pid_t getpid( void );
+pid_t getppid( void );
 pid_t gettid( void );
 int getpagesize( void );
 int getdtablesize( void );
@@ -140,9 +141,20 @@ long fpathconf( int fd, int name );
 uid_t getuid( void );
 uid_t geteuid( void );
 int setuid( uid_t uid );
+int setreuid( uid_t ruid, uid_t euid );
 
 gid_t getgid( void );
 gid_t getegid( void );
 int setgid( gid_t gid );
+int setregid( gid_t rgid, gid_t egid );
+
+pid_t tcgetpgrp( int fd );
+int tcsetpgrp( int fd, pid_t pgrp );
+
+pid_t getpgid( pid_t pid );
+int setpgid( pid_t pid, pid_t pgid );
+
+pid_t getpgrp( void );
+int setpgrp( void );
 
 #endif /* _UNISTD_H_ */

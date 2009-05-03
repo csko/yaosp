@@ -23,6 +23,7 @@
 #include <console.h>
 #include <errno.h>
 #include <smp.h>
+#include <debug.h>
 #include <lib/string.h>
 
 int is_signal_pending( thread_t* thread ) {
@@ -160,6 +161,13 @@ int sys_sigprocmask( int how, sigset_t* set, sigset_t* oldset ) {
                 return -EINVAL;
         }
     }
+
+    return 0;
+}
+
+int sys_kill( process_id pid, int signal ) {
+    kprintf( "sys_kill() called!\n" );
+    debug_print_stack_trace();
 
     return 0;
 }

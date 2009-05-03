@@ -87,6 +87,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strncpy.c</item>
         <item>src/string/strstr.c</item>
         <item>src/string/strerror.c</item>
+        <item>src/string/strsignal.c</item>
         <item>src/string/strcat.c</item>
         <item>src/string/strncat.c</item>
         <item>src/string/strpbrk.c</item>
@@ -120,6 +121,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/chdir.c</item>
         <item>src/unistd/ftruncate.c</item>
         <item>src/unistd/getpid.c</item>
+        <item>src/unistd/getppid.c</item>
         <item>src/unistd/gettid.c</item>
         <item>src/unistd/link.c</item>
         <item>src/unistd/rmdir.c</item>
@@ -132,11 +134,17 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/getuid.c</item>
         <item>src/unistd/geteuid.c</item>
         <item>src/unistd/setuid.c</item>
+        <item>src/unistd/setreuid.c</item>
         <item>src/unistd/getgid.c</item>
         <item>src/unistd/getegid.c</item>
         <item>src/unistd/setgid.c</item>
+        <item>src/unistd/setregid.c</item>
         <item>src/unistd/gethostname.c</item>
         <item>src/unistd/getdtablesize.c</item>
+        <item>src/unistd/getpgid.c</item>
+        <item>src/unistd/setpgid.c</item>
+        <item>src/unistd/getpgrp.c</item>
+        <item>src/unistd/setpgrp.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/fcntl/creat.c</item>
         <item>src/fcntl/fcntl.c</item>
@@ -169,6 +177,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/putchar.c</item>
         <item>src/stdio/rename.c</item>
         <item>src/stdio/remove.c</item>
+        <item>src/stdio/fpurge.c</item>
         <item>src/time/tzset.c</item>
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
@@ -224,6 +233,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/signal/signal.c</item>
         <item>src/signal/sigaction.c</item>
         <item>src/signal/kill.c</item>
+        <item>src/signal/killpg.c</item>
         <item>src/signal/raise.c</item>
         <item>src/signal/sigemptyset.c</item>
         <item>src/signal/sigfillset.c</item>
@@ -237,6 +247,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/termios/tcgetattr.c</item>
         <item>src/termios/tcsetattr.c</item>
         <item>src/termios/tcflow.c</item>
+        <item>src/termios/tcgetpgrp.c</item>
+        <item>src/termios/tcsetpgrp.c</item>
         <item>src/math/s_ldexp.c</item>
         <item>src/math/s_modf.c</item>
         <item>src/yaosp/debug.c</item>
@@ -252,6 +264,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/trio/triostr.c</item>
         <item>src/pwd/getpwuid.c</item>
         <item>src/pwd/getpwent.c</item>
+        <item>src/pwd/getpwnam.c</item>
         <item>src/pwd/endpwent.c</item>
         <item>src/pwd/setpwent.c</item>
         <item>src/network/inet_aton.c</item>
