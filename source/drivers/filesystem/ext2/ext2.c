@@ -400,16 +400,12 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
         }
 
         memcpy( data, block, size );
+    }
 
-        if ( ! ( cookie->flags & MOUNT_RO ) ){
-    
-            /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
-
-            /* TODO: noatime */
-            inode->fs_inode.i_atime = time( NULL );
-
-        }
-
+    if ( saved_size > 0 && ! ( cookie->flags & MOUNT_RO )
+         && ! ( cookie->flags & MOUNT_NOATIME) ){
+        /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
+        inode->fs_inode.i_atime = time( NULL );
     }
 
     return saved_size;
@@ -634,9 +630,10 @@ out:
         return error;
     }
 
-    /* Update the modification time of the inode, ext2_write_inode() will flush it to the disk */
-
-    inode->fs_inode.i_mtime = time( NULL );
+    if ( saved_size > 0 ){
+        /* Update the modification time of the inode, ext2_write_inode() will flush it to the disk */
+        inode->fs_inode.i_mtime = time( NULL );
+    }
 
     return saved_size;
 }
@@ -729,6 +726,8 @@ static int ext2_read_directory( void* fs_cookie, void* node, void* file_cookie, 
     direntry->name[ size ] = 0;
 
     kfree( block );
+
+    vparent->fs_inode.i_atime = time( NULL );
 
     return 1;
 

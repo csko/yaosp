@@ -177,6 +177,7 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_
     /* Update the parent inode */
 
     parent->fs_inode.i_size += cookie->blocksize;
+    parent->fs_inode.i_mtime = time( NULL );
 
     error = ext2_do_write_inode( cookie, parent );
 
