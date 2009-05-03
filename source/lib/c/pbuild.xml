@@ -53,7 +53,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/abort.c</item>
         <item>src/stdlib/getenv.c</item>
         <item>src/stdlib/strtol.c</item>
+        <item>src/stdlib/strtoll.c</item>
         <item>src/stdlib/strtoul.c</item>
+        <item>src/stdlib/strtoull.c</item>
         <item>src/stdlib/atoi.c</item>
         <item>src/stdlib/atol.c</item>
         <item>src/stdlib/atof.c</item>
@@ -129,6 +131,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/fpathconf.c</item>
         <item>src/unistd/getuid.c</item>
         <item>src/unistd/geteuid.c</item>
+        <item>src/unistd/setuid.c</item>
+        <item>src/unistd/getgid.c</item>
+        <item>src/unistd/getegid.c</item>
+        <item>src/unistd/setgid.c</item>
+        <item>src/unistd/gethostname.c</item>
+        <item>src/unistd/getdtablesize.c</item>
         <item>src/fcntl/open.c</item>
         <item>src/fcntl/creat.c</item>
         <item>src/fcntl/fcntl.c</item>

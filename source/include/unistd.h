@@ -128,6 +128,9 @@ int ttyname_r( int fd, char* buf, size_t buflen );
 pid_t getpid( void );
 pid_t gettid( void );
 int getpagesize( void );
+int getdtablesize( void );
+
+int gethostname( char* name, size_t len );
 
 unsigned int sleep( unsigned int seconds );
 unsigned int alarm( unsigned int seconds );
@@ -136,5 +139,10 @@ long fpathconf( int fd, int name );
 
 uid_t getuid( void );
 uid_t geteuid( void );
+int setuid( uid_t uid );
+
+gid_t getgid( void );
+gid_t getegid( void );
+int setgid( gid_t gid );
 
 #endif /* _UNISTD_H_ */

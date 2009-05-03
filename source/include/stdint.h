@@ -31,8 +31,13 @@ typedef unsigned long long uint64_t;
 typedef signed long intptr_t;
 typedef unsigned long uintptr_t;
 
-typedef signed long intmax_t;
-typedef unsigned long uintmax_t;
+#if __WORDSIZE == 64
+typedef signed long int intmax_t;
+typedef unsigned long int uintmax_t;
+#else
+typedef signed long long int intmax_t;
+typedef unsigned long long int uintmax_t;
+#endif /* __WORDSIZE == 64 */
 
 /* The ISO C99 standard specifies that in C++ implementations these
    macros should only be defined if explicitly requested.  */

@@ -16,25 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PWD_H_
-#define _PWD_H_
+#ifndef _INTTYPES_H_
+#define _INTTYPES_H_
 
-#include <sys/types.h>
+#include <stdint.h>
 
-struct passwd {
-    char* pw_name;
-    char* pw_passwd;
-    uid_t pw_uid;
-    gid_t pw_gid;
-    char* pw_gecos;
-    char* pw_dir;
-    char* pw_shell;
-};
+intmax_t strtoimax( const char *nptr, char** endptr, int base );
+uintmax_t strtoumax( const char *nptr, char** endptr, int base );
 
-struct passwd* getpwent( void );
-struct passwd* getpwuid( uid_t uid );
-
-void setpwent( void );
-void endpwent( void );
-
-#endif /* _PWD_H_ */
+#endif /* _INTTYPES_H_ */

@@ -47,7 +47,11 @@ static char* error_strings[] = {
     "Argument list too long", /* E2BIG */
     "Connection timed out", /* ETIMEDOUT */
     "Value too large for defined data type", /* EOVERFLOW */
-    "No space left on device" /* ENOSPC */
+    "No space left on device", /* ENOSPC */
+    "No child processes", /* ECHILD */
+    "File name too long", /* ENAMETOOLONG */
+    "Illegal seek", /* ESPIPE */
+    "Permission denied" /* EACCES */
 };
 
 char* strerror( int errnum ) {

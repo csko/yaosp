@@ -1,4 +1,4 @@
-/* strtoul function
+/* strtoull function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -20,10 +20,11 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
+#include <inttypes.h>
 
-unsigned long int strtoul( const char* ptr, char** endptr, int base ) {
+unsigned long long int strtoull( const char* ptr, char** endptr, int base ) {
     int neg = 0, overflow = 0;
-    unsigned long int v=0;
+    long long int v = 0;
     const char* orig;
     const char* nptr = ptr;
 
@@ -31,8 +32,8 @@ unsigned long int strtoul( const char* ptr, char** endptr, int base ) {
         ++nptr;
     }
 
-    if ( *nptr == '-') {
-        neg = 1;
+    if ( *nptr == '-' ) {
+        neg=1;
         nptr++;
     } else if ( *nptr == '+' ) {
         ++nptr;
@@ -48,6 +49,7 @@ unsigned long int strtoul( const char* ptr, char** endptr, int base ) {
         register unsigned int b = base - 2;
 
         if ( b > 34 ) {
+            errno = EINVAL;
             return 0;
         }
     } else {
@@ -55,7 +57,7 @@ unsigned long int strtoul( const char* ptr, char** endptr, int base ) {
             base = 8;
 
 skip0x:
-            if ( ( nptr[ 1 ] == 'x' || nptr[ 1 ] == 'X' ) && isxdigit( nptr[ 2 ] ) ) {
+            if ( ( ( *( nptr + 1 ) == 'x' ) || ( *( nptr + 1 ) == 'X' ) ) && isxdigit( nptr[ 2 ] ) ) {
                 nptr += 2;
                 base = 16;
             }
@@ -69,13 +71,15 @@ skip0x:
 
         c = ( c >= 'a' ? c - 'a' + 10 : c >= 'A' ? c - 'A' + 10 : c <= '9' ? c - '0' : 0xFF );
 
-        if ( c >= base ) break; /* out of base */
+        if ( c >= base ) {
+            break;	/* out of base */
+        }
 
         {
-            register unsigned long x=(v&0xff)*base+c;
-            register unsigned long w=(v>>8)*base+(x>>8);
+            register unsigned long x = ( v & 0xFF ) * base + c;
+            register unsigned long long w = ( v >> 8 ) * base + ( x >> 8 );
 
-            if ( w > ( ULONG_MAX >> 8 ) ) {
+            if ( w > ( ULLONG_MAX >> 8 ) ) {
                 overflow = 1;
             }
 
@@ -85,18 +89,22 @@ skip0x:
         ++nptr;
     }
 
-    if ( nptr == orig ) {     /* no conversion done */
+    if ( nptr == orig ) {		/* no conversion done */
         nptr = ptr;
+        errno = EINVAL;
         v = 0;
     }
 
     if ( endptr != NULL ) {
-        *endptr = ( char* )nptr;
+        *endptr = (char *)nptr;
     }
 
     if ( overflow ) {
-        return ULONG_MAX;
+        errno = ERANGE;
+        return ULLONG_MAX;
     }
 
     return ( neg ? -v : v );
 }
+
+uintmax_t strtoumax( const char* nptr, char** endptr, int base ) __attribute__(( alias( "strtoull" ) ));
