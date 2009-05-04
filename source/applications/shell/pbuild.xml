@@ -86,9 +86,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
         <call target="all" directory="external_commands"/>
     </target>
 </build>

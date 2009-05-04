@@ -28,6 +28,8 @@
 #include <macros.h>
 #include <lib/string.h>
 
+#define BLOCKABLE_SIGNALS ~( ( 1ULL << ( SIGKILL - 1 ) ) | ( 1ULL << ( SIGSTOP - 1 ) ) )
+
 int is_signal_pending( thread_t* thread ) {
     return ( ( thread->pending_signals & ~thread->blocked_signals ) != 0 );
 }
@@ -166,17 +168,22 @@ int sys_sigprocmask( int how, sigset_t* set, sigset_t* oldset ) {
     }
 
     if ( set != NULL ) {
+        sigset_t newset;
+
+        newset = *set;
+        newset &= BLOCKABLE_SIGNALS;
+
         switch ( how ) {
             case SIG_BLOCK :
-                thread->blocked_signals |= *set;
+                thread->blocked_signals |= newset;
                 break;
 
             case SIG_UNBLOCK :
-                thread->blocked_signals &= ~( *set );
+                thread->blocked_signals &= ~newset;
                 break;
 
             case SIG_SETMASK :
-                thread->blocked_signals = *set;
+                thread->blocked_signals = newset;
                 break;
 
             default :

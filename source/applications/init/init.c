@@ -78,7 +78,7 @@ int main( int argc, char** argv ) {
             int slave_tty;
             char tty_path[ 128 ];
 
-            char* argv[] = { "shell", NULL };
+            char* argv[] = { "bash", NULL };
             char* envv[] = {
                 "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
                 "HOME=/",
@@ -102,7 +102,7 @@ int main( int argc, char** argv ) {
 
             close( slave_tty );
 
-            error = execve( "/yaosp/application/shell", argv, envv );
+            error = execve( "/yaosp/application/bash", argv, envv );
             dbprintf( "Failed to execute shell: %d\n", error );
 
             _exit( -1 );

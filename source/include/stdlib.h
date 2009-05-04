@@ -54,6 +54,8 @@ double atof( const char* s );
 long int strtol( const char* nptr, char** endptr, int base );
 unsigned long int strtoul( const char* nptr, char** endptr, int base );
 double strtod( const char* s, char** endptr );
+long int strtol( const char* nptr, char** endptr, int base );
+long long int strtoll( const char* nptr, char** endptr, int base );
 
 void qsort( void* base, size_t nmemb, size_t size, int ( *compar )( const void*, const void* ) );
 void* bsearch( const void* key, const void* base, size_t nmemb, size_t size, int ( *compare )( const void*, const void* ) );
@@ -63,4 +65,4 @@ int random( void );
 char* mktemp( char* template );
 int mkstemp( char* template );
 
-#endif // _STDLIB_H_
+#endif /* _STDLIB_H_ */

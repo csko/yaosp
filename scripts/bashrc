@@ -1,0 +1,5 @@
+echo "Welcome to the yaOSp shell!"
+echo "Type \`list /application' for a full list of external commands."
+echo ""
+
+export PS1='\[\033[01;32m\]\W \[\033[01;34m\]\$\[\033[00m\] '
