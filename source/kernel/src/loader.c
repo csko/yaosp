@@ -149,6 +149,7 @@ int get_symbol_info( ptr_t address, symbol_info_t* info ) {
 }
 
 int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
+    int i;
     int fd;
     int error;
     char* new_name;
@@ -164,6 +165,8 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     int envc;
     char** cloned_envv;
     char** user_envv;
+
+    struct sigaction* handler;
 
     /* Open the file */
 
@@ -306,6 +309,15 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     thread->process->loader = loader;
 
     /* TODO: close those files that have close_on_exec flag turned on! */
+
+    /* Set default signal handling values */
+
+    for ( i = 0, handler = &thread->signal_handlers[ 0 ]; i < _NSIG - 1; i++, handler++ ) {
+        handler->sa_handler = SIG_DFL;
+        handler->sa_flags = 0;
+    }
+
+    thread->signal_handlers[ SIGCHLD - 1 ].sa_handler = SIG_IGN;
 
     /* Start the executable */
 

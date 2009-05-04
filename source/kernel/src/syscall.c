@@ -76,7 +76,7 @@ static system_call_entry_t system_call_table[] = {
     { "connect", sys_connect, 0 },
     { "exit", sys_exit, 0 },
     { "exit_thread", sys_exit_thread, 0 },
-    { "waitpid", sys_waitpid, 0 },
+    { "wait4", sys_wait4, 0 },
     { "stime", sys_stime, 0 },
     { "get_system_time", sys_get_system_time, 0 },
     { "get_boot_time", sys_get_boot_time, 0 },

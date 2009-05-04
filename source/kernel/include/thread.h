@@ -56,9 +56,12 @@ typedef struct thread {
     struct thread* queue_next;
 
     thread_id id;
+    thread_id parent_id;
+
     char* name;
     int state;
     int priority;
+
     struct process* process;
 
     /* Scheduling time stuffs */
@@ -98,6 +101,8 @@ typedef struct thread_info {
 
 typedef int thread_entry_t( void* arg );
 typedef int thread_iter_callback_t( thread_t* thread, void* data );
+
+extern hashtable_t thread_table;
 
 thread_t* allocate_thread( const char* name, struct process* process, int priority, uint32_t kernel_stack_pages );
 void destroy_thread( thread_t* thread );
@@ -171,6 +176,5 @@ uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_tab
 int sys_sleep_thread( uint64_t* microsecs, uint64_t* remaining );
 
 int init_threads( void );
-int init_thread_cleaner( void );
 
 #endif /* _THREAD_H_ */

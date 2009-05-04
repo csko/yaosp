@@ -42,12 +42,9 @@ typedef struct thread_info_iter_data {
     thread_info_t* info_table;
 } thread_info_iter_data_t;
 
-static int thread_id_counter = 0;
-static hashtable_t thread_table;
+hashtable_t thread_table;
 
-static thread_id thread_cleaner;
-static thread_t* thread_cleaner_list;
-static semaphore_id thread_cleaner_sync;
+static int thread_id_counter = 0;
 
 thread_t* allocate_thread( const char* name, process_t* process, int priority, uint32_t kernel_stack_pages ) {
     int i;
@@ -85,6 +82,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     }
 
     thread->id = -1;
+    thread->parent_id = -1;
     thread->state = THREAD_NEW;
     thread->priority = priority;
     thread->process = process;
@@ -101,6 +99,10 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
         handler->sa_handler = SIG_DFL;
         handler->sa_flags = 0;
     }
+
+    /* Ignoring SIGCHLD means automatic zombie cleaning */
+
+    thread->signal_handlers[ SIGCHLD - 1 ].sa_handler = SIG_IGN;
 
     return thread;
 
@@ -202,21 +204,28 @@ void thread_exit( int exit_code ) {
     disable_interrupts();
 
     /* Lock the scheduler. We set the thread state to zombie, so the scheduler
-       won't try to run it again. We also add the threadt to the cleaner list */
+       won't try to run it again. */
 
     spinlock( &scheduler_lock );
 
     thread = current_thread();
     thread->state = THREAD_ZOMBIE;
 
-    thread->queue_next = thread_cleaner_list;
-    thread_cleaner_list = thread;
+    if ( thread->parent_id != -1 ) {
+        thread_t* parent;
+
+        parent = get_thread_by_id( thread->parent_id );
+
+        if ( parent == NULL ) {
+            kprintf( "thread_exit(): Thread parent not found!\n" );
+        } else {
+            do_send_signal( parent, SIGCHLD );
+        }
+    } else {
+        kprintf( "thread_exit(): Thread %s:%s with parent id -1 tried to exit!\n", thread->name, thread->process->name );
+    }
 
     spinunlock( &scheduler_lock );
-
-    /* Tell the thread cleaner that we have something to clean */
-
-    UNLOCK( thread_cleaner_sync );
 
     /* Make sure we don't try to execute this thread anymore */
 
@@ -232,6 +241,7 @@ void kernel_thread_exit( void ) {
 thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t stack_size ) {
     int error;
     thread_t* thread;
+    thread_t* current;
     process_t* kernel_process;
 
     /* Get the kernel process */
@@ -273,6 +283,12 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
         return error;
     }
 
+    current = current_thread();
+
+    if ( current != NULL ) {
+        thread->parent_id = current->id;
+    }
+
     /* Get an unique ID to the new thread and add to the others */
 
     spinlock_disable( &scheduler_lock );
@@ -291,12 +307,14 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
 thread_id sys_create_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t user_stack_size ) {
     int error;
     thread_t* thread;
+    thread_t* current;
     process_t* process;
     uint8_t* user_stack;
 
     /* Get the current process */
 
-    process = current_process();
+    current = current_thread();
+    process = current->process;
 
     /* Calculate user stack size */
 
@@ -337,6 +355,8 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
     if ( error < 0 ) {
         goto error2;
     }
+
+    thread->parent_id = current->id;
 
     /* Get an unique ID to the new thread and add to the others */
 
@@ -594,67 +614,4 @@ __init int init_threads( void ) {
     }
 
     return 0;
-}
-
-static int thread_cleaner_entry( void* arg ) {
-    thread_t* thread;
-
-    while ( 1 ) {
-        /* Wait until a thread is added to the cleaner list */
-
-        LOCK( thread_cleaner_sync );
-
-        /* Pop the first thread from the cleaner list. We also remove
-           the thread from the global hashtable here because now we
-           own the scheduler lock so with this solution we don't have
-           to lock/unlock it again. */
-
-        spinlock_disable( &scheduler_lock );
-
-        thread = thread_cleaner_list;
-
-        if ( thread != NULL ) {
-            thread_cleaner_list = thread->queue_next;
-
-            hashtable_remove( &thread_table, ( const void* )&thread->id );
-        }
-
-        spinunlock_enable( &scheduler_lock );
-
-        if ( thread == NULL ) {
-            continue;
-        }
-
-        /* Free the resources allocated by this thread */
-
-        destroy_thread( thread );
-    }
-
-    return 0;
-}
-
-__init int init_thread_cleaner( void ) {
-    thread_cleaner_list = NULL;
-
-    thread_cleaner_sync = create_semaphore( "thread cleaner sync", SEMAPHORE_COUNTING, 0, 0 );
-
-    if ( thread_cleaner_sync < 0 ) {
-        goto error1;
-    }
-
-    thread_cleaner = create_kernel_thread( "thread cleaner", PRIORITY_LOW, thread_cleaner_entry, NULL, 0 );
-
-    if ( thread_cleaner < 0 ) {
-        goto error2;
-    }
-
-    wake_up_thread( thread_cleaner );
-
-    return 0;
-
-error2:
-    delete_semaphore( thread_cleaner_sync );
-
-error1:
-    return -1;
 }

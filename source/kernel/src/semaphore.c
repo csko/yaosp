@@ -25,6 +25,7 @@
 #include <macros.h>
 #include <kernel.h>
 #include <console.h>
+#include <debug.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -240,6 +241,8 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
         case SEMAPHORE_BINARY :
             count = 1;
 
+            ASSERT( ( semaphore->count == 0 ) || ( semaphore->count == 1 ) );
+
             if ( semaphore->count == 0 ) {
                 ASSERT( semaphore->holder != -1 );
 
@@ -319,6 +322,7 @@ try_again:
 
     switch ( ( int )semaphore->type ) {
         case SEMAPHORE_BINARY :
+            ASSERT( semaphore->count == 0 );
             ASSERT( semaphore->holder == -1 );
 
             semaphore->holder = current->id;

@@ -1,4 +1,4 @@
-/* waitpid function
+/* wait4 function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,11 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <sys/wait.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
-pid_t waitpid( pid_t pid, int* status, int options ) {
-    return wait4( pid, status, options, NULL );
+pid_t wait4( pid_t pid, int* status, int options, struct rusage* rusage ) {
+    int error;
+
+    error = syscall4(
+        SYS_wait4,
+        pid,
+        ( int )status,
+        options,
+        ( int )rusage
+    );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
+
+    return error;
 }

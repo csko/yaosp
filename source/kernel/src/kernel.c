@@ -37,6 +37,8 @@
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
 
+thread_id init_thread_id;
+
 static uint32_t kernel_param_count = 0;
 static char* kernel_params[ MAX_KERNEL_PARAMS ];
 static char kernel_param_buffer[ KERNEL_PARAM_BUF_SIZE ];
@@ -232,17 +234,16 @@ __init void kernel_main( void ) {
     }
 
     init_smp_late();
-    init_thread_cleaner();
 
     /* Create the init thread */
 
-    thread_id init_id = create_kernel_thread( "init", PRIORITY_NORMAL, init_thread, NULL, 0 );
+    init_thread_id = create_kernel_thread( "init", PRIORITY_NORMAL, init_thread, NULL, 0 );
 
-    if ( init_id < 0 ) {
+    if ( init_thread_id < 0 ) {
         return;
     }
 
-    wake_up_thread( init_id );
+    wake_up_thread( init_thread_id );
 
     /* Enable interrupts. The first timer interrupt will
        start the scheduler */

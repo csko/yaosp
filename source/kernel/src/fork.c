@@ -23,6 +23,7 @@
 #include <scheduler.h>
 #include <macros.h>
 #include <mm/context.h>
+#include <lib/string.h>
 
 #include <arch/fork.h>
 
@@ -104,6 +105,10 @@ int sys_fork( void ) {
         goto error2;
     }
 
+    /* Set the parent ID of the new thread */
+
+    new_thread->parent_id = this_thread->id;
+
     /* If the process has an userspace stack region then we have to find
        out the region ID of the cloned stack region. */
 
@@ -131,6 +136,14 @@ int sys_fork( void ) {
         goto error3;
     }
 
+    /* Copy signal related informations to the new thread */
+
+    memcpy(
+        &new_thread->signal_handlers[ 0 ],
+        &this_thread->signal_handlers[ 0 ],
+        ( _NSIG - 1 ) * sizeof( struct sigaction )
+    );
+
     /* Insert the new process and thread */
 
     spinlock_disable( &scheduler_lock );
@@ -145,7 +158,7 @@ int sys_fork( void ) {
 
             add_thread_to_ready( new_thread );
 
-            error = new_process->id;
+            error = new_thread->id;
         }
     }
 

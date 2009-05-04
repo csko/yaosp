@@ -120,6 +120,7 @@ int arch_handle_userspace_signal( struct thread* thread, int signal, struct siga
 int is_signal_pending( struct thread* thread );
 
 int handle_signals( struct thread* thread );
+int do_send_signal( struct thread* thread, int signal );
 int send_signal( struct thread* thread, int signal );
 
 int sys_sigaction( int signal, struct sigaction* act, struct sigaction* oldact );

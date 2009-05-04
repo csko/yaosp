@@ -20,6 +20,7 @@
 #define _KERNEL_H_
 
 #include <types.h>
+#include <thread.h>
 
 #define __init \
     __attribute__(( section( ".kernel_init" ) ))
@@ -34,6 +35,8 @@ typedef struct kernel_info {
     char build_date[ 32 ];
     char build_time[ 32 ];
 } kernel_info_t;
+
+extern thread_id init_thread_id;
 
 int parse_kernel_parameters( const char* params );
 

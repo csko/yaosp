@@ -197,7 +197,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/getopt/getopt.c</item>
         <item>src/getopt/getopt_long.c</item>
         <item>src/getopt/getopt_long_only.c</item>
-        <item>src/sys/waitpid.c</item>
         <item>src/sys/stat.c</item>
         <item>src/sys/fstat.c</item>
         <item>src/sys/stime.c</item>
@@ -212,6 +211,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/utime.c</item>
         <item>src/sys/utimes.c</item>
         <item>src/sys/wait.c</item>
+        <item>src/sys/wait3.c</item>
+        <item>src/sys/wait4.c</item>
+        <item>src/sys/waitpid.c</item>
         <item>src/sys/socket.c</item>
         <item>src/sys/connect.c</item>
         <item>src/ctype/isalpha.c</item>

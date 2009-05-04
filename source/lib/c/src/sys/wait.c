@@ -19,7 +19,5 @@
 #include <sys/wait.h>
 
 pid_t wait( int* status ) {
-    /* TODO */
-
-    return -1;
+    return wait4( -1, status, 0, NULL );
 }

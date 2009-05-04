@@ -22,12 +22,16 @@
 #include <semaphore.h>
 #include <config.h>
 #include <loader.h>
+#include <time.h>
 #include <mm/context.h>
 #include <mm/region.h>
 #include <vfs/io_context.h>
 #include <lib/hashtable.h>
 
 #include <arch/atomic.h>
+
+#define WNOHANG   1
+#define WUNTRACED 2
 
 typedef struct process {
     hashitem_t hash;
@@ -48,8 +52,6 @@ typedef struct process {
 
     void* loader_data;
     application_loader_t* loader;
-
-    semaphore_id waiters;
 } process_t;
 
 typedef struct process_info {
@@ -74,8 +76,8 @@ uint32_t sys_get_process_info( process_info_t* info_table, uint32_t max_count );
 
 process_id sys_getpid( void );
 int sys_exit( int exit_code );
-int sys_waitpid( process_id pid, int* status, int options );
+process_id sys_wait4( process_id pid, int* status, int options, struct rusage* rusage );
 
 int init_processes( void );
 
-#endif // _PROCESS_H_
+#endif /* _PROCESS_H_ */

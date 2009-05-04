@@ -23,6 +23,7 @@
 #include <scheduler.h>
 #include <macros.h>
 #include <kernel.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
 #include <vfs/vfs.h>
@@ -61,21 +62,12 @@ process_t* allocate_process( char* name ) {
         goto error3;
     }
 
-    process->waiters = create_semaphore( "proc exit waiters", SEMAPHORE_COUNTING, 0, 0 );
-
-    if ( process->waiters < 0 ) {
-        goto error4;
-    }
-
     process->id = -1;
     process->heap_region = -1;
 
     atomic_set( &process->thread_count, 0 );
 
     return process;
-
-error4:
-    delete_semaphore( process->lock );
 
 error3:
     kfree( process->name );
@@ -113,7 +105,6 @@ void destroy_process( process_t* process ) {
     /* Delete other resources allocated by the process */
 
     delete_semaphore( process->lock );
-    delete_semaphore( process->waiters );
     kfree( process->name );
     kfree( process );
 }
@@ -245,26 +236,146 @@ int sys_exit( int exit_code ) {
     return 0;
 }
 
-int sys_waitpid( process_id pid, int* status, int options ) {
-    process_t* process;
+typedef struct wait4_chld_chk_data {
+    thread_id parent;
+    thread_t** child;
+    bool zombie_only;
+} wait4_chld_chk_data_t;
 
-    spinlock_disable( &scheduler_lock );
+static int wait4_child_check_iterator( hashitem_t* item, void* _data ) {
+    thread_t* thread;
+    wait4_chld_chk_data_t* data;
 
-    process = get_process_by_id( pid );
+    thread = ( thread_t* )item;
+    data = ( wait4_chld_chk_data_t* )_data;
 
-    spinunlock_enable( &scheduler_lock );
-
-    if ( process == NULL ) {
-        return -EINVAL;
+    if ( ( data->zombie_only ) &&
+         ( thread->state != THREAD_ZOMBIE ) ) {
+        return 0;
     }
 
-    LOCK( process->waiters );
+    if ( thread->parent_id == data->parent ) {
+        *data->child = thread;
 
-    if ( status != NULL ) {
-        *status = 0;
+        return -1;
     }
 
     return 0;
+}
+
+static thread_t* find_and_remove_zombie_child( thread_id parent_id, process_id pid ) {
+    thread_t* tmp;
+
+    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
+    if ( pid > 0 ) {
+        tmp = get_thread_by_id( pid );
+
+        /* Is this thread zombie? */
+
+        if ( ( tmp != NULL ) &&
+             ( tmp->state != THREAD_ZOMBIE ) ) {
+            tmp = NULL;
+        }
+    } else if ( pid == -1 ) {
+        wait4_chld_chk_data_t data;
+
+        tmp = NULL;
+
+        data.parent = parent_id;
+        data.child = &tmp;
+        data.zombie_only = true;
+
+        hashtable_iterate( &thread_table, wait4_child_check_iterator, ( void* )&data );
+    } else {
+        kprintf( "find_and_remove_zombie_child(): Group support not yet implemented!\n" );
+
+        tmp = NULL;
+    }
+
+    if ( tmp != NULL ) {
+        hashtable_remove( &thread_table, ( const void* )&tmp->id );
+    }
+
+    return tmp;
+}
+
+process_id sys_wait4( process_id pid, int* status, int options, struct rusage* rusage ) {
+    int error;
+    thread_t* tmp;
+    thread_t* current;
+
+    current = current_thread();
+
+    /* Make sure we have something to wait for */
+
+    spinlock_disable( &scheduler_lock );
+
+    if ( pid > 0 ) {
+        tmp = get_thread_by_id( pid );
+    } else if ( pid == -1 ) {
+        wait4_chld_chk_data_t data;
+
+        tmp = NULL;
+
+        data.parent = current->id;
+        data.child = &tmp;
+        data.zombie_only = false;
+
+        hashtable_iterate( &thread_table, wait4_child_check_iterator, ( void* )&data );
+    } else {
+        kprintf( "sys_wait4(): wait4 for groups not yet implemented!\n" );
+
+        tmp = NULL;
+    }
+
+    spinunlock_enable( &scheduler_lock );
+
+    if ( tmp == NULL ) {
+        return -ECHILD;
+    }
+
+    while ( 1 ) {
+        lock_scheduler();
+
+        tmp = find_and_remove_zombie_child( current->id, pid );
+
+        if ( tmp != NULL ) {
+            unlock_scheduler();
+
+            error = tmp->id;
+
+            destroy_thread( tmp );
+
+            if ( status != NULL ) {
+                *status = 0; /* TODO: This is a bit of hack :) */
+            }
+
+            return error;
+        }
+
+        if ( options & WNOHANG ) {
+            unlock_scheduler();
+
+            return 0;
+        }
+
+        if ( is_signal_pending( current ) ) {
+            unlock_scheduler();
+
+            return -EINTR;
+        }
+
+        current->state = THREAD_WAITING;
+
+        unlock_scheduler();
+
+        sched_preempt();
+    }
+
+    /* This is never reached :) */
+
+    return -EINVAL;
 }
 
 static void* process_key( hashitem_t* item ) {
@@ -289,7 +400,7 @@ static bool process_compare( const void* key1, const void* key2 ) {
     return ( id1 == id2 );
 }
 
-int __init init_processes( void ) {
+__init int init_processes( void ) {
     int error;
     process_t* process;
 

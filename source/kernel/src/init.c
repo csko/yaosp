@@ -170,5 +170,9 @@ int init_thread( void* arg ) {
         }
     }
 
+    while ( 1 ) {
+        sys_wait4( -1, NULL, 0, NULL );
+    }
+
     return 0;
 }

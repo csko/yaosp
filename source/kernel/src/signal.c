@@ -24,6 +24,8 @@
 #include <errno.h>
 #include <smp.h>
 #include <debug.h>
+#include <kernel.h>
+#include <macros.h>
 #include <lib/string.h>
 
 int is_signal_pending( thread_t* thread ) {
@@ -51,6 +53,12 @@ int handle_signals( thread_t* thread ) {
         handler = &thread->signal_handlers[ i ];
 
         if ( handler->sa_handler == SIG_IGN ) {
+            if ( signal == SIGCHLD ) {
+                /* Do automatic zombie cleaning */
+
+                while ( sys_wait4( -1, NULL, WNOHANG, NULL ) > 0 ) { }
+            }
+
             continue;
         } else if ( handler->sa_handler == SIG_DFL ) {
             switch ( signal ) {
@@ -84,26 +92,40 @@ int handle_signals( thread_t* thread ) {
     return 0;
 }
 
+int do_send_signal( thread_t* thread, int signal ) {
+    ASSERT( signal > 0 );
+
+    signal--;
+
+    if ( thread->id == init_thread_id ) {
+        do_wake_up_thread( thread );
+    } else {
+        /* Add the signal to the pending bitmap */
+
+        thread->pending_signals |= ( 1ULL << signal );
+
+        if ( is_signal_pending( thread ) ) {
+            do_wake_up_thread( thread );
+        }
+    }
+
+    return 0;
+}
+
 int send_signal( thread_t* thread, int signal ) {
+    int error;
+
     if ( signal == 0 ) {
         return 0;
     }
 
-    signal--;
+    spinlock_disable( &scheduler_lock );
 
-    /* Add the signal to the pending bitmap */
+    error = do_send_signal( thread, signal );
 
-    thread->pending_signals |= ( 1ULL << signal );
+    spinunlock_enable( &scheduler_lock );
 
-    if ( is_signal_pending( thread ) ) {
-        spinlock_disable( &scheduler_lock );
-
-        do_wake_up_thread( thread );
-
-        spinunlock_enable( &scheduler_lock );
-    }
-
-    return 0;
+    return error;
 }
 
 int sys_sigaction( int signal, struct sigaction* act, struct sigaction* oldact ) {

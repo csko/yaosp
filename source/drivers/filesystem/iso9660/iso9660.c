@@ -63,7 +63,6 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
        volume descriptor should be */
 
     if ( pread( fd, block, BLOCK_SIZE, 0x8000 ) != BLOCK_SIZE ) {
-        kprintf( "ISO9660: Failed to read root block\n" );
         error = -EIO;
         goto error3;
     }

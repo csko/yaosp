@@ -320,12 +320,18 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
 int delete_region( region_id id ) {
     int error;
 
-    LOCK( region_lock );
+    error = LOCK( region_lock );
+
+    if ( error < 0 ) {
+        kprintf( "delete_region(id=%d): Failed to lock regions: %d\n", id, error );
+        goto out;
+    }
 
     error = do_delete_region( id, true );
 
     UNLOCK( region_lock );
 
+ out:
     return error;
 }
 

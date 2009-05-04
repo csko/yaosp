@@ -1,4 +1,4 @@
-/* waitpid function
+/* wait3 function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,9 +18,6 @@
 
 #include <sys/wait.h>
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
-
-pid_t waitpid( pid_t pid, int* status, int options ) {
-    return wait4( pid, status, options, NULL );
+pid_t wait3( int* status, int options, struct rusage* rusage ) {
+    return wait4( -1, status, options, rusage );
 }
