@@ -225,12 +225,6 @@ int sys_exit( int exit_code ) {
 
     process = current_process();
 
-    /* Delete the waiters semaphore. This will release all
-       waiter as well */
-
-    delete_semaphore( process->waiters );
-    process->waiters = -1;
-
     thread_exit( exit_code );
 
     return 0;
