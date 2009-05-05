@@ -1,6 +1,6 @@
 /* ext2 filesystem driver
  *
- * Copyright (c) 2009 Attila Magyar, Zoltan Kovacs
+ * Copyright (c) 2009 Attila Magyar, Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -142,6 +142,8 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_
             }
 
             error = 0;
+
+            parent->fs_inode.i_mtime = time( NULL );
 
             goto out;
         }

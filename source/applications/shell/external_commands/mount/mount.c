@@ -22,48 +22,200 @@
 #include <string.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <getopt.h>
 
 static char* argv0 = NULL;
+
+static char* device = NULL;
+static char* path = NULL;
+static char* fstype = NULL;
+
+typedef struct fs_mode {
+    char* name;
+    uint32_t flag;
+} fs_mode_t;
+
+static char* filesystems[] = {
+    "ramfs",
+    "iso9660",
+    "ext2",
+    NULL
+};
+
+static fs_mode_t modes[] = {
+    {"ro", MOUNT_RO},
+    {"noatime", MOUNT_NOATIME},
+    { NULL, 0 }
+};
+
+static char const short_options[] = "d:p:f:m:h";
+
+static struct option long_options[] = {
+    { "device", required_argument, NULL, 'd' },
+    { "path", required_argument, NULL, 'p' },
+    { "filesystem", required_argument, NULL, 'f' },
+    { "mode", required_argument, NULL, 'm' },
+    { "help", no_argument, NULL, 'h' }
+};
+
+static void print_usage( int status ) {
+    int i;
+
+    if ( status != EXIT_SUCCESS ) { /* option error */
+        fprintf( stderr, "Try `%s --help' for more information.\n", argv0 );
+    } else { /* --help */
+        printf( "Usage: %s --device=DEVICE --path=PATH --filesystem=FILESYSTEM\n", argv0 );
+        printf( "  -d, --device=DEVICE\n" );
+        printf( "  -p, --path=PATH\n" );
+        printf( "  -f, --filesystem=FILESYSTEM\n" );
+        printf( "      available filesystems:" );
+        for ( i = 0; filesystems[i] != NULL; i++ ) {
+            printf( " %s", filesystems[i] );
+        }
+        printf( "\n" );
+        printf( "  -m, --mode=MODE[,MODE]\n" );
+        printf( "      available modes:" );
+        for ( i = 0; modes[i].name != NULL; i++ ) {
+            printf( " %s", modes[i].name );
+        }
+        printf( "\n" );
+
+    }
+
+    exit( status );
+}
+
+static uint32_t parse_mode(char* str){
+    size_t i;
+    size_t len = strlen(str);
+    size_t pos = 0;
+    uint32_t mode = MOUNT_NONE;
+    int j;
+    int validmode;
+
+    for(i = 0; i < len + 1; i++){
+        if(str[i] == ',' || str[i] == '\0'){
+            str[i] = '\0';
+            validmode = 0;
+            for(j = 0; modes[j].name != NULL; j++ ) {
+                if(strcasecmp(str + pos, modes[j].name) == 0){
+                    mode |= modes[j].flag;
+                    validmode = 1;
+                    break;
+                }
+            }
+            if(validmode == 0){
+                fprintf( stderr, "Invalid mode `%s'.\n", str + pos );
+            }
+            pos = i+1;
+        }
+    }
+
+    return mode;
+}
 
 int main( int argc, char** argv ) {
     int error;
     struct stat st;
+    int optc;
+    uint32_t mode = MOUNT_NONE; /* TODO */
 
     argv0 = argv[ 0 ];
 
-    if ( argc < 4 ) {
-        fprintf( stderr, "usage: %s: device path filesystem\n", argv0 );
-
-        return EXIT_FAILURE;
+    if ( argc == 1 ) {
+        print_usage( EXIT_FAILURE );
     }
 
-    if ( stat( argv[ 2 ], &st ) != 0 ) {
-        fprintf( stderr, "%s: Failed to stat: %s\n", argv0, argv[ 2 ] );
+    /* Get the command line options */
+
+    opterr = 0;
+
+    for ( ;; ) {
+        optc = getopt_long(
+            argc,
+            argv,
+            short_options,
+            long_options,
+            NULL
+        );
+
+        /* No more options? */
+
+        if ( optc == -1 ) {
+            break;
+        }
+
+        switch ( optc ) {
+            case 'd' :
+                device = optarg;
+                break;
+
+            case 'p' :
+                path = optarg;
+                break;
+
+            case 'f' :
+                fstype = optarg;
+                break;
+
+            case 'm' :
+                if(optarg != NULL){
+                    mode = parse_mode(optarg);
+                }
+                break;
+
+            case 'h' :
+                print_usage( EXIT_SUCCESS );
+
+            default:
+                print_usage( EXIT_FAILURE );
+        }
+    }
+
+    /* path, filesystem and device are required arguments */
+
+    if( device == NULL) {
+        fprintf( stderr, "Missing argument --device.\n" );
+        print_usage( EXIT_FAILURE );
+    }
+
+    if ( path == NULL){
+        fprintf( stderr, "Missing argument --path.\n" );
+        print_usage( EXIT_FAILURE );
+    }
+
+    if( fstype == NULL ){
+        fprintf( stderr, "Missing argument --filesystem.\n" );
+        print_usage( EXIT_FAILURE );
+    }
+
+    if ( stat( path, &st ) != 0 ) {
+        fprintf( stderr, "%s: Failed to stat: %s\n", argv0, path );
 
         return EXIT_FAILURE;
     }
 
     if ( !S_ISDIR( st.st_mode ) ) {
-        fprintf( stderr, "%s: %s is not a directory!\n", argv0, argv[ 2 ] );
+        fprintf( stderr, "%s: %s is not a directory!\n", argv0, path );
 
         return EXIT_FAILURE;
     }
 
     error = mount(
-        argv[ 1 ],
-        argv[ 2 ],
-        argv[ 3 ],
-        MOUNT_NONE, /* TODO */
+        device,
+        path,
+        fstype,
+        mode,
         NULL
     );
 
     if ( error < 0 ) {
-        fprintf( stderr, "%s: Failed to mount %s to %s: %s\n", argv0, argv[ 1 ], argv[ 2 ], strerror( errno ) );
+        fprintf( stderr, "%s: Failed to mount %s to %s: %s\n", argv0, device, path, strerror( errno ) );
 
         return EXIT_FAILURE;
     }
 
-    printf( "%s is mounted to %s.\n", argv[ 1 ], argv[ 2 ] );
+    printf( "%s is mounted to %s with mode 0x%x.\n", device, path, mode );
 
     return EXIT_SUCCESS;
 }

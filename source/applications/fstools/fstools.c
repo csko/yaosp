@@ -147,7 +147,7 @@ int main( int argc, char** argv ) {
         }
     }
 
-    /* action, fstype and device are required arguments */
+    /* action, filesystem and device are required arguments */
 
     if ( action == NULL){
         fprintf( stderr, "Missing argument --action.\n" );

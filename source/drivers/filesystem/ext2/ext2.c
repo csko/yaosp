@@ -402,8 +402,7 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
         memcpy( data, block, size );
     }
 
-    if ( saved_size > 0 && ! ( cookie->flags & MOUNT_RO )
-         && ! ( cookie->flags & MOUNT_NOATIME) ){
+    if ( ! ( cookie->flags & MOUNT_RO ) && ! ( cookie->flags & MOUNT_NOATIME) ){
         /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
         inode->fs_inode.i_atime = time( NULL );
     }
@@ -630,10 +629,8 @@ out:
         return error;
     }
 
-    if ( saved_size > 0 ){
-        /* Update the modification time of the inode, ext2_write_inode() will flush it to the disk */
-        inode->fs_inode.i_mtime = time( NULL );
-    }
+    /* Update the modification time of the inode, ext2_write_inode() will flush it to the disk */
+    inode->fs_inode.i_mtime = time( NULL );
 
     return saved_size;
 }
