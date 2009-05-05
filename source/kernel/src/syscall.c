@@ -120,7 +120,7 @@ int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {
 
     /* Make sure this is a valid system call */
 
-    if ( number >= ARRAY_SIZE( system_call_table ) ) {
+    if ( __unlikely( number >= ARRAY_SIZE( system_call_table ) ) ) {
         return -EINVAL;
     }
 

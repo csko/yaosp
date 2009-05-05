@@ -24,7 +24,7 @@
 
 #include <arch/interrupt.h>
 
-irq_action_t* irq_handlers[ ARCH_IRQ_COUNT ];
+static irq_action_t* irq_handlers[ ARCH_IRQ_COUNT ];
 
 int request_irq( int irq, irq_handler_t* handler, void* data ) {
     bool enable_arch_irq;
@@ -68,7 +68,11 @@ void do_handle_irq( int irq, registers_t* regs ) {
 }
 
 __init int init_irq_handlers( void ) {
-    memset( irq_handlers, 0, sizeof( irq_handler_t* ) * ARCH_IRQ_COUNT );
+    memset(
+        irq_handlers,
+        0,
+        sizeof( irq_handler_t* ) * ARCH_IRQ_COUNT
+    );
 
     return 0;
 }

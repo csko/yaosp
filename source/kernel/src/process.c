@@ -155,11 +155,13 @@ int rename_process( process_t* process, char* new_name ) {
 
 uint32_t get_process_count( void ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     return hashtable_get_item_count( &process_table );
 }
 
 process_t* get_process_by_id( process_id id ) {
     ASSERT( spinlock_is_locked( &scheduler_lock ) );
+
     return ( process_t* )hashtable_get( &process_table, ( const void* )&id );
 }
 
@@ -224,6 +226,8 @@ int sys_exit( int exit_code ) {
     process_t* process;
 
     process = current_process();
+
+    /* TODO: Send KILL signal to all thread of this process */
 
     thread_exit( exit_code );
 

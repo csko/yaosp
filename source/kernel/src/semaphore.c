@@ -243,7 +243,7 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
 
     semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
-    if ( semaphore == NULL ) {
+    if ( __unlikely( semaphore == NULL ) ) {
         spinunlock_enable( &context->lock );
 
         return -EINVAL;
@@ -321,7 +321,7 @@ try_again:
 
         semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
-        if ( semaphore == NULL ) {
+        if ( __unlikely( semaphore == NULL ) ) {
             spinunlock_enable( &context->lock );
 
             return -EINVAL;
@@ -376,7 +376,7 @@ static int do_unlock_semaphore( bool kernel, semaphore_id id, int count ) {
 
     semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
-    if ( semaphore == NULL ) {
+    if ( __unlikely( semaphore == NULL ) ) {
         spinunlock_enable( &context->lock );
 
         return -EINVAL;
@@ -443,7 +443,7 @@ static bool do_is_semaphore_locked( bool kernel, semaphore_id id ) {
 
     /* Check if semaphore is valid */
 
-    if ( id < 0 ) {
+    if ( __unlikely( id < 0 ) ) {
         return false;
     }
 
@@ -463,7 +463,7 @@ static bool do_is_semaphore_locked( bool kernel, semaphore_id id ) {
 
     semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
-    if ( semaphore == NULL ) {
+    if ( __unlikely( semaphore == NULL ) ) {
         spinunlock_enable( &context->lock );
 
         return false;
@@ -553,7 +553,7 @@ static int semaphore_context_clone_iterator( hashitem_t* item, void* data ) {
 
     new_semaphore = allocate_semaphore( semaphore->name );
 
-    if ( new_semaphore== NULL ) {
+    if ( __unlikely( new_semaphore== NULL ) ) {
         return -ENOMEM;
     }
 
@@ -601,14 +601,13 @@ semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context )
     new_context = ( semaphore_context_t* )kmalloc( sizeof( semaphore_context_t ) );
 
     if ( new_context == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     error = init_semaphore_context( new_context );
 
     if ( error < 0 ) {
-        kfree( new_context );
-        return NULL;
+        goto error2;
     }
 
     spinlock_disable( &old_context->lock );
@@ -618,11 +617,19 @@ semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context )
     spinunlock_enable( &old_context->lock );
 
     if ( error < 0 ) {
-        /* TODO: cleanup */
-        return NULL;
+        goto error3;
     }
 
     return new_context;
+
+error3:
+    semaphore_context_make_empty( new_context );
+
+error2:
+    kfree( new_context );
+
+error1:
+    return NULL;
 }
 
 static int semaphore_context_update_iterator( hashitem_t* item, void* data ) {

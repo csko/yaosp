@@ -51,7 +51,7 @@ static module_t* create_module( const char* name ) {
     module = ( module_t* )kmalloc( sizeof( module_t ) );
 
     if ( module == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     memset( module, 0, sizeof( module_t ) );
@@ -59,11 +59,16 @@ static module_t* create_module( const char* name ) {
     module->name = strdup( name );
 
     if ( module->name == NULL ) {
-        kfree( module );
-        return NULL;
+        goto error2;
     }
 
     return module;
+
+error2:
+    kfree( module );
+
+error1:
+    return NULL;
 }
 
 static void destroy_module( module_t* module ) {
@@ -485,15 +490,21 @@ __init int init_module_loader( void ) {
     );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     module_lock = create_semaphore( "module lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( module_lock < 0 ) {
-        destroy_hashtable( &module_table );
-        return module_lock;
+        error = module_lock;
+        goto error2;
     }
 
     return 0;
+
+error2:
+    destroy_hashtable( &module_table );
+
+error1:
+    return error;
 }
