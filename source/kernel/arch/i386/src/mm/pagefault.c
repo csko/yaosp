@@ -87,7 +87,7 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
 
     p = alloc_pages( 1, MEM_COMMON );
 
-    if ( p == NULL ) {
+    if ( __unlikely( p == NULL ) ) {
         return -ENOMEM;
     }
 
@@ -134,7 +134,7 @@ static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_
 
     error = map_region_page_tables( arch_context, address, page_count * PAGE_SIZE, false );
 
-    if ( error < 0 ) {
+    if ( __unlikely( error < 0 ) ) {
         return error;
     }
 
@@ -167,7 +167,7 @@ static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_
 
     p = alloc_pages( page_count, MEM_COMMON );
 
-    if ( p == NULL ) {
+    if ( __unlikely( p == NULL ) ) {
         return -ENOMEM;
     }
 
@@ -207,7 +207,7 @@ static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_
         ( region->flags & REGION_WRITE ) != 0
     );
 
-    if ( error < 0 ) {
+    if ( __unlikely( error < 0 ) ) {
         return error;
     }
 
@@ -231,7 +231,7 @@ int handle_page_fault( registers_t* regs ) {
 
     thread = current_thread();
 
-    if ( thread == NULL ) {
+    if ( __unlikely( thread == NULL ) ) {
         invalid_page_fault( NULL, regs, cr2, "unknown" );
     }
 
@@ -239,7 +239,7 @@ int handle_page_fault( registers_t* regs ) {
 
     region = do_memory_context_get_region_for( thread->process->memory_context, cr2 );
 
-    if ( region == NULL ) {
+    if ( __unlikely( region == NULL ) ) {
         message = "no region for address";
         goto invalid;
     }
@@ -255,7 +255,7 @@ int handle_page_fault( registers_t* regs ) {
             error = handle_lazy_page_loading( region, cr2, &pages_loaded );
         }
 
-        if ( error < 0 ) {
+        if ( __unlikely( error < 0 ) ) {
             message = "lazy page allocation failed";
             goto invalid;
         }

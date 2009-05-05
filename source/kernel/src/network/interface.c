@@ -132,7 +132,7 @@ static int network_rx_thread( void* data ) {
                 break;
 
             default :
-                kprintf( "Unknown packet\n" );
+                kprintf( "NET: Unknown protocol: %x\n", ntohw( eth_header->proto ) );
                 break;
         }
     }
@@ -308,15 +308,21 @@ __init int init_network_interfaces( void ) {
     );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     interface_lock = create_semaphore( "network if lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( interface_lock < 0 ) {
-        destroy_hashtable( &interface_table );
-        return interface_lock;
+        error = interface_lock;
+        goto error2;
     }
 
     return 0;
+
+error2:
+    destroy_hashtable( &interface_table );
+
+error1:
+    return error;
 }

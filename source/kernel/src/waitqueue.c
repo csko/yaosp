@@ -269,6 +269,18 @@ int waitqueue_wake_up_all( waitqueue_t* queue ) {
     return 0;
 }
 
+bool waitqueue_is_empty( waitqueue_t* queue ) {
+    if ( queue->first_node == NULL ) {
+        ASSERT( queue->last_node == NULL );
+
+        return true;
+    } else {
+        ASSERT( queue->last_node != NULL );
+    }
+
+    return false;
+}
+
 int init_waitqueue( waitqueue_t* queue ) {
     queue->first_node = NULL;
     queue->last_node = NULL;

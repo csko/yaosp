@@ -123,7 +123,7 @@ int arch_handle_signals( registers_t* regs ) {
 
     /* Check if we have any pending signal */
 
-    if ( !is_signal_pending( thread ) ) {
+    if ( __likely( !is_signal_pending( thread ) ) ) {
         return 0;
     }
 

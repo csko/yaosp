@@ -1,6 +1,6 @@
 /* Wait queue implementation
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -94,6 +94,8 @@ int waitqueue_wake_up_head( waitqueue_t* queue, int count );
  */
 int waitqueue_wake_up_all( waitqueue_t* queue );
 
+bool waitqueue_is_empty( waitqueue_t* queue );
+
 /**
  * Initializes a wait queue.
  *
@@ -102,4 +104,4 @@ int waitqueue_wake_up_all( waitqueue_t* queue );
  */
 int init_waitqueue( waitqueue_t* queue );
 
-#endif // _WAITQUEUE_H_
+#endif /* _WAITQUEUE_H_ */

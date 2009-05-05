@@ -81,6 +81,7 @@ static system_call_entry_t system_call_table[] = {
     { "get_system_time", sys_get_system_time, 0 },
     { "get_boot_time", sys_get_boot_time, 0 },
     { "get_kernel_info", sys_get_kernel_info, 0 },
+    { "get_kernel_statistics", sys_get_kernel_statistics, 0 },
     { "get_module_count", sys_get_module_count, 0 },
     { "get_module_info", sys_get_module_info, 0 },
     { "get_process_count", sys_get_process_count, 0 },

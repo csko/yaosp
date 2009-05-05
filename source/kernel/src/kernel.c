@@ -136,6 +136,12 @@ int sys_get_kernel_info( kernel_info_t* kernel_info ) {
     return 0;
 }
 
+int sys_get_kernel_statistics( statistics_info_t* statistics_info ) {
+    statistics_info->semaphore_count = get_semaphore_count();
+
+    return 0;
+}
+
 int sys_dbprintf( const char* format, char** parameters ) {
     char buf[ 256 ];
 

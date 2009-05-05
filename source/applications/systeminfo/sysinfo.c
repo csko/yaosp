@@ -53,6 +53,7 @@ static void print_usage( void ) {
     printf( "    module       Kernel module information\n" );
     printf( "    processor    Processor information\n" );
     printf( "    memory       Memory information\n" );
+    printf( "    statistics   Kernel statistics\n" );
     printf( "    all          All of the above\n" );
 }
 
@@ -77,6 +78,25 @@ static int do_get_kernel_info( void ) {
         "Kernel was built on %s %s\n",
         kernel_info.build_date,
         kernel_info.build_time
+    );
+
+    return EXIT_SUCCESS;
+}
+
+static int do_get_kernel_statistics( void ) {
+    int error;
+    statistics_info_t statistics;
+
+    error = get_kernel_statistics( &statistics );
+
+    if ( error < 0 ) {
+        fprintf( stderr, "%s: Failed to get kernel statistics!\n", argv0 );
+        return EXIT_FAILURE;
+    }
+
+    printf(
+        "Semaphore count: %u\n",
+        statistics.semaphore_count
     );
 
     return EXIT_SUCCESS;
@@ -185,7 +205,8 @@ static int do_get_memory_info( void ) {
 
 int main( int argc, char** argv ) {
     char* info_type;
-    int i, ret = EXIT_SUCCESS;
+    int i;
+    int ret = EXIT_SUCCESS;
 
     argv0 = argv[ 0 ];
 
@@ -194,36 +215,40 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    for(i = 1; i < argc; i++) {
+    for ( i = 1; i < argc; i++ ) {
         info_type = argv[ i ];
 
         if ( strcmp( info_type, "kernel" ) == 0 ) {
-            if(do_get_kernel_info() != EXIT_SUCCESS) {
+            if ( do_get_kernel_info() != EXIT_SUCCESS ) {
                 ret = EXIT_FAILURE;
             }
         } else if ( strcmp( info_type, "module" ) == 0 ) {
-            if(do_get_module_info() != EXIT_SUCCESS){
+            if ( do_get_module_info() != EXIT_SUCCESS ) {
                 ret = EXIT_FAILURE;
             }
         } else if ( strcmp( info_type, "processor" ) == 0 ) {
-            if(do_get_processor_info() != EXIT_SUCCESS){
+            if ( do_get_processor_info() != EXIT_SUCCESS ) {
                 ret = EXIT_FAILURE;
             }
         } else if ( strcmp( info_type, "memory" ) == 0 ) {
-            if(do_get_memory_info() != EXIT_SUCCESS){
+            if ( do_get_memory_info() != EXIT_SUCCESS ) {
+                ret = EXIT_FAILURE;
+            }
+        } else if ( strcmp( info_type, "statistics" ) == 0 ) {
+            if ( do_get_kernel_statistics() != EXIT_SUCCESS ) {
                 ret = EXIT_FAILURE;
             }
         } else if ( strcmp( info_type, "all" ) == 0 ) {
-            if(do_get_kernel_info() != EXIT_SUCCESS){
+            if ( do_get_kernel_info() != EXIT_SUCCESS ){
                 ret = EXIT_FAILURE;
             }
-            if(do_get_module_info() != EXIT_SUCCESS){
+            if ( do_get_module_info() != EXIT_SUCCESS ) {
                 ret = EXIT_FAILURE;
             }
-            if(do_get_processor_info() != EXIT_SUCCESS){
+            if ( do_get_processor_info() != EXIT_SUCCESS ) {
                 ret = EXIT_FAILURE;
             }
-            if(do_get_memory_info() != EXIT_SUCCESS){
+            if ( do_get_memory_info() != EXIT_SUCCESS ) {
                 ret = EXIT_FAILURE;
             }
         } else {

@@ -196,6 +196,20 @@ int rename_thread( thread_t* thread, char* new_name ) {
     return 0;
 }
 
+static int thread_reparent_iterator( hashitem_t* item, void* data ) {
+    thread_id parent;
+    thread_t* thread;
+
+    thread = ( thread_t* )item;
+    parent = *( ( thread_id* )data );
+
+    if ( thread->parent_id == parent ) {
+        thread->parent_id = init_thread_id;
+    }
+
+    return 0;
+}
+
 void thread_exit( int exit_code ) {
     thread_t* thread;
 
@@ -211,19 +225,23 @@ void thread_exit( int exit_code ) {
     thread = current_thread();
     thread->state = THREAD_ZOMBIE;
 
-    if ( thread->parent_id != -1 ) {
+    if ( __likely( thread->parent_id != -1 ) ) {
         thread_t* parent;
 
         parent = get_thread_by_id( thread->parent_id );
 
-        if ( parent == NULL ) {
+        if ( __unlikely( parent == NULL ) ) {
             kprintf( "thread_exit(): Thread parent not found!\n" );
         } else {
             do_send_signal( parent, SIGCHLD );
         }
     } else {
-        kprintf( "thread_exit(): Thread %s:%s with parent id -1 tried to exit!\n", thread->name, thread->process->name );
+        kprintf( "thread_exit(): Thread %s:%s with parent id -1 tried to exit!\n", thread->process->name, thread->name );
     }
+
+    /* Reparent the children of the current thread */
+
+    hashtable_iterate( &thread_table, thread_reparent_iterator, ( void* )&thread->id );
 
     spinunlock( &scheduler_lock );
 

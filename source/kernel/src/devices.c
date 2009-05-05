@@ -21,6 +21,7 @@
 #include <time.h>
 #include <errno.h>
 #include <kernel.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -28,51 +29,65 @@ static hashtable_t bus_table;
 static semaphore_id bus_table_lock = -1;
 
 int register_bus_driver( const char* name, void* bus ) {
-    int error = 0;
+    int error;
     bus_driver_t* driver;
 
     driver = ( bus_driver_t* )kmalloc( sizeof( bus_driver_t ) );
 
-    if ( driver == NULL ) {
-        return -ENOMEM;
+    if ( __unlikely( driver == NULL ) ) {
+        error = -ENOMEM;
+        goto error1;
     }
 
     driver->name = strdup( name );
 
-    if ( driver->name == NULL ) {
-        kfree( driver );
-        return -ENOMEM;
+    if ( __unlikely( driver->name == NULL ) ) {
+        error = -ENOMEM;
+        goto error2;
     }
 
     driver->bus = bus;
 
-    LOCK( bus_table_lock );
+    error = LOCK( bus_table_lock );
 
-    if ( hashtable_get( &bus_table, ( const void* )name ) != NULL ) {
-        error = -EINVAL;
+    if ( __unlikely( error < 0 ) ) {
+        goto error2;
     }
 
-    if ( error == 0 ) {
-        hashtable_add( &bus_table, ( hashitem_t* )driver );
+    if ( hashtable_get( &bus_table, ( const void* )name ) == NULL ) {
+        error = hashtable_add( &bus_table, ( hashitem_t* )driver );
+    } else {
+        error = -EEXIST;
     }
 
     UNLOCK( bus_table_lock );
 
-    if ( error < 0 ) {
-        kfree( driver );
+    if ( __unlikely( error < 0 ) ) {
+        goto error2;
     }
 
+    return 0;
+
+error2:
+    kfree( driver );
+
+error1:
     return error;
 }
 
 int unregister_bus_driver( const char* name ) {
+    int error;
     bus_driver_t* driver;
 
-    LOCK( bus_table_lock );
+    error = LOCK( bus_table_lock );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
 
     driver = ( bus_driver_t* )hashtable_get( &bus_table, ( const void* )name );
 
-    if ( driver != NULL ) {
+    if ( __likely( driver != NULL ) ) {
         hashtable_remove( &bus_table, ( const void* )name );
     }
 
@@ -89,14 +104,19 @@ int unregister_bus_driver( const char* name ) {
 }
 
 void* get_bus_driver( const char* name ) {
+    int error;
     void* bus;
     bus_driver_t* driver;
 
-    LOCK( bus_table_lock );
+    error = LOCK( bus_table_lock );
+
+    if ( __unlikely( error < 0 ) ) {
+        return NULL;
+    }
 
     driver = ( bus_driver_t* )hashtable_get( &bus_table, ( const void* )name );
 
-    if ( driver == NULL ) {
+    if ( __unlikely( driver == NULL ) ) {
         bus = NULL;
     } else {
         bus = driver->bus;
@@ -137,7 +157,7 @@ __init int init_devices( void ) {
     );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     /* Create the bus driver table lock */
@@ -145,8 +165,15 @@ __init int init_devices( void ) {
     bus_table_lock = create_semaphore( "bus_table_lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( bus_table_lock < 0 ) {
-        return bus_table_lock;
+        error = bus_table_lock;
+        goto error2;
     }
 
     return 0;
+
+error2:
+    destroy_hashtable( &bus_table );
+
+error1:
+    return error;
 }

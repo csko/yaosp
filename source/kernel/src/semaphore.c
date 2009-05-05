@@ -31,12 +31,15 @@
 
 #include <arch/pit.h> /* get_system_time() */
 #include <arch/interrupt.h>
+#include <arch/atomic.h>
 
 #define GLOBAL ( 1 << 24 )
 #define ID_MASK 0x00FFFFFF
 
 semaphore_context_t global_semaphore_context;
 semaphore_context_t kernel_semaphore_context;
+
+static atomic_t semaphore_count = ATOMIC_INIT( 0 );
 
 static semaphore_t* allocate_semaphore( const char* name ) {
     int error;
@@ -125,7 +128,7 @@ semaphore_id do_create_semaphore( bool kernel, const char* name, semaphore_type_
         semaphore->id = context->semaphore_id_counter;
 
         context->semaphore_id_counter = ( context->semaphore_id_counter + 1 ) & 0x00FFFFFF;
-    } while ( hashtable_get( &context->semaphore_table, ( const void* )semaphore->id ) != NULL );
+    } while ( hashtable_get( &context->semaphore_table, ( const void* )&semaphore->id ) != NULL );
 
     hashtable_add( &context->semaphore_table, ( hashitem_t* )semaphore );
 
@@ -136,6 +139,10 @@ semaphore_id do_create_semaphore( bool kernel, const char* name, semaphore_type_
     if ( flags & SEMAPHORE_GLOBAL ) {
         id |= GLOBAL;
     }
+
+    /* Update the semaphore statistics */
+
+    atomic_inc( &semaphore_count );
 
     return id;
 }
@@ -160,11 +167,13 @@ static int do_delete_semaphore( bool kernel, semaphore_id id ) {
         context = current_process()->semaphore_context;
     }
 
+    id &= ID_MASK;
+
     /* First we remove the semaphore from the context */
 
     spinlock_disable( &context->lock );
 
-    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
+    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
     if ( semaphore == NULL ) {
         spinunlock_enable( &context->lock );
@@ -172,7 +181,7 @@ static int do_delete_semaphore( bool kernel, semaphore_id id ) {
         return -EINVAL;
     }
 
-    hashtable_remove( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
+    hashtable_remove( &context->semaphore_table, ( const void* )&id );
 
     spinunlock_enable( &context->lock );
 
@@ -187,6 +196,10 @@ static int do_delete_semaphore( bool kernel, semaphore_id id ) {
     /* Free the resources allocated by the semaphore */
 
     free_semaphore( semaphore );
+
+    /* Update the semaphore statistics */
+
+    atomic_dec( &semaphore_count );
 
     return 0;
 }
@@ -223,11 +236,12 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
         context = current_process()->semaphore_context;
     }
 
+    id &= ID_MASK;
     wakeup_time = get_system_time() + timeout;
 
     spinlock_disable( &context->lock );
 
-    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
+    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
     if ( semaphore == NULL ) {
         spinunlock_enable( &context->lock );
@@ -305,7 +319,7 @@ try_again:
             spinunlock( &scheduler_lock );
         }
 
-        semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
+        semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
         if ( semaphore == NULL ) {
             spinunlock_enable( &context->lock );
@@ -356,9 +370,11 @@ static int do_unlock_semaphore( bool kernel, semaphore_id id, int count ) {
         context = current_process()->semaphore_context;
     }
 
+    id &= ID_MASK;
+
     spinlock_disable( &context->lock );
 
-    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
+    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
     if ( semaphore == NULL ) {
         spinunlock_enable( &context->lock );
@@ -441,9 +457,11 @@ static bool do_is_semaphore_locked( bool kernel, semaphore_id id ) {
         context = current_process()->semaphore_context;
     }
 
+    id &= ID_MASK;
+
     spinlock_disable( &context->lock );
 
-    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )( id & ID_MASK ) );
+    semaphore = ( semaphore_t* )hashtable_get( &context->semaphore_table, ( const void* )&id );
 
     if ( semaphore == NULL ) {
         spinunlock_enable( &context->lock );
@@ -462,20 +480,30 @@ bool is_semaphore_locked( semaphore_id id ) {
     return do_is_semaphore_locked( true, id );
 }
 
+uint32_t get_semaphore_count( void ) {
+    return atomic_get( &semaphore_count );
+}
+
 static void* semaphore_key( hashitem_t* item ) {
     semaphore_t* semaphore;
 
     semaphore = ( semaphore_t* )item;
 
-    return ( void* )semaphore->id;
+    return ( void* )&semaphore->id;
 }
 
 static uint32_t semaphore_hash( const void* key ) {
-    return ( uint32_t )key;
+    return hash_number( ( uint8_t* )key, sizeof( semaphore_id ) );
 }
 
 static bool semaphore_compare( const void* key1, const void* key2 ) {
-    return ( key1 == key2 );
+    semaphore_id* id1;
+    semaphore_id* id2;
+
+    id1 = ( semaphore_id* )key1;
+    id2 = ( semaphore_id* )key2;
+
+    return ( *id1 == *id2 );
 }
 
 int init_semaphore_context( semaphore_context_t* context ) {
@@ -509,7 +537,8 @@ int init_semaphore_context( semaphore_context_t* context ) {
 }
 
 void destroy_semaphore_context( semaphore_context_t* context ) {
-    /* TODO: make the table empty */
+    semaphore_context_make_empty( context );
+
     destroy_hashtable( &context->semaphore_table );
     kfree( context );
 }
@@ -557,6 +586,10 @@ static int semaphore_context_clone_iterator( hashitem_t* item, void* data ) {
     }
 
     hashtable_add( &context->semaphore_table, ( hashitem_t* )new_semaphore );
+
+    /* Update the semaphore statistics */
+
+    atomic_inc( &semaphore_count );
 
     return 0;
 }
@@ -615,11 +648,38 @@ static int semaphore_context_update_iterator( hashitem_t* item, void* data ) {
 
 int semaphore_context_update( semaphore_context_t* context, thread_id new_thread ) {
     int error;
+
     spinlock_disable( &context->lock );
 
     error = hashtable_iterate( &context->semaphore_table, semaphore_context_update_iterator, ( void* )&new_thread );
 
     spinunlock_enable( &context->lock );
+
+    return 0;
+}
+
+
+static int semaphore_context_delete_iterator( hashitem_t* item, void* data ) {
+    semaphore_t* semaphore;
+    hashtable_t* semaphore_table;
+
+    semaphore = ( semaphore_t* )item;
+    semaphore_table = ( hashtable_t* )data;
+
+    ASSERT( waitqueue_is_empty( &semaphore->waiters ) );
+
+    hashtable_remove( semaphore_table, ( const void* )&semaphore->id );
+    free_semaphore( semaphore );
+
+    /* Update the semaphore statistics */
+
+    atomic_dec( &semaphore_count );
+
+    return 0;
+}
+
+int semaphore_context_make_empty( semaphore_context_t* context ) {
+    hashtable_iterate( &context->semaphore_table, semaphore_context_delete_iterator, ( void* )&context->semaphore_table );
 
     return 0;
 }

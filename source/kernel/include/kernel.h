@@ -36,6 +36,10 @@ typedef struct kernel_info {
     char build_time[ 32 ];
 } kernel_info_t;
 
+typedef struct statistics_info {
+    uint32_t semaphore_count;
+} statistics_info_t;
+
 extern thread_id init_thread_id;
 
 int parse_kernel_parameters( const char* params );
@@ -44,6 +48,7 @@ int get_kernel_param_as_string( const char* key, const char** value );
 int get_kernel_param_as_bool( const char* key, bool* value );
 
 int sys_get_kernel_info( kernel_info_t* kernel_info );
+int sys_get_kernel_statistics( statistics_info_t* statistics_info );
 
 int sys_dbprintf( const char* format, char** parameters );
 
@@ -60,4 +65,4 @@ int sys_shutdown( void );
 int arch_late_init( void );
 void kernel_main( void );
 
-#endif // _KERNEL_H_
+#endif /* _KERNEL_H_ */

@@ -27,6 +27,10 @@ int get_kernel_info( kernel_info_t* kernel_info ) {
     return syscall1( SYS_get_kernel_info, ( int )kernel_info );
 }
 
+int get_kernel_statistics( statistics_info_t* statistics_info ) {
+    return syscall1( SYS_get_kernel_statistics, ( int )statistics_info );
+}
+
 uint32_t get_module_count( void ) {
     return syscall0( SYS_get_module_count );
 }

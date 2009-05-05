@@ -114,11 +114,14 @@ int sys_delete_semaphore( semaphore_id id );
 int sys_lock_semaphore( semaphore_id id, int count, uint64_t* timeout );
 int sys_unlock_semaphore( semaphore_id id, int count );
 
+uint32_t get_semaphore_count( void );
+
 int init_semaphore_context( semaphore_context_t* context );
 void destroy_semaphore_context( semaphore_context_t* context );
 semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context );
 int semaphore_context_update( semaphore_context_t* context, thread_id new_thread );
+int semaphore_context_make_empty( semaphore_context_t* context );
 
 int init_semaphores( void );
 
-#endif // _SEMAPHORE_H_
+#endif /* _SEMAPHORE_H_ */
