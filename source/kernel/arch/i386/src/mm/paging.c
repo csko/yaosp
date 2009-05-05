@@ -631,12 +631,13 @@ __init int init_paging( void ) {
 
     map_region_pages(
         arch_context,
-        0,
-        0,
-        1 * 1024 * 1024,
+        PAGE_SIZE,
+        PAGE_SIZE,
+        1 * 1024 * 1024 - PAGE_SIZE,
         true,
         true
     );
+
     map_region_pages(
         arch_context,
         1 * 1024 * 1024,
@@ -645,6 +646,7 @@ __init int init_paging( void ) {
         true,
         false
     );
+
     map_region_pages(
         arch_context,
         1 * 1024 * 1024 + ro_size,
@@ -654,13 +656,23 @@ __init int init_paging( void ) {
         true
     );
 
-    error = create_initial_region( "1mb", 0, 1 * 1024 * 1024, true );
+    error = create_initial_region(
+        "1mb",
+        PAGE_SIZE,
+        1 * 1024 * 1024 - PAGE_SIZE,
+        true
+    );
 
     if ( error < 0 ) {
         return error;
     }
 
-    error = create_initial_region( "kernel_ro", 1 * 1024 * 1024, ro_size, false );
+    error = create_initial_region(
+        "kernel_ro",
+        1 * 1024 * 1024,
+        ro_size,
+        false
+    );
 
     if ( error < 0 ) {
         return error;

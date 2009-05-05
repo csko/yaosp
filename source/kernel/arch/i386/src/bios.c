@@ -17,6 +17,9 @@
  */
 
 #include <kernel.h>
+#include <console.h>
+#include <errno.h>
+#include <mm/region.h>
 #include <lib/string.h>
 
 #include <arch/io.h>
@@ -24,6 +27,42 @@
 #include <arch/cpu.h>
 
 #include "x86emu/x86emu.h"
+
+static uint8_t* below_1mb = NULL;
+static region_id below_1mb_region = -1;
+
+static u8 x86emu_rdb( u32 address ) {
+    return *( below_1mb + address );
+}
+
+static u16 x86emu_rdw( u32 address ) {
+    return *( ( uint16_t* )( below_1mb + address ) );
+}
+
+static u32 x86emu_rdl( u32 address ) {
+    return *( ( u32* )( below_1mb + address ) );
+}
+
+static void x86emu_wrb( u32 address, u8 value ) {
+    *( below_1mb + address ) = value;
+}
+
+static void x86emu_wrw( u32 address, u16 value ) {
+    *( ( u16* )( below_1mb + address ) ) = value;
+}
+
+static void x86emu_wrl( u32 address, u32 value ) {
+    *( ( u32* )( below_1mb + address ) ) = value;
+}
+
+static X86EMU_memFuncs x86emu_mem_funcs = {
+    .rdb = x86emu_rdb,
+    .rdw = x86emu_rdw,
+    .rdl = x86emu_rdl,
+    .wrb = x86emu_wrb,
+    .wrw = x86emu_wrw,
+    .wrl = x86emu_wrl
+};
 
 static uint8_t x86emu_inb( uint16_t port ) {
     return inb( port );
@@ -76,7 +115,7 @@ int call_bios_interrupt( int num, bios_regs_t* regs ) {
 
     /* Setup our own halt code at 0x1000 */
 
-    *( ( uint8_t* )0x1000 ) = 0xF4; /* hlt instruction */
+    *( ( uint8_t* )( below_1mb + 0x1000 ) ) = 0xF4; /* hlt instruction */
 
     M.x86.R_CS = 0x0000;
     M.x86.R_IP = 0x1000;
@@ -108,6 +147,34 @@ int call_bios_interrupt( int num, bios_regs_t* regs ) {
 }
 
 __init int init_bios_access( void ) {
+    int error;
+
+    below_1mb_region = do_create_region(
+        "below_1mb",
+        1 * 1024 * 1024,
+        REGION_READ | REGION_WRITE | REGION_KERNEL,
+        ALLOC_NONE,
+        ( void** )&below_1mb,
+        false
+    );
+
+    if ( below_1mb_region < 0 ) {
+        kprintf( "Failed to create memory region for <1mb access!\n" );
+        return -ENOMEM;
+    }
+
+    error = do_remap_region(
+        below_1mb_region,
+        0x0,
+        true
+    );
+
+    if ( error < 0 ) {
+        kprintf( "Failed to remap memory region for <1mb access!\n" );
+        return error;
+    }
+
+    X86EMU_setupMemFuncs( &x86emu_mem_funcs );
     X86EMU_setupPioFuncs( &x86emu_pio_funcs );
 
     return 0;
