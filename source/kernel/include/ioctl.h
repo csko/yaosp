@@ -56,4 +56,4 @@
 
 #define IOCTL_DISK_GET_GEOMETRY  0x00000500
 
-#endif // _IOCTL_H_
+#endif /* _IOCTL_H_ */

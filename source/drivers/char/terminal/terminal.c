@@ -633,8 +633,10 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                         buffer = &terminal->lines[ terminal->cursor_row ];
 
-                        for ( i = terminal->cursor_column; i < screen->width; i++ ) {
-                            buffer->data[ i ].character = ' ';
+                        if ( buffer->data != NULL ) {
+                            for ( i = terminal->cursor_column; i < screen->width; i++ ) {
+                                buffer->data[ i ].character = ' ';
+                            }
                         }
 
                         buffer->last_dirty = terminal->cursor_column - 1;

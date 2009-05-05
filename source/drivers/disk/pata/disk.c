@@ -19,6 +19,8 @@
 #include <console.h>
 #include <errno.h>
 #include <macros.h>
+#include <ioctl.h>
+#include <devices.h>
 #include <vfs/devfs.h>
 #include <lib/string.h>
 
@@ -135,47 +137,33 @@ static int pata_disk_do_transfer( pata_port_t* port, void* buffer, uint64_t offs
 }
 
 static int pata_disk_open( void* node, uint32_t flags, void** cookie ) {
-#if 0
-    pata_port_t* port;
-
-    port = ( pata_port_t* )node;
-
-    LOCK( port->lock );
-
-    if ( port->open ) {
-        UNLOCK( port->lock );
-
-        return -EBUSY;
-    }
-
-    port->open = true;
-
-    UNLOCK( port->lock );
-#endif
-
     return 0;
 }
 
 static int pata_disk_close( void* node, void* cookie ) {
-#if 0
-    pata_port_t* port;
-
-    port = ( pata_port_t* )node;
-
-    LOCK( port->lock );
-
-    port->open = false;
-
-    UNLOCK( port->lock );
-#endif
-
     return 0;
 }
 
 static int pata_disk_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
     int error;
+    pata_port_t* port;
+
+    port = ( pata_port_t* )node;
 
     switch ( command ) {
+        case IOCTL_DISK_GET_GEOMETRY : {
+            device_geometry_t* geometry;
+
+            geometry = ( device_geometry_t* )args;
+
+            geometry->bytes_per_sector = port->sector_size;
+            geometry->sector_count = port->capacity / port->sector_size;
+
+            error = 0;
+
+            break;
+        }
+
         default :
             error = -ENOSYS;
             break;
