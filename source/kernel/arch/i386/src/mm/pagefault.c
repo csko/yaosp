@@ -48,7 +48,11 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
         kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
         memory_context_dump( thread->process->memory_context );
 
-        send_signal( thread, SIGSEGV );
+        if ( regs->error_code & 0x4 ) {
+            send_signal( thread, SIGSEGV );
+        } else {
+            thread_exit( SIGSEGV );
+        }
     } else {
         disable_interrupts();
         halt_loop();
