@@ -154,7 +154,7 @@ int waitqueue_wake_up( waitqueue_t* queue, uint64_t now ) {
 
         thread = get_thread_by_id( node->thread );
 
-        if ( thread != NULL ) {
+        if ( __likely( thread != NULL ) ) {
             /* If the thread doesn't have time to run add
                it to the list of expired threads, otherwise
                add it to the ready list */
@@ -197,7 +197,7 @@ int waitqueue_wake_up_head( waitqueue_t* queue, int count ) {
 
         thread = get_thread_by_id( node->thread );
 
-        if ( thread != NULL ) {
+        if ( __likely( thread != NULL ) ) {
             /* If the thread doesn't have time to run add
                it to the list of expired threads, otherwise
                add it to the ready list */
@@ -242,7 +242,7 @@ int waitqueue_wake_up_all( waitqueue_t* queue ) {
 
         thread = get_thread_by_id( node->thread );
 
-        if ( thread != NULL ) {
+        if ( __likely( thread != NULL ) ) {
             /* If the thread doesn't have time to run add
                it to the list of expired threads, otherwise
                add it to the ready list */

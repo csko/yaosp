@@ -31,13 +31,6 @@
 #define ROUND_UP(n,a) (((n)+(a)-1) & ~((a)-1))
 #define ROUND_DOWN(n,a) ((n) & ~((a)-1))
 
-#define ASSERT(exp) \
-    if ( !( exp ) ) { \
-        panic( "Assertion (%s) failed at: %s:%d\n", \
-            #exp, __FILE__, __LINE__ \
-        ); \
-    }
-
 #if __GNUC__ < 3
 #define __expect(foo,bar) (foo)
 #else
@@ -47,4 +40,12 @@
 #define __likely(foo) __expect((foo),1)
 #define __unlikely(foo) __expect((foo),0)
 
-#endif // _MACROS_H_
+#define ASSERT(exp) \
+    if ( __unlikely( !( exp ) ) ) { \
+        panic( "Assertion (%s) failed at: %s:%d\n", \
+            #exp, __FILE__, __LINE__ \
+        ); \
+    }
+
+
+#endif /* _MACROS_H_ */

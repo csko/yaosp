@@ -271,7 +271,8 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
     spinunlock_enable( &scheduler_lock );
 
     if ( kernel_process == NULL ) {
-        return -EINVAL;
+        error = -EINVAL;
+        goto error1;
     }
 
     /* Calculate kernel stack size */
@@ -289,7 +290,8 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
     thread = allocate_thread( name, kernel_process, priority, stack_size );
 
     if ( thread == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error1;
     }
 
     /* Initialize the architecture dependent part of the thread */
@@ -297,8 +299,7 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
     error = arch_create_kernel_thread( thread, ( void* )entry, arg );
 
     if ( error < 0 ) {
-        destroy_thread( thread );
-        return error;
+        goto error2;
     }
 
     current = current_thread();
@@ -319,6 +320,16 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
 
     spinunlock_enable( &scheduler_lock );
 
+    if ( error < 0 ) {
+        goto error2;
+    }
+
+    return error;
+
+error2:
+    destroy_thread( thread );
+
+error1:
     return error;
 }
 
@@ -387,6 +398,10 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
     }
 
     spinunlock_enable( &scheduler_lock );
+
+    if ( error < 0 ) {
+        goto error2;
+    }
 
     return error;
 

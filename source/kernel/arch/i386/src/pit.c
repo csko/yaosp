@@ -102,15 +102,11 @@ uint64_t get_system_time( void ) {
 }
 
 int set_system_time( time_t* newtime ) {
-    tm_t tm;
-
     spinlock_disable( &time_lock );
 
     system_time = *newtime;
 
     spinunlock_enable( &time_lock );
-
-    sethwclock( gmtime_r( newtime, &tm ) );
 
     return 0;
 }

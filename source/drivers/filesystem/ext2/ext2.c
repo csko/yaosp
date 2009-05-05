@@ -402,9 +402,11 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
         memcpy( data, block, size );
     }
 
-    if ( ! ( cookie->flags & MOUNT_RO ) && ! ( cookie->flags & MOUNT_NOATIME) ){
+    if ( ( ( cookie->flags & MOUNT_RO ) == 0 ) &&
+         ( ( cookie->flags & MOUNT_NOATIME ) == 0 ) ) {
         /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
-        inode->fs_inode.i_atime = time( NULL );
+
+       inode->fs_inode.i_atime = time( NULL );
     }
 
     return saved_size;
