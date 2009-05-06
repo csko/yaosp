@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build>
     <array name="subdirs">
         <item>init</item>
-        <item>shell</item>
+        <item>shelltools</item>
         <item>listpci</item>
         <item>systeminfo</item>
         <item>guiserver</item>
