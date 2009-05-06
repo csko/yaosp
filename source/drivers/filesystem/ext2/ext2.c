@@ -30,127 +30,173 @@
  * The input parameter can be either direct, indirect, 2x indirect, 3x indirect block number.
  * The output is the number of the direct data block.
  */
-int ext2_calc_block_num( ext2_cookie_t *cookie, ext2_inode_t* vinode, uint32_t block_num, uint32_t* out ) {
+int ext2_calc_block_num( ext2_cookie_t* cookie, ext2_inode_t* node, uint32_t block_number, uint32_t* out ) {
+    int error;
+    uint8_t* buffer;
     uint32_t ind_block;
-    uint32_t buffer[cookie->ptr_per_block];
-    ext2_fs_inode_t* inode = ( ext2_fs_inode_t* )&vinode->fs_inode;
+    ext2_fs_inode_t* inode = ( ext2_fs_inode_t* )&node->fs_inode;
 
-    // direct
+    /* First check if this is a direct block [0..11] */
 
-    if ( block_num < EXT2_NDIR_BLOCKS ) {    // if block_num in [0..11]: it is a direct block
-        *out = inode->i_block[block_num];    // this points to the direct data
+    if ( block_number < EXT2_NDIR_BLOCKS ) {
+        *out = inode->i_block[ block_number ];
 
         return 0;
     }
 
-    block_num -= EXT2_NDIR_BLOCKS;          // -12
+    block_number -= EXT2_NDIR_BLOCKS;
 
-    // indirect
+    /* Is this an indirect block? */
 
-    if ( block_num < cookie->ptr_per_block ) {     // if block_num in [12..267] it is an indirect block, rel: [0-255]
-        ind_block = inode->i_block[EXT2_IND_BLOCK]; // find the indirect block
+    if ( block_number < cookie->ptr_per_block ) {
+        ind_block = inode->i_block[ EXT2_IND_BLOCK ];
 
         if ( ind_block == 0 ) {
             return -EINVAL;
         }
 
-        // read the indirect block
+        buffer = ( uint8_t* )kmalloc( cookie->blocksize );
 
-        if ( pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize ) != cookie->blocksize ) {
+        if ( __unlikely( buffer == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        /* Read the indirect block from the disk */
+
+        error = pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            kfree( buffer );
             return -EIO;
         }
 
-        // the element of the indirect block points to the data
+        /* The element of the indirect block points to the data */
 
-        *out = buffer[ block_num ];
+        *out = buffer[ block_number ];
+
+        kfree( buffer );
 
         return 0;
     }
 
-    block_num -= cookie->ptr_per_block;               // -256
+    block_number -= cookie->ptr_per_block;
 
-    // doubly-indirect
+    /* Doubly-indirect block? */
 
-    if ( block_num < cookie->doubly_indirect_block_count ) {   // if block_num in [268..65803],  rel: [0-65535]
-        ind_block = inode->i_block[EXT2_DIND_BLOCK]; // find the doubly indirect block
+    if ( block_number < cookie->doubly_indirect_block_count ) {
+        ind_block = inode->i_block[ EXT2_DIND_BLOCK ];
 
         if ( ind_block == 0 ) {
             return -EINVAL;
         }
 
-        // Read in the double-indirect block
+        buffer = ( uint8_t* )kmalloc( cookie->blocksize );
 
-        if ( pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize ) != cookie->blocksize ) {
+        if ( __unlikely( buffer == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        /* Read the double-indirect block from the disk */
+
+        error = pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            kfree( buffer );
             return -EIO;
         }
 
-        ind_block = buffer[ block_num / cookie->ptr_per_block ];    // in wich indirect block? [0..255]
+        ind_block = buffer[ block_number / cookie->ptr_per_block ];
 
         if ( ind_block == 0 ) {
+            kfree( buffer );
             return -EINVAL;
         }
 
-        // Read the single-indirect block
+        /* Read the single-indirect block from the disk */
 
-        if ( pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize ) != cookie->blocksize ) {
+        error =  pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            kfree( buffer );
             return -EIO;
         }
 
-        // find the direct block
+        /* Find the direct block */
 
-        *out = buffer[ block_num % cookie->ptr_per_block ];         // in wich direct block? [0..255]
+        *out = buffer[ block_number % cookie->ptr_per_block ];
+
+        kfree( buffer );
 
         return 0;
 
     }
 
-    block_num -= cookie->doubly_indirect_block_count;           // -65536
+    block_number -= cookie->doubly_indirect_block_count;           // -65536
 
-    // triply-indirect
+    /* Triply-indirect block... wow :) */
 
-    if ( block_num < cookie->triply_indirect_block_count ) {  // [65804..16843020],  rel: [0-16777215]
+    if ( block_number < cookie->triply_indirect_block_count ) {
         uint32_t mod;
 
-        ind_block = inode->i_block[EXT2_TIND_BLOCK]; // find the triply indirect block
+        ind_block = inode->i_block[ EXT2_TIND_BLOCK ];
 
         if ( ind_block == 0 ) {
             return -EINVAL;
         }
 
-        // Read in the triply-indirect block
-        if ( pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize ) != cookie->blocksize ) {
+        buffer = ( uint8_t* )kmalloc( cookie->blocksize );
+
+        if ( __unlikely( buffer == NULL ) ) {
+            return -ENOMEM;
+        }
+
+        error = pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize );
+
+        /* Read in the triply-indirect block from the disk */
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            kfree( buffer );
             return -EIO;
         }
 
-        ind_block = buffer[ block_num / cookie->doubly_indirect_block_count ];    // in wich doubly indirect block? [0..255]
+        ind_block = buffer[ block_number / cookie->doubly_indirect_block_count ];
 
         if ( ind_block == 0 ) {
+            kfree( buffer );
             return -EINVAL;
         }
 
-        // Read the doubly-indirect block
+        /* Read the doubly-indirect block from the disk */
 
-        if ( pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize ) != cookie->blocksize ) {
+        error = pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            kfree( buffer );
             return -EIO;
         }
 
-        // find the indirect-direct block
+        /* Find the indirect-direct block */
 
-        mod = block_num % cookie->doubly_indirect_block_count;
-        ind_block = buffer[ mod / cookie->ptr_per_block ];         // in wich indirect block? [0..65536]
+        mod = block_number % cookie->doubly_indirect_block_count;
+        ind_block = buffer[ mod / cookie->ptr_per_block ];
 
-        // read the indirect-block
+        /* Read the indirect-block from the disk */
 
-        if ( pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize ) != cookie->blocksize ) {
+        error = pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            kfree( buffer );
             return -EIO;
         }
 
         *out = buffer[ mod % cookie->ptr_per_block ];
 
+        kfree( buffer );
+
         return 0;
     }
 
-    return -EINVAL; // block number is too large
+    return -ERANGE;
 }
 
 static int ext2_flush_group_descriptors( ext2_cookie_t* cookie ) {
