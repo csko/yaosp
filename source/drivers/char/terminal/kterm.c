@@ -19,6 +19,7 @@
 #include <console.h>
 #include <thread.h>
 #include <semaphore.h>
+#include <macros.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
@@ -42,8 +43,9 @@ static thread_id kterm_flusher;
 static void kterm_putchar( console_t* console, char c ) {
     spinlock_disable( &kterm_lock );
 
-    if ( size < KTERM_BUFSIZE ) {
+    if ( __likely( size < KTERM_BUFSIZE ) ) {
         kterm_buffer[ write_pos ] = c;
+
         write_pos = ( write_pos + 1 ) % KTERM_BUFSIZE;
         size++;
     }

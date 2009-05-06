@@ -20,7 +20,6 @@
 #include <arch/elf32.h>
 
 bool elf32_check( elf_header_t* header ) {
-
     if ( ( header->ident[ ID_MAGIC0 ] != ELF32_MAGIC0 ) ||
          ( header->ident[ ID_MAGIC1 ] != ELF32_MAGIC1 ) ||
          ( header->ident[ ID_MAGIC2 ] != ELF32_MAGIC2 ) ||

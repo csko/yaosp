@@ -23,10 +23,11 @@
 
 int init_spinlock( spinlock_t* lock, const char* name ) {
     lock->name = name;
+    lock->enable_interrupts = false;
+
 #ifdef ENABLE_SMP
     atomic_set( &lock->locked, 0 );
 #endif /* ENABLE_SMP */
-    lock->enable_interrupts = false;
 
     return 0;
 }

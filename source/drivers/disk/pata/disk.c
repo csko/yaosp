@@ -63,7 +63,7 @@ static int pata_disk_do_transfer( pata_port_t* port, void* buffer, uint64_t offs
     need_lba48 = ( ( sector + sector_count ) > 0xFFFFFFF ) || ( sector_count >= 0x100 );
 
     if ( ( need_lba48 ) && ( !port->use_lba48 ) ) {
-        kprintf( "PATA: Transfer requires LBA48 support!\n" );
+        kprintf( "PATA: Transfer requires LBA48, but it's not supported by the controller!\n" );
         return -EIO;
     }
 
@@ -101,7 +101,7 @@ static int pata_disk_do_transfer( pata_port_t* port, void* buffer, uint64_t offs
     while ( sector_count > 0 ) {
         error = pata_port_wait( port, PATA_STATUS_DRQ, PATA_STATUS_BUSY, false, 1000000 );
 
-        if ( error < 0 ) {
+        if ( __unlikely( error < 0 ) ) {
             return error;
         }
 
@@ -180,15 +180,15 @@ static int pata_disk_read( void* node, void* cookie, void* buffer, off_t positio
 
     port = ( pata_port_t* )node;
 
-    if ( ( position % port->sector_size ) != 0 ) {
+    if ( __unlikely( ( position % port->sector_size ) != 0 ) ) {
         return -EINVAL;
     }
 
-    if ( ( size % port->sector_size ) != 0 ) {
+    if ( __unlikely( ( size % port->sector_size ) != 0 ) ) {
         return -EINVAL;
     }
 
-    if ( ( position + size ) > port->capacity ) {
+    if ( __unlikely( ( position + size ) > port->capacity ) ) {
         return -EINVAL;
     }
 
@@ -230,15 +230,15 @@ static int pata_disk_write( void* node, void* cookie, const void* buffer, off_t 
 
     port = ( pata_port_t* )node;
 
-    if ( ( position % port->sector_size ) != 0 ) {
+    if ( __unlikely( ( position % port->sector_size ) != 0 ) ) {
         return -EINVAL;
     }
 
-    if ( ( size % port->sector_size ) != 0 ) {
+    if ( __unlikely( ( size % port->sector_size ) != 0 ) ) {
         return -EINVAL;
     }
 
-    if ( ( position + size ) > port->capacity ) {
+    if ( __unlikely( ( position + size ) > port->capacity ) ) {
         return -EINVAL;
     }
 

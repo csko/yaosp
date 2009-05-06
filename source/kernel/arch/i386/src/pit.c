@@ -115,7 +115,7 @@ uint64_t get_boot_time( void ) {
     return boot_time;
 }
 
-int init_system_time( void ) {
+__init int init_system_time( void ) {
     tm_t now;
     uint64_t i;
 

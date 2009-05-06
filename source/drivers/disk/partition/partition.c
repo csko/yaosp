@@ -40,7 +40,7 @@ static partition_type_t* partition_types[] = {
     NULL
 };
 
-static int partition_ioctl ( void* _node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
+static int partition_ioctl( void* _node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
     int error;
     partition_node_t* node;
 
@@ -141,6 +141,8 @@ int create_device_partition( int fd, const char* device, int index, off_t offset
         return error;
     }
 
+    kprintf( "Created device node for partition: /device/%s\n", path );
+
     return 0;
 }
 
@@ -164,7 +166,12 @@ int init_module( void ) {
     dirent_t entry;
     int error;
 
-    mkdir( "/device/storage/partition", 0777 );
+    error = mkdir( "/device/storage/partition", 0777 );
+
+    if ( error < 0 ) {
+        kprintf( "Failed to create /device/storage/partition!\n" );
+        return error;
+    }
 
     dir = open( "/device/storage", O_RDONLY );
 

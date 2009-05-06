@@ -38,4 +38,4 @@ typedef struct idt {
 
 extern idt_descriptor_t idt[ IDT_ENTRIES ];
 
-#endif // _ARCH_IDT_H_
+#endif /* _ARCH_IDT_H_ */

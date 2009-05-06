@@ -270,4 +270,5 @@ int arch_boot_processors( void ) {
 
     return 0;
 }
+
 #endif /* ENABLE_SMP */

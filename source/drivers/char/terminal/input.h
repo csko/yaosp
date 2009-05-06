@@ -76,4 +76,4 @@ extern terminal_input_t ps2_keyboard;
 
 int terminal_handle_event( event_type_t event, int param1, int param2 );
 
-#endif // _TERMINAL_INPUT_H_
+#endif /* _TERMINAL_INPUT_H_ */

@@ -137,7 +137,11 @@ __init int init_interrupts( void ) {
 
     /* Zero the whole Interrupt Descriptor Table */
 
-    memset( idt, 0, sizeof( idt_descriptor_t ) * IDT_ENTRIES );
+    memset(
+        idt,
+        0,
+        sizeof( idt_descriptor_t ) * IDT_ENTRIES
+    );
 
     set_trap_gate( 0, isr0 );
     set_trap_gate( 1, isr1 );

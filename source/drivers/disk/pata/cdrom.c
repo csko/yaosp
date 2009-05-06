@@ -159,15 +159,15 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
 
     port = ( pata_port_t* )node;
 
-    if ( ( position % port->sector_size ) != 0 ) {
+    if ( __unlikely( ( position % port->sector_size ) != 0 ) ) {
         return -EINVAL;
     }
 
-    if ( ( size % port->sector_size ) != 0 ) {
+    if ( __unlikely( ( size % port->sector_size ) != 0 ) ) {
         return -EINVAL;
     }
 
-    if ( ( position + size ) > port->capacity ) {
+    if ( __unlikely( ( position + size ) > port->capacity ) ) {
         return -EINVAL;
     }
 

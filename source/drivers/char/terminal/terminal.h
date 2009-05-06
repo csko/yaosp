@@ -85,4 +85,4 @@ int terminal_switch_to( int index );
 
 int init_terminal_ctrl_device( void );
 
-#endif // _TERMINAL_TERMINAL_H_
+#endif /* _TERMINAL_TERMINAL_H_ */

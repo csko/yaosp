@@ -277,10 +277,10 @@ static int pty_read( void* fs_cookie, void* _node, void* file_cookie, void* buff
     while ( ( size > 0 ) && ( node->size > 0 ) ) {
         *data++ = node->buffer[ node->read_position ];
 
-        node->read_position = ( node->read_position + 1 ) % node->buffer_size;
         read++;
         size--;
         node->size--;
+        node->read_position = ( node->read_position + 1 ) % node->buffer_size;
     }
 
     /* Notify write select listeners */
@@ -321,10 +321,10 @@ static int pty_do_write( pty_node_t* node, const void* buffer, size_t size ) {
         while ( ( node->size < node->buffer_size ) && ( size > 0 ) ) {
             node->buffer[ node->write_position ] = *data++;
 
-            node->write_position = ( node->write_position + 1 ) % node->buffer_size;
             written++;
             node->size++;
             size--;
+            node->write_position = ( node->write_position + 1 ) % node->buffer_size;
         }
     }
 

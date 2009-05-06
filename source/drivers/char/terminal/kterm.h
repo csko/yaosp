@@ -21,4 +21,4 @@
 
 int init_kernel_terminal( void );
 
-#endif // _TERMINAL_KTERM_H_
+#endif /* _TERMINAL_KTERM_H_ */

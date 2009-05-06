@@ -272,9 +272,11 @@ void arch_reboot( void ) {
     disable_interrupts();
 
     /* Flush keyboard */
+
     for ( ; ( ( i = inb( 0x64 ) ) & 0x01 ) != 0 && ( i & 0x02 ) != 0 ; ) ;
 
     /* CPU RESET */
+
     outb( 0xFE, 0x64 );
 
     halt_loop();

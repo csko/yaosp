@@ -19,6 +19,7 @@
 #include <console.h>
 #include <errno.h>
 #include <thread.h>
+#include <macros.h>
 
 #include <arch/io.h>
 
@@ -117,7 +118,7 @@ int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read,
     uint16_t count;
     uint8_t cmd_data[ 7 ];
 
-    if ( !port->is_atapi ) {
+    if ( __unlikely( !port->is_atapi ) ) {
         kprintf( "PATA: ATAPI operation not allowed on non-ATAPI drive!\n" );
         return -EINVAL;
     }

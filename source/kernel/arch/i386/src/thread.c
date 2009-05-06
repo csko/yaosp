@@ -20,6 +20,7 @@
 #include <thread.h>
 #include <config.h>
 #include <errno.h>
+#include <macros.h>
 #include <syscall_table.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -34,7 +35,7 @@ int arch_allocate_thread( thread_t* thread ) {
 
     arch_thread = ( i386_thread_t* )kmalloc( sizeof( i386_thread_t ) + sizeof( fpu_state_t ) + 15 );
 
-    if ( arch_thread == NULL ) {
+    if ( __unlikely( arch_thread == NULL ) ) {
         return -ENOMEM;
     }
 
@@ -104,17 +105,17 @@ int arch_create_user_thread( thread_t* thread, void* entry, void* arg ) {
 
     /* Create the exit code */
 
-    /* movl %%eax, %%ebx */
+    /* movl %%eax, %%ebx
+       movl $SYS_exit_thread, %eax
+       int $0x80 */
+
     exit_code[ 0 ] = 0x89;
     exit_code[ 1 ] = 0xC3;
-
-    /* movl $SYS_exit_thread, %%eax */
     exit_code[ 2 ] = 0xB8;
-    *( ( register_t* )&exit_code[ 3 ] ) = SYS_exit_thread;
-
-    /* int $0x80 */
     exit_code[ 7 ] = 0xCD;
     exit_code[ 8 ] = 0x80;
+
+    *( ( register_t* )&exit_code[ 3 ] ) = SYS_exit_thread;
 
     /* Put the exit code to the stack */
 

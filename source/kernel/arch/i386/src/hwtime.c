@@ -48,10 +48,10 @@ void gethwclock( tm_t* tm ) {
     settings = inb( RTCDATA );
 
 /*
-    settings |= 0x02;  24-hour clock 
-    settings |= 0x04;  Use binary mode instead of BCD 
+    settings |= 0x02;  24-hour clock
+    settings |= 0x04;  Use binary mode instead of BCD
 
-     Update settings 
+     Update settings
     outb ( 0x0B, RTCADDR );
     outb ( settings, RTCDATA );
 */
@@ -86,7 +86,9 @@ void gethwclock( tm_t* tm ) {
 
     spinunlock_enable( &datetime_lock );
 
-    if(!(settings & 0x04)){ /* See if we have to convert the values */
+    /* See if we have to convert the values */
+
+    if ( ( settings & 0x04 ) == 0 ) {
         tm->tm_year = BCDTOBIN(tm->tm_year);
         tm->tm_mon = BCDTOBIN(tm->tm_mon);
         tm->tm_mday = BCDTOBIN(tm->tm_mday);
@@ -95,12 +97,13 @@ void gethwclock( tm_t* tm ) {
         tm->tm_min = BCDTOBIN(tm->tm_min);
         tm->tm_sec = BCDTOBIN(tm->tm_sec);
     }
+
     tm->tm_wday--;
     tm->tm_year += 2000;
 
     /* TODO: isDST */
     tm->tm_isdst = -1;
-    tm->tm_yday = ((tm->tm_year % 4 == 0) ? monthdays2[tm->tm_mon] : monthdays[tm->tm_mon]) + tm->tm_mday - 1;
+    tm->tm_yday = ( ( tm->tm_year % 4 == 0 ) ? monthdays2[ tm->tm_mon ] : monthdays[ tm->tm_mon ] ) + tm->tm_mday - 1;
 
     /* TODO: see other settings, for example 24-hour clock */
 }

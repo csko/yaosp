@@ -1,6 +1,6 @@
 /* Basic screen output handling functions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs 
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2008 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -90,7 +90,7 @@ static void screen_putchar( console_t* console, char c ) {
 
         default :
             *p++ = ( screen_color << 8 ) | c;
-            console->x++; 
+            console->x++;
 
             break;
     }
@@ -182,6 +182,7 @@ static void debug_init( console_t* debug ) {
 
 static void debug_putchar( console_t* debug, char c ) {
     while ( ( inb( 0x3F8 + 5 ) & 0x20 ) == 0 ) ;
+
     outb( c, 0x3F8 );
 }
 

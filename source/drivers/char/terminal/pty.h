@@ -80,4 +80,4 @@ typedef struct pty_dir_cookie {
 
 int init_pty_filesystem( void );
 
-#endif // _TERMINAL_PTY_H_
+#endif /* _TERMINAL_PTY_H_ */
