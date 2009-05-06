@@ -69,7 +69,7 @@ __init static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
 
             processor = ( mp_processor_t* )data;
 
-            if ( __unlikely( processor_count < MAX_CPU_COUNT ) ) {
+            if ( __likely( processor_count < MAX_CPU_COUNT ) ) {
                 /* Map the local APIC ID of the processor to our processor table */
 
                 apic_to_logical_cpu_id[ processor->local_apic_id ] = processor_count;

@@ -24,6 +24,7 @@
 #include <loader.h>
 #include <config.h>
 #include <errno.h>
+#include <process.h>
 #include <mm/pages.h>
 #include <vfs/vfs.h>
 #include <network/interface.h>

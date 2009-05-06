@@ -255,7 +255,15 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
         case SEMAPHORE_BINARY :
             count = 1;
 
-            ASSERT( ( semaphore->count == 0 ) || ( semaphore->count == 1 ) );
+            if ( ( semaphore->count != 0 ) && ( semaphore->count != 1 ) ) {
+                kprintf(
+                    "Invalid semaphore count (%d) for binary semaphore %s\n",
+                    semaphore->count,
+                    semaphore->name
+                );
+
+                ASSERT( 0 );
+            }
 
             if ( semaphore->count == 0 ) {
                 ASSERT( semaphore->holder != -1 );
@@ -263,7 +271,8 @@ static int do_lock_semaphore( bool kernel, semaphore_id id, int count, uint64_t 
                 if ( ( current->id == semaphore->holder ) &&
                      ( timeout == INFINITE_TIMEOUT ) ) {
                     kprintf(
-                        "Detected a deadlock while thread %s tried to lock semaphore %s.\n",
+                        "Detected a deadlock while %s:%s tried to lock semaphore %s.\n",
+                        current->process->name,
                         current->name,
                         semaphore->name
                     );
@@ -402,6 +411,17 @@ static int do_unlock_semaphore( bool kernel, semaphore_id id, int count ) {
                 }
 
                 semaphore->holder = -1;
+            } else if ( semaphore->count == 1 ) {
+                spinunlock_enable( &context->lock );
+
+                kprintf(
+                    "Binary semaphore %s is already unlocked but %s:%s tried to unlock again!\n",
+                    semaphore->name,
+                    current->process->name,
+                    current->name
+                );
+
+                return -EPERM;
             }
 
             break;

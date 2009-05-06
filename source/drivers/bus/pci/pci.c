@@ -190,7 +190,7 @@ static bool pci_check_2( void ) {
     ints = disable_interrupts();
 
     /* Check if PCI access method 2 is supported */
-    
+
     outb( 0x00, 0x0CFB );
     outb( 0x00, 0x0CF8 );
     outb( 0x00, 0x0CFA );

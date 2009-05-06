@@ -78,4 +78,4 @@
  */
 #define MAX_IPC_MSG_QUEUE_SIZE ( 64 * 1024 )
 
-#endif // _CONFIG_H_
+#endif /* _CONFIG_H_ */
