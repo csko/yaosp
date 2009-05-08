@@ -81,7 +81,8 @@
 typedef int sig_atomic_t;
 typedef uint64_t sigset_t;
 typedef int sigval_t;
-typedef void ( *sighandler_t )( int );
+typedef void ( *__sighandler_t )( int );
+typedef __sighandler_t sighandler_t;
 
 typedef struct siginfo {
     int      si_signo;   /* Signal number */

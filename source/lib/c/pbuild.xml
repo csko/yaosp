@@ -58,6 +58,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/strtoull.c</item>
         <item>src/stdlib/atoi.c</item>
         <item>src/stdlib/atol.c</item>
+        <item>src/stdlib/atoll.c</item>
         <item>src/stdlib/atof.c</item>
         <item>src/stdlib/qsort.c</item>
         <item>src/stdlib/bsearch.c</item>

@@ -1,4 +1,4 @@
-/* gethostname function
+/* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,13 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <unistd.h>
-#include <stdio.h>
+#ifndef _ENDIAN_H_
+#define _ENDIAN_H_
 
-int gethostname( char* name, size_t len ) {
-    /* TODO */
+#define __LITTLE_ENDIAN 1234
+#define __BIG_ENDIAN    4321
 
-    snprintf( name, len, "localhost" );
+#define __BYTE_ORDER    __LITTLE_ENDIAN
 
-    return 0;
-}
+#endif /* _ENDIAN_H_ */

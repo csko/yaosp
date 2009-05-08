@@ -1,4 +1,4 @@
-/* gethostname function
+/* atoll function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,13 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <unistd.h>
-#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
 
-int gethostname( char* name, size_t len ) {
-    /* TODO */
+long long int atoll( const char* s ) {
+    long long int v = 0;
+    int sign = 1;
 
-    snprintf( name, len, "localhost" );
+    while ( *s == ' '  ||  ( unsigned int )( *s - 9 ) < 5u ) {
+        ++s;
+    }
 
-    return 0;
+    switch ( *s ) {
+        case '-': sign = -1;
+        case '+': ++s;
+    }
+
+    while ( ( unsigned int )( *s - '0' ) < 10u ) {
+        v=  v * 10 + *s - '0';
+        ++s;
+    }
+
+    return sign == -1 ? -v : v;
 }

@@ -49,6 +49,7 @@ void abort( void );
 
 int atoi( const char* s );
 long atol( const char* s );
+long long atoll( const char* s );
 double atof( const char* s );
 
 long int strtol( const char* nptr, char** endptr, int base );
@@ -56,6 +57,7 @@ unsigned long int strtoul( const char* nptr, char** endptr, int base );
 double strtod( const char* s, char** endptr );
 long int strtol( const char* nptr, char** endptr, int base );
 long long int strtoll( const char* nptr, char** endptr, int base );
+unsigned long long int strtoull( const char* nptr, char** endptr, int base );
 
 void qsort( void* base, size_t nmemb, size_t size, int ( *compar )( const void*, const void* ) );
 void* bsearch( const void* key, const void* base, size_t nmemb, size_t size, int ( *compare )( const void*, const void* ) );

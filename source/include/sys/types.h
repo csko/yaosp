@@ -34,6 +34,8 @@
 
 #define INFINITE_TIMEOUT 18446744073709551615ULL
 
+typedef unsigned char u_char;
+
 typedef int ssize_t;
 typedef int pid_t;
 typedef int64_t ino_t;
