@@ -25,7 +25,7 @@
 uint16_t keyboard_normal_map[ 128 ] = {
     /* 0-9 */ 0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6', '7', '8',
     /* 10-19 */ '9', '0', '-', '=', KEY_BACKSPACE, KEY_TAB, 'q', 'w', 'e', 'r',
-    /* 20-29 */ 't', 'y', 'u', 'i', 'o', 'p', '[', ']', KEY_ENTER, KEY_L_CTRL,
+    /* 20-29 */ 't', 'y', 'u', 'i', 'o', 'p', '[', ']', CTRL( 'M' ), KEY_L_CTRL,
     /* 30-39 */ 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',
     /* 40-49 */ '\'', '`', KEY_L_SHIFT, '\\', 'z', 'x', 'c', 'v', 'b', 'n',
     /* 50-59 */ 'm', ',', '.', '/', KEY_R_SHIFT, '*', KEY_L_ALT, ' ', KEY_CAPSLOCK, KEY_F1,
@@ -41,7 +41,7 @@ uint16_t keyboard_normal_map[ 128 ] = {
 uint16_t keyboard_shifted_map[ 128 ] = {
     /* 0-9 */ 0, KEY_ESCAPE, '!', '@', '#', '$', '%', '^', '&', '*',
     /* 10-19 */ '(', ')', '_', '+', KEY_BACKSPACE, KEY_TAB, 'Q', 'W', 'E', 'R',
-    /* 20-29 */ 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', KEY_ENTER, KEY_L_CTRL,
+    /* 20-29 */ 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', CTRL( 'M' ), KEY_L_CTRL,
     /* 30-39 */ 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',
     /* 40-49 */ '"', '~', KEY_L_SHIFT, '|', 'Z', 'X', 'C', 'V', 'B', 'N',
     /* 50-59 */ 'M', '<', '>', '?', KEY_R_SHIFT, '*', KEY_L_ALT, ' ', KEY_CAPSLOCK, KEY_F1,
@@ -76,7 +76,7 @@ uint16_t keyboard_escaped_map[ 128 ] = {
     /* 20-29 */ 0, 0, 0, 0, 0, 0, 0, 0, KEY_ENTER, KEY_R_CTRL,
     /* 30-39 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     /* 40-49 */ 0, 0, KEY_L_SHIFT, 0, 0, 0, 0, 0, 0, 0,
-    /* 50-59 */ 0, 0, 0, '/', KEY_R_SHIFT, 0 /* Ctrl+PrintScr */, KEY_R_ALT, 0, 0, 0,
+    /* 50-59 */ 0, 0, 0, KEY_DELETE, KEY_R_SHIFT, 0 /* Ctrl+PrintScr */, KEY_R_ALT, 0, 0, 0,
     /* 60-69 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     /* 70-79 */ 0 /* Ctrl+Break */, KEY_HOME, KEY_UP, KEY_PAGE_UP, 0, KEY_LEFT, 0, KEY_RIGHT, 0, KEY_END,
     /* 80-89 */ KEY_DOWN, KEY_PAGE_DOWN, KEY_INSERT, KEY_DELETE, 0, 0, 0, 0, 0, 0,

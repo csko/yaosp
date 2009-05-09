@@ -153,6 +153,10 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
                     pwrite( active_terminal->master_pty, "\x1b[F", 3, 0 );
                     break;
 
+                case KEY_DELETE :
+                    pwrite( active_terminal->master_pty, "\x1b[3~", 4, 0 );
+                    break;
+
                 default :
                     pwrite( active_terminal->master_pty, &param1, 1, 0 );
                     break;

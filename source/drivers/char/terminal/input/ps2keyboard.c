@@ -100,6 +100,14 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
 
     up = ( ( scancode & 0x80 ) != 0 );
 
+    /* Handle CTRL-ALT-DEL for reboot */
+
+    if ( ( key == KEY_DELETE ) &&
+         ( ( qualifiers & ( L_ALT | R_ALT ) ) != 0 ) &&
+         ( ( qualifiers & ( L_CTRL | R_CTRL ) ) != 0 ) ) {
+        reboot();
+    }
+
     switch ( key ) {
         case KEY_L_SHIFT : if ( up ) qualifiers &= ~L_SHIFT; else qualifiers |= L_SHIFT; break;
         case KEY_R_SHIFT : if ( up ) qualifiers &= ~R_SHIFT; else qualifiers |= R_SHIFT; break;
@@ -110,9 +118,6 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
         case KEY_CAPSLOCK : if ( !up ) toggle_capslock(); break;
         case KEY_NUMLOCK : if ( !up ) toggle_numlock(); break;
         case KEY_SCRLOCK : if ( !up ) toggle_scrlock(); break;
-        /* Reboot on CTRL-ALT-DEL, for now. */
-        case KEY_DELETE : if ( qualifiers & ( L_ALT | R_ALT) &&
-                               qualifiers & ( L_CTRL | R_CTRL) ) reboot(); break;
         case KEY_PAGE_UP : if ( !up ) terminal_scroll( -10 ); break;
         case KEY_PAGE_DOWN : if ( !up ) terminal_scroll( 10 ); break;
         case KEY_F1 :
