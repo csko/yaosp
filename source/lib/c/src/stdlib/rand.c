@@ -1,6 +1,7 @@
-/* random function
+/* rand function
  *
  * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,11 +17,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-unsigned long _seed = 0xDEADBEEF;
+#include <stdlib.h>
 
-long int random( void ) {
-    unsigned int next = _seed;
-    unsigned long int result;
+unsigned int _seed2 = 0xDEADBEEF;
+
+int rand( void ) {
+    unsigned int next = _seed2;
+    unsigned int result;
 
     next *= 1103515245;
     next += 12345;
@@ -36,7 +39,7 @@ long int random( void ) {
     result <<= 10;
     result ^= ( unsigned int ) ( next / 65536 ) % 1024;
 
-    _seed = next;
+    _seed2 = next;
 
     return result;
 }

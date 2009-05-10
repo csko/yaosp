@@ -68,6 +68,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/strtod.c</item>
         <item>src/stdlib/mkstemp.c</item>
         <item>src/stdlib/random.c</item>
+        <item>src/stdlib/srandom.c</item>
+        <item>src/stdlib/rand.c</item>
+        <item>src/stdlib/srand.c</item>
         <item>src/stdlib/mktemp.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
