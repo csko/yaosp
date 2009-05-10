@@ -656,15 +656,19 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                     }
 
                     case 'A' :
-                        if ( terminal->input_param_count == 1 ) {
+                        {
                             int new_y;
 
-                            new_y = terminal->cursor_row - terminal->input_params[ 0 ];
+                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
+                                new_y = terminal->cursor_row - 1;
+                            }else{
+                                new_y = terminal->cursor_row - terminal->input_params[ 0 ];
+                            }
 
                             if ( new_y >= terminal->start_line ) {
                                 terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
                             } else {
-                                kprintf( "Terminal: Invalid number of rows for cursor up!\n" );
+                                terminal_move_cursor_to( terminal, terminal->cursor_column, 0 );
                             }
                         }
 
@@ -673,15 +677,19 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     case 'B' :
-                        if ( terminal->input_param_count == 1 ) {
+                        {
                             int new_y;
 
-                            new_y = terminal->cursor_row + terminal->input_params[ 0 ];
+                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
+                                new_y = terminal->cursor_row + 1;
+                            }else{
+                                new_y = terminal->cursor_row + terminal->input_params[ 0 ];
+                            }
 
                             if ( new_y < ( terminal->start_line + screen->height ) ) {
                                 terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
                             } else {
-                                kprintf( "Terminal: Invalid number of rows for cursor down!\n" );
+                                terminal_move_cursor_to( terminal, terminal->cursor_column, screen->height - 1 );
                             }
                         }
 
@@ -690,15 +698,19 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     case 'C' :
-                        if ( terminal->input_param_count == 1 ) {
+                        {
                             int new_x;
 
-                            new_x = terminal->cursor_column + terminal->input_params[ 0 ];
+                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
+                                new_x = terminal->cursor_column + 1;
+                            }else{
+                                new_x = terminal->cursor_column + terminal->input_params[ 0 ];
+                            }
 
                             if ( new_x < screen->width ) {
                                 terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
                             } else {
-                                kprintf( "Terminal: Invalid number of rows for cursor forward!\n" );
+                                terminal_move_cursor_to( terminal, screen->width - 1, terminal->cursor_row );
                             }
                         }
 
@@ -707,15 +719,19 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     case 'D' :
-                        if ( terminal->input_param_count == 1 ) {
+                        {
                             int new_x;
 
-                            new_x = terminal->cursor_column - terminal->input_params[ 0 ];
+                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
+                                new_x = terminal->cursor_column - 1;
+                            }else{
+                                new_x = terminal->cursor_column - terminal->input_params[ 0 ];
+                            }
 
                             if ( new_x >= 0 ) {
                                 terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
                             } else {
-                                kprintf( "Terminal: Invalid number of rows for cursor backward!\n" );
+                                terminal_move_cursor_to( terminal, 0, terminal->cursor_row );
                             }
                         }
 
