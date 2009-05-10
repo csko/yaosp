@@ -16,7 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-unsigned long _seed = 0xDEADBEEF;
+unsigned int _seed = 0xDEADBEEF;
 
 long int random( void ) {
     unsigned int next = _seed;

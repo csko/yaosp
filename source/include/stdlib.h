@@ -62,9 +62,6 @@ unsigned long long int strtoull( const char* nptr, char** endptr, int base );
 void qsort( void* base, size_t nmemb, size_t size, int ( *compar )( const void*, const void* ) );
 void* bsearch( const void* key, const void* base, size_t nmemb, size_t size, int ( *compare )( const void*, const void* ) );
 
-extern unsigned long int _seed;
-extern unsigned int _seed2;
-
 long int random( void );
 void srandom(unsigned int seed);
 int rand(void);

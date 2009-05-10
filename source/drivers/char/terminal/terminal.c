@@ -655,89 +655,85 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
                     }
 
-                    case 'A' :
-                        {
-                            int new_y;
+                    case 'A' : {
+                        int new_y;
 
-                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
-                                new_y = terminal->cursor_row - 1;
-                            }else{
-                                new_y = terminal->cursor_row - terminal->input_params[ 0 ];
-                            }
+                        if ( ( terminal->input_param_count == 0 ) || ( terminal->input_params[ 0 ] == 0 ) ) {
+                            new_y = terminal->cursor_row - 1;
+                        } else {
+                            new_y = terminal->cursor_row - terminal->input_params[ 0 ];
+                        }
 
-                            if ( new_y >= terminal->start_line ) {
-                                terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
-                            } else {
-                                terminal_move_cursor_to( terminal, terminal->cursor_column, 0 );
-                            }
+                        if ( new_y >= terminal->start_line ) {
+                            terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
+                        } else {
+                            terminal_move_cursor_to( terminal, terminal->cursor_column, 0 );
                         }
 
                         terminal->input_state = IS_NONE;
 
                         break;
+                    }
 
-                    case 'B' :
-                        {
-                            int new_y;
+                    case 'B' : {
+                        int new_y;
 
-                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
-                                new_y = terminal->cursor_row + 1;
-                            }else{
-                                new_y = terminal->cursor_row + terminal->input_params[ 0 ];
-                            }
+                        if ( ( terminal->input_param_count == 0 ) || ( terminal->input_params[ 0 ] == 0 ) ) {
+                            new_y = terminal->cursor_row + 1;
+                        } else {
+                            new_y = terminal->cursor_row + terminal->input_params[ 0 ];
+                        }
 
-                            if ( new_y < ( terminal->start_line + screen->height ) ) {
-                                terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
-                            } else {
-                                terminal_move_cursor_to( terminal, terminal->cursor_column, screen->height - 1 );
-                            }
+                        if ( new_y < ( terminal->start_line + screen->height ) ) {
+                            terminal_move_cursor_to( terminal, terminal->cursor_column, new_y - terminal->start_line );
+                        } else {
+                            terminal_move_cursor_to( terminal, terminal->cursor_column, screen->height - 1 );
                         }
 
                         terminal->input_state = IS_NONE;
 
                         break;
+                    }
 
-                    case 'C' :
-                        {
-                            int new_x;
+                    case 'C' : {
+                        int new_x;
 
-                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
-                                new_x = terminal->cursor_column + 1;
-                            }else{
-                                new_x = terminal->cursor_column + terminal->input_params[ 0 ];
-                            }
+                        if ( ( terminal->input_param_count == 0 ) || ( terminal->input_params[ 0 ] == 0 ) ) {
+                            new_x = terminal->cursor_column + 1;
+                        } else {
+                            new_x = terminal->cursor_column + terminal->input_params[ 0 ];
+                        }
 
-                            if ( new_x < screen->width ) {
-                                terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
-                            } else {
-                                terminal_move_cursor_to( terminal, screen->width - 1, terminal->cursor_row );
-                            }
+                        if ( new_x < screen->width ) {
+                            terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
+                        } else {
+                            terminal_move_cursor_to( terminal, screen->width - 1, terminal->cursor_row );
                         }
 
                         terminal->input_state = IS_NONE;
 
                         break;
+                    }
 
-                    case 'D' :
-                        {
-                            int new_x;
+                    case 'D' : {
+                        int new_x;
 
-                            if ( terminal->input_param_count == 0 || terminal->input_params[ 0 ] == 0){
-                                new_x = terminal->cursor_column - 1;
-                            }else{
-                                new_x = terminal->cursor_column - terminal->input_params[ 0 ];
-                            }
+                        if ( ( terminal->input_param_count == 0 ) || ( terminal->input_params[ 0 ] == 0 ) ) {
+                            new_x = terminal->cursor_column - 1;
+                        } else {
+                            new_x = terminal->cursor_column - terminal->input_params[ 0 ];
+                        }
 
-                            if ( new_x >= 0 ) {
-                                terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
-                            } else {
-                                terminal_move_cursor_to( terminal, 0, terminal->cursor_row );
-                            }
+                        if ( new_x >= 0 ) {
+                            terminal_move_cursor_to( terminal, new_x, terminal->cursor_row );
+                        } else {
+                            terminal_move_cursor_to( terminal, 0, terminal->cursor_row );
                         }
 
                         terminal->input_state = IS_NONE;
 
                         break;
+                    }
 
                     case 'r' :
                         /* TODO: what's this? */
@@ -800,12 +796,12 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
             case IS_CLOSE_BRACKET :
                 switch ( c ) {
                     case 'A' :
-                        /* Set United Kingdom G1 character set */
+                        /* TODO: Set United Kingdom G1 character set */
                         terminal->input_state = IS_NONE;
                         break;
 
                     case 'B' :
-                        /* Set United States G1 character set */
+                        /* TODO: Set United States G1 character set */
                         terminal->input_state = IS_NONE;
                         break;
 
