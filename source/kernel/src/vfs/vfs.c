@@ -1325,6 +1325,10 @@ static int do_fcntl( bool kernel, int fd, int cmd, int arg ) {
     }
 
     switch ( cmd ) {
+        case F_DUPFD :
+            error = io_context_insert_file( io_context, file, 3 );
+            break;
+
         case F_GETFL :
             error = file->flags;
             break;
