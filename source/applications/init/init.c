@@ -82,7 +82,7 @@ int main( int argc, char** argv ) {
             char* envv[] = {
                 "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
                 "HOME=/",
-                "TERM=vt100",
+                "TERM=xterm",
                 "TEMP=/temp",
                 NULL
             };

@@ -735,6 +735,72 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
                     }
 
+                    case 'P' : {
+                        terminal_buffer_t* buffer;
+
+                        buffer = &terminal->lines[ terminal->cursor_row ];
+
+                        if ( ( buffer != NULL ) &&
+                             ( terminal->cursor_column < buffer->last_dirty ) ) {
+                            memmove(
+                                &buffer->data[ terminal->cursor_column ],
+                                &buffer->data[ terminal->cursor_column + 1 ],
+                                ( buffer->last_dirty - terminal->cursor_column ) * sizeof( terminal_buffer_item_t )
+                            );
+
+                            buffer->last_dirty--;
+
+                            /* Update the screen */
+
+                            if ( terminal == active_terminal ) {
+                                terminal_do_full_update( terminal );
+                            }
+                        }
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+                    }
+
+                    case '@' : {
+                        terminal_buffer_t* buffer;
+
+                        buffer = &terminal->lines[ terminal->cursor_row ];
+
+                        /* TODO: We should insert the last character to the next line if we insert to a full line? */
+
+                        if ( ( buffer != NULL ) &&
+                            ( buffer->last_dirty < ( screen->width - 1 ) ) ) {
+                            terminal_buffer_item_t* data_item;
+
+                            ASSERT( buffer->last_dirty >= terminal->cursor_column );
+
+                            memmove(
+                                &buffer->data[ terminal->cursor_column + 1 ],
+                                &buffer->data[ terminal->cursor_column ],
+                                ( buffer->last_dirty - terminal->cursor_column + 1 ) * sizeof( terminal_buffer_item_t )
+                            );
+
+                            data_item = &buffer->data[ terminal->cursor_column ];
+
+                            data_item->character = ' ';
+                            data_item->fg_color = COLOR_LIGHT_GRAY;
+                            data_item->bg_color = COLOR_BLACK;
+
+                            buffer->last_dirty++;
+
+                            /* Update the screen */
+
+                            if ( terminal == active_terminal ) {
+                                terminal_do_full_update( terminal );
+                            }
+                        }
+
+                        terminal->input_state = IS_NONE;
+
+                        break;
+                    }
+
                     case 'r' :
                         /* TODO: what's this? */
                         terminal->input_state = IS_NONE;
