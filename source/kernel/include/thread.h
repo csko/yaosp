@@ -61,6 +61,7 @@ typedef struct thread {
     char* name;
     int state;
     int priority;
+    int exit_code;
 
     struct process* process;
 

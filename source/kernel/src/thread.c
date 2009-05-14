@@ -224,6 +224,7 @@ void thread_exit( int exit_code ) {
 
     thread = current_thread();
     thread->state = THREAD_ZOMBIE;
+    thread->exit_code = exit_code;
 
     if ( __likely( thread->parent_id != -1 ) ) {
         thread_t* parent;

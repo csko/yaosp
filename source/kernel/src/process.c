@@ -343,11 +343,11 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
 
             error = tmp->id;
 
-            destroy_thread( tmp );
-
             if ( status != NULL ) {
-                *status = 0; /* TODO: This is a bit of hack :) */
+                *status = tmp->exit_code;
             }
+
+            destroy_thread( tmp );
 
             return error;
         }

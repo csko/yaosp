@@ -52,9 +52,19 @@ def execute_and_wait( app, args ) :
     pid = os.fork()
 
     if pid == 0 :
-        os.execve( app, args, os.environ )
+        try :
+            os.execve( app, args, os.environ )
+        except OSError, e :
+            sys.exit( -1 )
+    elif pid < 0 :
+        return False
     else :
-        os.waitpid( pid, 0 )
+        pid, status = os.waitpid( pid, 0 )
+
+        if status != 0 :
+            return False
+
+    return True
 
 # Select partition to install
 
@@ -86,23 +96,33 @@ partition = partitions[ selected ]
 
 print
 print "Creating ext2 filesystem on %s ... " % ( partition[ "name" ] )
-print
 
-execute_and_wait(
+result = execute_and_wait(
     "/application/fstools",
     [ "fstools", "--action=create", "--filesystem=ext2", "--device=" + partition[ "name" ] ]
 )
+
+if not result :
+    print "Failed to execute fstools, make sure it's installed on your system!"
+    sys.exit(0)
+
+print
 
 # Unpack the base yaOSp package
 
 print
 print "Installing yaOSp base package ..."
-print
 
 os.mkdir( "/media/install" )
 os.mount( partition[ "name" ], "/media/install", "ext2" )
 
-base = tarfile.open( "/yaosp/yaosp.tar.bz2" )
+try :
+    base = tarfile.open( "/yaosp/yaosp.tar.bz2" )
+except IOError, e :
+    print "The yaosp base package is not found!"
+    sys.exit(0)
+
+print
 
 for entry in base :
     print "Extracting /media/install/%s" % ( entry.name )
