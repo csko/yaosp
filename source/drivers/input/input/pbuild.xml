@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,10 +21,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>terminal.c</item>
-        <item>pty.c</item>
-        <item>kterm.c</item>
+        <item>input.c</item>
         <item>control.c</item>
+        <item>driver.c</item>
+        <item>node.c</item>
+        <item>ps2keyboard/ps2keyboard.c</item>
+        <item>ps2keyboard/keymap.c</item>
     </array>
 
     <target name="clean">
@@ -40,11 +42,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo></echo>
-        <echo>Compiling terminal driver</echo>
+        <echo>Compiling input driver</echo>
         <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/drivers/char/terminal/${i}</echo>
+            <echo>[GCC    ] source/drivers/input/input/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -62,13 +64,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo></echo>
-        <echo>Linking terminal driver</echo>
+        <echo>Linking input driver</echo>
         <echo></echo>
-        <echo>[GCC    ] source/drivers/char/terminal/objs/terminal</echo>
+        <echo>[GCC    ] source/drivers/input/input/objs/input</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <output>objs/terminal</output>
+            <output>objs/input</output>
             <flag>-m32</flag>
             <flag>-shared</flag>
             <flag>-nostartfiles</flag>
@@ -77,7 +79,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/terminal" to="../../../../build/image/system/module/char/terminal"/>
+        <copy from="objs/input" to="../../../../build/image/system/module/input/input"/>
     </target>
 
     <target name="all">

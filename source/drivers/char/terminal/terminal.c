@@ -21,6 +21,8 @@
 #include <thread.h>
 #include <macros.h>
 #include <module.h>
+#include <ioctl.h>
+#include <input.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
@@ -28,7 +30,6 @@
 #include "pty.h"
 #include "terminal.h"
 #include "kterm.h"
-#include "input.h"
 
 semaphore_id lock;
 thread_id read_thread;
@@ -36,10 +37,6 @@ terminal_t* active_terminal = NULL;
 terminal_t* terminals[ MAX_TERMINAL_COUNT ];
 
 static console_t* screen;
-
-static terminal_input_t* input_drivers[] = {
-    &ps2_keyboard
-};
 
 static void terminal_do_full_update( terminal_t* terminal ) {
     int i;
@@ -105,10 +102,10 @@ static void terminal_do_full_update( terminal_t* terminal ) {
     screen->ops->gotoxy( screen, terminal->cursor_column, terminal->cursor_row - terminal->start_line );
 }
 
-int terminal_handle_event( event_type_t event, int param1, int param2 ) {
+int terminal_handle_event( input_event_t* event ) {
     LOCK( lock );
 
-    switch ( ( int )event ) {
+    switch ( ( int )event->event ) {
         case E_KEY_PRESSED : {
             int tmp;
 
@@ -128,7 +125,7 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
                 break;
             }
 
-            switch ( param1 ) {
+            switch ( event->param1 ) {
                 case KEY_LEFT :
                     pwrite( active_terminal->master_pty, "\x1b[D", 3, 0 );
                     break;
@@ -158,7 +155,7 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
                     break;
 
                 default :
-                    pwrite( active_terminal->master_pty, &param1, 1, 0 );
+                    pwrite( active_terminal->master_pty, &event->param1, 1, 0 );
                     break;
             }
 
@@ -167,6 +164,65 @@ int terminal_handle_event( event_type_t event, int param1, int param2 ) {
     }
 
     UNLOCK( lock );
+
+    return 0;
+}
+
+static int input_thread( void* arg ) {
+    int fd;
+    int error;
+    input_event_t event;
+
+    fd = open( "/device/input/node/0", O_RDONLY );
+
+    if ( fd < 0 ) {
+        kprintf( "Failed to open input node!\n" );
+
+        return 0;
+    }
+
+    while ( 1 ) {
+        error = pread( fd, &event, sizeof( input_event_t ), 0 );
+
+        if ( error < 0 ) {
+            kprintf( "Failed to read from input node: %d\n", error );
+            break;
+        }
+
+        terminal_handle_event( &event );
+    }
+
+    close( fd );
+
+    return 0;
+}
+
+static int init_input_handler( void ) {
+    int fd;
+    int error;
+    thread_id thread;
+
+    fd = open( "/device/control/input", O_RDONLY );
+
+    if ( fd < 0 ) {
+        return fd;
+    }
+
+    error = ioctl( fd, IOCTL_INPUT_CREATE_DEVICE, NULL );
+
+    close( fd );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    thread = create_kernel_thread( "terminal_input", PRIORITY_NORMAL, input_thread, NULL, 0 );
+
+    if ( thread < 0 ) {
+        return thread;
+    }
+
+    wake_up_thread( thread );
 
     return 0;
 }
@@ -1023,7 +1079,6 @@ int init_terminals( void ) {
 }
 
 int init_module( void ) {
-    int i;
     int error;
 
     lock = create_semaphore( "terminal lock", SEMAPHORE_BINARY, 0, 1 );
@@ -1072,12 +1127,10 @@ int init_module( void ) {
         return error;
     }
 
-    /* Initialize inputs */
+    error = init_input_handler();
 
-    for ( i = 0; i < ARRAY_SIZE( input_drivers ); i++ ) {
-        if ( input_drivers[ i ]->init() >= 0 ) {
-            input_drivers[ i ]->start();
-        }
+    if ( error < 0 ) {
+        return error;
     }
 
     error = init_terminal_ctrl_device();
@@ -1093,4 +1146,4 @@ int destroy_module( void ) {
     return 0;
 }
 
-MODULE_OPTIONAL_DEPENDENCIES( "ps2" );
+MODULE_DEPENDENCIES( "input" );

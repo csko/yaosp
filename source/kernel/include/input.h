@@ -1,4 +1,4 @@
-/* Terminal driver
+/* Input definitions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,14 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _TERMINAL_INPUT_H_
-#define _TERMINAL_INPUT_H_
+#ifndef _INPUT_H_
+#define _INPUT_H_
 
-typedef enum event_type {
+typedef enum input_event_type {
     E_KEY_PRESSED,
     E_KEY_RELEASED,
+    E_MOUSE_PRESSED,
+    E_MOUSE_RELEASED,
     E_MOUSE_MOVED,
-} event_type_t;
+    E_MOUSE_SCROLLED
+} input_event_type_t;
+
+typedef struct input_event {
+    input_event_type_t event;
+
+    int param1;
+    int param2;
+} input_event_t;
 
 enum {
     KEY_TAB = 7,
@@ -63,17 +73,4 @@ enum {
     KEY_RIGHT = 0x1F00
 };
 
-typedef int init_input_t( void );
-typedef int start_input_t( void );
-
-typedef struct terminal_input {
-    const char* name;
-    init_input_t* init;
-    start_input_t* start;
-} terminal_input_t;
-
-extern terminal_input_t ps2_keyboard;
-
-int terminal_handle_event( event_type_t event, int param1, int param2 );
-
-#endif /* _TERMINAL_INPUT_H_ */
+#endif /* _INPUT_H_ */

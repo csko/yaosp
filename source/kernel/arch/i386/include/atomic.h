@@ -82,4 +82,4 @@ int atomic_swap( atomic_t* atomic, int value );
  */
 int atomic_test_and_clear( volatile void* address, int bit );
 
-#endif // _ARCH_ATOMIC_H_
+#endif /* _ARCH_ATOMIC_H_ */

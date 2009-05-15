@@ -37,6 +37,7 @@
 #include <lib/string.h>
 #include <lib/hashtable.h>
 #include <lib/ctype.h>
+#include <lib/stack.h>
 
 #include <arch/atomic.h>
 #include <arch/spinlock.h>
@@ -154,6 +155,12 @@ static kernel_symbol_t symbols[] = {
     { "hashtable_iterate", ( ptr_t )hashtable_iterate },
     { "hash_number", ( ptr_t )hash_number },
     { "hash_string", ( ptr_t )hash_string },
+
+    /* Stack functions */
+    { "init_stack", ( ptr_t )init_stack },
+    { "destroy_stack", ( ptr_t )destroy_stack },
+    { "stack_push", ( ptr_t )stack_push },
+    { "stack_pop", ( ptr_t )stack_pop },
 
     /* Networking functions */
     { "create_packet", ( ptr_t )create_packet },

@@ -1,4 +1,4 @@
-/* Terminal driver
+/* PS/2 keyboard keymap
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
@@ -17,8 +17,7 @@
  */
 
 #include <types.h>
-
-#include "../input.h"
+#include <input.h>
 
 #define CTRL(c) ((c)&0x1F)
 

@@ -126,6 +126,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/lib/time.c</item>
         <item>src/lib/ctype.c</item>
         <item>src/lib/circular.c</item>
+        <item>src/lib/stack.c</item>
     </array>
 
     <target name="clean">
