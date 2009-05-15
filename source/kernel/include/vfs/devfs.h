@@ -1,6 +1,6 @@
 /* Device file system
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,9 +20,9 @@
 #ifndef _VFS_DEVFS_H_
 #define _VFS_DEVFS_H_
 
+#include <time.h>
 #include <vfs/inode.h>
 #include <lib/hashtable.h>
-#include <time.h>
 
 struct select_request;
 
@@ -56,11 +56,10 @@ typedef struct devfs_node {
 
 typedef struct devfs_dir_cookie {
     int position;
-    int mountflags;
 } devfs_dir_cookie_t;
 
 int create_device_node( const char* path, device_calls_t* calls, void* cookie );
 
 int init_devfs( void );
 
-#endif // _VFS_DEVFS_H_
+#endif /* _VFS_DEVFS_H_ */
