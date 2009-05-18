@@ -20,6 +20,7 @@
 #define _STDLIB_H_
 
 #include <stddef.h>
+#include <sys/types.h>
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
@@ -63,12 +64,9 @@ void qsort( void* base, size_t nmemb, size_t size, int ( *compar )( const void*,
 void* bsearch( const void* key, const void* base, size_t nmemb, size_t size, int ( *compare )( const void*, const void* ) );
 
 long int random( void );
-void srandom(unsigned int seed);
-int rand(void);
-/*
-int rand_r(unsigned int *seedp);
-*/
-void srand(unsigned int seed);
+void srandom( unsigned int seed );
+int rand( void );
+void srand( unsigned int seed );
 
 char* mktemp( char* template );
 int mkstemp( char* template );

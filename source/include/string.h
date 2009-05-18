@@ -23,7 +23,11 @@
 #include <stddef.h>
 
 #ifndef NULL
+#ifndef __cplusplus
+#define NULL 0
+#else
 #define NULL ((void*)0)
+#endif /* __cplusplus */
 #endif /* NULL */
 
 void* memset( void* s, int c, size_t n );

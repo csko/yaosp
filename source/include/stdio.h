@@ -42,7 +42,7 @@
 
 #ifndef BUFSIZ
 #define BUFSIZ _IO_BUFSIZE
-#endif // BUFSIZ
+#endif /* BUFSIZ */
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
@@ -126,4 +126,4 @@ int remove( const char* path );
 
 void perror( const char* s );
 
-#endif // _STDIO_H_
+#endif /* _STDIO_H_ */
