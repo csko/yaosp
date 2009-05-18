@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <console.h>
+#include <semaphore.h>
 
 #define MAX_TERMINAL_COUNT 6
 
@@ -76,7 +77,11 @@ typedef struct terminal {
     terminal_buffer_t* lines;
 } terminal_t;
 
+extern semaphore_id terminal_lock;
+extern terminal_t* active_terminal;
 extern terminal_t* terminals[ MAX_TERMINAL_COUNT ];
+
+void terminal_do_full_update( terminal_t* terminal );
 
 void terminal_put_char( terminal_t* terminal, char c );
 
@@ -84,5 +89,6 @@ int terminal_scroll( int offset );
 int terminal_switch_to( int index );
 
 int init_terminal_ctrl_device( void );
+int init_terminal_input( void );
 
 #endif /* _TERMINAL_TERMINAL_H_ */

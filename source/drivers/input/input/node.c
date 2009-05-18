@@ -166,6 +166,8 @@ int insert_input_device( input_device_t* device ) {
 
     snprintf( node, sizeof( node ), "input/node/%u", input_node_counter );
 
+    device->node_number = input_node_counter;
+
     input_node_counter++;
 
     error = create_device_node( node, &input_device_calls, ( void* )device );

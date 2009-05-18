@@ -345,8 +345,19 @@ class CopyWork( Work ) :
             self._do_copy_file( sf, df )
 
     def _do_copy_file( self, src, dest ) :
-        src_file = open( src, "r" )
-        dest_file = open( dest, "w" )
+        try :
+            src_file = open( src, "r" )
+        except IOError, e :
+            print "CopyWork: Failed to open source file: " + src
+            print "Build stopped."
+            sys.exit( 1 );
+
+        try :
+            dest_file = open( dest, "w" )
+        except IOError, e :
+            print "CopyWork: Failed to open destination file: " + dest
+            print "Build stopped."
+            sys.exit( 1 )
 
         dest_file.write( src_file.read() )
 

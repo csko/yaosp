@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>pty.c</item>
         <item>kterm.c</item>
         <item>control.c</item>
+        <item>input.c</item>
     </array>
 
     <target name="clean">

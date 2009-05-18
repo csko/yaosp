@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <ioctl.h>
+#include <input.h>
 #include <vfs/devfs.h>
 
 #include "input.h"
@@ -36,13 +37,18 @@ static int input_ctrl_ioctl( void* node, void* cookie, uint32_t command, void* a
     switch ( command ) {
         case IOCTL_INPUT_CREATE_DEVICE : {
             input_device_t* device;
+            input_cmd_create_node_t* cmd;
 
             device = create_input_device( 0 );
 
             if ( device != NULL ) {
                 error = insert_input_device( device );
 
-                if ( error < 0 ) {
+                if ( error >= 0 ) {
+                    cmd = ( input_cmd_create_node_t* )args;
+
+                    cmd->node_number = device->node_number;
+                } else {
                     destroy_input_device( device );
                 }
             } else {
@@ -54,6 +60,7 @@ static int input_ctrl_ioctl( void* node, void* cookie, uint32_t command, void* a
 
         default :
             error = -ENOSYS;
+            break;
     }
 
     return error;

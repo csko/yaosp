@@ -19,6 +19,8 @@
 #ifndef _INPUT_H_
 #define _INPUT_H_
 
+#include <types.h>
+
 typedef enum input_event_type {
     E_KEY_PRESSED,
     E_KEY_RELEASED,
@@ -72,5 +74,9 @@ enum {
     KEY_LEFT = 0x1E00,
     KEY_RIGHT = 0x1F00
 };
+
+typedef struct input_cmd_create_node {
+    uint32_t node_number;
+} input_cmd_create_node_t;
 
 #endif /* _INPUT_H_ */

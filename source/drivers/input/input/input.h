@@ -47,6 +47,7 @@ typedef struct input_event_wrapper {
 
 typedef struct input_device {
     int flags;
+    uint32_t node_number;
 
     semaphore_id lock;
     semaphore_id sync;

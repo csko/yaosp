@@ -31,14 +31,14 @@
 #include "terminal.h"
 #include "kterm.h"
 
-semaphore_id lock;
+semaphore_id terminal_lock = -1;
 thread_id read_thread;
 terminal_t* active_terminal = NULL;
 terminal_t* terminals[ MAX_TERMINAL_COUNT ];
 
 static console_t* screen;
 
-static void terminal_do_full_update( terminal_t* terminal ) {
+void terminal_do_full_update( terminal_t* terminal ) {
     int i;
     int j;
     char bg_color;
@@ -102,136 +102,12 @@ static void terminal_do_full_update( terminal_t* terminal ) {
     screen->ops->gotoxy( screen, terminal->cursor_column, terminal->cursor_row - terminal->start_line );
 }
 
-int terminal_handle_event( input_event_t* event ) {
-    LOCK( lock );
-
-    switch ( ( int )event->event ) {
-        case E_KEY_PRESSED : {
-            int tmp;
-
-            /* Scroll the terminal to the bottom */
-
-            tmp = MAX( 0, active_terminal->line_count - TERMINAL_HEIGHT );
-
-            if ( active_terminal->start_line != tmp ) {
-                active_terminal->start_line = tmp;
-
-                terminal_do_full_update( active_terminal );
-            }
-
-            /* Write the new character to the terminal */
-
-            if ( ( active_terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) == 0 ) {
-                break;
-            }
-
-            switch ( event->param1 ) {
-                case KEY_LEFT :
-                    pwrite( active_terminal->master_pty, "\x1b[D", 3, 0 );
-                    break;
-
-                case KEY_RIGHT :
-                    pwrite( active_terminal->master_pty, "\x1b[C", 3, 0 );
-                    break;
-
-                case KEY_UP :
-                    pwrite( active_terminal->master_pty, "\x1b[A", 3, 0 );
-                    break;
-
-                case KEY_DOWN :
-                    pwrite( active_terminal->master_pty, "\x1b[B", 3, 0 );
-                    break;
-
-                case KEY_HOME :
-                    pwrite( active_terminal->master_pty, "\x1b[H", 3, 0 );
-                    break;
-
-                case KEY_END :
-                    pwrite( active_terminal->master_pty, "\x1b[F", 3, 0 );
-                    break;
-
-                case KEY_DELETE :
-                    pwrite( active_terminal->master_pty, "\x1b[3~", 4, 0 );
-                    break;
-
-                default :
-                    pwrite( active_terminal->master_pty, &event->param1, 1, 0 );
-                    break;
-            }
-
-            break;
-        }
-    }
-
-    UNLOCK( lock );
-
-    return 0;
-}
-
-static int input_thread( void* arg ) {
-    int fd;
-    int error;
-    input_event_t event;
-
-    fd = open( "/device/input/node/0", O_RDONLY );
-
-    if ( fd < 0 ) {
-        kprintf( "Failed to open input node!\n" );
-
-        return 0;
-    }
-
-    while ( 1 ) {
-        error = pread( fd, &event, sizeof( input_event_t ), 0 );
-
-        if ( error < 0 ) {
-            kprintf( "Failed to read from input node: %d\n", error );
-            break;
-        }
-
-        terminal_handle_event( &event );
-    }
-
-    close( fd );
-
-    return 0;
-}
-
-static int init_input_handler( void ) {
-    int fd;
-    int error;
-    thread_id thread;
-
-    fd = open( "/device/control/input", O_RDONLY );
-
-    if ( fd < 0 ) {
-        return fd;
-    }
-
-    error = ioctl( fd, IOCTL_INPUT_CREATE_DEVICE, NULL );
-
-    close( fd );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    thread = create_kernel_thread( "terminal_input", PRIORITY_NORMAL, input_thread, NULL, 0 );
-
-    if ( thread < 0 ) {
-        return thread;
-    }
-
-    wake_up_thread( thread );
-
-    return 0;
-}
 
 int terminal_scroll( int offset ) {
     int tmp;
     int new_start_line;
 
-    LOCK( lock );
+    LOCK( terminal_lock );
 
     new_start_line = active_terminal->start_line + offset;
 
@@ -251,7 +127,7 @@ int terminal_scroll( int offset ) {
         terminal_do_full_update( active_terminal );
     }
 
-    UNLOCK( lock );
+    UNLOCK( terminal_lock );
 
     return 0;
 }
@@ -261,12 +137,12 @@ int terminal_switch_to( int index ) {
         return -EINVAL;
     }
 
-    LOCK( lock );
+    LOCK( terminal_lock );
 
     /* Make sure we're switching to another terminal */
 
     if ( terminals[ index ] == active_terminal ) {
-        UNLOCK( lock );
+        UNLOCK( terminal_lock );
 
         return 0;
     }
@@ -278,7 +154,7 @@ int terminal_switch_to( int index ) {
     screen->ops->set_bg_color( screen, active_terminal->bg_color );
     screen->ops->set_fg_color( screen, active_terminal->fg_color );
 
-    UNLOCK( lock );
+    UNLOCK( terminal_lock );
 
     return 0;
 }
@@ -1007,9 +883,11 @@ static int terminal_read_thread( void* arg ) {
                 size = pread( terminals[ i ]->master_pty, buffer, sizeof( buffer ), 0 );
 
                 if ( size > 0 ) {
-                    LOCK( lock );
+                    LOCK( terminal_lock );
+
                     terminal_parse_data( terminals[ i ], buffer, size );
-                    UNLOCK( lock );
+
+                    UNLOCK( terminal_lock );
                 }
             }
         }
@@ -1081,10 +959,10 @@ int init_terminals( void ) {
 int init_module( void ) {
     int error;
 
-    lock = create_semaphore( "terminal lock", SEMAPHORE_BINARY, 0, 1 );
+    terminal_lock = create_semaphore( "terminal lock", SEMAPHORE_BINARY, 0, 1 );
 
-    if ( lock < 0 ) {
-        return lock;
+    if ( terminal_lock < 0 ) {
+        return terminal_lock;
     }
 
     error = mkdir( "/device/terminal", 0 );
@@ -1127,7 +1005,7 @@ int init_module( void ) {
         return error;
     }
 
-    error = init_input_handler();
+    error = init_terminal_input();
 
     if ( error < 0 ) {
         return error;
