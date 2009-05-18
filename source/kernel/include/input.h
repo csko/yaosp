@@ -27,7 +27,8 @@ typedef enum input_event_type {
     E_MOUSE_PRESSED,
     E_MOUSE_RELEASED,
     E_MOUSE_MOVED,
-    E_MOUSE_SCROLLED
+    E_MOUSE_SCROLLED,
+    E_QUALIFIERS_CHANGED
 } input_event_type_t;
 
 typedef struct input_event {
@@ -74,6 +75,22 @@ enum {
     KEY_LEFT = 0x1E00,
     KEY_RIGHT = 0x1F00
 };
+
+enum {
+    Q_LEFT_SHIFT = ( 1 << 0 ),
+    Q_RIGHT_SHIFT = ( 1 << 1 ),
+    Q_LEFT_CTRL = ( 1 << 2 ),
+    Q_RIGHT_CTRL = ( 1 << 3 ),
+    Q_LEFT_ALT = ( 1 << 4 ),
+    Q_RIGHT_ALT = ( 1 << 5),
+    Q_CAPSLOCK = ( 1 << 6 ),
+    Q_SCRLOCK = ( 1 << 7 ),
+    Q_NUMLOCK = ( 1 << 8 )
+};
+
+#define Q_SHIFT ( Q_LEFT_SHIFT | Q_RIGHT_SHIFT )
+#define Q_CTRL  ( Q_LEFT_CTRL | Q_RIGHT_CTRL )
+#define Q_ALT   ( Q_LEFT_ALT | Q_RIGHT_ALT )
 
 typedef struct input_cmd_create_node {
     uint32_t node_number;

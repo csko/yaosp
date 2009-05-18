@@ -27,18 +27,6 @@
 
 #include "../input.h"
 
-enum {
-    L_SHIFT = 1,
-    R_SHIFT = 2,
-    CAPSLOCK = 4,
-    SCRLOCK = 8,
-    NUMLOCK = 16,
-    L_CTRL = 32,
-    R_CTRL = 64,
-    L_ALT = 128,
-    R_ALT = 256,
-};
-
 typedef struct ps2_kbd_state {
     uint32_t qualifiers;
 } ps2_kbd_state_t;
@@ -55,10 +43,20 @@ extern uint16_t keyboard_shifted_map[];
 extern uint16_t keyboard_ctrl_map[];
 extern uint16_t keyboard_escaped_map[];
 
+static inline int ps2_kbd_insert_event( input_event_type_t event, int param1 ) {
+    input_event_t e;
+
+    e.event = event;
+    e.param1 = param1;
+    e.param2 = 0;
+
+    return insert_input_event( &e );
+}
+
 static void ps2_keyboard_handle( uint8_t scancode ) {
     bool up;
     uint16_t key;
-    input_event_t event;
+
 
     if ( ( scancode == 0xE0 ) ||
          ( current_state == NULL ) ) {
@@ -67,19 +65,19 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
 
     if ( last_scancode == 0xE0 ) {
         key = keyboard_escaped_map[ scancode & 0x7F ];
-    } else if ( ( current_state->qualifiers & ( L_SHIFT | R_SHIFT ) ) != 0 ) {
-        if ( current_state->qualifiers & CAPSLOCK ) {
+    } else if ( ( current_state->qualifiers & Q_SHIFT ) != 0 ) {
+        if ( current_state->qualifiers & Q_CAPSLOCK ) {
             key = keyboard_normal_map[ scancode & 0x7F ];
         } else {
             key = keyboard_shifted_map[ scancode & 0x7F ];
         }
-    } else if ( ( current_state->qualifiers & ( CAPSLOCK ) ) != 0 ) {
-        if ( current_state->qualifiers & ( L_SHIFT | R_SHIFT ) ) {
+    } else if ( ( current_state->qualifiers & Q_CAPSLOCK ) != 0 ) {
+        if ( current_state->qualifiers & Q_SHIFT ) {
             key = keyboard_normal_map[ scancode & 0x7F ];
         } else {
             key = keyboard_shifted_map[ scancode & 0x7F ];
         }
-    } else if ( ( current_state->qualifiers & ( L_CTRL | R_CTRL ) ) != 0 ) {
+    } else if ( ( current_state->qualifiers & Q_CTRL ) != 0 ) {
         key = keyboard_ctrl_map[ scancode & 0x7F ];
     } else {
         key = keyboard_normal_map[ scancode & 0x7F ];
@@ -92,17 +90,41 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
     up = ( ( scancode & 0x80 ) != 0 );
 
     switch ( key ) {
-        case KEY_L_SHIFT : if ( up ) current_state->qualifiers &= ~L_SHIFT; else current_state->qualifiers |= L_SHIFT; break;
-        case KEY_R_SHIFT : if ( up ) current_state->qualifiers &= ~R_SHIFT; else current_state->qualifiers |= R_SHIFT; break;
-        case KEY_L_CTRL : if ( up ) current_state->qualifiers &= ~L_CTRL; else current_state->qualifiers |= L_CTRL; break;
-        case KEY_R_CTRL : if ( up ) current_state->qualifiers &= ~R_CTRL; else current_state->qualifiers |= R_CTRL; break;
-        case KEY_L_ALT : if ( up ) current_state->qualifiers &= ~L_ALT; else current_state->qualifiers |= L_ALT; break;
-        case KEY_R_ALT : if ( up ) current_state->qualifiers &= ~R_ALT; else current_state->qualifiers |= R_ALT; break;
-        default :
-            event.event = up ? E_KEY_RELEASED : E_KEY_PRESSED;
-            event.param1 = ( int )key;
+        case KEY_L_SHIFT :
+            if ( up ) current_state->qualifiers &= ~Q_LEFT_SHIFT; else current_state->qualifiers |= Q_LEFT_SHIFT;
+            ps2_kbd_insert_event( E_QUALIFIERS_CHANGED, current_state->qualifiers );
+            break;
 
-            insert_input_event( &event );
+        case KEY_R_SHIFT :
+            if ( up ) current_state->qualifiers &= ~Q_RIGHT_SHIFT; else current_state->qualifiers |= Q_RIGHT_SHIFT;
+            ps2_kbd_insert_event( E_QUALIFIERS_CHANGED, current_state->qualifiers );
+            break;
+
+        case KEY_L_CTRL :
+            if ( up ) current_state->qualifiers &= ~Q_LEFT_CTRL; else current_state->qualifiers |= Q_LEFT_CTRL;
+            ps2_kbd_insert_event( E_QUALIFIERS_CHANGED, current_state->qualifiers );
+            break;
+
+        case KEY_R_CTRL :
+            if ( up ) current_state->qualifiers &= ~Q_RIGHT_CTRL; else current_state->qualifiers |= Q_RIGHT_CTRL;
+            ps2_kbd_insert_event( E_QUALIFIERS_CHANGED, current_state->qualifiers );
+            break;
+
+        case KEY_L_ALT :
+            if ( up ) current_state->qualifiers &= ~Q_LEFT_ALT; else current_state->qualifiers |= Q_LEFT_ALT;
+            ps2_kbd_insert_event( E_QUALIFIERS_CHANGED, current_state->qualifiers );
+            break;
+
+        case KEY_R_ALT :
+            if ( up ) current_state->qualifiers &= ~Q_RIGHT_ALT; else current_state->qualifiers |= Q_RIGHT_ALT;
+            ps2_kbd_insert_event( E_QUALIFIERS_CHANGED, current_state->qualifiers );
+            break;
+
+        default :
+            ps2_kbd_insert_event(
+                up ? E_KEY_RELEASED : E_KEY_PRESSED,
+                ( int )key
+            );
 
             break;
     }

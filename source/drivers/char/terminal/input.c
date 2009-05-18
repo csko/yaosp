@@ -24,6 +24,28 @@
 #include "terminal.h"
 
 static int input_device = -1;
+static int current_qualifiers = 0;
+
+static inline int terminal_send_event( terminal_t* terminal, const char* data, size_t size ) {
+    int error;
+
+    if ( ( terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) == 0 ) {
+        return 0;
+    }
+
+    error = pwrite(
+        terminal->master_pty,
+        data,
+        size,
+        0
+    );
+
+    if ( error != ( int )size ) {
+        return -1;
+    }
+
+    return 0;
+}
 
 static int terminal_handle_event( input_event_t* event ) {
     LOCK( terminal_lock );
@@ -44,46 +66,65 @@ static int terminal_handle_event( input_event_t* event ) {
 
             /* Write the new character to the terminal */
 
-            if ( ( active_terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) == 0 ) {
-                break;
-            }
-
             switch ( event->param1 ) {
                 case KEY_LEFT :
-                    pwrite( active_terminal->master_pty, "\x1b[D", 3, 0 );
+                    terminal_send_event( active_terminal, "\x1b[D", 3 );
                     break;
 
                 case KEY_RIGHT :
-                    pwrite( active_terminal->master_pty, "\x1b[C", 3, 0 );
+                    terminal_send_event( active_terminal, "\x1b[C", 3 );
                     break;
 
                 case KEY_UP :
-                    pwrite( active_terminal->master_pty, "\x1b[A", 3, 0 );
+                    terminal_send_event( active_terminal, "\x1b[A", 3 );
                     break;
 
                 case KEY_DOWN :
-                    pwrite( active_terminal->master_pty, "\x1b[B", 3, 0 );
+                    terminal_send_event( active_terminal, "\x1b[B", 3 );
                     break;
 
                 case KEY_HOME :
-                    pwrite( active_terminal->master_pty, "\x1b[H", 3, 0 );
+                    terminal_send_event( active_terminal, "\x1b[H", 3 );
                     break;
 
                 case KEY_END :
-                    pwrite( active_terminal->master_pty, "\x1b[F", 3, 0 );
+                    terminal_send_event( active_terminal, "\x1b[F", 3 );
                     break;
 
                 case KEY_DELETE :
-                    pwrite( active_terminal->master_pty, "\x1b[3~", 4, 0 );
+                    terminal_send_event( active_terminal, "\x1b[3~", 4 );
+                    break;
+
+                case KEY_F1 :
+                case KEY_F2 :
+                case KEY_F3 :
+                case KEY_F4 :
+                case KEY_F5 :
+                case KEY_F6 :
+                    if ( current_qualifiers & Q_ALT ) {
+                        terminal_switch_to( ( event->param1 - KEY_F1 ) >> 8 );
+                    }
+
                     break;
 
                 default :
-                    pwrite( active_terminal->master_pty, &event->param1, 1, 0 );
+                    terminal_send_event( active_terminal, ( const char* )&event->param1, 1 );
                     break;
             }
 
             break;
         }
+
+        case E_KEY_RELEASED :
+            break;
+
+        case E_QUALIFIERS_CHANGED :
+            current_qualifiers = event->param1;
+            break;
+
+        default :
+            kprintf( "Terminal: Unknown input event: %d\n", event->event );
+            break;
     }
 
     UNLOCK( terminal_lock );

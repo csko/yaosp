@@ -344,7 +344,8 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
             error = tmp->id;
 
             if ( status != NULL ) {
-                *status = tmp->exit_code;
+                /* TODO: this makes bash unhappy on non-existing commands ... *status = tmp->exit_code; */
+                *status = 0;
             }
 
             destroy_thread( tmp );

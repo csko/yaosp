@@ -36,7 +36,11 @@ static int term_ctrl_ioctl( void* node, void* cookie, uint32_t command, void* ar
 
             active = *( ( int* )args );
 
+            LOCK( terminal_lock );
+
             terminal_switch_to( active );
+
+            UNLOCK( terminal_lock );
 
             break;
         }

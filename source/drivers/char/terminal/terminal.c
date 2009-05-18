@@ -137,13 +137,9 @@ int terminal_switch_to( int index ) {
         return -EINVAL;
     }
 
-    LOCK( terminal_lock );
-
     /* Make sure we're switching to another terminal */
 
     if ( terminals[ index ] == active_terminal ) {
-        UNLOCK( terminal_lock );
-
         return 0;
     }
 
@@ -153,8 +149,6 @@ int terminal_switch_to( int index ) {
 
     screen->ops->set_bg_color( screen, active_terminal->bg_color );
     screen->ops->set_fg_color( screen, active_terminal->fg_color );
-
-    UNLOCK( terminal_lock );
 
     return 0;
 }
