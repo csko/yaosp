@@ -411,7 +411,7 @@ static int pci_scan_device( int bus, int dev, int func ) {
         if ( pci_device_count < MAX_PCI_DEVICES ) {
 
             kprintf(
-                "PCI: %d:%d:%d 0x%x:0x%x:0x%x 0x%x:0x%x\n",
+                "PCI: %d:%d:%d 0x%04x:0x%04x:0x%x 0x%04x:0x%04x\n",
                 bus, dev, func, vendor_id, device_id, revision_id,
                 subsystem_vendor_id, subsystem_device_id
             );
