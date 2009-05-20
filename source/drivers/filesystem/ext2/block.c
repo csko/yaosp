@@ -17,6 +17,7 @@
  */
 
 #include <errno.h>
+#include <macros.h>
 
 #include "ext2.h"
 
@@ -65,4 +66,26 @@ int ext2_do_alloc_block( ext2_cookie_t* cookie, uint32_t* block_number ) {
     }
 
     return -ENOSPC;
+}
+
+int ext2_do_free_block( ext2_cookie_t* cookie, uint32_t block_number ) {
+    uint32_t group_number;
+    uint32_t offset;
+    ext2_group_t* group;
+
+    group_number = block_number / cookie->super_block.s_blocks_per_group;
+    offset = block_number % cookie->super_block.s_blocks_per_group;
+
+    ASSERT( group_number < cookie->ngroups );
+
+    group = &cookie->groups[ group_number ];
+
+    group->block_bitmap[ offset / 32 ] &= ~( 1UL << ( offset % 32 ) );
+
+    group->descriptor.bg_free_blocks_count++;
+    cookie->super_block.s_free_blocks_count++;
+
+    group->flags |= EXT2_BLOCK_BITMAP_DIRTY;
+
+    return 0;
 }

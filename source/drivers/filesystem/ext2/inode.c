@@ -242,6 +242,114 @@ int ext2_do_alloc_inode( ext2_cookie_t* cookie, ext2_inode_t* inode, bool for_di
     return -ENOSPC;
 }
 
+int ext2_do_free_inode( ext2_cookie_t* cookie, ext2_inode_t* inode, bool is_directory ) {
+    uint32_t group_number;
+    uint32_t offset;
+    ext2_group_t* group;
+
+    group_number = ( inode->inode_number - 1 ) / cookie->super_block.s_inodes_per_group;
+    offset =  ( inode->inode_number - 1 ) % cookie->super_block.s_inodes_per_group;
+
+    ASSERT( group_number < cookie->ngroups );
+    ASSERT( offset < cookie->super_block.s_inodes_per_group );
+
+    group = &cookie->groups[ group_number ];
+
+    group->inode_bitmap[ offset / 32 ] &= ~( 1UL << ( offset % 32 ) );
+
+    group->descriptor.bg_free_inodes_count++;
+    cookie->super_block.s_free_inodes_count++;
+
+    if ( is_directory ) {
+        group->descriptor.bg_used_dirs_count--;
+    }
+
+    group->flags |= EXT2_INODE_BITMAP_DIRTY;
+
+    return 0;
+}
+
+int ext2_do_free_inode_blocks( ext2_cookie_t* cookie, ext2_inode_t* inode ) {
+    int error;
+    uint32_t i;
+    uint32_t* block;
+    uint32_t remaining_blocks;
+    ext2_fs_inode_t* fs_inode;
+
+    fs_inode = &inode->fs_inode;
+    remaining_blocks = fs_inode->i_blocks / cookie->sectors_per_block;
+
+    /* Free direct blocks */
+
+    for ( i = 0; i < MIN( remaining_blocks, EXT2_NDIR_BLOCKS ); i++, remaining_blocks-- ) {
+        if ( fs_inode->i_block[ i ] == 0 ) {
+            kprintf( "ext2: Non-allocated block found while freeing inode blocks!\n" );
+            goto done;
+        }
+
+        error = ext2_do_free_block(
+            cookie,
+            fs_inode->i_block[ i ]
+        );
+
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+
+    /* Free indirect blocks */
+
+    if ( remaining_blocks > 0 ) {
+        block = ( uint32_t* )kmalloc( cookie->blocksize );
+
+        if ( block == NULL ) {
+            return -ENOMEM;
+        }
+
+        ASSERT( fs_inode->i_block[ EXT2_IND_BLOCK ] != 0 );
+
+        error = pread(
+            cookie->fd,
+            block,
+            cookie->blocksize,
+            fs_inode->i_block[ EXT2_IND_BLOCK ] * cookie->blocksize
+        );
+
+        if ( __unlikely( error != cookie->blocksize ) ) {
+            kfree( block );
+            return -EIO;
+        }
+
+        for ( i = 0; i < MIN( remaining_blocks, cookie->ptr_per_block ); i++, remaining_blocks-- ) {
+            error = ext2_do_free_block(
+                cookie,
+                block[ i ]
+            );
+
+            if ( error < 0 ) {
+                kfree( block );
+                return error;
+            }
+        }
+
+        kfree( block );
+
+        error = ext2_do_free_block(
+            cookie,
+            fs_inode->i_block[ EXT2_IND_BLOCK ]
+        );
+
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+
+    /* TODO: free ..... */
+
+done:
+    return 0;
+}
+
 int ext2_do_read_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t block_number, void* buffer ) {
     int error;
     uint32_t real_block_number;

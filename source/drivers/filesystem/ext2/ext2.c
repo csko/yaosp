@@ -300,7 +300,7 @@ static int ext2_flush_superblock( ext2_cookie_t* cookie ) {
     return 0;
 }
 
-static int ext2_read_inode( void *fs_cookie, ino_t inode_number, void** out) {
+static int ext2_read_inode( void *fs_cookie, ino_t inode_number, void** out ) {
     int error;
     ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
     ext2_inode_t* inode;
@@ -338,10 +338,52 @@ static int ext2_write_inode( void* fs_cookie, void* node ) {
     cookie = ( ext2_cookie_t* )fs_cookie;
     inode = ( ext2_inode_t* )node;
 
-    error = ext2_do_write_inode( cookie, inode );
+    /* Link count == 0 means that the inode is deleted, so we
+       have to delete it from the disk as well. */
 
-    if ( error < 0 ) {
-        return error;
+    if ( inode->fs_inode.i_links_count == 0 ) {
+        /* Free the inode and the allocated blocks */
+
+        error = ext2_do_free_inode_blocks(
+            cookie,
+            inode
+        );
+
+        if ( error < 0 ) {
+            return error;
+        }
+
+        error = ext2_do_free_inode(
+            cookie,
+            inode,
+            ( ( inode->fs_inode.i_mode & S_IFMT ) == S_IFDIR )
+        );
+
+        if ( error < 0 ) {
+            return error;
+        }
+
+        /* Flush group descriptor(s) and the superblock */
+
+        error = ext2_flush_group_descriptors( cookie );
+
+        if ( error < 0 ) {
+            return error;
+        }
+
+        error = ext2_flush_superblock( cookie );
+
+        if ( error < 0 ) {
+            return error;
+        }
+    } else {
+        /* Simply write the inode to the disk */
+
+        error = ext2_do_write_inode( cookie, inode );
+
+        if ( error < 0 ) {
+            return error;
+        }
     }
 
     kfree( inode );
@@ -924,6 +966,86 @@ error1:
     return error;
 }
 
+static int ext2_unlink( void* fs_cookie, void* node, const char* name, int name_length ) {
+    int error;
+    ext2_cookie_t* cookie;
+    ext2_inode_t* inode;
+    ext2_inode_t tmp_inode;
+    ext2_lookup_data_t lookup_data;
+    ext2_inode_t* vfs_inode;
+    mount_point_t* mnt_point;
+
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    inode = ( ext2_inode_t* )node;
+
+    lookup_data.name = ( char* )name;
+    lookup_data.name_length = name_length;
+
+    error = ext2_do_walk_directory( fs_cookie, node, ext2_lookup_inode_helper, ( void* )&lookup_data );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    tmp_inode.inode_number = lookup_data.inode_number;
+
+    error = ext2_do_read_inode( cookie, &tmp_inode );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    if ( ( tmp_inode.fs_inode.i_mode & S_IFMT ) == S_IFDIR ) {
+        return -EISDIR;
+    }
+
+    if ( tmp_inode.fs_inode.i_links_count > 1 ) {
+        return -EBUSY;
+    }
+
+    /* Remove the inode from the directory */
+
+    error = ext2_do_remove_entry( cookie, inode, tmp_inode.inode_number );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Decrease the reference count on the inode */
+
+    mnt_point = get_mount_point_by_cookie( fs_cookie );
+
+    ASSERT( mnt_point != NULL );
+
+    error = get_vnode( mnt_point, tmp_inode.inode_number, ( void** )&vfs_inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    ASSERT( vfs_inode->fs_inode.i_links_count == 1 );
+
+    vfs_inode->fs_inode.i_links_count--;
+
+    put_vnode( mnt_point, tmp_inode.inode_number );
+
+    /* Flush group descriptor and superblock */
+
+    error = ext2_flush_group_descriptors( cookie );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = ext2_flush_superblock( cookie );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
 static int ext2_mkdir( void* fs_cookie, void* node, const char* name, int name_length, int perms ) {
     int error;
     ext2_cookie_t* cookie;
@@ -1324,7 +1446,7 @@ static filesystem_calls_t ext2_calls = {
     .read_directory = ext2_read_directory,
     .rewind_directory = ext2_rewind_directory,
     .create = ext2_create,
-    .unlink = NULL,
+    .unlink = ext2_unlink,
     .mkdir = ext2_mkdir,
     .rmdir = NULL,
     .isatty = NULL,

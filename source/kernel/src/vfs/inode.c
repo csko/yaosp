@@ -180,6 +180,36 @@ int put_inode( inode_t* inode ) {
     return 0;
 }
 
+int get_vnode( struct mount_point* mount_point, ino_t inode_number, void** data ) {
+    inode_t* inode;
+
+    inode = get_inode( mount_point, inode_number );
+
+    if ( inode == NULL ) {
+        return -ENOINO;
+    }
+
+    *data = inode->fs_node;
+
+    return 0;
+}
+
+int put_vnode( struct mount_point* mount_point, ino_t inode_number ) {
+    inode_t* inode;
+
+    inode = get_inode( mount_point, inode_number );
+
+    if ( inode == NULL ) {
+        return -ENOINO;
+    }
+
+    atomic_dec( &inode->ref_count );
+
+    put_inode( inode );
+
+    return 0;
+}
+
 static int inode_table_unmount_iterator( hashitem_t* item, void* data ) {
     inode_t* inode;
     mount_point_t* mount_point;

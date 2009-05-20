@@ -250,9 +250,11 @@ int ext2_calc_block_num( ext2_cookie_t *cookie, ext2_inode_t *vinode, uint32_t b
 
 /* Inode handling functions */
 
-int ext2_do_read_inode( ext2_cookie_t *cookie, ext2_inode_t* inode );
+int ext2_do_read_inode( ext2_cookie_t* cookie, ext2_inode_t* inode );
 int ext2_do_write_inode( ext2_cookie_t* cookie, ext2_inode_t* inode );
 int ext2_do_alloc_inode( ext2_cookie_t* cookie, ext2_inode_t* inode, bool for_directory );
+int ext2_do_free_inode( ext2_cookie_t* cookie, ext2_inode_t* inode, bool is_directory );
+int ext2_do_free_inode_blocks( ext2_cookie_t* cookie, ext2_inode_t* inode );
 
 int ext2_do_read_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t block_number, void* buffer );
 int ext2_do_write_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32_t block_number, void* buffer );
@@ -262,11 +264,13 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uin
 /* Block handling functions */
 
 int ext2_do_alloc_block( ext2_cookie_t* cookie, uint32_t* block_number );
+int ext2_do_free_block( ext2_cookie_t* cookie, uint32_t block_number );
 
 /* Directory handling functions */
 
 int ext2_do_walk_directory( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_walk_callback_t* callback, void* data );
 int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_entry_t* new_entry, int new_entry_size );
+int ext2_do_remove_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ino_t inode_number );
 
 ext2_dir_entry_t* ext2_do_alloc_dir_entry( int name_length );
 

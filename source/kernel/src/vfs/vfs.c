@@ -109,6 +109,22 @@ int remove_mount_point( mount_point_t* mount_point ) {
     return 0;
 }
 
+mount_point_t* get_mount_point_by_cookie( void* cookie ) {
+    mount_point_t* current;
+
+    current = mount_points;
+
+    while ( current != NULL ) {
+        if ( current->fs_data == cookie ) {
+            return current;
+        }
+
+        current = current->next;
+    }
+
+    return NULL;
+}
+
 static int do_read_stat( inode_t* inode, struct stat* stat );
 
 int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t** _inode ) {

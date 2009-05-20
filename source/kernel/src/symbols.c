@@ -102,9 +102,12 @@ static kernel_symbol_t symbols[] = {
     { "mount", ( ptr_t )mount },
     { "select", ( ptr_t )select },
     { "getdents", ( ptr_t )getdents },
+    { "get_vnode", ( ptr_t )get_vnode },
+    { "put_vnode", ( ptr_t )put_vnode },
     { "init_block_cache", ( ptr_t )init_block_cache },
     { "block_cache_get_block", ( ptr_t )block_cache_get_block },
     { "block_cache_put_block", ( ptr_t )block_cache_put_block },
+    { "get_mount_point_by_cookie", ( ptr_t )get_mount_point_by_cookie },
 
     /* Semaphore functions */
     { "create_semaphore", ( ptr_t )create_semaphore },

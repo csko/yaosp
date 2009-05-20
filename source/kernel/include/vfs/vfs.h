@@ -157,6 +157,7 @@ mount_point_t* create_mount_point(
 );
 void delete_mount_point( mount_point_t* mount_point );
 int insert_mount_point( mount_point_t* mount_point );
+mount_point_t* get_mount_point_by_cookie( void* cookie );
 int mount_point_can_unmount( mount_point_t* mount_point );
 
 int follow_symbolic_link( io_context_t* io_context, inode_t** _parent, inode_t** _inode );

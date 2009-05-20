@@ -1,6 +1,6 @@
 /* Inode related definitions and functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -55,6 +55,9 @@ typedef struct inode_cache {
 inode_t* get_inode( struct mount_point* mount_point, ino_t inode_number );
 int put_inode( inode_t* inode );
 
+int get_vnode( struct mount_point* mount_point, ino_t inode_number, void** data );
+int put_vnode( struct mount_point* mount_point, ino_t inode_number );
+
 int do_lookup_inode(
     struct io_context* io_context,
     inode_t* parent,
@@ -87,4 +90,4 @@ uint32_t get_inode_cache_size( inode_cache_t* cache );
 int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, int max_free_inodes );
 void destroy_inode_cache( inode_cache_t* cache );
 
-#endif // _VFS_INODE_H_
+#endif /* _VFS_INODE_H_ */

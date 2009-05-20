@@ -59,11 +59,13 @@ int ext2_do_walk_directory( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_wa
             goto out;
         }
 
-        result = callback( entry, data );
+        if ( entry->inode != 0 ) {
+            result = callback( entry, data );
 
-        if ( !result ) {
-            error = 0;
-            goto out;
+            if ( !result ) {
+                error = 0;
+                goto out;
+            }
         }
 
         offset += entry->rec_len;
@@ -188,6 +190,64 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_
     }
 
     error = 0;
+
+out:
+    kfree( block );
+
+    return error;
+}
+
+int ext2_do_remove_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ino_t inode_number ) {
+    int error;
+    uint8_t* block;
+    uint32_t offset;
+    uint32_t block_number;
+    ext2_dir_entry_t* entry;
+    ext2_dir_entry_t* prev_entry;
+
+    block = ( uint8_t* )kmalloc( cookie->blocksize );
+
+    if ( block == NULL ) {
+        return -ENOMEM;
+    }
+
+    offset = 0;
+    prev_entry = NULL;
+
+    while ( offset < parent->fs_inode.i_size ) {
+        if ( __unlikely( ( offset % cookie->blocksize ) == 0 ) ) {
+            block_number = offset / cookie->blocksize;
+
+            error = ext2_do_read_inode_block( cookie, parent, block_number, block );
+
+            if ( __unlikely( error < 0 ) ) {
+                goto out;
+            }
+
+            prev_entry = NULL;
+        }
+
+        entry = ( ext2_dir_entry_t* )( block + ( offset % cookie->blocksize ) );
+
+        if ( __unlikely( entry->inode == inode_number ) ) {
+            entry->inode = 0;
+
+            if ( prev_entry != NULL ) {
+                prev_entry->rec_len += entry->rec_len;
+            }
+
+            block_number = offset / cookie->blocksize;
+
+            error = ext2_do_write_inode_block( cookie, parent, block_number, block );
+
+            goto out;
+        }
+
+        prev_entry = entry;
+        offset += entry->rec_len;
+    }
+
+    error = -ENOENT;
 
 out:
     kfree( block );
