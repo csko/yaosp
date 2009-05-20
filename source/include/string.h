@@ -20,15 +20,8 @@
 #define _STRING_H_
 
 #define __need_size_t
+#define __need_NULL
 #include <stddef.h>
-
-#ifndef NULL
-#ifndef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void*)0)
-#endif /* __cplusplus */
-#endif /* NULL */
 
 void* memset( void* s, int c, size_t n );
 void* memcpy( void* d, const void* s, size_t n );

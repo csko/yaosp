@@ -19,8 +19,9 @@
 #ifndef _STDLIB_H_
 #define _STDLIB_H_
 
+#define __need_size_t
+#define __need_NULL
 #include <stddef.h>
-#include <sys/types.h>
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
@@ -46,7 +47,7 @@ void* malloc( size_t size ) __attribute__(( malloc ));
 void free( void* ptr );
 void* realloc( void* ptr, size_t size );
 
-void abort( void );
+void abort( void ) __attribute__(( __noreturn__ ));
 
 int atoi( const char* s );
 long atol( const char* s );

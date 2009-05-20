@@ -19,6 +19,8 @@
 #ifndef _STDIO_H_
 #define _STDIO_H_
 
+#define __need_size_t
+#define __need_NULL
 #include <stddef.h>
 #include <stdarg.h>
 #include <sys/types.h>

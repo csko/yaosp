@@ -397,10 +397,15 @@ class ExecWork( Work ) :
 
         command = [ self.executable ] + real_args
 
-
         # Get the return code of the process
-        retcode = subprocess.call( command )
+
+        try :
+            retcode = subprocess.call( command )
+        except OSError, e :
+            retcode = -1
+
         # If the return code is not 0, the build process must stop
+
         if retcode != 0 :
             print "Process returned with return code %d" % retcode
             print "Build stopped."

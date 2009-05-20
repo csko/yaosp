@@ -16,16 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ASSERT_H_
-#define _ASSERT_H_
-
-#include <stdlib.h>
+#undef assert
 
 #ifdef NDEBUG
 #define assert(expr) ((void)0)
 #else
 #define assert(expr) \
-    ((expr) ? ((void)0) : abort())
-#endif // NDEBUG
+    if ( !(expr) ) { __assert_fail( #expr, __FILE__, __LINE__ ); }
+#endif /* NDEBUG */
+
+#ifndef _ASSERT_H_
+#define _ASSERT_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+
+static inline void __assert_fail( const char* expr, const char* file, int line ) {
+    printf( "Assertion (%s) failed at %s:%d\n", expr, file, line );
+    abort();
+}
 
 #endif /* _ASSERT_H_ */
