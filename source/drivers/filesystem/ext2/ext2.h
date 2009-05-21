@@ -279,6 +279,7 @@ int ext2_do_free_block( ext2_cookie_t* cookie, uint32_t block_number );
 int ext2_do_walk_directory( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_walk_callback_t* callback, void* data );
 int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_entry_t* new_entry, int new_entry_size );
 int ext2_do_remove_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ino_t inode_number );
+int ext2_is_directory_empty( ext2_cookie_t* cookie, ext2_inode_t* parent );
 
 ext2_dir_entry_t* ext2_do_alloc_dir_entry( int name_length );
 

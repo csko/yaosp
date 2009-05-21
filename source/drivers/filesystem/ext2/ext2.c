@@ -1186,6 +1186,92 @@ error1:
     return error;
 }
 
+static int ext2_rmdir( void* fs_cookie, void* node, const char* name, int name_length ) {
+    int error;
+    ext2_cookie_t* cookie;
+    ext2_inode_t* inode;
+    ext2_inode_t tmp_inode;
+    ext2_lookup_data_t lookup_data;
+    ext2_inode_t* vfs_inode;
+    mount_point_t* mnt_point;
+
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    inode = ( ext2_inode_t* )node;
+
+    lookup_data.name = ( char* )name;
+    lookup_data.name_length = name_length;
+
+    error = ext2_do_walk_directory( fs_cookie, node, ext2_lookup_inode_helper, ( void* )&lookup_data );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    tmp_inode.inode_number = lookup_data.inode_number;
+
+    error = ext2_do_read_inode( cookie, &tmp_inode );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    if ( ( tmp_inode.fs_inode.i_mode & S_IFMT ) != S_IFDIR ) {
+        return -ENOTDIR;
+    }
+
+    if ( tmp_inode.fs_inode.i_links_count > 2 ) {
+        return -EBUSY;
+    }
+
+    error = ext2_is_directory_empty( cookie, &tmp_inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Remove the inode from the directory */
+
+    error = ext2_do_remove_entry( cookie, inode, tmp_inode.inode_number );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Decrease the reference count on the inode */
+
+    mnt_point = get_mount_point_by_cookie( fs_cookie );
+
+    ASSERT( mnt_point != NULL );
+
+    error = get_vnode( mnt_point, tmp_inode.inode_number, ( void** )&vfs_inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    ASSERT( vfs_inode->fs_inode.i_links_count == 2 );
+
+    vfs_inode->fs_inode.i_links_count -= 2;
+
+    put_vnode( mnt_point, tmp_inode.inode_number );
+
+    /* Flush group descriptor and superblock */
+
+    error = ext2_flush_group_descriptors( cookie );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    error = ext2_flush_superblock( cookie );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
 static int ext2_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
     int error;
     ext2_lookup_data_t lookup_data;
@@ -1473,7 +1559,7 @@ static filesystem_calls_t ext2_calls = {
     .create = ext2_create,
     .unlink = ext2_unlink,
     .mkdir = ext2_mkdir,
-    .rmdir = NULL,
+    .rmdir = ext2_rmdir,
     .isatty = NULL,
     .symlink = NULL,
     .readlink = NULL,

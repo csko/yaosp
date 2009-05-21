@@ -56,6 +56,7 @@ int ext2_do_walk_directory( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_wa
 
         if ( __unlikely( entry->rec_len == 0 ) ) {
             error = -EINVAL;
+
             goto out;
         }
 
@@ -64,6 +65,7 @@ int ext2_do_walk_directory( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_wa
 
             if ( !result ) {
                 error = 0;
+
                 goto out;
             }
         }
@@ -115,6 +117,7 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_
 
         if ( __unlikely( entry->rec_len == 0 ) ) {
             error = -EINVAL;
+
             goto out;
         }
 
@@ -175,6 +178,7 @@ int ext2_do_insert_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ext2_dir_
 
     if ( __unlikely( error != cookie->blocksize ) ) {
         error = -EIO;
+
         goto out;
     }
 
@@ -248,6 +252,71 @@ int ext2_do_remove_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ino_t ino
     }
 
     error = -ENOENT;
+
+out:
+    kfree( block );
+
+    return error;
+}
+
+int ext2_is_directory_empty( ext2_cookie_t* cookie, ext2_inode_t* parent ) {
+    int error;
+    uint8_t* block;
+    uint32_t offset;
+    ext2_dir_entry_t* entry;
+
+    block = ( uint8_t* )kmalloc( cookie->blocksize );
+
+    if ( block == NULL ) {
+        return -ENOMEM;
+    }
+
+    offset = 0;
+
+    while ( offset < parent->fs_inode.i_size ) {
+        if ( __unlikely( ( offset % cookie->blocksize ) == 0 ) ) {
+            uint32_t block_number;
+
+            block_number = offset / cookie->blocksize;
+
+            error = ext2_do_read_inode_block( cookie, parent, block_number, block );
+
+            if ( __unlikely( error < 0 ) ) {
+                goto out;
+            }
+        }
+
+        entry = ( ext2_dir_entry_t* )( block + ( offset % cookie->blocksize ) );
+
+        if ( __unlikely( entry->rec_len == 0 ) ) {
+            error = -EINVAL;
+
+            goto out;
+        }
+
+        if ( entry->inode == 0 ) {
+            goto next_entry;
+        }
+
+        if ( ( entry->name_len == 1 ) &&
+             ( strncmp( ( const char* )( entry + 1 ), ".", 1 ) == 0 ) ) {
+            goto next_entry;
+        }
+
+        if ( ( entry->name_len == 2 ) &&
+            ( strncmp( ( const char* )( entry + 1 ), "..", 2 ) == 0 ) ) {
+            goto next_entry;
+        }
+
+        error = -ENOTEMPTY;
+
+        goto out;
+
+next_entry:
+        offset += entry->rec_len;
+    }
+
+    error = 0;
 
 out:
     kfree( block );
