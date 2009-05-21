@@ -779,14 +779,17 @@ static int ext2_read_directory( void* fs_cookie, void* node, void* file_cookie, 
     ext2_cookie_t* cookie = ( ext2_cookie_t* )fs_cookie;
     ext2_dir_cookie_t*  dir_cookie = ( ext2_dir_cookie_t* )file_cookie;
 
-    if ( __unlikely( dir_cookie->dir_offset >= vparent->fs_inode.i_size ) ) {
-        return 0;
-    }
-
     block = ( uint8_t* )kmalloc( cookie->blocksize );
 
     if ( __unlikely( block == NULL ) ) {
         return -ENOMEM;
+    }
+
+next_entry:
+    if ( __unlikely( dir_cookie->dir_offset >= vparent->fs_inode.i_size ) ) {
+        kfree( block );
+
+        return 0;
     }
 
     block_number = dir_cookie->dir_offset / cookie->blocksize;
@@ -806,7 +809,11 @@ static int ext2_read_directory( void* fs_cookie, void* node, void* file_cookie, 
 
     dir_cookie->dir_offset += entry->rec_len; // next entry
 
-    size = entry->name_len > sizeof(direntry->name) -1 ? sizeof(direntry->name) -1 : entry->name_len;
+    if ( entry->inode == 0 ) {
+        goto next_entry;
+    }
+
+    size = entry->name_len > sizeof( direntry->name ) -1 ? sizeof( direntry->name ) -1 : entry->name_len;
 
     direntry->inode_number = entry->inode;
     memcpy( direntry->name, ( void* )( entry + 1 ), size );
