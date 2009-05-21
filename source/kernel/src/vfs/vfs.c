@@ -1870,7 +1870,7 @@ int sys_dup2( int old_fd, int new_fd ) {
     return do_dup2( false, old_fd, new_fd );
 }
 
-static int do_utime( bool kernel, const char* path, const struct utimbuf* times) {
+static int do_utime( bool kernel, const char* path, const struct utimbuf* times ) {
     int error;
     inode_t* inode;
     io_context_t* io_context;
@@ -1908,8 +1908,8 @@ static int do_utime( bool kernel, const char* path, const struct utimbuf* times)
     return error;
 }
 
-int sys_utime( const char* filename, const struct utimbuf* times ){
-    return do_utime(false, filename, times);
+int sys_utime( const char* filename, const struct utimbuf* times ) {
+    return do_utime( false, filename, times );
 }
 
 __init int init_vfs( void ) {

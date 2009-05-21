@@ -1225,6 +1225,31 @@ static int ext2_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
     return 0;
 }
 
+static int ext2_write_stat( void* fs_cookie, void* node, struct stat* stat, uint32_t mask ) {
+    ext2_cookie_t* cookie;
+    ext2_inode_t* inode;
+
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    inode = ( ext2_inode_t* )node;
+
+    if ( mask & WSTAT_ATIME ) {
+        inode->fs_inode.i_atime = stat->st_atime;
+    }
+
+    if ( mask & WSTAT_MTIME ) {
+        inode->fs_inode.i_mtime = stat->st_mtime;
+    }
+
+    if ( mask & WSTAT_CTIME ) {
+        inode->fs_inode.i_ctime = stat->st_ctime;
+    }
+
+    /* NOTE: ext2_write_inode() will flush the changed fields to the disk
+       when the inode is deleted from the kernel's inode cache. */
+
+    return 0;
+}
+
 static int ext2_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
     kfree( file_cookie );
 
@@ -1442,7 +1467,7 @@ static filesystem_calls_t ext2_calls = {
     .write = ext2_write,
     .ioctl = NULL,
     .read_stat = ext2_read_stat,
-    .write_stat = NULL,
+    .write_stat = ext2_write_stat,
     .read_directory = ext2_read_directory,
     .rewind_directory = ext2_rewind_directory,
     .create = ext2_create,
