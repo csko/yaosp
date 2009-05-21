@@ -41,7 +41,7 @@ region_t* allocate_region( const char* name ) {
 
     region = ( region_t* )kmalloc( sizeof( region_t ) );
 
-    if ( region == NULL ) {
+    if ( __unlikely( region == NULL ) ) {
         goto error1;
     }
 
@@ -49,7 +49,7 @@ region_t* allocate_region( const char* name ) {
 
     region->name = strdup( name );
 
-    if ( region->name == NULL ) {
+    if ( __unlikely( region->name == NULL ) ) {
         goto error2;
     }
 
@@ -96,7 +96,7 @@ int region_insert( memory_context_t* context, region_t* region ) {
 
     error = hashtable_add( &region_table, ( hashitem_t* )region );
 
-    if ( error < 0 ) {
+    if ( __unlikely( error < 0 ) ) {
         goto error1;
     }
 
@@ -104,7 +104,7 @@ int region_insert( memory_context_t* context, region_t* region ) {
 
     error = memory_context_insert_region( context, region );
 
-    if ( error < 0 ) {
+    if ( __unlikely( error < 0 ) ) {
         goto error2;
     }
 
@@ -193,7 +193,7 @@ region_id do_create_region(
 
     region = allocate_region( name );
 
-    if ( region == NULL ) {
+    if ( __unlikely( region == NULL ) ) {
         return -ENOMEM;
     }
 

@@ -102,12 +102,11 @@ void terminal_do_full_update( terminal_t* terminal ) {
     screen->ops->gotoxy( screen, terminal->cursor_column, terminal->cursor_row - terminal->start_line );
 }
 
-
 int terminal_scroll( int offset ) {
     int tmp;
     int new_start_line;
 
-    LOCK( terminal_lock );
+    ASSERT( is_semaphore_locked( terminal_lock ) );
 
     new_start_line = active_terminal->start_line + offset;
 
@@ -126,8 +125,6 @@ int terminal_scroll( int offset ) {
 
         terminal_do_full_update( active_terminal );
     }
-
-    UNLOCK( terminal_lock );
 
     return 0;
 }

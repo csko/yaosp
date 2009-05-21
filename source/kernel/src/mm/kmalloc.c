@@ -37,7 +37,7 @@ static kmalloc_block_t* __kmalloc_create_block( uint32_t pages ) {
 
     block = ( kmalloc_block_t* )alloc_pages( pages, MEM_COMMON );
 
-    if ( block == NULL ) {
+    if ( __unlikely( block == NULL ) ) {
         return NULL;
     }
 
@@ -74,7 +74,7 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
         chunk = chunk->next;
     }
 
-    if ( chunk == NULL ) {
+    if ( __unlikely( chunk == NULL ) ) {
         return NULL;
     }
 
@@ -153,7 +153,7 @@ void* kmalloc( uint32_t size ) {
 
     block = __kmalloc_create_block( min_size / PAGE_SIZE );
 
-    if ( block == NULL ) {
+    if ( __unlikely( block == NULL ) ) {
         spinunlock_enable( &kmalloc_lock );
 
         return NULL;
@@ -171,7 +171,7 @@ block_found:
 
     spinunlock_enable( &kmalloc_lock );
 
-    if ( p != NULL ) {
+    if ( __likely( p != NULL ) ) {
         memset( p, 0xAA, size );
     }
 
@@ -189,11 +189,11 @@ void kfree( void* p ) {
 
     spinlock_disable( &kmalloc_lock );
 
-    if ( chunk->magic != KMALLOC_CHUNK_MAGIC ) {
+    if ( __unlikely( chunk->magic != KMALLOC_CHUNK_MAGIC ) ) {
         panic( "kfree(): Tried to free an invalid memory region! (%x)\n", p );
     }
 
-    if ( chunk->type != CHUNK_ALLOCATED ) {
+    if ( __unlikely( chunk->type != CHUNK_ALLOCATED ) ) {
         panic( "kfree(): Tried to free a non-allocated memory region! (%x)\n", p );
     }
 

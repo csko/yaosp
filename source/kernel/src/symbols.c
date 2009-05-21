@@ -114,6 +114,7 @@ static kernel_symbol_t symbols[] = {
     { "delete_semaphore", ( ptr_t )delete_semaphore },
     { "lock_semaphore", ( ptr_t )lock_semaphore },
     { "unlock_semaphore", ( ptr_t )unlock_semaphore },
+    { "is_semaphore_locked", ( ptr_t )is_semaphore_locked },
 
     /* Spinlock calls */
     { "init_spinlock", ( ptr_t )init_spinlock },

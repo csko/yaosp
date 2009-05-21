@@ -33,9 +33,9 @@ static uint64_t memory_size;
 static page_t* memory_pages;
 static memory_type_desc_t memory_descriptors[ MAX_MEMORY_TYPES ];
 
-static spinlock_t pages_lock = INIT_SPINLOCK( "Page allocator" );
+static spinlock_t pages_lock = INIT_SPINLOCK( "page allocator" );
 
-static memory_type_desc_t* get_memory_descriptor( ptr_t address ) {
+static inline memory_type_desc_t* get_memory_descriptor( ptr_t address ) {
     int i;
     memory_type_desc_t* memory_desc;
 
@@ -72,7 +72,7 @@ static void* do_alloc_pages( memory_type_desc_t* memory_desc, uint32_t count ) {
     /* First make sure this memory region is big enough for
        the requested number of pages */
 
-    if ( page_count < count ) {
+    if ( __unlikely( page_count < count ) ) {
         return NULL;
     }
 
@@ -148,7 +148,7 @@ static void* do_alloc_pages_aligned( memory_type_desc_t* memory_desc, uint32_t c
     start_page = ( start - memory_desc->start ) / PAGE_SIZE;
     end_page = memory_desc->size / PAGE_SIZE;
 
-    p = NULL;    
+    p = NULL;
     page = &memory_pages[ start / PAGE_SIZE ];
 
     for ( i = start_page; i < end_page; i += step ) {
@@ -205,7 +205,7 @@ void free_pages( void* address, uint32_t count ) {
 
     region_start = ( ptr_t )address;
 
-    if ( region_start >= memory_size ) {
+    if ( __unlikely( region_start >= memory_size ) ) {
         panic( "free_pages(): Called with an address outside of physical memory!\n" );
         return;
     }
@@ -290,7 +290,7 @@ int reserve_memory_pages( ptr_t start, ptr_t size ) {
     return 0;
 }
 
-int register_memory_type( int mem_type, ptr_t start, ptr_t size ) {
+__init int register_memory_type( int mem_type, ptr_t start, ptr_t size ) {
     memory_type_desc_t* memory_desc;
 
     if ( ( mem_type < 0 ) || ( mem_type >= MAX_MEMORY_TYPES ) ) {
@@ -299,7 +299,7 @@ int register_memory_type( int mem_type, ptr_t start, ptr_t size ) {
 
     memory_desc = &memory_descriptors[ mem_type ];
 
-    if ( !memory_desc->free ) {
+    if ( __unlikely( !memory_desc->free ) ) {
         return -EBUSY;
     }
 

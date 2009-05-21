@@ -95,6 +95,20 @@ static int terminal_handle_event( input_event_t* event ) {
                     terminal_send_event( active_terminal, "\x1b[3~", 4 );
                     break;
 
+                case KEY_PAGE_UP :
+                    if ( current_qualifiers & Q_SHIFT ) {
+                        terminal_scroll( -10 );
+                    }
+
+                    break;
+
+                case KEY_PAGE_DOWN :
+                    if ( current_qualifiers & Q_SHIFT ) {
+                        terminal_scroll( 10 );
+                    }
+
+                    break;
+
                 case KEY_F1 :
                 case KEY_F2 :
                 case KEY_F3 :
