@@ -1255,6 +1255,20 @@ static int ext2_rmdir( void* fs_cookie, void* node, const char* name, int name_l
 
     put_vnode( mnt_point, tmp_inode.inode_number );
 
+    /* Decrease the reference count on the parent as well */
+
+    error = get_vnode( mnt_point, inode->inode_number, ( void** )&vfs_inode );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    ASSERT( vfs_inode->fs_inode.i_links_count > 2 );
+
+    vfs_inode->fs_inode.i_links_count--;
+
+    put_vnode( mnt_point, tmp_inode.inode_number );
+
     /* Flush group descriptor and superblock */
 
     error = ext2_flush_group_descriptors( cookie );
