@@ -1369,15 +1369,11 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     ext2_group_t* group;
     ext2_cookie_t* cookie;
 
-    uint32_t sb_offset = 1 * EXT2_MIN_BLOCK_SIZE; // offset of the superblock (1024)
-
     cookie = ( ext2_cookie_t* )kmalloc( sizeof( ext2_cookie_t ) );
 
-    if ( cookie == NULL ) {
+    if ( __unlikely( cookie == NULL ) ) {
         return -ENOMEM;
     }
-
-    cookie->flags = flags;
 
     /* Open the device */
 
@@ -1385,20 +1381,24 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
 
     if ( cookie->fd < 0 ) {
         result = cookie->fd;
+
         goto error1;
     }
 
     /* Read the superblock */
 
-    if ( pread( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), sb_offset ) != sizeof( ext2_super_block_t ) ) {
+    result = pread( cookie->fd, &cookie->super_block, sizeof( ext2_super_block_t ), 1024 );
+
+    if ( __unlikely( result != sizeof( ext2_super_block_t ) ) ) {
         result = -EIO;
+
         goto error2;
     }
 
     /* Validate the superblock */
 
-    if ( cookie->super_block.s_magic != EXT2_SUPER_MAGIC) {
-        kprintf("ext2: bad magic number: 0x%x\n", cookie->super_block.s_magic);
+    if ( cookie->super_block.s_magic != EXT2_SUPER_MAGIC ) {
+        kprintf( "ext2: Bad magic number: 0x%x\n", cookie->super_block.s_magic );
         result = -EINVAL;
         goto error2;
     }
@@ -1406,7 +1406,7 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     /* Check fs state */
 
     if ( cookie->super_block.s_state != EXT2_VALID_FS ) {
-        kprintf( "ext2: partition is damaged or was not cleanly unmounted!\n" );
+        kprintf( "ext2: Partition is damaged or was not cleanly unmounted!\n" );
         result = -EINVAL;
         goto error2;
     }
@@ -1481,6 +1481,8 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     }
 
     kfree( block );
+
+    cookie->flags = flags;
 
     /* Increase mount count and mark fs in use only in RW mode */
 
