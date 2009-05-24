@@ -49,7 +49,7 @@ typedef struct filesystem_calls {
     int ( *write_stat )( void* fs_cookie, void* node, struct stat* stat, uint32_t mask );
     int ( *read_directory )( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry );
     int ( *rewind_directory )( void* fs_cookie, void* node, void* file_cookie );
-    int ( *create )( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_num, void** file_cookie );
+    int ( *create )( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_number, void** file_cookie );
     int ( *unlink )( void* fs_cookie, void* node, const char* name, int name_length );
     int ( *mkdir )( void* fs_cookie, void* node, const char* name, int name_length, int perms );
     int ( *rmdir )( void* fs_cookie, void* node, const char* name, int name_length );
@@ -72,4 +72,4 @@ filesystem_descriptor_t* get_filesystem( const char* name );
 
 int init_filesystems( void );
 
-#endif // _VFS_FILESYSTEM_H_
+#endif /* _VFS_FILESYSTEM_H_ */

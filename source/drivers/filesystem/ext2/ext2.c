@@ -1293,6 +1293,68 @@ static int ext2_rmdir( void* fs_cookie, void* node, const char* name, int name_l
     return 0;
 }
 
+static int ext2_readlink( void* fs_cookie, void* node, char* buffer, size_t length ) {
+    size_t to_copy;
+    ext2_cookie_t* cookie;
+    ext2_inode_t* inode;
+
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    inode = ( ext2_inode_t* )node;
+
+    if ( ( inode->fs_inode.i_mode & S_IFMT ) != S_IFLNK ) {
+        return -EINVAL;
+    }
+
+    if ( length == 0 ) {
+        return 0;
+    }
+
+    to_copy = MIN( length - 1, inode->fs_inode.i_size );
+
+    if ( to_copy == 0 ) {
+        return 0;
+    }
+
+    if ( inode->fs_inode.i_size <= ( sizeof( uint32_t ) * EXT2_N_BLOCKS ) ) {
+        memcpy( buffer, &inode->fs_inode.i_block[ 0 ], to_copy );
+    } else {
+        int error;
+        uint8_t* block;
+        uint32_t block_number = 0;
+
+        block = ( uint8_t* )kmalloc( cookie->blocksize );
+
+        if ( block == NULL ) {
+            return -ENOMEM;
+        }
+
+        while ( to_copy > 0 ) {
+            size_t tmp;
+
+            tmp = MIN( to_copy, cookie->blocksize );
+
+            error = ext2_do_read_inode_block( cookie, inode, block_number, block );
+
+            if ( error < 0 ) {
+                return error;
+            }
+
+            memcpy( buffer, block, tmp );
+
+            to_copy -= tmp;
+            buffer += tmp;
+
+            block_number++;
+        }
+
+        kfree( block );
+    }
+
+    buffer[ to_copy ] = 0;
+
+    return ( int )to_copy;
+}
+
 static int ext2_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
     int error;
     ext2_lookup_data_t lookup_data;
@@ -1585,7 +1647,7 @@ static filesystem_calls_t ext2_calls = {
     .rmdir = ext2_rmdir,
     .isatty = NULL,
     .symlink = NULL,
-    .readlink = NULL,
+    .readlink = ext2_readlink,
     .set_flags = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL

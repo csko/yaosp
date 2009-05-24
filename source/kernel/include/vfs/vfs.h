@@ -76,20 +76,24 @@
 
 /* write_stat bitmasks */
 
-#define WSTAT_DEV     1
-#define WSTAT_INO     2
-#define WSTAT_MODE    4
-#define WSTAT_NLINK   8
-#define WSTAT_UID     16
-#define WSTAT_GID     32
-#define WSTAT_RDEV    64
-#define WSTAT_SIZE    128
-#define WSTAT_BLKSIZE 256
-#define WSTAT_BLOCKS  512
-#define WSTAT_ATIME   1024
-#define WSTAT_MTIME   2048
-#define WSTAT_CTIME   4096
-#define WSTAT_ALL     8191
+#define WSTAT_DEV     ( 1 << 0 )
+#define WSTAT_INO     ( 1 << 1 )
+#define WSTAT_MODE    ( 1 << 2 )
+#define WSTAT_NLINK   ( 1 << 3 )
+#define WSTAT_UID     ( 1 << 4 )
+#define WSTAT_GID     ( 1 << 5 )
+#define WSTAT_RDEV    ( 1 << 6 )
+#define WSTAT_SIZE    ( 1 << 7 )
+#define WSTAT_BLKSIZE ( 1 << 8 )
+#define WSTAT_BLOCKS  ( 1 << 9 )
+#define WSTAT_ATIME   ( 1 << 10 )
+#define WSTAT_MTIME   ( 1 << 11 )
+#define WSTAT_CTIME   ( 1 << 12 )
+#define WSTAT_ALL     \
+    ( WSTAT_DEV | WSTAT_INO | WSTAT_MODE | WSTAT_NLINK  \
+      WSTAT_UID | WSTAT_GID | WSTAT_RDEV | WSTAT_SIZE \
+      WSTAT_BLKSIZE | WSTAT_BLOCKS | WSTAT_ATIME | WSTAT_MTIME \
+      WSTAT_CTIME )
 
 typedef struct dirent {
     ino_t inode_number;
