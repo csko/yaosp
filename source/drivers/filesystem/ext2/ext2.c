@@ -959,15 +959,12 @@ static int ext2_create( void* fs_cookie, void* node, const char* name, int name_
     return 0;
 
 error3:
-
     /* TODO: cleanup */
 
 error2:
-
     /* TODO: release the allocated inode */
 
 error1:
-
     kfree( file_cookie );
 
     return error;
@@ -1291,6 +1288,151 @@ static int ext2_rmdir( void* fs_cookie, void* node, const char* name, int name_l
     }
 
     return 0;
+}
+
+static int ext2_symlink( void* fs_cookie, void* node, const char* name, int name_length, const char* link_path ) {
+    int error;
+    ext2_cookie_t* cookie;
+    ext2_inode_t* parent;
+    ext2_inode_t child;
+    ext2_fs_inode_t* inode;
+    ext2_lookup_data_t lookup_data;
+    ext2_dir_entry_t* new_entry;
+    size_t link_size;
+    uint8_t* block;
+
+    cookie = ( ext2_cookie_t* )fs_cookie;
+    parent = ( ext2_inode_t* )node;
+
+    if ( name_length <= 0 ) {
+        return -EINVAL;
+    }
+
+    lookup_data.name = ( char* )name;
+    lookup_data.name_length = name_length;
+
+    /* Make sure the name we want to create doesn't exist */
+
+    error = ext2_do_walk_directory( fs_cookie, node, ext2_lookup_inode_helper, ( void* )&lookup_data );
+
+    if ( error == 0 ) {
+        return -EEXIST;
+    }
+
+    new_entry = ext2_do_alloc_dir_entry( name_length );
+
+    if ( new_entry == NULL ) {
+        return -ENOMEM;
+    }
+
+    /* Allocate a new inode for the symlink */
+
+    error = ext2_do_alloc_inode( fs_cookie, &child, false );
+
+    if ( error < 0 ) {
+        goto error1;
+    }
+
+    /* Fill the inode fields */
+
+    inode = &child.fs_inode;
+
+    memset( inode, 0, sizeof( ext2_fs_inode_t ) );
+
+    inode->i_mode = S_IFLNK | 0777;
+    inode->i_atime = inode->i_mtime = inode->i_ctime = time( NULL );
+    inode->i_links_count = 1;
+
+    /* Link the new inode to the directory */
+
+    new_entry->inode = child.inode_number;
+    new_entry->file_type = EXT2_FT_SYMLINK;
+
+    memcpy( ( void* )( new_entry + 1 ), name, name_length );
+
+    error = ext2_do_insert_entry( cookie, parent, new_entry, sizeof( ext2_dir_entry_t ) + name_length );
+
+    if ( error < 0 ) {
+        goto error2;
+    }
+
+    kfree( new_entry );
+
+    /* Write the file data */
+
+    link_size = strlen( link_path );
+
+    if ( link_size <= ( EXT2_N_BLOCKS * sizeof( uint32_t ) ) ) {
+        inode->i_size = link_size;
+
+        memcpy( &inode->i_block[ 0 ], link_path, link_size );
+    } else {
+        block = ( uint8_t* )kmalloc( cookie->blocksize );
+
+        if ( block == NULL ) {
+            return -ENOMEM;
+        }
+
+        while ( link_size > 0 ) {
+            size_t to_write;
+            uint32_t block_number;
+
+            to_write = MIN( link_size, cookie->blocksize );
+
+            error = ext2_do_get_new_inode_block( cookie, &child, &block_number );
+
+            if ( error < 0 ) {
+                kfree( block );
+                return error;
+            }
+
+            memcpy( block, link_path, to_write );
+
+            error = pwrite( cookie->fd, block, cookie->blocksize, block_number * cookie->blocksize );
+
+            if ( __unlikely( error != cookie->blocksize ) ) {
+                kfree( block );
+                return -EIO;
+            }
+
+            link_path += to_write;
+            link_size -= to_write;
+            inode->i_size += to_write;
+        }
+
+        kfree( block );
+    }
+
+    /* Write the inode to the disk */
+
+    error = ext2_do_write_inode( fs_cookie, &child );
+
+    if ( error < 0 ) {
+        goto error2;
+    }
+
+    /* Write dirty group descriptors and bitmaps to the disk */
+
+    error = ext2_flush_group_descriptors( fs_cookie );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    /* Write the updated superblock to the disk */
+
+    error = ext2_flush_superblock( fs_cookie );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    return 0;
+
+error3:
+error2:
+error1:
+    return error;
 }
 
 static int ext2_readlink( void* fs_cookie, void* node, char* buffer, size_t length ) {
@@ -1646,7 +1788,7 @@ static filesystem_calls_t ext2_calls = {
     .mkdir = ext2_mkdir,
     .rmdir = ext2_rmdir,
     .isatty = NULL,
-    .symlink = NULL,
+    .symlink = ext2_symlink,
     .readlink = ext2_readlink,
     .set_flags = NULL,
     .add_select_request = NULL,

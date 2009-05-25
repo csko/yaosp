@@ -40,7 +40,7 @@ static int do_symlink( const char* src, const char* dest ) {
     error = symlink( src, dest );
 
     if ( error < 0 ) {
-        fprintf( stderr, "Failed to create symlink. (%d)\n", errno );
+        fprintf( stderr, "Failed to create symlink: %s.\n", strerror( errno ) );
     }
 
     return error;

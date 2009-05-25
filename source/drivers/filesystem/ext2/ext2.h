@@ -46,6 +46,7 @@
 
 #define EXT2_FT_REG_FILE  0x1
 #define EXT2_FT_DIRECTORY 0x2
+#define EXT2_FT_SYMLINK   0x7
 
 typedef struct ext2_super_block {
     uint32_t s_inodes_count; /* Inodes count */
