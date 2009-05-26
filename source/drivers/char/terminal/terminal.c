@@ -62,6 +62,7 @@ void terminal_do_full_update( terminal_t* terminal ) {
     for ( i = 0; i < screen->height; i++, buffer++ ) {
         if ( ( buffer->data == NULL ) && ( i != screen->height - 1 ) ) {
             screen->ops->putchar( screen, '\n' );
+
             continue;
         }
 
@@ -219,6 +220,7 @@ void terminal_put_char( terminal_t* terminal, char c ) {
 
     if ( c == '\n' ) {
         terminal_handle_new_line( terminal );
+
         return;
     }
 
@@ -339,7 +341,6 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
 
                     default :
                         if ( ( c >= ' ' ) ||
-                             ( c == '\r' ) ||
                              ( c == '\n' ) ||
                              ( c == '\b' ) ) {
                             terminal_put_char( terminal, c );
@@ -375,7 +376,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_ESC state!\n", c );
+                        kprintf( "Terminal: Unknown character (%x) in IS_ESC state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -693,7 +694,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         /* TODO: We should insert the last character to the next line if we insert to a full line? */
 
                         if ( ( buffer != NULL ) &&
-                            ( buffer->last_dirty < ( screen->width - 1 ) ) ) {
+                             ( buffer->last_dirty < ( screen->width - 1 ) ) ) {
                             terminal_buffer_item_t* data_item;
 
                             ASSERT( buffer->last_dirty >= terminal->cursor_column );
@@ -750,7 +751,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_BRACKET state!\n", c );
+                        kprintf( "Terminal: Unknown character (%x) in IS_BRACKET state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -772,10 +773,10 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                     case '0' :
                         /* TODO: Set G0 special chars. & line set */
                         terminal->input_state = IS_NONE;
-                         break;
+                        break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_OPEN_BRACKET state!\n", c );
+                        kprintf( "Terminal: Unknown character (%x) in IS_OPEN_BRACKET state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -797,10 +798,10 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                     case '0' :
                         /* TODO: Set G1 special chars. & line set */
                         terminal->input_state = IS_NONE;
-                         break;
+                        break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_CLOSE_BRACKET state!\n", c );
+                        kprintf( "Terminal: Unknown character (%x) in IS_CLOSE_BRACKET state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -831,7 +832,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_QUESTION state!\n", c );
+                        kprintf( "Terminal: Unknown character (%x) in IS_QUESTION state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -864,7 +865,7 @@ static int terminal_read_thread( void* arg ) {
 
         count = select( max_fd + 1, &read_set, NULL, NULL, NULL );
 
-        if ( count < 0 ) {
+        if ( __unlikely( count < 0 ) ) {
             kprintf( "Terminal: Select error: %d\n", count );
             continue;
         }
@@ -873,7 +874,7 @@ static int terminal_read_thread( void* arg ) {
             if ( FD_ISSET( terminals[ i ]->master_pty, &read_set ) ) {
                 size = pread( terminals[ i ]->master_pty, buffer, sizeof( buffer ), 0 );
 
-                if ( size > 0 ) {
+                if ( __likely( size > 0 ) ) {
                     LOCK( terminal_lock );
 
                     terminal_parse_data( terminals[ i ], buffer, size );
@@ -956,7 +957,7 @@ int init_module( void ) {
         return terminal_lock;
     }
 
-    error = mkdir( "/device/terminal", 0 );
+    error = mkdir( "/device/terminal", 0777 );
 
     if ( error < 0 ) {
         kprintf( "Terminal: Failed to create /device/terminal\n" );
