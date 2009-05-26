@@ -847,20 +847,29 @@ static int terminal_read_thread( void* arg ) {
     int count;
     int max_fd;
     fd_set read_set;
+    terminal_t* terminal;
 
     int size;
-    char buffer[ 512 ];
+    char* buffer;
+
+    buffer = ( char* )kmalloc( TERMINAL_READ_BUFFER_SIZE );
+
+    if ( buffer == NULL ) {
+        kprintf( "terminal_read_thread(): Failed to create read buffer!\n" );
+
+        return -1;
+    }
 
     while ( 1 ) {
         max_fd = -1;
         FD_ZERO( &read_set );
 
         for ( i = 0; i < MAX_TERMINAL_COUNT; i++ ) {
-            FD_SET( terminals[ i ]->master_pty, &read_set );
+            terminal = terminals[ i ];
 
-            if ( terminals[ i ]->master_pty > max_fd ) {
-                max_fd = terminals[ i ]->master_pty;
-            }
+            FD_SET( terminal->master_pty, &read_set );
+
+            max_fd = MAX( max_fd, terminal->master_pty );
         }
 
         count = select( max_fd + 1, &read_set, NULL, NULL, NULL );
@@ -871,13 +880,15 @@ static int terminal_read_thread( void* arg ) {
         }
 
         for ( i = 0; i < MAX_TERMINAL_COUNT; i++ ) {
-            if ( FD_ISSET( terminals[ i ]->master_pty, &read_set ) ) {
-                size = pread( terminals[ i ]->master_pty, buffer, sizeof( buffer ), 0 );
+            terminal = terminals[ i ];
+
+            if ( FD_ISSET( terminal->master_pty, &read_set ) ) {
+                size = pread( terminal->master_pty, buffer, TERMINAL_READ_BUFFER_SIZE, 0 );
 
                 if ( __likely( size > 0 ) ) {
                     LOCK( terminal_lock );
 
-                    terminal_parse_data( terminals[ i ], buffer, size );
+                    terminal_parse_data( terminal, buffer, size );
 
                     UNLOCK( terminal_lock );
                 }

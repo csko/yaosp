@@ -27,7 +27,7 @@
 
 #include "pty.h"
 
-#define PTY_BUFSIZE 4096
+#define PTY_BUFSIZE 32768
 
 static ino_t pty_inode_counter = 1;
 static hashtable_t pty_node_table;

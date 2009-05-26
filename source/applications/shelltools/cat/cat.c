@@ -24,17 +24,20 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define BUFLEN 4096
+#define BUFLEN 16384
 
 static char* argv0;
+
 static char buffer[ BUFLEN ];
 
 /* Simple cat function */
 
 int do_cat( char* file ) {
-    struct stat st;
+    int fd;
     int error;
+    struct stat st;
     ssize_t last_read;
+
     error = stat( file, &st );
 
     if ( error != 0 ) {
@@ -43,32 +46,28 @@ int do_cat( char* file ) {
     }
 
     if ( S_ISDIR( st.st_mode ) ) {
-        fprintf( stderr, "%s: %s: Is a directory\n", argv0, file);
+        fprintf( stderr, "%s: %s: Is a directory\n", argv0, file );
         return -1;
     }
 
-    error = open( file, O_RDONLY );
+    fd = open( file, O_RDONLY );
 
-    if ( error < 0 ) {
+    if ( fd < 0 ) {
         fprintf( stderr, "%s: %s: %s.\n", argv0, file, strerror( errno ) );
         return -1;
     }
 
-    for ( ;; ) {
-        last_read = read( error, buffer, BUFLEN );
+    do {
+        last_read = read( fd, buffer, BUFLEN );
 
         if ( last_read <= 0 ) {
             break;
         }
 
-        write( 1, buffer, last_read );
+        write( STDOUT_FILENO, buffer, last_read );
+    } while ( last_read == BUFLEN );
 
-        if ( last_read != BUFLEN ) {
-            break;
-        }
-    }
-
-    close( error );
+    close( fd );
 
     return 0;
 }
@@ -89,7 +88,7 @@ int main( int argc, char** argv ) {
         /* Basic echo from stdin */
 
         int last_read;
-    
+
         for ( ;; ) {
             last_read = getchar();
 
