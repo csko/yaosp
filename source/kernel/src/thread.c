@@ -17,7 +17,6 @@
  */
 
 #include <thread.h>
-#include <config.h>
 #include <errno.h>
 #include <kernel.h>
 #include <scheduler.h>
@@ -26,6 +25,7 @@
 #include <macros.h>
 #include <console.h>
 #include <signal.h>
+#include <debug.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>
@@ -631,6 +631,110 @@ static bool thread_compare( const void* key1, const void* key2 ) {
 
     return ( id1 == id2 );
 }
+
+#ifdef ENABLE_DEBUGGER
+static const char* thread_states[] = {
+    "unknown",
+    "new",
+    "ready",
+    "running",
+    "waiting",
+    "sleeping",
+    "zombie"
+};
+
+static int dbg_list_thread_iterator( hashitem_t* item, void* data ) {
+    thread_t* thread;
+
+    thread = ( thread_t* )item;
+
+    dbg_printf(
+        "%4d %-25s %-25s %s\n",
+        thread->id,
+        thread->process->name,
+        thread->name,
+        thread_states[ thread->state ]
+    );
+
+    return 0;
+}
+
+int dbg_list_threads( const char* params ) {
+    dbg_set_scroll_mode( true );
+
+    dbg_printf( "  Id Process                   Thread                   State\n" );
+    dbg_printf( "-----------------------------------------------------------------\n" );
+
+    hashtable_iterate( &thread_table, dbg_list_thread_iterator, NULL );
+
+    dbg_set_scroll_mode( false );
+
+    return 0;
+}
+
+int dbg_show_thread_info( const char* params ) {
+    thread_id id;
+    thread_t* thread;
+
+    if ( params == NULL ) {
+        dbg_printf( "show-thread-info thread_id\n" );
+
+        return 0;
+    }
+
+    if ( !str_to_num( params, &id ) ) {
+        dbg_printf( "Thread ID must be a number!\n" );
+
+        return 0;
+    }
+
+    thread = ( thread_t* )hashtable_get( &thread_table, ( const void* )&id );
+
+    if ( thread == NULL ) {
+        dbg_printf( "Thread %d not found!\n", id );
+
+        return 0;
+    }
+
+    dbg_printf( "Informations about thread %d:\n", id );
+    dbg_printf( "  process: %s\n", thread->process->name );
+    dbg_printf( "  name: %s\n", thread->name );
+    dbg_printf( "  state: %s\n", thread_states[ thread->state ] );
+    dbg_printf( "  priority: %d\n", thread->priority );
+    arch_dbg_show_thread_info( thread );
+
+    return 0;
+}
+
+int dbg_trace_thread( const char* params ) {
+    thread_id id;
+    thread_t* thread;
+
+    if ( params == NULL ) {
+        dbg_printf( "trace-thread thread_id\n" );
+
+        return 0;
+    }
+
+    if ( !str_to_num( params, &id ) ) {
+        dbg_printf( "Thread ID must be a number!\n" );
+
+        return 0;
+    }
+
+    thread = ( thread_t* )hashtable_get( &thread_table, ( const void* )&id );
+
+    if ( thread == NULL ) {
+        dbg_printf( "Thread %d not found!\n", id );
+
+        return 0;
+    }
+
+    arch_dbg_trace_thread( thread );
+
+    return 0;
+}
+#endif /* ENABLE_DEBUGGER */
 
 __init int init_threads( void ) {
     int error;

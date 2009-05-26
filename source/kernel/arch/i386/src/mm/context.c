@@ -81,3 +81,33 @@ int arch_clone_memory_context( memory_context_t* old_context, memory_context_t* 
 
     return 0;
 }
+
+#ifdef ENABLE_DEBUGGER
+int arch_memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical ) {
+    uint32_t offset;
+    uint32_t* pgd_entry;
+    uint32_t* pt_entry;
+    i386_memory_context_t* arch_context;
+
+    offset = linear & ~PAGE_MASK;
+    linear &= PAGE_MASK;
+
+    arch_context = ( i386_memory_context_t* )context->arch_data;
+
+    pgd_entry = page_directory_entry( arch_context, linear );
+
+    if ( ( ( *pgd_entry ) & PRESENT ) == 0 ) {
+        return -EINVAL;
+    }
+
+    pt_entry = page_table_entry( *pgd_entry, linear );
+
+    if ( ( ( *pt_entry ) & PRESENT ) == 0 ) {
+        return -EINVAL;
+    }
+
+    *physical = ( ( *pt_entry ) & PAGE_MASK ) + offset;
+
+    return 0;
+}
+#endif /* ENABLE_DEBUGGER */

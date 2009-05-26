@@ -310,3 +310,23 @@ char* strncat( char *dest, const char *src, size_t n ) {
     return dest;
 }
 #endif // ARCH_HAVE_STRNCAT
+
+bool str_to_num( const char* string, int* _number ) {
+    int number;
+
+    number = 0;
+
+    while ( *string != 0 ) {
+        if ( !isdigit( *string ) ) {
+            return false;
+        }
+
+        number = number * 10 + ( *string - '0' );
+
+        string++;
+    }
+
+    *_number = number;
+
+    return true;
+}

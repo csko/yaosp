@@ -42,7 +42,9 @@ char* strdup( const char* s );
 char* strndup( const char* s, size_t length );
 char* strcat(char *dest, const char *src);
 char* strncat(char *dest, const char *src, size_t n);
-              
+
 int snprintf( char* str, size_t size, const char* format, ... );
 
-#endif // _LIB_STRING_H_
+bool str_to_num( const char* string, int* _number );
+
+#endif /* _LIB_STRING_H_ */

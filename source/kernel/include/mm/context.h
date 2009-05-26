@@ -19,6 +19,7 @@
 #ifndef _MM_CONTEXT_H_
 #define _MM_CONTEXT_H_
 
+#include <config.h>
 #include <mm/region.h>
 
 struct process;
@@ -107,6 +108,10 @@ int memory_context_delete_regions( memory_context_t* context );
 
 void memory_context_destroy( memory_context_t* context );
 
+#ifdef ENABLE_DEBUGGER
+int memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical );
+#endif /* ENABLE_DEBUGGER */
+
 void memory_context_dump( memory_context_t* context );
 
-#endif // _MM_CONTEXT_H_
+#endif /* _MM_CONTEXT_H_ */

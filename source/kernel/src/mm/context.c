@@ -354,6 +354,18 @@ void memory_context_destroy( memory_context_t* context ) {
     kfree( context );
 }
 
+#ifdef ENABLE_DEBUGGER
+int memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical ) {
+    if ( linear < FIRST_USER_ADDRESS ) {
+        *physical = linear;
+
+        return 0;
+    }
+
+    return arch_memory_context_translate_address( context, linear, physical );
+}
+#endif /* ENABLE_DEBUGGER */
+
 void memory_context_dump( memory_context_t* context ) {
     int i;
     region_t* region;

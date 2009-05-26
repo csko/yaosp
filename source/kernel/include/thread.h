@@ -176,6 +176,12 @@ uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_tab
 
 int sys_sleep_thread( uint64_t* microsecs, uint64_t* remaining );
 
+#ifdef ENABLE_DEBUGGER
+int dbg_list_threads( const char* params );
+int dbg_show_thread_info( const char* params );
+int dbg_trace_thread( const char* params );
+#endif /* ENABLE_DEBUGGER */
+
 int init_threads( void );
 
 #endif /* _THREAD_H_ */

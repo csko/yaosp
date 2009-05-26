@@ -483,7 +483,7 @@ int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, i
 
     /* Create the inode cache semaphore */
 
-    cache->lock = create_semaphore( "inode_cache_lock", SEMAPHORE_BINARY, 0, 1 );
+    cache->lock = create_semaphore( "inode cache lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( cache->lock < 0 ) {
         destroy_hashtable( &cache->inode_table );

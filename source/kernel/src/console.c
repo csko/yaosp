@@ -33,7 +33,12 @@ static char kernel_console[ KERNEL_CONSOLE_SIZE ];
 
 static console_t* screen = NULL;
 static console_t* debug = NULL;
+static console_t* real_screen = NULL;
 static spinlock_t console_lock = INIT_SPINLOCK( "console" );
+
+console_t* console_get_real_screen( void ) {
+    return real_screen;
+}
 
 int console_set_screen( console_t* console ) {
     if ( ( console != NULL ) && ( console->ops->init != NULL ) ) {
@@ -43,6 +48,10 @@ int console_set_screen( console_t* console ) {
     spinlock_disable( &console_lock );
 
     screen = console;
+
+    if ( real_screen == NULL ) {
+        real_screen = console;
+    }
 
     spinunlock_enable( &console_lock );
 

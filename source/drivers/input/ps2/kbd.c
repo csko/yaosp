@@ -21,6 +21,7 @@
 #include <semaphore.h>
 #include <errno.h>
 #include <console.h>
+#include <config.h>
 #include <vfs/devfs.h>
 
 #include <arch/io.h>
@@ -29,21 +30,35 @@
 
 static ps2_buffer_t kbd_buffer;
 
+#ifdef ENABLE_DEBUGGER
+static uint8_t prev_scancode = 0;
+#endif /* ENABLE_DEBUGGER */
+
 static int ps2kbd_interrupt( int irq, void* _data, registers_t* regs ) {
     uint8_t data;
 
     ps2_lock();
 
     if ( ( inb( PS2_PORT_STATUS ) & PS2_STATUS_OBF ) != PS2_STATUS_OBF ) {
-        goto out;
+        ps2_unlock();
+
+        return 0;
     }
 
     data = inb( PS2_PORT_DATA );
 
     ps2_buffer_add( &kbd_buffer, data );
 
-out:
     ps2_unlock();
+
+#ifdef ENABLE_DEBUGGER
+    if ( ( prev_scancode == 0xE0 ) &&
+         ( data == 0x37 ) ) {
+        __asm__ __volatile__( "int $0x1" );
+    }
+
+    prev_scancode = data;
+#endif /* ENABLE_DEBUGGER */
 
     return 0;
 }
@@ -111,7 +126,7 @@ static int ps2kbd_read( void* node, void* cookie, void* buffer, off_t position, 
 
 static int ps2kbd_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
     return 0;
-}                                                                                                    
+}
 
 static device_calls_t ps2kbd_calls = {
     .open = ps2kbd_open,
@@ -130,11 +145,11 @@ int ps2_init_keyboard( void ) {
     /* Flush buffer */
 
     ps2_flush_buffer();
-    
+
     /* Read control register */
 
     error = ps2_read_command( PS2_CMD_RCTR, &control );
-    
+
     if ( error < 0 ) {
         kprintf( "PS2: I/O error!\n" );
         return -EIO;
@@ -142,14 +157,14 @@ int ps2_init_keyboard( void ) {
 
     control |= PS2_CTR_KBDDIS;
     control &= ~PS2_CTR_KBDINT;
-    
+
     /* Check if translated mode is enabled */
 
     if ( ( control & PS2_CTR_XLATE ) == 0 ) {
         kprintf( "PS2: Keyboard is in non-translated mode.\n" );
         return -EINVAL;
     }
-    
+
     /* Write control register */
 
     error = ps2_write_command( PS2_CMD_WCTR, control );

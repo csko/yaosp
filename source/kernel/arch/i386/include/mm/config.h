@@ -42,4 +42,4 @@ enum arch_memory_type {
     MEM_LOW = MEM_ARCH_FIRST
 };
 
-#endif // _ARCH_MM_CONFIG_H_
+#endif /* _ARCH_MM_CONFIG_H_ */

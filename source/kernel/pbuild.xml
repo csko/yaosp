@@ -95,6 +95,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/interpreter.c</item>
         <item>src/ipc.c</item>
         <item>src/signal.c</item>
+        <item>src/debugger.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/context.c</item>

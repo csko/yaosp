@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <waitqueue.h>
+#include <config.h>
 #include <lib/hashtable.h>
 
 #include <arch/spinlock.h>
@@ -121,6 +122,10 @@ void destroy_semaphore_context( semaphore_context_t* context );
 semaphore_context_t* semaphore_context_clone( semaphore_context_t* old_context );
 int semaphore_context_update( semaphore_context_t* context, thread_id new_thread );
 int semaphore_context_make_empty( semaphore_context_t* context );
+
+#ifdef ENABLE_DEBUGGER
+int dbg_list_kernel_semaphores( const char* params );
+#endif /* ENABLE_DEBUGGER */
 
 int init_semaphores( void );
 

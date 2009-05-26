@@ -1,6 +1,6 @@
 /* i386 paging code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -29,11 +29,11 @@
 #define USER    0x4
 
 static inline uint32_t* page_directory_entry( i386_memory_context_t* context, ptr_t address ) {
-  return &( context->page_directory[ address >> PGDIR_SHIFT ] );
+    return &( context->page_directory[ address >> PGDIR_SHIFT ] );
 }
 
 static inline uint32_t* page_table_entry( uint32_t table, ptr_t address ) {
-  return &( ( ( uint32_t* )( table & PAGE_MASK ) )[ ( address / PAGE_SIZE ) & 1023 ] );
+    return &( ( ( uint32_t* )( table & PAGE_MASK ) )[ ( address / PAGE_SIZE ) & 1023 ] );
 }
 
 int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel );
@@ -62,4 +62,4 @@ int clone_user_region(
 
 int init_paging( void );
 
-#endif // _ARCH_MM_PAGING_H_
+#endif /* _ARCH_MM_PAGING_H_ */

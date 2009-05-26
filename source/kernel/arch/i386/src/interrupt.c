@@ -144,7 +144,7 @@ __init int init_interrupts( void ) {
     );
 
     set_trap_gate( 0, isr0 );
-    set_trap_gate( 1, isr1 );
+    set_interrupt_gate( 1, isr1 );
     set_trap_gate( 3, isr3 );
     set_trap_gate( 6, isr6 );
     set_trap_gate( 7, isr7 );

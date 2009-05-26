@@ -711,6 +711,42 @@ int semaphore_context_make_empty( semaphore_context_t* context ) {
     return 0;
 }
 
+#ifdef ENABLE_DEBUGGER
+static const char* semaphore_types[] = {
+    "binary",
+    "counting"
+};
+
+static int dbg_list_kernel_sema_iterator( hashitem_t* item, void* data ) {
+    semaphore_t* semaphore;
+
+    semaphore = ( semaphore_t* )item;
+
+    dbg_printf(
+        "%4d %-30s %-10s %3d\n",
+        semaphore->id,
+        semaphore->name,
+        semaphore_types[ semaphore->type ],
+        semaphore->count
+    );
+
+    return 0;
+}
+
+int dbg_list_kernel_semaphores( const char* params ) {
+    dbg_set_scroll_mode( true );
+
+    dbg_printf( "%4s %-30s %-10s %s\n", "Id", "Name", "Type", "Cnt" );
+    dbg_printf( "--------------------------------------------------\n" );
+
+    hashtable_iterate( &kernel_semaphore_context.semaphore_table, dbg_list_kernel_sema_iterator, NULL );
+
+    dbg_set_scroll_mode( false );
+
+    return 0;
+}
+#endif /* ENABLE_DEBUGGER */
+
 __init int init_semaphores( void ) {
     int error;
 

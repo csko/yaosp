@@ -20,6 +20,7 @@
 #define _ARCH_MM_CONTEXT_H_
 
 #include <types.h>
+#include <config.h>
 
 typedef struct i386_memory_context {
     uint32_t* page_directory;
@@ -36,4 +37,8 @@ int arch_clone_memory_region(
     region_t* new_region
 );
 
-#endif // _ARCH_MM_CONTEXT_H_
+#ifdef ENABLE_DEBUGGER
+int arch_memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical );
+#endif /* ENABLE_DEBUGGER */
+
+#endif /* _ARCH_MM_CONTEXT_H_ */

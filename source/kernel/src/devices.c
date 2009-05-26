@@ -162,7 +162,7 @@ __init int init_devices( void ) {
 
     /* Create the bus driver table lock */
 
-    bus_table_lock = create_semaphore( "bus_table_lock", SEMAPHORE_BINARY, 0, 1 );
+    bus_table_lock = create_semaphore( "bus table lock", SEMAPHORE_BINARY, 0, 1 );
 
     if ( bus_table_lock < 0 ) {
         error = bus_table_lock;

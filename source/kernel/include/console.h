@@ -69,6 +69,8 @@ typedef struct console {
     console_operations_t* ops;
 } console_t;
 
+console_t* console_get_real_screen( void );
+
 /**
  * This is used by architecture specific part of the kernel to
  * specify the screen properties and callbacks. The arch. code
@@ -91,4 +93,4 @@ int dprintf_unlocked( const char* format, ... );
 
 int kernel_console_read( char* buffer, int size );
 
-#endif // _CONSOLE_H_
+#endif /* _CONSOLE_H_ */

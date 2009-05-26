@@ -35,7 +35,7 @@ static semaphore_id pty_lock;
 
 static pty_node_t root_inode = {
     .inode_number = PTY_ROOT_INODE,
-    .mode = S_IFDIR
+    .mode = S_IFDIR | 0777
 };
 
 static inline bool pty_is_master( pty_node_t* node ) {
@@ -43,6 +43,7 @@ static inline bool pty_is_master( pty_node_t* node ) {
 }
 
 static pty_node_t* pty_create_node( const char* name, int name_length, size_t buffer_size, mode_t mode ) {
+    char tmp[ 32 ];
     pty_node_t* node;
 
     node = ( pty_node_t* )kmalloc( sizeof( pty_node_t ) );
@@ -69,19 +70,25 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
         goto error3;
     }
 
-    node->lock = create_semaphore( "pty lock", SEMAPHORE_BINARY, 0, 1 );
+    snprintf( tmp, sizeof( tmp ), "%s lock", name );
+
+    node->lock = create_semaphore( tmp, SEMAPHORE_BINARY, 0, 1 );
 
     if ( node->lock < 0 ) {
         goto error4;
     }
 
-    node->read_queue = create_semaphore( "pty read queue", SEMAPHORE_COUNTING, 0, 0 );
+    snprintf( tmp, sizeof( tmp ), "%s read queue", name );
+
+    node->read_queue = create_semaphore( tmp, SEMAPHORE_COUNTING, 0, 0 );
 
     if ( node->read_queue < 0 ) {
         goto error5;
     }
 
-    node->write_queue = create_semaphore( "pty write queue", SEMAPHORE_COUNTING, 0, 0 );
+    snprintf( tmp,  sizeof( tmp ), "%s write queue", name );
+
+    node->write_queue = create_semaphore( tmp, SEMAPHORE_COUNTING, 0, 0 );
 
     if ( node->write_queue < 0 ) {
         goto error6;
@@ -673,7 +680,7 @@ static int pty_create(
 
     /* Create the master node */
 
-    master = pty_create_node( name, name_length, PTY_BUFSIZE, S_IFCHR );
+    master = pty_create_node( name, name_length, PTY_BUFSIZE, S_IFCHR | 0777 );
 
     if ( master == NULL ) {
         return -ENOMEM;
@@ -691,7 +698,7 @@ static int pty_create(
 
     /* Create the slave node */
 
-    slave = pty_create_node( tty_name, -1, PTY_BUFSIZE, S_IFCHR );
+    slave = pty_create_node( tty_name, -1, PTY_BUFSIZE, S_IFCHR | 0777 );
 
     kfree( tty_name );
 
