@@ -51,13 +51,14 @@ int main( int argc, char** argv ) {
 
     argv0 = argv[ 0 ];
 
-    if ( argc != 3 ) {
-        print_usage( EXIT_FAILURE );
+    if ( ( argc == 2 ) &&
+         ( ( strcmp( argv[ 1 ], "-h" ) == 0 ) ||
+           ( strcmp( argv[ 1 ], "--help" ) == 0 ) ) ) {
+        print_usage( EXIT_SUCCESS );
     }
 
-    if ( ( strcmp( argv[ 1 ], "-h" ) == 0 ) ||
-         ( strcmp( argv[ 1 ], "--help" ) == 0 ) ) {
-        print_usage( EXIT_SUCCESS );
+    if ( argc != 3 ) {
+        print_usage( EXIT_FAILURE );
     }
 
     error = do_symlink( argv[ 2 ], argv[ 1 ] );
