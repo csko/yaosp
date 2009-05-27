@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <kernel.h>
 #include <symbols.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <mm/region.h>
 #include <lib/string.h>
@@ -31,25 +32,24 @@
 
 static bool elf32_module_get_symbol( module_t* module, const char* symbol_name, ptr_t* symbol_addr );
 
-static bool elf32_module_check( module_reader_t* reader ) {
-    elf_header_t header;
+static bool elf32_module_check( binary_loader_t* loader ) {
+    int error;
+    elf32_image_info_t info;
 
-    if ( get_module_size( reader ) < sizeof( elf_header_t ) ) {
+    error = elf32_init_image_info( &info );
+
+    if ( __unlikely( error < 0 ) ) {
         return false;
     }
 
-    if ( read_module_data(
-        reader,
-        ( void* )&header,
-        0,
-        sizeof( elf_header_t )
-    ) != sizeof( elf_header_t ) ) {
-        return false;
-    }
+    error = elf32_load_and_validate_header( &info, loader );
 
-    return elf32_check( &header );
+    elf32_destroy_image_info( &info );
+
+    return ( error == 0 );
 }
 
+#if 0
 static int elf32_parse_dynsym_section(
     module_reader_t* reader,
     elf_module_t* elf_module,
@@ -277,8 +277,10 @@ static int elf32_parse_section_headers( module_reader_t* reader, elf_module_t* e
 
     return 0;
 }
+#endif
 
-static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module ) {
+static int elf32_module_map( elf_module_t* elf_module, binary_loader_t* loader ) {
+    int error;
     uint32_t i;
     char region_name[ 64 ];
     elf_section_header_t* section_header;
@@ -300,8 +302,8 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
     uint32_t bss_end = 0;
     uint32_t data_size_with_bss = 0;
 
-    for ( i = 0; i < elf_module->section_count; i++ ) {
-        section_header = &elf_module->sections[ i ];
+    for ( i = 0; i < elf_module->image_info.header.shnum; i++ ) {
+        section_header = &elf_module->image_info.section_headers[ i ];
 
         /* Check if the current section occupies memory during execution */
 
@@ -336,7 +338,8 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
     }
 
     if ( ( !text_found ) || ( !data_found ) ) {
-        return -EINVAL;
+        error = -EINVAL;
+        goto error1;
     }
 
     text_offset -= ( text_start & ~PAGE_MASK );
@@ -348,7 +351,7 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
     data_size = data_end - data_start + 1;
     data_size_with_bss = bss_end - data_start + 1;
 
-    snprintf( region_name, sizeof( region_name ), "%s_ro", get_module_name( reader ) );
+    snprintf( region_name, sizeof( region_name ), "%s_ro", loader->get_name( loader->private ) );
 
     elf_module->text_region = create_region(
         region_name,
@@ -358,11 +361,12 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
         &text_address
     );
 
-    if ( elf_module->text_region < 0 ) {
-        return elf_module->text_region;
+    if ( __unlikely( elf_module->text_region < 0 ) ) {
+        error = elf_module->text_region;
+        goto error1;
     }
 
-    snprintf( region_name, sizeof( region_name ), "%s_rw", get_module_name( reader ) );
+    snprintf( region_name, sizeof( region_name ), "%s_rw", loader->get_name( loader->private ) );
 
     elf_module->data_region = create_region(
         region_name,
@@ -372,38 +376,35 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
         &data_address
     );
 
-    if ( elf_module->data_region < 0 ) {
-        delete_region( elf_module->text_region );
-        elf_module->text_region = -1;
-        return elf_module->data_region;
+    if ( __unlikely( elf_module->data_region < 0 ) ) {
+        error = elf_module->data_region;
+        goto error2;
     }
 
     /* Copy text and data in */
 
-    if ( read_module_data(
-        reader,
+    error = loader->read(
+        loader->private,
         text_address,
         text_offset,
         text_size
-    ) != text_size ) {
-        delete_region( elf_module->text_region );
-        elf_module->text_region = -1;
-        delete_region( elf_module->data_region );
-        elf_module->data_region = -1;
-        return -EIO;
+    );
+
+    if ( __unlikely( error != text_size ) ) {
+        error = -EIO;
+        goto error3;
     }
 
-    if ( read_module_data(
-        reader,
+    error = loader->read(
+        loader->private,
         data_address,
         data_offset,
         data_size
-    ) != data_size ) {
-        delete_region( elf_module->text_region );
-        elf_module->text_region = -1;
-        delete_region( elf_module->data_region );
-        elf_module->data_region = -1;
-        return -EIO;
+    );
+
+    if ( __unlikely( error != data_size ) ) {
+        error = -EIO;
+        goto error3;
     }
 
     memset( ( char* )data_address + data_size, 0, data_size_with_bss - data_size );
@@ -411,8 +412,20 @@ static int elf32_module_map( module_reader_t* reader, elf_module_t* elf_module )
     elf_module->text_address = ( uint32_t )text_address;
 
     return 0;
+
+error3:
+    delete_region( elf_module->data_region );
+    elf_module->data_region = -1;
+
+error2:
+    delete_region( elf_module->text_region );
+    elf_module->text_region = -1;
+
+error1:
+    return error;
 }
 
+#if 0
 static bool elf32_module_find_symbol( elf_module_t* elf_module, const char* name, uint8_t type, ptr_t* address ) {
     uint32_t i;
 
@@ -546,92 +559,66 @@ r_386_32_found:
 
     return 0;
 }
+#endif
 
-static int elf32_module_load( module_t* module, module_reader_t* reader ) {
+static int elf32_module_load( module_t* module, binary_loader_t* loader ) {
     int error;
     elf_module_t* elf_module;
-    elf_header_t header;
-
-    if ( read_module_data(
-        reader,
-        &header,
-        0,
-        sizeof( elf_header_t )
-    ) != sizeof( elf_header_t ) ) {
-        return -EIO;
-    }
 
     elf_module = ( elf_module_t* )kmalloc( sizeof( elf_module_t ) );
 
-    if ( elf_module == NULL ) {
-        return -ENOMEM;
+    if ( __unlikely( elf_module == NULL ) ) {
+        error = -ENOMEM;
+        goto error1;
     }
 
-    memset( elf_module, 0, sizeof( elf_module_t ) );
+    error = elf32_init_image_info( &elf_module->image_info );
 
-    if ( header.shentsize != sizeof( elf_section_header_t ) ) {
-        kprintf( "ELF32: Invalid section header size!\n" );
-        kfree( elf_module );
-        return -EINVAL;
+    if ( __unlikely( error < 0 ) ) {
+        kprintf( "%d %d\n", __LINE__, error );
+        goto error2;
     }
 
-    /* Load section headers from the ELF file */
+    error = elf32_load_and_validate_header( &elf_module->image_info, loader );
 
-    elf_module->section_count = header.shnum;
-
-    elf_module->sections = ( elf_section_header_t* )kmalloc(
-        sizeof( elf_section_header_t ) * elf_module->section_count
-    );
-
-    if ( elf_module->sections == NULL ) {
-        kfree( elf_module );
-        return -ENOMEM;
+    if ( __unlikely( error < 0 ) ) {
+        kprintf( "%d %d\n", __LINE__, error );
+        goto error3;
     }
 
-    if ( read_module_data(
-        reader,
-        ( void* )elf_module->sections,
-        header.shoff,
-        sizeof( elf_section_header_t ) * elf_module->section_count
-    ) != sizeof( elf_section_header_t ) * elf_module->section_count ) {
-        kfree( elf_module->sections );
-        kfree( elf_module );
-        return -EIO;
+    error = elf32_load_section_headers( &elf_module->image_info, loader );
+
+    if ( __unlikely( error < 0 ) ) {
+        kprintf( "%d %d\n", __LINE__, error );
+        goto error3;
     }
 
-    /* Parse section headers */
+    error = elf32_parse_section_headers( &elf_module->image_info, loader );
 
-    error = elf32_parse_section_headers( reader, elf_module );
-
-    if ( error < 0 ) {
-        kfree( elf_module->sections );
-        kfree( elf_module );
-        return error;
+    if ( __unlikely( error < 0 ) ) {
+        kprintf( "%d %d\n", __LINE__, error );
+        goto error3;
     }
 
-    /* Map the ELF image to the kernel memory */
+    error = elf32_module_map( elf_module, loader );
 
-    error = elf32_module_map( reader, elf_module );
-
-    if ( error < 0 ) {
-        /* TODO: free other stuffs */
-        kfree( elf_module->sections );
-        kfree( elf_module );
-        return error;
+    if ( __unlikely( error < 0 ) ) {
+        kprintf( "%d %d\n", __LINE__, error );
+        goto error3;
     }
 
-    /* Relocate the ELF module */
-
-    error = elf32_relocate_module( elf_module );
-
-    if ( error < 0 ) {
-        /* TODO: cleanup */
-        return error;
-    }
-
-    module->loader_data = ( void* )elf_module;
+    /* TODO: relocate the module */
 
     return 0;
+
+error3:
+    elf32_destroy_image_info( &elf_module->image_info );
+
+error2:
+    kfree( elf_module );
+
+error1:
+    return error;
 }
 
 static int elf32_module_load_dependency_table( module_t* module, char* symbol, char*** dep_table, size_t* dep_count ) {

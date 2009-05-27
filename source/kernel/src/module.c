@@ -76,40 +76,12 @@ static void destroy_module( module_t* module ) {
     kfree( module );
 }
 
-int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int size ) {
-    return reader->read( reader->private, buffer, offset, size );
-}
-
-size_t get_module_size( module_reader_t* reader ) {
-    return reader->get_size( reader->private );
-}
-
-char* get_module_name( module_reader_t* reader ) {
-    return reader->get_name( reader->private );
-}
-
 static int file_module_read( void* private, void* data, off_t offset, int size ) {
     file_module_reader_t* reader;
 
     reader = ( file_module_reader_t* )private;
 
     return pread( reader->fd, data, size, offset );
-}
-
-static size_t file_module_get_size( void* private ) {
-    int error;
-    struct stat st;
-    file_module_reader_t* reader;
-
-    reader = ( file_module_reader_t* )private;
-
-    error = fstat( reader->fd, &st );
-
-    if ( error < 0 ) {
-        return 0;
-    }
-
-    return ( size_t )st.st_size;
 }
 
 static char* file_module_get_name( void* private ) {
@@ -120,10 +92,10 @@ static char* file_module_get_name( void* private ) {
     return reader->name;
 }
 
-static module_reader_t* get_file_module_reader_helper( const char* directory, const char* module_name ) {
+static binary_loader_t* get_file_module_reader_helper( const char* directory, const char* module_name ) {
     int file;
     char path[ 128 ];
-    module_reader_t* reader;
+    binary_loader_t* loader;
     file_module_reader_t* file_reader;
 
     snprintf( path, sizeof( path ), "/yaosp/system/module/%s/%s", directory, module_name );
@@ -134,13 +106,13 @@ static module_reader_t* get_file_module_reader_helper( const char* directory, co
         goto error1;
     }
 
-    reader = ( module_reader_t* )kmalloc( sizeof( module_reader_t ) + sizeof( file_module_reader_t ) );
+    loader = ( binary_loader_t* )kmalloc( sizeof( binary_loader_t ) + sizeof( file_module_reader_t ) );
 
-    if ( reader == NULL ) {
+    if ( loader == NULL ) {
         goto error2;
     }
 
-    file_reader = ( file_module_reader_t* )( reader + 1 );
+    file_reader = ( file_module_reader_t* )( loader + 1 );
 
     file_reader->name = strdup( module_name );
 
@@ -150,15 +122,14 @@ static module_reader_t* get_file_module_reader_helper( const char* directory, co
 
     file_reader->fd = file;
 
-    reader->private = ( void* )file_reader;
-    reader->read = file_module_read;
-    reader->get_size = file_module_get_size;
-    reader->get_name = file_module_get_name;
+    loader->private = ( void* )file_reader;
+    loader->read = file_module_read;
+    loader->get_name = file_module_get_name;
 
-    return reader;
+    return loader;
 
 error3:
-    kfree( reader );
+    kfree( loader );
 
 error2:
     close( file );
@@ -167,10 +138,10 @@ error1:
     return NULL;
 }
 
-static module_reader_t* get_file_module_reader( const char* name ) {
+static binary_loader_t* get_file_module_loader( const char* name ) {
     int dir;
     dirent_t entry;
-    module_reader_t* reader = NULL;
+    binary_loader_t* loader = NULL;
 
     dir = open( "/yaosp/system/module", O_RDONLY );
 
@@ -184,19 +155,19 @@ static module_reader_t* get_file_module_reader( const char* name ) {
             continue;
         }
 
-        reader = get_file_module_reader_helper( entry.name, name );
+        loader = get_file_module_reader_helper( entry.name, name );
 
-        if ( reader != NULL ) {
+        if ( loader != NULL ) {
             break;
         }
     }
 
     close( dir );
 
-    return reader;
+    return loader;
 }
 
-static void put_file_module_reader( module_reader_t* reader ) {
+static void put_file_module_loader( binary_loader_t* reader ) {
     file_module_reader_t* file_reader;
 
     file_reader = ( file_module_reader_t* )reader->private;
@@ -234,11 +205,11 @@ static int do_load_module( const char* name ) {
     bool found;
     module_t* module;
     bootmodule_t* bootmodule;
-    module_reader_t* reader;
+    binary_loader_t* loader;
     bool is_bootmodule;
     module_dependencies_t module_deps;
 
-    reader = NULL;
+    loader = NULL;
     is_bootmodule = false;
 
     /* Try bootmodules first */
@@ -247,7 +218,7 @@ static int do_load_module( const char* name ) {
         bootmodule = get_bootmodule_at( i );
 
         if ( strcmp( bootmodule->name, name ) == 0 ) {
-            reader = get_bootmodule_reader( i );
+            loader = get_bootmodule_loader( i );
             is_bootmodule = true;
             break;
         }
@@ -255,13 +226,13 @@ static int do_load_module( const char* name ) {
 
     /* Try to load the module from a simple file */
 
-    if ( reader == NULL ) {
-        reader = get_file_module_reader( name );
+    if ( loader == NULL ) {
+        loader = get_file_module_loader( name );
     }
 
     /* If we didn't find anything we can't load the module :( */
 
-    if ( reader == NULL ) {
+    if ( loader == NULL ) {
         error = -ENOENT;
 
         goto error1;
@@ -269,7 +240,7 @@ static int do_load_module( const char* name ) {
 
     /* Check if this is a valid module */
 
-    if ( !module_loader->check_module( reader ) ) {
+    if ( !module_loader->check_module( loader ) ) {
         error = -EINVAL;
 
         goto error2;
@@ -313,8 +284,8 @@ static int do_load_module( const char* name ) {
 
     /* Load the module */
 
-    error = module_loader->load_module( module, reader );
-
+    error = module_loader->load_module( module, loader );
+    kprintf( "%s() error=%d\n", __FUNCTION__, error );
     if ( error < 0 ) {
         goto error3;
     }
@@ -385,9 +356,9 @@ error3:
 
 error2:
     if ( is_bootmodule ) {
-        put_bootmodule_reader( reader );
+        put_bootmodule_loader( loader );
     } else {
-        put_file_module_reader( reader );
+        put_file_module_loader( loader );
     }
 
 error1:

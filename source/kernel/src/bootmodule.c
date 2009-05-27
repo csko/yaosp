@@ -1,6 +1,6 @@
 /* Boot module management
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -54,14 +54,6 @@ static int bm_read_module( void* private, void* data, off_t offset, int size ) {
     return size;
 }
 
-static size_t bm_get_size( void* private ) {
-    bootmodule_t* bootmodule;
-
-    bootmodule = ( bootmodule_t* )private;
-
-    return bootmodule->size;
-}
-
 static char* bm_get_name( void* private ) {
     bootmodule_t* bootmodule;
 
@@ -70,29 +62,28 @@ static char* bm_get_name( void* private ) {
     return bootmodule->name;
 }
 
-module_reader_t* get_bootmodule_reader( int index ) {
-    module_reader_t* reader;
+binary_loader_t* get_bootmodule_loader( int index ) {
+    binary_loader_t* loader;
 
     if ( ( index < 0 ) || ( index >= MAX_BOOTMODULE_COUNT ) ) {
         return NULL;
     }
 
-    reader = ( module_reader_t* )kmalloc( sizeof( module_reader_t ) );
+    loader = ( binary_loader_t* )kmalloc( sizeof( binary_loader_t ) );
 
-    if ( reader == NULL ) {
+    if ( __unlikely( loader == NULL ) ) {
         return NULL;
     }
 
-    reader->private = &bootmodules[ index ];
-    reader->read = bm_read_module;
-    reader->get_size = bm_get_size;
-    reader->get_name = bm_get_name;
+    loader->private = ( void* )&bootmodules[ index ];
+    loader->read = bm_read_module;
+    loader->get_name = bm_get_name;
 
-    return reader;
+    return loader;
 }
 
-void put_bootmodule_reader( module_reader_t* reader ) {
-    kfree( reader );
+void put_bootmodule_loader( binary_loader_t* loader ) {
+    kfree( loader );
 }
 
 __init int init_bootmodules( multiboot_header_t* header ) {

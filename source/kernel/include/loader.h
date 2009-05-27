@@ -24,6 +24,7 @@
 typedef struct binary_loader {
     void* private;
     int ( *read )( void* private, void* buffer, off_t offset, int size );
+    char* ( *get_name )( void* private );
 } binary_loader_t;
 
 /* Application loader calls */

@@ -53,7 +53,6 @@ bool elf32_check( elf_header_t* header ) {
     return true;
 }
 
-#if 0
 int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader ) {
     int error;
 
@@ -149,7 +148,170 @@ error1:
 }
 
 static int elf32_load_symtab_section( elf32_image_info_t* info, binary_loader_t* loader, elf_section_header_t* symtab ) {
-    return -1;
+    int error;
+    uint32_t i;
+    uint32_t symbol_count;
+    elf_symbol_t* elf_symbol;
+    elf_symbol_t* elf_symbols;
+    my_elf_symbol_t* my_elf_symbol;
+
+    symbol_count = symtab->size / sizeof( elf_symbol_t );
+
+    elf_symbols = ( elf_symbol_t* )kmalloc( symtab->size );
+
+    if ( elf_symbols == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    error = loader->read(
+        loader->private,
+        elf_symbols,
+        symtab->offset,
+        symtab->size
+    );
+
+    if ( __unlikely( error != symtab->size ) ) {
+        error = -EIO;
+        goto error2;
+    }
+
+    info->symbol_table = ( my_elf_symbol_t* )kmalloc( sizeof( my_elf_symbol_t ) * symbol_count );
+
+    if ( info->symbol_table == NULL ) {
+        error = -ENOMEM;
+        goto error2;
+    }
+
+    for ( i = 0, elf_symbol = &elf_symbols[ 0 ], my_elf_symbol = &info->symbol_table[ 0 ];
+          i < symbol_count;
+          i++, elf_symbol++, my_elf_symbol++ ) {
+        my_elf_symbol->name = info->string_table + elf_symbol->name;
+        my_elf_symbol->address = elf_symbol->value;
+        my_elf_symbol->info = elf_symbol->info;
+    }
+
+    kfree( elf_symbols );
+
+    return 0;
+
+error2:
+    kfree( elf_symbols );
+
+error1:
+    return error;
+}
+
+static int elf32_load_dynamic_section( elf32_image_info_t* info, binary_loader_t* loader, elf_section_header_t* dynamic_section ) {
+    int error;
+    uint32_t i;
+    uint32_t dynamic_count;
+    elf_dynamic_t* dynamic;
+    elf_dynamic_t* dynamic_table;
+
+    uint32_t rel_address = 0;
+    uint32_t rel_size = 0;
+    uint32_t pltrel_address = 0;
+    uint32_t pltrel_size = 0;
+
+    dynamic_table = ( elf_dynamic_t* )kmalloc( dynamic_section->size );
+
+    if ( dynamic_table == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
+
+    error = loader->read(
+        loader->private,
+        dynamic_table,
+        dynamic_section->offset,
+        dynamic_section->size
+    );
+
+    if ( __unlikely( error != dynamic_section->size ) ) {
+        error = -EIO;
+        goto error2;
+    }
+
+    dynamic_count = dynamic_section->size / sizeof( elf_dynamic_t );
+
+    for ( i = 0, dynamic = &dynamic_table[ 0 ]; i < dynamic_count; i++, dynamic++ ) {
+        switch ( dynamic->tag ) {
+            case DYN_REL :
+                rel_address = dynamic->value;
+                break;
+
+            case DYN_RELSZ :
+                rel_size = dynamic->value;
+                break;
+
+            case DYN_JMPREL :
+                pltrel_address = dynamic->value;
+                break;
+
+            case DYN_PLTRELSZ :
+                pltrel_size = dynamic->value;
+                break;
+        }
+    }
+
+    kfree( dynamic_table );
+
+    if ( ( rel_size > 0 ) ||
+         ( pltrel_size > 0 ) ) {
+        uint32_t reloc_size = rel_size + pltrel_size;
+
+        info->reloc_count = reloc_size / sizeof( elf_reloc_t );
+        info->reloc_table = ( elf_reloc_t* )kmalloc( reloc_size );
+
+        if ( info->reloc_table == NULL ) {
+            error = -ENOMEM;
+            goto error1;
+        }
+
+        if ( rel_size > 0 ) {
+            error = loader->read(
+                loader->private,
+                ( void* )info->reloc_table,
+                rel_address,
+                rel_size
+            );
+
+            if ( __unlikely( error != rel_size ) ) {
+                error = -EIO;
+                goto error3;
+            }
+        }
+
+        if ( pltrel_size > 0 ) {
+            error = loader->read(
+                loader->private,
+                ( char* )info->reloc_table + rel_size,
+                pltrel_address,
+                pltrel_size
+            );
+
+            if ( __unlikely( error != pltrel_size ) ) {
+                error = -EIO;
+                goto error3;
+            }
+        }
+    }
+
+    return 0;
+
+ error3:
+    info->reloc_count = 0;
+    kfree( info->reloc_table );
+    info->reloc_table = NULL;
+
+    return error;
+
+error2:
+    kfree( dynamic_table );
+
+error1:
+    return error;
 }
 
 int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* loader ) {
@@ -158,9 +320,11 @@ int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* load
     elf_section_header_t* current;
     elf_section_header_t* strtab;
     elf_section_header_t* symtab;
+    elf_section_header_t* dynamic;
 
     strtab = NULL;
     symtab = NULL;
+    dynamic = NULL;
 
     for ( i = 0, current = &info->section_headers[ i ]; i < info->header.shnum; i++, current++ ) {
         switch ( current->type ) {
@@ -170,6 +334,10 @@ int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* load
 
             case SECTION_SYMTAB :
                 symtab = current;
+                break;
+
+            case SECTION_DYNAMIC :
+                dynamic = current;
                 break;
         }
     }
@@ -191,12 +359,23 @@ int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* load
         return error;
     }
 
+    if ( dynamic != NULL ) {
+        error = elf32_load_dynamic_section( info, loader, dynamic );
+
+        if ( __unlikely( error < 0 ) ) {
+            return error;
+        }
+    }
+
     return 0;
 }
 
 int elf32_init_image_info( elf32_image_info_t* info ) {
     info->section_headers = NULL;
     info->string_table = NULL;
+    info->symbol_table = NULL;
+    info->reloc_count = 0;
+    info->reloc_table = NULL;
 
     return 0;
 }
@@ -208,9 +387,15 @@ int elf32_destroy_image_info( elf32_image_info_t* info ) {
     kfree( info->string_table );
     info->string_table = NULL;
 
+    kfree( info->symbol_table );
+    info->symbol_table = NULL;
+
+    info->reloc_count = 0;
+    kfree( info->reloc_table );
+    info->reloc_table = NULL;
+
     return 0;
 }
-#endif
 
 __init int init_elf32_kernel_symbols( void ) {
     uint32_t i;

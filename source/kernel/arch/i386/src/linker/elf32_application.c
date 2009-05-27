@@ -30,6 +30,7 @@
 #include <arch/gdt.h>
 #include <arch/mm/paging.h>
 
+#if 0
 static bool elf32_application_check( int fd ) {
     off_t pos = 0;
     elf_header_t header;
@@ -666,9 +667,10 @@ static application_loader_t elf32_application_loader = {
     .execute = elf32_application_execute,
     .get_symbol_info = elf32_application_get_symbol_info
 };
+#endif
 
 __init int init_elf32_application_loader( void ) {
-    register_application_loader( &elf32_application_loader );
+    //register_application_loader( &elf32_application_loader );
 
     return 0;
 }

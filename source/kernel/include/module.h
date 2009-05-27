@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <config.h>
+#include <loader.h>
 #include <lib/hashtable.h>
 
 #define MODULE_DEPENDENCIES(...) \
@@ -62,19 +63,6 @@ typedef struct module_info {
     char name[ MAX_MODULE_NAME_LENGTH ];
 } module_info_t;
 
-/* Module reader definitions */
-
-typedef int read_module_t( void* private, void* data, off_t offset, int size );
-typedef size_t get_module_size_t( void* private );
-typedef char* get_module_name_t( void* private );
-
-typedef struct module_reader {
-    void* private;
-    read_module_t* read;
-    get_module_size_t* get_size;
-    get_module_name_t* get_name;
-} module_reader_t;
-
 typedef struct module_dependencies {
     size_t dep_count;
     char** dep_table;
@@ -84,8 +72,8 @@ typedef struct module_dependencies {
 
 /* Module loader definitions */
 
-typedef bool check_module_t( module_reader_t* reader );
-typedef int load_module_t( module_t* module, module_reader_t* reader );
+typedef bool check_module_t( binary_loader_t* loader );
+typedef int load_module_t( module_t* module, binary_loader_t* loader );
 typedef int get_module_dependencies_t( module_t* module, module_dependencies_t* deps );
 typedef int free_module_t( module_t* module );
 typedef bool get_module_symbol_t( module_t* module, const char* symbol_name, ptr_t* symbol_addr );
@@ -98,10 +86,6 @@ typedef struct module_loader {
     free_module_t* free;
     get_module_symbol_t* get_symbol;
 } module_loader_t;
-
-int read_module_data( module_reader_t* reader, void* buffer, off_t offset, int size );
-size_t get_module_size( module_reader_t* reader );
-char* get_module_name( module_reader_t* reader );
 
 int load_module( const char* name );
 
