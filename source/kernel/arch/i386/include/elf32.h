@@ -1,6 +1,6 @@
 /* 32bit ELF format handling
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -187,9 +187,10 @@ typedef struct elf_application {
     region_id data_region;
 } elf_application_t;
 
+bool elf32_check( elf_header_t* header );
+
+int init_elf32_kernel_symbols( void );
 int init_elf32_module_loader( void );
 int init_elf32_application_loader( void );
 
-bool elf32_check( elf_header_t* header );
-
-#endif // _ARCH_ELF32_H_
+#endif /* _ARCH_ELF32_H_ */

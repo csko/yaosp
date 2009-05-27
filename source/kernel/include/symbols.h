@@ -1,6 +1,6 @@
 /* Kernel symbol table
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,12 +20,21 @@
 #define _SYMBOLS_H_
 
 #include <types.h>
+#include <loader.h>
+#include <lib/hashtable.h>
 
 typedef struct kernel_symbol {
-    const char* name;
+    hashitem_t hash;
+
+    char* name;
     ptr_t address;
 } kernel_symbol_t;
 
-int get_kernel_symbol_address( const char* name, ptr_t* address );
+int add_kernel_symbol( const char* name, ptr_t address );
 
-#endif // _SYMBOLS_H_
+int get_kernel_symbol_address( const char* name, ptr_t* address );
+int get_kernel_symbol_info( ptr_t address, symbol_info_t* info );
+
+int init_kernel_symbols( void );
+
+#endif /* _SYMBOLS_H_ */

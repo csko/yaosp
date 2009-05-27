@@ -43,6 +43,8 @@
 
 extern int __kernel_end;
 
+multiboot_header_t mb_header;
+
 __init static int arch_init_page_allocator( multiboot_header_t* header ) {
     int error;
     int module_count;
@@ -70,6 +72,24 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
 
             if ( module_end > first_free_address ) {
                 first_free_address = module_end;
+            }
+        }
+    }
+
+    if ( header->flags & MB_FLAG_ELF_SYM_INFO ) {
+        uint32_t i;
+        elf_section_header_t* section_header;
+
+        first_free_address = MAX( first_free_address, PAGE_ALIGN( header->elf_info.addr + header->elf_info.num * header->elf_info.size ) );
+
+        for ( i = 1; i < header->elf_info.num; i++ ) {
+            section_header = ( elf_section_header_t* )( header->elf_info.addr + i * header->elf_info.size );
+
+            switch ( section_header->type ) {
+                case SECTION_STRTAB :
+                case SECTION_SYMTAB :
+                    first_free_address = MAX( first_free_address, PAGE_ALIGN( section_header->address + section_header->size ) );
+                    break;
             }
         }
     }
@@ -112,6 +132,34 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
         }
     }
 
+    /* Reserve region containing ELF informations, if any */
+
+    if ( header->flags & MB_FLAG_ELF_SYM_INFO ) {
+        uint32_t i;
+        elf_section_header_t* section_header;
+
+        /* Section headers */
+
+        reserve_memory_pages( ( ptr_t )header->elf_info.addr, PAGE_ALIGN( header->elf_info.num * header->elf_info.size ) );
+
+        /* Required ELF sections */
+
+        for ( i = 1; i < header->elf_info.num; i++ ) {
+            section_header = ( elf_section_header_t* )( header->elf_info.addr + i * header->elf_info.size );
+
+            switch ( section_header->type ) {
+                case SECTION_STRTAB :
+                case SECTION_SYMTAB :
+                    reserve_memory_pages(
+                        ( ptr_t )( section_header->address & PAGE_MASK ),
+                        PAGE_ALIGN( section_header->size + ( section_header->address & ~PAGE_MASK ) )
+                    );
+
+                    break;
+            }
+        }
+    }
+
     /* Reserve not usable memory pages reported by GRUB */
 
     mmap_length = 0;
@@ -148,6 +196,10 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
 
 __init void arch_start( multiboot_header_t* header ) {
     int error;
+
+    /* Save the multiboot structure */
+
+    memcpy( &mb_header, header, sizeof( multiboot_header_t ) );
 
     /* Save the kernel parameters before we write to any memory location */
 
@@ -259,6 +311,7 @@ __init int arch_late_init( void ) {
     init_pit();
     init_apic_timer();
     init_system_time();
+    init_elf32_kernel_symbols();
     init_elf32_module_loader();
     init_elf32_application_loader();
     init_bios_access();

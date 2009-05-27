@@ -4,7 +4,7 @@ OUTPUT_ARCH(i386)
 ENTRY(_start)
 
 SECTIONS {
-    . = 0x100000;
+    . = 0x100000 + SIZEOF_HEADERS;
 
     .text : {
         *(.multiboot_header)

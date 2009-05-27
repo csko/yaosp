@@ -39,6 +39,7 @@
 
 /* register_t get_eflags( void ) */
 
+.type get_eflags, @function
 get_eflags:
     pushfl
     popl %eax
@@ -47,6 +48,7 @@ get_eflags:
 
 /* void set_eflags( register_t eflags ) */
 
+.type set_eflags, @function
 set_eflags:
     pushl 4(%esp)
     popfl
@@ -55,6 +57,7 @@ set_eflags:
 
 /* bool disable_interrupts( void ) */
 
+.type disable_interrupts, @function
 disable_interrupts:
     pushfl
     popl %eax
@@ -65,6 +68,7 @@ disable_interrupts:
 
 /* void enable_interrupts( void ) */
 
+.type enable_interrupts, @function
 enable_interrupts:
     sti
     ret
@@ -72,6 +76,7 @@ enable_interrupts:
 
 /* bool is_interrupts_disabled( void ) */
 
+.type is_interrupts_disabled, @function
 is_interrupts_disabled:
     pushfl
     popl %eax
@@ -82,6 +87,7 @@ is_interrupts_disabled:
 
 /* register_t get_cr2( void ) */
 
+.type get_cr2, @function
 get_cr2:
     movl %cr2, %eax
     ret
@@ -89,6 +95,7 @@ get_cr2:
 
 /* void set_cr2( register_t ) */
 
+.type set_cr2, @function
 set_cr2:
     movl 4(%esp), %eax
     movl %eax, %cr2
@@ -97,6 +104,7 @@ set_cr2:
 
 /* register_t get_cr3( void ) */
 
+.type get_cr3, @function
 get_cr3:
     movl %cr3, %eax
     ret
@@ -104,6 +112,7 @@ get_cr3:
 
 /* void set_cr3( register_t cr3 ) */
 
+.type set_cr3, @function
 set_cr3:
     movl 4(%esp), %eax
     movl %eax, %cr3
@@ -112,6 +121,7 @@ set_cr3:
 
 /* register_t get_ebp( void ) */
 
+.type get_ebp, @function
 get_ebp:
     movl %ebp, %eax
     ret
@@ -119,6 +129,7 @@ get_ebp:
 
 /* void clear_task_switched( void ) */
 
+.type clear_task_switched, @function
 clear_task_switched:
     clts
     ret
@@ -126,6 +137,7 @@ clear_task_switched:
 
 /* void set_task_switched( void ) */
 
+.type set_task_switched, @function
 set_task_switched:
     movl %cr0, %eax
     orl $0x8, %eax
@@ -135,6 +147,7 @@ set_task_switched:
 
 /* void flush_tlb( void ) */
 
+.type flush_tlb, @function
 flush_tlb:
     movl %cr3, %eax
     movl %eax, %cr3
@@ -143,6 +156,7 @@ flush_tlb:
 
 /* void halt_loop( void ) */
 
+.type halt_loop, @function
 halt_loop:
     hlt
     jmp halt_loop
@@ -152,6 +166,7 @@ halt_loop:
 
 /* void reload_segment_descriptors( void ) */
 
+.type reload_segment_descriptors, @function
 reload_segment_descriptors:
     movw $KERNEL_DS, %ax
     movw %ax, %es

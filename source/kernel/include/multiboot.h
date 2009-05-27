@@ -24,6 +24,7 @@
 
 #define MB_FLAG_ALIGN_MODULES 0x0001
 #define MB_FLAG_MEMORY_INFO   0x0002
+#define MB_FLAG_ELF_SYM_INFO  0x0020
 
 #ifndef __ASSEMBLER__
 
@@ -42,10 +43,21 @@ typedef struct multiboot_header {
     uint32_t module_count;
     void* first_module;
 
-    uint32_t unused1;
-    uint32_t unused2;
-    uint32_t unused3;
-    uint32_t unused4;
+    union {
+        struct {
+            uint32_t tabsize;
+            uint32_t strsize;
+            uint32_t addr;
+            uint32_t reserved;
+        } aout_info;
+
+        struct {
+            uint32_t num;
+            uint32_t size;
+            uint32_t addr;
+            uint32_t shndx;
+        } elf_info;
+    };
 
     uint32_t memory_map_length;
     uint32_t memory_map_address;
@@ -65,6 +77,6 @@ typedef struct multiboot_mmap_entry {
     uint32_t type;
 } multiboot_mmap_entry_t;
 
-#endif // __ASSEMBLER__
+#endif /* __ASSEMBLER__ */
 
-#endif // _MULTIBOOT_H_
+#endif /* _MULTIBOOT_H_ */

@@ -31,6 +31,7 @@
 #include <config.h>
 #include <ipc.h>
 #include <debug.h>
+#include <symbols.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>
 
@@ -208,6 +209,7 @@ int sys_shutdown( void ) {
 __init void kernel_main( void ) {
     int error;
 
+    init_kernel_symbols();
     init_semaphores();
     init_regions();
     init_devices();

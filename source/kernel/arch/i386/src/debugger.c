@@ -21,12 +21,15 @@
 #include <loader.h>
 #include <debug.h>
 #include <thread.h>
+#include <symbols.h>
 
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
 #include <arch/io.h>
 #include <arch/thread.h>
 #include <arch/mm/config.h>
+
+extern int __kernel_end;
 
 static uint8_t dbg_keymap[ 128 ] = {
     /* 0-9 */ 0, 0, '1', '2', '3', '4', '5', '6', '7', '8',
@@ -74,9 +77,11 @@ int debug_print_stack_trace( void ) {
     int error;
     register_t eip;
     register_t ebp;
+    thread_t* thread;
     symbol_info_t symbol_info;
 
     ebp = get_ebp();
+    thread = current_thread();
 
     kprintf( "Stack trace:\n" );
 
@@ -86,7 +91,7 @@ int debug_print_stack_trace( void ) {
         kprintf( "  %x", eip );
 
         if ( eip >= FIRST_USER_ADDRESS ) {
-            error = get_symbol_info( eip, &symbol_info );
+            error = get_application_symbol_info( thread, eip, &symbol_info );
 
             if ( error >= 0 ) {
                 kprintf( " (%s+0x%x)", symbol_info.name, eip - symbol_info.address );
@@ -114,7 +119,37 @@ int arch_dbg_show_thread_info( struct thread* thread ) {
     return 0;
 }
 
-int arch_dbg_trace_thread( struct thread* thread ) {
+static int print_trace_entry( thread_t* thread, uint32_t eip ) {
+    int error;
+    symbol_info_t symbol_info;
+
+    dbg_printf( "  0x%08x", eip );
+
+    if ( ( eip >= 0x100000 ) &&
+         ( eip < ( ptr_t )&__kernel_end ) ) {
+        /* This is a symbol inside the kernel binary */
+
+        error = get_kernel_symbol_info( eip, &symbol_info );
+    } else if ( eip >= FIRST_USER_ADDRESS ) {
+        /* This is an application symbol */
+
+        error = -1;
+    } else {
+        /* This can be a symbol from a module, for example */
+
+        error = -1;
+    }
+
+    if ( error >= 0 ) {
+        dbg_printf( " %s", symbol_info.name );
+    }
+
+    dbg_printf( "\n" );
+
+    return 0;
+}
+
+int arch_dbg_trace_thread( thread_t* thread ) {
     int error;
     uint32_t ebp;
     uint32_t eip;
@@ -126,7 +161,7 @@ int arch_dbg_trace_thread( struct thread* thread ) {
     registers = ( registers_t* )arch_thread->esp;
 
     dbg_printf( "Tracing of thread %d:\n", thread->id );
-    dbg_printf( "  0x%08x\n", registers->eip );
+    print_trace_entry( thread, registers->eip );
 
     ebp = registers->ebp;
 
@@ -145,7 +180,7 @@ int arch_dbg_trace_thread( struct thread* thread ) {
 
         eip = *( ( register_t* )physical );
 
-        dbg_printf( "  0x%08x\n", eip );
+        print_trace_entry( thread, eip );
 
         error = memory_context_translate_address(
             thread->process->memory_context,

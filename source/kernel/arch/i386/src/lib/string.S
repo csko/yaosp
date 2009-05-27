@@ -25,6 +25,7 @@
 
 /* void* memset( void* d, int c, size_t n ) */
 
+.type memset, @function
 memset:
     pushl %edi
     movl 16(%esp), %ecx
@@ -41,6 +42,7 @@ memset:
 
 /* void* memsetw( void* d, int c, size_t n ) */
 
+.type memsetw, @function
 memsetw:
     pushl %edi
     movl 16(%esp), %ecx
@@ -57,6 +59,7 @@ memsetw:
 
 /* void* memsetl( void* d, int c, size_t n ) */
 
+.type memsetl, @function
 memsetl:
     pushl %edi
     movl 16(%esp), %ecx
@@ -73,6 +76,7 @@ memsetl:
 
 /* void* memcpy( void* d, const void* s, size_t n ) */
 
+.type memcpy, @function
 memcpy:
     pushl %esi
     pushl %edi

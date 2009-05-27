@@ -21,6 +21,7 @@
 .section .text
 
 #define ISR(num,handler) \
+    .type isr##num, @function; \
     .global isr##num; \
     isr##num:; \
     pushl $0; \
@@ -47,6 +48,7 @@
     iret
 
 #define ISR_SIGCHECK(num,handler) \
+    .type isr##num, @function; \
     .global isr##num; \
     isr##num:; \
     pushl $0; \
@@ -74,6 +76,7 @@
     iret
 
 #define ISR_WITH_ERROR(num,handler) \
+    .type isr##num, @function; \
     .global isr##num; \
     isr##num:; \
     pushl $##num; \
@@ -99,6 +102,7 @@
     iret
 
 #define ISR_WITH_ERROR_SIGCHECK(num,handler) \
+    .type isr##num, @function; \
     .global isr##num; \
     isr##num:; \
     pushl $##num; \

@@ -44,7 +44,7 @@ _start:
 
     /* clear EBP */
 
-    xorl %ebp, %ebp 
+    xorl %ebp, %ebp
 
     /* Check if the kernel was loaded with a multiboot
        compatible bootloader or not */

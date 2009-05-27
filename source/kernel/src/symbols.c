@@ -45,161 +45,140 @@
 #include <arch/pit.h>
 #include <arch/bios.h>
 
-extern void __moddi3( void );
-extern void __divdi3( void );
-extern void __umoddi3( void );
-extern void __udivdi3( void );
+static hashtable_t kernel_symbol_table;
 
-static kernel_symbol_t symbols[] = {
-    /* Console output */
-    { "kprintf", ( ptr_t )kprintf },
-    { "kvprintf", ( ptr_t )kvprintf },
-    { "dprintf", ( ptr_t )dprintf },
-    { "dprintf_unlocked", ( ptr_t )dprintf_unlocked },
-    { "kernel_console_read", ( ptr_t )kernel_console_read },
+int add_kernel_symbol( const char* name, ptr_t address ) {
+    int error;
+    size_t name_len;
+    kernel_symbol_t* symbol;
 
-    /* Memory management */
-    { "kmalloc", ( ptr_t )kmalloc },
-    { "kfree", ( ptr_t )kfree },
-    { "alloc_pages", ( ptr_t )alloc_pages },
-    { "alloc_pages_aligned", ( ptr_t )alloc_pages_aligned },
-    { "free_pages", ( ptr_t )free_pages },
+    name_len = strlen( name );
 
-    /* Atomic operations */
-    { "atomic_get", ( ptr_t )atomic_get },
-    { "atomic_set", ( ptr_t )atomic_set },
-    { "atomic_inc", ( ptr_t )atomic_inc },
-    { "atomic_dec", ( ptr_t )atomic_dec },
-    { "atomic_swap", ( ptr_t )atomic_swap },
+    symbol = ( kernel_symbol_t* )kmalloc( sizeof( kernel_symbol_t ) + name_len + 1 );
 
-    /* Spinlock operations */
-    { "spinlock", ( ptr_t )spinlock },
-    { "spinunlock", ( ptr_t )spinunlock },
-    { "spinlock_disable", ( ptr_t )spinlock_disable },
-    { "spinunlock_enable", ( ptr_t )spinunlock_enable },
+    if ( symbol == NULL ) {
+        error = -ENOMEM;
+        goto error1;
+    }
 
-    /* Interrupt manipulation */
-    { "disable_interrupts", ( ptr_t )disable_interrupts },
-    { "enable_interrupts", ( ptr_t )enable_interrupts },
-    { "request_irq", ( ptr_t )request_irq },
+    symbol->name = ( char* )( symbol + 1 );
+    symbol->address = address;
 
-    /* Device management */
-    { "register_bus_driver", ( ptr_t )register_bus_driver },
-    { "unregister_bus_driver", ( ptr_t )unregister_bus_driver },
-    { "get_bus_driver", ( ptr_t )get_bus_driver },
+    memcpy( symbol->name, name, name_len + 1 );
 
-    /* VFS calls */
-    { "create_device_node", ( ptr_t )create_device_node },
-    { "register_filesystem", ( ptr_t )register_filesystem },
-    { "open", ( ptr_t )open },
-    { "close", ( ptr_t )close },
-    { "pread", ( ptr_t )pread },
-    { "pwrite", ( ptr_t )pwrite },
-    { "ioctl", ( ptr_t )ioctl },
-    { "fstat", ( ptr_t )fstat },
-    { "dup", ( ptr_t )dup },
-    { "mkdir", ( ptr_t )mkdir },
-    { "mount", ( ptr_t )mount },
-    { "select", ( ptr_t )select },
-    { "getdents", ( ptr_t )getdents },
-    { "get_vnode", ( ptr_t )get_vnode },
-    { "put_vnode", ( ptr_t )put_vnode },
-    { "init_block_cache", ( ptr_t )init_block_cache },
-    { "block_cache_get_block", ( ptr_t )block_cache_get_block },
-    { "block_cache_put_block", ( ptr_t )block_cache_put_block },
-    { "get_mount_point_by_cookie", ( ptr_t )get_mount_point_by_cookie },
+    error = hashtable_add( &kernel_symbol_table, ( hashitem_t* )symbol );
 
-    /* Semaphore functions */
-    { "create_semaphore", ( ptr_t )create_semaphore },
-    { "delete_semaphore", ( ptr_t )delete_semaphore },
-    { "lock_semaphore", ( ptr_t )lock_semaphore },
-    { "unlock_semaphore", ( ptr_t )unlock_semaphore },
-    { "is_semaphore_locked", ( ptr_t )is_semaphore_locked },
+    if ( error < 0 ) {
+        goto error2;
+    }
 
-    /* Spinlock calls */
-    { "init_spinlock", ( ptr_t )init_spinlock },
-    { "spinlock_disable", ( ptr_t )spinlock_disable },
-    { "spinunlock_enable", ( ptr_t )spinunlock_enable },
+    return 0;
 
-    /* Time functions */
-    { "get_system_time", ( ptr_t )get_system_time },
-    { "time", ( ptr_t )time },
-    { "mktime", ( ptr_t )mktime },
+error2:
+    kfree( symbol );
 
-    /* Console functions */
-    { "console_set_screen", ( ptr_t )console_set_screen },
-    { "console_switch_screen", ( ptr_t )console_switch_screen },
-
-    /* Process & thread functions */
-    { "create_kernel_thread", ( ptr_t )create_kernel_thread },
-    { "sleep_thread", ( ptr_t )sleep_thread },
-    { "wake_up_thread", ( ptr_t )wake_up_thread },
-
-    /* Memory & string functions */
-    { "memcpy", ( ptr_t )memcpy },
-    { "memmove", ( ptr_t )memmove },
-    { "memcmp", ( ptr_t )memcmp },
-    { "memset", ( ptr_t )memset },
-    { "strcmp", ( ptr_t )strcmp },
-    { "strncmp", ( ptr_t )strncmp },
-    { "strchr", ( ptr_t )strchr },
-    { "strlen", ( ptr_t )strlen },
-    { "strncpy", ( ptr_t )strncpy },
-    { "strdup", ( ptr_t )strdup },
-    { "strndup", ( ptr_t )strndup },
-    { "snprintf", ( ptr_t )snprintf },
-    { "tolower", ( ptr_t )tolower },
-
-    /* Hashtable functions */
-    { "init_hashtable", ( ptr_t )init_hashtable },
-    { "destroy_hashtable", ( ptr_t )destroy_hashtable },
-    { "hashtable_add", ( ptr_t )hashtable_add },
-    { "hashtable_get", ( ptr_t )hashtable_get },
-    { "hashtable_remove", ( ptr_t )hashtable_remove },
-    { "hashtable_iterate", ( ptr_t )hashtable_iterate },
-    { "hash_number", ( ptr_t )hash_number },
-    { "hash_string", ( ptr_t )hash_string },
-
-    /* Stack functions */
-    { "init_stack", ( ptr_t )init_stack },
-    { "destroy_stack", ( ptr_t )destroy_stack },
-    { "stack_push", ( ptr_t )stack_push },
-    { "stack_pop", ( ptr_t )stack_pop },
-
-    /* Networking functions */
-    { "create_packet", ( ptr_t )create_packet },
-    { "delete_packet", ( ptr_t )delete_packet },
-    { "packet_queue_insert", ( ptr_t )packet_queue_insert },
-
-    /* Architecture dependent functions */
-    { "call_bios_interrupt", ( ptr_t )call_bios_interrupt },
-
-    /* Misc functions */
-    { "reboot", ( ptr_t )reboot },
-    { "shutdown", ( ptr_t )shutdown },
-    { "handle_panic", ( ptr_t )handle_panic },
-    { "lock_scheduler", ( ptr_t )lock_scheduler },
-    { "unlock_scheduler", ( ptr_t )unlock_scheduler },
-    { "debug_print_stack_trace", ( ptr_t )debug_print_stack_trace },
-    { "__moddi3", ( ptr_t )__moddi3 },
-    { "__divdi3", ( ptr_t )__divdi3 },
-    { "__umoddi3", ( ptr_t )__umoddi3 },
-    { "__udivdi3", ( ptr_t )__udivdi3 },
-
-    /* List terminator */
-    { NULL, 0 }
-};
+error1:
+    return error;
+}
 
 int get_kernel_symbol_address( const char* name, ptr_t* address ) {
-    uint32_t i;
+    kernel_symbol_t* symbol;
 
-    for ( i = 0; symbols[ i ].name != NULL; i++ ) {
-        if ( strcmp( symbols[ i ].name, name ) == 0 ) {
-            *address = symbols[ i ].address;
+    symbol = ( kernel_symbol_t* )hashtable_get( &kernel_symbol_table, ( void* )name );
 
-            return 0;
+    if ( symbol == NULL ) {
+        return -ENOENT;
+    }
+
+    *address = symbol->address;
+
+    return 0;
+}
+
+typedef struct sym_lookup_info {
+    ptr_t address;
+    symbol_info_t* sym_info;
+} sym_lookup_info_t;
+
+static int get_kernel_sym_info_iterator( hashitem_t* item, void* data ) {
+    kernel_symbol_t* symbol;
+    sym_lookup_info_t* info;
+
+    symbol = ( kernel_symbol_t* )item;
+    info = ( sym_lookup_info_t* )data;
+
+    if ( symbol->address > info->address ) {
+        return 0;
+    }
+
+    if ( info->sym_info->address == 0 ) {
+        info->sym_info->name = symbol->name;
+        info->sym_info->address = symbol->address;
+    } else if ( symbol->address <= info->address ) {
+        int last_diff;
+        int current_diff;
+
+        last_diff = info->address - info->sym_info->address;
+        current_diff = info->address - symbol->address;
+
+        if ( current_diff < last_diff ) {
+            info->sym_info->name = symbol->name;
+            info->sym_info->address = symbol->address;
         }
     }
 
-    return -EINVAL;
+    return 0;
+}
+
+int get_kernel_symbol_info( ptr_t address, symbol_info_t* info ) {
+    int error;
+    sym_lookup_info_t lookup_info;
+
+    info->name = NULL;
+    info->address = 0;
+
+    lookup_info.sym_info = info;
+    lookup_info.address = address;
+
+    error = hashtable_iterate( &kernel_symbol_table, get_kernel_sym_info_iterator, ( void* )&lookup_info );
+
+    if ( info->address == 0 ) {
+        return -ENOENT;
+    }
+
+    return 0;
+}
+
+static void* kernel_sym_key( hashitem_t* item ) {
+    kernel_symbol_t* symbol;
+
+    symbol = ( kernel_symbol_t* )item;
+
+    return ( void* )symbol->name;
+}
+
+static uint32_t kernel_sym_hash( const void* key ) {
+    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
+}
+
+static bool kernel_sym_compare( const void* key1, const void* key2 ) {
+    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
+}
+
+int init_kernel_symbols( void ) {
+    int error;
+
+    error = init_hashtable(
+        &kernel_symbol_table,
+        1024,
+        kernel_sym_key,
+        kernel_sym_hash,
+        kernel_sym_compare
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
 }

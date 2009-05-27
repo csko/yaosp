@@ -136,17 +136,14 @@ static uint8_t* copy_param_array_to_user( char** array, char** user_array, int c
     return stack;
 }
 
-int get_symbol_info( ptr_t address, symbol_info_t* info ) {
-    thread_t* current;
+int get_application_symbol_info( thread_t* thread, ptr_t address, symbol_info_t* info ) {
     application_loader_t* loader;
 
-    current = current_thread();
-
-    if ( current == NULL ) {
+    if ( thread == NULL ) {
         return -EINVAL;
     }
 
-    loader = current->process->loader;
+    loader = thread->process->loader;
 
     if ( loader == NULL ) {
         return -EINVAL;

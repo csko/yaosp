@@ -113,4 +113,4 @@ void set_module_loader( module_loader_t* loader );
 
 int init_module_loader( void );
 
-#endif // _MODULE_H_
+#endif /* _MODULE_H_ */

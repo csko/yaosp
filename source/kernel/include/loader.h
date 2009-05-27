@@ -58,7 +58,9 @@ typedef struct interpreter_loader {
     struct interpreter_loader* next;
 } interpreter_loader_t;
 
-int get_symbol_info( ptr_t address, symbol_info_t* info );
+struct thread;
+
+int get_application_symbol_info( struct thread* thread, ptr_t address, symbol_info_t* info );
 
 int do_execve( char* path, char** argv, char** envp, bool free_argv );
 int sys_execve( char* path, char** argv, char** envp );
