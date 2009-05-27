@@ -181,7 +181,7 @@ block_found:
 void kfree( void* p ) {
     kmalloc_chunk_t* chunk;
 
-    if ( p == NULL ) {
+    if ( __unlikely( p == NULL ) ) {
         return;
     }
 

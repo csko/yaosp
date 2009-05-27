@@ -21,6 +21,11 @@
 
 #include <types.h>
 
+typedef struct binary_loader {
+    void* private;
+    int ( *read )( void* private, void* buffer, off_t offset, int size );
+} binary_loader_t;
+
 /* Application loader calls */
 
 typedef struct symbol_info {
@@ -71,4 +76,4 @@ int register_interpreter_loader( interpreter_loader_t* loader );
 int init_interpreter_loader( void );
 int init_application_loader( void );
 
-#endif // _LOADER_H_
+#endif /* _LOADER_H_ */

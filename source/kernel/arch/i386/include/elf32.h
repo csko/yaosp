@@ -21,6 +21,7 @@
 #define _ARCH_ELF32_H_
 
 #include <types.h>
+#include <loader.h>
 #include <mm/region.h>
 
 #define ELF32_R_SYM(i)  ((i)>>8)
@@ -152,6 +153,12 @@ typedef struct my_elf_symbol {
     uint8_t info;
 } my_elf_symbol_t;
 
+typedef struct elf32_image_info {
+    elf_header_t header;
+    elf_section_header_t* section_headers;
+    char* string_table;
+} elf32_image_info_t;
+
 typedef struct elf_module {
     uint32_t section_count;
     elf_section_header_t* sections;
@@ -188,6 +195,15 @@ typedef struct elf_application {
 } elf_application_t;
 
 bool elf32_check( elf_header_t* header );
+
+#if 0
+int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader );
+int elf32_load_section_headers( elf32_image_info_t* info, binary_loader_t* loader );
+int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* loader );
+
+int elf32_init_image_info( elf32_image_info_t* info );
+int elf32_destroy_image_info( elf32_image_info_t* info );
+#endif
 
 int init_elf32_kernel_symbols( void );
 int init_elf32_module_loader( void );
