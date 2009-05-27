@@ -23,10 +23,12 @@
 #include <types.h>
 #include <loader.h>
 #include <mm/region.h>
+#include <lib/hashtable.h>
 
 #define ELF32_R_SYM(i)  ((i)>>8)
 #define ELF32_R_TYPE(i) ((unsigned char)(i))
 
+#define ELF32_ST_BIND(i) ((i)>>4)
 #define ELF32_ST_TYPE(i) ((i)&0xF)
 
 enum {
@@ -148,6 +150,8 @@ typedef struct elf_reloc {
 } elf_reloc_t;
 
 typedef struct my_elf_symbol {
+    hashitem_t hash;
+
     char* name;
     uint32_t address;
     uint8_t info;
@@ -156,8 +160,17 @@ typedef struct my_elf_symbol {
 typedef struct elf32_image_info {
     elf_header_t header;
     elf_section_header_t* section_headers;
+
     char* string_table;
+    char* sh_string_table;
+    char* dyn_string_table;
+
+    uint32_t symbol_count;
     my_elf_symbol_t* symbol_table;
+    hashtable_t symbol_hash_table;
+
+    uint32_t dyn_symbol_count;
+    my_elf_symbol_t* dyn_symbol_table;
     uint32_t reloc_count;
     elf_reloc_t* reloc_table;
 } elf32_image_info_t;
@@ -165,33 +178,13 @@ typedef struct elf32_image_info {
 typedef struct elf_module {
     elf32_image_info_t image_info;
 
-    uint32_t section_count;
-    elf_section_header_t* sections;
-
-    char* strings;
-
-    uint32_t symbol_count;
-    my_elf_symbol_t* symbols;
-
-    uint32_t reloc_count;
-    elf_reloc_t* relocs;
-
     uint32_t text_address;
     region_id text_region;
     region_id data_region;
 } elf_module_t;
 
 typedef struct elf_application {
-    uint32_t section_count;
-    elf_section_header_t* sections;
-
-    char* strings;
-
-    uint32_t symbol_count;
-    my_elf_symbol_t* symbols;
-
-    uint32_t reloc_count;
-    elf_reloc_t* relocs;
+    elf32_image_info_t image_info;
 
     register_t entry_address;
 
@@ -204,6 +197,8 @@ bool elf32_check( elf_header_t* header );
 int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader );
 int elf32_load_section_headers( elf32_image_info_t* info, binary_loader_t* loader );
 int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* loader );
+
+my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name );
 
 int elf32_init_image_info( elf32_image_info_t* info );
 int elf32_destroy_image_info( elf32_image_info_t* info );

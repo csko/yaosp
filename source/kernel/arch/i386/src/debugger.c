@@ -90,12 +90,19 @@ int debug_print_stack_trace( void ) {
 
         kprintf( "  %x", eip );
 
-        if ( eip >= FIRST_USER_ADDRESS ) {
-            error = get_application_symbol_info( thread, eip, &symbol_info );
+        if ( ( eip >= 0x100000 ) &&
+             ( eip < ( ptr_t )&__kernel_end ) ) {
+            /* This is a symbol inside the kernel binary */
 
-            if ( error >= 0 ) {
-                kprintf( " (%s+0x%x)", symbol_info.name, eip - symbol_info.address );
-            }
+            error = get_kernel_symbol_info( eip, &symbol_info );
+        } else  if ( eip >= FIRST_USER_ADDRESS ) {
+            error = get_application_symbol_info( thread, eip, &symbol_info );
+        } else {
+            error = -1;
+        }
+
+        if ( error >= 0 ) {
+            kprintf( " (%s+0x%x)", symbol_info.name, eip - symbol_info.address );
         }
 
         kprintf( "\n" );

@@ -285,7 +285,7 @@ static int do_load_module( const char* name ) {
     /* Load the module */
 
     error = module_loader->load_module( module, loader );
-    kprintf( "%s() error=%d\n", __FUNCTION__, error );
+
     if ( error < 0 ) {
         goto error3;
     }
