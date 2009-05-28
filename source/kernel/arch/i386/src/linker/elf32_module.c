@@ -419,14 +419,14 @@ static int elf32_module_get_symbol_info( module_t* module, ptr_t address, symbol
     /* Module without symbols?! */
 
     if ( elf_module->image_info.symbol_count == 0 ) {
-        return false;
+        return -EINVAL;
     }
 
     /* Make sure that the specified address is inside of this module */
 
     if ( ( address < elf_module->text_address ) ||
          ( address >= ( elf_module->text_address + elf_module->text_size ) ) ) {
-        return false;
+        return -EINVAL;
     }
 
     return elf32_get_symbol_info( &elf_module->image_info, address - elf_module->text_address, info );
