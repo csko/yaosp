@@ -124,7 +124,10 @@ int semaphore_context_update( semaphore_context_t* context, thread_id new_thread
 int semaphore_context_make_empty( semaphore_context_t* context );
 
 #ifdef ENABLE_DEBUGGER
+
 int dbg_list_kernel_semaphores( const char* params );
+int dbg_kernel_semaphore_info( const char* params );
+
 #endif /* ENABLE_DEBUGGER */
 
 int init_semaphores( void );

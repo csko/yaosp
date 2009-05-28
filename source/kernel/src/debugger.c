@@ -20,9 +20,12 @@
 #include <debug.h>
 #include <semaphore.h>
 #include <thread.h>
+#include <config.h>
 #include <lib/stdarg.h>
 #include <lib/printf.h>
 #include <lib/string.h>
+
+#ifdef ENABLE_DEBUGGER
 
 static console_t* dbg_screen = NULL;
 
@@ -35,6 +38,7 @@ static int dbg_show_help( const char* params );
 
 static dbg_command_t debugger_commands[] = {
     { "list-kernel-semas", dbg_list_kernel_semaphores, "Lists kernel semaphores" },
+    { "kernel-sema-info",  dbg_kernel_semaphore_info,  "Show the informations of the specified kernel semaphore" },
     { "list-threads",      dbg_list_threads,           "List threads" },
     { "show-thread-info",  dbg_show_thread_info,       "Show the informations of the specified thread" },
     { "trace-thread",      dbg_trace_thread,           "" },
@@ -182,3 +186,5 @@ int start_kernel_debugger( void ) {
 
     return 0;
 }
+
+#endif /* ENABLE_DEBUGGER */

@@ -701,6 +701,11 @@ int dbg_show_thread_info( const char* params ) {
     dbg_printf( "  name: %s\n", thread->name );
     dbg_printf( "  state: %s\n", thread_states[ thread->state ] );
     dbg_printf( "  priority: %d\n", thread->priority );
+
+    if ( thread->blocking_semaphore != -1 ) {
+        dbg_printf( "  blocking semaphore: %d\n", thread->blocking_semaphore );
+    }
+
     arch_dbg_show_thread_info( thread );
 
     return 0;

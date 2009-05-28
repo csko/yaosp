@@ -312,6 +312,7 @@ try_again:
         }
 
         thread->state = THREAD_WAITING;
+        thread->blocking_semaphore = id;
 
         spinunlock( &scheduler_lock );
         spinunlock_enable( &context->lock );
@@ -319,6 +320,8 @@ try_again:
         sched_preempt();
 
         spinlock_disable( &context->lock );
+
+        thread->blocking_semaphore = -1;
 
         if ( timeout != INFINITE_TIMEOUT ) {
             spinlock( &scheduler_lock );
@@ -712,6 +715,7 @@ int semaphore_context_make_empty( semaphore_context_t* context ) {
 }
 
 #ifdef ENABLE_DEBUGGER
+
 static const char* semaphore_types[] = {
     "binary",
     "counting"
@@ -745,6 +749,51 @@ int dbg_list_kernel_semaphores( const char* params ) {
 
     return 0;
 }
+
+int dbg_kernel_semaphore_info( const char* params ) {
+    semaphore_id id;
+    semaphore_t* semaphore;
+
+    if ( params == NULL ) {
+        dbg_printf( "trace-thread thread_id\n" );
+
+        return 0;
+    }
+
+    if ( !str_to_num( params, &id ) ) {
+        dbg_printf( "Thread ID must be a number!\n" );
+
+        return 0;
+    }
+
+    semaphore = ( semaphore_t* )hashtable_get( &kernel_semaphore_context.semaphore_table, ( const void* )&id );
+
+    if ( semaphore == NULL ) {
+        dbg_printf( "Invalid kernel semaphore: %d\n", id );
+
+        return 0;
+    }
+
+    dbg_printf( "Semaphore informations:\n" );
+    dbg_printf( "  name: %s\n", semaphore->name );
+    dbg_printf( "  type: %s\n", semaphore_types[ semaphore->type ] );
+    dbg_printf( "  count: %d\n", semaphore->count );
+
+    switch ( semaphore->type ) {
+        case SEMAPHORE_BINARY :
+            if ( semaphore->count == 0 ) {
+                dbg_printf( "  holder: %d\n", semaphore->holder );
+            }
+
+            break;
+
+        case SEMAPHORE_COUNTING :
+            break;
+    }
+
+    return 0;
+}
+
 #endif /* ENABLE_DEBUGGER */
 
 __init int init_semaphores( void ) {

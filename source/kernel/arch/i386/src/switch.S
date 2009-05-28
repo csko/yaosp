@@ -1,6 +1,6 @@
 /* Thread switching code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,6 +25,7 @@
 
 /* void switch_to_thread( register_t esp ) */
 
+.type switch_to_thread, @function
 switch_to_thread:
     movl 4(%esp), %esp
     pop %fs
@@ -37,6 +38,7 @@ switch_to_thread:
 
 /* void sched_preempt( void ) */
 
+.type sched_preempty, @function
 sched_preempt:
     movl 0(%esp), %eax
     addl $4, %esp

@@ -62,6 +62,7 @@ typedef struct thread {
     int state;
     int priority;
     int exit_code;
+    int blocking_semaphore;
 
     struct process* process;
 

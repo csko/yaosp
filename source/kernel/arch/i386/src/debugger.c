@@ -32,6 +32,8 @@
 
 extern int __kernel_end;
 
+#ifdef ENABLE_DEBUGGER
+
 static uint8_t dbg_keymap[ 128 ] = {
     /* 0-9 */ 0, 0, '1', '2', '3', '4', '5', '6', '7', '8',
     /* 10-19 */ '9', '0', '-', '=', '\b', '\t', 'q', 'w', 'e', 'r',
@@ -48,31 +50,7 @@ static uint8_t dbg_keymap[ 128 ] = {
     /* 120-127 */ 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-char arch_dbg_get_character( void ) {
-    uint8_t code;
-    uint8_t scancode;
-
-    do {
-        code = inb( 0x64 );
-
-        if ( ( code & 1 ) &&
-             ( code & ( 1 << 5 ) ) ) {
-            inb( 0x60 );
-
-            continue;
-        }
-    } while ( ( code & 1 ) == 0 );
-
-    scancode = inb( 0x60 );
-
-    if ( scancode & 0x80 ) {
-        return 0;
-    }
-
-    scancode &= 0x7F;
-
-    return dbg_keymap[ scancode ];
-}
+#endif /* ENABLE_DEBUGGER */
 
 int debug_print_stack_trace( void ) {
     int error;
@@ -112,6 +90,34 @@ int debug_print_stack_trace( void ) {
     }
 
     return 0;
+}
+
+#ifdef ENABLE_DEBUGGER
+
+char arch_dbg_get_character( void ) {
+    uint8_t code;
+    uint8_t scancode;
+
+    do {
+        code = inb( 0x64 );
+
+        if ( ( code & 1 ) &&
+             ( code & ( 1 << 5 ) ) ) {
+            inb( 0x60 );
+
+            continue;
+        }
+    } while ( ( code & 1 ) == 0 );
+
+    scancode = inb( 0x60 );
+
+    if ( scancode & 0x80 ) {
+        return 0;
+    }
+
+    scancode &= 0x7F;
+
+    return dbg_keymap[ scancode ];
 }
 
 int arch_dbg_show_thread_info( struct thread* thread ) {
@@ -208,7 +214,14 @@ int arch_dbg_trace_thread( thread_t* thread ) {
     return 0;
 }
 
+#endif /* ENABLE_DEBUGGER */
+
 void handle_debug_exception( registers_t* regs ) {
+#ifdef ENABLE_DEBUGGER
     start_kernel_debugger();
+#else
+    kprintf( "handle_debug_exception called!\n" );
+ #endif /* ENABLE_DEBUGGER */
+
     halt_loop();
 }

@@ -20,6 +20,7 @@
 
 .global ip_checksum
 
+.type ip_checksum, @function
 ip_checksum:
     pushl %ebp
     movl %esp, %ebp
