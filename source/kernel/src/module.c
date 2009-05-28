@@ -369,6 +369,41 @@ int load_module( const char* name ) {
     return do_load_module( name );
 }
 
+typedef struct module_sym_info {
+    ptr_t address;
+    symbol_info_t* symbol_info;
+} module_sym_info_t;
+
+static int module_sym_info_iterator( hashitem_t* item, void* data ) {
+    module_t* module;
+    module_sym_info_t* info;
+
+    module = ( module_t* )item;
+    info = ( module_sym_info_t* )data;
+
+    if ( module_loader->get_symbol_info( module, info->address, info->symbol_info ) ) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int get_module_symbol_info( ptr_t address, symbol_info_t* info ) {
+    int error;
+    module_sym_info_t sym_info;
+
+    sym_info.address = address;
+    sym_info.symbol_info = info;
+
+    error = hashtable_iterate( &module_table, module_sym_info_iterator, ( void* )&sym_info );
+
+    if ( error == 0 ) {
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
 int sys_load_module( const char* name ) {
     return do_load_module( name );
 }

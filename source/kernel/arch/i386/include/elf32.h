@@ -171,6 +171,7 @@ typedef struct elf32_image_info {
 
     uint32_t dyn_symbol_count;
     my_elf_symbol_t* dyn_symbol_table;
+
     uint32_t reloc_count;
     elf_reloc_t* reloc_table;
 } elf32_image_info_t;
@@ -179,7 +180,9 @@ typedef struct elf_module {
     elf32_image_info_t image_info;
 
     uint32_t text_address;
+    size_t text_size;
     region_id text_region;
+
     region_id data_region;
 } elf_module_t;
 

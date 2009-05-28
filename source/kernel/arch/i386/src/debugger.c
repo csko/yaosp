@@ -22,6 +22,7 @@
 #include <debug.h>
 #include <thread.h>
 #include <symbols.h>
+#include <module.h>
 
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
@@ -98,7 +99,7 @@ int debug_print_stack_trace( void ) {
         } else  if ( eip >= FIRST_USER_ADDRESS ) {
             error = get_application_symbol_info( thread, eip, &symbol_info );
         } else {
-            error = -1;
+            error = get_module_symbol_info( eip, &symbol_info );
         }
 
         if ( error >= 0 ) {
@@ -144,7 +145,7 @@ static int print_trace_entry( thread_t* thread, uint32_t eip ) {
     } else {
         /* This can be a symbol from a module, for example */
 
-        error = -1;
+        error = get_module_symbol_info( eip, &symbol_info );
     }
 
     if ( error >= 0 ) {

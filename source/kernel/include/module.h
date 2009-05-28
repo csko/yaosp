@@ -77,6 +77,7 @@ typedef int load_module_t( module_t* module, binary_loader_t* loader );
 typedef int get_module_dependencies_t( module_t* module, module_dependencies_t* deps );
 typedef int free_module_t( module_t* module );
 typedef bool get_module_symbol_t( module_t* module, const char* symbol_name, ptr_t* symbol_addr );
+typedef bool get_module_symbol_info_t( module_t* module, ptr_t address, symbol_info_t* symbol_info );
 
 typedef struct module_loader {
     const char* name;
@@ -85,9 +86,12 @@ typedef struct module_loader {
     get_module_dependencies_t* get_dependencies;
     free_module_t* free;
     get_module_symbol_t* get_symbol;
+    get_module_symbol_info_t* get_symbol_info;
 } module_loader_t;
 
 int load_module( const char* name );
+
+int get_module_symbol_info( ptr_t address, symbol_info_t* info );
 
 int sys_load_module( const char* name );
 uint32_t sys_get_module_count( void );

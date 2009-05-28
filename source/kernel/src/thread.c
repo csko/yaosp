@@ -730,7 +730,9 @@ int dbg_trace_thread( const char* params ) {
         return 0;
     }
 
+    dbg_set_scroll_mode( true );
     arch_dbg_trace_thread( thread );
+    dbg_set_scroll_mode( false );
 
     return 0;
 }

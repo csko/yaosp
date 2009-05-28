@@ -180,6 +180,7 @@ static int elf32_module_map( elf_module_t* elf_module, binary_loader_t* loader )
     memset( ( char* )data_address + data_size, 0, data_size_with_bss - data_size );
 
     elf_module->text_address = ( uint32_t )text_address;
+    elf_module->text_size = PAGE_ALIGN( text_size );
 
     return 0;
 
@@ -410,13 +411,68 @@ static bool elf32_module_get_symbol( module_t* module, const char* symbol_name, 
     return true;
 }
 
+static bool elf32_module_get_symbol_info( module_t* module, ptr_t address, symbol_info_t* info ) {
+    uint32_t i;
+    elf_module_t* elf_module;
+    my_elf_symbol_t* symbol;
+
+    elf_module = ( elf_module_t* )module->loader_data;
+
+    /* Module without symbols?! */
+
+    if ( elf_module->image_info.symbol_count == 0 ) {
+        return false;
+    }
+
+    /* Make sure that the specified address is inside of this module */
+
+    if ( ( address < elf_module->text_address ) ||
+         ( address >= ( elf_module->text_address + elf_module->text_size ) ) ) {
+        return false;
+    }
+
+    info->name = NULL;
+    info->address = 0;
+
+    symbol = elf_module->image_info.symbol_table;
+
+    for ( i = 0; i < elf_module->image_info.symbol_count; i++, symbol++ ) {
+        ptr_t real_symbol_address;
+
+        real_symbol_address = symbol->address + elf_module->text_address;
+
+        if ( real_symbol_address > address ) {
+            continue;
+        }
+
+        if ( info->name == NULL ) {
+            info->name = symbol->name;
+            info->address = real_symbol_address;
+        } else {
+            int last_diff;
+            int curr_diff;
+
+            last_diff = address - info->address;
+            curr_diff = address - real_symbol_address;
+
+            if ( curr_diff < last_diff ) {
+                info->name = symbol->name;
+                info->address = real_symbol_address;
+            }
+        }
+    }
+
+    return ( info->name != NULL );
+}
+
 static module_loader_t elf32_module_loader = {
     .name = "ELF32",
     .check_module = elf32_module_check,
     .get_dependencies = elf32_module_get_dependencies,
     .load_module = elf32_module_load,
     .free = elf32_module_free,
-    .get_symbol = elf32_module_get_symbol
+    .get_symbol = elf32_module_get_symbol,
+    .get_symbol_info = elf32_module_get_symbol_info
 };
 
 __init int init_elf32_module_loader( void ) {

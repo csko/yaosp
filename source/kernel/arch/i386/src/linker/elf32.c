@@ -225,6 +225,8 @@ static int elf32_load_symtab_section( elf32_image_info_t* info, binary_loader_t*
 
     kfree( elf_symbols );
 
+    info->symbol_count = symbol_count;
+
     return 0;
 
 error2:
@@ -423,6 +425,8 @@ static int elf32_load_dynsym_section( elf32_image_info_t* info, binary_loader_t*
     }
 
     kfree( elf_symbols );
+
+    info->dyn_symbol_count = symbol_count;
 
     return 0;
 
