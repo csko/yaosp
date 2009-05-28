@@ -1271,7 +1271,7 @@ static int ext2_rmdir( void* fs_cookie, void* node, const char* name, int name_l
 
     vfs_inode->fs_inode.i_links_count--;
 
-    put_vnode( mnt_point, tmp_inode.inode_number );
+    put_vnode( mnt_point, inode->inode_number );
 
     /* Flush group descriptor and superblock */
 
