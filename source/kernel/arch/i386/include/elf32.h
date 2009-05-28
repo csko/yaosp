@@ -189,8 +189,6 @@ typedef struct elf_module {
 typedef struct elf_application {
     elf32_image_info_t image_info;
 
-    register_t entry_address;
-
     region_id text_region;
     region_id data_region;
 } elf_application_t;
@@ -202,6 +200,7 @@ int elf32_load_section_headers( elf32_image_info_t* info, binary_loader_t* loade
 int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* loader );
 
 my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name );
+int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_t* symbol_info );
 
 int elf32_init_image_info( elf32_image_info_t* info );
 int elf32_destroy_image_info( elf32_image_info_t* info );

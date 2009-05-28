@@ -25,7 +25,11 @@ typedef struct binary_loader {
     void* private;
     int ( *read )( void* private, void* buffer, off_t offset, int size );
     char* ( *get_name )( void* private );
+    int ( *get_fd )( void* private );
 } binary_loader_t;
+
+binary_loader_t* get_app_binary_loader( int fd );
+void put_app_binary_loader( binary_loader_t* loader );
 
 /* Application loader calls */
 
@@ -34,10 +38,12 @@ typedef struct symbol_info {
     ptr_t address;
 } symbol_info_t;
 
-typedef bool check_application_t( int fd );
-typedef int load_application_t( int fd );
+struct thread;
+
+typedef bool check_application_t( binary_loader_t* loader );
+typedef int load_application_t( binary_loader_t* loader );
 typedef int execute_application_t( void );
-typedef int get_symbol_info_t( ptr_t address, symbol_info_t* info );
+typedef int get_symbol_info_t( struct thread* thread, ptr_t address, symbol_info_t* info );
 
 typedef struct application_loader {
     const char* name;
@@ -52,8 +58,8 @@ typedef struct application_loader {
 
 /* Interpreter loader calls */
 
-typedef bool check_interpreter_t( int fd );
-typedef int execute_interpreter_t( int fd, const char* filename, char** argv, char** envp );
+typedef bool check_interpreter_t( binary_loader_t* loader );
+typedef int execute_interpreter_t( binary_loader_t* loader, const char* filename, char** argv, char** envp );
 
 typedef struct interpreter_loader {
     const char* name;

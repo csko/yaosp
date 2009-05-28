@@ -20,24 +20,30 @@
 #include <loader.h>
 #include <console.h>
 #include <kernel.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
-static bool interpreter_check( int fd ) {
-    off_t pos;
+static bool interpreter_check( binary_loader_t* loader ) {
+    int error;
     char buf[ 3 ];
 
-    pos = 0;
+    error = loader->read(
+        loader->private,
+        buf,
+        0,
+        3
+    );
 
-    if ( sys_pread( fd, buf, 3, &pos ) != 3 ) {
+    if ( __unlikely( error != 3 ) ) {
         return false;
     }
 
     return ( memcmp( buf, "#! ", 3 ) == 0 );
 }
 
-static int interpreter_execute( int fd, const char* name, char** argv, char** envp ) {
+static int interpreter_execute( binary_loader_t* loader, const char* name, char** argv, char** envp ) {
     int i;
     int data;
     int argc;
@@ -48,9 +54,16 @@ static int interpreter_execute( int fd, const char* name, char** argv, char** en
 
     pos = 3;
 
-    data = sys_pread( fd, interpreter, sizeof( interpreter ) - 1, &pos );
+    data = loader->read(
+        loader->private,
+        interpreter,
+        sizeof( interpreter ) - 1,
+        3
+    );
 
-    if ( data < 2 ) {
+    put_app_binary_loader( loader );
+
+    if ( __unlikely( data < 2 ) ) {
         return -EIO;
     }
 

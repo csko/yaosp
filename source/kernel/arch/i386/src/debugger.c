@@ -141,7 +141,7 @@ static int print_trace_entry( thread_t* thread, uint32_t eip ) {
     } else if ( eip >= FIRST_USER_ADDRESS ) {
         /* This is an application symbol */
 
-        error = -1;
+        error = get_application_symbol_info( thread, eip, &symbol_info );
     } else {
         /* This can be a symbol from a module, for example */
 

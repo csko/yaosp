@@ -411,10 +411,8 @@ static bool elf32_module_get_symbol( module_t* module, const char* symbol_name, 
     return true;
 }
 
-static bool elf32_module_get_symbol_info( module_t* module, ptr_t address, symbol_info_t* info ) {
-    uint32_t i;
+static int elf32_module_get_symbol_info( module_t* module, ptr_t address, symbol_info_t* info ) {
     elf_module_t* elf_module;
-    my_elf_symbol_t* symbol;
 
     elf_module = ( elf_module_t* )module->loader_data;
 
@@ -431,38 +429,7 @@ static bool elf32_module_get_symbol_info( module_t* module, ptr_t address, symbo
         return false;
     }
 
-    info->name = NULL;
-    info->address = 0;
-
-    symbol = elf_module->image_info.symbol_table;
-
-    for ( i = 0; i < elf_module->image_info.symbol_count; i++, symbol++ ) {
-        ptr_t real_symbol_address;
-
-        real_symbol_address = symbol->address + elf_module->text_address;
-
-        if ( real_symbol_address > address ) {
-            continue;
-        }
-
-        if ( info->name == NULL ) {
-            info->name = symbol->name;
-            info->address = real_symbol_address;
-        } else {
-            int last_diff;
-            int curr_diff;
-
-            last_diff = address - info->address;
-            curr_diff = address - real_symbol_address;
-
-            if ( curr_diff < last_diff ) {
-                info->name = symbol->name;
-                info->address = real_symbol_address;
-            }
-        }
-    }
-
-    return ( info->name != NULL );
+    return elf32_get_symbol_info( &elf_module->image_info, address - elf_module->text_address, info );
 }
 
 static module_loader_t elf32_module_loader = {

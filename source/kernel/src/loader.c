@@ -29,16 +29,67 @@
 
 #define USER_STACK_PAGES ( USER_STACK_SIZE / PAGE_SIZE )
 
+typedef struct app_loader_private {
+    int fd;
+} app_loader_private_t;
+
 static application_loader_t* application_loaders;
 static interpreter_loader_t* interpreter_loaders;
 
-static application_loader_t* find_application_loader( int fd ) {
+static int app_loader_read( void* _private, void* buffer, off_t offset, int size ) {
+    app_loader_private_t* private;
+
+    private = ( app_loader_private_t* )_private;
+
+    return sys_pread(
+        private->fd,
+        buffer,
+        size,
+        &offset
+    );
+}
+
+static int app_loader_get_fd( void* _private ) {
+    app_loader_private_t* private;
+
+    private = ( app_loader_private_t* )_private;
+
+    return private->fd;
+}
+
+binary_loader_t* get_app_binary_loader( int fd ) {
+    binary_loader_t* loader;
+    app_loader_private_t* private;
+
+    loader = ( binary_loader_t* )kmalloc( sizeof( binary_loader_t ) + sizeof( app_loader_private_t ) );
+
+    if ( loader == NULL ) {
+        return NULL;
+    }
+
+    private = ( app_loader_private_t* )( loader + 1 );
+
+    private->fd = fd;
+
+    loader->private = ( void* )private;
+    loader->read = app_loader_read;
+    loader->get_name = NULL;
+    loader->get_fd = app_loader_get_fd;
+
+    return loader;
+}
+
+void put_app_binary_loader( binary_loader_t* loader ) {
+    kfree( loader );
+}
+
+static application_loader_t* find_application_loader( binary_loader_t* binary_loader ) {
     application_loader_t* loader;
 
     loader = application_loaders;
 
     while ( loader != NULL ) {
-        if ( loader->check( fd ) ) {
+        if ( loader->check( binary_loader ) ) {
             break;
         }
 
@@ -48,13 +99,13 @@ static application_loader_t* find_application_loader( int fd ) {
     return loader;
 }
 
-static interpreter_loader_t* find_interpreter_loader( int fd ) {
+static interpreter_loader_t* find_interpreter_loader( binary_loader_t* binary_loader ) {
     interpreter_loader_t* loader;
 
     loader = interpreter_loaders;
 
     while ( loader != NULL ) {
-        if ( loader->check( fd ) ) {
+        if ( loader->check( binary_loader ) ) {
             break;
         }
 
@@ -149,7 +200,7 @@ int get_application_symbol_info( thread_t* thread, ptr_t address, symbol_info_t*
         return -EINVAL;
     }
 
-    return loader->get_symbol_info( address, info );
+    return loader->get_symbol_info( thread, address, info );
 }
 
 int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
@@ -171,6 +222,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     char** user_envv;
 
     struct sigaction* handler;
+    binary_loader_t* binary_loader;
 
     /* Open the file */
 
@@ -181,15 +233,17 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
         goto _error1;
     }
 
+    binary_loader = get_app_binary_loader( fd );
+
     /* Find the proper loader for it */
 
-    interpreter_loader = find_interpreter_loader( fd );
+    interpreter_loader = find_interpreter_loader( binary_loader );
 
     if ( interpreter_loader != NULL ) {
-        return interpreter_loader->execute( fd, path, argv, envp );
+        return interpreter_loader->execute( binary_loader, path, argv, envp );
     }
 
-    loader = find_application_loader( fd );
+    loader = find_application_loader( binary_loader );
 
     if ( loader == NULL ) {
         error = -EINVAL;
@@ -254,8 +308,9 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     /* Load the executable with the selected loader */
 
-    error = loader->load( fd );
+    error = loader->load( binary_loader );
 
+    put_app_binary_loader( binary_loader );
     sys_close( fd );
 
     if ( error < 0 ) {

@@ -125,6 +125,7 @@ static binary_loader_t* get_file_module_reader_helper( const char* directory, co
     loader->private = ( void* )file_reader;
     loader->read = file_module_read;
     loader->get_name = file_module_get_name;
+    loader->get_fd = NULL;
 
     return loader;
 
@@ -381,7 +382,7 @@ static int module_sym_info_iterator( hashitem_t* item, void* data ) {
     module = ( module_t* )item;
     info = ( module_sym_info_t* )data;
 
-    if ( module_loader->get_symbol_info( module, info->address, info->symbol_info ) ) {
+    if ( module_loader->get_symbol_info( module, info->address, info->symbol_info ) == 0 ) {
         return -1;
     }
 

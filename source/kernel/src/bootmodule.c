@@ -78,6 +78,7 @@ binary_loader_t* get_bootmodule_loader( int index ) {
     loader->private = ( void* )&bootmodules[ index ];
     loader->read = bm_read_module;
     loader->get_name = bm_get_name;
+    loader->get_fd = NULL;
 
     return loader;
 }

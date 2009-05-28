@@ -531,6 +531,52 @@ my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name ) 
     return ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
 }
 
+int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_t* symbol_info ) {
+    uint32_t i;
+    my_elf_symbol_t* symbol;
+
+    /* Image without symbols?! */
+
+    if ( info->symbol_count == 0 ) {
+        return false;
+    }
+
+    /* Make sure that the specified address is inside of this module */
+
+    symbol_info->name = NULL;
+    symbol_info->address = 0;
+
+    symbol = info->symbol_table;
+
+    for ( i = 0; i < info->symbol_count; i++, symbol++ ) {
+        if ( symbol->address > address ) {
+            continue;
+        }
+
+        if ( symbol_info->name == NULL ) {
+            symbol_info->name = symbol->name;
+            symbol_info->address = symbol->address;
+        } else {
+            int last_diff;
+            int curr_diff;
+
+            last_diff = address - symbol_info->address;
+            curr_diff = address - symbol->address;
+
+            if ( curr_diff < last_diff ) {
+                symbol_info->name = symbol->name;
+                symbol_info->address = symbol->address;
+            }
+        }
+    }
+
+    if ( symbol_info->name == NULL ) {
+        return -ENOENT;
+    }
+
+    return 0;
+}
+
 static void* symbol_key( hashitem_t* item ) {
     my_elf_symbol_t* symbol;
 
