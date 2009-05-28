@@ -29,10 +29,6 @@ static int current_qualifiers = 0;
 static inline int terminal_send_event( terminal_t* terminal, const char* data, size_t size ) {
     int error;
 
-    if ( ( terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) == 0 ) {
-        return 0;
-    }
-
     UNLOCK( terminal_lock );
 
     error = pwrite(
@@ -52,11 +48,54 @@ static inline int terminal_send_event( terminal_t* terminal, const char* data, s
 }
 
 static int terminal_handle_event( input_event_t* event ) {
+    bool event_handled;
+
+    event_handled = false;
+
     LOCK( terminal_lock );
 
     switch ( ( int )event->event ) {
         case E_KEY_PRESSED : {
             int tmp;
+
+            switch ( event->param1 ) {
+                case KEY_PAGE_UP :
+                    if ( current_qualifiers & Q_SHIFT ) {
+                        terminal_scroll( -10 );
+                    }
+
+                    event_handled = true;
+
+                    break;
+
+                case KEY_PAGE_DOWN :
+                    if ( current_qualifiers & Q_SHIFT ) {
+                        terminal_scroll( 10 );
+                    }
+
+                    event_handled = true;
+
+                    break;
+
+                case KEY_F1 :
+                case KEY_F2 :
+                case KEY_F3 :
+                case KEY_F4 :
+                case KEY_F5 :
+                case KEY_F6 :
+                    if ( current_qualifiers & Q_ALT ) {
+                        terminal_switch_to( ( event->param1 - KEY_F1 ) >> 8 );
+                    }
+
+                    event_handled = true;
+
+                    break;
+            }
+
+            if ( ( event_handled ) ||
+                 ( ( active_terminal->flags & TERMINAL_ACCEPTS_USER_INPUT ) == 0 ) ) {
+                break;
+            }
 
             /* Scroll the terminal to the bottom */
 
@@ -97,32 +136,6 @@ static int terminal_handle_event( input_event_t* event ) {
 
                 case KEY_DELETE :
                     terminal_send_event( active_terminal, "\x1b[3~", 4 );
-                    break;
-
-                case KEY_PAGE_UP :
-                    if ( current_qualifiers & Q_SHIFT ) {
-                        terminal_scroll( -10 );
-                    }
-
-                    break;
-
-                case KEY_PAGE_DOWN :
-                    if ( current_qualifiers & Q_SHIFT ) {
-                        terminal_scroll( 10 );
-                    }
-
-                    break;
-
-                case KEY_F1 :
-                case KEY_F2 :
-                case KEY_F3 :
-                case KEY_F4 :
-                case KEY_F5 :
-                case KEY_F6 :
-                    if ( current_qualifiers & Q_ALT ) {
-                        terminal_switch_to( ( event->param1 - KEY_F1 ) >> 8 );
-                    }
-
                     break;
 
                 default :
