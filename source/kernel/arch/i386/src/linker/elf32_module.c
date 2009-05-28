@@ -210,6 +210,21 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
         symbol = &symbol_table[ ELF32_R_SYM( reloc->info ) ];
 
         switch ( ELF32_R_TYPE( reloc->info ) ) {
+            case R_386_32 : {
+                my_elf_symbol_t* elf_symbol;
+
+                elf_symbol = elf32_get_symbol( &elf_module->image_info, symbol->name );
+
+                if ( elf_symbol == NULL ) {
+                    return -EINVAL;
+                }
+
+                target = ( uint32_t* )( elf_module->text_address + reloc->offset );
+                *target = *target + elf_symbol->address;
+
+                break;
+            }
+
             case R_386_RELATIVE : {
                 target = ( uint32_t* )( elf_module->text_address + reloc->offset );
                 *target += elf_module->text_address;
