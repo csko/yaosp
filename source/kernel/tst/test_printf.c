@@ -129,6 +129,7 @@ int main( int argc, char** argv ) {
     DO_TEST( "    FFFF", "%8X", 65535 )
     DO_TEST( "0000ffff", "%08x", 65535 )
     DO_TEST( "0000FFFF", "%08X", 65535 )
+    DO_TEST( "00F 00FF 0000FFFF", "%03X %04X %08X", 15, 255, 65535 )
     DO_TEST( "ffff    ", "%-8x", 65535 )
     DO_TEST( "FFFF    ", "%-8X", 65535 )
 

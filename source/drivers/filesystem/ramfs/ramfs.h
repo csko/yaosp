@@ -51,6 +51,7 @@ typedef struct ramfs_inode {
 
     void* data;
     size_t size;
+    char* link_path;
 
     int link_count;
     bool is_loaded;

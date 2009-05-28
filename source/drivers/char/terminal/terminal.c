@@ -375,6 +375,8 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         terminal->input_state = IS_NONE;
                         break;
 
+                    /* TODO: ESC M, ESC E, ESC c, etc */
+
                     default :
                         kprintf( "Terminal: Unknown character (%x) in IS_ESC state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;

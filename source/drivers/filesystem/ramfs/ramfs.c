@@ -55,6 +55,7 @@ static ramfs_inode_t* ramfs_create_inode( ramfs_cookie_t* cookie, ramfs_inode_t*
     inode->parent = parent;
     inode->first_children = NULL;
     inode->is_directory = is_directory;
+    inode->link_path = NULL;
 
     if ( parent != NULL ) {
         inode->next_sibling = parent->first_children;
@@ -481,16 +482,19 @@ static int ramfs_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
     stat->st_ino = inode->inode_number;
     stat->st_size = inode->size;
     stat->st_mode = 0777;
-
-    if ( inode->is_directory ) {
-        stat->st_mode |= S_IFDIR;
-    } else {
-        stat->st_mode |= S_IFREG;
-    }
-
     stat->st_atime = inode->atime;
     stat->st_mtime = inode->mtime;
     stat->st_ctime = inode->ctime;
+
+    if ( inode->link_path != NULL ) {
+        stat->st_mode |= S_IFLNK;
+    } else {
+      if ( inode->is_directory ) {
+          stat->st_mode |= S_IFDIR;
+      } else {
+          stat->st_mode |= S_IFREG;
+      }
+    }
 
     UNLOCK( cookie->lock );
 
@@ -726,12 +730,90 @@ out:
     return error;
 }
 
-static int ramfs_symlink( void* fs_cookie, void* node, const char* name, int name_length, const char* link_path ) {
-    return -ENOSYS;
+static int ramfs_symlink( void* fs_cookie, void* _node, const char* name, int name_length, const char* link_path ) {
+    int error;
+    ramfs_cookie_t* cookie;
+    ramfs_inode_t* node;
+    ramfs_inode_t* new_node;
+    
+    cookie = ( ramfs_cookie_t* )fs_cookie;
+    LOCK( cookie->lock );
+
+    /* Check if this name already exists */
+
+    node = ( ramfs_inode_t* )_node;
+    new_node = ramfs_do_lookup_inode( node, name, name_length );
+
+    if ( new_node != NULL ) {
+        error = -EEXIST;
+        goto out;
+    }
+
+    /* We can create symbolic links only in directories */
+
+    if ( !node->is_directory ) {
+        error = -EINVAL;
+        goto out;
+    }
+
+    /* Create the new node */
+
+    new_node = ramfs_create_inode(
+        cookie,
+        node,
+        name,
+        name_length,
+        true
+    );
+
+    if ( new_node == NULL ) {
+        error = -ENOMEM;
+        goto out;
+    }
+
+    /* Save the link path in the new node */
+
+    new_node->link_path = strdup( link_path );
+
+    if ( new_node->link_path == NULL ) {
+        ramfs_delete_inode( cookie, new_node );
+        error = -ENOMEM;
+        goto out;
+    }
+
+    error = 0;
+
+    node->mtime = time( NULL );
+
+out:
+    UNLOCK( cookie->lock );
+
+    return error;
 }
 
-static int ramfs_readlink( void* fs_cookie, void* node, char* buffer, size_t length ) {
-    return 0;
+static int ramfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t length ) {
+    ramfs_cookie_t* cookie;
+    ramfs_inode_t* node;
+
+    node = ( ramfs_inode_t* )_node;
+
+    cookie = ( ramfs_cookie_t* )fs_cookie;
+    LOCK( cookie->lock );
+
+    if ( node->link_path == NULL ) {
+        UNLOCK( cookie->lock );
+
+        return -EINVAL;
+    }
+
+    strncpy( buffer, node->link_path, length );
+    buffer[ length - 1 ] = 0;
+
+    node->atime = time( NULL );
+
+    UNLOCK( cookie->lock );
+
+    return strlen( buffer );
 }
 
 static filesystem_calls_t ramfs_calls = {

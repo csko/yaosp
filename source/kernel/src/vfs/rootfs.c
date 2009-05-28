@@ -417,7 +417,7 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     new_node->link_path = strdup( link_path );
 
     if ( new_node->link_path == NULL ) {
-        /* TODO: delete the node */
+        rootfs_delete_node( new_node );
         error = -ENOMEM;
         goto out;
     }

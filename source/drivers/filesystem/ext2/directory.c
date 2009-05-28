@@ -254,6 +254,10 @@ int ext2_do_remove_entry( ext2_cookie_t* cookie, ext2_inode_t* parent, ino_t ino
     error = -ENOENT;
 
 out:
+    if ( error == 0 ) {
+        parent->fs_inode.i_mtime = time( NULL );
+    }
+
     kfree( block );
 
     return error;
