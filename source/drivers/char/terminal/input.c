@@ -33,12 +33,16 @@ static inline int terminal_send_event( terminal_t* terminal, const char* data, s
         return 0;
     }
 
+    UNLOCK( terminal_lock );
+
     error = pwrite(
         terminal->master_pty,
         data,
         size,
         0
     );
+
+    LOCK( terminal_lock );
 
     if ( error != ( int )size ) {
         return -1;
