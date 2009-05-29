@@ -174,7 +174,7 @@ static void ps2_mouse_handle_input( void ) {
 
         event.event = E_MOUSE_MOVED;
         event.param1 = x;
-        event.param2 = y;
+        event.param2 = -y;
 
         insert_input_event( &event );
     }

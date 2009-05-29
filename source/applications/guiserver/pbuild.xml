@@ -33,7 +33,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/region.c</item>
         <item>src/arch/i386/graphicsdriver_i386.c</item>
         <item>driver/video/vesa/vesa.c</item>
-        <item>driver/input/ps2mouse/ps2mouse.c</item>
         <item>driver/decorator/default/default.c</item>
     </array>
 

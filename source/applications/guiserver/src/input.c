@@ -17,193 +17,105 @@
  */
 
 #include <stdlib.h>
-#include <assert.h>
 #include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #include <yaosp/debug.h>
-#include <yaosp/semaphore.h>
 #include <yaosp/thread.h>
+#include <yaosp/input.h>
 
 #include <input.h>
 #include <windowmanager.h>
 
-static int free_event_count;
-static semaphore_id free_list_lock;
-static input_event_t* first_free_event;
-
-static input_event_t* event_queue;
-static input_event_t* event_queue_tail;
-static semaphore_id event_queue_lock;
-static semaphore_id event_queue_sync;
-
+static int input_device = -1;
 static thread_id input_thread;
 
-static input_driver_t* input_drivers[] = {
-    &ps2mouse_driver,
-    NULL
-};
-
-input_event_t* get_input_event( input_event_type_t type, int param1, int param2 ) {
-    input_event_t* event;
-
-    LOCK( free_list_lock );
-
-    event = first_free_event;
-
-    if ( event != NULL ) {
-        assert( free_event_count > 0 );
-
-        first_free_event = event->next;
-
-        free_event_count--;
-    }
-
-    UNLOCK( free_list_lock );
-
-    if ( event == NULL ) {
-        event = ( input_event_t* )malloc( sizeof( input_event_t ) );
-
-        if ( event == NULL ) {
-            return NULL;
-        }
-    }
-
-    event->type = type;
-    event->param1 = param1;
-    event->param2 = param2;
-
-    return event;
-}
-
-int put_input_event( input_event_t* event ) {
-    LOCK( free_list_lock );
-
-    if ( free_event_count < MAX_FREE_EVENT_COUNT ) {
-        event->next = first_free_event;
-        first_free_event = event;
-
-        free_event_count++;
-
-        event = NULL;
-    }
-
-    UNLOCK( free_list_lock );
-
-    if ( event != NULL ) {
-        free( event );
-    }
-
-    return 0;
-}
-
-int insert_input_event( input_event_t* event ) {
-    event->next = NULL;
-
-    LOCK( event_queue_lock );
-
-    if ( event_queue == NULL ) {
-        assert( event_queue_tail == NULL );
-
-        event_queue = event;
-        event_queue_tail = event;
-    } else {
-        event_queue_tail->next = event;
-        event_queue_tail = event;
-    }
-
-    UNLOCK( event_queue_lock );
-
-    UNLOCK( event_queue_sync );
-
-    return 0;
-}
-
 static int input_thread_entry( void* arg ) {
-    input_event_t* event;
+    int error;
+    input_event_t event;
+
+    if ( input_device < 0 ) {
+        return 0;
+    }
 
     while ( 1 ) {
-        LOCK( event_queue_sync );
+        error = read( input_device, &event, sizeof( input_event_t ) );
 
-        LOCK( event_queue_lock );
-
-        event = event_queue;
-
-        if ( event != NULL ) {
-            event_queue = event->next;
-
-            if ( event_queue == NULL ) {
-                event_queue_tail = NULL;
-            }
+        if ( error < 0 ) {
+            dbprintf( "Failed to read from input node: %d\n", error );
+            break;
         }
 
-        UNLOCK( event_queue_lock );
+        switch ( event.event ) {
+            case E_KEY_PRESSED :
+                break;
 
-        if ( event != NULL ) {
-            switch ( event->type ) {
-                case MOUSE_MOVED : {
-                    point_t delta = { .x = event->param1, .y = event->param2 };
+            case E_KEY_RELEASED :
+                break;
 
-                    wm_mouse_moved( &delta );
+            case E_QUALIFIERS_CHANGED :
+                break;
 
-                    break;
-                }
+            case E_MOUSE_MOVED : {
+                point_t delta = {
+                    .x = event.param1,
+                    .y = event.param2
+                };
 
-                case MOUSE_PRESSED :
-                    wm_mouse_pressed( event->param1 );
-                    break;
+                wm_mouse_moved( &delta );
 
-                case MOUSE_RELEASED :
-                    wm_mouse_released( event->param1 );
-                    break;
+                break;
             }
 
-            put_input_event( event );
+            case E_MOUSE_PRESSED :
+                wm_mouse_pressed( event.param1 );
+                break;
+
+            case E_MOUSE_RELEASED :
+                wm_mouse_released( event.param1 );
+                break;
+
+            case E_MOUSE_SCROLLED :
+                break;
         }
     }
+
+    close( input_device );
 
     return 0;
 }
 
 int init_input_system( void ) {
-    int i;
+    int fd;
     int error;
-    input_event_t* event;
-    input_driver_t* input_driver;
+    char path[ 128 ];
+    input_cmd_create_node_t cmd;
 
-    free_list_lock = create_semaphore( "Input free list", SEMAPHORE_BINARY, 0, 1 );
+    fd = open( "/device/control/input", O_RDONLY );
 
-    if ( free_list_lock < 0 ) {
-        return free_list_lock;
+    if ( fd < 0 ) {
+        return fd;
     }
 
-    event_queue_lock = create_semaphore( "Input event queue lock", SEMAPHORE_BINARY, 0, 1 );
+    cmd.flags = INPUT_KEY_EVENTS | INPUT_MOUSE_EVENTS;
 
-    if ( event_queue_lock < 0 ) {
-        return event_queue_lock;
+    error = ioctl( fd, IOCTL_INPUT_CREATE_DEVICE, ( void* )&cmd );
+
+    close( fd );
+
+    if ( error < 0 ) {
+        return error;
     }
 
-    event_queue_sync = create_semaphore( "Input event queue sync", SEMAPHORE_COUNTING, 0, 0 );
+    snprintf( path, sizeof( path ), "/device/input/node/%u", cmd.node_number );
 
-    if ( event_queue_sync < 0 ) {
-        return event_queue_sync;
+    input_device = open( path, O_RDONLY );
+
+    if ( input_device < 0 ) {
+        return input_device;
     }
-
-    first_free_event = NULL;
-
-    for ( i = 0; i < INIT_FREE_EVENT_COUNT; i++ ) {
-        event = ( input_event_t* )malloc( sizeof( input_event_t ) );
-
-        if ( event == NULL ) {
-            return -ENOMEM;
-        }
-
-        event->next = first_free_event;
-        first_free_event = event;
-    }
-
-    free_event_count = INIT_FREE_EVENT_COUNT;
-
-    event_queue = NULL;
-    event_queue_tail = NULL;
 
     input_thread = create_thread(
         "input dispatcher",
@@ -218,26 +130,6 @@ int init_input_system( void ) {
     }
 
     wake_up_thread( input_thread );
-
-    for ( i = 0; input_drivers[ i ] != NULL; i++ ) {
-        input_driver = input_drivers[ i ];
-
-        error = input_driver->init();
-
-        if ( error < 0 ) {
-            dbprintf( "Failed to initialize input driver: %s\n", input_driver->name );
-            continue;
-        }
-
-        error = input_driver->start();
-
-        if ( error < 0 ) {
-            dbprintf( "Failed to start input driver: %s\n", input_driver->name );
-            continue;
-        }
-
-        dbprintf( "Input driver %s started.\n", input_driver->name );
-    }
 
     return 0;
 }
