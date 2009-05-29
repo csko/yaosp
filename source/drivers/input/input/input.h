@@ -23,18 +23,13 @@
 #include <input.h>
 #include <semaphore.h>
 
-#define INPUT_DRV_COUNT 1
+#define INPUT_DRV_COUNT 2
 
 typedef enum input_driver_type {
     T_KEYBOARD,
     T_MOUSE,
     T_JOYSTICK
 } input_driver_type_t;
-
-enum {
-    INPUT_KEY_EVENTS = ( 1 << 0 ),
-    INPUT_MOUSE_EVENTS = ( 1 << 1 )
-};
 
 typedef struct input_state {
     void* driver_states[ INPUT_DRV_COUNT ];
@@ -49,7 +44,6 @@ typedef struct input_device {
     int flags;
     uint32_t node_number;
 
-    semaphore_id lock;
     semaphore_id sync;
 
     input_state_t input_state;

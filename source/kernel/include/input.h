@@ -21,6 +21,11 @@
 
 #include <types.h>
 
+enum {
+    INPUT_KEY_EVENTS = ( 1 << 0 ),
+    INPUT_MOUSE_EVENTS = ( 1 << 1 )
+};
+
 typedef enum input_event_type {
     E_KEY_PRESSED,
     E_KEY_RELEASED,
@@ -92,7 +97,14 @@ enum {
 #define Q_CTRL  ( Q_LEFT_CTRL | Q_RIGHT_CTRL )
 #define Q_ALT   ( Q_LEFT_ALT | Q_RIGHT_ALT )
 
+enum {
+    MOUSE_BTN_LEFT = 1,
+    MOUSE_BTN_RIGHT,
+    MOUSE_BTN_CENTER
+};
+
 typedef struct input_cmd_create_node {
+    int flags;
     uint32_t node_number;
 } input_cmd_create_node_t;
 

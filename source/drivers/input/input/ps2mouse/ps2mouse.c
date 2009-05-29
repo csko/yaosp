@@ -1,4 +1,4 @@
-/* PS/2 mouse driver for the GUI server
+/* PS/2 mouse driver
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,14 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <fcntl.h>
-#include <unistd.h>
+#include <thread.h>
+#include <console.h>
+#include <kernel.h>
+#include <ioctl.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <yaosp/debug.h>
-#include <yaosp/thread.h>
+#include <macros.h>
+#include <mm/kmalloc.h>
+#include <vfs/vfs.h>
 
-#include <input.h>
+#include "../input.h"
 
 #define PS2_AUX_SET_RES     0xE8
 #define PS2_AUX_SET_SCALE11 0xE6
@@ -67,7 +69,7 @@ static uint8_t ps2_init[] = {
     PS2_AUX_SET_SCALE11, PS2_AUX_ENABLE_DEV, PS2_AUX_SET_SAMPLE, 100, PS2_AUX_SET_RES, 3
 };
 
-static int ps2mouse_write( uint8_t* data, size_t size ) {
+static int ps2_mouse_write( uint8_t* data, size_t size ) {
     size_t i;
     int error;
     uint8_t ack;
@@ -75,9 +77,9 @@ static int ps2mouse_write( uint8_t* data, size_t size ) {
     error = 0;
 
     for ( i = 0; i < size; i++, data++ ) {
-        write( mouse_device, data, 1 );
+        pwrite( mouse_device, data, 1, 0 );
 
-        if ( ( read( mouse_device, &ack, 1 ) != 1 ) ||
+        if ( ( pread( mouse_device, &ack, 1, 0 ) != 1 ) ||
              ( ack != PS2_AUX_ACK ) ) {
             error++;
         }
@@ -86,31 +88,31 @@ static int ps2mouse_write( uint8_t* data, size_t size ) {
     return error;
 }
 
-static int ps2mouse_read_id( void ) {
+static int ps2_mouse_read_id( void ) {
     int error;
     uint8_t data;
 
     data = PS2_AUX_SEND_ID;
 
-    error = write( mouse_device, &data, 1 );
+    error = pwrite( mouse_device, &data, 1, 0 );
 
     if ( error < 0 ) {
         return PS2_AUX_ID_ERROR;
     }
 
-    if ( ( read( mouse_device, &data, 1 ) != 1 ) ||
+    if ( ( pread( mouse_device, &data, 1, 0 ) != 1 ) ||
          ( data != PS2_AUX_ACK ) ) {
         return PS2_AUX_ID_ERROR;
     }
 
-    if ( read( mouse_device, &data, 1 ) != 1 ) {
+    if ( pread( mouse_device, &data, 1, 0 ) != 1 ) {
         return PS2_AUX_ID_ERROR;
     }
 
     return data;
 }
 
-static int ps2mouse_init( void ) {
+static int ps2_mouse_init( void ) {
     int id;
     int error;
 
@@ -120,28 +122,28 @@ static int ps2mouse_init( void ) {
         return mouse_device;
     }
 
-    ps2mouse_write( basic_init, sizeof( basic_init ) );
+    ps2_mouse_write( basic_init, sizeof( basic_init ) );
 
-    error = ps2mouse_write( basic_init, sizeof( basic_init ) );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    error = ps2mouse_write( imps2_init, sizeof( imps2_init ) );
+    error = ps2_mouse_write( basic_init, sizeof( basic_init ) );
 
     if ( error < 0 ) {
         return error;
     }
 
-    id = ps2mouse_read_id();
+    error = ps2_mouse_write( imps2_init, sizeof( imps2_init ) );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    id = ps2_mouse_read_id();
 
     if ( id == PS2_AUX_ID_ERROR ) {
-        dbprintf( "PS/2 mouse: Invalid mouse ID: %x\n", id );
+        kprintf( "PS/2 mouse: Invalid mouse ID: %x\n", id );
         return -EINVAL;
     }
 
-    error = ps2mouse_write( ps2_init, sizeof( ps2_init ) );
+    error = ps2_mouse_write( ps2_init, sizeof( ps2_init ) );
 
     if ( error < 0 ) {
         return error;
@@ -150,12 +152,11 @@ static int ps2mouse_init( void ) {
     return 0;
 }
 
-static void ps2mouse_handle_input( void ) {
+static void ps2_mouse_handle_input( void ) {
     int x;
     int y;
     int buttons;
     int act_buttons;
-    input_event_t* event;
 
     x = mouse_buffer[ 1 ];
     y = mouse_buffer[ 2 ];
@@ -169,11 +170,13 @@ static void ps2mouse_handle_input( void ) {
     }
 
     if ( ( x != 0 ) || ( y != 0 ) ) {
-        event = get_input_event( MOUSE_MOVED, x, -y );
+        input_event_t event;
 
-        if ( event != NULL ) {
-            insert_input_event( event );
-        }
+        event.event = E_MOUSE_MOVED;
+        event.param1 = x;
+        event.param2 = y;
+
+        insert_input_event( &event );
     }
 
     buttons = mouse_buffer[ 0 ] & 0x7;
@@ -185,29 +188,28 @@ static void ps2mouse_handle_input( void ) {
 
     if ( act_buttons != 0 ) {
         if ( act_buttons & PS2_BUTTON_LEFT ) {
-            input_event_type_t event_type;
+            input_event_t event;
 
             if ( buttons & PS2_BUTTON_LEFT ) {
-                event_type = MOUSE_PRESSED;
+                event.event = E_MOUSE_PRESSED;
             } else {
-                event_type = MOUSE_RELEASED;
+                event.event = E_MOUSE_RELEASED;
             }
 
-            event = get_input_event( event_type, MOUSE_BTN_LEFT, 0 );
+            event.param1 = MOUSE_BTN_LEFT;
+            event.param2 = 0;
 
-            if ( event != NULL ) {
-                insert_input_event( event );
-            }
+            insert_input_event( &event );
         }
     }
 }
 
-static int ps2mouse_thread( void* arg ) {
+static int ps2_mouse_thread( void* arg ) {
     uint8_t data;
 
     while ( 1 ) {
-        if ( read( mouse_device, &data, 1 ) != 1 ) {
-            dbprintf( "PS2mouse: Failed to read data from the device!\n" );
+        if ( pread( mouse_device, &data, 1, 0 ) != 1 ) {
+            kprintf( "PS2mouse: Failed to read data from the device!\n" );
             break;
         }
 
@@ -224,7 +226,7 @@ static int ps2mouse_thread( void* arg ) {
 
             case 2 :
                 mouse_buffer[ mouse_packet_index++ ] = data;
-                ps2mouse_handle_input();
+                ps2_mouse_handle_input();
                 break;
         }
     }
@@ -232,13 +234,13 @@ static int ps2mouse_thread( void* arg ) {
     return 0;
 }
 
-static int ps2mouse_start( void ) {
+static int ps2_mouse_start( void ) {
     int error;
 
-    mouse_thread = create_thread(
-        "ps2_input",
-        PRIORITY_DISPLAY,
-        ps2mouse_thread,
+    mouse_thread = create_kernel_thread(
+        "ps2mouse_input",
+        PRIORITY_NORMAL + 1,
+        ps2_mouse_thread,
         NULL,
         0
     );
@@ -256,9 +258,13 @@ static int ps2mouse_start( void ) {
     return 0;
 }
 
-input_driver_t ps2mouse_driver = {
+input_driver_t ps2_mouse_driver = {
     .name = "PS/2 mouse",
-    .init = ps2mouse_init,
-    .start = ps2mouse_start
+    .type = T_MOUSE,
+    .init = ps2_mouse_init,
+    .destroy = NULL,
+    .start = ps2_mouse_start,
+    .create_state = NULL,
+    .destroy_state = NULL,
+    .set_state = NULL
 };
-

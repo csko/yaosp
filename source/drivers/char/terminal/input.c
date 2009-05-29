@@ -200,6 +200,8 @@ int init_terminal_input( void ) {
         return fd;
     }
 
+    cmd.flags = INPUT_KEY_EVENTS;
+
     error = ioctl( fd, IOCTL_INPUT_CREATE_DEVICE, ( void* )&cmd );
 
     close( fd );

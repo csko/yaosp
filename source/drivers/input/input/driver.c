@@ -19,9 +19,11 @@
 #include "input.h"
 
 extern input_driver_t ps2_kbd_driver;
+extern input_driver_t ps2_mouse_driver;
 
 static input_driver_t* input_drivers[ INPUT_DRV_COUNT ] = {
-    &ps2_kbd_driver
+    &ps2_kbd_driver,
+    &ps2_mouse_driver
 };
 
 int set_input_driver_states( input_state_t* state ) {

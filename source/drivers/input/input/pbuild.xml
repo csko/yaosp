@@ -27,6 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>node.c</item>
         <item>ps2keyboard/ps2keyboard.c</item>
         <item>ps2keyboard/keymap.c</item>
+        <item>ps2mouse/ps2mouse.c</item>
     </array>
 
     <target name="clean">

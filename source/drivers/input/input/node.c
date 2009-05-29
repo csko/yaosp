@@ -57,12 +57,12 @@ static int input_device_read( void* node, void* cookie, void* buffer, off_t posi
 
     device = ( input_device_t* )node;
 
-    LOCK( device->lock );
+    LOCK( input_stack_lock );
 
     while ( device->first_event == NULL ) {
-        UNLOCK( device->lock );
+        UNLOCK( input_stack_lock );
         LOCK( device->sync );
-        LOCK( device->lock );
+        LOCK( input_stack_lock );
     }
 
     wrapper = device->first_event;
@@ -72,7 +72,7 @@ static int input_device_read( void* node, void* cookie, void* buffer, off_t posi
         device->last_event = NULL;
     }
 
-    UNLOCK( device->lock );
+    UNLOCK( input_stack_lock );
 
     memcpy( buffer, &wrapper->e, sizeof( input_event_t ) );
 
@@ -102,24 +102,17 @@ input_device_t* create_input_device( int flags ) {
         goto error1;
     }
 
-    device->lock = create_semaphore( "input node lock", SEMAPHORE_BINARY, 0, 1 );
-
-    if ( device->lock < 0 ) {
-        error = device->lock;
-        goto error2;
-    }
-
     device->sync = create_semaphore( "input node sync", SEMAPHORE_COUNTING, 0, 0 );
 
     if ( device->sync < 0 ) {
         error = device->sync;
-        goto error3;
+        goto error2;
     }
 
     error = init_input_driver_states( &device->input_state );
 
     if ( __unlikely( error < 0 ) ) {
-        goto error4;
+        goto error3;
     }
 
     device->flags = flags;
@@ -128,11 +121,8 @@ input_device_t* create_input_device( int flags ) {
 
     return device;
 
-error4:
-    delete_semaphore( device->sync );
-
 error3:
-    delete_semaphore( device->lock );
+    delete_semaphore( device->sync );
 
 error2:
     kfree( device );
@@ -192,42 +182,61 @@ error1:
 }
 
 int insert_input_event( input_event_t* event ) {
-    int error;
+    bool skip_event = false;
+    semaphore_id active_sync = -1;
     input_event_wrapper_t* wrapper;
 
     LOCK( input_stack_lock );
 
     if ( active_input_receiver != NULL ) {
-        error = LOCK( active_input_receiver->lock );
+        switch ( event->event ) {
+            case E_KEY_PRESSED :
+            case E_KEY_RELEASED :
+            case E_QUALIFIERS_CHANGED :
+                if ( ( active_input_receiver->flags & INPUT_KEY_EVENTS ) == 0 ) {
+                    skip_event = true;
+                }
 
-        if ( error < 0 ) {
-            goto out;
+                break;
+
+            case E_MOUSE_PRESSED :
+            case E_MOUSE_RELEASED :
+            case E_MOUSE_MOVED :
+            case E_MOUSE_SCROLLED :
+                if ( ( active_input_receiver->flags & INPUT_MOUSE_EVENTS ) == 0 ) {
+                    skip_event = true;
+                }
+
+                break;
         }
 
-        wrapper = ( input_event_wrapper_t* )kmalloc( sizeof( input_event_wrapper_t ) );
+        if ( !skip_event ) {
+            wrapper = ( input_event_wrapper_t* )kmalloc( sizeof( input_event_wrapper_t ) );
 
-        ASSERT( wrapper != NULL ); /* ... this is not a good idea actually */
+            ASSERT( wrapper != NULL ); /* ... this is not a good idea actually */
 
-        memcpy( &wrapper->e, event, sizeof( input_event_t ) );
-        wrapper->next = NULL;
+            memcpy( &wrapper->e, event, sizeof( input_event_t ) );
+            wrapper->next = NULL;
 
-        if ( active_input_receiver->first_event == NULL ) {
-            active_input_receiver->first_event = wrapper;
-            active_input_receiver->last_event = wrapper;
-        } else {
-            active_input_receiver->last_event->next = wrapper;
-            active_input_receiver->last_event = wrapper;
+            if ( active_input_receiver->first_event == NULL ) {
+                active_input_receiver->first_event = wrapper;
+                active_input_receiver->last_event = wrapper;
+            } else {
+                active_input_receiver->last_event->next = wrapper;
+                active_input_receiver->last_event = wrapper;
+            }
+
+            active_sync = active_input_receiver->sync;
         }
-
-        UNLOCK( active_input_receiver->lock );
-
-        /* Tell the readers that they have something to read ;) */
-
-        UNLOCK( active_input_receiver->sync );
     }
 
- out:
     UNLOCK( input_stack_lock );
+
+    /* Tell the readers that they have something to read ;) */
+
+    if ( active_sync != -1 ) {
+        UNLOCK( active_sync );
+    }
 
     return 0;
 }
