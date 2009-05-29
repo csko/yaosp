@@ -24,43 +24,28 @@
 #include <mouse.h>
 #include <windowmanager.h>
 
-#define BORDER_SIZE 5
-
-static color_t border_colors[] = {
-    { 0x4E, 0x7A, 0xA0, 0xFF },
-    { 0x83, 0xA7, 0xC6, 0xFF },
-    { 0x74, 0x9A, 0xBB, 0xFF },
-    { 0x5D, 0x86, 0xA9, 0xFF },
-    { 0x5C, 0x5C, 0x5B, 0xFF }
-};
-
-static color_t top_border_colors[] = {
-    { 0x4E, 0x7A, 0xA0, 0xFF },
-    { 0x83, 0xA7, 0xC6, 0xFF },
-    { 0x74, 0x9A, 0xBB, 0xFF },
-    { 0x5D, 0x86, 0xA9, 0xFF },
-    { 0x5D, 0x86, 0xA9, 0xFF },
-    { 0x5D, 0x86, 0xA8, 0xFF },
-    { 0x5D, 0x85, 0xA8, 0xFF },
-    { 0x5C, 0x84, 0xA7, 0xFF },
-    { 0x5B, 0x83, 0xA6, 0xFF },
-    { 0x5B, 0x83, 0xA5, 0xFF },
-    { 0x5A, 0x82, 0xA4, 0xFF },
-    { 0x5A, 0x81, 0xA2, 0xFF },
-    { 0x5A, 0x80, 0xA1, 0xFF },
-    { 0x58, 0x7F, 0xA0, 0xFF },
-    { 0x58, 0x7E, 0x9F, 0xFF },
-    { 0x57, 0x7E, 0x9E, 0xFF },
-    { 0x56, 0x7C, 0x9C, 0xFF },
-    { 0x56, 0x7B, 0x9B, 0xFF },
-    { 0x56, 0x7B, 0x9A, 0xFF },
-    { 0x55, 0x7A, 0x99, 0xFF },
-    { 0x54, 0x79, 0x98, 0xFF },
-    { 0x54, 0x78, 0x97, 0xFF },
-    { 0x54, 0x77, 0x96, 0xFF },
-    { 0x54, 0x77, 0x96, 0xFF },
-    { 0x53, 0x77, 0x95, 0xFF },
-    { 0x5C, 0x5C, 0x5B, 0xFF }
+static color_t top_border_colors[ 21 ] = {
+    { 0x6D, 0x6D, 0x6D, 0xFF },
+    { 0x5D, 0x5D, 0x5D, 0xFF },
+    { 0x50, 0x50, 0x50, 0xFF },
+    { 0x48, 0x48, 0x48, 0xFF },
+    { 0x45, 0x45, 0x45, 0xFF },
+    { 0x45, 0x45, 0x45, 0xFF },
+    { 0x46, 0x46, 0x46, 0xFF },
+    { 0x48, 0x48, 0x48, 0xFF },
+    { 0x4A, 0x4A, 0x4A, 0xFF },
+    { 0x4B, 0x4B, 0x4B, 0xFF },
+    { 0x4D, 0x4D, 0x4D, 0xFF },
+    { 0x4F, 0x4F, 0x4F, 0xFF },
+    { 0x51, 0x51, 0x51, 0xFF },
+    { 0x52, 0x52, 0x52, 0xFF },
+    { 0x53, 0x53, 0x53, 0xFF },
+    { 0x55, 0x55, 0x55, 0xFF },
+    { 0x54, 0x54, 0x54, 0xFF },
+    { 0x52, 0x52, 0x52, 0xFF },
+    { 0x4B, 0x4B, 0x4B, 0xFF },
+    { 0x41, 0x41, 0x41, 0xFF },
+    { 0x33, 0x33, 0x33, 0xFF }
 };
 
 typedef struct decorator_data {
@@ -110,7 +95,7 @@ static int decorator_calculate_regions( window_t* window ) {
         screen_rect->left,
         screen_rect->top,
         screen_rect->right,
-        screen_rect->top + 25
+        screen_rect->top + 20
     );
 
     /* Left border */
@@ -119,7 +104,7 @@ static int decorator_calculate_regions( window_t* window ) {
         &data->left_border,
         screen_rect->left,
         screen_rect->top,
-        screen_rect->left + 4,
+        screen_rect->left,
         screen_rect->bottom
     );
 
@@ -127,7 +112,7 @@ static int decorator_calculate_regions( window_t* window ) {
 
     rect_init(
         &data->right_border,
-        screen_rect->right - 4,
+        screen_rect->right,
         screen_rect->top,
         screen_rect->right,
         screen_rect->bottom
@@ -138,7 +123,7 @@ static int decorator_calculate_regions( window_t* window ) {
     rect_init(
         &data->bottom_border,
         screen_rect->left,
-        screen_rect->bottom - 4,
+        screen_rect->bottom,
         screen_rect->right,
         screen_rect->bottom
     );
@@ -158,9 +143,9 @@ static int decorator_update_border( window_t* window ) {
 
     rect_bounds( &window->screen_rect, &width, &height );
 
-    color = &border_colors[ 0 ];
+    color = &top_border_colors[ 20 ];
 
-    for ( i = 0; i < 5; i++, color++ ) {
+    for ( i = 0; i < 1; i++, color++ ) {
         /* Left | */
 
         rect_init( &rect, i, i, i, height - ( i + 1 ) );
@@ -181,13 +166,8 @@ static int decorator_update_border( window_t* window ) {
 
     color = &top_border_colors[ 0 ];
 
-    for ( i = 0; i < 4; i++, color++ ) {
-        rect_init( &rect, i, i, width - ( i + 1 ), i );
-        graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
-    }
-
-    for ( i = 4; i < 26; i++, color++ ) {
-        rect_init( &rect, 4, i, width - 5, i );
+    for ( i = 0; i < 21; i++, color++ ) {
+        rect_init( &rect, 0, i, width - 1, i );
         graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
     }
 
@@ -250,12 +230,12 @@ static int decorator_mouse_released( window_t* window, int button ) {
 
 window_decorator_t default_decorator = {
     .border_size = {
-        .x = 10,
-        .y = 31
+        .x = 2,
+        .y = 22
     },
     .lefttop_offset = {
-        .x = 5,
-        .y = 26
+        .x = 1,
+        .y = 21
     },
     .initialize = decorator_initialize,
     .destroy = decorator_destroy,

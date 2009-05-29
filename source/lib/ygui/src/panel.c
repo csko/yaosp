@@ -22,7 +22,7 @@
 #include <ygui/panel.h>
 #include <ygui/layout/layout.h>
 
-static color_t panel_bg = { 0x11, 0x22, 0x33, 0xFF };
+static color_t panel_bg = { 216, 216, 216, 0xFF };
 
 typedef struct panel {
     layout_t* layout;
