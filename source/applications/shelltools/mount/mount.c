@@ -48,11 +48,9 @@ static fs_mode_t modes[] = {
     { NULL, 0 }
 };
 
-static char const short_options[] = "d:p:f:m:h";
+static char const short_options[] = "f:m:h";
 
 static struct option long_options[] = {
-    { "device", required_argument, NULL, 'd' },
-    { "path", required_argument, NULL, 'p' },
     { "filesystem", required_argument, NULL, 'f' },
     { "mode", required_argument, NULL, 'm' },
     { "help", no_argument, NULL, 'h' }
@@ -64,9 +62,8 @@ static void print_usage( int status ) {
     if ( status != EXIT_SUCCESS ) { /* option error */
         fprintf( stderr, "Try `%s --help' for more information.\n", argv0 );
     } else { /* --help */
-        printf( "Usage: %s --device=DEVICE --path=PATH --filesystem=FILESYSTEM\n", argv0 );
-        printf( "  -d, --device=DEVICE\n" );
-        printf( "  -p, --path=PATH\n" );
+        printf( "Usage: %s DEVICE PATH [OPTION]...\n", argv0 );
+        printf( "Available options:\n" );
         printf( "  -f, --filesystem=FILESYSTEM\n" );
         printf( "      available filesystems:" );
         for ( i = 0; filesystems[i] != NULL; i++ ) {
@@ -146,13 +143,6 @@ int main( int argc, char** argv ) {
         }
 
         switch ( optc ) {
-            case 'd' :
-                device = optarg;
-                break;
-
-            case 'p' :
-                path = optarg;
-                break;
 
             case 'f' :
                 fstype = optarg;
@@ -172,20 +162,22 @@ int main( int argc, char** argv ) {
         }
     }
 
-    /* path, filesystem and device are required arguments */
+    /* path and device are required arguments */
+
+    if ( optind + 2 > argc || optind < argc - 2 ) {
+        print_usage( EXIT_FAILURE );
+    }else{
+      device = argv[ optind ];
+      path = argv[ optind + 1 ];
+    }
 
     if( device == NULL) {
-        fprintf( stderr, "Missing argument --device.\n" );
+        fprintf( stderr, "Missing argument DEVICE.\n" );
         print_usage( EXIT_FAILURE );
     }
 
     if ( path == NULL){
-        fprintf( stderr, "Missing argument --path.\n" );
-        print_usage( EXIT_FAILURE );
-    }
-
-    if( fstype == NULL ){
-        fprintf( stderr, "Missing argument --filesystem.\n" );
+        fprintf( stderr, "Missing argument PATH.\n" );
         print_usage( EXIT_FAILURE );
     }
 

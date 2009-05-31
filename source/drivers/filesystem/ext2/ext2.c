@@ -821,7 +821,12 @@ next_entry:
 
     kfree( block );
 
-    vparent->fs_inode.i_atime = time( NULL );
+    if ( ( ( cookie->flags & MOUNT_RO ) == 0 ) &&
+         ( ( cookie->flags & MOUNT_NOATIME ) == 0 ) ) {
+        /* Update the access time of the inode, ext2_write_inode() will flush it to the disk */
+
+        vparent->fs_inode.i_atime = time( NULL );
+    }
 
     return 1;
 
