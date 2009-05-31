@@ -94,6 +94,42 @@ filesystem_descriptor_t* get_filesystem( const char* name ) {
     return fs_desc;
 }
 
+typedef struct fs_probe_data {
+    const char* device;
+    filesystem_descriptor_t* fs_desc;
+} fs_probe_data_t;
+
+static int probe_fs_iterator( hashitem_t* item, void* _data ) {
+    fs_probe_data_t* data;
+    filesystem_descriptor_t* desc;
+
+    data = ( fs_probe_data_t* )_data;
+    desc = ( filesystem_descriptor_t* )item;
+
+    if ( desc->calls->probe( data->device ) ) {
+        data->fs_desc = desc;
+
+        return -1;
+    }
+
+    return 0;
+}
+
+filesystem_descriptor_t* probe_filesystem( const char* device ) {
+    fs_probe_data_t data;
+
+    data.device = device;
+    data.fs_desc = NULL;
+
+    LOCK( filesystem_lock );
+
+    hashtable_iterate( &filesystem_table, probe_fs_iterator, ( void* )&data );
+
+    UNLOCK( filesystem_lock );
+
+    return data.fs_desc;
+}
+
 __init int init_filesystems( void ) {
     int error;
 

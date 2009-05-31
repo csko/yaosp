@@ -1460,7 +1460,11 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
         return -EBUSY;
     }
 
-    fs_desc = get_filesystem( filesystem );
+    if ( filesystem != NULL ) {
+        fs_desc = get_filesystem( filesystem );
+    } else {
+        fs_desc = probe_filesystem( device );
+    }
 
     if ( fs_desc == NULL ) {
         put_inode( dir_inode );

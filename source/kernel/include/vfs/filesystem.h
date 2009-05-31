@@ -69,6 +69,7 @@ typedef struct filesystem_descriptor {
 
 int register_filesystem( const char* name, filesystem_calls_t* calls );
 filesystem_descriptor_t* get_filesystem( const char* name );
+filesystem_descriptor_t* probe_filesystem( const char* device );
 
 int init_filesystems( void );
 
