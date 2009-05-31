@@ -41,7 +41,7 @@ static dbg_command_t debugger_commands[] = {
     { "kernel-sema-info",  dbg_kernel_semaphore_info,  "Show the informations of the specified kernel semaphore" },
     { "list-threads",      dbg_list_threads,           "List threads" },
     { "show-thread-info",  dbg_show_thread_info,       "Show the informations of the specified thread" },
-    { "trace-thread",      dbg_trace_thread,           "" },
+    { "trace-thread",      dbg_trace_thread,           "Prints the backtrace of the selected thread" },
     { "help",              dbg_show_help,              "Displays this message :)" },
     { NULL, NULL }
 };
