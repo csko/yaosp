@@ -106,7 +106,8 @@ static int probe_fs_iterator( hashitem_t* item, void* _data ) {
     data = ( fs_probe_data_t* )_data;
     desc = ( filesystem_descriptor_t* )item;
 
-    if ( desc->calls->probe( data->device ) ) {
+    if ( ( desc->calls->probe != NULL ) &&
+         ( desc->calls->probe( data->device ) ) ) {
         data->fs_desc = desc;
 
         return -1;

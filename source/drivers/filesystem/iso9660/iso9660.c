@@ -33,6 +33,52 @@
 #define INODE_TO_OFFSET(inode) ( inode % BLOCK_SIZE )
 #define POSITION_TO_INODE(block,offset) ( ( ( ino_t ) ( block * BLOCK_SIZE ) | ( ( ino_t ) offset ) ) )
 
+static bool iso9660_probe( const char* device ) {
+    int fd;
+    int error;
+    char* block;
+    bool valid_fs;
+    iso9660_volume_descriptor_t* desc;
+
+    fd = open( device, O_RDONLY );
+
+    if ( __unlikely( fd < 0 ) ) {
+        goto error1;
+    }
+
+    block = ( char* )kmalloc( BLOCK_SIZE );
+
+    if ( __unlikely( block == NULL ) ) {
+        goto error2;
+    }
+
+    error = pread( fd, block, BLOCK_SIZE, 0x8000 );
+
+    if ( __unlikely( error != BLOCK_SIZE ) ) {
+        goto error3;
+    }
+
+    close( fd );
+
+    desc = ( iso9660_volume_descriptor_t* )block;
+
+    valid_fs = ( ( memcmp( desc->identifier, "CD001", 5 ) == 0 ) &&
+                 ( desc->type == ISO9660_VD_PRIMARY ) );
+
+    kfree( block );
+
+    return valid_fs;
+
+error3:
+    kfree( block );
+
+error2:
+    close( fd );
+
+error1:
+    return false;
+}
+
 static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
     int fd;
     int error;
@@ -692,7 +738,7 @@ static int iso9660_rewind_directory( void* fs_cookie, void* node, void* file_coo
 }
 
 static filesystem_calls_t iso9660_calls = {
-    .probe = NULL,
+    .probe = iso9660_probe,
     .mount = iso9660_mount,
     .unmount = iso9660_unmount,
     .read_inode = iso9660_read_inode,

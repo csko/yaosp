@@ -89,4 +89,4 @@ typedef struct iso9660_dir_cookie {
     uint32_t size;
 } iso9660_dir_cookie_t;
 
-#endif // _ISO9660_H_
+#endif /* _ISO9660_H_ */

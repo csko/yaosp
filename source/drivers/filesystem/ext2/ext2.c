@@ -1567,6 +1567,27 @@ static int ext2_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
     return 0;
 }
 
+static bool ext2_probe( const char* device ) {
+    int fd;
+    int error;
+
+    ext2_super_block_t superblock;
+
+    fd = open( device, O_RDONLY );
+
+    if ( __unlikely( fd < 0 ) ) {
+        return false;
+    }
+
+    error = pread( fd, &superblock, sizeof( ext2_super_block_t ), 1024 );
+
+    close( fd );
+
+    return ( ( error == sizeof( ext2_super_block_t ) ) &&
+             ( superblock.s_magic == EXT2_SUPER_MAGIC ) &&
+             ( superblock.s_state == EXT2_VALID_FS ) );
+}
+
 static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {
     int i;
     int result = 0;
@@ -1767,7 +1788,7 @@ error1:
 }
 
 static filesystem_calls_t ext2_calls = {
-    .probe = NULL,
+    .probe = ext2_probe,
     .mount = ext2_mount,
     .unmount = ext2_unmount,
     .read_inode = ext2_read_inode,
