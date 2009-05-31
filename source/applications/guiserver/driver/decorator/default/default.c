@@ -1,4 +1,4 @@
-/* GUI server
+/* GUI server - default window decorator
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -18,11 +18,13 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <sys/types.h>
 
 #include <windowdecorator.h>
 #include <graphicsdriver.h>
 #include <mouse.h>
 #include <windowmanager.h>
+#include <bitmap.h>
 
 static color_t top_border_colors[ 21 ] = {
     { 0x6D, 0x6D, 0x6D, 0xFF },
@@ -48,12 +50,18 @@ static color_t top_border_colors[ 21 ] = {
     { 0x33, 0x33, 0x33, 0xFF }
 };
 
+static uint8_t close_focused[ 21 * 21 * 4 ] = {
+#include "images/close_focus.c"
+};
+
 typedef struct decorator_data {
     rect_t header;
     rect_t left_border;
     rect_t right_border;
     rect_t bottom_border;
 } decorator_data_t;
+
+static bitmap_t* bmp_close_focused;
 
 static int decorator_initialize( window_t* window ) {
     decorator_data_t* data;
@@ -136,6 +144,7 @@ static int decorator_update_border( window_t* window ) {
     int width;
     int height;
     rect_t rect;
+    point_t point;
     color_t* color;
     bitmap_t* bitmap;
 
@@ -170,6 +179,17 @@ static int decorator_update_border( window_t* window ) {
         rect_init( &rect, 0, i, width - 1, i );
         graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
     }
+
+    point_init( &point, width - 22, 0 );
+    rect_init( &rect, 0, 0, 20, 20 );
+
+    graphics_driver->blit_bitmap(
+        bitmap,
+        &point,
+        bmp_close_focused,
+        &rect,
+        DM_COPY
+    );
 
     return 0;
 }
@@ -223,6 +243,21 @@ static int decorator_mouse_pressed( window_t* window, int button ) {
 static int decorator_mouse_released( window_t* window, int button ) {
     if ( window->is_moving ) {
         wm_set_moving_window( NULL );
+    }
+
+    return 0;
+}
+
+int init_default_decorator( void ) {
+    bmp_close_focused = create_bitmap_from_buffer(
+        21,
+        21,
+        CS_RGB32,
+        close_focused
+    );
+
+    if ( bmp_close_focused == NULL ) {
+        return -ENOMEM;
     }
 
     return 0;

@@ -40,6 +40,8 @@ bitmap_t* screen_bitmap;
 screen_mode_t active_screen_mode;
 graphics_driver_t* graphics_driver;
 
+int init_default_decorator( void );
+
 static graphics_driver_t* graphics_drivers[] = {
     &vesa_graphics_driver,
     NULL
@@ -201,6 +203,8 @@ int main( int argc, char** argv ) {
         printf( "Failed to initialize font manager\n" );
         return error;
     }
+
+    init_default_decorator();
 
     error = init_mouse_manager();
 
