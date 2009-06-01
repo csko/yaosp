@@ -366,7 +366,7 @@ static int pci_scan_device( int bus, int dev, int func ) {
 
         device = ( pci_device_t* )kmalloc( sizeof( pci_device_t ) );
 
-        if ( device == NULL ) {
+        if ( __unlikely( device == NULL ) ) {
             return -ENOMEM;
         }
 
@@ -409,7 +409,6 @@ static int pci_scan_device( int bus, int dev, int func ) {
         }
 
         if ( pci_device_count < MAX_PCI_DEVICES ) {
-
             kprintf(
                 "PCI: %d:%d:%d 0x%04x:0x%04x:0x%x 0x%04x:0x%04x\n",
                 bus, dev, func, vendor_id, device_id, revision_id,
@@ -432,11 +431,68 @@ static int pci_bus_get_device_count( void ) {
 }
 
 static pci_device_t* pci_bus_get_device( int index ) {
-    if ( ( index < 0 ) || ( index >= pci_device_count ) ) {
+    if ( __unlikely( ( index < 0 ) || ( index >= pci_device_count ) ) ) {
         return NULL;
     }
 
     return pci_devices[ index ];
+}
+
+static int pci_bus_enable_device( pci_device_t* device ) {
+    int error;
+    uint8_t flags;
+    uint32_t tmp;
+
+    error = pci_access->read(
+        device->bus,
+        device->dev,
+        device->func,
+        PCI_COMMAND,
+        2,
+        &tmp
+    );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    flags = PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER;
+
+    if ( ( tmp & flags ) != flags ) {
+        error = pci_access->write(
+            device->bus,
+            device->dev,
+            device->func,
+            PCI_COMMAND,
+            2,
+            tmp | flags
+        );
+
+        if ( __unlikely( error < 0 ) ) {
+            return error;
+        }
+
+        error = pci_access->read(
+            device->bus,
+            device->dev,
+            device->func,
+            PCI_COMMAND,
+            2,
+            &tmp
+        );
+
+        if ( __unlikely( error < 0 ) ) {
+            return error;
+        }
+
+        if ( ( tmp & flags ) != flags ) {
+            kprintf( "PCI: Failed to enable device at %d:%d:%d!\n", device->bus, device->dev, device->func );
+
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 static int pci_bus_read_config( pci_device_t* device, int offset, int size, uint32_t* data ) {
@@ -464,6 +520,7 @@ static int pci_bus_write_config( pci_device_t* device, int offset, int size, uin
 static pci_bus_t pci_bus = {
     .get_device_count = pci_bus_get_device_count,
     .get_device = pci_bus_get_device,
+    .enable_device = pci_bus_enable_device,
     .read_config = pci_bus_read_config,
     .write_config = pci_bus_write_config
 };
@@ -482,7 +539,7 @@ static int pci_scan_bus( int bus ) {
 
         error = pci_access->read( bus, dev, 0, PCI_HEADER_TYPE, 1, &header_type );
 
-        if ( error < 0 ) {
+        if ( __unlikely( error < 0 ) ) {
             return error;
         }
 

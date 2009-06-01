@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <console.h>
 #include <thread.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -78,38 +79,23 @@ int pata_detect_controllers( void ) {
 }
 
 static int pata_enable_controller( pata_controller_t* controller ) {
-    uint8_t flags;
-    uint32_t tmp;
+    int error;
     pci_bus_t* pci_bus;
 
     pci_bus = get_bus_driver( "PCI" );
 
-    if ( pci_bus == NULL ) {
+    if ( __unlikely( pci_bus == NULL ) ) {
         kprintf( "PATA: PCI bus not found!\n" );
+
         return -1;
     }
 
-    if ( pci_bus->read_config( &controller->pci_device, PCI_COMMAND, 2, &tmp ) < 0 ) {
-        return -1;
-    }
+    error = pci_bus->enable_device( &controller->pci_device );
 
-    flags = PCI_COMMAND_IO | PCI_COMMAND_MASTER;
+    if ( __unlikely( error < 0 ) ) {
+        kprintf( "PATA: Failed to enable controller!\n" );
 
-    if ( ( tmp & flags ) != flags ) {
-        kprintf( "PATA: Enabling controller!\n" );
-
-        if ( pci_bus->write_config( &controller->pci_device, PCI_COMMAND, 2, tmp | flags ) < 0 ) {
-            return -1;
-        }
-
-        if ( pci_bus->read_config( &controller->pci_device, PCI_COMMAND, 2, &tmp ) < 0 ) {
-            return -1;
-        }
-
-        if ( ( tmp & flags ) != flags ) {
-            kprintf( "PATA: Failed to enable controller!\n" );
-            return -1;
-        }
+        return error;
     }
 
     return 0;
@@ -240,7 +226,7 @@ int pata_initialize_controller( pata_controller_t* controller ) {
 
     controller->channels = 2;
     controller->ports_per_channel = 2;
-    
+
     for ( chan = 0; chan < controller->channels; chan++ ) {
         for ( port_num = 0; port_num < controller->ports_per_channel; port_num++ ) {
             port = ( pata_port_t* )kmalloc( sizeof( pata_port_t ) );
