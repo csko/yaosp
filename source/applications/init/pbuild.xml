@@ -75,7 +75,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/init" to="../../../build/image/application/init"/>
+        <copy from="objs/init" to="../../../build/image/system/init"/>
     </target>
 
     <target name="all">

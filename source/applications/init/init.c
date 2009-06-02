@@ -19,12 +19,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
 #include <yaosp/debug.h>
 #include <yaosp/module.h>
+#include <yaosp/sysinfo.h>
 
 static int create_temp_directory( void ) {
     int error;
@@ -54,6 +56,13 @@ int main( int argc, char** argv ) {
     int i;
     int f;
     pid_t child;
+
+    /* Make sure this is the first time when init was executed */
+
+    if ( ( get_process_count() != 2 ) ||
+         ( getpid() != 1 ) ) {
+        return EXIT_FAILURE;
+    }
 
     /* Create symbolic links and directories */
 
@@ -125,5 +134,5 @@ int main( int argc, char** argv ) {
         close( f );
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

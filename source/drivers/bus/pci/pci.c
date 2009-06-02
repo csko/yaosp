@@ -317,21 +317,26 @@ static bool pci_detect( void ) {
 }
 
 static int pci_scan_device( int bus, int dev, int func ) {
+    int error;
     uint32_t vendor_id;
     uint32_t header_type;
 
     /* First check if this is a real device */
 
-    if ( pci_access->read( bus, dev, func, PCI_VENDOR_ID, 2, &vendor_id ) < 0 ) {
-        return -1;
+    error = pci_access->read( bus, dev, func, PCI_VENDOR_ID, 2, &vendor_id );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
     }
 
     if ( ( vendor_id == 0xFFFF ) || ( vendor_id == 0x0000 ) ) {
         return -EINVAL;
     }
 
-    if ( pci_access->read( bus, dev, func, PCI_HEADER_TYPE, 1, &header_type ) < 0 ) {
-        return -1;
+    error = pci_access->read( bus, dev, func, PCI_HEADER_TYPE, 1, &header_type );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
     }
 
     /* If this device is a PCI-PCI bridge then scan the new
@@ -346,14 +351,15 @@ static int pci_scan_device( int bus, int dev, int func ) {
             return -1;
         }
 
-        if ( ( int )primary != bus ) {
+        if ( __unlikely( ( int )primary != bus ) ) {
             return -1;
         }
 
-        pci_scan_bus( ( int )secondary );
+        if ( __likely( bus != ( int )secondary ) ) {
+            pci_scan_bus( ( int )secondary );
+        }
     } else {
         int i;
-        int error;
         uint32_t device_id;
         uint32_t revision_id;
         uint32_t class_api;
@@ -408,7 +414,7 @@ static int pci_scan_device( int bus, int dev, int func ) {
             device->interrupt_line = 0;
         }
 
-        if ( pci_device_count < MAX_PCI_DEVICES ) {
+        if ( __likely( pci_device_count < MAX_PCI_DEVICES ) ) {
             kprintf(
                 "PCI: %d:%d:%d 0x%04x:0x%04x:0x%x 0x%04x:0x%04x\n",
                 bus, dev, func, vendor_id, device_id, revision_id,

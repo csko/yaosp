@@ -22,4 +22,4 @@
 void reboot( void );
 void halt( void );
 
-#endif // _SYSINFO_H_
+#endif /* _SYSINFO_H_ */

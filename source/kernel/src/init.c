@@ -166,7 +166,7 @@ int init_thread( void* arg ) {
     /* Create a new process and start the init application */
 
     if ( fork() == 0 ) {
-        if ( execve( "/yaosp/application/init", NULL, NULL ) != 0 ) {
+        if ( execve( "/yaosp/system/init", NULL, NULL ) != 0 ) {
             panic( "Failed to execute init process!\n" );
         }
     }
