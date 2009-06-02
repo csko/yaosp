@@ -444,9 +444,8 @@ static pci_device_t* pci_bus_get_device( int index ) {
     return pci_devices[ index ];
 }
 
-static int pci_bus_enable_device( pci_device_t* device ) {
+static int pci_bus_enable_device( pci_device_t* device, uint32_t flags ) {
     int error;
-    uint8_t flags;
     uint32_t tmp;
 
     error = pci_access->read(
@@ -461,8 +460,6 @@ static int pci_bus_enable_device( pci_device_t* device ) {
     if ( __unlikely( error < 0 ) ) {
         return error;
     }
-
-    flags = PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER;
 
     if ( ( tmp & flags ) != flags ) {
         error = pci_access->write(

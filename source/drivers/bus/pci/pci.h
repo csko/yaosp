@@ -112,7 +112,7 @@ typedef struct pci_device {
 typedef struct pci_bus {
     int ( *get_device_count )( void );
     pci_device_t* ( *get_device )( int index );
-    int ( *enable_device )( pci_device_t* device );
+    int ( *enable_device )( pci_device_t* device, uint32_t flags );
     int ( *read_config )( pci_device_t* device, int offset, int size, uint32_t* data );
     int ( *write_config )( pci_device_t* device, int offset, int size, uint32_t data );
 } pci_bus_t;

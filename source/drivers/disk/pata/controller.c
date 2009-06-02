@@ -90,7 +90,7 @@ static int pata_enable_controller( pata_controller_t* controller ) {
         return -1;
     }
 
-    error = pci_bus->enable_device( &controller->pci_device );
+    error = pci_bus->enable_device( &controller->pci_device, PCI_COMMAND_MASTER | PCI_COMMAND_IO );
 
     if ( __unlikely( error < 0 ) ) {
         kprintf( "PATA: Failed to enable controller!\n" );
