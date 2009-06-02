@@ -1,6 +1,6 @@
 /* Root file system
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,11 @@ typedef struct rootfs_node {
     time_t ctime;
     char* link_path;
 
+    bool is_loaded;
+    int link_count;
+
     struct rootfs_node* parent;
+    struct rootfs_node* prev_sibling;
     struct rootfs_node* next_sibling;
     struct rootfs_node* first_child;
 } rootfs_node_t;
@@ -45,4 +49,4 @@ typedef struct rootfs_dir_cookie {
 
 int init_root_filesystem( void );
 
-#endif // _VFS_ROOTFS_H_
+#endif /* _VFS_ROOTFS_H_ */

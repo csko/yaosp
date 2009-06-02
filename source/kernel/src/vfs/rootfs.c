@@ -22,12 +22,13 @@
 #include <scheduler.h>
 #include <kernel.h>
 #include <semaphore.h>
+#include <macros.h>
+#include <time.h>
 #include <mm/kmalloc.h>
 #include <vfs/rootfs.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 #include <lib/hashtable.h>
-#include <time.h>
 
 static ino_t rootfs_inode_counter = 0;
 static hashtable_t rootfs_node_table;
@@ -59,15 +60,23 @@ static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* nam
 
     node->is_directory = is_directory;
     node->parent = parent;
+    node->prev_sibling = NULL;
     node->next_sibling = NULL;
     node->first_child = NULL;
     node->atime = node->mtime = node->ctime = time( NULL );
     node->link_path = NULL;
+    node->link_count = 1;
+    node->is_loaded = false;
 
     /* Link the new node to the parent */
 
     if ( parent != NULL ) {
         node->next_sibling = parent->first_child;
+
+        if ( parent->first_child != NULL ) {
+            parent->first_child->prev_sibling = node;
+        }
+
         parent->first_child = node;
     }
 
@@ -100,14 +109,34 @@ error1:
 }
 
 static void rootfs_delete_node( rootfs_node_t* node ) {
+    if ( node->link_count > 0 ) {
+        if ( node == node->parent->first_child ) {
+            node->parent->first_child = node->next_sibling;
+        }
+
+        if ( node->prev_sibling != NULL ) {
+            node->prev_sibling->next_sibling = node->next_sibling;
+        }
+
+        if ( node->next_sibling != NULL ) {
+            node->next_sibling->prev_sibling = node->prev_sibling;
+        }
+
+        node->link_count--;
+    }
+
+    ASSERT( node->link_count == 0 );
+
     /* Remove from the node table */
 
     hashtable_remove( &rootfs_node_table, ( const void* )&node->inode_number );
 
     /* Free the node */
 
-    kfree( node->name );
-    kfree( node );
+    if ( !node->is_loaded ) {
+        kfree( node->name );
+        kfree( node );
+    }
 }
 
 static int rootfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
@@ -116,6 +145,12 @@ static int rootfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     LOCK( rootfs_lock );
 
     node = ( rootfs_node_t* )hashtable_get( &rootfs_node_table, ( const void* )&inode_num );
+
+    if ( __likely( node != NULL ) ) {
+        ASSERT( !node->is_loaded );
+
+        node->is_loaded = true;
+    }
 
     UNLOCK( rootfs_lock );
 
@@ -128,7 +163,23 @@ static int rootfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     return 0;
 }
 
-static int rootfs_write_inode( void* fs_cookie, void* node ) {
+static int rootfs_write_inode( void* fs_cookie, void* _node ) {
+    rootfs_node_t* node;
+
+    node = ( rootfs_node_t* )_node;
+
+    LOCK( rootfs_lock );
+
+    ASSERT( node->is_loaded );
+
+    node->is_loaded = false;
+
+    if ( node->link_count == 0 ) {
+        rootfs_delete_node( node );
+    }
+
+    UNLOCK( rootfs_lock );
+
     return 0;
 }
 
@@ -155,6 +206,7 @@ static int rootfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* n
         if ( ( strlen( node->name ) == name_length ) &&
              ( strncmp( node->name, name, name_length ) == 0 ) ) {
             *inode_number = node->inode_number;
+
             return 0;
         }
 
@@ -367,9 +419,46 @@ out:
 }
 
 static int rootfs_rmdir( void* fs_cookie, void* _node, const char* name, int name_length ) {
-    /* TODO */
+    int error;
+    ino_t inode_number;
+    rootfs_node_t* parent;
+    rootfs_node_t* node;
 
-    return -ENOSYS;
+    parent = ( rootfs_node_t* )_node;
+
+    LOCK( rootfs_lock );
+
+    error = rootfs_do_lookup_inode( fs_cookie, _node, name, name_length, &inode_number );
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    node = ( rootfs_node_t* )hashtable_get( &rootfs_node_table, ( const void* )&inode_number );
+
+    if ( node == NULL ) {
+        error = -ENOENT;
+        goto out;
+    }
+
+    if ( !node->is_directory ) {
+        error = -ENOTDIR;
+        goto out;
+    }
+
+    if ( node->first_child != NULL ) {
+        error = -ENOTEMPTY;
+        goto out;
+    }
+
+    rootfs_delete_node( node );
+
+    parent->mtime = time( NULL );
+
+out:
+    UNLOCK( rootfs_lock );
+
+    return error;
 }
 
 static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int name_length, const char* link_path ) {

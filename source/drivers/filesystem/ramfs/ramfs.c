@@ -264,7 +264,7 @@ static int ramfs_write_inode( void* fs_cookie, void* node ) {
 
     ASSERT( inode->is_loaded );
 
-    inode->is_loaded = 0;
+    inode->is_loaded = false;
 
     if ( inode->link_count == 0 ) {
         ramfs_delete_inode( cookie, inode );
@@ -735,7 +735,7 @@ static int ramfs_symlink( void* fs_cookie, void* _node, const char* name, int na
     ramfs_cookie_t* cookie;
     ramfs_inode_t* node;
     ramfs_inode_t* new_node;
-    
+
     cookie = ( ramfs_cookie_t* )fs_cookie;
     LOCK( cookie->lock );
 
