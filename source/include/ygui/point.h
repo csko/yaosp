@@ -41,6 +41,11 @@ static inline void point_sub_n( point_t* dest, point_t* src1, point_t* src2 ) {
     dest->y = src1->y - src2->y;
 }
 
+static inline void point_sub_xy( point_t* point1, int x, int y ) {
+    point1->x -= x;
+    point1->y -= y;
+}
+
 static inline void point_sub_xy_n( point_t* dest, point_t* point, int x, int y ) {
     dest->x = point->x - x;
     dest->y = point->y - y;

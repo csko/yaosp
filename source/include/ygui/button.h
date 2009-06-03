@@ -16,38 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_WINDOW_H_
-#define _YAOSP_WINDOW_H_
+#ifndef _YAOSP_BUTTON_H_
+#define _YAOSP_BUTTON_H_
 
-#include <sys/types.h>
-
-#include <yaosp/ipc.h>
-
-#include <ygui/point.h>
 #include <ygui/widget.h>
 
-typedef struct window {
-    ipc_port_id client_port;
-    ipc_port_id server_port;
-    ipc_port_id reply_port;
+widget_t* create_button( const char* text );
 
-    widget_t* container;
-    widget_t* mouse_widget;
-
-    uint8_t* render_buffer;
-    size_t render_buffer_size;
-    size_t render_buffer_max_size;
-} window_t;
-
-enum {
-    WINDOW_NO_BORDER = ( 1 << 0 )
-};
-
-widget_t* window_get_container( window_t* window );
-
-window_t* create_window( const char* title, point_t* position, point_t* size, int flags );
-
-int show_window( window_t* window );
-int hide_window( window_t* window );
-
-#endif /* _YAOSP_WINDOW_H_ */
+#endif /* _YAOSP_BUTTON_H_ */

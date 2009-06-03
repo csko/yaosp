@@ -102,7 +102,12 @@ static int label_paint( widget_t* widget ) {
 }
 
 static widget_operations_t label_ops = {
-    .paint = label_paint
+    .paint = label_paint,
+    .mouse_entered = NULL,
+    .mouse_exited = NULL,
+    .mouse_moved = NULL,
+    .mouse_pressed = NULL,
+    .mouse_released = NULL
 };
 
 widget_t* create_label( const char* text ) {

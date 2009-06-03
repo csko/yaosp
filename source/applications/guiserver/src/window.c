@@ -306,7 +306,12 @@ int window_mouse_entered( window_t* window, point_t* mouse_position ) {
     if ( window->mouse_on_decorator ) {
         window_decorator->mouse_entered( window, mouse_position );
     } else {
-        /* TODO: Tell the window, the mouse entered */
+        msg_mouse_entered_t cmd;
+
+        memcpy( &cmd.mouse_position, mouse_position, sizeof( point_t ) );
+        point_sub_xy( &cmd.mouse_position, window->client_rect.left, window->client_rect.top );
+
+        send_ipc_message( window->client_port, MSG_MOUSE_ENTERED, &cmd, sizeof( msg_mouse_entered_t ) );
     }
 
     return 0;
@@ -316,7 +321,7 @@ int window_mouse_exited( window_t* window ) {
     if ( window->mouse_on_decorator ) {
         window_decorator->mouse_exited( window );
     } else {
-        /* TODO: Tell the window, the mouse is exited */
+        send_ipc_message( window->client_port, MSG_MOUSE_EXITED, NULL, 0 );
     }
 
     return 0;
@@ -332,14 +337,26 @@ int window_mouse_moved( window_t* window, point_t* mouse_position ) {
             window_decorator->mouse_moved( window, mouse_position );
         } else {
             window_decorator->mouse_entered( window, mouse_position );
+
+            send_ipc_message( window->client_port, MSG_MOUSE_EXITED, NULL, 0 );
         }
     } else {
         if ( window->mouse_on_decorator ) {
-            /* TODO: Tell the window, the mouse is exited */
+            msg_mouse_entered_t cmd;
 
             window_decorator->mouse_exited( window );
+
+            memcpy( &cmd.mouse_position, mouse_position, sizeof( point_t ) );
+            point_sub_xy( &cmd.mouse_position, window->client_rect.left, window->client_rect.top );
+
+            send_ipc_message( window->client_port, MSG_MOUSE_ENTERED, &cmd, sizeof( msg_mouse_entered_t ) );
         } else {
-            /* TODO: Tell the window, the mouse is moved */
+            msg_mouse_moved_t cmd;
+
+            memcpy( &cmd.mouse_position, mouse_position, sizeof( point_t ) );
+            point_sub_xy( &cmd.mouse_position, window->client_rect.left, window->client_rect.top );
+
+            send_ipc_message( window->client_port, MSG_MOUSE_MOVED, &cmd, sizeof( msg_mouse_moved_t ) );
         }
     }
 

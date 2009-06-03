@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include <ygui/widget.h>
+#include <ygui/protocol.h>
 #include <ygui/render/render.h>
 
 #include "internal.h"
@@ -56,6 +57,37 @@ int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
     );
 
     return 0;
+}
+
+widget_t* widget_get_child_at( widget_t* widget, point_t* position ) {
+    int i;
+    int size;
+    widget_t* tmp;
+    rect_t widget_rect;
+
+    size = array_get_size( &widget->children );
+
+    if ( size == 0 ) {
+        return widget;
+    }
+
+    for ( i = 0; i < size; i++ ) {
+        tmp = ( widget_t* )array_get_item( &widget->children, i );
+
+        rect_init(
+            &widget_rect,
+            tmp->position.x,
+            tmp->position.y,
+            tmp->position.x + tmp->size.x - 1,
+            tmp->position.y + tmp->size.y - 1
+        );
+
+        if ( rect_has_point( &widget_rect, position ) ) {
+            return tmp;
+        }
+    }
+
+    return widget;
 }
 
 int widget_set_window( widget_t* widget, struct window* window ) {
@@ -111,8 +143,11 @@ int widget_paint( widget_t* widget ) {
     int size;
     widget_t* child;
 
-    if ( widget->ops->paint != NULL ) {
+    if ( ( !widget->is_valid ) &&
+         ( widget->ops->paint != NULL ) ) {
         widget->ops->paint( widget );
+
+        widget->is_valid = 1;
     }
 
     size = array_get_size( &widget->children );
@@ -124,6 +159,53 @@ int widget_paint( widget_t* widget ) {
     }
 
     return 0;
+}
+
+int widget_invalidate( widget_t* widget, int notify_window ) {
+    int i;
+    int size;
+    widget_t* tmp;
+
+    widget->is_valid = 0;
+
+    size = array_get_size( &widget->children );
+
+    for ( i = 0; i < size; i++ ) {
+        tmp = ( widget_t* )array_get_item( &widget->children, i );
+
+        widget_invalidate( tmp, 0 );
+    }
+
+    if ( ( notify_window ) &&
+         ( widget->window != NULL ) ) {
+        send_ipc_message( widget->window->client_port, MSG_WIDGET_INVALIDATED, NULL, 0 );
+    }
+
+    return 0;
+}
+
+int widget_mouse_entered( widget_t* widget, point_t* position ) {
+    if ( widget->ops->mouse_entered == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->mouse_entered( widget, position );
+}
+
+int widget_mouse_exited( widget_t* widget ) {
+    if ( widget->ops->mouse_exited == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->mouse_exited( widget );
+}
+
+int widget_mouse_moved( widget_t* widget, point_t* position ) {
+    if ( widget->ops->mouse_moved == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->mouse_moved( widget, position );
 }
 
 int widget_set_pen_color( widget_t* widget, color_t* color ) {
@@ -247,6 +329,8 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
         goto error1;
     }
 
+    memset( widget, 0, sizeof( widget_t ) );
+
     error = init_array( &widget->children );
 
     if ( error < 0 ) {
@@ -256,10 +340,12 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
     array_set_realloc_size( &widget->children, 8 );
 
     widget->id = id;
-    widget->ref_count = 1;
-    widget->ops = ops;
     widget->data = data;
+    widget->ref_count = 1;
+
+    widget->ops = ops;
     widget->window = NULL;
+    widget->is_valid = 0;
 
     return widget;
 

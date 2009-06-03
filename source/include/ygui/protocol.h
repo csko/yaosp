@@ -38,7 +38,11 @@ enum {
     MSG_DO_HIDE_WINDOW,
     MSG_RENDER_COMMANDS,
     MSG_CREATE_FONT,
-    MSG_GET_STRING_WIDTH
+    MSG_GET_STRING_WIDTH,
+    MSG_WIDGET_INVALIDATED,
+    MSG_MOUSE_ENTERED,
+    MSG_MOUSE_EXITED,
+    MSG_MOUSE_MOVED,
 };
 
 /* MSG_CREATE_APPLICATION */
@@ -93,5 +97,15 @@ typedef struct msg_get_str_width {
 typedef struct msg_get_str_width_reply {
     int width;
 } msg_get_str_width_reply_t;
+
+/* MSG_MOUSE_* */
+
+typedef struct msg_mouse_entered {
+    point_t mouse_position;
+} msg_mouse_entered_t;
+
+typedef struct msg_mouse_moved {
+    point_t mouse_position;
+} msg_mouse_moved_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

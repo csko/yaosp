@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 #include <yaosp/thread.h>
 #include <yaosp/debug.h>
 
@@ -35,6 +36,19 @@ extern ipc_port_id app_server_port;
 
 widget_t* window_get_container( window_t* window ) {
     return window->container;
+}
+
+static widget_t* window_find_widget_at( window_t* window, point_t* position ) {
+    widget_t* prev;
+    widget_t* next;
+
+    prev = window->container;
+
+    for ( next = widget_get_child_at( prev, position ); prev != next; next = widget_get_child_at( prev, position ) ) {
+        prev = next;
+    }
+
+    return next;
 }
 
 static int window_thread( void* arg ) {
@@ -75,6 +89,77 @@ static int window_thread( void* arg ) {
 
                 break;
 
+            case MSG_WIDGET_INVALIDATED :
+                /* Re-paint the widgets */
+
+                widget_paint( window->container );
+
+                /* Send the rendering commands to the guiserver */
+
+                flush_render_buffer( window );
+
+                break;
+
+            case MSG_MOUSE_ENTERED : {
+                point_t widget_position;
+                msg_mouse_entered_t* cmd;
+
+                cmd = ( msg_mouse_entered_t* )buffer;
+
+                assert( window->mouse_widget == NULL );
+                assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
+                assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
+
+                window->mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
+
+                assert( window->mouse_widget != NULL );
+
+                /* Notify the widget */
+
+                point_sub_n( &widget_position, &cmd->mouse_position, &window->mouse_widget->position );
+
+                widget_mouse_entered( window->mouse_widget, &widget_position );
+
+                break;
+            }
+
+            case MSG_MOUSE_EXITED :
+                assert( window->mouse_widget != NULL );
+
+                widget_mouse_exited( window->mouse_widget );
+                window->mouse_widget = NULL;
+
+                break;
+
+            case MSG_MOUSE_MOVED : {
+                msg_mouse_moved_t* cmd;
+                point_t widget_position;
+                widget_t* new_mouse_widget;
+
+                cmd = ( msg_mouse_moved_t* )buffer;
+
+                assert( window->mouse_widget != NULL );
+                assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
+                assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
+
+                new_mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
+
+                assert( new_mouse_widget != NULL );
+
+                point_sub_n( &widget_position, &cmd->mouse_position, &new_mouse_widget->position );
+
+                if ( window->mouse_widget == new_mouse_widget ) {
+                    widget_mouse_moved( window->mouse_widget, &widget_position );
+                } else {
+                    widget_mouse_exited( window->mouse_widget );
+                    widget_mouse_entered( new_mouse_widget, &widget_position );
+
+                    window->mouse_widget = new_mouse_widget;
+                }
+
+                break;
+            }
+
             default :
                 dbprintf( "window_thread(): Received unknown message: %x\n", code );
                 break;
@@ -110,6 +195,8 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     if ( window == NULL ) {
         goto error1;
     }
+
+    memset( window, 0, sizeof( window_t ) );
 
     window->reply_port = create_ipc_port();
 
@@ -177,6 +264,7 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     }
 
     window->server_port = reply.server_port;
+    window->mouse_widget = NULL;
 
     thread = create_thread(
         "window",

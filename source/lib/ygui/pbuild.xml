@@ -27,6 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/panel.c</item>
         <item>src/label.c</item>
         <item>src/font.c</item>
+        <item>src/button.c</item>
         <item>src/layout/layout.c</item>
         <item>src/layout/borderlayout.c</item>
         <item>src/render/render.c</item>
