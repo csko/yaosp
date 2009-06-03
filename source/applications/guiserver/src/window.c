@@ -27,6 +27,7 @@
 #include <windowdecorator.h>
 #include <windowmanager.h>
 #include <graphicsdriver.h>
+#include <mouse.h>
 
 #define MAX_WINDOW_BUFSIZE 8192
 
@@ -124,6 +125,16 @@ r_draw_text_done:
                 break;
             }
 
+            case R_DONE :
+                if ( window->is_visible ) {
+                    wm_update_window_region( window, &window->client_rect );
+                }
+
+                buffer += sizeof( render_header_t );
+                size -= sizeof( render_header_t );
+
+                break;
+
             default :
                 dbprintf( "window_do_render(): Invalid render command: %x\n", r_header->command );
                 break;
@@ -166,6 +177,7 @@ static int window_thread( void* arg ) {
 
             case MSG_SHOW_WINDOW :
                 wm_register_window( window );
+                window->is_visible = 1;
                 break;
 
             default :
@@ -213,6 +225,7 @@ int handle_create_window( msg_create_win_t* request ) {
 
     window->client_port = request->client_port;
     window->flags = request->flags;
+    window->is_visible = 0;
     window->is_moving = 0;
     window->mouse_on_decorator = 0;
 
@@ -365,17 +378,30 @@ int window_mouse_moved( window_t* window, point_t* mouse_position ) {
     return 0;
 }
 
-int window_mouse_pressed( window_t* window, int button ) {
+int window_mouse_pressed( window_t* window, int mouse_button ) {
     if ( window->mouse_on_decorator ) {
-        window_decorator->mouse_pressed( window, button );
+        window_decorator->mouse_pressed( window, mouse_button );
+    } else {
+        msg_mouse_pressed_t cmd;
+
+        mouse_get_position( &cmd.mouse_position );
+        cmd.button = mouse_button;
+
+        send_ipc_message( window->client_port, MSG_MOUSE_PRESSED, &cmd, sizeof( msg_mouse_pressed_t ) );
     }
 
     return 0;
 }
 
-int window_mouse_released( window_t* window, int button ) {
+int window_mouse_released( window_t* window, int mouse_button ) {
     if ( window->mouse_on_decorator ) {
-        window_decorator->mouse_released( window, button );
+        window_decorator->mouse_released( window, mouse_button );
+    } else {
+        msg_mouse_released_t cmd;
+
+        cmd.button = mouse_button;
+
+        send_ipc_message( window->client_port, MSG_MOUSE_RELEASED, &cmd, sizeof( msg_mouse_released_t ) );
     }
 
     return 0;

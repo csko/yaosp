@@ -36,12 +36,18 @@ static int button_paint( widget_t* widget ) {
 
     //static color_t fg_color = { 0, 0, 0, 0xFF };
     static color_t bg_color = { 216, 216, 216, 0xFF };
+    static color_t pressed_bg_color = { 116, 116, 166, 0xFF };
 
     button = ( button_t* )widget_get_data( widget );
 
     widget_get_bounds( widget, &bounds );
 
-    widget_set_pen_color( widget, &bg_color );
+    if ( button->pressed ) {
+        widget_set_pen_color( widget, &pressed_bg_color );
+    } else {
+        widget_set_pen_color( widget, &bg_color );
+    }
+
     widget_fill_rect( widget, &bounds );
 
     return 0;

@@ -79,6 +79,8 @@ int widget_invalidate( widget_t* widget, int notify_window );
 int widget_mouse_entered( widget_t* widget, point_t* position );
 int widget_mouse_exited( widget_t* widget );
 int widget_mouse_moved( widget_t* widget, point_t* position );
+int widget_mouse_pressed( widget_t* widget, point_t* position, int mouse_button );
+int widget_mouse_released( widget_t* widget, int mouse_button );
 
 int widget_set_pen_color( widget_t* widget, color_t* color );
 int widget_set_font( widget_t* widget, font_t* font );

@@ -30,7 +30,8 @@ enum {
     R_SET_PEN_COLOR = 1,
     R_SET_FONT,
     R_FILL_RECT,
-    R_DRAW_TEXT
+    R_DRAW_TEXT,
+    R_DONE
 };
 
 typedef struct render_header {

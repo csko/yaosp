@@ -22,7 +22,7 @@
 #include <ygui/application.h>
 #include <ygui/window.h>
 #include <ygui/panel.h>
-#include <ygui/label.h>
+#include <ygui/button.h>
 #include <ygui/layout/borderlayout.h>
 
 int main( int argc, char** argv ) {
@@ -56,11 +56,11 @@ int main( int argc, char** argv ) {
     point_t p = { 25, 25 };
     point_t s = { 100, 25 };
 
-    widget_t* label = create_label( "Hello World" );
-    widget_add( container, label );
-    widget_set_position( label, &p );
-    widget_set_size( label, &s );
-    widget_dec_ref( label );
+    widget_t* button = create_button( "Hello World" );
+    widget_add( container, button );
+    widget_set_position( button, &p );
+    widget_set_size( button, &s );
+    widget_dec_ref( button );
 
     /* Show the window */
 

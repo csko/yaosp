@@ -252,6 +252,18 @@ int mouse_get_position( point_t* position ) {
     return 0;
 }
 
+int mouse_get_rect( rect_t* mouse_rect ) {
+    rect_init(
+        mouse_rect,
+        mouse_position.x,
+        mouse_position.y,
+        mouse_position.x + active_mouse_pointer->pointer_bitmap->width - 1,
+        mouse_position.y + active_mouse_pointer->pointer_bitmap->height - 1
+    );
+
+    return 0;
+}
+
 static void* mouse_pointer_key( hashitem_t* item ) {
     mouse_pointer_t* pointer;
 

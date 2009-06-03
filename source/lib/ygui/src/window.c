@@ -89,16 +89,28 @@ static int window_thread( void* arg ) {
 
                 break;
 
-            case MSG_WIDGET_INVALIDATED :
+            case MSG_WIDGET_INVALIDATED : {
+                int error;
+                render_header_t* header;
+
                 /* Re-paint the widgets */
 
                 widget_paint( window->container );
+
+                /* Add the terminator item to the render command list */
+
+                error = allocate_render_packet( window, sizeof( render_header_t ), ( void** )&header );
+
+                if ( error >= 0 ) {
+                    header->command = R_DONE;
+                }
 
                 /* Send the rendering commands to the guiserver */
 
                 flush_render_buffer( window );
 
                 break;
+            }
 
             case MSG_MOUSE_ENTERED : {
                 point_t widget_position;
@@ -156,6 +168,38 @@ static int window_thread( void* arg ) {
 
                     window->mouse_widget = new_mouse_widget;
                 }
+
+                break;
+            }
+
+            case MSG_MOUSE_PRESSED : {
+                point_t widget_position;
+                msg_mouse_pressed_t* cmd;
+
+                cmd = ( msg_mouse_pressed_t* )buffer;
+
+                assert( window->mouse_widget != NULL );
+                assert( window->mouse_down_widget == NULL );
+
+                window->mouse_down_widget = window->mouse_widget;
+
+                point_sub_n( &widget_position, &cmd->mouse_position, &window->mouse_down_widget->position );
+
+                widget_mouse_pressed( window->mouse_down_widget, &widget_position, cmd->button );
+
+                break;
+            }
+
+            case MSG_MOUSE_RELEASED : {
+                msg_mouse_released_t* cmd;
+
+                cmd = ( msg_mouse_released_t* )buffer;
+
+                assert( window->mouse_down_widget != NULL );
+
+                widget_mouse_released( window->mouse_down_widget, cmd->button );
+
+                window->mouse_down_widget = NULL;
 
                 break;
             }

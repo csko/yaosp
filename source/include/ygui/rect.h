@@ -78,6 +78,13 @@ static inline void rect_sub_point( rect_t* rect, point_t* point ) {
     rect->bottom -= point->y;
 }
 
+static inline void rect_sub_point_xy( rect_t* rect, int x, int y ) {
+    rect->left -= x;
+    rect->right -= x;
+    rect->top -= y;
+    rect->bottom -= y;
+}
+
 static inline void rect_and( rect_t* rect1, rect_t* rect2 ) {
     rect1->left = MAX( rect1->left, rect2->left );
     rect1->right = MIN( rect1->right, rect2->right );

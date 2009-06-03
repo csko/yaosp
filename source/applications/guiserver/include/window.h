@@ -38,6 +38,7 @@ typedef struct window {
     bitmap_t* bitmap;
     region_t visible_regions;
 
+    int is_visible;
     int is_moving;
     int mouse_on_decorator;
     void* decorator_data;

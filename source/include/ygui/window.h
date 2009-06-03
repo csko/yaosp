@@ -33,6 +33,7 @@ typedef struct window {
 
     widget_t* container;
     widget_t* mouse_widget;
+    widget_t* mouse_down_widget;
 
     uint8_t* render_buffer;
     size_t render_buffer_size;

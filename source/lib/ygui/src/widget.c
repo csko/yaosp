@@ -208,6 +208,22 @@ int widget_mouse_moved( widget_t* widget, point_t* position ) {
     return widget->ops->mouse_moved( widget, position );
 }
 
+int widget_mouse_pressed( widget_t* widget, point_t* position, int mouse_button ) {
+    if ( widget->ops->mouse_pressed == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->mouse_pressed( widget, position, mouse_button );
+}
+
+int widget_mouse_released( widget_t* widget, int mouse_button ) {
+    if ( widget->ops->mouse_released == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->mouse_released( widget, mouse_button );
+}
+
 int widget_set_pen_color( widget_t* widget, color_t* color ) {
     int error;
     window_t* window;

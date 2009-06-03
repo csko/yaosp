@@ -22,6 +22,7 @@
 #include <window.h>
 
 int wm_register_window( window_t* window );
+int wm_update_window_region( window_t* window, rect_t* region );
 
 int wm_mouse_moved( point_t* delta );
 int wm_mouse_pressed( int button );

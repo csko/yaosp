@@ -43,6 +43,8 @@ enum {
     MSG_MOUSE_ENTERED,
     MSG_MOUSE_EXITED,
     MSG_MOUSE_MOVED,
+    MSG_MOUSE_PRESSED,
+    MSG_MOUSE_RELEASED
 };
 
 /* MSG_CREATE_APPLICATION */
@@ -107,5 +109,14 @@ typedef struct msg_mouse_entered {
 typedef struct msg_mouse_moved {
     point_t mouse_position;
 } msg_mouse_moved_t;
+
+typedef struct msg_mouse_pressed {
+    point_t mouse_position;
+    int button;
+} msg_mouse_pressed_t;
+
+typedef struct msg_mouse_released {
+    int button;
+} msg_mouse_released_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

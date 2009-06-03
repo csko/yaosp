@@ -30,6 +30,7 @@ static array_t window_stack;
 static semaphore_id wm_lock;
 
 static window_t* mouse_window = NULL;
+static window_t* mouse_down_window = NULL;
 
 static rect_t moving_rect;
 static window_t* moving_window = NULL;
@@ -147,6 +148,11 @@ int wm_register_window( window_t* window ) {
         goto error1;
     }
 
+    /* Generate visible regions of the new window */
+
+    region_clear( &window->visible_regions );
+    region_add( &window->visible_regions, &window->screen_rect );
+
     /* Regenerate visible regions of other windows */
 
     size = array_get_size( &window_stack );
@@ -218,6 +224,56 @@ error1:
     return error;
 }
 
+int wm_update_window_region( window_t* window, rect_t* region ) {
+    point_t lefttop;
+    int mouse_hidden;
+    rect_t mouse_rect;
+    rect_t visible_rect;
+    clip_rect_t* clip_rect;
+    rect_t hidden_mouse_rect;
+
+    mouse_hidden = 0;
+
+    LOCK( wm_lock );
+
+    mouse_get_rect( &mouse_rect );
+
+    for ( clip_rect = window->visible_regions.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
+        rect_and_n( &visible_rect, region, &clip_rect->rect );
+
+        if ( rect_is_valid( &visible_rect ) ) {
+            if ( !mouse_hidden ) {
+                rect_and_n( &hidden_mouse_rect, &mouse_rect, &visible_rect );
+
+                if ( rect_is_valid( &hidden_mouse_rect ) ) {
+                    hide_mouse_pointer();
+
+                    mouse_hidden = 1;
+                }
+            }
+
+            rect_lefttop( &visible_rect, &lefttop );
+            rect_sub_point_xy( &visible_rect, window->screen_rect.left, window->screen_rect.top );
+
+            graphics_driver->blit_bitmap(
+                screen_bitmap,
+                &lefttop,
+                window->bitmap,
+                &visible_rect,
+                DM_COPY
+            );
+        }
+    }
+
+    if ( mouse_hidden ) {
+        show_mouse_pointer();
+    }
+
+    UNLOCK( wm_lock );
+
+    return 0;
+}
+
 int wm_mouse_moved( point_t* delta ) {
     window_t* window;
     point_t mouse_diff;
@@ -279,6 +335,8 @@ int wm_mouse_pressed( int button ) {
         window_mouse_pressed( mouse_window, button );
     }
 
+    mouse_down_window = mouse_window;
+
     UNLOCK( wm_lock );
 
     return 0;
@@ -287,8 +345,9 @@ int wm_mouse_pressed( int button ) {
 int wm_mouse_released( int button ) {
     LOCK( wm_lock );
 
-    if ( mouse_window != NULL ) {
-        window_mouse_released( mouse_window, button );
+    if ( mouse_down_window != NULL ) {
+        window_mouse_released( mouse_down_window, button );
+        mouse_down_window = NULL;
     }
 
     UNLOCK( wm_lock );
