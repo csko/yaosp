@@ -335,6 +335,78 @@ int widget_draw_text( widget_t* widget, point_t* position, const char* text, int
     return 0;
 }
 
+static int widget_find_event_handler( widget_t* widget, const char* name, int* pos ) {
+    int first;
+    int last;
+    int mid;
+    int result;
+    event_entry_t* tmp;
+
+    first = 0;
+    last = array_get_size( &widget->event_handlers ) - 1;
+
+    while ( first <= last ) {
+        mid = ( first + last ) / 2;
+        tmp = ( event_entry_t* )array_get_item( &widget->event_handlers, mid );
+
+        result = strcmp( name, tmp->name );
+
+        if ( result < 0 ) {
+            last = mid - 1;
+        } else if ( result > 0 ) {
+            first = mid + 1;
+        } else {
+            if ( pos != NULL ) {
+                *pos = mid;
+            }
+
+            return 0;
+        }
+    }
+
+    if ( pos != NULL ) {
+        *pos = first;
+    }
+
+    return -ENOENT;
+}
+
+int widget_connect_event_handler( widget_t* widget, const char* event_name, event_callback_t* callback, void* data ) {
+    int pos;
+    int error;
+    event_entry_t* entry;
+
+    error = widget_find_event_handler( widget, event_name, &pos );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    entry = ( event_entry_t* )array_get_item( &widget->event_handlers, pos );
+
+    entry->callback = callback;
+    entry->data = data;
+
+    return 0;
+}
+
+int widget_signal_event_handler( widget_t* widget, int event_handler ) {
+    event_entry_t* entry;
+
+    if ( ( event_handler < 0 ) ||
+         ( event_handler >= array_get_size( &widget->event_handlers ) ) ) {
+        return -EINVAL;
+    }
+
+    entry = ( event_entry_t* )array_get_item( &widget->event_handlers, event_handler );
+
+    if ( entry->callback != NULL ) {
+        entry->callback( widget, entry->data );
+    }
+
+    return 0;
+}
+
 widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
     int error;
     widget_t* widget;
@@ -353,6 +425,12 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
         goto error2;
     }
 
+    error = init_array( &widget->event_handlers );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
     array_set_realloc_size( &widget->children, 8 );
 
     widget->id = id;
@@ -365,9 +443,65 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
 
     return widget;
 
+error3:
+    destroy_array( &widget->children );
+
 error2:
     free( widget );
 
 error1:
     return NULL;
+}
+
+int widget_set_events( widget_t* widget, event_type_t* event_types, int* event_indexes, int event_count ) {
+    int i;
+    int j;
+    int pos;
+    int error;
+    int* index;
+    event_type_t* type;
+    event_entry_t* entry;
+
+    /* Insert the event types */
+
+    for ( i = 0, type = event_types; i < event_count; i++, type++ ) {
+        entry = ( event_entry_t* )malloc( sizeof( event_entry_t ) );
+
+        if ( entry == NULL ) {
+            return -ENOMEM;
+        }
+
+        entry->name = type->name;
+        entry->callback = NULL;
+
+        error = widget_find_event_handler( widget, type->name, &pos );
+
+        if ( error == 0 ) {
+            return -EEXIST;
+        }
+
+        error = array_insert_item( &widget->event_handlers, pos, ( void* )entry );
+
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+
+    /* Calculate event handler indexes */
+
+    for ( i = 0, type = event_types, index = event_indexes; i < event_count; i++, type++, index++ ) {
+        for ( j = 0; j < event_count; j++ ) {
+            entry = ( event_entry_t* )array_get_item( &widget->event_handlers, j );
+
+            if ( strcmp( type->name, entry->name ) == 0 ) {
+                *index = j;
+
+                break;
+            }
+        }
+
+        assert( j != event_count );
+    }
+
+    return 0;
 }

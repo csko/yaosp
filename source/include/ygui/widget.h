@@ -25,6 +25,7 @@
 #include <ygui/rect.h>
 #include <ygui/color.h>
 #include <ygui/font.h>
+#include <ygui/event.h>
 
 enum {
     W_PANEL = 1,
@@ -58,6 +59,10 @@ typedef struct widget {
     point_t size;
 
     array_t children;
+
+    /* Event handling */
+
+    array_t event_handlers;
 } widget_t;
 
 int widget_add( widget_t* parent, widget_t* child );
@@ -82,11 +87,20 @@ int widget_mouse_moved( widget_t* widget, point_t* position );
 int widget_mouse_pressed( widget_t* widget, point_t* position, int mouse_button );
 int widget_mouse_released( widget_t* widget, int mouse_button );
 
+/* Drawing functions */
+
 int widget_set_pen_color( widget_t* widget, color_t* color );
 int widget_set_font( widget_t* widget, font_t* font );
 int widget_fill_rect( widget_t* widget, rect_t* rect );
 int widget_draw_text( widget_t* widget, point_t* position, const char* text, int length );
 
+/* Event related functions */
+
+int widget_connect_event_handler( widget_t* widget, const char* event_name, event_callback_t* callback, void* data );
+int widget_signal_event_handler( widget_t* widget, int event_handler );
+
 widget_t* create_widget( int id, widget_operations_t* ops, void* data );
+
+int widget_set_events( widget_t* widget, event_type_t* event_types, int* event_indexes, int event_count );
 
 #endif /* _YAOSP_WIDGET_H_ */

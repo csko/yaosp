@@ -22,6 +22,11 @@
 #include <ygui/button.h>
 #include <ygui/yconstants.h>
 
+enum {
+    E_CLICKED,
+    E_COUNT
+};
+
 typedef struct button {
     char* text;
     font_t* font;
@@ -29,6 +34,14 @@ typedef struct button {
     v_alignment_t v_align;
     int pressed;
 } button_t;
+
+static event_type_t button_event_types[ E_COUNT ] = {
+    { "clicked" }
+};
+
+static int button_events[ E_COUNT ] = {
+    0
+};
 
 static int button_paint( widget_t* widget ) {
     rect_t bounds;
@@ -72,6 +85,8 @@ static int button_released( widget_t* widget, int mouse_button ) {
 
     widget_invalidate( widget, 1 );
 
+    widget_signal_event_handler( widget, button_events[ E_CLICKED ] );
+
     return 0;
 }
 
@@ -85,6 +100,7 @@ static widget_operations_t button_ops = {
 };
 
 widget_t* create_button( const char* text ) {
+    int error;
     button_t* button;
     widget_t* widget;
     font_properties_t properties;
@@ -116,11 +132,20 @@ widget_t* create_button( const char* text ) {
         goto error4;
     }
 
+    error = widget_set_events( widget, button_event_types, button_events, E_COUNT );
+
+    if ( error < 0 ) {
+        goto error5;
+    }
+
     button->h_align = H_ALIGN_CENTER;
     button->v_align = V_ALIGN_CENTER;
     button->pressed = 0;
 
     return widget;
+
+error5:
+    /* TODO: destroy the widget */
 
 error4:
     /* TODO: free the font */

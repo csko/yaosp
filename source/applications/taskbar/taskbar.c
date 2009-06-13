@@ -25,6 +25,12 @@
 #include <ygui/button.h>
 #include <ygui/layout/borderlayout.h>
 
+static int event_button_clicked( widget_t* widget, void* data ) {
+    dbprintf( "Button clicked\n" );
+
+    return 0;
+}
+
 int main( int argc, char** argv ) {
     int error;
     window_t* win;
@@ -61,6 +67,7 @@ int main( int argc, char** argv ) {
     widget_set_position( button, &p );
     widget_set_size( button, &s );
     widget_dec_ref( button );
+    widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
 
     /* Show the window */
 
