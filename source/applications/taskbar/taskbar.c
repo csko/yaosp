@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <yaosp/debug.h>
 
 #include <ygui/application.h>
@@ -26,7 +27,20 @@
 #include <ygui/layout/borderlayout.h>
 
 static int event_button_clicked( widget_t* widget, void* data ) {
-    dbprintf( "Button clicked\n" );
+    window_t* win;
+
+    point_t point = {
+        .x = random() % 100,
+        .y = random() % 100
+    };
+    point_t size = {
+        .x = 100 + random() % 200,
+        .y = 100 + random() % 200
+    };
+
+    win = create_window( "Test window", &point, &size, 0 );
+
+    show_window( win );
 
     return 0;
 }

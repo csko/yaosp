@@ -90,23 +90,48 @@ int array_insert_item( array_t* array, int index, void* item ) {
 
 int array_remove_item( array_t* array, void* item ) {
     int i;
-    int asize = array->item_count;
+    int size;
+
+    size = array->item_count;
 
     /* Find the first hit */
-    for ( i = 0; i < asize; i++) {
-        if ( array->items[i] == item ) {
+
+    for ( i = 0; i < size; i++ ) {
+        if ( array->items[ i ] == item ) {
             break;
         }
     }
 
-    if ( i == asize ) { /* Item not found */
+    if ( i == size ) { /* Item not found */
         return -ENOENT;
     }
 
     array->item_count--;
 
     /* Shift elements */
-    memmove(array->items[ i ], array->items[ i + 1 ], asize - i - 1);
+
+    memmove(
+        &array->items[ i ],
+        &array->items[ i + 1 ],
+        sizeof( void* ) * ( size - ( i + 1 ) )
+    );
+
+    return 0;
+}
+
+int array_remove_item_from( array_t* array, int index ) {
+    if ( ( index < 0 ) ||
+         ( index >= array->item_count ) ) {
+        return -EINVAL;
+    }
+
+    memmove(
+        &array->items[ index ],
+        &array->items[ index + 1 ],
+        sizeof( void* ) * ( array->item_count - ( index + 1 ) )
+    );
+
+    array->item_count--;
 
     return 0;
 }
@@ -121,6 +146,18 @@ void* array_get_item( array_t* array, int index ) {
     }
 
     return array->items[ index ];
+}
+
+int array_index_of( array_t* array, void* item ) {
+    int i;
+
+    for ( i = 0; i < array->item_count; i++ ) {
+        if ( array->items[ i ] == item ) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 int array_set_realloc_size( array_t* array, int realloc_size ) {

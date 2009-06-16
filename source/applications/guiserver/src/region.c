@@ -196,6 +196,44 @@ int region_exclude( region_t* region, rect_t* rect ) {
     return 0;
 }
 
+int region_duplicate( region_t* old_region, region_t* new_region ) {
+    clip_rect_t* clip_rect;
+    clip_rect_t* new_clip_rect;
+    clip_rect_t* last_clip_rect;
+
+    last_clip_rect = NULL;
+    new_region->rects = NULL;
+
+    for ( clip_rect = old_region->rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
+        new_clip_rect = get_clip_rect();
+
+        if ( new_clip_rect == NULL ) {
+            goto error1;
+        }
+
+        memcpy( &new_clip_rect->rect, &clip_rect->rect, sizeof( rect_t ) );
+
+        if ( last_clip_rect == NULL ) {
+            new_region->rects = new_clip_rect;
+        } else {
+            last_clip_rect->next = new_clip_rect;
+        }
+
+        last_clip_rect = new_clip_rect;
+    }
+
+    if ( last_clip_rect != NULL ) {
+        last_clip_rect->next = NULL;
+    }
+
+    return 0;
+
+ error1:
+    region_clear( new_region );
+
+    return -ENOMEM;
+}
+
 int init_region_manager( void ) {
     int i;
     clip_rect_t* rect;

@@ -127,7 +127,11 @@ r_draw_text_done:
 
             case R_DONE :
                 if ( window->is_visible ) {
+                    LOCK( wm_lock );
+
                     wm_update_window_region( window, &window->client_rect );
+
+                    UNLOCK( wm_lock );
                 }
 
                 buffer += sizeof( render_header_t );

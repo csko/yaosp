@@ -37,6 +37,8 @@ int region_clear( region_t* region );
 int region_add( region_t* region, rect_t* rect );
 int region_exclude( region_t* region, rect_t* rect );
 
+int region_duplicate( region_t* old_region, region_t* new_region );
+
 int init_region_manager( void );
 
 #endif /* _REGION_H_ */

@@ -19,10 +19,17 @@
 #ifndef _WINDOWMANAGER_H_
 #define _WINDOWMANAGER_H_
 
+#include <yaosp/semaphore.h>
+
 #include <window.h>
 
+extern semaphore_id wm_lock;
+
 int wm_register_window( window_t* window );
+int wm_bring_to_front( window_t* window );
+
 int wm_update_window_region( window_t* window, rect_t* region );
+int wm_hide_window_region( window_t* window, rect_t* region );
 
 int wm_mouse_moved( point_t* delta );
 int wm_mouse_pressed( int button );
