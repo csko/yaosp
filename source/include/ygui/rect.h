@@ -113,4 +113,11 @@ static inline int rect_is_equal( rect_t* rect1, rect_t* rect2 ) {
     return ( memcmp( rect1, rect2, sizeof( rect_t ) ) == 0 );
 }
 
+static inline void rect_resize( rect_t* rect, int l, int t, int r, int b ) {
+    rect->left += l;
+    rect->top += t;
+    rect->right += r;
+    rect->bottom += b;
+}
+
 #endif /* _YGUI_RECT_H_ */

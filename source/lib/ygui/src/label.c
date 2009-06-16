@@ -84,10 +84,14 @@ static int label_paint( widget_t* widget ) {
             text_position.y = font_get_ascender( label->font );
             break;
 
-        case V_ALIGN_CENTER :
-            text_position.y = bounds.bottom -
-                ( ( rect_height( &bounds ) - ( font_get_ascender( label->font ) - font_get_descender( label->font ) ) ) / 2 - font_get_descender( label->font ) );
+        case V_ALIGN_CENTER : {
+            int asc = font_get_ascender( label->font );
+            int desc = font_get_descender( label->font );
+
+            text_position.y = bounds.top + ( rect_height( &bounds ) - ( asc - desc ) ) / 2 + asc;
+
             break;
+        }
 
         case V_ALIGN_BOTTOM :
             text_position.y = bounds.bottom - ( font_get_line_gap( label->font ) - font_get_descender( label->font ) );

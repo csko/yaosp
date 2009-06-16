@@ -91,6 +91,7 @@ int widget_mouse_released( widget_t* widget, int mouse_button );
 
 int widget_set_pen_color( widget_t* widget, color_t* color );
 int widget_set_font( widget_t* widget, font_t* font );
+int widget_draw_rect( widget_t* widget, rect_t* rect );
 int widget_fill_rect( widget_t* widget, rect_t* rect );
 int widget_draw_text( widget_t* widget, point_t* position, const char* text, int length );
 

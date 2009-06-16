@@ -29,6 +29,7 @@
 enum {
     R_SET_PEN_COLOR = 1,
     R_SET_FONT,
+    R_DRAW_RECT,
     R_FILL_RECT,
     R_DRAW_TEXT,
     R_DONE
@@ -47,6 +48,11 @@ typedef struct r_set_font {
     render_header_t header;
     int font_handle;
 } __attribute__(( packed )) r_set_font_t;
+
+typedef struct r_draw_rect {
+    render_header_t header;
+    rect_t rect;
+} __attribute__(( packed )) r_draw_rect_t;
 
 typedef struct r_fill_rect {
     render_header_t header;

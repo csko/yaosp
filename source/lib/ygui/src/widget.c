@@ -270,6 +270,31 @@ int widget_set_font( widget_t* widget, font_t* font ) {
     return 0;
 }
 
+int widget_draw_rect( widget_t* widget, rect_t* rect ) {
+    int error;
+    window_t* window;
+    r_draw_rect_t* packet;
+
+    window = widget->window;
+
+    if ( window == NULL ) {
+        return -EINVAL;
+    }
+
+    error = allocate_render_packet( window, sizeof( r_draw_rect_t ), ( void** )&packet );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    packet->header.command = R_DRAW_RECT;
+    memcpy( &packet->rect, rect, sizeof( rect_t ) );
+
+    rect_add_point( &packet->rect, &widget->position );
+
+    return 0;
+}
+
 int widget_fill_rect( widget_t* widget, rect_t* rect ) {
     int error;
     window_t* window;

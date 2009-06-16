@@ -172,6 +172,9 @@ font_t* create_font( const char* family, const char* style, font_properties_t* p
     }
 
     font->handle = reply.handle;
+    font->ascender = reply.ascender;
+    font->descender = reply.descender;
+    font->line_gap = reply.line_gap;
 
     return font;
 

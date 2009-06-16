@@ -77,6 +77,54 @@ static int window_do_render( window_t* window, uint8_t* buffer, int size ) {
                 break;
             }
 
+            case R_DRAW_RECT : {
+                rect_t tmp;
+                rect_t rect;
+                r_draw_rect_t* cmd;
+
+                cmd = ( r_draw_rect_t* )buffer;
+
+                rect_add_point_n( &rect, &cmd->rect, &window_decorator->lefttop_offset );
+
+                rect_init( &tmp, rect.left, rect.top, rect.right, rect.top );
+
+                graphics_driver->fill_rect(
+                    window->bitmap,
+                    &tmp,
+                    &window->pen_color,
+                    DM_COPY
+                );
+
+                rect_init( &tmp, rect.left, rect.bottom, rect.right, rect.bottom );
+
+                graphics_driver->fill_rect(
+                    window->bitmap,
+                    &tmp,
+                    &window->pen_color,
+                    DM_COPY
+                );
+
+                rect_init( &tmp, rect.left, rect.top, rect.left, rect.bottom );
+
+                graphics_driver->fill_rect(
+                    window->bitmap,
+                    &tmp,
+                    &window->pen_color,
+                    DM_COPY
+                );
+
+                rect_init( &tmp, rect.right, rect.top, rect.right, rect.bottom );
+
+                graphics_driver->fill_rect(
+                    window->bitmap,
+                    &tmp,
+                    &window->pen_color,
+                    DM_COPY
+                );
+
+                break;
+            }
+
             case R_FILL_RECT : {
                 r_fill_rect_t* cmd;
 
