@@ -112,6 +112,30 @@ static int window_thread( void* arg ) {
                 break;
             }
 
+            case MSG_KEY_PRESSED : {
+                msg_key_pressed_t* cmd;
+
+                cmd = ( msg_key_pressed_t* )buffer;
+
+                if ( window->focused_widget != NULL ) {
+                    widget_key_pressed( window->focused_widget, cmd->key );
+                }
+
+                break;
+            }
+
+            case MSG_KEY_RELEASED : {
+                msg_key_released_t* cmd;
+
+                cmd = ( msg_key_released_t* )buffer;
+
+                if ( window->focused_widget != NULL ) {
+                    widget_key_released( window->focused_widget, cmd->key );
+                }
+
+                break;
+            }
+
             case MSG_MOUSE_ENTERED : {
                 point_t widget_position;
                 msg_mouse_entered_t* cmd;
@@ -180,6 +204,20 @@ static int window_thread( void* arg ) {
 
                 assert( window->mouse_widget != NULL );
                 assert( window->mouse_down_widget == NULL );
+
+                /* Handle possible focus change */
+
+                if ( window->focused_widget != window->mouse_widget ) {
+                    if ( window->focused_widget != NULL ) {
+                        /* TODO: this widget lost the focus */
+                    }
+
+                    window->focused_widget = window->mouse_widget;
+
+                    /* TODO: the new widget is just got the focus */
+                }
+
+                /* Handle the mouse press event */
 
                 window->mouse_down_widget = window->mouse_widget;
 
@@ -308,7 +346,6 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     }
 
     window->server_port = reply.server_port;
-    window->mouse_widget = NULL;
 
     thread = create_thread(
         "window",

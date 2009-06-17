@@ -46,7 +46,7 @@ typedef struct input_event {
 enum {
     KEY_TAB = 7,
     KEY_BACKSPACE = 8,
-    KEY_ENTER = 10,
+    KEY_ENTER = 13,
     KEY_ESCAPE = 27,
     KEY_F1 = 0x0100,
     KEY_F2 = 0x0200,

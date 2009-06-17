@@ -129,6 +129,7 @@ static int button_paint( widget_t* widget ) {
 
     widget_set_pen_color( widget, &fg_color );
     widget_set_font( widget, button->font );
+    widget_set_clip_rect( widget, &bounds );
     widget_draw_text( widget, &text_position, button->text, -1 );
 
     return 0;
@@ -160,6 +161,8 @@ static int button_released( widget_t* widget, int mouse_button ) {
 
 static widget_operations_t button_ops = {
     .paint = button_paint,
+    .key_pressed = NULL,
+    .key_released = NULL,
     .mouse_entered = NULL,
     .mouse_exited = NULL,
     .mouse_moved = NULL,

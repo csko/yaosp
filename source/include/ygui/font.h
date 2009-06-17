@@ -21,8 +21,13 @@
 
 #include <sys/types.h>
 
-static inline int utf8_char_length( uint8_t first_byte ) {
-    return ( ( ( 0xE5000000 >> ( ( first_byte >> 3 ) & 0x1E ) ) & 3 ) + 1 );
+static inline int utf8_is_first_byte( uint8_t byte ) {
+    return ( ( ( byte & 0x80 ) == 0x80 ) ||
+             ( ( byte & 0xC0 ) == 0xC0 ) );
+}
+
+static inline int utf8_char_length( uint8_t byte ) {
+    return ( ( ( 0xE5000000 >> ( ( byte >> 3 ) & 0x1E ) ) & 3 ) + 1 );
 }
 
 static inline int utf8_to_unicode( const char* text ) {

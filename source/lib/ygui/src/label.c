@@ -107,6 +107,8 @@ static int label_paint( widget_t* widget ) {
 
 static widget_operations_t label_ops = {
     .paint = label_paint,
+    .key_pressed = NULL,
+    .key_released = NULL,
     .mouse_entered = NULL,
     .mouse_exited = NULL,
     .mouse_moved = NULL,

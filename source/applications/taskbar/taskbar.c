@@ -23,7 +23,7 @@
 #include <ygui/application.h>
 #include <ygui/window.h>
 #include <ygui/panel.h>
-#include <ygui/button.h>
+#include <ygui/textfield.h>
 #include <ygui/layout/borderlayout.h>
 
 static int event_button_clicked( widget_t* widget, void* data ) {
@@ -41,6 +41,22 @@ static int event_button_clicked( widget_t* widget, void* data ) {
     win = create_window( "Test window", &point, &size, 0 );
 
     show_window( win );
+
+    return 0;
+}
+
+static int event_textfield_activated( widget_t* widget, void* data ) {
+    char* text;
+
+    text = textfield_get_text( widget );
+
+    if ( text != NULL ) {
+        dbprintf( "Textfield data: '%s'\n", text );
+
+        free( text );
+    }
+
+    textfield_set_text( widget, NULL );
 
     return 0;
 }
@@ -76,12 +92,14 @@ int main( int argc, char** argv ) {
     point_t p = { 25, 25 };
     point_t s = { 100, 25 };
 
-    widget_t* button = create_button( "Hello World" );
+    //widget_t* button = create_button( "Hello World" );
+    widget_t* button = create_textfield();
     widget_add( container, button );
     widget_set_position( button, &p );
     widget_set_size( button, &s );
     widget_dec_ref( button );
-    widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
+    //widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
+    widget_connect_event_handler( button, "activated", event_textfield_activated, NULL );
 
     /* Show the window */
 

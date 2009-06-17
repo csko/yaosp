@@ -50,9 +50,11 @@ static int input_thread_entry( void* arg ) {
 
         switch ( event.event ) {
             case E_KEY_PRESSED :
+                wm_key_pressed( event.param1 );
                 break;
 
             case E_KEY_RELEASED :
+                wm_key_released( event.param1 );
                 break;
 
             case E_QUALIFIERS_CHANGED :

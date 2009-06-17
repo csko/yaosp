@@ -30,7 +30,8 @@
 enum {
     W_PANEL = 1,
     W_LABEL,
-    W_BUTTON
+    W_BUTTON,
+    W_TEXTFIELD
 };
 
 struct window;
@@ -38,6 +39,8 @@ struct widget;
 
 typedef struct widget_operations {
     int ( *paint )( struct widget* widget );
+    int ( *key_pressed )( struct widget* widget, int key );
+    int ( *key_released )( struct widget* widget, int key );
     int ( *mouse_entered )( struct widget* widget, point_t* position );
     int ( *mouse_exited )( struct widget* widget );
     int ( *mouse_moved )( struct widget* widget, point_t* position );
@@ -81,6 +84,8 @@ int widget_dec_ref( widget_t* widget );
 int widget_paint( widget_t* widget );
 int widget_invalidate( widget_t* widget, int notify_window );
 
+int widget_key_pressed( widget_t* widget, int key );
+int widget_key_released( widget_t* widget, int key );
 int widget_mouse_entered( widget_t* widget, point_t* position );
 int widget_mouse_exited( widget_t* widget );
 int widget_mouse_moved( widget_t* widget, point_t* position );
@@ -91,6 +96,7 @@ int widget_mouse_released( widget_t* widget, int mouse_button );
 
 int widget_set_pen_color( widget_t* widget, color_t* color );
 int widget_set_font( widget_t* widget, font_t* font );
+int widget_set_clip_rect( widget_t* widget, rect_t* rect );
 int widget_draw_rect( widget_t* widget, rect_t* rect );
 int widget_fill_rect( widget_t* widget, rect_t* rect );
 int widget_draw_text( widget_t* widget, point_t* position, const char* text, int length );

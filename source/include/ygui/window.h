@@ -32,6 +32,7 @@ typedef struct window {
     ipc_port_id reply_port;
 
     widget_t* container;
+    widget_t* focused_widget;
     widget_t* mouse_widget;
     widget_t* mouse_down_widget;
 

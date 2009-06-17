@@ -1,4 +1,4 @@
-/* GUI server
+/* yaosp GUI library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,29 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _WINDOWMANAGER_H_
-#define _WINDOWMANAGER_H_
+#ifndef _YAOSP_TEXTFIELD_H_
+#define _YAOSP_TEXTFIELD_H_
 
-#include <yaosp/semaphore.h>
+#include <ygui/widget.h>
 
-#include <window.h>
+#define IS_TEXTFIELD(w) (widget_get_id(w) == W_TEXTFIELD)
+#define TEXTFIELD(w) ( (textfield_t*)widget_get_data(w) )
 
-extern semaphore_id wm_lock;
+char* textfield_get_text( widget_t* widget );
 
-int wm_register_window( window_t* window );
-int wm_bring_to_front( window_t* window );
+int textfield_set_text( widget_t* widget, char* text );
 
-int wm_update_window_region( window_t* window, rect_t* region );
-int wm_hide_window_region( window_t* window, rect_t* region );
+widget_t* create_textfield( void );
 
-int wm_key_pressed( int key );
-int wm_key_released( int key );
-int wm_mouse_moved( point_t* delta );
-int wm_mouse_pressed( int button );
-int wm_mouse_released( int button );
-
-int wm_set_moving_window( window_t* window );
-
-int init_windowmanager( void );
-
-#endif /* _WINDOWMANAGER_H_ */
+#endif /* _YAOSP_TEXTFIELD_H_ */

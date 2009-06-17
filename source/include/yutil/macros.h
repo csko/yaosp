@@ -1,4 +1,4 @@
-/* GUI server
+/* Common macro definitions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,29 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _WINDOWMANAGER_H_
-#define _WINDOWMANAGER_H_
+#ifndef _YUTIL_MACROS_H_
+#define _YUTIL_MACROS_H_
 
-#include <yaosp/semaphore.h>
+#define y_return_if_fail(exp) \
+    if ( !(exp) ) {           \
+        return;               \
+    }
 
-#include <window.h>
+#define y_return_val_if_fail(exp, val) \
+    if ( !(exp) ) {                    \
+        return (val);                  \
+    }
 
-extern semaphore_id wm_lock;
-
-int wm_register_window( window_t* window );
-int wm_bring_to_front( window_t* window );
-
-int wm_update_window_region( window_t* window, rect_t* region );
-int wm_hide_window_region( window_t* window, rect_t* region );
-
-int wm_key_pressed( int key );
-int wm_key_released( int key );
-int wm_mouse_moved( point_t* delta );
-int wm_mouse_pressed( int button );
-int wm_mouse_released( int button );
-
-int wm_set_moving_window( window_t* window );
-
-int init_windowmanager( void );
-
-#endif /* _WINDOWMANAGER_H_ */
+#endif /* _YUTIL_MACROS_H_ */

@@ -45,12 +45,17 @@ typedef struct window {
 
     /* Rendering stuffs */
 
+    rect_t clip_rect;
     color_t pen_color;
     font_node_t* font;
 } window_t;
 
+int window_do_render( window_t* window, uint8_t* buffer, int size );
+
 int handle_create_window( msg_create_win_t* request );
 
+int window_key_pressed( window_t* window, int key );
+int window_key_released( window_t* window, int key );
 int window_mouse_entered( window_t* window, point_t* mouse_position );
 int window_mouse_exited( window_t* window );
 int window_mouse_moved( window_t* window, point_t* mouse_position );

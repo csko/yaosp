@@ -40,6 +40,8 @@ enum {
     MSG_CREATE_FONT,
     MSG_GET_STRING_WIDTH,
     MSG_WIDGET_INVALIDATED,
+    MSG_KEY_PRESSED,
+    MSG_KEY_RELEASED,
     MSG_MOUSE_ENTERED,
     MSG_MOUSE_EXITED,
     MSG_MOUSE_MOVED,
@@ -99,6 +101,16 @@ typedef struct msg_get_str_width {
 typedef struct msg_get_str_width_reply {
     int width;
 } msg_get_str_width_reply_t;
+
+/* MSG_KEY_* */
+
+typedef struct msg_key_pressed {
+    int key;
+} msg_key_pressed_t;
+
+typedef struct msg_key_released {
+    int key;
+} msg_key_released_t;
 
 /* MSG_MOUSE_* */
 

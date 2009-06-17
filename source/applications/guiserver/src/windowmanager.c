@@ -30,6 +30,7 @@ semaphore_id wm_lock;
 static array_t window_stack;
 
 static window_t* mouse_window = NULL;
+static window_t* active_window = NULL;
 static window_t* mouse_down_window = NULL;
 
 static rect_t moving_rect;
@@ -251,6 +252,10 @@ int wm_register_window( window_t* window ) {
         show_mouse_pointer();
     }
 
+    /* Update the active window */
+
+    active_window = window;
+
     UNLOCK( wm_lock );
 
     return 0;
@@ -445,6 +450,30 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
     return 0;
 }
 
+int wm_key_pressed( int key ) {
+    LOCK( wm_lock );
+
+    if ( active_window != NULL ) {
+        window_key_pressed( active_window, key );
+    }
+
+    UNLOCK( wm_lock );
+
+    return 0;
+}
+
+int wm_key_released( int key ) {
+    LOCK( wm_lock );
+
+    if ( active_window != NULL ) {
+        window_key_released( active_window, key );
+    }
+
+    UNLOCK( wm_lock );
+
+    return 0;
+}
+
 int wm_mouse_moved( point_t* delta ) {
     window_t* window;
     point_t mouse_diff;
@@ -501,7 +530,15 @@ int wm_mouse_pressed( int button ) {
     LOCK( wm_lock );
 
     if ( mouse_window != NULL ) {
+        /* The window under the mouse is the new active window */
+
+        active_window = mouse_window;
+
+        /* Bring the window to the front */
+
         wm_bring_to_front( mouse_window );
+
+        /* Send the mouse event to the window */
 
         window_mouse_pressed( mouse_window, button );
     }

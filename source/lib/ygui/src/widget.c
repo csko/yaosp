@@ -143,12 +143,32 @@ int widget_paint( widget_t* widget ) {
     int size;
     widget_t* child;
 
+    /* Repaint the widget if it has a valid
+       paint method and the widget is invalid */
+
     if ( ( !widget->is_valid ) &&
          ( widget->ops->paint != NULL ) ) {
+        /* Set the current clip rect to the widget rect */
+
+        rect_t widget_rect = {
+            .left = 0,
+            .top = 0,
+            .right = widget->size.x - 1,
+            .bottom = widget->size.y - 1
+        };
+
+        widget_set_clip_rect( widget, &widget_rect );
+
+        /* Call the paint method of the widget */
+
         widget->ops->paint( widget );
+
+        /* The widget is valid now :) */
 
         widget->is_valid = 1;
     }
+
+    /* Call paint on the children */
 
     size = array_get_size( &widget->children );
 
@@ -182,6 +202,22 @@ int widget_invalidate( widget_t* widget, int notify_window ) {
     }
 
     return 0;
+}
+
+int widget_key_pressed( widget_t* widget, int key ) {
+    if ( widget->ops->key_pressed == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->key_pressed( widget, key );
+}
+
+int widget_key_released( widget_t* widget, int key ) {
+    if ( widget->ops->key_released == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->key_released( widget, key );
 }
 
 int widget_mouse_entered( widget_t* widget, point_t* position ) {
@@ -270,6 +306,39 @@ int widget_set_font( widget_t* widget, font_t* font ) {
     return 0;
 }
 
+int widget_set_clip_rect( widget_t* widget, rect_t* rect ) {
+    int error;
+    window_t* window;
+    r_set_clip_rect_t* packet;
+
+    window = widget->window;
+
+    if ( window == NULL ) {
+        return -EINVAL;
+    }
+
+    error = allocate_render_packet( window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    packet->header.command = R_SET_CLIP_RECT;
+
+    rect_add_point_n( &packet->clip_rect, rect, &widget->position );
+
+    rect_t widget_rect = {
+        .left = widget->position.x,
+        .top = widget->position.y,
+        .right = widget->position.x + widget->size.x - 1,
+        .bottom = widget->position.y + widget->size.y - 1
+    };
+
+    rect_and( &packet->clip_rect, &widget_rect );
+
+    return 0;
+}
+
 int widget_draw_rect( widget_t* widget, rect_t* rect ) {
     int error;
     window_t* window;
@@ -288,9 +357,8 @@ int widget_draw_rect( widget_t* widget, rect_t* rect ) {
     }
 
     packet->header.command = R_DRAW_RECT;
-    memcpy( &packet->rect, rect, sizeof( rect_t ) );
 
-    rect_add_point( &packet->rect, &widget->position );
+    rect_add_point_n( &packet->rect, rect, &widget->position );
 
     return 0;
 }
@@ -313,9 +381,8 @@ int widget_fill_rect( widget_t* widget, rect_t* rect ) {
     }
 
     packet->header.command = R_FILL_RECT;
-    memcpy( &packet->rect, rect, sizeof( rect_t ) );
 
-    rect_add_point( &packet->rect, &widget->position );
+    rect_add_point_n( &packet->rect, rect, &widget->position );
 
     return 0;
 }
@@ -352,10 +419,8 @@ int widget_draw_text( widget_t* widget, point_t* position, const char* text, int
     packet->header.command = R_DRAW_TEXT;
     packet->length = length;
 
-    memcpy( &packet->position, position, sizeof( point_t ) );
+    point_add_n( &packet->position, position, &widget->position );
     memcpy( ( void* )( packet + 1 ), text, length );
-
-    point_add( &packet->position, &widget->position );
 
     return 0;
 }
