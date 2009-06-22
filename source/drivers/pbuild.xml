@@ -27,7 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>filesystem</item>
         <item>input</item>
         <item>char</item>
-        <item>video</item>
+        <item>graphics</item>
         <item>network</item>
     </array>
 
