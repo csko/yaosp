@@ -116,6 +116,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/route.c</item>
         <item>src/network/socket.c</item>
         <item>src/network/tcp.c</item>
+        <item>src/gui/graphicsdriver.c</item>
+        <item>src/gui/control.c</item>
+        <item>src/gui/gui.c</item>
     </array>
 
     <array name="files_lib">

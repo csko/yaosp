@@ -16,24 +16,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
 
-int main( int argc, char** argv ) {
-    pid_t pid;
+static int start_gui_engine( void ) {
+    int fd;
+    int error;
 
-    /* Start the guiserver */
+    fd = open( "/device/control/gui", O_RDONLY );
 
-    pid = fork();
-
-    if ( pid == 0 ) {
-        char* const argv[] = { "guiserver", NULL };
-
-        execv( "/application/guiserver", argv );
-        _exit( 0 );
-    } else {
-        printf( "Guiserver started with pid: #%d\n", pid );
+    if ( fd < 0 ) {
+        return fd;
     }
+
+    error = ioctl( fd, IOCTL_GUI_START, NULL );
+
+    close( fd );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+static int start_taskbar( void ) {
+    pid_t pid;
 
     /* Start the taskbar */
 
@@ -49,4 +60,22 @@ int main( int argc, char** argv ) {
     }
 
     return 0;
+}
+
+int main( int argc, char** argv ) {
+    int error;
+
+    error = start_gui_engine();
+
+    if ( error < 0 ) {
+        return EXIT_FAILURE;
+    }
+
+    error = start_taskbar();
+
+    if ( error < 0 ) {
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

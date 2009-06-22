@@ -22,7 +22,7 @@
 #include <types.h>
 
 typedef struct vesa_info {
-    char signature[ 4 ];
+    uint8_t signature[ 4 ];
     uint16_t version;
     uint32_t oem_string_ptr;
     uint32_t capabilities;
@@ -78,19 +78,9 @@ typedef struct vesa_mode_info {
     uint8_t  reserved4[ 190 ];
 } __attribute__(( packed )) vesa_mode_info_t;
 
-typedef struct vesa_cmd_modelist {
-    uint32_t max_count;
-    uint32_t current_count;
-    void* mode_list;
-} vesa_cmd_modelist_t;
+typedef struct vesa_mode {
+    uint16_t mode_id;
+    void* phys_base_ptr;
+} vesa_mode_t;
 
-typedef struct vesa_cmd_modeinfo {
-    uint16_t mode_number;
-    vesa_mode_info_t mode_info;
-} vesa_cmd_modeinfo_t;
-
-typedef struct vesa_cmd_setmode {
-    uint16_t mode_number;
-} vesa_cmd_setmode_t;
-
-#endif // _VESA_H_
+#endif /* _VESA_H_ */

@@ -56,6 +56,11 @@
 
 #define IOCTL_INPUT_CREATE_DEVICE 0x00000600
 
+/* GUI ioctls */
+
+#define IOCTL_GUI_START           0x00000700
+#define IOCTL_GUI_STOP            0x00000800
+
 typedef struct device_geometry {
     uint32_t bytes_per_sector;
     uint64_t sector_count;
