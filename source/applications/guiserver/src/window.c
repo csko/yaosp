@@ -289,6 +289,8 @@ int window_mouse_pressed( window_t* window, int mouse_button ) {
         msg_mouse_pressed_t cmd;
 
         mouse_get_position( &cmd.mouse_position );
+        point_sub_xy( &cmd.mouse_position, window->client_rect.left, window->client_rect.top );
+
         cmd.button = mouse_button;
 
         send_ipc_message( window->client_port, MSG_MOUSE_PRESSED, &cmd, sizeof( msg_mouse_pressed_t ) );

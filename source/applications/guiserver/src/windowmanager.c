@@ -591,9 +591,18 @@ int wm_set_moving_window( window_t* window ) {
 
         wm_hide_window_region( moving_window, &moving_window->screen_rect );
 
-        /* Draw the window */
+        /* Update the window rects */
 
         memcpy( &moving_window->screen_rect, &moving_rect, sizeof( rect_t ) );
+        memcpy( &moving_window->client_rect, &moving_rect, sizeof( rect_t ) );
+
+        rect_resize(
+            &moving_window->client_rect,
+            window_decorator->lefttop_offset.x,
+            window_decorator->lefttop_offset.y,
+            -( window_decorator->border_size.x - window_decorator->lefttop_offset.x ),
+            -( window_decorator->border_size.y - window_decorator->lefttop_offset.y )
+        );
 
         /* Update the window decorator informations */
 

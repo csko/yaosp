@@ -164,6 +164,20 @@ static int textfield_key_pressed( widget_t* widget, int key ) {
     return 0;
 }
 
+static int textfield_get_preferred_size( widget_t* widget, point_t* size ) {
+    textfield_t* textfield;
+
+    textfield = ( textfield_t* )widget_get_data( widget );
+
+    point_init(
+        size,
+        -1,
+        font_get_ascender( textfield->font ) - font_get_descender( textfield->font ) + font_get_line_gap( textfield->font ) + 6
+    );
+
+    return 0;
+}
+
 static widget_operations_t textfield_ops = {
     .paint = textfield_paint,
     .key_pressed = textfield_key_pressed,
@@ -172,7 +186,11 @@ static widget_operations_t textfield_ops = {
     .mouse_exited = NULL,
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
-    .mouse_released = NULL
+    .mouse_released = NULL,
+    .get_minimum_size = NULL,
+    .get_preferred_size = textfield_get_preferred_size,
+    .get_maximum_size = NULL,
+    .do_validate = NULL
 };
 
 char* textfield_get_text( widget_t* widget ) {

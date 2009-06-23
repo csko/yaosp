@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <sys/param.h>
+#include <yaosp/debug.h>
 
 #include <ygui/layout/borderlayout.h>
 
@@ -32,8 +33,8 @@ enum {
     W_COUNT
 };
 
-static void borderlayout_do_page_start( widget_t* widget, point_t* panel_position,
-                                        point_t* panel_size, point_t* center_size ) {
+static void borderlayout_do_page_start( widget_t* widget, point_t* panel_position, point_t* panel_size,
+                                        point_t* center_position, point_t* center_size ) {
     point_t widget_size;
     point_t widget_position;
     point_t preferred_size;
@@ -60,11 +61,12 @@ static void borderlayout_do_page_start( widget_t* widget, point_t* panel_positio
         &widget_size
     );
 
+    center_position->y = widget_size.y;
     center_size->y -= widget_size.y;
 }
 
 static void borderlayout_do_page_end( widget_t* widget, point_t* panel_position,
-                                        point_t* panel_size, point_t* center_size ) {
+                                      point_t* panel_size, point_t* center_size ) {
     point_t widget_size;
     point_t widget_position;
     point_t preferred_size;
@@ -94,10 +96,32 @@ static void borderlayout_do_page_end( widget_t* widget, point_t* panel_position,
     center_size->y -= widget_size.y;
 }
 
+static void borderlayout_do_center( widget_t* widget, point_t* panel_position, point_t* panel_size,
+                                    point_t* center_position, point_t* center_size ) {
+    point_t widget_position;
+
+    if ( center_size->y <= 0 ) {
+        return;
+    }
+
+    point_add_n(
+        &widget_position,
+        center_position,
+        panel_position
+    );
+
+    widget_set_position_and_size(
+        widget,
+        &widget_position,
+        center_size
+    );
+}
+
 static int borderlayout_do_layout( widget_t* widget ) {
     int i;
     int count;
     point_t center_size;
+    point_t center_position;
     point_t panel_size;
     point_t panel_position;
     widget_t* widget_table[ W_COUNT ] = { NULL, NULL, NULL, NULL, NULL };
@@ -135,14 +159,19 @@ static int borderlayout_do_layout( widget_t* widget ) {
         }
     }
 
+    point_init( &center_position, 0, 0 );
     memcpy( &center_size, &panel_size, sizeof( point_t ) );
 
     if ( widget_table[ W_PAGE_START ] != NULL ) {
-        borderlayout_do_page_start( widget_table[ W_PAGE_START ], &panel_position, &panel_size, &center_size );
+        borderlayout_do_page_start( widget_table[ W_PAGE_START ], &panel_position, &panel_size, &center_position, &center_size );
     }
 
     if ( widget_table[ W_PAGE_END ] != NULL ) {
         borderlayout_do_page_end( widget_table[ W_PAGE_END ], &panel_position, &panel_size, &center_size );
+    }
+
+    if ( widget_table[ W_CENTER ] != NULL ) {
+        borderlayout_do_center( widget_table[ W_CENTER ], &panel_position, &panel_size, &center_position, &center_size );
     }
 
     return 0;

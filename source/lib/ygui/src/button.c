@@ -159,6 +159,20 @@ static int button_released( widget_t* widget, int mouse_button ) {
     return 0;
 }
 
+static int button_get_preferred_size( widget_t* widget, point_t* size ) {
+    button_t* button;
+
+    button = ( button_t* )widget_get_data( widget );
+
+    point_init(
+        size,
+        font_get_string_width( button->font, button->text, -1 ) + 6,
+        font_get_ascender( button->font ) - font_get_descender( button->font ) + font_get_line_gap( button->font ) + 6
+    );
+
+    return 0;
+}
+
 static widget_operations_t button_ops = {
     .paint = button_paint,
     .key_pressed = NULL,
@@ -167,7 +181,11 @@ static widget_operations_t button_ops = {
     .mouse_exited = NULL,
     .mouse_moved = NULL,
     .mouse_pressed = button_pressed,
-    .mouse_released = button_released
+    .mouse_released = button_released,
+    .get_minimum_size = NULL,
+    .get_preferred_size = button_get_preferred_size,
+    .get_maximum_size = NULL,
+    .do_validate = NULL
 };
 
 widget_t* create_button( const char* text ) {
