@@ -21,9 +21,7 @@
 #include <ioctl.h>
 #include <macros.h>
 #include <mm/kmalloc.h>
-#include <mm/region.h>
 #include <vfs/devfs.h>
-#include <gui/graphicsdriver.h>
 #include <lib/string.h>
 
 #include <arch/io.h>
@@ -33,14 +31,7 @@
 #include "vesa.h"
 
 static uint32_t mode_count;
-static uint16_t* mode_table;
-
-static uint32_t screen_mode_count;
-static screen_mode_t* screen_mode_table;
-static vesa_mode_t* vesa_mode_table;
-
-static void* framebuffer_address = NULL;
-static region_id framebuffer_region = -1;
+static uint16_t* mode_table = NULL;
 
 static int detect_vesa( void ) {
     int error;
@@ -83,11 +74,7 @@ static int detect_vesa( void ) {
 
     tmp = mode_ptr;
 
-    /* Count the usable VESA video modes */
-
-    for ( ; *tmp != 0xFFFF; tmp++ )  {
-
-    }
+    for ( ; *tmp != 0xFFFF; tmp++ ) ;
 
     mode_count = ( ( uint32_t )tmp - ( uint32_t )mode_ptr ) / sizeof( uint16_t );
 
@@ -161,148 +148,75 @@ static int vesa_set_mode( uint16_t mode_number ) {
     return 0;
 }
 
-static uint32_t vesa_get_screen_mode_count( void ) {
-    return screen_mode_count;
-}
-
-static int vesa_get_screen_mode_info( uint32_t index, screen_mode_t* screen_mode ) {
-    if ( __unlikely( index >= screen_mode_count ) ) {
-        return -EINVAL;
-    }
-
-    memcpy( screen_mode, &screen_mode_table[ index ], sizeof( screen_mode_t ) );
-
-    return 0;
-}
-
-static int vesa_set_screen_mode( screen_mode_t* screen_mode ) {
+static int vesa_ioctl( void* node, void* cookie, uint32_t command, void* args, bool from_kernel ) {
     int error;
-    vesa_mode_t* vesa_mode;
 
-    vesa_mode = ( vesa_mode_t* )screen_mode->private;
+    switch ( command ) {
+        case IOCTL_VESA_GET_MODE_LIST : {
+            uint32_t to_copy;
+            vesa_cmd_modelist_t* cmd;
 
-    error = vesa_set_mode( vesa_mode->mode_id );
+            cmd = ( vesa_cmd_modelist_t* )args;
+            to_copy = MIN( mode_count, cmd->max_count );
 
-    if ( __unlikely( error < 0 ) ) {
-        return error;
+            if ( to_copy > 0 ) {
+                memcpy( cmd->mode_list, mode_table, sizeof( uint16_t ) * to_copy );
+            }
+
+            cmd->current_count = to_copy;
+            error = 0;
+
+            break;
+        }
+
+        case IOCTL_VESA_GET_MODE_INFO : {
+            vesa_cmd_modeinfo_t* cmd;
+
+            cmd = ( vesa_cmd_modeinfo_t* )args;
+
+            error = vesa_get_mode_information( cmd->mode_number, &cmd->mode_info );
+
+            break;
+        }
+
+        case IOCTL_VESA_SET_MODE : {
+            vesa_cmd_setmode_t* cmd;
+
+            cmd = ( vesa_cmd_setmode_t* )args;
+
+            error = vesa_set_mode( cmd->mode_number );
+
+            break;
+        }
+
+        default :
+            error = -ENOSYS;
+            break;
     }
 
-    framebuffer_region = create_region(
-        "vesa_framebuffer",
-        screen_mode->width * screen_mode->height * colorspace_to_bpp( screen_mode->color_space ),
-        REGION_READ | REGION_WRITE | REGION_KERNEL,
-        ALLOC_NONE,
-        &framebuffer_address
-    );
-
-    if ( framebuffer_region < 0 ) {
-        return framebuffer_region;
-    }
-
-    error = remap_region( framebuffer_region, ( ptr_t )vesa_mode->phys_base_ptr );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    return 0;
+    return error;
 }
 
-static int vesa_get_framebuffer_info( void** address ) {
-    *address = framebuffer_address;
-
-    return 0;
-}
-
-static graphics_driver_t vesa_driver = {
-    .name = "VESA",
-    .get_screen_mode_count = vesa_get_screen_mode_count,
-    .get_screen_mode_info = vesa_get_screen_mode_info,
-    .set_screen_mode = vesa_set_screen_mode,
-    .get_framebuffer_info = vesa_get_framebuffer_info,
-    .fill_rect = NULL,
-    .blit_bitmap = NULL
+static device_calls_t vesa_calls = {
+    .open = NULL,
+    .close = NULL,
+    .ioctl = vesa_ioctl,
+    .read = NULL,
+    .write = NULL,
+    .add_select_request = NULL,
+    .remove_select_request = NULL
 };
 
-static int init_vesa_graphics_device( void ) {
+static int create_vesa_device( void ) {
     int error;
-    uint32_t i;
-    screen_mode_t* screen_mode;
-    vesa_mode_t* vesa_mode;
-    vesa_mode_info_t mode_info;
 
-    /* Create the table for the screen modes */
-
-    screen_mode_table = ( screen_mode_t* )kmalloc( sizeof( screen_mode_t ) * mode_count );
-
-    if ( __unlikely( screen_mode_table == NULL ) ) {
-        error = -ENOMEM;
-        goto error1;
-    }
-
-    vesa_mode_table = ( vesa_mode_t* )kmalloc( sizeof( vesa_mode_t ) * mode_count );
-
-    if ( __unlikely( vesa_mode_table == NULL ) ) {
-        error = -ENOMEM;
-        goto error2;
-    }
-
-    /* Run through the VESA modes */
-
-    screen_mode_count = 0;
-    screen_mode = screen_mode_table;
-    vesa_mode = vesa_mode_table;
-
-    for ( i = 0; i < mode_count; i++ ) {
-        error = vesa_get_mode_information( mode_table[ i ], &mode_info );
-
-        if ( __unlikely( error < 0 ) ) {
-            continue;
-        }
-
-        if ( ( mode_info.phys_base_ptr == 0 ) ||
-             ( mode_info.num_planes != 1 ) ||
-             ( ( mode_info.bits_per_pixel != 16 ) &&
-               ( mode_info.bits_per_pixel != 24 ) &&
-               ( mode_info.bits_per_pixel != 32 ) ) ) {
-            continue;
-        }
-
-        screen_mode->width = mode_info.width;
-        screen_mode->height = mode_info.height;
-        screen_mode->color_space = bpp_to_colorspace( mode_info.bits_per_pixel );
-        screen_mode->private = ( void* )vesa_mode;
-
-        vesa_mode->mode_id = mode_table[ i ];
-        vesa_mode->phys_base_ptr = ( void* )mode_info.phys_base_ptr;
-
-        screen_mode++;
-        vesa_mode++;
-        screen_mode_count++;
-    }
-
-    kprintf( "Found %u usable VESA modes.\n", screen_mode_count );
-
-    /* Register the graphics driver */
-
-    error = register_graphics_driver( &vesa_driver );
+    error = create_device_node( "video/vesa", &vesa_calls, NULL );
 
     if ( error < 0 ) {
-        goto error3;
+        return error;
     }
 
-    kprintf( "Registered VESA graphics driver.\n" );
-
     return 0;
-
- error3:
-    kfree( vesa_mode_table );
-
- error2:
-    kfree( screen_mode_table );
-
- error1:
-    return error;
 }
 
 int init_module( void ) {
@@ -314,7 +228,7 @@ int init_module( void ) {
         return error;
     }
 
-    error = init_vesa_graphics_device();
+    error = create_vesa_device();
 
     if ( error < 0 ) {
         return error;

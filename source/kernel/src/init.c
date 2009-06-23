@@ -140,18 +140,6 @@ __init static void init_network( void ) {
     create_network_interfaces();
 }
 
-#ifdef ENABLE_GUI
-
-#include <gui/graphicsdriver.h>
-#include <gui/control.h>
-
-__init static void init_gui( void ) {
-    init_graphics_driver_manager();
-    init_gui_control();
-}
-
-#endif /* ENABLE_GUI */
-
 int init_thread( void* arg ) {
     uint32_t init_page_count;
 
@@ -168,10 +156,6 @@ int init_thread( void* arg ) {
     load_bootmodules();
     mount_root_filesystem();
     init_network();
-
-#ifdef ENABLE_GUI
-    init_gui();
-#endif /* ENABLE_GUI */
 
     /* Free init code */
 
