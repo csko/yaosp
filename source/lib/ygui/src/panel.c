@@ -39,8 +39,28 @@ static int panel_paint( widget_t* widget ) {
     return 0;
 }
 
+static int panel_do_validate( widget_t* widget ) {
+    panel_t* panel;
+
+    panel = ( panel_t* )widget_get_data( widget );
+
+    if ( panel->layout != NULL ) {
+        panel->layout->ops->do_layout( widget );
+    }
+
+    return 0;
+}
+
 static widget_operations_t panel_ops = {
-    .paint = panel_paint
+    .paint = panel_paint,
+    .key_pressed = NULL,
+    .key_released = NULL,
+    .mouse_entered = NULL,
+    .mouse_exited = NULL,
+    .mouse_moved = NULL,
+    .mouse_pressed = NULL,
+    .mouse_released = NULL,
+    .do_validate = panel_do_validate
 };
 
 int panel_set_layout( widget_t* widget, layout_t* layout ) {

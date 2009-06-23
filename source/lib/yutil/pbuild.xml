@@ -74,9 +74,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="install">
     </target>
 
+    <target name="test">
+        <call target="test" directory="tst"/>
+    </target>
+
     <target name="all">
         <call target="clean"/>
         <call target="compile"/>
         <call target="install"/>
+        <call target="test"/>
     </target>
 </build>

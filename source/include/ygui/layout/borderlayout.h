@@ -21,6 +21,12 @@
 #ifndef _YAOSP_BORDERLAYOUT_H_
 #define _YAOSP_BORDERLAYOUT_H_
 
+#define BRD_PAGE_START ((void*)1)
+#define BRD_PAGE_END   ((void*)2)
+#define BRD_LINE_START ((void*)3)
+#define BRD_LINE_END   ((void*)4)
+#define BRD_CENTER     ((void*)5)
+
 layout_t* create_border_layout( void );
 
 #endif /* _YAOSP_BORDERLAYOUT_H_ */

@@ -105,6 +105,20 @@ static int label_paint( widget_t* widget ) {
     return 0;
 }
 
+static int label_get_preferred_size( widget_t* widget, point_t* size ) {
+    label_t* label;
+
+    label = ( label_t* )widget_get_data( widget );
+
+    point_init(
+        size,
+        font_get_string_width( label->font, label->text, -1 ) + 4,
+        font_get_ascender( label->font ) - font_get_descender( label->font ) + font_get_line_gap( label->font ) + 4
+    );
+
+    return 0;
+}
+
 static widget_operations_t label_ops = {
     .paint = label_paint,
     .key_pressed = NULL,
@@ -113,7 +127,11 @@ static widget_operations_t label_ops = {
     .mouse_exited = NULL,
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
-    .mouse_released = NULL
+    .mouse_released = NULL,
+    .get_minimum_size = NULL,
+    .get_preferred_size = label_get_preferred_size,
+    .get_maximum_size = NULL,
+    .do_validate = NULL
 };
 
 widget_t* create_label( const char* text ) {

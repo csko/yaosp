@@ -46,6 +46,10 @@ typedef struct widget_operations {
     int ( *mouse_moved )( struct widget* widget, point_t* position );
     int ( *mouse_pressed )( struct widget* widget, point_t* position, int mouse_button );
     int ( *mouse_released )( struct widget* widget, int mouse_button );
+    int ( *get_minimum_size )( struct widget* widget, point_t* size );
+    int ( *get_preferred_size )( struct widget* widget, point_t* size );
+    int ( *get_maximum_size )( struct widget* widget, point_t* size );
+    int ( *do_validate )( struct widget* widget );
 } widget_operations_t;
 
 typedef struct widget {
@@ -68,16 +72,21 @@ typedef struct widget {
     array_t event_handlers;
 } widget_t;
 
-int widget_add( widget_t* parent, widget_t* child );
+int widget_add( widget_t* parent, widget_t* child, void* data );
 
 int widget_get_id( widget_t* widget );
 void* widget_get_data( widget_t* widget );
+int widget_get_position( widget_t* widget, point_t* position );
+int widget_get_size( widget_t* widget, point_t* size );
 int widget_get_bounds( widget_t* widget, rect_t* bounds );
+int widget_get_minimum_size( widget_t* widget, point_t* size );
+int widget_get_preferred_size( widget_t* widget, point_t* size );
+int widget_get_maximum_size( widget_t* widget, point_t* size );
+
 widget_t* widget_get_child_at( widget_t* widget, point_t* position );
 
 int widget_set_window( widget_t* widget, struct window* window );
-int widget_set_position( widget_t* widget, point_t* position );
-int widget_set_size( widget_t* widget, point_t* size );
+int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size );
 
 int widget_inc_ref( widget_t* widget );
 int widget_dec_ref( widget_t* widget );

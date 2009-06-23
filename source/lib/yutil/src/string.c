@@ -57,8 +57,8 @@ int string_insert( string_t* string, int pos, char* data, int size ) {
     }
 
     memmove(
-        &string->buffer[ pos ],
         &string->buffer[ pos + size ],
+        &string->buffer[ pos ],
         string->length - pos + 1
     );
 

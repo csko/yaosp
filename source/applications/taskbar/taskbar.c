@@ -24,6 +24,7 @@
 #include <ygui/window.h>
 #include <ygui/panel.h>
 #include <ygui/textfield.h>
+#include <ygui/button.h>
 #include <ygui/layout/borderlayout.h>
 
 static int event_button_clicked( widget_t* widget, void* data ) {
@@ -89,17 +90,16 @@ int main( int argc, char** argv ) {
 
     /* Create a test label */
 
-    point_t p = { 25, 25 };
-    point_t s = { 100, 25 };
-
-    //widget_t* button = create_button( "Hello World" );
-    widget_t* button = create_textfield();
-    widget_add( container, button );
-    widget_set_position( button, &p );
-    widget_set_size( button, &s );
+    widget_t* button = create_button( "Press me!" );
+    widget_add( container, button, BRD_PAGE_END );
     widget_dec_ref( button );
-    //widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
-    widget_connect_event_handler( button, "activated", event_textfield_activated, NULL );
+
+    widget_t* textfield = create_textfield();
+    widget_add( container, textfield, BRD_CENTER );
+    widget_dec_ref( textfield );
+
+    widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
+    widget_connect_event_handler( textfield, "activated", event_textfield_activated, NULL );
 
     /* Show the window */
 

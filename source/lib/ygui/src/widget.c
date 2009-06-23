@@ -27,10 +27,21 @@
 
 #include "internal.h"
 
-int widget_add( widget_t* parent, widget_t* child ) {
+int widget_add( widget_t* parent, widget_t* child, void* data ) {
+    widget_wrapper_t* wrapper;
+
+    wrapper = ( widget_wrapper_t* )malloc( sizeof( widget_wrapper_t ) );
+
+    if ( wrapper == NULL ) {
+        return -ENOMEM;
+    }
+
     widget_inc_ref( child );
 
-    array_add_item( &parent->children, ( void* )child );
+    wrapper->widget = child;
+    wrapper->data = data;
+
+    array_add_item( &parent->children, ( void* )wrapper );
 
     if ( parent->window != NULL ) {
         widget_set_window( child, parent->window );
@@ -47,6 +58,18 @@ void* widget_get_data( widget_t* widget ) {
     return widget->data;
 }
 
+int widget_get_position( widget_t* widget, point_t* position ) {
+    memcpy( position, &widget->position, sizeof( point_t ) );
+
+    return 0;
+}
+
+int widget_get_size( widget_t* widget, point_t* size ) {
+    memcpy( size, &widget->size, sizeof( point_t ) );
+
+    return 0;
+}
+
 int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
     rect_init(
         bounds,
@@ -55,6 +78,48 @@ int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
         widget->size.x - 1,
         widget->size.y - 1
     );
+
+    return 0;
+}
+
+int widget_get_minimum_size( widget_t* widget, point_t* size ) {
+    if ( widget->ops->get_minimum_size == NULL ) {
+        point_init(
+            size,
+            0,
+            0
+        );
+    } else {
+        widget->ops->get_minimum_size( widget, size );
+    }
+
+    return 0;
+}
+
+int widget_get_preferred_size( widget_t* widget, point_t* size ) {
+    if ( widget->ops->get_preferred_size == NULL ) {
+        point_init(
+            size,
+            0,
+            0
+        );
+    } else {
+        widget->ops->get_preferred_size( widget, size );
+    }
+
+    return 0;
+}
+
+int widget_get_maximum_size( widget_t* widget, point_t* size ) {
+    if ( widget->ops->get_maximum_size == NULL ) {
+        point_init(
+            size,
+            INT_MAX,
+            INT_MAX
+        );
+    } else {
+        widget->ops->get_maximum_size( widget, size );
+    }
 
     return 0;
 }
@@ -72,7 +137,7 @@ widget_t* widget_get_child_at( widget_t* widget, point_t* position ) {
     }
 
     for ( i = 0; i < size; i++ ) {
-        tmp = ( widget_t* )array_get_item( &widget->children, i );
+        tmp = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
 
         rect_init(
             &widget_rect,
@@ -100,7 +165,7 @@ int widget_set_window( widget_t* widget, struct window* window ) {
     size = array_get_size( &widget->children );
 
     for ( i = 0; i < size; i++ ) {
-        child = ( widget_t* )array_get_item( &widget->children, i );
+        child = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
 
         widget_set_window( child, window );
     }
@@ -108,14 +173,11 @@ int widget_set_window( widget_t* widget, struct window* window ) {
     return 0;
 }
 
-int widget_set_position( widget_t* widget, point_t* position ) {
+int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size ) {
     memcpy( &widget->position, position, sizeof( point_t ) );
-
-    return 0;
-}
-
-int widget_set_size( widget_t* widget, point_t* size ) {
     memcpy( &widget->size, size, sizeof( point_t ) );
+
+    widget_invalidate( widget, 0 );
 
     return 0;
 }
@@ -146,22 +208,31 @@ int widget_paint( widget_t* widget ) {
     /* Repaint the widget if it has a valid
        paint method and the widget is invalid */
 
-    if ( ( !widget->is_valid ) &&
-         ( widget->ops->paint != NULL ) ) {
-        /* Set the current clip rect to the widget rect */
+    if ( !widget->is_valid ) {
+        /* Validate the widget */
 
-        rect_t widget_rect = {
-            .left = 0,
-            .top = 0,
-            .right = widget->size.x - 1,
-            .bottom = widget->size.y - 1
-        };
+        if ( widget->ops->do_validate != NULL ) {
+            widget->ops->do_validate( widget );
+        }
 
-        widget_set_clip_rect( widget, &widget_rect );
+        /* Paint the widget */
 
-        /* Call the paint method of the widget */
+        if ( widget->ops->paint != NULL ) {
+            /* Set the current clip rect to the widget rect */
 
-        widget->ops->paint( widget );
+            rect_t widget_rect = {
+                .left = 0,
+                .top = 0,
+                .right = widget->size.x - 1,
+                .bottom = widget->size.y - 1
+            };
+
+            widget_set_clip_rect( widget, &widget_rect );
+
+            /* Call the paint method of the widget */
+
+            widget->ops->paint( widget );
+        }
 
         /* The widget is valid now :) */
 
@@ -173,7 +244,7 @@ int widget_paint( widget_t* widget ) {
     size = array_get_size( &widget->children );
 
     for ( i = 0; i < size; i++ ) {
-        child = ( widget_t* )array_get_item( &widget->children, i );
+        child = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
 
         widget_paint( child );
     }
@@ -191,7 +262,7 @@ int widget_invalidate( widget_t* widget, int notify_window ) {
     size = array_get_size( &widget->children );
 
     for ( i = 0; i < size; i++ ) {
-        tmp = ( widget_t* )array_get_item( &widget->children, i );
+        tmp = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
 
         widget_invalidate( tmp, 0 );
     }

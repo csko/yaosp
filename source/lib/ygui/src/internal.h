@@ -21,6 +21,11 @@
 
 #include <ygui/window.h>
 
+typedef struct widget_wrapper {
+    widget_t* widget;
+    void* data;
+} widget_wrapper_t;
+
 int initialize_render_buffer( window_t* window );
 int allocate_render_packet( window_t* window, size_t size, void** buffer );
 int flush_render_buffer( window_t* window );
