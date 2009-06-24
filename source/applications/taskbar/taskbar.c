@@ -25,6 +25,7 @@
 #include <ygui/panel.h>
 #include <ygui/textfield.h>
 #include <ygui/button.h>
+#include <ygui/desktop.h>
 #include <ygui/layout/borderlayout.h>
 
 static int event_button_clicked( widget_t* widget, void* data ) {
@@ -73,12 +74,16 @@ int main( int argc, char** argv ) {
         return error;
     }
 
-    point_t point = { .x = 50, .y = 50 };
-    point_t size = { .x = 300, .y = 300 };
+    point_t point = { .x = 0, .y = 0 };
+    point_t size;
+
+    desktop_get_size( &size );
+
+    size.y = 40;
 
     /* Create a window */
 
-    win = create_window( "Taskbar", &point, &size, 0 );
+    win = create_window( "Taskbar", &point, &size, WINDOW_NO_BORDER );
 
     widget_t* container = window_get_container( win );
 

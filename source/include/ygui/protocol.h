@@ -46,7 +46,8 @@ enum {
     MSG_MOUSE_EXITED,
     MSG_MOUSE_MOVED,
     MSG_MOUSE_PRESSED,
-    MSG_MOUSE_RELEASED
+    MSG_MOUSE_RELEASED,
+    MSG_GET_DESKTOP_SIZE
 };
 
 /* MSG_CREATE_APPLICATION */
@@ -130,5 +131,16 @@ typedef struct msg_mouse_pressed {
 typedef struct msg_mouse_released {
     int button;
 } msg_mouse_released_t;
+
+/* MSG_DESKTOP_GET_SIZE */
+
+typedef struct msg_desk_get_size {
+    ipc_port_id reply_port;
+    int desktop;
+} msg_desk_get_size_t;
+
+typedef struct msg_desk_get_size_reply {
+    point_t size;
+} msg_desk_get_size_reply_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

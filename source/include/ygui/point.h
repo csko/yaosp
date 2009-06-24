@@ -19,6 +19,7 @@
 #ifndef _YGUI_POINT_H_
 #define _YGUI_POINT_H_
 
+#include <string.h>
 #include <sys/types.h>
 
 typedef struct point {
@@ -29,6 +30,10 @@ typedef struct point {
 static inline void point_init( point_t* point, int x, int y ) {
     point->x = x;
     point->y = y;
+}
+
+static inline void point_copy( point_t* new, point_t* old ) {
+    memcpy( ( void* )new, ( void* )old, sizeof( point_t ) );
 }
 
 static inline void point_add( point_t* point1, point_t* point2 ) {

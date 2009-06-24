@@ -39,6 +39,10 @@ static inline void rect_init( rect_t* rect, int left, int top, int right, int bo
     rect->bottom = bottom;
 }
 
+static inline void rect_copy( rect_t* new, rect_t* old ) {
+    memcpy( ( void* )new, ( void* )old, sizeof( rect_t ) );
+}
+
 static inline int rect_width( rect_t* rect ) {
     return ( rect->right - rect->left + 1 );
 }
@@ -76,6 +80,13 @@ static inline void rect_sub_point( rect_t* rect, point_t* point ) {
     rect->right -= point->x;
     rect->top -= point->y;
     rect->bottom -= point->y;
+}
+
+static inline void rect_sub_point_n( rect_t* dest, rect_t* rect, point_t* point ) {
+    dest->left = rect->left - point->x;
+    dest->right = rect->right - point->x;
+    dest->top = rect->top - point->y;
+    dest->bottom = rect->bottom - point->y;
 }
 
 static inline void rect_sub_point_xy( rect_t* rect, int x, int y ) {
@@ -118,6 +129,13 @@ static inline void rect_resize( rect_t* rect, int l, int t, int r, int b ) {
     rect->top += t;
     rect->right += r;
     rect->bottom += b;
+}
+
+static inline void rect_resize_n( rect_t* dest, rect_t* rect, int l, int t, int r, int b ) {
+    dest->left = rect->left + l;
+    dest->top = rect->top + t;
+    dest->right = rect->right + r;
+    dest->bottom = rect->bottom + b;
 }
 
 #endif /* _YGUI_RECT_H_ */

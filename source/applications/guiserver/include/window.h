@@ -50,6 +50,10 @@ typedef struct window {
     font_node_t* font;
 } window_t;
 
+enum {
+    WINDOW_NO_BORDER = ( 1 << 0 )
+};
+
 int window_do_render( window_t* window, uint8_t* buffer, int size );
 
 int handle_create_window( msg_create_win_t* request );

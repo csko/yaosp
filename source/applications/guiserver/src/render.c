@@ -56,11 +56,15 @@ static int set_clip_rect( window_t* window, uint8_t* buffer ) {
 
     cmd = ( r_set_clip_rect_t* )buffer;
 
-    rect_add_point_n(
-        &window->clip_rect,
-        &cmd->clip_rect,
-        &window_decorator->lefttop_offset
-    );
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        rect_add_point_n(
+            &window->clip_rect,
+            &cmd->clip_rect,
+            &window_decorator->lefttop_offset
+        );
+    } else {
+        rect_copy( &window->clip_rect, &cmd->clip_rect );
+    }
 
     return sizeof( r_set_clip_rect_t );
 }
@@ -72,7 +76,15 @@ static int draw_rect( window_t* window, uint8_t* buffer ) {
 
     cmd = ( r_draw_rect_t* )buffer;
 
-    rect_add_point_n( &rect, &cmd->rect, &window_decorator->lefttop_offset );
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        rect_add_point_n(
+            &rect,
+            &cmd->rect,
+            &window_decorator->lefttop_offset
+        );
+    } else {
+        rect_copy( &rect, &cmd->rect );
+    }
 
     /* Top line */
 
@@ -139,7 +151,15 @@ static int fill_rect( window_t* window, uint8_t* buffer ) {
 
     cmd = ( r_fill_rect_t* )buffer;
 
-    rect_add_point_n( &tmp, &cmd->rect, &window_decorator->lefttop_offset );
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        rect_add_point_n(
+            &tmp,
+            &cmd->rect,
+            &window_decorator->lefttop_offset
+        );
+    } else {
+        rect_copy( &tmp, &cmd->rect );
+    }
 
     rect_and( &tmp, &window->clip_rect );
 
@@ -164,7 +184,12 @@ static int draw_text( window_t* window, uint8_t* buffer ) {
         goto out;
     }
 
-    point_add( &cmd->position, &window_decorator->lefttop_offset );
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        point_add(
+            &cmd->position,
+            &window_decorator->lefttop_offset
+        );
+    }
 
     graphics_driver->draw_text(
         window->bitmap,

@@ -26,6 +26,7 @@
 #include <application.h>
 #include <window.h>
 #include <fontmanager.h>
+#include <graphicsdriver.h>
 
 #define MAX_APPLICATION_BUFSIZE 512
 
@@ -67,6 +68,20 @@ static int handle_get_string_width( msg_get_str_width_t* request ) {
     return 0;
 }
 
+static int handle_get_desktop_size( msg_desk_get_size_t* request ) {
+    msg_desk_get_size_reply_t reply;
+
+    point_init(
+        &reply.size,
+        rect_width( &screen_rect ),
+        rect_height( &screen_rect )
+    );
+
+    send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_desk_get_size_reply_t ) );
+
+    return 0;
+}
+
 static int application_thread( void* arg ) {
     int error;
     void* buffer;
@@ -100,6 +115,10 @@ static int application_thread( void* arg ) {
 
             case MSG_GET_STRING_WIDTH :
                 handle_get_string_width( ( msg_get_str_width_t* )buffer );
+                break;
+
+            case MSG_GET_DESKTOP_SIZE :
+                handle_get_desktop_size( ( msg_desk_get_size_t* )buffer );
                 break;
 
             default :

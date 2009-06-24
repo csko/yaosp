@@ -117,20 +117,34 @@ int handle_create_window( msg_create_win_t* request ) {
 
     window->font = NULL;
 
-    rect_init(
-        &window->screen_rect,
-        request->position.x,
-        request->position.y,
-        request->position.x + request->size.x + window_decorator->border_size.x - 1,
-        request->position.y + request->size.y + window_decorator->border_size.y - 1
-    );
-    rect_init(
-        &window->client_rect,
-        request->position.x + window_decorator->lefttop_offset.x,
-        request->position.y + window_decorator->lefttop_offset.y,
-        request->position.x + window_decorator->lefttop_offset.x + request->size.x - 1,
-        request->position.y + window_decorator->lefttop_offset.y + request->size.y - 1
-    );
+    if ( window->flags & WINDOW_NO_BORDER ) {
+        rect_init(
+            &window->screen_rect,
+            request->position.x,
+            request->position.y,
+            request->position.x + request->size.x - 1,
+            request->position.y + request->size.y - 1
+        );
+
+        rect_copy( &window->client_rect, &window->screen_rect );
+    } else {
+        rect_init(
+            &window->screen_rect,
+            request->position.x,
+            request->position.y,
+            request->position.x + request->size.x + window_decorator->border_size.x - 1,
+            request->position.y + request->size.y + window_decorator->border_size.y - 1
+        );
+
+        rect_resize_n(
+            &window->client_rect,
+            &window->screen_rect,
+            window_decorator->lefttop_offset.x,
+            window_decorator->lefttop_offset.y,
+            window_decorator->lefttop_offset.x,
+            window_decorator->lefttop_offset.y
+        );
+    }
 
     rect_bounds( &window->screen_rect, &width, &height );
 
@@ -140,13 +154,15 @@ int handle_create_window( msg_create_win_t* request ) {
         goto error5;
     }
 
-    error = window_decorator->initialize( window );
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        error = window_decorator->initialize( window );
 
-    if ( error < 0 ) {
-        goto error6;
+        if ( error < 0 ) {
+            goto error6;
+        }
+
+        window_decorator->calculate_regions( window );
     }
-
-    window_decorator->calculate_regions( window );
 
     thread = create_thread(
         "window",
@@ -167,7 +183,9 @@ int handle_create_window( msg_create_win_t* request ) {
     goto out;
 
 error7:
-    window_decorator->destroy( window );
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        window_decorator->destroy( window );
+    }
 
 error6:
     put_bitmap( window->bitmap );
@@ -218,15 +236,21 @@ int window_mouse_entered( window_t* window, point_t* mouse_position ) {
 
     point_sub_xy_n( &window_position, mouse_position, window->screen_rect.left, window->screen_rect.top );
 
-    window->mouse_on_decorator = window_decorator->border_has_position( window, mouse_position );
+    window->mouse_on_decorator = \
+        ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) &&
+        ( window_decorator->border_has_position( window, mouse_position ) );
 
     if ( window->mouse_on_decorator ) {
         window_decorator->mouse_entered( window, mouse_position );
     } else {
         msg_mouse_entered_t cmd;
 
-        memcpy( &cmd.mouse_position, mouse_position, sizeof( point_t ) );
-        point_sub_xy( &cmd.mouse_position, window->client_rect.left, window->client_rect.top );
+        point_sub_xy_n(
+            &cmd.mouse_position,
+            mouse_position,
+            window->client_rect.left,
+            window->client_rect.top
+        );
 
         send_ipc_message( window->client_port, MSG_MOUSE_ENTERED, &cmd, sizeof( msg_mouse_entered_t ) );
     }
@@ -247,7 +271,9 @@ int window_mouse_exited( window_t* window ) {
 int window_mouse_moved( window_t* window, point_t* mouse_position ) {
     int on_decorator;
 
-    on_decorator = window_decorator->border_has_position( window, mouse_position );
+    on_decorator = \
+        ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) &&
+        ( window_decorator->border_has_position( window, mouse_position ) );
 
     if ( on_decorator ) {
         if ( window->mouse_on_decorator ) {
@@ -263,15 +289,23 @@ int window_mouse_moved( window_t* window, point_t* mouse_position ) {
 
             window_decorator->mouse_exited( window );
 
-            memcpy( &cmd.mouse_position, mouse_position, sizeof( point_t ) );
-            point_sub_xy( &cmd.mouse_position, window->client_rect.left, window->client_rect.top );
+            point_sub_xy_n(
+                &cmd.mouse_position,
+                mouse_position,
+                window->client_rect.left,
+                window->client_rect.top
+            );
 
             send_ipc_message( window->client_port, MSG_MOUSE_ENTERED, &cmd, sizeof( msg_mouse_entered_t ) );
         } else {
             msg_mouse_moved_t cmd;
 
-            memcpy( &cmd.mouse_position, mouse_position, sizeof( point_t ) );
-            point_sub_xy( &cmd.mouse_position, window->client_rect.left, window->client_rect.top );
+            point_sub_xy_n(
+                &cmd.mouse_position,
+                mouse_position,
+                window->client_rect.left,
+                window->client_rect.top
+            );
 
             send_ipc_message( window->client_port, MSG_MOUSE_MOVED, &cmd, sizeof( msg_mouse_moved_t ) );
         }

@@ -210,7 +210,9 @@ int wm_register_window( window_t* window ) {
 
     /* Update the decoration of the window */
 
-    window_decorator->update_border( window );
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        window_decorator->update_border( window );
+    }
 
     /* Check mouse position */
 
@@ -226,9 +228,7 @@ int wm_register_window( window_t* window ) {
     /* Draw the window */
 
     rect_lefttop( &window->screen_rect, &lefttop );
-
-    memcpy( &winrect, &window->screen_rect, sizeof( rect_t ) );
-    rect_sub_point( &winrect, &lefttop );
+    rect_sub_point_n( &winrect, &window->screen_rect, &lefttop );
 
     graphics_driver->blit_bitmap(
         screen_bitmap,
@@ -570,7 +570,7 @@ int wm_set_moving_window( window_t* window ) {
 
         window->is_moving = 1;
 
-        memcpy( &moving_rect, &window->screen_rect, sizeof( rect_t ) );
+        rect_copy( &moving_rect, &window->screen_rect );
 
         invert_moving_rect();
     } else {
@@ -593,20 +593,22 @@ int wm_set_moving_window( window_t* window ) {
 
         /* Update the window rects */
 
-        memcpy( &moving_window->screen_rect, &moving_rect, sizeof( rect_t ) );
-        memcpy( &moving_window->client_rect, &moving_rect, sizeof( rect_t ) );
+        rect_copy( &moving_window->screen_rect, &moving_rect );
+        rect_copy( &moving_window->client_rect, &moving_rect );
 
-        rect_resize(
-            &moving_window->client_rect,
-            window_decorator->lefttop_offset.x,
-            window_decorator->lefttop_offset.y,
-            -( window_decorator->border_size.x - window_decorator->lefttop_offset.x ),
-            -( window_decorator->border_size.y - window_decorator->lefttop_offset.y )
-        );
+        if ( ( moving_window->flags & WINDOW_NO_BORDER ) == 0 ) {
+            rect_resize(
+                &moving_window->client_rect,
+                window_decorator->lefttop_offset.x,
+                window_decorator->lefttop_offset.y,
+                -( window_decorator->border_size.x - window_decorator->lefttop_offset.x ),
+                -( window_decorator->border_size.y - window_decorator->lefttop_offset.y )
+            );
 
-        /* Update the window decorator informations */
+            /* Update the window decorator informations */
 
-        window_decorator->calculate_regions( moving_window );
+            window_decorator->calculate_regions( moving_window );
+        }
 
         /* Regenerate the visible rects of the moved window and the other below */
 
