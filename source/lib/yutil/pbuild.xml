@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/hashtable.c</item>
         <item>src/array.c</item>
         <item>src/string.c</item>
+        <item>src/stack.c</item>
     </array>
 
     <target name="clean">

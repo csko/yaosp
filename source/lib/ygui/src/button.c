@@ -35,15 +35,15 @@ typedef struct button {
     int pressed;
 } button_t;
 
-static event_type_t button_event_types[ E_COUNT ] = {
-    { "clicked" }
-};
-
 static int button_events[ E_COUNT ] = {
-    0
+    -1
 };
 
-static int button_paint( widget_t* widget ) {
+static event_type_t button_event_types[ E_COUNT ] = {
+    { "clicked", &button_events[ E_CLICKED ] }
+};
+
+static int button_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
     button_t* button;
     point_t text_position;
@@ -58,20 +58,21 @@ static int button_paint( widget_t* widget ) {
 
     /* Draw the border of the button */
 
-    widget_set_pen_color( widget, &fg_color );
-    widget_draw_rect( widget, &bounds );
+    gc_set_pen_color( gc, &fg_color );
+    gc_draw_rect( gc, &bounds );
 
     /* Fill the background of the button */
 
     if ( button->pressed ) {
-        widget_set_pen_color( widget, &pressed_bg_color );
+        gc_set_pen_color( gc, &pressed_bg_color );
     } else {
-        widget_set_pen_color( widget, &bg_color );
+        gc_set_pen_color( gc, &bg_color );
     }
 
-    rect_resize( &bounds, 1, 1, -1, -1 );
+    gc_translate_xy( gc, 1, 1 );
 
-    widget_fill_rect( widget, &bounds );
+    rect_resize( &bounds, 0, 0, -2, -2 );
+    gc_fill_rect( gc, &bounds );
 
     /* Draw the text to the button */
 
@@ -85,10 +86,10 @@ static int button_paint( widget_t* widget ) {
 
             text_width = font_get_string_width( button->font, button->text, -1 );
 
-            text_position.x = bounds.left + ( rect_width( &bounds ) - text_width ) / 2;
+            text_position.x = ( rect_width( &bounds ) - text_width ) / 2;
 
-            if ( text_position.x < bounds.left ) {
-                text_position.x = bounds.left;
+            if ( text_position.x < 0 ) {
+                text_position.x = 0;
             }
 
             break;
@@ -101,24 +102,20 @@ static int button_paint( widget_t* widget ) {
 
             text_position.x = bounds.right - text_width + 1;
 
-            if ( text_position.x < bounds.left ) {
-                text_position.x = bounds.left;
-            }
-
             break;
         }
     }
 
     switch ( button->v_align ) {
         case V_ALIGN_TOP :
-            text_position.y = bounds.top + font_get_ascender( button->font );
+            text_position.y = font_get_ascender( button->font );
             break;
 
         case V_ALIGN_CENTER : {
             int asc = font_get_ascender( button->font );
             int desc = font_get_descender( button->font );
 
-            text_position.y = bounds.top + ( rect_height( &bounds ) - ( asc - desc ) ) / 2 + asc;
+            text_position.y = ( rect_height( &bounds ) - ( asc - desc ) ) / 2 + asc;
 
             break;
         }
@@ -128,10 +125,11 @@ static int button_paint( widget_t* widget ) {
             break;
     }
 
-    widget_set_pen_color( widget, &fg_color );
-    widget_set_font( widget, button->font );
-    widget_set_clip_rect( widget, &bounds );
-    widget_draw_text( widget, &text_position, button->text, -1 );
+    gc_set_pen_color( gc, &fg_color );
+    gc_set_font( gc, button->font );
+    gc_set_clip_rect( gc, &bounds );
+
+    gc_draw_text( gc, &text_position, button->text, -1 );
 
     return 0;
 }
@@ -222,7 +220,7 @@ widget_t* create_button( const char* text ) {
         goto error4;
     }
 
-    error = widget_set_events( widget, button_event_types, button_events, E_COUNT );
+    error = widget_add_events( widget, button_event_types, button_events, E_COUNT );
 
     if ( error < 0 ) {
         goto error5;

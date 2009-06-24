@@ -19,6 +19,7 @@
 #ifndef _YGUI_COLOR_H_
 #define _YGUI_COLOR_H_
 
+#include <string.h>
 #include <sys/types.h>
 
 typedef struct color {
@@ -27,6 +28,10 @@ typedef struct color {
     uint8_t blue;
     uint8_t alpha;
 } color_t;
+
+static inline void color_copy( color_t* new, color_t* old ) {
+    memcpy( ( void* )new, ( void* )old, sizeof( color_t ) );
+}
 
 static inline uint32_t color_to_uint32( color_t* color ) {
     return ( ( color->alpha << 24 ) | ( color->red << 16 ) | ( color->green << 8 ) | ( color->blue ) );

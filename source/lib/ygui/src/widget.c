@@ -23,7 +23,6 @@
 
 #include <ygui/widget.h>
 #include <ygui/protocol.h>
-#include <ygui/render/render.h>
 
 #include "internal.h"
 
@@ -58,11 +57,21 @@ void* widget_get_data( widget_t* widget ) {
     return widget->data;
 }
 
-int widget_get_position_and_size( widget_t* widget, point_t* position, point_t* size ) {
-    memcpy( position, &widget->position, sizeof( point_t ) );
-    memcpy( size, &widget->size, sizeof( point_t ) );
+int widget_get_child_count( widget_t* widget ) {
+    return array_get_size( &widget->children );
+}
 
-    return 0;
+widget_t* widget_get_child( widget_t* widget, int index ) {
+    widget_wrapper_t* wrapper;
+
+    if ( ( index < 0 ) ||
+         ( index >= array_get_size( &widget->children ) ) ) {
+        return NULL;
+    }
+
+    wrapper = ( widget_wrapper_t* )array_get_item( &widget->children, index );
+
+    return wrapper->widget;
 }
 
 int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
@@ -70,8 +79,8 @@ int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
         bounds,
         0,
         0,
-        widget->size.x - 1,
-        widget->size.y - 1
+        widget->full_size.x - 1,
+        widget->full_size.y - 1
     );
 
     return 0;
@@ -92,14 +101,16 @@ int widget_get_minimum_size( widget_t* widget, point_t* size ) {
 }
 
 int widget_get_preferred_size( widget_t* widget, point_t* size ) {
-    if ( widget->ops->get_preferred_size == NULL ) {
+    if ( widget->is_pref_size_set ) {
+        point_copy( size, &widget->preferred_size );
+    } else if ( widget->ops->get_preferred_size != NULL ) {
+        widget->ops->get_preferred_size( widget, size );
+    } else {
         point_init(
             size,
             0,
             0
         );
-    } else {
-        widget->ops->get_preferred_size( widget, size );
     }
 
     return 0;
@@ -117,37 +128,6 @@ int widget_get_maximum_size( widget_t* widget, point_t* size ) {
     }
 
     return 0;
-}
-
-widget_t* widget_get_child_at( widget_t* widget, point_t* position ) {
-    int i;
-    int size;
-    widget_t* tmp;
-    rect_t widget_rect;
-
-    size = array_get_size( &widget->children );
-
-    if ( size == 0 ) {
-        return widget;
-    }
-
-    for ( i = 0; i < size; i++ ) {
-        tmp = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
-
-        rect_init(
-            &widget_rect,
-            tmp->position.x,
-            tmp->position.y,
-            tmp->position.x + tmp->size.x - 1,
-            tmp->position.y + tmp->size.y - 1
-        );
-
-        if ( rect_has_point( &widget_rect, position ) ) {
-            return tmp;
-        }
-    }
-
-    return widget;
 }
 
 int widget_set_window( widget_t* widget, struct window* window ) {
@@ -169,10 +149,18 @@ int widget_set_window( widget_t* widget, struct window* window ) {
 }
 
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size ) {
-    memcpy( &widget->position, position, sizeof( point_t ) );
-    memcpy( &widget->size, size, sizeof( point_t ) );
+    point_copy( &widget->position, position );
+    point_copy( &widget->full_size, size );
+    point_copy( &widget->visible_size, size );
 
     widget_invalidate( widget, 0 );
+
+    return 0;
+}
+
+int widget_set_preferred_size( widget_t* widget, point_t* size ) {
+    point_copy( &widget->preferred_size, size );
+    widget->is_pref_size_set = 1;
 
     return 0;
 }
@@ -195,10 +183,36 @@ int widget_dec_ref( widget_t* widget ) {
     return 0;
 }
 
-int widget_paint( widget_t* widget ) {
+int widget_paint( widget_t* widget, gc_t* gc ) {
     int i;
     int size;
+    rect_t res_area;
     widget_t* child;
+
+    /* Calculate the restricted area of the current widget */
+
+    rect_init(
+        &res_area,
+        0,
+        0,
+        widget->visible_size.x - 1,
+        widget->visible_size.y - 1
+    );
+    rect_add_point( &res_area, &gc->lefttop );
+    rect_add_point( &res_area, &widget->scroll_offset );
+    rect_and( &res_area, gc_current_restricted_area( gc ) );
+
+    /* If the restricted area is not valid, then we can make sure that
+       none of the child widgets will be visible, so painting can be
+       terminated here! */
+
+    if ( !rect_is_valid( &res_area ) ) {
+        return 0;
+    }
+
+    /* Push the restricted area */
+
+    gc_push_restricted_area( gc, &res_area );
 
     /* Repaint the widget if it has a valid
        paint method and the widget is invalid */
@@ -213,20 +227,11 @@ int widget_paint( widget_t* widget ) {
         /* Paint the widget */
 
         if ( widget->ops->paint != NULL ) {
-            /* Set the current clip rect to the widget rect */
+            gc_push_translate_checkpoint( gc );
 
-            rect_t widget_rect = {
-                .left = 0,
-                .top = 0,
-                .right = widget->size.x - 1,
-                .bottom = widget->size.y - 1
-            };
+            widget->ops->paint( widget, gc );
 
-            widget_set_clip_rect( widget, &widget_rect );
-
-            /* Call the paint method of the widget */
-
-            widget->ops->paint( widget );
+            gc_rollback_translate( gc );
         }
 
         /* The widget is valid now :) */
@@ -241,8 +246,17 @@ int widget_paint( widget_t* widget ) {
     for ( i = 0; i < size; i++ ) {
         child = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
 
-        widget_paint( child );
+        gc_push_translate_checkpoint( gc );
+        gc_translate( gc, &child->position );
+
+        widget_paint( child, gc );
+
+        gc_rollback_translate( gc );
     }
+
+    /* Pop the restricted area */
+
+    gc_pop_restricted_area( gc );
 
     return 0;
 }
@@ -324,171 +338,6 @@ int widget_mouse_released( widget_t* widget, int mouse_button ) {
     }
 
     return widget->ops->mouse_released( widget, mouse_button );
-}
-
-int widget_set_pen_color( widget_t* widget, color_t* color ) {
-    int error;
-    window_t* window;
-    r_set_pen_color_t* packet;
-
-    window = widget->window;
-
-    if ( window == NULL ) {
-        return -EINVAL;
-    }
-
-    error = allocate_render_packet( window, sizeof( r_set_pen_color_t ), ( void** )&packet );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    packet->header.command = R_SET_PEN_COLOR;
-    memcpy( &packet->color, color, sizeof( color_t ) );
-
-    return 0;
-}
-
-int widget_set_font( widget_t* widget, font_t* font ) {
-    int error;
-    window_t* window;
-    r_set_font_t* packet;
-
-    window = widget->window;
-
-    if ( window == NULL ) {
-        return -EINVAL;
-    }
-
-    error = allocate_render_packet( window, sizeof( r_set_font_t ), ( void** )&packet );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    packet->header.command = R_SET_FONT;
-    packet->font_handle = font->handle;
-
-    return 0;
-}
-
-int widget_set_clip_rect( widget_t* widget, rect_t* rect ) {
-    int error;
-    window_t* window;
-    r_set_clip_rect_t* packet;
-
-    window = widget->window;
-
-    if ( window == NULL ) {
-        return -EINVAL;
-    }
-
-    error = allocate_render_packet( window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    packet->header.command = R_SET_CLIP_RECT;
-
-    rect_add_point_n( &packet->clip_rect, rect, &widget->position );
-
-    rect_t widget_rect = {
-        .left = widget->position.x,
-        .top = widget->position.y,
-        .right = widget->position.x + widget->size.x - 1,
-        .bottom = widget->position.y + widget->size.y - 1
-    };
-
-    rect_and( &packet->clip_rect, &widget_rect );
-
-    return 0;
-}
-
-int widget_draw_rect( widget_t* widget, rect_t* rect ) {
-    int error;
-    window_t* window;
-    r_draw_rect_t* packet;
-
-    window = widget->window;
-
-    if ( window == NULL ) {
-        return -EINVAL;
-    }
-
-    error = allocate_render_packet( window, sizeof( r_draw_rect_t ), ( void** )&packet );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    packet->header.command = R_DRAW_RECT;
-
-    rect_add_point_n( &packet->rect, rect, &widget->position );
-
-    return 0;
-}
-
-int widget_fill_rect( widget_t* widget, rect_t* rect ) {
-    int error;
-    window_t* window;
-    r_fill_rect_t* packet;
-
-    window = widget->window;
-
-    if ( window == NULL ) {
-        return -EINVAL;
-    }
-
-    error = allocate_render_packet( window, sizeof( r_fill_rect_t ), ( void** )&packet );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    packet->header.command = R_FILL_RECT;
-
-    rect_add_point_n( &packet->rect, rect, &widget->position );
-
-    return 0;
-}
-
-int widget_draw_text( widget_t* widget, point_t* position, const char* text, int length ) {
-    int error;
-    window_t* window;
-    r_draw_text_t* packet;
-
-    if ( text == NULL ) {
-        return -EINVAL;
-    }
-
-    if ( length == -1 ) {
-        length = strlen( text );
-    }
-
-    if ( length == 0 ) {
-        return 0;
-    }
-
-    window = widget->window;
-
-    if ( window == NULL ) {
-        return -EINVAL;
-    }
-
-    error = allocate_render_packet( window, sizeof( r_draw_text_t ) + length, ( void** )&packet );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    packet->header.command = R_DRAW_TEXT;
-    packet->length = length;
-
-    point_add_n( &packet->position, position, &widget->position );
-    memcpy( ( void* )( packet + 1 ), text, length );
-
-    return 0;
 }
 
 static int widget_find_event_handler( widget_t* widget, const char* name, int* pos ) {
@@ -589,6 +438,18 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
 
     array_set_realloc_size( &widget->children, 8 );
 
+    /* Add widget related events */
+
+    event_type_t widget_events[] = {
+        { "preferred-size-changed", &widget->event_ids[ E_PREF_SIZE_CHANGED ] }
+    };
+
+    error = widget_add_events( widget, widget_events, widget->event_ids, E_WIDGET_COUNT );
+
+    if ( error < 0 ) {
+        goto error4;
+    }
+
     widget->id = id;
     widget->data = data;
     widget->ref_count = 1;
@@ -599,22 +460,24 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
 
     return widget;
 
-error3:
+ error4:
+    destroy_array( &widget->event_handlers );
+
+ error3:
     destroy_array( &widget->children );
 
-error2:
+ error2:
     free( widget );
 
-error1:
+ error1:
     return NULL;
 }
 
-int widget_set_events( widget_t* widget, event_type_t* event_types, int* event_indexes, int event_count ) {
+int widget_add_events( widget_t* widget, event_type_t* event_types, int* event_indexes, int event_count ) {
     int i;
-    int j;
     int pos;
+    int size;
     int error;
-    int* index;
     event_type_t* type;
     event_entry_t* entry;
 
@@ -628,6 +491,7 @@ int widget_set_events( widget_t* widget, event_type_t* event_types, int* event_i
         }
 
         entry->name = type->name;
+        entry->event_id = type->event_id;
         entry->callback = NULL;
 
         error = widget_find_event_handler( widget, type->name, &pos );
@@ -645,18 +509,12 @@ int widget_set_events( widget_t* widget, event_type_t* event_types, int* event_i
 
     /* Calculate event handler indexes */
 
-    for ( i = 0, type = event_types, index = event_indexes; i < event_count; i++, type++, index++ ) {
-        for ( j = 0; j < event_count; j++ ) {
-            entry = ( event_entry_t* )array_get_item( &widget->event_handlers, j );
+    size = array_get_size( &widget->event_handlers );
 
-            if ( strcmp( type->name, entry->name ) == 0 ) {
-                *index = j;
+    for ( i = 0; i < size; i++ ) {
+        entry = ( event_entry_t* )array_get_item( &widget->event_handlers, i );
 
-                break;
-            }
-        }
-
-        assert( j != event_count );
+        *entry->event_id = i;
     }
 
     return 0;

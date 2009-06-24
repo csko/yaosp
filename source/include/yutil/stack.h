@@ -1,4 +1,4 @@
-/* yaosp GUI library
+/* Stack implementation
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_INTERNAL_H_
-#define _YGUI_INTERNAL_H_
+#ifndef _YUTIL_STACK_H_
+#define _YUTIL_STACK_H_
 
-#include <ygui/window.h>
-#include <ygui/gc.h>
+typedef struct stack {
+    void** items;
+    int item_count;
+    int max_items;
+} stack_t;
 
-typedef struct widget_wrapper {
-    widget_t* widget;
-    void* data;
-} widget_wrapper_t;
+int stack_push( stack_t* stack, void* item );
+int stack_pop( stack_t* stack, void** item );
+int stack_peek( stack_t* stack, void** item );
 
-int initialize_render_buffer( window_t* window );
-int allocate_render_packet( window_t* window, size_t size, void** buffer );
-int flush_render_buffer( window_t* window );
+int stack_size( stack_t* stack );
 
-int gc_push_restricted_area( gc_t* gc, rect_t* area );
-int gc_pop_restricted_area( gc_t* gc );
-rect_t* gc_current_restricted_area( gc_t* gc );
+int init_stack( stack_t* stack );
+int destroy_stack( stack_t* stack );
 
-int gc_push_translate_checkpoint( gc_t* gc );
-int gc_rollback_translate( gc_t* gc );
-
-#endif /* _YGUI_INTERNAL_H_ */
+#endif /* _YUTIL_STACK_H_ */

@@ -30,6 +30,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/button.c</item>
         <item>src/textfield.c</item>
         <item>src/desktop.c</item>
+        <item>src/scrollpanel.c</item>
+        <item>src/gc.c</item>
         <item>src/layout/layout.c</item>
         <item>src/layout/borderlayout.c</item>
         <item>src/render/render.c</item>

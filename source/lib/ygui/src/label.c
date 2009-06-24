@@ -30,7 +30,7 @@ typedef struct label {
     v_alignment_t v_align;
 } label_t;
 
-static int label_paint( widget_t* widget ) {
+static int label_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
     label_t* label;
     point_t text_position;
@@ -42,8 +42,8 @@ static int label_paint( widget_t* widget ) {
 
     widget_get_bounds( widget, &bounds );
 
-    widget_set_pen_color( widget, &bg_color );
-    widget_fill_rect( widget, &bounds );
+    gc_set_pen_color( gc, &bg_color );
+    gc_fill_rect( gc, &bounds );
 
     switch ( label->h_align ) {
         case H_ALIGN_LEFT :
@@ -98,9 +98,9 @@ static int label_paint( widget_t* widget ) {
             break;
     }
 
-    widget_set_pen_color( widget, &fg_color );
-    widget_set_font( widget, label->font );
-    widget_draw_text( widget, &text_position, label->text, -1 );
+    gc_set_pen_color( gc, &fg_color );
+    gc_set_font( gc, label->font );
+    gc_draw_text( gc, &text_position, label->text, -1 );
 
     return 0;
 }

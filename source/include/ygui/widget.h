@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_WIDGET_H_
-#define _YAOSP_WIDGET_H_
+#ifndef _YGUI_WIDGET_H_
+#define _YGUI_WIDGET_H_
 
 #include <yutil/array.h>
 
@@ -26,19 +26,28 @@
 #include <ygui/color.h>
 #include <ygui/font.h>
 #include <ygui/event.h>
+#include <ygui/gc.h>
 
 enum {
     W_PANEL = 1,
     W_LABEL,
     W_BUTTON,
-    W_TEXTFIELD
+    W_TEXTFIELD,
+    W_SCROLLPANEL
+};
+
+/* Global widget events */
+
+enum {
+    E_PREF_SIZE_CHANGED,
+    E_WIDGET_COUNT
 };
 
 struct window;
 struct widget;
 
 typedef struct widget_operations {
-    int ( *paint )( struct widget* widget );
+    int ( *paint )( struct widget* widget, gc_t* gc );
     int ( *key_pressed )( struct widget* widget, int key );
     int ( *key_released )( struct widget* widget, int key );
     int ( *mouse_entered )( struct widget* widget, point_t* position );
@@ -63,12 +72,18 @@ typedef struct widget {
     int is_valid;
 
     point_t position;
-    point_t size;
+    point_t scroll_offset;
+    point_t full_size;
+    point_t visible_size;
+
+    int is_pref_size_set;
+    point_t preferred_size;
 
     array_t children;
 
     /* Event handling */
 
+    int event_ids[ E_WIDGET_COUNT ];
     array_t event_handlers;
 } widget_t;
 
@@ -76,20 +91,20 @@ int widget_add( widget_t* parent, widget_t* child, void* data );
 
 int widget_get_id( widget_t* widget );
 void* widget_get_data( widget_t* widget );
-int widget_get_position_and_size( widget_t* widget, point_t* position, point_t* size );
+int widget_get_child_count( widget_t* widget );
+widget_t* widget_get_child( widget_t* widget, int index );
 int widget_get_bounds( widget_t* widget, rect_t* bounds );
 int widget_get_minimum_size( widget_t* widget, point_t* size );
 int widget_get_preferred_size( widget_t* widget, point_t* size );
 int widget_get_maximum_size( widget_t* widget, point_t* size );
 
-widget_t* widget_get_child_at( widget_t* widget, point_t* position );
-
 int widget_set_window( widget_t* widget, struct window* window );
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size );
+int widget_set_preferred_size( widget_t* widget, point_t* size );
 
 int widget_inc_ref( widget_t* widget );
 int widget_dec_ref( widget_t* widget );
-int widget_paint( widget_t* widget );
+int widget_paint( widget_t* widget, gc_t* gc );
 int widget_invalidate( widget_t* widget, int notify_window );
 
 int widget_key_pressed( widget_t* widget, int key );
@@ -100,15 +115,6 @@ int widget_mouse_moved( widget_t* widget, point_t* position );
 int widget_mouse_pressed( widget_t* widget, point_t* position, int mouse_button );
 int widget_mouse_released( widget_t* widget, int mouse_button );
 
-/* Drawing functions */
-
-int widget_set_pen_color( widget_t* widget, color_t* color );
-int widget_set_font( widget_t* widget, font_t* font );
-int widget_set_clip_rect( widget_t* widget, rect_t* rect );
-int widget_draw_rect( widget_t* widget, rect_t* rect );
-int widget_fill_rect( widget_t* widget, rect_t* rect );
-int widget_draw_text( widget_t* widget, point_t* position, const char* text, int length );
-
 /* Event related functions */
 
 int widget_connect_event_handler( widget_t* widget, const char* event_name, event_callback_t* callback, void* data );
@@ -116,6 +122,6 @@ int widget_signal_event_handler( widget_t* widget, int event_handler );
 
 widget_t* create_widget( int id, widget_operations_t* ops, void* data );
 
-int widget_set_events( widget_t* widget, event_type_t* event_types, int* event_indexes, int event_count );
+int widget_add_events( widget_t* widget, event_type_t* event_types, int* event_indexes, int event_count );
 
-#endif /* _YAOSP_WIDGET_H_ */
+#endif /* _YGUI_WIDGET_H_ */

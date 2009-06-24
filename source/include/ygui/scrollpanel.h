@@ -16,26 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_INTERNAL_H_
-#define _YGUI_INTERNAL_H_
+#ifndef _YGUI_SCROLLPANEL_H_
+#define _YGUI_SCROLLPANEL_H_
 
-#include <ygui/window.h>
-#include <ygui/gc.h>
+#include <ygui/widget.h>
+#include <ygui/yconstants.h>
 
-typedef struct widget_wrapper {
-    widget_t* widget;
-    void* data;
-} widget_wrapper_t;
+widget_t* create_scroll_panel( scrollbar_policy_t v_scroll_policy, scrollbar_policy_t h_scroll_policy );
 
-int initialize_render_buffer( window_t* window );
-int allocate_render_packet( window_t* window, size_t size, void** buffer );
-int flush_render_buffer( window_t* window );
-
-int gc_push_restricted_area( gc_t* gc, rect_t* area );
-int gc_pop_restricted_area( gc_t* gc );
-rect_t* gc_current_restricted_area( gc_t* gc );
-
-int gc_push_translate_checkpoint( gc_t* gc );
-int gc_rollback_translate( gc_t* gc );
-
-#endif /* _YGUI_INTERNAL_H_ */
+#endif /* _YGUI_SCROLLPANEL_H_ */

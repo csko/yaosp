@@ -21,6 +21,7 @@
 
 typedef struct event_type {
     const char* name;
+    int* event_id;
 } event_type_t;
 
 struct widget;
@@ -29,6 +30,7 @@ typedef int event_callback_t( struct widget* widget, void* data );
 
 typedef struct event_entry {
     const char* name;
+    int* event_id;
     event_callback_t* callback;
     void* data;
 } event_entry_t;

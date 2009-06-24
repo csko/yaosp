@@ -25,6 +25,7 @@
 
 #include <ygui/point.h>
 #include <ygui/widget.h>
+#include <ygui/gc.h>
 
 typedef struct window {
     ipc_port_id client_port;
@@ -36,6 +37,7 @@ typedef struct window {
     widget_t* mouse_widget;
     widget_t* mouse_down_widget;
 
+    gc_t gc;
     uint8_t* render_buffer;
     size_t render_buffer_size;
     size_t render_buffer_max_size;

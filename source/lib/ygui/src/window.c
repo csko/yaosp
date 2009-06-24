@@ -38,17 +38,56 @@ widget_t* window_get_container( window_t* window ) {
     return window->container;
 }
 
-static widget_t* window_find_widget_at( window_t* window, point_t* position ) {
-    widget_t* prev;
-    widget_t* next;
+static widget_t* window_find_widget_at( window_t* window, point_t* _position ) {
+    widget_t* widget;
+    point_t position;
 
-    prev = window->container;
+    widget = window->container;
 
-    for ( next = widget_get_child_at( prev, position ); prev != next; next = widget_get_child_at( prev, position ) ) {
-        prev = next;
+    point_copy( &position, _position );
+
+    while ( 1 ) {
+        int i;
+        int size;
+        int found;
+
+        found = 0;
+        size = array_get_size( &widget->children );
+
+        for ( i = 0; i < size; i++ ) {
+            widget_wrapper_t* wrapper;
+
+            wrapper = ( widget_wrapper_t* )array_get_item( &widget->children, i );
+
+            rect_t widget_rect = {
+                .left = 0,
+                .top = 0,
+                .right = widget->visible_size.x - 1,
+                .bottom = widget->visible_size.y - 1
+            };
+
+            rect_add_point( &widget_rect, &wrapper->widget->position );
+            rect_add_point( &widget_rect, &wrapper->widget->scroll_offset );
+
+            if ( rect_has_point( &widget_rect, &position ) ) {
+                point_sub( &position, &widget->position );
+                point_sub( &position, &widget->scroll_offset );
+
+                widget = wrapper->widget;
+                found = 1;
+
+                break;
+            }
+        }
+
+        if ( !found ) {
+            return widget;
+        }
     }
 
-    return next;
+    /* Muhaha :) */
+
+    return NULL;
 }
 
 static int window_thread( void* arg ) {
@@ -75,27 +114,30 @@ static int window_thread( void* arg ) {
 
         switch ( code ) {
             case MSG_DO_SHOW_WINDOW :
-                /* Paint all the widgets */
-
-                widget_paint( window->container );
-
-                /* Send the rendering commands to the guiserver */
-
-                flush_render_buffer( window );
-
-                /* Show the window */
-
-                send_ipc_message( window->server_port, MSG_SHOW_WINDOW, NULL, 0 );
-
-                break;
-
             case MSG_WIDGET_INVALIDATED : {
                 int error;
+                rect_t res_area;
                 render_header_t* header;
+
+                /* Setup the initial restricted area */
+
+                rect_init(
+                    &res_area,
+                    0,
+                    0,
+                    window->container->visible_size.x - 1,
+                    window->container->visible_size.y - 1
+                );
+
+                gc_push_restricted_area( &window->gc, &res_area );
 
                 /* Re-paint the widgets */
 
-                widget_paint( window->container );
+                widget_paint( window->container, &window->gc );
+
+                /* Clean-up the graphics context */
+
+                gc_clean_up( &window->gc );
 
                 /* Add the terminator item to the render command list */
 
@@ -108,6 +150,12 @@ static int window_thread( void* arg ) {
                 /* Send the rendering commands to the guiserver */
 
                 flush_render_buffer( window );
+
+                /* Show the window (if needed) */
+
+                if ( code == MSG_DO_SHOW_WINDOW ) {
+                    send_ipc_message( window->server_port, MSG_SHOW_WINDOW, NULL, 0 );
+                }
 
                 break;
             }
@@ -143,8 +191,8 @@ static int window_thread( void* arg ) {
                 cmd = ( msg_mouse_entered_t* )buffer;
 
                 assert( window->mouse_widget == NULL );
-                assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
-                assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
+                //assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
+                //assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
 
                 window->mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
 
@@ -175,8 +223,8 @@ static int window_thread( void* arg ) {
                 cmd = ( msg_mouse_moved_t* )buffer;
 
                 assert( window->mouse_widget != NULL );
-                assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
-                assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
+                //assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
+                //assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
 
                 new_mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
 
@@ -300,8 +348,13 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     widget_set_window( window->container, window );
 
-    point_init( &window->container->position, 0, 0 );
-    point_init( &window->container->size, size->x, size->y );
+    point_t container_position = { .x = 0, .y = 0 };
+
+    widget_set_position_and_size(
+        window->container,
+        &container_position,
+        size
+    );
 
     window->render_buffer = ( uint8_t* )malloc( DEFAULT_RENDER_BUFFER_SIZE );
 
@@ -312,12 +365,20 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     initialize_render_buffer( window );
     window->render_buffer_max_size = DEFAULT_RENDER_BUFFER_SIZE;
 
+    /* Initialize the graphics context of the window */
+
+    error = init_gc( window, &window->gc );
+
+    if ( error < 0 ) {
+        goto error6;
+    }
+
     /* Register the window to the guiserver */
 
     request = ( msg_create_win_t* )malloc( sizeof( msg_create_win_t ) + title_size + 1 );
 
     if ( request == NULL ) {
-        goto error5;
+        goto error6;
     }
 
     request->reply_port = window->reply_port;
@@ -332,17 +393,17 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     free( request );
 
     if ( error < 0 ) {
-        goto error5;
+        goto error6;
     }
 
     error = recv_ipc_message( window->reply_port, NULL, &reply, sizeof( msg_create_win_reply_t ), INFINITE_TIMEOUT );
 
     if ( error < 0 ) {
-        goto error5;
+        goto error6;
     }
 
     if ( reply.server_port < 0 ) {
-        goto error5;
+        goto error6;
     }
 
     window->server_port = reply.server_port;
@@ -356,29 +417,32 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     );
 
     if ( thread < 0 ) {
-        goto error6;
+        goto error7;
     }
 
     wake_up_thread( thread );
 
     return window;
 
-error6:
+ error7:
     /* TODO: Unregister the window from the guiserver */
 
-error5:
+ error6:
+    /* TODO: free the render buffer */
+
+ error5:
     /* TODO: free the container */
 
-error4:
+ error4:
     /* TODO: Delete the client port */
 
-error3:
+ error3:
     /* TODO: Delete the reply port */
 
-error2:
+ error2:
     free( window );
 
-error1:
+ error1:
     return NULL;
 }
 

@@ -26,6 +26,7 @@
 #include <ygui/textfield.h>
 #include <ygui/button.h>
 #include <ygui/desktop.h>
+#include <ygui/scrollpanel.h>
 #include <ygui/layout/borderlayout.h>
 
 static int event_button_clicked( widget_t* widget, void* data ) {
@@ -41,6 +42,16 @@ static int event_button_clicked( widget_t* widget, void* data ) {
     };
 
     win = create_window( "Test window", &point, &size, 0 );
+
+    widget_t* container = window_get_container( win );
+
+    layout_t* layout = create_border_layout();
+    panel_set_layout( container, layout );
+    layout_dec_ref( layout );
+
+    widget_t* scroll = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_ALWAYS );
+    widget_add( container, scroll, BRD_CENTER );
+    widget_dec_ref( scroll );
 
     show_window( win );
 

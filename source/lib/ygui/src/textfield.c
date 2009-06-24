@@ -44,15 +44,15 @@ typedef struct textfield {
     v_alignment_t v_align;
 } textfield_t;
 
-static event_type_t textfield_event_types[ E_COUNT ] = {
-    { "activated" }
-};
-
 static int textfield_events[ E_COUNT ] = {
-    0
+    -1
 };
 
-static int textfield_paint( widget_t* widget ) {
+static event_type_t textfield_event_types[ E_COUNT ] = {
+    { "activated", &textfield_events[ E_ACTIVATED ] }
+};
+
+static int textfield_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
     point_t text_position;
     textfield_t* textfield;
@@ -66,14 +66,14 @@ static int textfield_paint( widget_t* widget ) {
 
     /* Draw the border of the textfield */
 
-    widget_set_pen_color( widget, &fg_color );
-    widget_draw_rect( widget, &bounds );
+    gc_set_pen_color( gc, &fg_color );
+    gc_draw_rect( gc, &bounds );
 
     /* Fill the background of the textfield */
 
     rect_resize( &bounds, 1, 1, -1, -1 );
-    widget_set_pen_color( widget, &bg_color );
-    widget_fill_rect( widget, &bounds );
+    gc_set_pen_color( gc, &bg_color );
+    gc_fill_rect( gc, &bounds );
 
     /* Calculate the text position */
 
@@ -100,10 +100,10 @@ static int textfield_paint( widget_t* widget ) {
 
     /* Draw the text to the widget */
 
-    widget_set_pen_color( widget, &fg_color );
-    widget_set_font( widget, textfield->font );
-    widget_set_clip_rect( widget, &bounds );
-    widget_draw_text( widget, &text_position, string_c_str( &textfield->buffer ) + textfield->text_start, -1 );
+    gc_set_pen_color( gc, &fg_color );
+    gc_set_font( gc, textfield->font );
+    gc_set_clip_rect( gc, &bounds );
+    gc_draw_text( gc, &text_position, string_c_str( &textfield->buffer ) + textfield->text_start, -1 );
 
     return 0;
 }
@@ -259,7 +259,7 @@ widget_t* create_textfield( void ) {
         goto error4;
     }
 
-    error = widget_set_events( widget, textfield_event_types, textfield_events, E_COUNT );
+    error = widget_add_events( widget, textfield_event_types, textfield_events, E_COUNT );
 
     if ( error < 0 ) {
         goto error5;

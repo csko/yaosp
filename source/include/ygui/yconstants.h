@@ -31,4 +31,10 @@ typedef enum v_alignment {
     V_ALIGN_BOTTOM
 } v_alignment_t;
 
+typedef enum scrollbar_policy {
+    SCROLLBAR_NEVER,
+    SCROLLBAR_AUTO,
+    SCROLLBAR_ALWAYS
+} scrollbar_policy_t;
+
 #endif /* _YAOSP_YCONSTANTS_H_ */

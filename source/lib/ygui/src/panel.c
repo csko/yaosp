@@ -28,13 +28,13 @@ typedef struct panel {
     layout_t* layout;
 } panel_t;
 
-static int panel_paint( widget_t* widget ) {
+static int panel_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
 
     widget_get_bounds( widget, &bounds );
 
-    widget_set_pen_color( widget, &panel_bg );
-    widget_fill_rect( widget, &bounds );
+    gc_set_pen_color( gc, &panel_bg );
+    gc_fill_rect( gc, &bounds );
 
     return 0;
 }
