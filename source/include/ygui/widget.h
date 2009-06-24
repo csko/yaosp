@@ -76,8 +76,7 @@ int widget_add( widget_t* parent, widget_t* child, void* data );
 
 int widget_get_id( widget_t* widget );
 void* widget_get_data( widget_t* widget );
-int widget_get_position( widget_t* widget, point_t* position );
-int widget_get_size( widget_t* widget, point_t* size );
+int widget_get_position_and_size( widget_t* widget, point_t* position, point_t* size );
 int widget_get_bounds( widget_t* widget, rect_t* bounds );
 int widget_get_minimum_size( widget_t* widget, point_t* size );
 int widget_get_preferred_size( widget_t* widget, point_t* size );

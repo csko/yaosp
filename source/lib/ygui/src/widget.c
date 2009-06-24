@@ -58,13 +58,8 @@ void* widget_get_data( widget_t* widget ) {
     return widget->data;
 }
 
-int widget_get_position( widget_t* widget, point_t* position ) {
+int widget_get_position_and_size( widget_t* widget, point_t* position, point_t* size ) {
     memcpy( position, &widget->position, sizeof( point_t ) );
-
-    return 0;
-}
-
-int widget_get_size( widget_t* widget, point_t* size ) {
     memcpy( size, &widget->size, sizeof( point_t ) );
 
     return 0;

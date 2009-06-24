@@ -84,7 +84,7 @@ static void borderlayout_do_page_end( widget_t* widget, point_t* panel_position,
     point_init(
         &widget_position,
         panel_position->x + ( panel_size->x - widget_size.x ) / 2,
-        panel_position->y + panel_size->y - ( widget_size.y + 1 )
+        panel_position->y + panel_size->y - widget_size.y
     );
 
     widget_set_position_and_size(
@@ -94,6 +94,69 @@ static void borderlayout_do_page_end( widget_t* widget, point_t* panel_position,
     );
 
     center_size->y -= widget_size.y;
+}
+
+static void borderlayout_do_line_start( widget_t* widget, point_t* panel_position, point_t* panel_size,
+                                        point_t* center_position, point_t* center_size ) {
+    point_t widget_position;
+    point_t widget_size;
+    point_t preferred_size;
+    point_t maximum_size;
+
+    widget_get_preferred_size( widget, &preferred_size );
+    widget_get_maximum_size( widget, &maximum_size );
+
+    point_init(
+        &widget_size,
+        preferred_size.x,
+        MIN( center_size->y, maximum_size.y )
+    );
+
+    point_init(
+        &widget_position,
+        panel_position->x,
+        panel_position->y + center_position->y + ( center_size->y - widget_size.y ) / 2
+    );
+
+    widget_set_position_and_size(
+        widget,
+        &widget_position,
+        &widget_size
+    );
+
+    center_position->x += widget_size.x;
+    center_size->x -= widget_size.x;
+}
+
+static void borderlayout_do_line_end( widget_t* widget, point_t* panel_position, point_t* panel_size,
+                                      point_t* center_position, point_t* center_size ) {
+    point_t widget_position;
+    point_t widget_size;
+    point_t preferred_size;
+    point_t maximum_size;
+
+    widget_get_preferred_size( widget, &preferred_size );
+    widget_get_maximum_size( widget, &maximum_size );
+
+    point_init(
+        &widget_size,
+        preferred_size.x,
+        MIN( center_size->y, maximum_size.y )
+    );
+
+    point_init(
+        &widget_position,
+        panel_position->x + panel_size->x - widget_size.x,
+        panel_position->y + center_position->y + ( center_size->y - widget_size.y ) / 2
+    );
+
+    widget_set_position_and_size(
+        widget,
+        &widget_position,
+        &widget_size
+    );
+
+    center_size->x -= widget_size.x;
 }
 
 static void borderlayout_do_center( widget_t* widget, point_t* panel_position, point_t* panel_size,
@@ -126,8 +189,7 @@ static int borderlayout_do_layout( widget_t* widget ) {
     point_t panel_position;
     widget_t* widget_table[ W_COUNT ] = { NULL, NULL, NULL, NULL, NULL };
 
-    widget_get_size( widget, &panel_size );
-    widget_get_position( widget, &panel_position );
+    widget_get_position_and_size( widget, &panel_position, &panel_size );
 
     count = array_get_size( &widget->children );
 
@@ -163,15 +225,52 @@ static int borderlayout_do_layout( widget_t* widget ) {
     memcpy( &center_size, &panel_size, sizeof( point_t ) );
 
     if ( widget_table[ W_PAGE_START ] != NULL ) {
-        borderlayout_do_page_start( widget_table[ W_PAGE_START ], &panel_position, &panel_size, &center_position, &center_size );
+        borderlayout_do_page_start(
+            widget_table[ W_PAGE_START ],
+            &panel_position,
+            &panel_size,
+            &center_position,
+            &center_size
+        );
     }
 
     if ( widget_table[ W_PAGE_END ] != NULL ) {
-        borderlayout_do_page_end( widget_table[ W_PAGE_END ], &panel_position, &panel_size, &center_size );
+        borderlayout_do_page_end(
+            widget_table[ W_PAGE_END ],
+            &panel_position,
+            &panel_size,
+            &center_size
+        );
+    }
+
+    if ( widget_table[ W_LINE_START ] != NULL ) {
+        borderlayout_do_line_start(
+            widget_table[ W_LINE_START ],
+            &panel_position,
+            &panel_size,
+            &center_position,
+            &center_size
+        );
+    }
+
+    if ( widget_table[ W_LINE_END ] != NULL ) {
+        borderlayout_do_line_end(
+            widget_table[ W_LINE_END ],
+            &panel_position,
+            &panel_size,
+            &center_position,
+            &center_size
+        );
     }
 
     if ( widget_table[ W_CENTER ] != NULL ) {
-        borderlayout_do_center( widget_table[ W_CENTER ], &panel_position, &panel_size, &center_position, &center_size );
+        borderlayout_do_center(
+            widget_table[ W_CENTER ],
+            &panel_position,
+            &panel_size,
+            &center_position,
+            &center_size
+        );
     }
 
     return 0;

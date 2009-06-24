@@ -59,7 +59,7 @@ static int button_paint( widget_t* widget ) {
     /* Draw the border of the button */
 
     widget_set_pen_color( widget, &fg_color );
-    widget_fill_rect( widget, &bounds );
+    widget_draw_rect( widget, &bounds );
 
     /* Fill the background of the button */
 
@@ -70,6 +70,7 @@ static int button_paint( widget_t* widget ) {
     }
 
     rect_resize( &bounds, 1, 1, -1, -1 );
+
     widget_fill_rect( widget, &bounds );
 
     /* Draw the text to the button */
