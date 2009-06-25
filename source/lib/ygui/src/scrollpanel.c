@@ -41,14 +41,14 @@ typedef struct scrollpanel {
     scrollbar_t horizontal;
 } scrollpanel_t;
 
-static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child );
+static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible );
+static void scrollbar_calc_horizontal_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible );
 
 static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* gc ) {
     rect_t tmp;
     rect_t bounds;
 
     static color_t fg_color = { 0, 0, 0, 0xFF };
-    static color_t bg_color = { 216, 216, 216, 0xFF };
     static color_t darker_bg_color = { 176, 176, 176, 0xFF };
 
     widget_get_bounds( widget, &bounds );
@@ -59,27 +59,48 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         0
     );
 
-    /* Border */
+    gc_set_pen_color( gc, &fg_color );
+
+    /* Left border */
 
     rect_init(
         &tmp,
         0,
-        bounds.top,
-        SCROLL_BAR_SIZE - 1,
-        bounds.bottom
+        scrollbar->prev.top,
+        0,
+        scrollbar->next.bottom
     );
 
-    gc_set_pen_color( gc, &fg_color );
     gc_draw_rect( gc, &tmp );
+
+    /* Right border */
+
+    rect_init(
+        &tmp,
+        SCROLL_BAR_SIZE - 1,
+        scrollbar->prev.top,
+        SCROLL_BAR_SIZE - 1,
+        scrollbar->next.bottom
+    );
 
     /* Up button */
 
     rect_init(
         &tmp,
         1,
-        bounds.top + SCROLL_BAR_SIZE - 1,
+        scrollbar->prev.top,
         SCROLL_BAR_SIZE - 2,
-        bounds.top + SCROLL_BAR_SIZE - 1
+        scrollbar->prev.top
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    rect_init(
+        &tmp,
+        1,
+        scrollbar->prev.bottom,
+        SCROLL_BAR_SIZE - 2,
+        scrollbar->prev.bottom
     );
 
     gc_fill_rect( gc, &tmp );
@@ -89,9 +110,19 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
     rect_init(
         &tmp,
         1,
-        bounds.bottom - SCROLL_BAR_SIZE + 1,
+        scrollbar->next.top,
         SCROLL_BAR_SIZE - 2,
-        bounds.bottom - SCROLL_BAR_SIZE + 1
+        scrollbar->next.top
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    rect_init(
+        &tmp,
+        1,
+        scrollbar->next.bottom,
+        SCROLL_BAR_SIZE - 2,
+        scrollbar->next.bottom
     );
 
     gc_fill_rect( gc, &tmp );
@@ -118,24 +149,12 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
 
     gc_fill_rect( gc, &tmp );
 
-    rect_resize_n(
-        &tmp,
-        &scrollbar->slider,
-        -scrollbar->slider.left + 1,
-        1,
-        -scrollbar->slider.left - 1,
-        -1
-    );
-
-    gc_set_pen_color( gc, &bg_color );
-    gc_fill_rect( gc, &tmp );
-
     /* Space before the slider */
 
     rect_init(
         &tmp,
         1,
-        SCROLL_BTN_SIZE,
+        scrollbar->prev.bottom + 1,
         SCROLL_BAR_SIZE - 2,
         scrollbar->slider.top - 1
     );
@@ -150,7 +169,7 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         1,
         scrollbar->slider.bottom + 1,
         SCROLL_BAR_SIZE - 2,
-        bounds.bottom - SCROLL_BTN_SIZE
+        scrollbar->next.top - 1
     );
 
     gc_fill_rect( gc, &tmp );
@@ -162,11 +181,153 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
     );
 }
 
-static void paint_h_scrollbar( widget_t* widget, gc_t* gc ) {
+static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* gc ) {
+    rect_t tmp;
+    rect_t bounds;
+
+    static color_t fg_color = { 0, 0, 0, 0xFF };
+    static color_t darker_bg_color = { 176, 176, 176, 0xFF };
+
+    widget_get_bounds( widget, &bounds );
+
+    gc_translate_xy(
+        gc,
+        0,
+        bounds.bottom - SCROLL_BAR_SIZE + 1
+    );
+
+    gc_set_pen_color( gc, &fg_color );
+
+    /* Top border */
+
+    rect_init(
+        &tmp,
+        scrollbar->prev.left,
+        0,
+        scrollbar->next.right,
+        0
+    );
+
+    gc_draw_rect( gc, &tmp );
+
+    /* Bottom border */
+
+    rect_init(
+        &tmp,
+        scrollbar->prev.left,
+        SCROLL_BAR_SIZE - 1,
+        scrollbar->next.right,
+        SCROLL_BAR_SIZE - 1
+    );
+
+    /* Up button */
+
+    rect_init(
+        &tmp,
+        scrollbar->prev.left,
+        1,
+        scrollbar->prev.left,
+        SCROLL_BAR_SIZE - 2
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    rect_init(
+        &tmp,
+        scrollbar->prev.right,
+        1,
+        scrollbar->prev.right,
+        SCROLL_BAR_SIZE - 2
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    /* Down button */
+
+    rect_init(
+        &tmp,
+        scrollbar->next.left,
+        1,
+        scrollbar->next.left,
+        SCROLL_BAR_SIZE - 2
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    rect_init(
+        &tmp,
+        scrollbar->next.right,
+        1,
+        scrollbar->next.right,
+        SCROLL_BAR_SIZE - 2
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    /* Slider */
+
+    rect_init(
+        &tmp,
+        scrollbar->slider.left,
+        1,
+        scrollbar->slider.left,
+        SCROLL_BAR_SIZE - 2
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    rect_init(
+        &tmp,
+        scrollbar->slider.right,
+        1,
+        scrollbar->slider.right,
+        SCROLL_BAR_SIZE - 2
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    /* Space before the slider */
+
+    rect_init(
+        &tmp,
+        scrollbar->prev.right + 1,
+        1,
+        SCROLL_BAR_SIZE - 2,
+        scrollbar->slider.left - 1
+    );
+
+    gc_set_pen_color( gc, &darker_bg_color );
+    gc_fill_rect( gc, &tmp );
+
+    /* Space after the slider */
+
+    rect_init(
+        &tmp,
+        scrollbar->slider.right + 1,
+        1,
+        scrollbar->next.left - 1,
+        SCROLL_BAR_SIZE - 2
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    gc_translate_xy(
+        gc,
+        0,
+        -( bounds.bottom - SCROLL_BAR_SIZE + 1 )
+    );
 }
 
 static int scrollpanel_paint( widget_t* widget, gc_t* gc ) {
+    rect_t bounds;
     scrollpanel_t* scrollpanel;
+
+    static color_t bg_color = { 216, 216, 216, 0xFF };
+
+    widget_get_bounds( widget, &bounds );
+
+    gc_set_pen_color( gc, &bg_color );
+    gc_fill_rect( gc, &bounds );
 
     scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
 
@@ -175,7 +336,7 @@ static int scrollpanel_paint( widget_t* widget, gc_t* gc ) {
     }
 
     if ( scrollpanel->horizontal.visible ) {
-        paint_h_scrollbar( widget, gc );
+        paint_h_scrollbar( widget, &scrollpanel->horizontal, gc );
     }
 
     return 0;
@@ -183,6 +344,9 @@ static int scrollpanel_paint( widget_t* widget, gc_t* gc ) {
 
 static void do_v_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) {
     widget_t* child;
+    scrollpanel_t* scrollpanel;
+
+    scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
 
     if ( widget_get_child_count( widget ) == 0 ) {
         return;
@@ -202,7 +366,7 @@ static void do_v_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
 
     /* Recalculate the position of the vertical slider */
 
-    scrollbar_calc_vertical_slider( widget, scrollbar, child );
+    scrollbar_calc_vertical_slider( widget, scrollbar, child, scrollpanel->horizontal.visible );
 
     /* Invalidate the scrollpanel */
 
@@ -226,6 +390,54 @@ static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
     widget_invalidate( widget, 1 );
 }
 
+static void do_h_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) {
+    widget_t* child;
+    scrollpanel_t* scrollpanel;
+
+    scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
+
+    if ( widget_get_child_count( widget ) == 0 ) {
+        return;
+    }
+
+    child = widget_get_child_at( widget, 0 );
+
+    /* Update the scroll offset of the child widget */
+
+    child->scroll_offset.x += amount;
+
+    if ( child->scroll_offset.x > 0 ) {
+        child->scroll_offset.x = 0;
+    } else if ( -child->scroll_offset.x > child->full_size.x - child->visible_size.x ) {
+        child->scroll_offset.x = MIN( 0, child->visible_size.x - child->full_size.x );
+    }
+
+    /* Recalculate the position of the vertical slider */
+
+    scrollbar_calc_horizontal_slider( widget, scrollbar, child, scrollpanel->vertical.visible );
+
+    /* Invalidate the scrollpanel */
+
+    widget_invalidate( widget, 1 );
+}
+
+static void do_h_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
+    double p;
+    widget_t* child;
+
+    if ( widget_get_child_count( widget ) == 0 ) {
+        return;
+    }
+
+    child = widget_get_child_at( widget, 0 );
+
+    p = ( double )( scrollbar->slider.left - SCROLL_BTN_SIZE ) / scrollbar->slider_space;
+
+    child->scroll_offset.x = -( ( int )( ( child->full_size.x - child->visible_size.x ) * p ) );
+
+    widget_invalidate( widget, 1 );
+}
+
 static void scrollpanel_vertical_drag( widget_t* widget, scrollbar_t* scrollbar, point_t* point ) {
     rect_t bounds;
     point_t offset;
@@ -245,15 +457,45 @@ static void scrollpanel_vertical_drag( widget_t* widget, scrollbar_t* scrollbar,
             0,
             SCROLL_BTN_SIZE - scrollbar->slider.top
         );
-    } else if ( scrollbar->slider.bottom > bounds.bottom - SCROLL_BTN_SIZE ) {
+    } else if ( scrollbar->slider.bottom >= scrollbar->next.top ) {
         rect_sub_point_xy(
             &scrollbar->slider,
             0,
-            scrollbar->slider.bottom - ( bounds.bottom - SCROLL_BTN_SIZE )
+            scrollbar->slider.bottom - scrollbar->next.top + 1
         );
     }
 
     do_v_scroll_to( widget, scrollbar );
+}
+
+static void scrollpanel_horizontal_drag( widget_t* widget, scrollbar_t* scrollbar, point_t* point ) {
+    rect_t bounds;
+    point_t offset;
+
+    widget_get_bounds( widget, &bounds );
+
+    point_sub_n( &offset, point, &scrollbar->drag_position );
+    point_copy( &scrollbar->drag_position, point );
+
+    offset.y = 0;
+
+    rect_add_point( &scrollbar->slider, &offset );
+
+    if ( scrollbar->slider.left < SCROLL_BTN_SIZE ) {
+        rect_add_point_xy(
+            &scrollbar->slider,
+            SCROLL_BTN_SIZE - scrollbar->slider.left,
+            0
+        );
+    } else if ( scrollbar->slider.right >= scrollbar->next.left ) {
+        rect_sub_point_xy(
+            &scrollbar->slider,
+            scrollbar->slider.right - scrollbar->next.left + 1,
+            0
+        );
+    }
+
+    do_h_scroll_to( widget, scrollbar );
 }
 
 static int scrollpanel_mouse_moved( widget_t* widget, point_t* point ) {
@@ -268,6 +510,8 @@ static int scrollpanel_mouse_moved( widget_t* widget, point_t* point ) {
     }
 
     if ( scrollpanel->horizontal.dragging ) {
+        scrollpanel_horizontal_drag( widget, &scrollpanel->horizontal, point );
+
         return 0;
     }
 
@@ -336,7 +580,27 @@ static int scrollpanel_mouse_pressed( widget_t* widget, point_t* point, int butt
     hit_type = scrollbar_check_hit( &scrollpanel->horizontal, point );
 
     if ( hit_type != HIT_NONE ) {
-        /* TODO */
+        switch ( ( int )hit_type ) {
+            case HIT_PREV_BTN :
+                do_h_scroll( widget, &scrollpanel->horizontal, 15 );
+                break;
+
+            case HIT_NEXT_BTN :
+                do_h_scroll( widget, &scrollpanel->horizontal, -15 );
+                break;
+
+            case HIT_BEFORE_SCROLL_BAR :
+                break;
+
+            case HIT_AFTER_SCROLL_BAR :
+                break;
+
+            case HIT_SCROLL_BAR :
+                scrollpanel->horizontal.dragging = 1;
+                point_copy( &scrollpanel->horizontal.drag_position, point );
+
+                break;
+        }
 
         return 0;
     }
@@ -353,6 +617,12 @@ static int scrollpanel_mouse_released( widget_t* widget, int button ) {
 
     if ( scrollpanel->vertical.dragging ) {
         scrollpanel->vertical.dragging = 0;
+    }
+
+    /* Check horizontal scrollbar */
+
+    if ( scrollpanel->horizontal.dragging ) {
+        scrollpanel->horizontal.dragging = 0;
     }
 
     return 0;
@@ -374,13 +644,13 @@ static int scrollpanel_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
-static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child ) {
+static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible ) {
     rect_t bounds;
 
     widget_get_bounds( widget, &bounds );
 
     int slider_size;
-    int max_slider_size = rect_height( &bounds ) - 2 * SCROLL_BTN_SIZE;
+    int max_slider_size = rect_height( &bounds ) - 2 * SCROLL_BTN_SIZE - ( other_visible ? SCROLL_BAR_SIZE : 0 );
 
     if ( child->full_size.y > child->visible_size.y ) {
         double p;
@@ -388,29 +658,37 @@ static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrol
         p = ( double )child->visible_size.y / child->full_size.y;
 
         slider_size = ( int )( max_slider_size * p );
+
+        if ( slider_size < 5 ) {
+            slider_size = 5;
+        }
     } else {
         slider_size = max_slider_size;
     }
 
-    if ( slider_size < 5 ) {
-        slider_size = 5;
-    }
-
     scrollbar->slider_space = max_slider_size - slider_size;
 
-    double sp = ( double )-child->scroll_offset.y / ( child->full_size.y - child->visible_size.y );
-    int slider_position = ( int )( scrollbar->slider_space * sp );
+    int slider_position;
+
+    if ( child->full_size.y > child->visible_size.y ) {
+        double p;
+
+        p = ( double )-child->scroll_offset.y / ( child->full_size.y - child->visible_size.y );
+        slider_position = ( int )( scrollbar->slider_space * p );
+    } else {
+        slider_position = 0;
+    }
 
     rect_init(
         &scrollbar->slider,
         bounds.right - SCROLL_BAR_SIZE + 1,
-        bounds.top + SCROLL_BTN_SIZE + slider_position,
+        scrollbar->prev.bottom + slider_position,
         bounds.right,
-        bounds.top + SCROLL_BTN_SIZE + slider_position + slider_size - 1
+        scrollbar->prev.bottom + slider_position + slider_size - 1
     );
 }
 
-static void scrollpanel_calc_vertical_bar( widget_t* widget, scrollbar_t* scrollbar, widget_t* child ) {
+static void scrollpanel_calc_vertical_bar( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible ) {
     rect_t bounds;
 
     widget_get_bounds( widget, &bounds );
@@ -435,12 +713,104 @@ static void scrollpanel_calc_vertical_bar( widget_t* widget, scrollbar_t* scroll
         bounds.bottom
     );
 
+    if ( other_visible ) {
+        rect_resize(
+            &scrollbar->next,
+            0,
+            -SCROLL_BAR_SIZE,
+            0,
+            -SCROLL_BAR_SIZE
+        );
+    }
+
     /* Slider */
 
-    scrollbar_calc_vertical_slider( widget, scrollbar, child );
+    scrollbar_calc_vertical_slider( widget, scrollbar, child, other_visible );
 }
 
-static void scrollpanel_calc_horizontal_bar( widget_t* widget, scrollbar_t* scrollbar, widget_t* child ) {
+static void scrollbar_calc_horizontal_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible ) {
+    rect_t bounds;
+
+    widget_get_bounds( widget, &bounds );
+
+    int slider_size;
+    int max_slider_size = rect_width( &bounds ) - 2 * SCROLL_BTN_SIZE - ( other_visible ? SCROLL_BAR_SIZE : 0 );
+
+    if ( child->full_size.x > child->visible_size.x ) {
+        double p;
+
+        p = ( double )child->visible_size.x / child->full_size.x;
+
+        slider_size = ( int )( max_slider_size * p );
+
+        if ( slider_size < 5 ) {
+            slider_size = 5;
+        }
+    } else {
+        slider_size = max_slider_size;
+    }
+
+    scrollbar->slider_space = max_slider_size - slider_size;
+
+    int slider_position;
+
+    if ( child->full_size.x > child->visible_size.x ) {
+        double p;
+
+        p = ( double )-child->scroll_offset.x / ( child->full_size.x - child->visible_size.x );
+
+        slider_position = ( int )( scrollbar->slider_space * p );
+    } else {
+        slider_position = 0;
+    }
+
+    rect_init(
+        &scrollbar->slider,
+        scrollbar->prev.right + slider_position,
+        bounds.bottom - SCROLL_BAR_SIZE + 1,
+        scrollbar->prev.right + slider_position + slider_size - 1,
+        bounds.bottom
+    );
+}
+
+static void scrollpanel_calc_horizontal_bar( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible ) {
+    rect_t bounds;
+
+    widget_get_bounds( widget, &bounds );
+
+    /* Prev button */
+
+    rect_init(
+        &scrollbar->prev,
+        bounds.left,
+        bounds.bottom - SCROLL_BAR_SIZE + 1,
+        bounds.left + SCROLL_BTN_SIZE - 1,
+        bounds.bottom
+    );
+
+    /* Next button */
+
+    rect_init(
+        &scrollbar->next,
+        bounds.right - SCROLL_BTN_SIZE + 1,
+        bounds.bottom - SCROLL_BAR_SIZE + 1,
+        bounds.right,
+        bounds.bottom
+    );
+
+    if ( other_visible ) {
+        rect_resize(
+            &scrollbar->next,
+            -SCROLL_BAR_SIZE,
+            0,
+            -SCROLL_BAR_SIZE,
+            0
+        );
+    }
+
+    /* Slider */
+
+    scrollbar_calc_horizontal_slider( widget, scrollbar, child, other_visible );
 }
 
 static int scrollpanel_size_changed( widget_t* widget ) {
@@ -501,11 +871,11 @@ static int scrollpanel_size_changed( widget_t* widget ) {
     widget_set_position_and_sizes( child, &position, &visible_size, &preferred_size );
 
     if ( scrollpanel->vertical.visible ) {
-        scrollpanel_calc_vertical_bar( widget, &scrollpanel->vertical, child );
+        scrollpanel_calc_vertical_bar( widget, &scrollpanel->vertical, child, scrollpanel->horizontal.visible );
     }
 
     if ( scrollpanel->horizontal.visible ) {
-        scrollpanel_calc_horizontal_bar( widget, &scrollpanel->horizontal, child );
+        scrollpanel_calc_horizontal_bar( widget, &scrollpanel->horizontal, child, scrollpanel->vertical.visible );
     }
 
     return 0;

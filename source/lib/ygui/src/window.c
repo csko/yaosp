@@ -191,8 +191,6 @@ static int window_thread( void* arg ) {
                 cmd = ( msg_mouse_entered_t* )buffer;
 
                 assert( window->mouse_widget == NULL );
-                //assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
-                //assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
 
                 window->mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
 
@@ -223,8 +221,6 @@ static int window_thread( void* arg ) {
                 cmd = ( msg_mouse_moved_t* )buffer;
 
                 assert( window->mouse_widget != NULL );
-                //assert( ( cmd->mouse_position.x >= 0 ) && ( cmd->mouse_position.x < window->container->size.x ) );
-                //assert( ( cmd->mouse_position.y >= 0 ) && ( cmd->mouse_position.y < window->container->size.y ) );
 
                 new_mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
 

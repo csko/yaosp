@@ -54,7 +54,7 @@ static int event_button_clicked( widget_t* widget, void* data ) {
     widget_dec_ref( scroll );
 
     widget_t* button = create_button( "Hello World!" );
-    point_t pref_size = { .x = 200, .y = 600 };
+    point_t pref_size = { .x = 600, .y = 600 };
     widget_set_preferred_size( button, &pref_size );
     widget_add( scroll, button, NULL );
     widget_dec_ref( button );
