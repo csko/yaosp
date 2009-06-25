@@ -55,25 +55,25 @@ static widget_t* window_find_widget_at( window_t* window, point_t* _position ) {
         size = array_get_size( &widget->children );
 
         for ( i = 0; i < size; i++ ) {
-            widget_wrapper_t* wrapper;
+            widget_t* child;
 
-            wrapper = ( widget_wrapper_t* )array_get_item( &widget->children, i );
+            child = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
 
-            rect_t widget_rect = {
+            rect_t child_rect = {
                 .left = 0,
                 .top = 0,
-                .right = widget->visible_size.x - 1,
-                .bottom = widget->visible_size.y - 1
+                .right = child->full_size.x - 1,
+                .bottom = child->full_size.y - 1
             };
 
-            rect_add_point( &widget_rect, &wrapper->widget->position );
-            rect_add_point( &widget_rect, &wrapper->widget->scroll_offset );
+            rect_add_point( &child_rect, &child->position );
+            rect_add_point( &child_rect, &child->scroll_offset );
 
-            if ( rect_has_point( &widget_rect, &position ) ) {
-                point_sub( &position, &widget->position );
-                point_sub( &position, &widget->scroll_offset );
+            if ( rect_has_point( &child_rect, &position ) ) {
+                point_sub( &position, &child->position );
+                point_sub( &position, &child->scroll_offset );
 
-                widget = wrapper->widget;
+                widget = child;
                 found = 1;
 
                 break;

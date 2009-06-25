@@ -75,6 +75,13 @@ static inline void rect_add_point_n( rect_t* dst, rect_t* src1, point_t* src2 ) 
     dst->bottom = src1->bottom + src2->y;
 }
 
+static inline void rect_add_point_xy( rect_t* rect, int x, int y ) {
+    rect->left += x;
+    rect->top += y;
+    rect->right += x;
+    rect->bottom += y;
+}
+
 static inline void rect_sub_point( rect_t* rect, point_t* point ) {
     rect->left -= point->x;
     rect->right -= point->x;

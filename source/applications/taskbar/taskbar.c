@@ -53,6 +53,12 @@ static int event_button_clicked( widget_t* widget, void* data ) {
     widget_add( container, scroll, BRD_CENTER );
     widget_dec_ref( scroll );
 
+    widget_t* button = create_button( "Hello World!" );
+    point_t pref_size = { .x = 200, .y = 600 };
+    widget_set_preferred_size( button, &pref_size );
+    widget_add( scroll, button, NULL );
+    widget_dec_ref( button );
+
     show_window( win );
 
     return 0;

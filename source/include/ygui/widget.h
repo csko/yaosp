@@ -59,6 +59,7 @@ typedef struct widget_operations {
     int ( *get_preferred_size )( struct widget* widget, point_t* size );
     int ( *get_maximum_size )( struct widget* widget, point_t* size );
     int ( *do_validate )( struct widget* widget );
+    int ( *size_changed )( struct widget* widget );
 } widget_operations_t;
 
 typedef struct widget {
@@ -92,7 +93,7 @@ int widget_add( widget_t* parent, widget_t* child, void* data );
 int widget_get_id( widget_t* widget );
 void* widget_get_data( widget_t* widget );
 int widget_get_child_count( widget_t* widget );
-widget_t* widget_get_child( widget_t* widget, int index );
+widget_t* widget_get_child_at( widget_t* widget, int index );
 int widget_get_bounds( widget_t* widget, rect_t* bounds );
 int widget_get_minimum_size( widget_t* widget, point_t* size );
 int widget_get_preferred_size( widget_t* widget, point_t* size );
@@ -100,6 +101,7 @@ int widget_get_maximum_size( widget_t* widget, point_t* size );
 
 int widget_set_window( widget_t* widget, struct window* window );
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size );
+int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t* visible_size, point_t* full_size );
 int widget_set_preferred_size( widget_t* widget, point_t* size );
 
 int widget_inc_ref( widget_t* widget );

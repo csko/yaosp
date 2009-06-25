@@ -61,7 +61,7 @@ int widget_get_child_count( widget_t* widget ) {
     return array_get_size( &widget->children );
 }
 
-widget_t* widget_get_child( widget_t* widget, int index ) {
+widget_t* widget_get_child_at( widget_t* widget, int index ) {
     widget_wrapper_t* wrapper;
 
     if ( ( index < 0 ) ||
@@ -149,9 +149,23 @@ int widget_set_window( widget_t* widget, struct window* window ) {
 }
 
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size ) {
+    return widget_set_position_and_sizes( widget, position, size, size );
+}
+
+int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t* visible_size, point_t* full_size ) {
+    /* Update the position and the size of the widget */
+
     point_copy( &widget->position, position );
-    point_copy( &widget->full_size, size );
-    point_copy( &widget->visible_size, size );
+    point_copy( &widget->visible_size, visible_size );
+    point_copy( &widget->full_size, full_size );
+
+    /* Tell the widget that its size is changed */
+
+    if ( widget->ops->size_changed != NULL ) {
+        widget->ops->size_changed( widget );
+    }
+
+    /* As the size of the widget is changed, we should repaint it ... */
 
     widget_invalidate( widget, 0 );
 
@@ -199,7 +213,6 @@ int widget_paint( widget_t* widget, gc_t* gc ) {
         widget->visible_size.y - 1
     );
     rect_add_point( &res_area, &gc->lefttop );
-    rect_add_point( &res_area, &widget->scroll_offset );
     rect_and( &res_area, gc_current_restricted_area( gc ) );
 
     /* If the restricted area is not valid, then we can make sure that
@@ -228,6 +241,7 @@ int widget_paint( widget_t* widget, gc_t* gc ) {
 
         if ( widget->ops->paint != NULL ) {
             gc_push_translate_checkpoint( gc );
+            gc_translate( gc, &widget->scroll_offset );
 
             widget->ops->paint( widget, gc );
 
