@@ -66,6 +66,7 @@ typedef struct font {
     int line_gap;
 } font_t;
 
+int font_get_height( font_t* font );
 int font_get_ascender( font_t* font );
 int font_get_descender( font_t* font );
 int font_get_line_gap( font_t* font );

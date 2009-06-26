@@ -30,9 +30,17 @@ extern ipc_port_id app_server_port;
 
 extern semaphore_id app_lock;
 
+int font_get_height( font_t* font ) {
+    if ( font == NULL ) {
+        return 0;
+    }
+
+    return font->ascender - font->descender + font->line_gap;
+}
+
 int font_get_ascender( font_t* font ) {
     if ( font == NULL ) {
-        return -EINVAL;
+        return 0;
     }
 
     return font->ascender;
@@ -40,7 +48,7 @@ int font_get_ascender( font_t* font ) {
 
 int font_get_descender( font_t* font ) {
     if ( font == NULL ) {
-        return -EINVAL;
+        return 0;
     }
 
     return font->descender;
@@ -48,7 +56,7 @@ int font_get_descender( font_t* font ) {
 
 int font_get_line_gap( font_t* font ) {
     if ( font == NULL ) {
-        return -EINVAL;
+        return 0;
     }
 
     return font->line_gap;
