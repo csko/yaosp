@@ -41,6 +41,7 @@ typedef struct window {
     int is_visible;
     int is_moving;
     int mouse_on_decorator;
+    int mouse_pressed_on_decorator;
     void* decorator_data;
 
     /* Rendering stuffs */

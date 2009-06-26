@@ -330,11 +330,13 @@ int window_mouse_pressed( window_t* window, int mouse_button ) {
         send_ipc_message( window->client_port, MSG_MOUSE_PRESSED, &cmd, sizeof( msg_mouse_pressed_t ) );
     }
 
+    window->mouse_pressed_on_decorator = window->mouse_on_decorator;
+
     return 0;
 }
 
 int window_mouse_released( window_t* window, int mouse_button ) {
-    if ( window->mouse_on_decorator ) {
+    if ( window->mouse_pressed_on_decorator ) {
         window_decorator->mouse_released( window, mouse_button );
     } else {
         msg_mouse_released_t cmd;

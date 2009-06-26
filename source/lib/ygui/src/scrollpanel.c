@@ -71,7 +71,7 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         scrollbar->next.bottom
     );
 
-    gc_draw_rect( gc, &tmp );
+    gc_fill_rect( gc, &tmp );
 
     /* Right border */
 
@@ -82,6 +82,8 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         SCROLL_BAR_SIZE - 1,
         scrollbar->next.bottom
     );
+
+    gc_fill_rect( gc, &tmp );
 
     /* Up button */
 
@@ -208,7 +210,7 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         0
     );
 
-    gc_draw_rect( gc, &tmp );
+    gc_fill_rect( gc, &tmp );
 
     /* Bottom border */
 
@@ -219,6 +221,8 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         scrollbar->next.right,
         SCROLL_BAR_SIZE - 1
     );
+
+    gc_fill_rect( gc, &tmp );
 
     /* Up button */
 
