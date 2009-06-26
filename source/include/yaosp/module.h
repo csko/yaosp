@@ -21,4 +21,4 @@
 
 int load_module( const char* name );
 
-#endif // _YAOSP_MODULE_H_
+#endif /* _YAOSP_MODULE_H_ */

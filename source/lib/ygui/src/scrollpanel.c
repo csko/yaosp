@@ -397,6 +397,10 @@ static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
 
     child = widget_get_child_at( widget, 0 );
 
+    if ( child->full_size.y <= child->visible_size.y ) {
+        return;
+    }
+
     p = ( double )( scrollbar->slider.top - SCROLL_BTN_SIZE ) / scrollbar->slider_space;
 
     child->scroll_offset.y = -( ( int )( ( child->full_size.y - child->visible_size.y ) * p ) );
@@ -448,6 +452,10 @@ static void do_h_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
     }
 
     child = widget_get_child_at( widget, 0 );
+
+    if ( child->full_size.x <= child->visible_size.x ) {
+        return;
+    }
 
     p = ( double )( scrollbar->slider.left - SCROLL_BTN_SIZE ) / scrollbar->slider_space;
 
@@ -712,9 +720,9 @@ static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrol
     rect_init(
         &scrollbar->slider,
         bounds.right - SCROLL_BAR_SIZE + 1,
-        scrollbar->prev.bottom + slider_position,
+        scrollbar->prev.bottom + slider_position + 1,
         bounds.right,
-        scrollbar->prev.bottom + slider_position + slider_size - 1
+        scrollbar->prev.bottom + slider_position + slider_size
     );
 }
 
@@ -796,9 +804,9 @@ static void scrollbar_calc_horizontal_slider( widget_t* widget, scrollbar_t* scr
 
     rect_init(
         &scrollbar->slider,
-        scrollbar->prev.right + slider_position,
+        scrollbar->prev.right + slider_position + 1,
         bounds.bottom - SCROLL_BAR_SIZE + 1,
-        scrollbar->prev.right + slider_position + slider_size - 1,
+        scrollbar->prev.right + slider_position + slider_size,
         bounds.bottom
     );
 }

@@ -19,8 +19,14 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#include <yaosp/module.h>
+
 int main( int argc, char** argv ) {
     pid_t pid;
+
+    /* Load the VESA graphics module */
+
+    load_module( "vesa" );
 
     /* Start the guiserver */
 
