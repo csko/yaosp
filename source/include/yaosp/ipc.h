@@ -24,6 +24,8 @@
 typedef int ipc_port_id;
 
 ipc_port_id create_ipc_port( void );
+int destroy_ipc_port( ipc_port_id port_id );
+
 int send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
 int recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t timeout );
 

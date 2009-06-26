@@ -94,6 +94,10 @@ error1:
     return error;
 }
 
+int sys_destroy_ipc_port( ipc_port_id port_id ) {
+    return -ENOSYS;
+}
+
 int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size ) {
     int error;
     ipc_port_t* port;

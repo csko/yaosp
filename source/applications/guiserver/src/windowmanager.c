@@ -656,9 +656,9 @@ int init_windowmanager( void ) {
 
     return 0;
 
-error2:
-    /* TODO: Delete the window stack array */
+ error2:
+    destroy_array( &window_stack );
 
-error1:
+ error1:
     return error;
 }

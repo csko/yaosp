@@ -168,7 +168,7 @@ int handle_create_application( msg_create_app_t* request ) {
     goto out;
 
 error3:
-    /* TODO: delete the IPC port */
+    destroy_ipc_port( app->server_port );
 
 error2:
     free( app );

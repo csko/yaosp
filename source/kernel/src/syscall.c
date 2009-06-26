@@ -103,6 +103,7 @@ static system_call_entry_t system_call_table[] = {
     { "create_thread", sys_create_thread, 0 },
     { "wake_up_thread", sys_wake_up_thread, 0 },
     { "create_ipc_port", sys_create_ipc_port, 0 },
+    { "destroy_ipc_port", sys_destroy_ipc_port, 0 },
     { "send_ipc_message", sys_send_ipc_message, 0 },
     { "recv_ipc_message", sys_recv_ipc_message, 0 },
     { "register_named_ipc_port", sys_register_named_ipc_port, 0 },

@@ -49,6 +49,8 @@ typedef struct named_ipc_port_t {
 } named_ipc_port_t;
 
 ipc_port_id sys_create_ipc_port( void );
+int sys_destroy_ipc_port( ipc_port_id port_id );
+
 int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size );
 int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t* timeout );
 

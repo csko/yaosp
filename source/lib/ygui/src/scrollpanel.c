@@ -326,14 +326,20 @@ static int scrollpanel_paint( widget_t* widget, gc_t* gc ) {
 
     widget_get_bounds( widget, &bounds );
 
+    /* Fill the widget with the background color */
+
     gc_set_pen_color( gc, &bg_color );
     gc_fill_rect( gc, &bounds );
 
     scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
 
+    /* Paint the vertical scrollbar */
+
     if ( scrollpanel->vertical.visible ) {
         paint_v_scrollbar( widget, &scrollpanel->vertical, gc );
     }
+
+    /* Paint the horizontal scrollbar */
 
     if ( scrollpanel->horizontal.visible ) {
         paint_h_scrollbar( widget, &scrollpanel->horizontal, gc );
@@ -347,6 +353,8 @@ static void do_v_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
     scrollpanel_t* scrollpanel;
 
     scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
+
+    /* Get the child widget */
 
     if ( widget_get_child_count( widget ) == 0 ) {
         return;
@@ -377,6 +385,8 @@ static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
     double p;
     widget_t* child;
 
+    /* Get the child widget */
+
     if ( widget_get_child_count( widget ) == 0 ) {
         return;
     }
@@ -395,6 +405,8 @@ static void do_h_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
     scrollpanel_t* scrollpanel;
 
     scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
+
+    /* Get the child widget */
 
     if ( widget_get_child_count( widget ) == 0 ) {
         return;
@@ -424,6 +436,8 @@ static void do_h_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
 static void do_h_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
     double p;
     widget_t* child;
+
+    /* Get the child widget */
 
     if ( widget_get_child_count( widget ) == 0 ) {
         return;
@@ -646,11 +660,13 @@ static int scrollpanel_get_preferred_size( widget_t* widget, point_t* size ) {
 
 static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible ) {
     rect_t bounds;
+    int slider_size;
+    int slider_position;
+    int max_slider_size;
 
     widget_get_bounds( widget, &bounds );
 
-    int slider_size;
-    int max_slider_size = rect_height( &bounds ) - 2 * SCROLL_BTN_SIZE - ( other_visible ? SCROLL_BAR_SIZE : 0 );
+    max_slider_size = rect_height( &bounds ) - 2 * SCROLL_BTN_SIZE - ( other_visible ? SCROLL_BAR_SIZE : 0 );
 
     if ( child->full_size.y > child->visible_size.y ) {
         double p;
@@ -667,8 +683,6 @@ static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrol
     }
 
     scrollbar->slider_space = max_slider_size - slider_size;
-
-    int slider_position;
 
     if ( child->full_size.y > child->visible_size.y ) {
         double p;
@@ -730,11 +744,13 @@ static void scrollpanel_calc_vertical_bar( widget_t* widget, scrollbar_t* scroll
 
 static void scrollbar_calc_horizontal_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible ) {
     rect_t bounds;
+    int slider_size;
+    int slider_position;
+    int max_slider_size;
 
     widget_get_bounds( widget, &bounds );
 
-    int slider_size;
-    int max_slider_size = rect_width( &bounds ) - 2 * SCROLL_BTN_SIZE - ( other_visible ? SCROLL_BAR_SIZE : 0 );
+    max_slider_size = rect_width( &bounds ) - 2 * SCROLL_BTN_SIZE - ( other_visible ? SCROLL_BAR_SIZE : 0 );
 
     if ( child->full_size.x > child->visible_size.x ) {
         double p;
@@ -751,8 +767,6 @@ static void scrollbar_calc_horizontal_slider( widget_t* widget, scrollbar_t* scr
     }
 
     scrollbar->slider_space = max_slider_size - slider_size;
-
-    int slider_position;
 
     if ( child->full_size.x > child->visible_size.x ) {
         double p;
@@ -862,6 +876,8 @@ static int scrollpanel_size_changed( widget_t* widget ) {
             break;
     }
 
+    /* Set the position and the size of the child widget */
+
     point_init(
         &position,
         0,
@@ -869,6 +885,8 @@ static int scrollpanel_size_changed( widget_t* widget ) {
     );
 
     widget_set_position_and_sizes( child, &position, &visible_size, &preferred_size );
+
+    /* Calculate scrollbar values */
 
     if ( scrollpanel->vertical.visible ) {
         scrollpanel_calc_vertical_bar( widget, &scrollpanel->vertical, child, scrollpanel->horizontal.visible );

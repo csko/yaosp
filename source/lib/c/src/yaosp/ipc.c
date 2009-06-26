@@ -27,6 +27,13 @@ ipc_port_id create_ipc_port( void ) {
     );
 }
 
+int destroy_ipc_port( ipc_port_id port_id ) {
+    return syscall1(
+        SYS_destroy_ipc_port,
+        port_id
+    );
+}
+
 int send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size ) {
     return syscall4(
         SYS_send_ipc_message,
