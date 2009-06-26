@@ -183,8 +183,9 @@ int wm_register_window( window_t* window ) {
     rect_t winrect;
     point_t lefttop;
 
-    int mouse_inside;
+    int mouse_hidden;
     rect_t mouse_rect;
+    point_t mouse_position;
 
     LOCK( wm_lock );
 
@@ -219,9 +220,9 @@ int wm_register_window( window_t* window ) {
     mouse_get_rect( &mouse_rect );
     rect_and( &mouse_rect, &window->screen_rect );
 
-    mouse_inside = rect_is_valid( &mouse_rect );
+    mouse_hidden = rect_is_valid( &mouse_rect );
 
-    if ( mouse_inside ) {
+    if ( mouse_hidden ) {
         hide_mouse_pointer();
     }
 
@@ -240,18 +241,19 @@ int wm_register_window( window_t* window ) {
 
     /* Update the mouse window if required */
 
-    if ( mouse_inside ) {
-        point_t mouse_position;
+    mouse_get_position( &mouse_position );
 
+    if ( rect_has_point( &window->screen_rect, &mouse_position ) ) {
         if ( mouse_window != NULL ) {
             window_mouse_exited( mouse_window );
         }
 
         mouse_window = window;
 
-        mouse_get_position( &mouse_position );
         window_mouse_entered( mouse_window, &mouse_position );
+    }
 
+    if ( mouse_hidden ) {
         show_mouse_pointer();
     }
 

@@ -38,56 +38,85 @@ widget_t* window_get_container( window_t* window ) {
     return window->container;
 }
 
-static widget_t* window_find_widget_at( window_t* window, point_t* _position ) {
-    widget_t* widget;
-    point_t position;
+static widget_t* window_find_widget_at_helper( widget_t* widget, point_t* position, point_t* lefttop, rect_t* visible_rect ) {
+    int i;
+    int count;
+    rect_t widget_rect;
 
-    widget = window->container;
+    rect_init(
+        &widget_rect,
+        0,
+        0,
+        widget->full_size.x - 1,
+        widget->full_size.y - 1
+    );
 
-    point_copy( &position, _position );
+    rect_add_point( &widget_rect, lefttop );
 
-    while ( 1 ) {
-        int i;
-        int size;
-        int found;
+    rect_and( &widget_rect, visible_rect );
 
-        found = 0;
-        size = array_get_size( &widget->children );
-
-        for ( i = 0; i < size; i++ ) {
-            widget_t* child;
-
-            child = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
-
-            rect_t child_rect = {
-                .left = 0,
-                .top = 0,
-                .right = child->full_size.x - 1,
-                .bottom = child->full_size.y - 1
-            };
-
-            rect_add_point( &child_rect, &child->position );
-            rect_add_point( &child_rect, &child->scroll_offset );
-
-            if ( rect_has_point( &child_rect, &position ) ) {
-                point_sub( &position, &child->position );
-                point_sub( &position, &child->scroll_offset );
-
-                widget = child;
-                found = 1;
-
-                break;
-            }
-        }
-
-        if ( !found ) {
-            return widget;
-        }
+    if ( ( !rect_is_valid( &widget_rect ) ) ||
+        ( !rect_has_point( &widget_rect, position ) ) ) {
+        return NULL;
     }
 
-    /* Muhaha :) */
+    count = widget_get_child_count( widget );
 
-    return NULL;
+    for ( i = 0; i < count; i++ ) {
+        widget_t* child;
+        widget_t* result;
+        rect_t new_visible_rect;
+
+        child = widget_get_child_at( widget, i );
+
+        point_add( lefttop, &child->position );
+        point_add( lefttop, &child->scroll_offset );
+
+        rect_resize_n(
+            &new_visible_rect,
+            visible_rect,
+            child->position.x,
+            child->position.y,
+            0,
+            0
+        );
+
+        new_visible_rect.right = MIN(
+            new_visible_rect.right,
+            new_visible_rect.left + child->visible_size.x - 1
+        );
+
+        new_visible_rect.bottom = MIN(
+            new_visible_rect.bottom,
+            new_visible_rect.top + child->visible_size.y - 1
+        );
+
+        result = window_find_widget_at_helper( child, position, lefttop, &new_visible_rect );
+
+        if ( result != NULL ) {
+            return result;
+        }
+
+        point_sub( lefttop, &child->scroll_offset );
+        point_sub( lefttop, &child->position );
+    }
+
+    return widget;
+}
+
+static widget_t* window_find_widget_at( window_t* window, point_t* position ) {
+    point_t lefttop = {
+        .x = 0,
+        .y = 0
+    };
+    rect_t visible_rect = {
+        .left = 0,
+        .top = 0,
+        .right = window->container->visible_size.x - 1,
+        .bottom = window->container->visible_size.y - 1
+    };
+
+    return window_find_widget_at_helper( window->container, position, &lefttop, &visible_rect );
 }
 
 static int window_thread( void* arg ) {

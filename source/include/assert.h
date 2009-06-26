@@ -30,9 +30,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <yaosp/debug.h>
 
 static inline void __assert_fail( const char* expr, const char* file, int line ) {
     printf( "Assertion (%s) failed at %s:%d\n", expr, file, line );
+    dbprintf( "Assertion (%s) failed at %s:%d\n", expr, file, line );
     abort();
 }
 
