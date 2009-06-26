@@ -190,7 +190,8 @@ static widget_operations_t textfield_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = textfield_get_preferred_size,
     .get_maximum_size = NULL,
-    .do_validate = NULL
+    .do_validate = NULL,
+    .size_changed = NULL
 };
 
 char* textfield_get_text( widget_t* widget ) {

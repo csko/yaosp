@@ -184,7 +184,8 @@ static widget_operations_t button_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = button_get_preferred_size,
     .get_maximum_size = NULL,
-    .do_validate = NULL
+    .do_validate = NULL,
+    .size_changed = NULL
 };
 
 widget_t* create_button( const char* text ) {

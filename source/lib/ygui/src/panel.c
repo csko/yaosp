@@ -60,7 +60,8 @@ static widget_operations_t panel_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
     .mouse_released = NULL,
-    .do_validate = panel_do_validate
+    .do_validate = panel_do_validate,
+    .size_changed = NULL
 };
 
 int panel_set_layout( widget_t* widget, layout_t* layout ) {

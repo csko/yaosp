@@ -131,7 +131,8 @@ static widget_operations_t label_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = label_get_preferred_size,
     .get_maximum_size = NULL,
-    .do_validate = NULL
+    .do_validate = NULL,
+    .size_changed = NULL
 };
 
 widget_t* create_label( const char* text ) {

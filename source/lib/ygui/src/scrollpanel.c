@@ -647,6 +647,10 @@ static int scrollpanel_mouse_released( widget_t* widget, int button ) {
 }
 
 static int scrollpanel_get_preferred_size( widget_t* widget, point_t* size ) {
+    scrollpanel_t* scrollpanel;
+
+    scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
+
     if ( widget_get_child_count( widget ) == 0 ) {
         point_init(
             size,
@@ -658,6 +662,14 @@ static int scrollpanel_get_preferred_size( widget_t* widget, point_t* size ) {
     }
 
     widget_get_preferred_size( widget_get_child_at( widget, 0 ), size );
+
+    if ( scrollpanel->vertical.visible ) {
+        size->x += SCROLL_BAR_SIZE;
+    }
+
+    if ( scrollpanel->horizontal.visible ) {
+        size->y += SCROLL_BAR_SIZE;
+    }
 
     return 0;
 }
@@ -860,6 +872,7 @@ static int scrollpanel_size_changed( widget_t* widget ) {
             break;
 
         case SCROLLBAR_ALWAYS :
+            scrollpanel->vertical.visible = 1;
             visible_size.x = widget->visible_size.x - SCROLL_BAR_SIZE;
             break;
     }
@@ -876,6 +889,7 @@ static int scrollpanel_size_changed( widget_t* widget ) {
             break;
 
         case SCROLLBAR_ALWAYS :
+            scrollpanel->horizontal.visible = 1;
             visible_size.y = widget->visible_size.y - SCROLL_BAR_SIZE;
             break;
     }
@@ -935,14 +949,7 @@ widget_t* create_scroll_panel( scrollbar_policy_t v_scroll_policy, scrollbar_pol
         goto error2;
     }
 
-    /* Vertical scrollbar */
-
-    scrollpanel->vertical.visible = 1;
     scrollpanel->vertical.policy = v_scroll_policy;
-
-    /* Horizontal scrollbar */
-
-    scrollpanel->horizontal.visible = 1;
     scrollpanel->horizontal.policy = h_scroll_policy;
 
     return widget;

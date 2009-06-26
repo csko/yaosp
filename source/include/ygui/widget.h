@@ -28,12 +28,15 @@
 #include <ygui/event.h>
 #include <ygui/gc.h>
 
+/* Global widget types */
+
 enum {
     W_PANEL = 1,
     W_LABEL,
     W_BUTTON,
     W_TEXTFIELD,
-    W_SCROLLPANEL
+    W_SCROLLPANEL,
+    W_TYPE_COUNT
 };
 
 /* Global widget events */

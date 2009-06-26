@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <yaosp/debug.h>
 
 #include <ygui/application.h>
@@ -26,56 +27,27 @@
 #include <ygui/textfield.h>
 #include <ygui/button.h>
 #include <ygui/desktop.h>
-#include <ygui/scrollpanel.h>
 #include <ygui/layout/borderlayout.h>
 
+static widget_t* textfield;
+
 static int event_button_clicked( widget_t* widget, void* data ) {
-    window_t* win;
-
-    point_t point = {
-        .x = random() % 100,
-        .y = random() % 100
-    };
-    point_t size = {
-        .x = 100 + random() % 200,
-        .y = 100 + random() % 200
-    };
-
-    win = create_window( "Test window", &point, &size, 0 );
-
-    widget_t* container = window_get_container( win );
-
-    layout_t* layout = create_border_layout();
-    panel_set_layout( container, layout );
-    layout_dec_ref( layout );
-
-    widget_t* scroll = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_ALWAYS );
-    widget_add( container, scroll, BRD_CENTER );
-    widget_dec_ref( scroll );
-
-    widget_t* button = create_button( "Hello World!" );
-    point_t pref_size = { .x = 600, .y = 600 };
-    widget_set_preferred_size( button, &pref_size );
-    widget_add( scroll, button, NULL );
-    widget_dec_ref( button );
-
-    show_window( win );
-
-    return 0;
-}
-
-static int event_textfield_activated( widget_t* widget, void* data ) {
     char* text;
 
-    text = textfield_get_text( widget );
+    text = textfield_get_text( textfield );
 
     if ( text != NULL ) {
-        dbprintf( "Textfield data: '%s'\n", text );
+        if ( fork() == 0 ) {
+            char* argv[] = { text, NULL };
+
+            execv( text, argv );
+            _exit( 1 );
+        }
 
         free( text );
     }
 
-    textfield_set_text( widget, NULL );
+    textfield_set_text( textfield, NULL );
 
     return 0;
 }
@@ -116,12 +88,11 @@ int main( int argc, char** argv ) {
     widget_add( container, button, BRD_PAGE_END );
     widget_dec_ref( button );
 
-    widget_t* textfield = create_textfield();
+    textfield = create_textfield();
     widget_add( container, textfield, BRD_CENTER );
     widget_dec_ref( textfield );
 
     widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
-    widget_connect_event_handler( textfield, "activated", event_textfield_activated, NULL );
 
     /* Show the window */
 

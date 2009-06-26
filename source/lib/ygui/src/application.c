@@ -43,8 +43,6 @@ int create_application( void ) {
 
     /* Get the guiserver port ... */
 
-    dbprintf( "Waiting for guiserver to start ...\n" );
-
     while ( 1 ) {
         error = get_named_ipc_port( "guiserver", &guiserver_port );
 
@@ -57,8 +55,6 @@ int create_application( void ) {
 
         nanosleep( &slp_time, NULL );
     }
-
-    dbprintf( "Guiserver port: %d\n", guiserver_port );
 
     /* Register our own application */
 
@@ -123,8 +119,6 @@ int run_application( void ) {
     if ( buffer == NULL ) {
         return -ENOMEM;
     }
-
-    dbprintf( "Application running ...\n" );
 
     while ( 1 ) {
         error = recv_ipc_message( app_client_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
