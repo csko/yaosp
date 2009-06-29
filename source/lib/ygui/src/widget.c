@@ -46,6 +46,12 @@ int widget_add( widget_t* parent, widget_t* child, void* data ) {
         widget_set_window( child, parent->window );
     }
 
+    /* Notify the parent widget about the new child */
+
+    if ( parent->ops->child_added != NULL ) {
+        parent->ops->child_added( parent, child );
+    }
+
     return 0;
 }
 

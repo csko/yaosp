@@ -1,0 +1,214 @@
+/* Terminal application
+ *
+ * Copyright (c) 2009 Zoltan Kovacs
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of version 2 of the GNU General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <yaosp/debug.h>
+#include <yaosp/thread.h>
+
+#include <ygui/application.h>
+#include <ygui/window.h>
+#include <ygui/panel.h>
+#include <ygui/textfield.h>
+#include <ygui/button.h>
+#include <ygui/scrollpanel.h>
+#include <ygui/layout/borderlayout.h>
+
+#include "term_widget.h"
+
+window_t* window;
+widget_t* terminal_widget;
+
+int master_pty;
+pid_t shell_pid;
+terminal_t* terminal;
+
+static int pty_read_thread_entry( void* arg ) {
+    int size;
+    uint8_t buffer[ 512 ];
+
+    while ( 1 ) {
+        size = read( master_pty, buffer, sizeof( buffer ) );
+
+        if ( size < 0 ) {
+            dbprintf( "Failed to read from the master PTY!\n" );
+
+            break;
+        }
+
+        if ( size == 0 ) {
+            continue;
+        }
+
+        /* Add the new data to the terminal engine */
+
+        terminal_handle_data( terminal, buffer, size );
+
+        /* Invalidate the terminal widget to repaint it */
+
+        widget_invalidate( terminal_widget, 1 );
+    }
+
+    return 0;
+}
+
+static int initialize_terminal( void ) {
+    terminal = create_terminal( 80, 25 );
+
+    if ( terminal == NULL ) {
+        return -ENOMEM;
+    }
+
+    return 0;
+}
+
+static int initialize_pty( void ) {
+    int i;
+    char path[ 64 ];
+
+    /* Create the pty for the terminal<->shell communication */
+
+    i = 0;
+
+    while ( 1 ) {
+        struct stat st;
+
+        snprintf( path, sizeof( path ), "/device/terminal/pty%d", i );
+
+        if ( stat( path, &st ) != 0 ) {
+            break;
+        }
+
+        i++;
+    }
+
+    master_pty = open( path, O_RDWR | O_CREAT );
+
+    if ( master_pty < 0 ) {
+        dbprintf( "Failed to open the master PTY!\n" );
+
+        return EXIT_FAILURE;
+    }
+
+    shell_pid = fork();
+
+    if ( shell_pid == 0 ) {
+        int error;
+        int slave_tty;
+
+        snprintf( path, sizeof( path ), "/device/terminal/tty%d", i );
+
+        slave_tty = open( path, O_RDWR );
+
+        if ( slave_tty < 0 ) {
+            dbprintf( "Failed to open the slave TTY!\n" );
+
+            _exit( 1 );
+        }
+
+        dup2( slave_tty, 0 );
+        dup2( slave_tty, 1 );
+        dup2( slave_tty, 2 );
+
+        char* argv[] = { "bash", NULL };
+
+        error = execv( "/application/bash", argv );
+
+        if ( error < 0 ) {
+            dbprintf( "Failed to start the shell!\n" );
+        }
+
+        _exit( 1 );
+    } else if ( shell_pid < 0 ) {
+        return shell_pid;
+    }
+
+    thread_id pty_read_thread = create_thread( "pty read thread", PRIORITY_NORMAL, pty_read_thread_entry, NULL, 0 );
+    wake_up_thread( pty_read_thread );
+
+    return 0;
+}
+
+static int initialize_gui( void ) {
+    /* Create the GUI */
+
+    point_t tmp;
+    point_t point = { .x = 50, 50 };
+    point_t size;
+
+    widget_t* scrollpanel = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_NEVER );
+
+    widget_get_preferred_size( scrollpanel, &tmp );
+
+    terminal_widget = create_terminal_widget( terminal );
+    widget_add( scrollpanel, terminal_widget, NULL );
+    widget_dec_ref( terminal_widget );
+
+    /* Calculate the size of the terminal window */
+
+    terminal_widget_get_character_size( terminal_widget, &size.x, &size.y );
+
+    size.x *= 80;
+    size.y *= 25;
+
+    point_add( &size, &tmp );
+
+    window = create_window( "Terminal", &point, &size, 0 );
+
+    /* Create a window */
+
+    widget_t* container = window_get_container( window );
+
+    layout_t* layout = create_border_layout();
+    panel_set_layout( container, layout );
+    layout_dec_ref( layout );
+
+    widget_add( container, scrollpanel, BRD_CENTER );
+    widget_dec_ref( scrollpanel );
+
+    return 0;
+}
+
+int main( int argc, char** argv ) {
+    int error;
+
+    error = create_application();
+
+    if ( error < 0 ) {
+        dbprintf( "Failed to initialize taskbar application!\n" );
+
+        return EXIT_FAILURE;
+    }
+
+    initialize_terminal();
+    initialize_gui();
+    initialize_pty();
+
+    /* Show the window */
+
+    show_window( window );
+
+    run_application();
+
+    return 0;
+}

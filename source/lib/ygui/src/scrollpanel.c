@@ -666,6 +666,14 @@ static int scrollpanel_get_preferred_size( widget_t* widget, point_t* size ) {
             0
         );
 
+        if ( scrollpanel->vertical.policy == SCROLLBAR_ALWAYS ) {
+            size->x += SCROLL_BAR_SIZE;
+        }
+
+        if ( scrollpanel->horizontal.policy == SCROLLBAR_ALWAYS ) {
+            size->y += SCROLL_BAR_SIZE;
+        }
+
         return 0;
     }
 
@@ -925,6 +933,45 @@ static int scrollpanel_size_changed( widget_t* widget ) {
     return 0;
 }
 
+static int child_preferred_size_changed( widget_t* widget, void* data ) {
+    widget_t* parent;
+    scrollpanel_t* scrollpanel;
+
+    parent = ( widget_t* )data;
+    scrollpanel = widget_get_data( parent );
+
+    /* Update the full size of the child widget */
+
+    widget_get_preferred_size( widget, &widget->full_size );
+
+    /* Update the scrollbars */
+
+    if ( scrollpanel->vertical.visible ) {
+        scrollpanel_calc_vertical_bar( parent, &scrollpanel->vertical, widget, scrollpanel->horizontal.visible );
+    }
+
+    if ( scrollpanel->horizontal.visible ) {
+        scrollpanel_calc_horizontal_bar( parent, &scrollpanel->horizontal, widget, scrollpanel->vertical.visible );
+    }
+
+    /* Request a repaint on the scrollpanel widget */
+
+    widget_invalidate( parent, 1 );
+
+    return 0;
+}
+
+static int scrollpanel_child_added( widget_t* widget, widget_t* child ) {
+    widget_connect_event_handler(
+        child,
+        "preferred-size-changed",
+        child_preferred_size_changed,
+        ( void* )widget
+    );
+
+    return 0;
+}
+
 static widget_operations_t scrollpanel_ops = {
     .paint = scrollpanel_paint,
     .key_pressed = NULL,
@@ -938,7 +985,8 @@ static widget_operations_t scrollpanel_ops = {
     .get_preferred_size = scrollpanel_get_preferred_size,
     .get_maximum_size = NULL,
     .do_validate = NULL,
-    .size_changed = scrollpanel_size_changed
+    .size_changed = scrollpanel_size_changed,
+    .child_added = scrollpanel_child_added
 };
 
 widget_t* create_scroll_panel( scrollbar_policy_t v_scroll_policy, scrollbar_policy_t h_scroll_policy ) {

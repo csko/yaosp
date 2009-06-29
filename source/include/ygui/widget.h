@@ -63,6 +63,7 @@ typedef struct widget_operations {
     int ( *get_maximum_size )( struct widget* widget, point_t* size );
     int ( *do_validate )( struct widget* widget );
     int ( *size_changed )( struct widget* widget );
+    int ( *child_added )( struct widget* widget, struct widget* child );
 } widget_operations_t;
 
 typedef struct widget {
