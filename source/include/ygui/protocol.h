@@ -47,7 +47,8 @@ enum {
     MSG_MOUSE_MOVED,
     MSG_MOUSE_PRESSED,
     MSG_MOUSE_RELEASED,
-    MSG_GET_DESKTOP_SIZE
+    MSG_GET_DESKTOP_SIZE,
+    MSG_WINDOW_CALLBACK
 };
 
 /* MSG_CREATE_APPLICATION */
@@ -142,5 +143,10 @@ typedef struct msg_desk_get_size {
 typedef struct msg_desk_get_size_reply {
     point_t size;
 } msg_desk_get_size_reply_t;
+
+typedef struct msg_window_callback {
+    void* callback;
+    void* data;
+} msg_window_callback_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

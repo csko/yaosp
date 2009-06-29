@@ -21,10 +21,22 @@
 #include <string.h>
 #include <yaosp/debug.h>
 
+#include <ygui/window.h>
+
 #include "terminal.h"
 #include "term_widget.h"
 
+extern window_t* window;
 extern widget_t* terminal_widget;
+
+static int terminal_update_widget( void* data ) {
+    widget_signal_event_handler(
+        terminal_widget,
+        terminal_widget->event_ids[ E_PREF_SIZE_CHANGED ]
+    );
+
+    return 0;
+}
 
 static int terminal_ensure_line( terminal_t* terminal, int line ) {
     int i;
@@ -149,10 +161,7 @@ static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
             /* TODO: this is a bit of hack :) */
 
             if ( old_last_line < terminal->last_line ) {
-                widget_signal_event_handler(
-                    terminal_widget,
-                    terminal_widget->event_ids[ E_PREF_SIZE_CHANGED ]
-                );
+                window_insert_callback( window, terminal_update_widget, NULL );
             }
 
             break;

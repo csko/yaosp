@@ -20,6 +20,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <unistd.h>
 #include <yaosp/thread.h>
 #include <yaosp/debug.h>
 
@@ -315,10 +316,37 @@ static int window_thread( void* arg ) {
                 break;
             }
 
+            case MSG_WINDOW_CALLBACK : {
+                msg_window_callback_t* cmd;
+                window_callback_t* callback;
+
+                cmd = ( msg_window_callback_t* )buffer;
+                callback = ( window_callback_t* )cmd->callback;
+
+                callback( cmd->data );
+
+                break;
+            }
+
             default :
                 dbprintf( "window_thread(): Received unknown message: %x\n", code );
                 break;
         }
+    }
+
+    return 0;
+}
+
+int window_insert_callback( window_t* window, window_callback_t* callback, void* data ) {
+    if ( gettid() == window->thread_id ) {
+        callback( data );
+    } else {
+        msg_window_callback_t msg;
+
+        msg.callback = ( void* )callback;
+        msg.data = data;
+
+        send_ipc_message( window->client_port, MSG_WINDOW_CALLBACK, &msg, sizeof( msg_window_callback_t ) );
     }
 
     return 0;
@@ -330,8 +358,6 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     size_t title_size;
     msg_create_win_t* request;
     msg_create_win_reply_t reply;
-
-    thread_id thread;
 
     /* Do some sanity checking */
 
@@ -433,7 +459,7 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     window->server_port = reply.server_port;
 
-    thread = create_thread(
+    window->thread_id = create_thread(
         "window",
         PRIORITY_DISPLAY,
         window_thread,
@@ -441,11 +467,11 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
         0
     );
 
-    if ( thread < 0 ) {
+    if ( window->thread_id < 0 ) {
         goto error7;
     }
 
-    wake_up_thread( thread );
+    wake_up_thread( window->thread_id );
 
     return window;
 

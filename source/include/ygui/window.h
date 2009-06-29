@@ -22,20 +22,29 @@
 #include <sys/types.h>
 
 #include <yaosp/ipc.h>
+#include <yaosp/semaphore.h>
+#include <yaosp/thread.h>
 
 #include <ygui/point.h>
 #include <ygui/widget.h>
 #include <ygui/gc.h>
 
 typedef struct window {
+    /* Window IPC ports */
+
+    thread_id thread_id;
     ipc_port_id client_port;
     ipc_port_id server_port;
     ipc_port_id reply_port;
+
+    /* Widget management */
 
     widget_t* container;
     widget_t* focused_widget;
     widget_t* mouse_widget;
     widget_t* mouse_down_widget;
+
+    /* Rendering informations */
 
     gc_t gc;
     uint8_t* render_buffer;
@@ -43,11 +52,22 @@ typedef struct window {
     size_t render_buffer_max_size;
 } window_t;
 
+typedef int window_callback_t( void* data );
+
+typedef struct window_callback_item {
+    window_callback_t* callback;
+    void* data;
+} window_callback_item_t;
+
 enum {
     WINDOW_NO_BORDER = ( 1 << 0 )
 };
 
 widget_t* window_get_container( window_t* window );
+
+/* Window callback handling */
+
+int window_insert_callback( window_t* window, window_callback_t* callback, void* data );
 
 window_t* create_window( const char* title, point_t* position, point_t* size, int flags );
 
