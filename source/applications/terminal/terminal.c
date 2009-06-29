@@ -131,7 +131,6 @@ static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
             break;
 
         default : {
-            int old_last_line;
             terminal_line_t* term_line;
 
             error = terminal_ensure_line( terminal, terminal->cursor_y );
@@ -155,14 +154,7 @@ static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
                 terminal->cursor_y++;
             }
 
-            old_last_line = terminal->last_line;
             terminal->last_line = MAX( terminal->last_line, terminal->cursor_y );
-
-            /* TODO: this is a bit of hack :) */
-
-            if ( old_last_line < terminal->last_line ) {
-                window_insert_callback( window, terminal_update_widget, NULL );
-            }
 
             break;
         }
@@ -232,8 +224,12 @@ static void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
 
 int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
     int i;
+    int new_last_line;
+    int current_last_line;
 
     LOCK( terminal->lock );
+
+    current_last_line = terminal->last_line;
 
     for ( i = 0; i < size; i++, data++ ) {
         switch ( terminal->state ) {
@@ -255,7 +251,13 @@ int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
         }
     }
 
+    new_last_line = terminal->last_line;
+
     UNLOCK( terminal->lock );
+
+    if ( new_last_line > current_last_line ) {
+        window_insert_callback( window, terminal_update_widget, NULL );
+    }
 
     return 0;
 }

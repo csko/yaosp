@@ -33,7 +33,7 @@
 
 extern ipc_port_id app_server_port;
 
-#define MAX_WINDOW_BUFSIZE 512
+#define MAX_WINDOW_BUFSIZE 256
 
 widget_t* window_get_container( window_t* window ) {
     return window->container;
@@ -138,7 +138,7 @@ static int window_thread( void* arg ) {
         error = recv_ipc_message( window->client_port, &code, buffer, MAX_WINDOW_BUFSIZE, INFINITE_TIMEOUT );
 
         if ( error < 0 ) {
-            dbprintf( "window_thread(): Failed to receive message: %x\n", error );
+            dbprintf( "window_thread(): Failed to receive message: %d\n", error );
             break;
         }
 

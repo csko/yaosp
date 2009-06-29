@@ -106,6 +106,7 @@ static system_call_entry_t system_call_table[] = {
     { "destroy_ipc_port", sys_destroy_ipc_port, 0 },
     { "send_ipc_message", sys_send_ipc_message, 0 },
     { "recv_ipc_message", sys_recv_ipc_message, 0 },
+    { "peek_ipc_message", sys_peek_ipc_message, 0 },
     { "register_named_ipc_port", sys_register_named_ipc_port, 0 },
     { "get_named_ipc_port", sys_get_named_ipc_port, 0 },
     { "sigaction", sys_sigaction, 0 },

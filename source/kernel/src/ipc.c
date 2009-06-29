@@ -157,7 +157,89 @@ error1:
     return error;
 }
 
-int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t* timeout ) {
+int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, size_t size, uint64_t* _timeout ) {
+    int error;
+    uint64_t timeout;
+    ipc_port_t* port;
+    semaphore_id queue_sync;
+    ipc_message_t* message;
+
+    timeout = *_timeout;
+
+    LOCK( ipc_port_lock );
+
+    port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
+
+    if ( port == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    if ( timeout > 0 ) {
+        queue_sync = port->queue_sync;
+
+        UNLOCK( ipc_port_lock );
+
+        error = lock_semaphore( queue_sync, 1, timeout );
+
+        if ( error < 0 ) {
+            goto error1;
+        }
+
+        LOCK( ipc_port_lock );
+
+        port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
+
+        if ( port == NULL ) {
+            error = -EINVAL;
+            goto error2;
+        }
+    }
+
+    if ( port->message_queue == NULL ) {
+        error = -ENOENT;
+        goto error2;
+    }
+
+    message = port->message_queue;
+
+    if ( message->size > size ) {
+        error = -E2BIG;
+        goto error2;
+    }
+
+    port->message_queue = message->next;
+
+    if ( port->message_queue == NULL ) {
+        port->message_queue_tail = NULL;
+    }
+
+    UNLOCK( ipc_port_lock );
+
+    if ( code != NULL ) {
+        *code = message->code;
+    }
+
+    if ( message->size > 0 ) {
+        ASSERT( message->size <= size );
+
+        memcpy( buffer, ( void* )( message + 1 ), message->size );
+    }
+
+    error = message->size;
+
+    kfree( message );
+
+    return error;
+
+error2:
+    UNLOCK( ipc_port_lock );
+
+error1:
+    return error;
+}
+
+int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uint64_t* timeout ) {
     int error;
     ipc_port_t* port;
     semaphore_id queue_sync;
@@ -198,34 +280,17 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
 
     message = port->message_queue;
 
-    if ( message->size > size ) {
-        error = -E2BIG;
-        goto error2;
-    }
-
-    port->message_queue = message->next;
-
-    if ( port->message_queue == NULL ) {
-        port->message_queue_tail = NULL;
-    }
-
-    UNLOCK( ipc_port_lock );
-
     if ( code != NULL ) {
         *code = message->code;
     }
 
-    if ( message->size > 0 ) {
-        ASSERT( message->size <= size );
-
-        memcpy( buffer, ( void* )( message + 1 ), message->size );
+    if ( size != NULL ) {
+        *size = message->size;
     }
 
-    error = message->size;
+    UNLOCK( ipc_port_lock );
 
-    kfree( message );
-
-    return error;
+    return 0;
 
 error2:
     UNLOCK( ipc_port_lock );
