@@ -434,8 +434,8 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     request->reply_port = window->reply_port;
     request->client_port = window->client_port;
-    memcpy( &request->position, position, sizeof( point_t ) );
-    memcpy( &request->size, size, sizeof( point_t ) );
+    point_copy( &request->position, position );
+    point_copy( &request->size, size );
     memcpy( ( void* )( request + 1 ), title, title_size + 1 );
     request->flags = flags;
 

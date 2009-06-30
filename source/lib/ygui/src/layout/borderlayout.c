@@ -211,7 +211,7 @@ static int borderlayout_do_layout( widget_t* widget ) {
     }
 
     point_init( &center_position, 0, 0 );
-    memcpy( &center_size, &panel_size, sizeof( point_t ) );
+    point_copy( &center_size, &panel_size );
 
     if ( widget_table[ W_PAGE_START ] != NULL ) {
         borderlayout_do_page_start(

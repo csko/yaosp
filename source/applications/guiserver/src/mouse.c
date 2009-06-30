@@ -247,7 +247,7 @@ int mouse_moved( point_t* delta ) {
 }
 
 int mouse_get_position( point_t* position ) {
-    memcpy( position, &mouse_position, sizeof( point_t ) );
+    point_copy( position, &mouse_position );
 
     return 0;
 }

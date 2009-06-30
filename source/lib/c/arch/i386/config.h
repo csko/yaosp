@@ -1,4 +1,4 @@
-/* yaosp C library
+/* i386 architecture configuration
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,22 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <string.h>
+#ifndef _I386_CONFIG_H_
+#define _I386_CONFIG_H_
 
-#include "../../arch/i386/config.h"
+#define ARCH_HAVE_MEMCPY 1
 
-#ifndef ARCH_HAVE_MEMCPY
-void* memcpy( void* d, const void* s, size_t n ) {
-    char* dest;
-    char* src;
-
-    dest = ( char* )d;
-    src = ( char* )s;
-
-    while ( n-- ) {
-        *dest++ = *src++;
-    }
-
-    return d;
-}
-#endif /* ARCH_HAVE_MEMCPY */
+#endif /* _I386_CONFIG_H_ */

@@ -113,7 +113,7 @@ int region_add( region_t* region, rect_t* rect ) {
         return -ENOMEM;
     }
 
-    memcpy( &clip_rect->rect, rect, sizeof( rect_t ) );
+    rect_copy( &clip_rect->rect, rect );
 
     clip_rect->next = region->rects;
     region->rects = clip_rect;
@@ -184,7 +184,7 @@ int region_exclude( region_t* region, rect_t* rect ) {
                 continue;
             }
 
-            memcpy( &current->rect, &new_rects[ i ], sizeof( rect_t ) );
+            rect_copy( &current->rect, &new_rects[ i ] );
 
             current->next = new_list;
             new_list = current;
@@ -211,7 +211,7 @@ int region_duplicate( region_t* old_region, region_t* new_region ) {
             goto error1;
         }
 
-        memcpy( &new_clip_rect->rect, &clip_rect->rect, sizeof( rect_t ) );
+        rect_copy( &new_clip_rect->rect, &clip_rect->rect );
 
         if ( last_clip_rect == NULL ) {
             new_region->rects = new_clip_rect;

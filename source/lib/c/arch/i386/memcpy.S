@@ -1,6 +1,6 @@
-/* yaosp C library
+/* i386 architecture specific memcpy function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2008 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,22 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <string.h>
+.global memcpy
 
-#include "../../arch/i386/config.h"
+.section .text
 
-#ifndef ARCH_HAVE_MEMCPY
-void* memcpy( void* d, const void* s, size_t n ) {
-    char* dest;
-    char* src;
+/* void* memcpy( void* d, const void* s, size_t n ) */
 
-    dest = ( char* )d;
-    src = ( char* )s;
-
-    while ( n-- ) {
-        *dest++ = *src++;
-    }
-
-    return d;
-}
-#endif /* ARCH_HAVE_MEMCPY */
+.type memcpy, @function
+memcpy:
+    pushl %esi
+    pushl %edi
+    movl 12(%esp), %edi
+    movl 16(%esp), %esi
+    movl 20(%esp), %ecx
+    movl %ecx, %edx
+    shrl $2, %ecx
+    testl %ecx, %ecx
+    jz 4f
+    rep movsl
+4:
+    movl %edx, %ecx
+    andl $3, %ecx
+    testl %ecx, %ecx
+    jz 5f
+    rep movsb
+5:
+    movl 12(%esp), %eax
+    popl %edi
+    popl %esi
+    ret
+.size memcpy,.-memcpy

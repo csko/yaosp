@@ -54,7 +54,7 @@ int desktop_get_size( point_t* size ) {
         goto error1;
     }
 
-    memcpy( size, &reply.size, sizeof( point_t ) );
+    point_copy( size, &reply.size );
 
     return 0;
 

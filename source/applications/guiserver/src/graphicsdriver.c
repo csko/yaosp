@@ -168,7 +168,7 @@ static inline void render_glyph( bitmap_t* bitmap, font_glyph_t* glyph, point_t*
                     } else if ( alpha > 0 ) {
                       register uint32_t bg_color = *bitmap_raster;
 
-                      uint8_t bg_alpha = ( bg_color >> 24 ) & 0xFF;
+                      uint8_t bg_alpha = bg_color >> 24;
                       uint8_t bg_red  = ( bg_color >> 16 ) & 0xFF;
                       uint8_t bg_green = ( bg_color >> 8 ) & 0xFF;
                       uint8_t bg_blue = bg_color & 0xFF;
@@ -208,7 +208,7 @@ int generic_draw_text( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font
         length = strlen( text );
     }
 
-    memcpy( &current_point, point, sizeof( point_t ) );
+    point_copy( &current_point, point );
 
     LOCK( font->style->lock );
 
