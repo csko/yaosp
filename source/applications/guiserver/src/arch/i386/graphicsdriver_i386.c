@@ -52,3 +52,31 @@ void i386_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32_t color )
         : "ecx", "memory"
     );
 }
+
+int i386_blit_bitmap_copy_rgb32( int width, int height, uint32_t* dst_buffer, int dst_modulo, uint32_t* src_buffer, int src_modulo ) {
+    assert( dst_modulo >= width );
+    assert( src_modulo >= width );
+
+    uint32_t tmp[] = {
+        width,
+        ( dst_modulo - width ) * 4,
+        ( src_modulo - width ) * 4
+    };
+
+    assert( height > 0 );
+
+    __asm__ __volatile__(
+        "1:\n"
+        "movl 0(%%edx), %%ecx\n"
+        "rep ; movsl\n"
+        "addl 8(%%edx), %%esi\n"
+        "addl 4(%%edx), %%edi\n"
+        "decl %%ebx\n"
+        "jnz 1b\n"
+        :
+        : "b" ( height ), "d" ( tmp ), "S" ( src_buffer ), "D" ( dst_buffer )
+        : "eax", "ecx", "memory"
+    );
+
+    return 0;
+}

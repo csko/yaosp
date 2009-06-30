@@ -24,9 +24,12 @@
 
 #define BITMAP_OFFSET_32( ptr, x, y, bpl ) ((uint32_t*)(((uint8_t*)(ptr)) + (x*4) + (y) * (bpl)))
 
-#if defined( USE_I386_ASM )
+#if defined( USE_i386_ASM )
 int i386_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32_t color );
-#else
+int i386_blit_bitmap_copy_rgb32( int width, int height, uint32_t* dst_buffer, int dst_modulo, uint32_t* src_buffer, int src_modulo );
+#endif /* USE_i386_ASM */
+
+#if !defined( USE_i386_ASM )
 static void generic_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32_t color ) {
     int x;
     int y;
@@ -54,7 +57,7 @@ static void generic_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32
         data += padding;
     }
 }
-#endif
+#endif /* USE_i386_ASM */
 
 static void generic_fill_rect_rgb32_invert( bitmap_t* bitmap, rect_t* rect ) {
     int x;
@@ -92,7 +95,7 @@ int generic_fill_rect( bitmap_t* bitmap, rect_t* rect, color_t* color, drawing_m
         case DM_COPY :
             switch ( bitmap->color_space ) {
                 case CS_RGB32 :
-#if defined( USE_I386_ASM )
+#if defined( USE_i386_ASM )
                     i386_fill_rect_rgb32_copy( bitmap, rect, color_to_uint32( color ) );
 #else
                     generic_fill_rect_rgb32_copy( bitmap, rect, color_to_uint32( color ) );
@@ -258,13 +261,24 @@ static int blit_bitmap_copy( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t*
 
             switch ( src_bitmap->color_space ) {
                 case CS_RGB32 : {
-                    int y;
                     int src_modulo;
-                    int data_to_copy;
                     uint32_t* src_buffer;
 
                     src_buffer = BITMAP_OFFSET_32( src_bitmap->buffer, src_rect->left, src_rect->top, src_bitmap->bytes_per_line );
                     src_modulo = src_bitmap->bytes_per_line / 4;
+
+#if defined( USE_i386_ASM )
+                    i386_blit_bitmap_copy_rgb32(
+                        width,
+                        height,
+                        dst_buffer,
+                        dst_modulo,
+                        src_buffer,
+                        src_modulo
+                    );
+#else
+                    int y;
+                    int data_to_copy;
 
                     data_to_copy = width * 4;
 
@@ -274,6 +288,7 @@ static int blit_bitmap_copy( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t*
                         dst_buffer += dst_modulo;
                         src_buffer += src_modulo;
                     } // for
+#endif /* USE_i386_ASM */
 
                     break;
                 } // case CS_RGB32
