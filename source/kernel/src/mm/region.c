@@ -21,9 +21,9 @@
 #include <smp.h>
 #include <kernel.h>
 #include <macros.h>
-#include <semaphore.h>
 #include <scheduler.h>
 #include <console.h>
+#include <lock/mutex.h>
 #include <mm/region.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
@@ -31,7 +31,7 @@
 
 #include <arch/mm/region.h>
 
-semaphore_id region_lock;
+lock_id region_lock;
 hashtable_t region_table;
 
 static int region_id_counter = 0;
@@ -92,7 +92,7 @@ int region_insert( memory_context_t* context, region_t* region ) {
         if ( region_id_counter < 0 ) {
             region_id_counter = 0;
         }
-    } while ( hashtable_get( &region_table, ( void* )region->id ) != NULL );
+    } while ( hashtable_get( &region_table, ( void* )&region->id ) != NULL );
 
     error = hashtable_add( &region_table, ( hashitem_t* )region );
 
@@ -111,16 +111,16 @@ int region_insert( memory_context_t* context, region_t* region ) {
     return 0;
 
 error2:
-    hashtable_remove( &region_table, ( const void* )region->id );
+    hashtable_remove( &region_table, ( const void* )&region->id );
 
 error1:
     return error;
 }
 
 int region_remove( memory_context_t* context, region_t* region ) {
-    ASSERT( is_semaphore_locked( region_lock ) );
+    //ASSERT( is_semaphore_locked( region_lock ) );
 
-    hashtable_remove( &region_table, ( const void* )region->id );
+    hashtable_remove( &region_table, ( const void* )&region->id );
     memory_context_remove_region( context, region );
 
     return 0;
@@ -221,11 +221,11 @@ region_id do_create_region(
 
     /* Update process vmem statistics */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     context->process->vmem_size += region->size;
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     *_address = ( void* )address;
 
@@ -258,11 +258,11 @@ region_id create_region(
 
     flags &= ( REGION_READ | REGION_WRITE | REGION_KERNEL | REGION_STACK );
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     region = do_create_region( name, size, flags, alloc_method, _address, false );
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return region;
 }
@@ -278,11 +278,11 @@ region_id sys_create_region(
 
     flags &= ( REGION_READ | REGION_WRITE );
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     region = do_create_region( name, size, flags, alloc_method, _address, true );
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return region;
 }
@@ -290,7 +290,7 @@ region_id sys_create_region(
 static int do_delete_region( region_id id, bool allow_kernel_region ) {
     region_t* region;
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
+    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
         return -EINVAL;
@@ -306,11 +306,11 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
 
     /* Update process vmem statistics */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     region->context->process->vmem_size -= region->size;
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     destroy_region( region );
 
@@ -320,29 +320,19 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
 int delete_region( region_id id ) {
     int error;
 
-    error = LOCK( region_lock );
-
-    if ( error < 0 ) {
-        kprintf( "delete_region(id=%d): Failed to lock regions: %d\n", id, error );
-        goto out;
-    }
-
+    mutex_lock( region_lock );
     error = do_delete_region( id, true );
+    mutex_unlock( region_lock );
 
-    UNLOCK( region_lock );
-
- out:
     return error;
 }
 
 int sys_delete_region( region_id id ) {
     int error;
 
-    LOCK( region_lock );
-
+    mutex_lock( region_lock );
     error = do_delete_region( id, false );
-
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return error;
 }
@@ -350,7 +340,7 @@ int sys_delete_region( region_id id ) {
 int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region ) {
     region_t* region;
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
+    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
         return -EINVAL;
@@ -372,11 +362,11 @@ int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region ) {
 int remap_region( region_id id, ptr_t address ) {
     int error;
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     error = do_remap_region( id, address, true );
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return error;
 }
@@ -384,11 +374,11 @@ int remap_region( region_id id, ptr_t address ) {
 int sys_remap_region( region_id id, ptr_t address ) {
     int error;
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     error = do_remap_region( id, address, false );
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return error;
 }
@@ -402,12 +392,12 @@ int resize_region( region_id id, uint32_t new_size ) {
         return -EINVAL;
     }
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
+    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
-        UNLOCK( region_lock );
+        mutex_unlock( region_lock );
 
         return -EINVAL;
     }
@@ -420,7 +410,7 @@ int resize_region( region_id id, uint32_t new_size ) {
 
     if ( new_size > region->size ) {
         if ( !memory_context_can_resize_region( context, region, new_size ) ) {
-            UNLOCK( region_lock );
+            mutex_unlock( region_lock );
 
             return -ENOMEM;
         }
@@ -431,23 +421,23 @@ int resize_region( region_id id, uint32_t new_size ) {
     error = arch_resize_region( context, region, new_size );
 
     if ( error < 0 ) {
-        UNLOCK( region_lock );
+        mutex_unlock( region_lock );
 
         return error;
     }
 
     /* Update process vmem statistics */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     context->process->vmem_size -= region->size;
     context->process->vmem_size += new_size;
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     region->size = new_size;
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return 0;
 }
@@ -469,14 +459,14 @@ int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
 
     ASSERT( atomic_get( &file->ref_count ) >= 2 );
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
+    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( ( region == NULL ) ||
          ( region->alloc_method != ALLOC_LAZY ) ||
          ( region->file != NULL ) ) {
-        UNLOCK( region_lock );
+        mutex_unlock( region_lock );
 
         io_context_put_file( io_context, file );
 
@@ -487,7 +477,7 @@ int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
     region->file_offset = offset;
     region->file_size = length;
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return 0;
 }
@@ -496,9 +486,9 @@ int get_region_info( region_id id, region_info_t* info ) {
     int error;
     region_t* region;
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )id );
+    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
         error = -EINVAL;
@@ -509,32 +499,26 @@ int get_region_info( region_id id, region_info_t* info ) {
         info->size = region->size;
     }
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return error;
 }
 
 void memory_region_dump( region_t* region, int index ) {
-    kprintf( "  region #%d\n", index );
-    kprintf( "    id: %d name: %s\n", region->id, region->name );
-    kprintf( "    start: %p size: %u\n", region->start, region->size );
-    kprintf( "    flags:" );
+    kprintf(
+        INFO,
+        "  id: %2d region: %08p-%08p flags: ",
+        region->id,
+        region->start,
+        region->start + region->size - 1
+    );
 
-    if ( region->flags & REGION_READ ) { kprintf( " read" ); }
-    if ( region->flags & REGION_WRITE ) { kprintf( " write" ); }
-    if ( region->flags & REGION_STACK ) { kprintf( " stack" ); }
-    if ( region->flags & REGION_REMAPPED ) { kprintf( " remapped" ); }
+    if ( region->flags & REGION_READ ) { kprintf( INFO, "r" ); } else { kprintf( INFO, "-" ); }
+    if ( region->flags & REGION_WRITE ) { kprintf( INFO, "w" ); } else { kprintf( INFO, "-" ); }
+    if ( region->flags & REGION_STACK ) { kprintf( INFO, "S" ); } else { kprintf( INFO, "-" ); }
+    if ( region->flags & REGION_REMAPPED ) { kprintf( INFO, "R" ); } else { kprintf( INFO, "-" ); }
 
-    kprintf( "\n    alloc method: " );
-
-    switch ( region->alloc_method ) {
-        case ALLOC_NONE : kprintf( "none" ); break;
-        case ALLOC_LAZY : kprintf( "lazy" ); break;
-        case ALLOC_PAGES : kprintf( "pages" ); break;
-        case ALLOC_CONTIGUOUS : kprintf( "cont" ); break;
-    }
-
-    kprintf( "\n" );
+    kprintf( INFO, " %s\n", region->name );
 }
 
 static void* region_key( hashitem_t* item ) {
@@ -542,15 +526,7 @@ static void* region_key( hashitem_t* item ) {
 
     region = ( region_t* )item;
 
-    return ( void* )region->id;
-}
-
-static uint32_t region_hash( const void* key ) {
-    return ( uint32_t )key;
-}
-
-static bool region_compare( const void* key1, const void* key2 ) {
-    return ( key1 == key2 );
+    return ( void* )&region->id;
 }
 
 __init int preinit_regions( void ) {
@@ -560,8 +536,8 @@ __init int preinit_regions( void ) {
         &region_table,
         1024,
         region_key,
-        region_hash,
-        region_compare
+        hash_int,
+        compare_int
     );
 
     if ( error < 0 ) {
@@ -572,7 +548,7 @@ __init int preinit_regions( void ) {
 }
 
 __init int init_regions( void ) {
-    region_lock = create_semaphore( "region lock", SEMAPHORE_BINARY, 0, 1 );
+    region_lock = mutex_create( "region mutex", MUTEX_NONE );
 
     if ( region_lock < 0 ) {
         return region_lock;

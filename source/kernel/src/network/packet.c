@@ -54,7 +54,7 @@ packet_queue_t* create_packet_queue( void ) {
         goto error1;
     }
 
-    queue->sync = create_semaphore( "packet queue sync", SEMAPHORE_COUNTING, 0, 0 );
+    queue->sync = semaphore_create( "packet queue semaphore", 0 );
 
     if ( queue->sync < 0 ) {
         goto error2;
@@ -84,7 +84,7 @@ void delete_packet_queue( packet_queue_t* packet_queue ) {
         delete_packet( packet );
     }
 
-    delete_semaphore( packet_queue->sync );
+    semaphore_destroy( packet_queue->sync );
     kfree( packet_queue );
 }
 
@@ -107,7 +107,7 @@ int packet_queue_insert( packet_queue_t* queue, packet_t* packet ) {
 
     spinunlock_enable( &queue->lock );
 
-    UNLOCK( queue->sync );
+    semaphore_unlock( queue->sync, 1 );
 
     return 0;
 }
@@ -115,7 +115,7 @@ int packet_queue_insert( packet_queue_t* queue, packet_t* packet ) {
 packet_t* packet_queue_pop_head( packet_queue_t* queue, uint64_t timeout ) {
     packet_t* packet;
 
-    lock_semaphore( queue->sync, 1, timeout );
+    semaphore_timedlock( queue->sync, 1, timeout );
 
     spinlock_disable( &queue->lock );
 

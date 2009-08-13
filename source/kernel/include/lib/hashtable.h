@@ -66,4 +66,12 @@ uint32_t hashtable_get_filtered_item_count( hashtable_t* table, hashtable_filter
 uint32_t hash_number( uint8_t* data, size_t length );
 uint32_t hash_string( uint8_t* data, size_t length );
 
-#endif // _LIB_HASHTABLE_H_
+uint32_t hash_int( const void* key );
+uint32_t hash_int64( const void* key );
+uint32_t hash_str( const void* key );
+
+bool compare_int( const void* key1, const void* key2 );
+bool compare_int64( const void* key1, const void* key2 );
+bool compare_str( const void* key1, const void* key2 );
+
+#endif /* _LIB_HASHTABLE_H_ */

@@ -20,7 +20,8 @@
 #define _NETWORK_TCP_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/mutex.h>
+#include <lock/condition.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
 #include <lib/hashtable.h>
@@ -103,18 +104,18 @@ typedef struct tcp_socket {
     tcp_endpoint_key_t endpoint_info;
 
     socket_t* socket;
-    semaphore_id lock;
-    semaphore_id sync;
+    lock_id mutex;
+    lock_id sync;
     tcp_socket_state_t state;
 
     int mss;
 
-    semaphore_id rx_queue;
+    lock_id rx_queue;
     circular_buffer_t rx_buffer;
     circular_pointer_t rx_user_data;
     circular_pointer_t rx_free_data;
 
-    semaphore_id tx_queue;
+    lock_id tx_queue;
     circular_buffer_t tx_buffer;
     uint32_t tx_last_unacked_seq;
     circular_pointer_t tx_first_unacked;

@@ -20,7 +20,7 @@
 #define _VFS_INODE_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/mutex.h>
 #include <lib/hashtable.h>
 
 #include <arch/atomic.h>
@@ -49,7 +49,7 @@ typedef struct inode_cache {
     int max_free_inode_count;
     inode_t* free_inodes;
 
-    semaphore_id lock;
+    lock_id mutex;
 } inode_cache_t;
 
 inode_t* get_inode( struct mount_point* mount_point, ino_t inode_number );

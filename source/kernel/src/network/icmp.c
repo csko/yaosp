@@ -54,7 +54,7 @@ static int icmp_handle_echo( packet_t* packet ) {
     );
 
     if ( reply == NULL ) {
-        kprintf( "NET: No memory for ICMP packet!\n" );
+        kprintf( ERROR, "NET: No memory for ICMP packet!\n" );
         delete_packet( packet );
         return -ENOMEM;
     }
@@ -98,7 +98,7 @@ static int icmp_handle_echo( packet_t* packet ) {
 
     icmp_reply_header->checksum = 0;
     icmp_reply_header->checksum = ip_checksum(
-        ( uint16_t* )icmp_reply_header, 
+        ( uint16_t* )icmp_reply_header,
         ICMP_HEADER_LEN + sizeof( icmp_echo_reply_t ) + echo_payload_size
     );
 
@@ -118,7 +118,7 @@ int icmp_input( packet_t* packet ) {
             break;
 
         default :
-            kprintf( "NET: Unknown ICMP type: %x\n", icmp_header->type );
+            kprintf( WARNING, "NET: Unknown ICMP type: %x\n", icmp_header->type );
             delete_packet( packet );
             return -EINVAL;
     }

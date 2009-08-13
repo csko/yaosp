@@ -85,7 +85,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/module.c</item>
         <item>src/symbols.c</item>
         <item>src/waitqueue.c</item>
-        <item>src/semaphore.c</item>
         <item>src/devices.c</item>
         <item>src/syscall.c</item>
         <item>src/fork.c</item>
@@ -118,6 +117,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/tcp.c</item>
     </array>
 
+    <array name="files_lock">
+        <item>src/lock/context.c</item>
+        <item>src/lock/mutex.c</item>
+        <item>src/lock/condition.c</item>
+        <item>src/lock/semaphore.c</item>
+    </array>
+
     <array name="files_lib">
         <item>src/lib/string.c</item>
         <item>src/lib/printf.c</item>
@@ -137,6 +143,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <rmdir>objs/arch</rmdir>
         <delete>objs/lib/*</delete>
         <rmdir>objs/lib</rmdir>
+        <delete>objs/lock/*</delete>
+        <rmdir>objs/lock</rmdir>
         <delete>objs/*</delete>
         <rmdir>objs</rmdir>
         <delete>include/arch</delete>
@@ -144,6 +152,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="prepare" type="private">
         <mkdir>objs</mkdir>
+        <mkdir>objs/lock</mkdir>
         <mkdir>objs/lib</mkdir>
         <mkdir>objs/arch</mkdir>
         <mkdir>objs/x86emu</mkdir>
@@ -246,6 +255,24 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
+        <for var="i" array="${files_lock}">
+            <echo>[GCC    ] source/kernel/${i}</echo>
+            <gcc>
+                <input>${i}</input>
+                <output>objs/lock/filename(${i}).o</output>
+                <include>./include</include>
+                <flag>-c</flag>
+                <flag>-O2</flag>
+                <flag>-m32</flag>
+                <flag>-Wall</flag>
+                <flag>-Werror</flag>
+                <flag>-Wshadow</flag>
+                <flag>-nostdinc</flag>
+                <flag>-nostdlib</flag>
+                <flag>-ffreestanding</flag>
+            </gcc>
+        </for>
+
         <for var="i" array="${files_lib}">
             <echo>[GCC    ] source/kernel/${i}</echo>
             <gcc>
@@ -271,6 +298,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <ld>
             <input>objs/*.o</input>
+            <input>objs/lock/*.o</input>
             <input>objs/lib/*.o</input>
             <input>objs/arch/*.o</input>
             <input>objs/x86emu/*.o</input>

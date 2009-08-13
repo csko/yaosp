@@ -64,5 +64,6 @@ int sys_shutdown( void );
 
 int arch_late_init( void );
 void kernel_main( void );
+int create_init_thread( void );
 
 #endif /* _KERNEL_H_ */

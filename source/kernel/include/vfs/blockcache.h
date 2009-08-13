@@ -20,7 +20,7 @@
 #define _VFS_BLOCKCACHE_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/mutex.h>
 #include <lib/hashtable.h>
 
 #define BLOCK_CACHE_READ_BEFORE      8
@@ -34,7 +34,7 @@ typedef struct block {
 
 typedef struct block_cache {
     int fd;
-    semaphore_id lock;
+    lock_id mutex;
     uint32_t block_size;
     uint64_t block_count;
     hashtable_t block_table;

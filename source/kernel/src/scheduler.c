@@ -173,14 +173,6 @@ thread_t* do_schedule( void ) {
     return next;
 }
 
-void lock_scheduler( void ) {
-    spinlock_disable( &scheduler_lock );
-}
-
-void unlock_scheduler( void ) {
-    spinunlock_enable( &scheduler_lock );
-}
-
 __init int init_scheduler( void ) {
     int error;
 

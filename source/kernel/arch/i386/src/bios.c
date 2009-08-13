@@ -159,7 +159,7 @@ __init int init_bios_access( void ) {
     );
 
     if ( below_1mb_region < 0 ) {
-        kprintf( "Failed to create memory region for <1mb access!\n" );
+        kprintf( ERROR, "Failed to create memory region for <1mb access!\n" );
         return -ENOMEM;
     }
 
@@ -170,7 +170,7 @@ __init int init_bios_access( void ) {
     );
 
     if ( error < 0 ) {
-        kprintf( "Failed to remap memory region for <1mb access!\n" );
+        kprintf( ERROR, "Failed to remap memory region for <1mb access!\n" );
         return error;
     }
 

@@ -45,7 +45,7 @@ extern int __smp_trampoline_start;
 extern int __smp_trampoline_end;
 
 void processor_activated( void ) {
-    active_cpu_mask |= ( 1 << get_processor_id() );
+    active_cpu_mask |= ( 1 << get_processor_index() );
 }
 
 void flush_tlb_global( void ) {
@@ -67,7 +67,7 @@ void flush_tlb_global( void ) {
 
         /* This will tell other CPUs that they have to invalidate their TLB */
 
-        tlb_invalidate_mask = active_cpu_mask & ~( 1 << get_processor_id() );
+        tlb_invalidate_mask = active_cpu_mask & ~( 1 << get_processor_index() );
 
         /* Send the IPI to other processors */
 
@@ -105,7 +105,7 @@ void flush_tlb_global( void ) {
         /* Maybe a timeout happened? :( */
 
         if ( timeout == 0 ) {
-            kprintf( "Global TLB flush timed out!\n" );
+            kprintf( WARNING, "Global TLB flush timed out!\n" );
         }
     }
 }
@@ -157,7 +157,7 @@ void ap_processor_entry( void ) {
     __asm__ __volatile__(
         "ltr %%ax\n"
         :
-        : "a" ( ( GDT_ENTRIES + get_processor_id() ) * 8 )
+        : "a" ( ( GDT_ENTRIES + get_processor_index() ) * 8 )
     );
 
     /* Setup the local APIC and initialize the APIC timer */
@@ -198,7 +198,7 @@ int arch_boot_processors( void ) {
         ap_stack_top -= sizeof( register_t );
         atomic_set( &ap_running, 0 );
 
-        kprintf( "Booting CPU %d ...\n", i, ap_stack_top );
+        DEBUG_LOG( "Booting CPU %d ...\n", i, ap_stack_top );
 
         /* Send INIT to the AP */
 
@@ -214,7 +214,7 @@ int arch_boot_processors( void ) {
 
         /* Give 10ms to the AP to initialize itself */
 
-        sleep_thread( 10000 );
+        thread_sleep( 10000 );
 
         int times_to_wait_for_ap[] = {
             10000, /* 10ms */
@@ -244,7 +244,7 @@ int arch_boot_processors( void ) {
 
             /* Let the AP start the boot process */
 
-            sleep_thread( times_to_wait_for_ap[ j ] );
+            thread_sleep( times_to_wait_for_ap[ j ] );
         }
 
         /* If the AP is started we wait until it finishes the kernel
@@ -255,16 +255,16 @@ int arch_boot_processors( void ) {
             int tries = 0;
 
             do {
-                sleep_thread( 10000 );
+                thread_sleep( 10000 );
             } while ( ( !processor_table[ i ].running ) && ( tries++ < 500 ) );
 
             if ( processor_table[ i ].running ) {
-                kprintf( "CPU %d is running!\n", i );
+                DEBUG_LOG( "CPU %d is running!\n", i );
             } else {
-                kprintf( "CPU %d started but failed to finish booting!\n", i );
+                kprintf( ERROR, "CPU %d started but failed to finish booting!\n", i );
             }
         } else {
-            kprintf( "Failed to start up CPU %d\n", i );
+            kprintf( ERROR, "Failed to start up CPU %d\n", i );
         }
     }
 

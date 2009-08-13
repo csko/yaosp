@@ -28,6 +28,10 @@
 extern waitqueue_t sleep_queue;
 extern spinlock_t scheduler_lock;
 
+#define scheduler_lock() spinlock_disable( &scheduler_lock )
+#define scheduler_unlock() spinunlock_enable( &scheduler_lock )
+#define scheduler_is_locked() spinlock_is_locked( &scheduler_lock )
+
 int add_thread_to_ready( thread_t* thread );
 int add_thread_to_expired( thread_t* thread );
 
@@ -35,9 +39,6 @@ void reset_thread_quantum( thread_t* thread );
 
 thread_t* do_schedule( void );
 int schedule( registers_t* regs );
-
-void lock_scheduler( void );
-void unlock_scheduler( void );
 
 void sched_preempt( void );
 

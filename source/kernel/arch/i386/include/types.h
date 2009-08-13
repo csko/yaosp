@@ -101,4 +101,9 @@ typedef struct tss {
     unsigned short io_bitmap;
 } __attribute__(( packed )) tss_t;
 
+typedef struct i386_stack_frame {
+    register_t ebp;
+    register_t eip;
+} __attribute__(( packed )) i386_stack_frame_t;
+
 #endif /* _ARCH_TYPES_H_ */

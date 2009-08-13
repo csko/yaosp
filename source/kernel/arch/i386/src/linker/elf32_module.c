@@ -243,7 +243,7 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                     elf_symbol = elf32_get_symbol( &elf_module->image_info, symbol->name );
 
                     if ( elf_symbol == NULL ) {
-                        kprintf( "ELF32(R_386_JMP_SLOT): Symbol %s not found!\n", symbol->name );
+                        kprintf( ERROR, "ELF32(R_386_JMP_SLOT): Symbol %s not found!\n", symbol->name );
 
                         return -EINVAL;
                     }
@@ -263,7 +263,7 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                 elf_symbol = elf32_get_symbol( &elf_module->image_info, symbol->name );
 
                 if ( elf_symbol == NULL ) {
-                    kprintf( "ELF32(R_386_GLOB_DATA): Symbol %s not found!\n", symbol->name );
+                    kprintf( ERROR, "ELF32(R_386_GLOB_DATA): Symbol %s not found!\n", symbol->name );
 
                     return -EINVAL;
                 }
@@ -275,7 +275,7 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
             }
 
             default :
-                kprintf( "elf32_reloacate_module(): Unknown reloc type: %x\n", ELF32_R_TYPE( reloc->info ) );
+                kprintf( WARNING, "elf32_reloacate_module(): Unknown reloc type: %x\n", ELF32_R_TYPE( reloc->info ) );
 
                 return -EINVAL;
         }
@@ -427,6 +427,7 @@ static bool elf32_module_get_symbol( module_t* module, const char* symbol_name, 
 }
 
 static int elf32_module_get_symbol_info( module_t* module, ptr_t address, symbol_info_t* info ) {
+    int error;
     elf_module_t* elf_module;
 
     elf_module = ( elf_module_t* )module->loader_data;
@@ -444,7 +445,15 @@ static int elf32_module_get_symbol_info( module_t* module, ptr_t address, symbol
         return -EINVAL;
     }
 
-    return elf32_get_symbol_info( &elf_module->image_info, address - elf_module->text_address, info );
+    error = elf32_get_symbol_info( &elf_module->image_info, address - elf_module->text_address, info );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    info->address += elf_module->text_address;
+
+    return 0;
 }
 
 static module_loader_t elf32_module_loader = {

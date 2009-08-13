@@ -17,10 +17,10 @@
  */
 
 #include <kernel.h>
-#include <semaphore.h>
 #include <errno.h>
 #include <console.h>
 #include <ioctl.h>
+#include <lock/mutex.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/interface.h>
@@ -31,9 +31,9 @@
 #include <network/route.h>
 #include <lib/string.h>
 
+static lock_id interface_mutex;
 static uint32_t interface_counter = 0;
 static hashtable_t interface_table;
-static semaphore_id interface_lock;
 
 static net_interface_t* alloc_network_interface( void ) {
     net_interface_t* interface;
@@ -65,7 +65,7 @@ error1:
 }
 
 static int insert_network_interface( net_interface_t* interface ) {
-    LOCK( interface_lock );
+    mutex_lock( interface_mutex );
 
     atomic_set( &interface->ref_count, 1 );
 
@@ -76,7 +76,7 @@ static int insert_network_interface( net_interface_t* interface ) {
 
     hashtable_add( &interface_table, ( hashitem_t* )interface );
 
-    UNLOCK( interface_lock );
+    mutex_unlock( interface_mutex );
 
     return 0;
 }
@@ -132,7 +132,7 @@ static int network_rx_thread( void* data ) {
                 break;
 
             default :
-                kprintf( "NET: Unknown protocol: %x\n", ntohw( eth_header->proto ) );
+                kprintf( WARNING, "NET: Unknown protocol: %x\n", ntohw( eth_header->proto ) );
                 break;
         }
     }
@@ -143,11 +143,11 @@ static int network_rx_thread( void* data ) {
 static int get_interface_count( void ) {
     int count;
 
-    LOCK( interface_lock );
+    mutex_lock( interface_mutex );
 
     count = hashtable_get_item_count( &interface_table );
 
-    UNLOCK( interface_lock );
+    mutex_unlock( interface_mutex );
 
     return count;
 }
@@ -167,7 +167,7 @@ static int start_network_interface( net_interface_t* interface ) {
         return -1;
     }
 
-    wake_up_thread( interface->rx_thread );
+    thread_wake_up( interface->rx_thread );
 
     /* TODO */
     uint8_t netmask[4]={255,255,255,0};
@@ -223,7 +223,7 @@ static int create_network_interface( int device ) {
     insert_network_interface( interface );
     start_network_interface( interface );
 
-    kprintf( "Created network interface: %s\n", interface->name );
+    kprintf( INFO, "Created network interface: %s\n", interface->name );
 
     return 0;
 }
@@ -286,14 +286,6 @@ static void* net_if_key( hashitem_t* item ) {
     return ( void* )interface->name;
 }
 
-static uint32_t net_if_hash( const void* key ) {
-    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
-}
-
-static bool net_if_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
-}
-
 __init int init_network_interfaces( void ) {
     int error;
 
@@ -303,18 +295,18 @@ __init int init_network_interfaces( void ) {
         &interface_table,
         32,
         net_if_key,
-        net_if_hash,
-        net_if_compare
+        hash_str,
+        compare_str
     );
 
     if ( error < 0 ) {
         goto error1;
     }
 
-    interface_lock = create_semaphore( "network if lock", SEMAPHORE_BINARY, 0, 1 );
+    interface_mutex = mutex_create( "network interface mutex", MUTEX_NONE );
 
-    if ( interface_lock < 0 ) {
-        error = interface_lock;
+    if ( interface_mutex < 0 ) {
+        error = interface_mutex;
         goto error2;
     }
 

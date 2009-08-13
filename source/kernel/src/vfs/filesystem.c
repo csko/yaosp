@@ -17,15 +17,15 @@
  */
 
 #include <errno.h>
-#include <semaphore.h>
 #include <kernel.h>
+#include <lock/mutex.h>
 #include <mm/kmalloc.h>
 #include <vfs/filesystem.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
 
+static lock_id filesystem_mutex;
 static hashtable_t filesystem_table;
-static semaphore_id filesystem_lock;
 
 static void* filesystem_key( hashitem_t* item ) {
     filesystem_descriptor_t* fs_desc;
@@ -33,14 +33,6 @@ static void* filesystem_key( hashitem_t* item ) {
     fs_desc = ( filesystem_descriptor_t* )item;
 
     return ( void* )fs_desc->name;
-}
-
-static uint32_t filesystem_hash( const void* key ) {
-    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
-}
-
-static bool filesystem_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
 }
 
 int register_filesystem( const char* name, filesystem_calls_t* calls ) {
@@ -62,7 +54,7 @@ int register_filesystem( const char* name, filesystem_calls_t* calls ) {
 
     fs_desc->calls = calls;
 
-    LOCK( filesystem_lock );
+    mutex_lock( filesystem_mutex );
 
     if ( hashtable_get( &filesystem_table, ( const void* )name ) != NULL ) {
         error = -EEXIST;
@@ -72,7 +64,7 @@ int register_filesystem( const char* name, filesystem_calls_t* calls ) {
         error = hashtable_add( &filesystem_table, ( hashitem_t* )fs_desc );
     }
 
-    UNLOCK( filesystem_lock );
+    mutex_unlock( filesystem_mutex );
 
     if ( error < 0 ) {
         kfree( fs_desc->name );
@@ -85,11 +77,11 @@ int register_filesystem( const char* name, filesystem_calls_t* calls ) {
 filesystem_descriptor_t* get_filesystem( const char* name ) {
     filesystem_descriptor_t* fs_desc;
 
-    LOCK( filesystem_lock );
+    mutex_lock( filesystem_mutex );
 
     fs_desc = ( filesystem_descriptor_t* )hashtable_get( &filesystem_table, ( const void* )name );
 
-    UNLOCK( filesystem_lock );
+    mutex_unlock( filesystem_mutex );
 
     return fs_desc;
 }
@@ -122,11 +114,11 @@ filesystem_descriptor_t* probe_filesystem( const char* device ) {
     data.device = device;
     data.fs_desc = NULL;
 
-    LOCK( filesystem_lock );
+    mutex_lock( filesystem_mutex );
 
     hashtable_iterate( &filesystem_table, probe_fs_iterator, ( void* )&data );
 
-    UNLOCK( filesystem_lock );
+    mutex_unlock( filesystem_mutex );
 
     return data.fs_desc;
 }
@@ -138,19 +130,19 @@ __init int init_filesystems( void ) {
         &filesystem_table,
         16,
         filesystem_key,
-        filesystem_hash,
-        filesystem_compare
+        hash_str,
+        compare_str
     );
 
     if ( error < 0 ) {
         return error;
     }
 
-    filesystem_lock = create_semaphore( "filesystem lock", SEMAPHORE_BINARY, 0, 1 );
+    filesystem_mutex = mutex_create( "fs table mutex", MUTEX_NONE );
 
-    if ( filesystem_lock < 0 ) {
+    if ( filesystem_mutex < 0 ) {
         destroy_hashtable( &filesystem_table );
-        return filesystem_lock;
+        return filesystem_mutex;
     }
 
     return 0;

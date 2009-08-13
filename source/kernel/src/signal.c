@@ -121,11 +121,11 @@ int send_signal( thread_t* thread, int signal ) {
         return 0;
     }
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     error = do_send_signal( thread, signal );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return error;
 }
@@ -195,7 +195,7 @@ int sys_sigprocmask( int how, sigset_t* set, sigset_t* oldset ) {
 }
 
 int sys_kill( process_id pid, int signal ) {
-    kprintf( "sys_kill() called!\n" );
+    DEBUG_LOG( "sys_kill() called!\n" );
     debug_print_stack_trace();
 
     return 0;
@@ -204,11 +204,11 @@ int sys_kill( process_id pid, int signal ) {
 int sys_kill_thread( thread_id tid, int signal ) {
     thread_t* thread;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     thread = get_thread_by_id( tid );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     if ( thread == NULL ) {
         return -EINVAL;

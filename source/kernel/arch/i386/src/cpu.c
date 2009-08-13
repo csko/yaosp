@@ -196,17 +196,16 @@ __init int detect_cpu( void ) {
 
     /* Put the boot processor information to the screen */
 
-    kprintf( "Boot processor: %s\n", name );
-    kprintf( "Family: 0x%x Model: 0x%x\n", family, model );
-    kprintf( "Features:" );
+    kprintf( INFO, "Boot processor: %s\n", name );
+    kprintf( INFO, "Features:" );
 
     for ( i = 0; i386_features[ i ].feature != 0; i++ ) {
         if ( ( features & i386_features[ i ].feature ) != 0 ) {
-            kprintf( " %s", i386_features[ i ].name );
+            kprintf( INFO, " %s", i386_features[ i ].name );
         }
     }
 
-    kprintf( "\n" );
+    kprintf( INFO, "\n" );
 
     /* Setup TSS for all possible CPU */
 
@@ -269,7 +268,7 @@ __init int cpu_calibrate_speed( void ) {
 
     processor->core_speed = ( uint64_t )PIT_TICKS_PER_SEC * ( end - start ) / 0xFFFF;
 
-    kprintf( "CPU %d runs at %u MHz.\n", get_processor_id(), ( uint32_t )( processor->core_speed / 1000000 ) );
+    kprintf( INFO, "CPU %d runs at %u MHz.\n", get_processor_index(), ( uint32_t )( processor->core_speed / 1000000 ) );
 
     outb( 0x34, PIT_MODE );
     outb( 0x00, PIT_CH0 );

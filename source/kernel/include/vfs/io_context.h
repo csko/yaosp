@@ -43,7 +43,7 @@ typedef struct file {
 } file_t;
 
 typedef struct io_context {
-    semaphore_id lock;
+    lock_id mutex;
 
     inode_t* root_directory;
     inode_t* current_directory;

@@ -136,7 +136,7 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
  * @param microsecs The number of microseconds to delay the thread
  * @return On success 0 is returned
  */
-int sleep_thread( uint64_t microsecs );
+int thread_sleep( uint64_t microsecs );
 
 int do_wake_up_thread( thread_t* thread );
 
@@ -146,7 +146,7 @@ int do_wake_up_thread( thread_t* thread );
  * @param id The id of the thread to wake up
  * @return On success 0 is returned
  */
-int wake_up_thread( thread_id id );
+int thread_wake_up( thread_id id );
 
 /**
  * Returnes the total number of created threads.

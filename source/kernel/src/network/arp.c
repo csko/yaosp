@@ -140,7 +140,7 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
     reply = create_packet( ETH_HEADER_LEN + ARP_HEADER_LEN + ARP_DATA_LEN );
 
     if ( reply == NULL ) {
-        kprintf( "NET: No memory for ARP reply packet!\n" );
+        kprintf( ERROR, "NET: No memory for ARP reply packet!\n" );
         return -ENOMEM;
     }
 
@@ -176,7 +176,7 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
     delete_packet( reply );
 
     if ( error < 0 ) {
-        kprintf( "NET: Failed to send ARP reply packet: %d\n", error );
+        kprintf( ERROR, "NET: Failed to send ARP reply packet: %d\n", error );
     }
 
     return error;
@@ -230,7 +230,7 @@ int arp_input( net_interface_t* interface, packet_t* packet ) {
             break;
 
         default :
-            kprintf( "Unknown ARP command: 0x%x\n", ntohw( arp_header->command ) );
+            kprintf( WARNING, "Unknown ARP command: 0x%x\n", ntohw( arp_header->command ) );
             break;
     }
 
@@ -245,14 +245,6 @@ static void* pending_ip_key( hashitem_t* item ) {
     return &request->ip_address[ 0 ];
 }
 
-static uint32_t pending_ip_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, IPV4_ADDR_LEN );
-}
-
-static bool pending_ip_compare( const void* key1, const void* key2 ) {
-    return ( memcmp( key1, key2, IPV4_ADDR_LEN ) == 0 );
-}
-
 __init int init_arp( void ) {
     int error;
 
@@ -260,8 +252,8 @@ __init int init_arp( void ) {
         &pending_requests,
         32,
         pending_ip_key,
-        pending_ip_hash,
-        pending_ip_compare
+        hash_int,
+        compare_int
     );
 
     if ( error < 0 ) {

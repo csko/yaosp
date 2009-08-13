@@ -21,6 +21,8 @@
 #include <arch/spinlock.h>
 #include <arch/interrupt.h>
 
+#include <console.h>
+
 int init_spinlock( spinlock_t* lock, const char* name ) {
     lock->name = name;
     lock->enable_interrupts = false;

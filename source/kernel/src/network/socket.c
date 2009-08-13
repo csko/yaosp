@@ -21,13 +21,14 @@
 #include <console.h>
 #include <kernel.h>
 #include <mm/kmalloc.h>
+#include <lock/mutex.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
 #include <network/interface.h>
 #include <network/device.h>
 #include <network/tcp.h>
 
-static semaphore_id socket_lock;
+static lock_id socket_mutex;
 static ino_t socket_inode_counter = 0;
 static hashtable_t socket_inode_table;
 
@@ -36,11 +37,11 @@ static mount_point_t* socket_mount_point;
 static int socket_read_inode( void* fs_cookie, ino_t inode_number, void** node ) {
     socket_t* socket;
 
-    LOCK( socket_lock );
+    mutex_lock( socket_mutex );
 
     socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&inode_number );
 
-    UNLOCK( socket_lock );
+    mutex_unlock( socket_mutex );
 
     *node = ( void* )socket;
 
@@ -56,11 +57,11 @@ static int socket_write_inode( void* fs_cookie, void* node ) {
 
     socket = ( socket_t* )node;
 
-    LOCK( socket_lock );
+    mutex_lock( socket_mutex );
 
     hashtable_remove( &socket_inode_table, ( const void* )&socket->inode_number );
 
-    UNLOCK( socket_lock );
+    mutex_unlock( socket_mutex );
 
     switch ( socket->type ) {
         case SOCK_STREAM :
@@ -262,7 +263,7 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
         goto error2;
     }
 
-    LOCK( socket_lock );
+    mutex_lock( socket_mutex );
 
     do {
         socket->inode_number = socket_inode_counter++;
@@ -270,7 +271,7 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
 
     error = hashtable_add( &socket_inode_table, ( hashitem_t* )socket );
 
-    UNLOCK( socket_lock );
+    mutex_unlock( socket_mutex );
 
     if ( error < 0 ) {
         goto error3;
@@ -291,9 +292,9 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
     return error;
 
 error4:
-    LOCK( socket_lock );
+    mutex_lock( socket_mutex );
     hashtable_remove( &socket_inode_table, ( const void* )&socket->inode_number );
-    UNLOCK( socket_lock );
+    mutex_unlock( socket_mutex );
 
 error3:
     delete_file( file );
@@ -370,27 +371,13 @@ static void* socket_key( hashitem_t* item ) {
     return ( void* )&socket->inode_number;
 }
 
-static uint32_t socket_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( ino_t ) );
-}
-
-static bool socket_compare( const void* key1, const void* key2 ) {
-    ino_t* inode_num_1;
-    ino_t* inode_num_2;
-
-    inode_num_1 = ( ino_t* )key1;
-    inode_num_2 = ( ino_t* )key2;
-
-    return ( *inode_num_1 == *inode_num_2 );
-}
-
 __init int init_socket( void ) {
     int error;
 
-    socket_lock = create_semaphore( "socket table", SEMAPHORE_BINARY, 0, 1 );
+    socket_mutex = mutex_create( "socket table mutex", MUTEX_NONE );
 
-    if ( socket_lock < 0 ) {
-        error = socket_lock;
+    if ( socket_mutex < 0 ) {
+        error = socket_mutex;
         goto error1;
     }
 
@@ -398,8 +385,8 @@ __init int init_socket( void ) {
         &socket_inode_table,
         64,
         socket_key,
-        socket_hash,
-        socket_compare
+        hash_int64,
+        compare_int64
     );
 
     if ( error < 0 ) {
@@ -434,7 +421,7 @@ error3:
     destroy_hashtable( &socket_inode_table );
 
 error2:
-    delete_semaphore( socket_lock );
+    mutex_destroy( socket_mutex );
 
 error1:
     return error;

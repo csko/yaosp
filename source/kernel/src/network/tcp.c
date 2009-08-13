@@ -33,9 +33,9 @@
 
 #include <arch/interrupt.h>
 
+static lock_id tcp_endpoint_lock;
 static thread_id tcp_timer_thread;
 static hashtable_t tcp_endpoint_table;
-static semaphore_id tcp_endpoint_lock;
 
 static uint16_t tcp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8_t* tcp_header, size_t tcp_size ) {
     int i;
@@ -205,10 +205,10 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     tcp_socket = ( tcp_socket_t* )socket->data;
     in_address = ( struct sockaddr_in* )address;
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     if ( tcp_socket->state != TCP_STATE_CLOSED ) {
-        UNLOCK( tcp_socket->lock );
+        mutex_unlock( tcp_socket->mutex );
 
         return -EINVAL;
     }
@@ -220,9 +220,9 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     route = find_route( ( uint8_t* )&in_address->sin_addr.s_addr );
 
     if ( route == NULL ) {
-        UNLOCK( tcp_socket->lock );
+        mutex_unlock( tcp_socket->mutex );
 
-        kprintf( "NET: No route for TCP endpoint!\n" );
+        kprintf( WARNING, "net: No route for TCP endpoint!\n" );
 
         return -EINVAL;
     }
@@ -256,15 +256,15 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     syn_timeout_timer->running = true;
     syn_timeout_timer->expire_time = get_system_time() + TCP_SYN_TIMEOUT;
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     /* Put the new endpoint to the table */
 
-    LOCK( tcp_endpoint_lock );
+    mutex_lock( tcp_endpoint_lock );
 
     hashtable_add( &tcp_endpoint_table, ( hashitem_t* )tcp_socket );
 
-    UNLOCK( tcp_endpoint_lock );
+    mutex_unlock( tcp_endpoint_lock );
 
     /* Send the SYN packet */
 
@@ -281,11 +281,11 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     /* Wait until the connection is established */
 
-    LOCK( tcp_socket->sync );
+    semaphore_lock( tcp_socket->sync, 1 );
 
     /* Calculate the return value */
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     if ( tcp_socket->state == TCP_STATE_ESTABLISHED ) {
         error = 0;
@@ -297,7 +297,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
         }
     }
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     return error;
 }
@@ -309,14 +309,12 @@ static int tcp_read( socket_t* socket, void* data, size_t length ) {
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
 
     while ( rx_data_size == 0 ) {
-        UNLOCK( tcp_socket->lock );
-        LOCK( tcp_socket->rx_queue );
-        LOCK( tcp_socket->lock );
+        condition_wait( tcp_socket->rx_queue, tcp_socket->mutex );
 
         rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
     }
@@ -326,7 +324,7 @@ static int tcp_read( socket_t* socket, void* data, size_t length ) {
     circular_buffer_read( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, data, to_copy );
     circular_pointer_move( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, to_copy );
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     return to_copy;
 }
@@ -340,7 +338,7 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
     data = ( uint8_t* )_data;
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     while ( length > 0 ) {
         size_t to_copy;
@@ -355,9 +353,7 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
         );
 
         while ( free_size == 0 ) {
-            UNLOCK( tcp_socket->lock );
-            LOCK( tcp_socket->tx_queue );
-            LOCK( tcp_socket->lock );
+            condition_wait( tcp_socket->tx_queue, tcp_socket->mutex );
 
             free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
                 &tcp_socket->tx_buffer,
@@ -379,10 +375,10 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
 
         /* Wake up the TCP timer thread to transmit the data */
 
-        wake_up_thread( tcp_timer_thread );
+        thread_wake_up( tcp_timer_thread );
     }
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     return data_written;
 }
@@ -398,7 +394,7 @@ static int tcp_add_select_request( socket_t* socket, struct select_request* requ
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     switch ( ( int )request->type ) {
         case SELECT_READ :
@@ -407,7 +403,7 @@ static int tcp_add_select_request( socket_t* socket, struct select_request* requ
 
             if ( circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data ) > 0 ) {
                 request->ready = true;
-                UNLOCK( request->sync );
+                semaphore_unlock( request->sync, 1 );
             }
 
             break;
@@ -426,7 +422,7 @@ static int tcp_add_select_request( socket_t* socket, struct select_request* requ
 
             if ( free_size > 0 ) {
                 request->ready = true;
-                UNLOCK( request->sync );
+                semaphore_unlock( request->sync, 1 );
             }
 
             break;
@@ -436,7 +432,7 @@ static int tcp_add_select_request( socket_t* socket, struct select_request* requ
             break;
     }
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     return 0;
 }
@@ -448,7 +444,7 @@ static int tcp_remove_select_request( socket_t* socket, struct select_request* r
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     switch ( ( int )request->type ) {
         case SELECT_READ :
@@ -497,7 +493,7 @@ static int tcp_remove_select_request( socket_t* socket, struct select_request* r
             break;
     }
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     return 0;
 }
@@ -521,7 +517,7 @@ static int tcp_handle_syn_timeout( tcp_socket_t* tcp_socket ) {
 
     tcp_socket->state = TCP_STATE_CLOSED;
 
-    UNLOCK( tcp_socket->sync );
+    semaphore_unlock( tcp_socket->sync, 1 );
 
     return 0;
 }
@@ -593,25 +589,25 @@ int tcp_create_socket( socket_t* socket ) {
     init_circular_pointer( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent, 0 );
     init_circular_pointer( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, 0 );
 
-    tcp_socket->lock = create_semaphore( "TCP socket", SEMAPHORE_BINARY, 0, 1 );
+    tcp_socket->mutex = mutex_create( "TCP socket mutex", MUTEX_NONE );
 
-    if ( tcp_socket->lock < 0 ) {
+    if ( tcp_socket->mutex < 0 ) {
         goto error4;
     }
 
-    tcp_socket->rx_queue = create_semaphore( "TCP RX queue", SEMAPHORE_COUNTING, 0, 0 );
+    tcp_socket->rx_queue = condition_create( "TCP RX queue" );
 
     if ( tcp_socket->rx_queue < 0 ) {
         goto error5;
     }
 
-    tcp_socket->tx_queue = create_semaphore( "TCP TX queue", SEMAPHORE_COUNTING, 0, 0 );
+    tcp_socket->tx_queue = condition_create( "TCP TX queue" );
 
     if ( tcp_socket->tx_queue < 0 ) {
         goto error6;
     }
 
-    tcp_socket->sync = create_semaphore( "TCP sync", SEMAPHORE_COUNTING, 0, 0 );
+    tcp_socket->sync = semaphore_create( "TCP sync", 0 );
 
     if ( tcp_socket->sync < 0 ) {
         goto error7;
@@ -639,13 +635,13 @@ int tcp_create_socket( socket_t* socket ) {
     return 0;
 
 error7:
-    delete_semaphore( tcp_socket->tx_queue );
+    condition_destroy( tcp_socket->tx_queue );
 
 error6:
-    delete_semaphore( tcp_socket->rx_queue );
+    condition_destroy( tcp_socket->rx_queue );
 
 error5:
-    delete_semaphore( tcp_socket->lock );
+    mutex_destroy( tcp_socket->mutex );
 
 error4:
     destroy_circular_buffer( &tcp_socket->tx_buffer );
@@ -674,7 +670,7 @@ static tcp_socket_t* get_tcp_endpoint( packet_t* packet ) {
     memcpy( &endpoint_key.src_address, ip_header->dest_address, IPV4_ADDR_LEN );
     endpoint_key.src_port = ntohw( tcp_header->dest_port );
 
-    LOCK( tcp_endpoint_lock );
+    mutex_lock( tcp_endpoint_lock );
 
     tcp_socket = ( tcp_socket_t* )hashtable_get( &tcp_endpoint_table, ( const void* )&endpoint_key );
 
@@ -684,7 +680,7 @@ static tcp_socket_t* get_tcp_endpoint( packet_t* packet ) {
         atomic_inc( &tcp_socket->ref_count );
     }
 
-    UNLOCK( tcp_endpoint_lock );
+    mutex_unlock( tcp_endpoint_lock );
 
     return tcp_socket;
 }
@@ -694,7 +690,7 @@ void put_tcp_endpoint( tcp_socket_t* tcp_socket ) {
 
     do_delete = false;
 
-    LOCK( tcp_endpoint_lock );
+    mutex_lock( tcp_endpoint_lock );
 
     if ( atomic_dec_and_test( &tcp_socket->ref_count ) ) {
         hashtable_remove( &tcp_endpoint_table, ( const void* )&tcp_socket->endpoint_info );
@@ -702,13 +698,13 @@ void put_tcp_endpoint( tcp_socket_t* tcp_socket ) {
         do_delete = true;
     }
 
-    UNLOCK( tcp_endpoint_lock );
+    mutex_unlock( tcp_endpoint_lock );
 
     if ( do_delete ) {
-        delete_semaphore( tcp_socket->lock );
-        delete_semaphore( tcp_socket->sync );
-        delete_semaphore( tcp_socket->rx_queue );
-        delete_semaphore( tcp_socket->tx_queue );
+        mutex_destroy( tcp_socket->mutex );
+        semaphore_destroy( tcp_socket->sync );
+        condition_destroy( tcp_socket->rx_queue );
+        condition_destroy( tcp_socket->tx_queue );
 
         destroy_circular_buffer( &tcp_socket->rx_buffer );
         destroy_circular_buffer( &tcp_socket->tx_buffer );
@@ -730,7 +726,7 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
         tcp_socket->state = TCP_STATE_CLOSED;
         tcp_send_reset( packet );
 
-        UNLOCK( tcp_socket->sync );
+        semaphore_unlock( tcp_socket->sync, 1 );
 
         return -EINVAL;
     }
@@ -753,7 +749,7 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
 
                     mss_option = ( tcp_mss_option_t* )tcp_option_header;
 
-                    kprintf( "MSS: %d\n", htonw( mss_option->mss ) );
+                    DEBUG_LOG( "MSS: %d\n", htonw( mss_option->mss ) );
 
                     break;
                 }
@@ -781,7 +777,7 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
 
     tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].running = false;
 
-    UNLOCK( tcp_socket->sync );
+    semaphore_unlock( tcp_socket->sync, 1 );
 
     return 0;
 }
@@ -793,14 +789,14 @@ static void tcp_notify_read_waiters( tcp_socket_t* tcp_socket ) {
 
     while ( tmp != NULL ) {
         tmp->ready = true;
-        UNLOCK( tmp->sync );
+        semaphore_unlock( tmp->sync, 1 );
 
         tmp = tmp->next;
     }
 
     tcp_socket->first_read_select = NULL;
 
-    UNLOCK( tcp_socket->rx_queue );
+    condition_broadcast( tcp_socket->rx_queue );
 }
 
 static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) {
@@ -891,7 +887,7 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
             circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_first_unacked, acked_data_size );
 
             if ( tx_buffer_full ) {
-                UNLOCK( tcp_socket->tx_queue );
+                condition_broadcast( tcp_socket->tx_queue );
             }
         }
 
@@ -901,7 +897,7 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
 
         if ( ( tcp_socket->tx_window_size == 0 ) &&
              ( new_window_size > 0 ) ) {
-            wake_up_thread( tcp_timer_thread );
+            thread_wake_up( tcp_timer_thread );
         }
 
         tcp_socket->tx_window_size = new_window_size;
@@ -922,7 +918,7 @@ int tcp_input( packet_t* packet ) {
         goto out;
     }
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     switch ( ( int )tcp_socket->state ) {
         case TCP_STATE_SYN_SENT :
@@ -934,7 +930,7 @@ int tcp_input( packet_t* packet ) {
             break;
     }
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     put_tcp_endpoint( tcp_socket );
 
@@ -972,7 +968,7 @@ static int get_tcp_socket_iterator( hashitem_t* hash, void* _data ) {
     tcp_socket = ( tcp_socket_t* )hash;
     data = ( tcp_socket_t** )_data;
 
-    LOCK( tcp_socket->lock );
+    mutex_lock( tcp_socket->mutex );
 
     /* Check if we have something to send ... */
 
@@ -984,7 +980,7 @@ static int get_tcp_socket_iterator( hashitem_t* hash, void* _data ) {
 
     found = ( ( data_to_send > 0 ) && ( tcp_socket->tx_window_size > 0 ) );
 
-    UNLOCK( tcp_socket->lock );
+    mutex_unlock( tcp_socket->mutex );
 
     if ( found ) {
         *data = tcp_socket;
@@ -1012,18 +1008,18 @@ static int tcp_timer_thread_entry( void* data ) {
 
     while ( 1 ) {
         do {
-            LOCK( tcp_endpoint_lock );
+            mutex_lock( tcp_endpoint_lock );
             tcp_socket = get_tcp_socket_for_work();
-            UNLOCK( tcp_endpoint_lock );
+            mutex_unlock( tcp_endpoint_lock );
 
             if ( tcp_socket != NULL ) {
-                LOCK( tcp_socket->lock );
+                mutex_lock( tcp_socket->mutex );
                 tcp_handle_transmit( tcp_socket );
-                UNLOCK( tcp_socket->lock );
+                mutex_unlock( tcp_socket->mutex );
             }
         } while ( tcp_socket != NULL );
 
-        sleep_thread( 1 * 1000 * 1000 );
+        thread_sleep( 1 * 1000 * 1000 );
     }
 
     return 0;
@@ -1044,7 +1040,7 @@ __init int init_tcp( void ) {
         return error;
     }
 
-    tcp_endpoint_lock = create_semaphore( "TCP endpoint lock", SEMAPHORE_BINARY, 0, 1 );
+    tcp_endpoint_lock = mutex_create( "TCP endpoint mutex", MUTEX_NONE );
 
     if ( tcp_endpoint_lock < 0 ) {
         destroy_hashtable( &tcp_endpoint_table );
@@ -1057,7 +1053,7 @@ __init int init_tcp( void ) {
         return -1;
     }
 
-    wake_up_thread( tcp_timer_thread );
+    thread_wake_up( tcp_timer_thread );
 
     return 0;
 }

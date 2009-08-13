@@ -53,7 +53,7 @@ int io_context_insert_file( io_context_t* io_context, file_t* file, int start_fd
     size_t i;
     int error;
 
-    LOCK( io_context->lock );
+    mutex_lock( io_context->mutex );
 
     for ( i = start_fd; i < io_context->file_table_size; i++ ) {
         if ( io_context->file_table[ i ] == NULL ) {
@@ -73,7 +73,7 @@ int io_context_insert_file( io_context_t* io_context, file_t* file, int start_fd
     error = ( int )i;
 
 out:
-    UNLOCK( io_context->lock );
+    mutex_unlock( io_context->mutex );
 
     return error;
 }
@@ -83,7 +83,7 @@ int io_context_insert_file_at( io_context_t* io_context, file_t* file, int fd, b
 
     atomic_inc( &file->ref_count );
 
-    LOCK( io_context->lock );
+    mutex_lock( io_context->mutex );
 
     if ( ( fd < 0 ) || ( fd >= io_context->file_table_size ) ) {
         error = -EINVAL;
@@ -104,7 +104,7 @@ int io_context_insert_file_at( io_context_t* io_context, file_t* file, int fd, b
     error = 0;
 
 out:
-    UNLOCK( io_context->lock );
+    mutex_unlock( io_context->mutex );
 
     return error;
 }
@@ -115,7 +115,7 @@ int io_context_remove_file( io_context_t* io_context, int fd ) {
 
     file = NULL;
 
-    LOCK( io_context->lock );
+    mutex_lock( io_context->mutex );
 
     if ( ( fd < 0 ) || ( fd >= io_context->file_table_size ) ) {
         error = -EBADF;
@@ -134,7 +134,7 @@ int io_context_remove_file( io_context_t* io_context, int fd ) {
     error = 0;
 
 out:
-    UNLOCK( io_context->lock );
+    mutex_unlock( io_context->mutex );
 
     if ( file != NULL ) {
         io_context_put_file( io_context, file );
@@ -146,7 +146,7 @@ out:
 file_t* io_context_get_file( io_context_t* io_context, int fd ) {
     file_t* file;
 
-    LOCK( io_context->lock );
+    mutex_lock( io_context->mutex );
 
     if ( ( fd < 0 ) || ( fd >= io_context->file_table_size ) ) {
         file = NULL;
@@ -162,7 +162,7 @@ file_t* io_context_get_file( io_context_t* io_context, int fd ) {
     atomic_inc( &file->ref_count );
 
  out:
-    UNLOCK( io_context->lock );
+    mutex_unlock( io_context->mutex );
 
     return file;
 }
@@ -222,7 +222,7 @@ io_context_t* io_context_clone( io_context_t* old_io_context ) {
         return NULL;
     }
 
-    LOCK( old_io_context->lock );
+    mutex_lock( old_io_context->mutex );
 
     /* Clone root and current working directory */
 
@@ -244,7 +244,7 @@ io_context_t* io_context_clone( io_context_t* old_io_context ) {
         atomic_inc( &new_io_context->file_table[ i ]->ref_count );
     }
 
-    UNLOCK( old_io_context->lock );
+    mutex_unlock( old_io_context->mutex );
 
     return new_io_context;
 }
@@ -254,10 +254,10 @@ int init_io_context( io_context_t* io_context, size_t file_table_size ) {
 
     /* Create the I/O context lock */
 
-    io_context->lock = create_semaphore( "I/O context lock", SEMAPHORE_BINARY, 0, 1 );
+    io_context->mutex = mutex_create( "I/O context mutex", MUTEX_NONE );
 
-    if ( io_context->lock < 0 ) {
-        error = io_context->lock;
+    if ( io_context->mutex < 0 ) {
+        error = io_context->mutex;
         goto error1;
     }
 
@@ -277,7 +277,7 @@ int init_io_context( io_context_t* io_context, size_t file_table_size ) {
     return 0;
 
 error2:
-    delete_semaphore( io_context->lock );
+    mutex_destroy( io_context->mutex );
 
 error1:
     return error;
@@ -305,6 +305,6 @@ void destroy_io_context( io_context_t* io_context ) {
 
     /* Delete the lock of the context */
 
-    delete_semaphore( io_context->lock );
+    mutex_destroy( io_context->mutex );
     kfree( io_context );
 }

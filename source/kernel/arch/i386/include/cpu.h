@@ -98,7 +98,7 @@ void flush_tlb( void );
  */
 void halt_loop( void );
 
-int get_processor_id( void );
+int get_processor_index( void );
 cpu_t* get_processor( void );
 
 /**
@@ -129,6 +129,6 @@ int detect_cpu( void );
  */
 int cpu_calibrate_speed( void );
 
-#endif // __ASSELBLER__
+#endif /* __ASSELBLER__ */
 
-#endif // _ARCH_CPU_H_
+#endif /* _ARCH_CPU_H_ */

@@ -280,10 +280,10 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
         new_name++;
     }
 
-    lock_scheduler();
+    scheduler_lock();
     rename_process( thread->process, new_name );
     rename_thread( thread, "main" );
-    unlock_scheduler();
+    scheduler_unlock();
 
     /* Empty the memory context of the process */
 
@@ -291,9 +291,9 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     thread->process->heap_region = -1;
 
-    /* Empty the semaphore context of the process */
+    /* Empty the locking context of the process */
 
-    semaphore_context_make_empty( thread->process->semaphore_context );
+    lock_context_make_empty( thread->process->lock_context );
 
     /* TODO: close those files that have close_on_exec flag turned on! */
 
@@ -420,7 +420,7 @@ error2:
 error1:
     thread->user_stack_region = -1;
 
-    kprintf( "Failed to execute %s.\n", thread->process->name );
+    kprintf( ERROR, "Failed to execute %s.\n", thread->process->name );
 
     thread_exit( 0 );
 
@@ -437,7 +437,7 @@ int register_application_loader( application_loader_t* loader ) {
     loader->next = application_loaders;
     application_loaders = loader;
 
-    kprintf( "Registered application loader: %s.\n", loader->name );
+    kprintf( INFO, "Registered application loader: %s.\n", loader->name );
 
     return 0;
 }
@@ -446,7 +446,7 @@ int register_interpreter_loader( interpreter_loader_t* loader ) {
     loader->next = interpreter_loaders;
     interpreter_loaders = loader;
 
-    kprintf( "Registered interpreter loader: %s.\n", loader->name );
+    kprintf( INFO, "Registered interpreter loader: %s.\n", loader->name );
 
     return 0;
 }

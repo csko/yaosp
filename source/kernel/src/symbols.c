@@ -22,7 +22,6 @@
 #include <console.h>
 #include <devices.h>
 #include <thread.h>
-#include <semaphore.h>
 #include <irq.h>
 #include <scheduler.h>
 #include <process.h>
@@ -157,14 +156,6 @@ static void* kernel_sym_key( hashitem_t* item ) {
     return ( void* )symbol->name;
 }
 
-static uint32_t kernel_sym_hash( const void* key ) {
-    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
-}
-
-static bool kernel_sym_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
-}
-
 int init_kernel_symbols( void ) {
     int error;
 
@@ -172,8 +163,8 @@ int init_kernel_symbols( void ) {
         &kernel_symbol_table,
         1024,
         kernel_sym_key,
-        kernel_sym_hash,
-        kernel_sym_compare
+        hash_str,
+        compare_str
     );
 
     if ( error < 0 ) {

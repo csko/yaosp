@@ -23,6 +23,7 @@
 #include <kernel.h>
 #include <console.h>
 #include <mm/kmalloc.h>
+#include <lock/semaphore.h>
 #include <vfs/vfs.h>
 #include <vfs/rootfs.h>
 #include <vfs/inode.h>
@@ -1076,14 +1077,14 @@ static int do_fchdir( bool kernel, int fd ) {
         goto out;
     }
 
-    LOCK( io_context->lock );
+    mutex_lock( io_context->mutex );
 
     tmp = io_context->current_directory;
     io_context->current_directory = file->inode;
 
     atomic_inc( &io_context->current_directory->ref_count );
 
-    UNLOCK( io_context->lock );
+    mutex_unlock( io_context->mutex );
 
     put_inode( tmp );
 
@@ -1384,7 +1385,7 @@ static int do_fcntl( bool kernel, int fd, int cmd, int arg ) {
             break;
 
         default :
-            kprintf( "do_fcntl(): Unhandled fcntl command: %x\n", cmd );
+            kprintf( WARNING, "do_fcntl(): Unhandled fcntl command: %x\n", cmd );
             error = -EINVAL;
             break;
     }
@@ -1608,10 +1609,10 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
     int error;
     io_context_t* io_context;
 
+    lock_id sync;
     int req_count;
     int ready_count;
     file_t** files;
-    semaphore_id sync;
     select_request_t* requests;
 
     if ( count <= 0 ) {
@@ -1637,7 +1638,7 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
         return -ENOMEM;
     }
 
-    sync = create_semaphore( "select sync", SEMAPHORE_COUNTING, 0, 0 );
+    sync = semaphore_create( "select semaphore", 0 );
 
     if ( sync < 0 ) {
         kfree( files );
@@ -1700,7 +1701,7 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
                 case SELECT_READ :
                 case SELECT_WRITE :
                     requests[ i ].ready = true;
-                    UNLOCK( requests[ i ].sync );
+                    semaphore_unlock( requests[ i ].sync, 1 );
                     break;
             }
 
@@ -1721,13 +1722,13 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
     }
 
     if ( timeout == NULL ) {
-        lock_semaphore( sync, 1, INFINITE_TIMEOUT );
+        semaphore_lock( sync, 1 );
     } else {
         uint64_t _timeout;
 
         _timeout = ( uint64_t )timeout->tv_sec * 1000000 + ( uint64_t )timeout->tv_usec;
 
-        lock_semaphore( sync, 1, _timeout );
+        semaphore_timedlock( sync, 1, _timeout );
     }
 
     if ( readfds != NULL ) {
@@ -1791,7 +1792,7 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
 
     /* Free allocated resources */
 
-    delete_semaphore( sync );
+    semaphore_destroy( sync );
 
     kfree( files );
     kfree( requests );

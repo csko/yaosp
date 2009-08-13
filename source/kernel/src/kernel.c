@@ -22,7 +22,6 @@
 #include <scheduler.h>
 #include <kernel.h>
 #include <module.h>
-#include <semaphore.h>
 #include <devices.h>
 #include <loader.h>
 #include <version.h>
@@ -32,13 +31,12 @@
 #include <ipc.h>
 #include <debug.h>
 #include <symbols.h>
+#include <lock/context.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>
 
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
-
-thread_id init_thread_id;
 
 static uint32_t kernel_param_count = 0;
 static char* kernel_params[ MAX_KERNEL_PARAMS ];
@@ -138,7 +136,7 @@ int sys_get_kernel_info( kernel_info_t* kernel_info ) {
 }
 
 int sys_get_kernel_statistics( statistics_info_t* statistics_info ) {
-    statistics_info->semaphore_count = get_semaphore_count();
+    statistics_info->semaphore_count = 0;//get_semaphore_count();
 
     return 0;
 }
@@ -158,7 +156,7 @@ int sys_dbprintf( const char* format, char** parameters ) {
         parameters[ 5 ]
     );
 
-    kprintf( "%s", buf );
+    DEBUG_LOG( "%s", buf );
 
     return 0;
 }
@@ -169,16 +167,16 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
 
     //disable_interrupts();
 
-    kprintf( "Panic at %s:%d: ", file, line );
+    kprintf( ERROR, "Panic at %s:%d: ", file, line );
 
     va_start( args, format );
-    kvprintf( format, args );
+    kvprintf( ERROR, format, args );
     va_end( args );
 
     thread = current_thread();
 
     if ( thread != NULL ) {
-        kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
+        kprintf( ERROR, "Process: %s thread: %s\n", thread->process->name, thread->name );
     }
 
     debug_print_stack_trace();
@@ -210,30 +208,17 @@ __init void kernel_main( void ) {
     int error;
 
     init_kernel_symbols();
-    init_semaphores();
+    init_locking();
     init_regions();
     init_devices();
     init_module_loader();
     init_application_loader();
     init_interpreter_loader();
-
-    kprintf( "Initializing processes ... " );
     init_processes();
-    kprintf( "done\n" );
-
-    kprintf( "Initializing threads ... " );
     init_threads();
-    kprintf( "done\n" );
-
-    kprintf( "Initializing scheduler ... " );
     init_scheduler();
-    kprintf( "done\n" );
-
     init_ipc();
-
-    kprintf( "Initializing SMP ... " );
     init_smp();
-    kprintf( "done\n" );
 
     error = arch_late_init();
 
@@ -242,21 +227,11 @@ __init void kernel_main( void ) {
     }
 
     init_smp_late();
-
-    /* Create the init thread */
-
-    init_thread_id = create_kernel_thread( "init", PRIORITY_NORMAL, init_thread, NULL, 0 );
-
-    if ( init_thread_id < 0 ) {
-        return;
-    }
-
-    wake_up_thread( init_thread_id );
+    create_init_thread();
 
     /* Enable interrupts. The first timer interrupt will
        start the scheduler */
 
     enable_interrupts();
-
     halt_loop();
 }

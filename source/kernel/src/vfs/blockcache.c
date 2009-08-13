@@ -37,7 +37,7 @@ int block_cache_get_block( block_cache_t* cache, uint64_t block_index, void** bu
         return -EINVAL;
     }
 
-    LOCK( cache->lock );
+    mutex_lock( cache->mutex );
 
     block = ( block_t* )hashtable_get( &cache->block_table, ( const void* )&block_index );
 
@@ -46,7 +46,7 @@ int block_cache_get_block( block_cache_t* cache, uint64_t block_index, void** bu
 
         *buffer = ( void* )( block + 1 );
 
-        UNLOCK( cache->lock );
+        mutex_unlock( cache->mutex );
 
         return 0;
     }
@@ -92,12 +92,12 @@ int block_cache_get_block( block_cache_t* cache, uint64_t block_index, void** bu
         }
     }
 
-    UNLOCK( cache->lock );
+    mutex_unlock( cache->mutex );
 
     return 0;
 
  error1:
-    UNLOCK( cache->lock );
+    mutex_unlock( cache->mutex );
 
     return error;
 }
@@ -111,11 +111,11 @@ int block_cache_read_blocks( block_cache_t* cache, uint64_t start_block, uint64_
         return -EINVAL;
     }
 
-    LOCK( cache->lock );
+    mutex_lock( cache->mutex );
 
     /* TODO */
 
-    UNLOCK( cache->lock );
+    mutex_unlock( cache->mutex );
 
     return 0;
 }
@@ -126,14 +126,6 @@ static void* block_table_key( hashitem_t* item ) {
     block = ( block_t* )item;
 
     return ( void* )&block->block_index;
-}
-
-static uint32_t block_table_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( uint64_t ) );
-}
-
-static bool block_table_compare( const void* key1, const void* key2 ) {
-    return ( memcmp( key1, key2, sizeof( uint64_t ) ) == 0 );
 }
 
 block_cache_t* init_block_cache( int fd, uint32_t block_size, uint64_t block_count ) {
@@ -150,9 +142,9 @@ block_cache_t* init_block_cache( int fd, uint32_t block_size, uint64_t block_cou
         goto error1;
     }
 
-    cache->lock = create_semaphore( "block cache lock", SEMAPHORE_BINARY, 0, 1 );
+    cache->mutex = mutex_create( "block cache mutex", MUTEX_NONE );
 
-    if ( cache->lock < 0 ) {
+    if ( cache->mutex < 0 ) {
         goto error2;
     }
 
@@ -160,8 +152,8 @@ block_cache_t* init_block_cache( int fd, uint32_t block_size, uint64_t block_cou
         &cache->block_table,
         1024,
         block_table_key,
-        block_table_hash,
-        block_table_compare
+        hash_int64,
+        compare_int64
     );
 
     if ( error < 0 ) {
@@ -176,7 +168,7 @@ block_cache_t* init_block_cache( int fd, uint32_t block_size, uint64_t block_cou
     return cache;
 
  error3:
-    delete_semaphore( cache->lock );
+    mutex_destroy( cache->mutex );
 
  error2:
     kfree( cache );

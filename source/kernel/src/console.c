@@ -59,7 +59,8 @@ int console_set_screen( console_t* console ) {
 }
 
 int console_switch_screen( console_t* new_console, console_t** old_console ) {
-    if ( ( new_console != NULL ) && ( new_console->ops->init != NULL ) ) {
+    if ( ( new_console != NULL ) &&
+         ( new_console->ops->init != NULL ) ) {
         new_console->ops->init( new_console );
     }
 
@@ -88,7 +89,12 @@ int console_set_debug( console_t* console ) {
 }
 
 static int kprintf_helper( void* data, char c ) {
-    if ( screen != NULL ) {
+    int loglevel;
+
+    loglevel = *( ( int* )data );
+
+    if ( __likely( ( loglevel > DEBUG ) &&
+                   ( screen != NULL ) ) ) {
         screen->ops->putchar( screen, c );
     }
 
@@ -106,7 +112,7 @@ static int kprintf_helper( void* data, char c ) {
     return 0;
 }
 
-int kprintf( const char* format, ... ) {
+int kprintf( int loglevel, const char* format, ... ) {
     va_list args;
 
     spinlock_disable( &console_lock );
@@ -114,16 +120,19 @@ int kprintf( const char* format, ... ) {
     /* Print the text */
 
     va_start( args, format );
-    do_printf( kprintf_helper, NULL, format, args );
+    do_printf( kprintf_helper, ( void* )&loglevel, format, args );
     va_end( args );
 
     /* Flush the consoles */
 
-    if ( ( screen != NULL ) && ( screen->ops->flush != NULL ) ) {
+    if ( ( loglevel > DEBUG ) &&
+         ( screen != NULL ) &&
+         ( screen->ops->flush != NULL ) ) {
         screen->ops->flush( screen );
     }
 
-    if ( ( debug != NULL ) && ( debug->ops->flush != NULL ) ) {
+    if ( ( debug != NULL ) &&
+         ( debug->ops->flush != NULL ) ) {
         debug->ops->flush( debug );
     }
 
@@ -132,12 +141,12 @@ int kprintf( const char* format, ... ) {
     return 0;
 }
 
-int kvprintf( const char* format, va_list args ) {
+int kvprintf( int loglevel, const char* format, va_list args ) {
     spinlock_disable( &console_lock );
 
     /* Print the text */
 
-    do_printf( kprintf_helper, NULL, format, args );
+    do_printf( kprintf_helper, ( void* )&loglevel, format, args );
 
     /* Flush the consoles */
 
@@ -155,7 +164,7 @@ int kvprintf( const char* format, va_list args ) {
 }
 
 static int dprintf_helper( void* data, char c ) {
-    if ( debug != NULL ) {
+    if ( __likely( debug != NULL ) ) {
         debug->ops->putchar( debug, c );
     }
 
@@ -175,7 +184,8 @@ int dprintf( const char* format, ... ) {
 
     /* Flush the debug console */
 
-    if ( ( debug != NULL ) && ( debug->ops->flush != NULL ) ) {
+    if ( ( debug != NULL ) &&
+         ( debug->ops->flush != NULL ) ) {
         debug->ops->flush( debug );
     }
 

@@ -33,7 +33,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
 
     cache = &mount_point->inode_cache;
 
-    LOCK( cache->lock );
+    mutex_lock( cache->mutex );
 
     /* Get the inode from the hashtable */
 
@@ -45,7 +45,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
     if ( inode != NULL ) {
         atomic_inc( &inode->ref_count );
 
-        UNLOCK( cache->lock );
+        mutex_unlock( cache->mutex );
 
         return inode;
     }
@@ -67,7 +67,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
         inode = ( inode_t* )kmalloc( sizeof( inode_t ) );
 
         if ( inode == NULL ) {
-            UNLOCK( cache->lock );
+            mutex_unlock( cache->mutex );
 
             return NULL;
         }
@@ -99,7 +99,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
             inode = NULL;
         }
 
-        UNLOCK( cache->lock );
+        mutex_unlock( cache->mutex );
 
         kfree( inode );
 
@@ -124,14 +124,14 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
             mount_point->fs_calls->write_inode( mount_point->fs_data, tmp_fs_node );
         }
 
-        UNLOCK( cache->lock );
+        mutex_unlock( cache->mutex );
 
         kfree( inode );
 
         return NULL;
     }
 
-    UNLOCK( cache->lock );
+    mutex_unlock( cache->mutex );
 
     return inode;
 }
@@ -144,7 +144,7 @@ int put_inode( inode_t* inode ) {
     mount_point = inode->mount_point;
     cache = &mount_point->inode_cache;
 
-    LOCK( cache->lock );
+    mutex_lock( cache->mutex );
 
     ASSERT( atomic_get( &inode->ref_count ) > 0 );
 
@@ -175,7 +175,7 @@ int put_inode( inode_t* inode ) {
         }
     }
 
-    UNLOCK( cache->lock );
+    mutex_unlock( cache->mutex );
 
     return 0;
 }
@@ -240,20 +240,6 @@ static void* inode_key( hashitem_t* item ) {
     return ( void* )&inode->inode_number;
 }
 
-static uint32_t inode_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( ino_t ) );
-}
-
-static bool inode_compare( const void* key1, const void* key2 ) {
-    ino_t* inode_num_1;
-    ino_t* inode_num_2;
-
-    inode_num_1 = ( ino_t* )key1;
-    inode_num_2 = ( ino_t* )key2;
-
-    return ( *inode_num_1 == *inode_num_2 );
-}
-
 int do_lookup_inode( io_context_t* io_context, inode_t* parent, const char* name, int name_length, bool follow_mount, inode_t** result ) {
     int error;
     inode_t* inode;
@@ -267,12 +253,12 @@ int do_lookup_inode( io_context_t* io_context, inode_t* parent, const char* name
          ( parent->inode_number == parent->mount_point->root_inode_number ) ) {
         bool is_root;
 
-        LOCK( io_context->lock );
+        mutex_lock( io_context->mutex );
 
         is_root = ( ( parent->inode_number == io_context->root_directory->inode_number ) &&
                     ( parent->mount_point == io_context->root_directory->mount_point ) );
 
-        UNLOCK( io_context->lock );
+        mutex_unlock( io_context->mutex );
 
         if ( is_root ) {
             atomic_inc( &parent->ref_count );
@@ -337,7 +323,7 @@ int lookup_parent_inode(
     int error;
     char* sep;
 
-    LOCK( io_context->lock );
+    mutex_lock( io_context->mutex );
 
     if ( path[ 0 ] == '/' ) {
         parent = io_context->root_directory;
@@ -349,14 +335,14 @@ int lookup_parent_inode(
     }
 
     if ( parent == NULL ) {
-        UNLOCK( io_context->lock );
+        mutex_unlock( io_context->mutex );
 
         return -EINVAL;
     }
 
     atomic_inc( &parent->ref_count );
 
-    UNLOCK( io_context->lock );
+    mutex_unlock( io_context->mutex );
 
     while ( true ) {
         int name_length;
@@ -453,11 +439,11 @@ int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, i
 uint32_t get_inode_cache_size( inode_cache_t* cache ) {
     uint32_t size;
 
-    LOCK( cache->lock );
+    mutex_lock( cache->mutex );
 
     size = hashtable_get_item_count( &cache->inode_table );
 
-    UNLOCK( cache->lock );
+    mutex_unlock( cache->mutex );
 
     return size;
 }
@@ -473,8 +459,8 @@ int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, i
         &cache->inode_table,
         current_size,
         inode_key,
-        inode_hash,
-        inode_compare
+        hash_int64,
+        compare_int64
     );
 
     if ( error < 0 ) {
@@ -483,11 +469,11 @@ int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, i
 
     /* Create the inode cache semaphore */
 
-    cache->lock = create_semaphore( "inode cache lock", SEMAPHORE_BINARY, 0, 1 );
+    cache->mutex = mutex_create( "inode cache mutex", MUTEX_NONE );
 
-    if ( cache->lock < 0 ) {
+    if ( cache->mutex < 0 ) {
         destroy_hashtable( &cache->inode_table );
-        return cache->lock;
+        return cache->mutex;
     }
 
     /* Create the initial free inodes */
@@ -510,7 +496,7 @@ int init_inode_cache( inode_cache_t* cache, int current_size, int free_inodes, i
             }
 
             destroy_hashtable( &cache->inode_table );
-            delete_semaphore( cache->lock );
+            mutex_destroy( cache->mutex );
 
             return -ENOMEM;
         }
@@ -532,7 +518,7 @@ void destroy_inode_cache( inode_cache_t* cache ) {
     /* TODO: destroy loaded inodes? */
 
     destroy_hashtable( &cache->inode_table );
-    delete_semaphore( cache->lock );
+    mutex_destroy( cache->mutex );
 
     inode = cache->free_inodes;
 

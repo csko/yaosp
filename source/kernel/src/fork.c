@@ -22,6 +22,7 @@
 #include <thread.h>
 #include <scheduler.h>
 #include <macros.h>
+#include <console.h>
 #include <mm/context.h>
 #include <lib/string.h>
 
@@ -82,11 +83,11 @@ int sys_fork( void ) {
         goto error2;
     }
 
-    /* Clone the semaphore context */
+    /* Clone the locking context */
 
-    new_process->semaphore_context = semaphore_context_clone( this_process->semaphore_context );
+    new_process->lock_context = lock_context_clone( this_process->lock_context );
 
-    if ( new_process->semaphore_context == NULL ) {
+    if ( new_process->lock_context == NULL ) {
         error = -ENOMEM;
         goto error2;
     }
@@ -146,7 +147,7 @@ int sys_fork( void ) {
 
     /* Insert the new process and thread */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     error = insert_process( new_process );
 
@@ -154,7 +155,7 @@ int sys_fork( void ) {
         error = insert_thread( new_thread );
 
         if ( error >= 0 ) {
-            semaphore_context_update( new_process->semaphore_context, new_thread->id );
+            lock_context_update( new_process->lock_context, new_thread->id );
 
             add_thread_to_ready( new_thread );
 
@@ -162,7 +163,7 @@ int sys_fork( void ) {
         }
     }
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     if ( error < 0 ) {
         goto error3;

@@ -23,7 +23,6 @@
 #include <smp.h>
 #include <loader.h>
 #include <kernel.h>
-#include <semaphore.h>
 #include <time.h>
 #include <thread.h>
 #include <module.h>
@@ -33,16 +32,13 @@
 #include <mm/pages.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
+#include <lock/mutex.h>
 
 static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK },
     { "execve", sys_execve, SYSCALL_SAVE_STACK },
     { "dbprintf", sys_dbprintf, 0 },
     { "sbrk", sys_sbrk, 0 },
-    { "create_semaphore", sys_create_semaphore, 0 },
-    { "delete_semaphore", sys_delete_semaphore, 0 },
-    { "lock_semaphore", sys_lock_semaphore, 0 },
-    { "unlock_semaphore", sys_unlock_semaphore, 0 },
     { "open", sys_open, 0 },
     { "close", sys_close, 0 },
     { "read", sys_read, 0 },
@@ -72,8 +68,6 @@ static system_call_entry_t system_call_table[] = {
     { "unmount", sys_unmount, 0 },
     { "select", sys_select, 0 },
     { "utime", sys_utime, 0 },
-    { "socket", sys_socket, 0 },
-    { "connect", sys_connect, 0 },
     { "exit", sys_exit, 0 },
     { "exit_thread", sys_exit_thread, 0 },
     { "wait4", sys_wait4, 0 },
@@ -113,7 +107,19 @@ static system_call_entry_t system_call_table[] = {
     { "sigprocmask", sys_sigprocmask, 0 },
     { "kill", sys_kill, 0 },
     { "kill_thread", sys_kill_thread, 0 },
-    { "signal_return", sys_signal_return, SYSCALL_SAVE_STACK }
+    { "signal_return", sys_signal_return, SYSCALL_SAVE_STACK },
+    { "mutex_lock", sys_mutex_lock, 0 },
+    { "mutex_trylock", sys_mutex_trylock, 0 },
+    { "mutex_timedlock", sys_mutex_timedlock, 0 },
+    { "mutex_unlock", sys_mutex_unlock, 0 },
+    { "mutex_create", sys_mutex_create, 0 },
+    { "mutex_destroy", sys_mutex_destroy, 0 },
+    { "condition_wait", sys_condition_wait, 0 },
+    { "condition_timedwait", sys_condition_timedwait, 0 },
+    { "condition_signal", sys_condition_signal, 0 },
+    { "condition_broadcast", sys_condition_broadcast, 0 },
+    { "condition_create", sys_condition_create, 0 },
+    { "condition_destroy", sys_condition_destroy, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {

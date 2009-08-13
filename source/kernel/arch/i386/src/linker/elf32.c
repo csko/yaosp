@@ -585,14 +585,6 @@ static void* symbol_key( hashitem_t* item ) {
     return ( void* )symbol->name;
 }
 
-static uint32_t symbol_hash( const void* key ) {
-    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
-}
-
-static bool symbol_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
-}
-
 int elf32_init_image_info( elf32_image_info_t* info ) {
     int error;
 
@@ -600,8 +592,8 @@ int elf32_init_image_info( elf32_image_info_t* info ) {
         &info->symbol_hash_table,
         256,
         symbol_key,
-        symbol_hash,
-        symbol_compare
+        hash_str,
+        compare_str
     );
 
     if ( error < 0 ) {
@@ -657,7 +649,7 @@ __init int init_elf32_kernel_symbols( void ) {
     /* Do we have ELF information from the multiboot header? */
 
     if ( ( mb_header.flags & MB_FLAG_ELF_SYM_INFO ) == 0 ) {
-        kprintf( "ELF symbol information not provided for the kernel!\n" );
+        kprintf( WARNING, "ELF symbol information not provided for the kernel!\n" );
 
         return 0;
     }
@@ -687,7 +679,7 @@ __init int init_elf32_kernel_symbols( void ) {
 
     if ( ( symtab == NULL ) ||
          ( string_table == NULL ) ) {
-        kprintf( "ELF symbol table not found for the kernel!\n" );
+        kprintf( WARNING, "ELF symbol table not found for the kernel!\n" );
 
         return 0;
     }

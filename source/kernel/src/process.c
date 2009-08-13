@@ -18,7 +18,6 @@
 
 #include <process.h>
 #include <errno.h>
-#include <semaphore.h>
 #include <smp.h>
 #include <scheduler.h>
 #include <macros.h>
@@ -56,9 +55,9 @@ process_t* allocate_process( char* name ) {
         goto error2;
     }
 
-    process->lock = create_semaphore( "process lock", SEMAPHORE_BINARY, 0, 1 );
+    process->mutex = mutex_create( "process mutex", MUTEX_NONE );
 
-    if ( process->lock < 0 ) {
+    if ( process->mutex < 0 ) {
         goto error3;
     }
 
@@ -96,15 +95,15 @@ void destroy_process( process_t* process ) {
         destroy_io_context( process->io_context );
     }
 
-    /* Destroy the semaphore context */
+    /* Destroy the locking context */
 
-    if ( process->semaphore_context != NULL ) {
-        destroy_semaphore_context( process->semaphore_context );
+    if ( process->lock_context != NULL ) {
+        lock_context_destroy( process->lock_context );
     }
 
     /* Delete other resources allocated by the process */
 
-    delete_semaphore( process->lock );
+    mutex_destroy( process->mutex );
     kfree( process->name );
     kfree( process );
 }
@@ -112,7 +111,7 @@ void destroy_process( process_t* process ) {
 int insert_process( process_t* process ) {
     int error;
 
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     do {
         process->id = process_id_counter++;
@@ -132,14 +131,15 @@ int insert_process( process_t* process ) {
 }
 
 void remove_process( process_t* process ) {
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
+
     hashtable_remove( &process_table, ( const void* )&process->id );
 }
 
 int rename_process( process_t* process, char* new_name ) {
     char* name;
 
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     name = strdup( new_name );
 
@@ -154,13 +154,13 @@ int rename_process( process_t* process, char* new_name ) {
 }
 
 uint32_t get_process_count( void ) {
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     return hashtable_get_item_count( &process_table );
 }
 
 process_t* get_process_by_id( process_id id ) {
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     return ( process_t* )hashtable_get( &process_table, ( const void* )&id );
 }
@@ -168,11 +168,11 @@ process_t* get_process_by_id( process_id id ) {
 uint32_t sys_get_process_count( void ) {
     uint32_t result;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     result = hashtable_get_item_count( &process_table );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return result;
 }
@@ -209,11 +209,11 @@ uint32_t sys_get_process_info( process_info_t* info_table, uint32_t max_count ) 
     data.max_count = max_count;
     data.info_table = info_table;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     hashtable_iterate( &process_table, get_process_info_iterator, ( void* )&data );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return data.curr_index;
 }
@@ -264,7 +264,7 @@ static int wait4_child_check_iterator( hashitem_t* item, void* _data ) {
 static thread_t* find_and_remove_zombie_child( thread_id parent_id, process_id pid ) {
     thread_t* tmp;
 
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     if ( pid > 0 ) {
         tmp = get_thread_by_id( pid );
@@ -286,7 +286,7 @@ static thread_t* find_and_remove_zombie_child( thread_id parent_id, process_id p
 
         hashtable_iterate( &thread_table, wait4_child_check_iterator, ( void* )&data );
     } else {
-        kprintf( "find_and_remove_zombie_child(): Group support not yet implemented!\n" );
+        kprintf( WARNING, "find_and_remove_zombie_child(): Group support not yet implemented!\n" );
 
         tmp = NULL;
     }
@@ -307,7 +307,7 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
 
     /* Make sure we have something to wait for */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     if ( pid > 0 ) {
         tmp = get_thread_by_id( pid );
@@ -322,24 +322,24 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
 
         hashtable_iterate( &thread_table, wait4_child_check_iterator, ( void* )&data );
     } else {
-        kprintf( "sys_wait4(): wait4 for groups not yet implemented!\n" );
+        kprintf( WARNING, "sys_wait4(): wait4 for groups not yet implemented!\n" );
 
         tmp = NULL;
     }
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     if ( tmp == NULL ) {
         return -ECHILD;
     }
 
     while ( 1 ) {
-        lock_scheduler();
+        scheduler_lock();
 
         tmp = find_and_remove_zombie_child( current->id, pid );
 
         if ( tmp != NULL ) {
-            unlock_scheduler();
+            scheduler_unlock();
 
             error = tmp->id;
 
@@ -354,20 +354,20 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
         }
 
         if ( options & WNOHANG ) {
-            unlock_scheduler();
+            scheduler_unlock();
 
             return 0;
         }
 
         if ( is_signal_pending( current ) ) {
-            unlock_scheduler();
+            scheduler_unlock();
 
             return -EINTR;
         }
 
         current->state = THREAD_WAITING;
 
-        unlock_scheduler();
+        scheduler_unlock();
 
         sched_preempt();
     }
@@ -385,20 +385,6 @@ static void* process_key( hashitem_t* item ) {
     return ( void* )&process->id;
 }
 
-static uint32_t process_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( process_id ) );
-}
-
-static bool process_compare( const void* key1, const void* key2 ) {
-    process_id id1;
-    process_id id2;
-
-    id1 = *( ( process_id* )key1 );
-    id2 = *( ( process_id* )key2 );
-
-    return ( id1 == id2 );
-}
-
 __init int init_processes( void ) {
     int error;
     process_t* process;
@@ -409,8 +395,8 @@ __init int init_processes( void ) {
         &process_table,
         128,
         process_key,
-        process_hash,
-        process_compare
+        hash_int,
+        compare_int
     );
 
     if ( error < 0 ) {
@@ -426,17 +412,17 @@ __init int init_processes( void ) {
     }
 
     process->memory_context = &kernel_memory_context;
-    process->semaphore_context = &kernel_semaphore_context;
+    process->lock_context = &kernel_lock_context;
     process->io_context = &kernel_io_context;
 
     /* TODO: This vmem setting is highly architecture dependent! */
-    process->vmem_size = 512 * 1024 * 1024;
+    process->vmem_size = MIN( get_total_page_count() * PAGE_SIZE, 512 * 1024 * 1024 );
 
     kernel_memory_context.process = process;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
     error = insert_process( process );
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     if ( error < 0 ) {
         return error;

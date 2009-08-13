@@ -19,14 +19,16 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-//#define ENABLE_SMP 1
+//#define MK_RELEASE_BUILD 1
+
+#define ENABLE_SMP 1
 #define ENABLE_DEBUGGER 1
 
 /**
  * The maximum number of CPUs supported.
  */
 #ifdef ENABLE_SMP
-#define MAX_CPU_COUNT 32
+#define MAX_CPU_COUNT 4
 #else
 #define MAX_CPU_COUNT 1
 #endif

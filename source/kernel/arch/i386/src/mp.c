@@ -60,29 +60,37 @@ static inline uint8_t mp_checksum( uint8_t* data, int length ) {
 #ifdef ENABLE_SMP
 __init static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
     uint8_t* data;
+    uint8_t type;
 
     data = ( uint8_t* )address;
+    type = *data;
 
-    switch ( *data ) {
+    switch ( type ) {
         case MP_PROCESSOR : {
             mp_processor_t* processor;
 
+            if ( __unlikely( processor_count >= MAX_CPU_COUNT ) ) {
+                return 20;
+            }
+
             processor = ( mp_processor_t* )data;
 
-            if ( __likely( processor_count < MAX_CPU_COUNT ) ) {
-                /* Map the local APIC ID of the processor to our processor table */
-
-                apic_to_logical_cpu_id[ processor->local_apic_id ] = processor_count;
-
-                /* Make the processor present and save its local APIC ID */
-
-                processor_table[ processor_count ].present = true;
-                arch_processor_table[ processor_count ].apic_id = processor->local_apic_id;
-
-                /* We have one more processor ;) */
-
-                processor_count++;
+            if ( !processor->enabled ) {
+                return 20;
             }
+
+            /* Map the local APIC ID of the processor to our processor table */
+
+            apic_to_logical_cpu_id[ processor->local_apic_id ] = processor_count;
+
+            /* Make the processor present and save its local APIC ID */
+
+            processor_table[ processor_count ].present = true;
+            arch_processor_table[ processor_count ].apic_id = processor->local_apic_id;
+
+            /* We have one more processor ;) */
+
+            processor_count++;
 
             return 20;
         }
@@ -100,7 +108,7 @@ __init static uint32_t mp_handle_cfg_table_entry( ptr_t address ) {
             return 8;
 
         default :
-            kprintf( "mp_handle_cfg_table_entry(): Unknown entry: %d\n", *data & 0xFF );
+            kprintf( WARNING, "mp_handle_cfg_table_entry(): Unknown entry: %d\n", type & 0xFF );
             return 1;
     }
 }
@@ -192,24 +200,24 @@ __init int init_mp( void ) {
     }
 
     if ( !fp_found ) {
-        kprintf( "MP floating pointer not found!\n" );
+        kprintf( INFO, "MP floating pointer not found!\n" );
         return -ENOENT;
     }
 
-    kprintf( "Found MP floating pointer at 0x%x\n", fp );
+    kprintf( INFO, "Found MP floating pointer at 0x%x\n", fp );
 
     if ( fp->mp_feature[ 0 ] == 0 ) {
         error = mp_handle_cfg_table( ( void* )fp->physical_address );
 
         if ( error < 0 ) {
-            kprintf( "Failed to parse MP configuration table!\n" );
+            kprintf( ERROR, "Failed to parse MP configuration table!\n" );
             return error;
         }
     } else {
         mp_handle_default_cfg();
     }
 
-    kprintf( "Found %d processors in the system.\n", processor_count );
+    kprintf( INFO, "Found %d processors in the system.\n", processor_count );
 
     return 0;
 }

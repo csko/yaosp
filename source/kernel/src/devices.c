@@ -17,16 +17,16 @@
  */
 
 #include <devices.h>
-#include <semaphore.h>
 #include <time.h>
 #include <errno.h>
 #include <kernel.h>
 #include <macros.h>
+#include <lock/mutex.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
 static hashtable_t bus_table;
-static semaphore_id bus_table_lock = -1;
+static lock_id bus_table_mutex;
 
 int register_bus_driver( const char* name, void* bus ) {
     int error;
@@ -48,7 +48,7 @@ int register_bus_driver( const char* name, void* bus ) {
 
     driver->bus = bus;
 
-    error = LOCK( bus_table_lock );
+    error = mutex_lock( bus_table_mutex );
 
     if ( __unlikely( error < 0 ) ) {
         goto error2;
@@ -60,7 +60,7 @@ int register_bus_driver( const char* name, void* bus ) {
         error = -EEXIST;
     }
 
-    UNLOCK( bus_table_lock );
+    mutex_unlock( bus_table_mutex );
 
     if ( __unlikely( error < 0 ) ) {
         goto error2;
@@ -79,7 +79,7 @@ int unregister_bus_driver( const char* name ) {
     int error;
     bus_driver_t* driver;
 
-    error = LOCK( bus_table_lock );
+    error = mutex_lock( bus_table_mutex );
 
     if ( __unlikely( error < 0 ) ) {
         return error;
@@ -91,7 +91,7 @@ int unregister_bus_driver( const char* name ) {
         hashtable_remove( &bus_table, ( const void* )name );
     }
 
-    UNLOCK( bus_table_lock );
+    mutex_unlock( bus_table_mutex );
 
     if ( driver == NULL ) {
         return -EINVAL;
@@ -108,7 +108,7 @@ void* get_bus_driver( const char* name ) {
     void* bus;
     bus_driver_t* driver;
 
-    error = LOCK( bus_table_lock );
+    error = mutex_lock( bus_table_mutex );
 
     if ( __unlikely( error < 0 ) ) {
         return NULL;
@@ -122,7 +122,7 @@ void* get_bus_driver( const char* name ) {
         bus = driver->bus;
     }
 
-    UNLOCK( bus_table_lock );
+    mutex_unlock( bus_table_mutex );
 
     return bus;
 }
@@ -135,14 +135,6 @@ static void* bus_driver_key( hashitem_t* item ) {
     return ( void* )driver->name;
 }
 
-static uint32_t bus_driver_hash( const void* key ) {
-    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
-}
-
-static bool bus_driver_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
-}
-
 __init int init_devices( void ) {
     int error;
 
@@ -152,8 +144,8 @@ __init int init_devices( void ) {
         &bus_table,
         32,
         bus_driver_key,
-        bus_driver_hash,
-        bus_driver_compare
+        hash_str,
+        compare_str
     );
 
     if ( error < 0 ) {
@@ -162,10 +154,10 @@ __init int init_devices( void ) {
 
     /* Create the bus driver table lock */
 
-    bus_table_lock = create_semaphore( "bus table lock", SEMAPHORE_BINARY, 0, 1 );
+    bus_table_mutex = mutex_create( "bus table mutex", MUTEX_NONE );
 
-    if ( bus_table_lock < 0 ) {
-        error = bus_table_lock;
+    if ( bus_table_mutex < 0 ) {
+        error = bus_table_mutex;
         goto error2;
     }
 

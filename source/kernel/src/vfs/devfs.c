@@ -18,8 +18,9 @@
  */
 
 #include <errno.h>
-#include <semaphore.h>
 #include <kernel.h>
+#include <lock/mutex.h>
+#include <lock/semaphore.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <vfs/filesystem.h>
@@ -27,9 +28,9 @@
 #include <lib/string.h>
 #include <time.h>
 
+static lock_id devfs_mutex;
 static ino_t devfs_inode_counter = 0;
 static hashtable_t devfs_node_table;
-static semaphore_id devfs_lock;
 
 static devfs_node_t* devfs_root_node = NULL;
 
@@ -112,11 +113,11 @@ static int devfs_mount( const char* device, uint32_t flags, void** fs_cookie, in
 static int devfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     devfs_node_t* node;
 
-    LOCK( devfs_lock );
+    mutex_lock( devfs_mutex );
 
     node = ( devfs_node_t* )hashtable_get( &devfs_node_table, ( const void* )&inode_num );
 
-    UNLOCK( devfs_lock );
+    mutex_unlock( devfs_mutex );
 
     if ( node == NULL ) {
         return -ENOENT;
@@ -174,11 +175,11 @@ out:
 static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
     int error;
 
-    LOCK( devfs_lock );
+    mutex_lock( devfs_mutex );
 
     error = devfs_do_lookup_inode( fs_cookie, _parent, name, name_length, inode_num );
 
-    UNLOCK( devfs_lock );
+    mutex_unlock( devfs_mutex );
 
     return error;
 }
@@ -298,7 +299,7 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     node = ( devfs_node_t* )_node;
 
-    LOCK( devfs_lock );
+    mutex_lock( devfs_mutex );
 
     stat->st_ino = node->inode_number;
     stat->st_mode = 0777;
@@ -313,7 +314,7 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
         stat->st_mode |= S_IFBLK;
     }
 
-    UNLOCK( devfs_lock );
+    mutex_unlock( devfs_mutex );
 
     return 0;
 }
@@ -322,7 +323,7 @@ static int devfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, ui
 
     node = ( devfs_node_t* )_node;
 
-    LOCK( devfs_lock );
+    mutex_lock( devfs_mutex );
 
     if ( mask & WSTAT_ATIME ) {
         node->atime = stat->st_atime;
@@ -336,7 +337,7 @@ static int devfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, ui
         node->ctime = stat->st_ctime;
     }
 
-    UNLOCK( devfs_lock );
+    mutex_unlock( devfs_mutex );
 
     return 0;
 }
@@ -355,7 +356,7 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
 
     cookie = ( devfs_dir_cookie_t* )file_cookie;
 
-    LOCK( devfs_lock );
+    mutex_lock( devfs_mutex );
 
     child = node->first_child;
     current = 0;
@@ -366,7 +367,7 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
             strncpy( entry->name, child->name, NAME_MAX );
             entry->name[ NAME_MAX ] = 0;
 
-            UNLOCK( devfs_lock );
+            mutex_unlock( devfs_mutex );
 
             cookie->position++;
 
@@ -379,7 +380,7 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
 
     node->atime = time( NULL );
 
-    UNLOCK( devfs_lock );
+    mutex_unlock( devfs_mutex );
 
     return 0;
 }
@@ -402,7 +403,7 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
     devfs_node_t* node;
     ino_t dummy;
 
-    LOCK( devfs_lock );
+    mutex_lock( devfs_mutex );
 
     parent = devfs_root_node;
 
@@ -473,7 +474,7 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
     error = 0;
 
 out:
-    UNLOCK( devfs_lock );
+    mutex_unlock( devfs_mutex );
 
     return error;
 }
@@ -484,7 +485,7 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
     devfs_node_t* node;
     devfs_node_t* new_node;
 
-    LOCK( devfs_lock );
+    mutex_lock( devfs_mutex );
 
     /* Check if this name already exists */
 
@@ -521,7 +522,7 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
     error = 0;
 
 out:
-    UNLOCK( devfs_lock );
+    mutex_unlock( devfs_mutex );
 
     return error;
 }
@@ -547,7 +548,7 @@ static int devfs_add_select_request( void* fs_cookie, void* _node, void* file_co
             case SELECT_READ :
             case SELECT_WRITE :
                 request->ready = true;
-                UNLOCK( request->sync );
+                semaphore_unlock( request->sync, 1 );
                 break;
         }
 
@@ -615,20 +616,6 @@ static void* devfs_node_key( hashitem_t* item ) {
     return ( void* )&node->inode_number;
 }
 
-static uint32_t devfs_node_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( ino_t ) );
-}
-
-static bool devfs_node_compare( const void* key1, const void* key2 ) {
-    ino_t* inode_num_1;
-    ino_t* inode_num_2;
-
-    inode_num_1 = ( ino_t* )key1;
-    inode_num_2 = ( ino_t* )key2;
-
-    return ( *inode_num_1 == *inode_num_2 );
-}
-
 __init int init_devfs( void ) {
     int error;
 
@@ -636,18 +623,18 @@ __init int init_devfs( void ) {
         &devfs_node_table,
         64,
         devfs_node_key,
-        devfs_node_hash,
-        devfs_node_compare
+        hash_int64,
+        compare_int64
     );
 
     if ( error < 0 ) {
         goto error1;
     }
 
-    devfs_lock = create_semaphore( "devfs lock", SEMAPHORE_BINARY, 0, 1 );
+    devfs_mutex = mutex_create( "devfs mutex", MUTEX_NONE );
 
-    if ( devfs_lock < 0 ) {
-        error = devfs_lock;
+    if ( devfs_mutex < 0 ) {
+        error = devfs_mutex;
         goto error2;
     }
 
@@ -660,7 +647,7 @@ __init int init_devfs( void ) {
     return 0;
 
 error3:
-    delete_semaphore( devfs_lock );
+    mutex_destroy( devfs_mutex );
 
 error2:
     destroy_hashtable( &devfs_node_table );

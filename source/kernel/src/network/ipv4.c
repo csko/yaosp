@@ -68,7 +68,7 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     route = find_route( dest_ip );
 
     if ( route == NULL ) {
-        kprintf( "NET: No route to address: %d.%d.%d.%d\n", dest_ip[ 0 ], dest_ip[ 1 ], dest_ip[ 2 ], dest_ip[ 3 ] );
+        kprintf( WARNING, "NET: No route to address: %d.%d.%d.%d\n", dest_ip[ 0 ], dest_ip[ 1 ], dest_ip[ 2 ], dest_ip[ 3 ] );
         return -EINVAL;
     }
 
@@ -117,7 +117,7 @@ static int ipv4_handle_packet( packet_t* packet ) {
             return tcp_input( packet );
 
         case IP_PROTO_UDP :
-            kprintf( "UDP packet\n" );
+            DEBUG_LOG( "UDP packet\n" );
             break;
 
         case IP_PROTO_ICMP :
@@ -137,7 +137,7 @@ int ipv4_input( packet_t* packet ) {
     /* Make sure the IP packet is valid */
 
     if ( ip_checksum( ( uint16_t* )ip_header, IPV4_HDR_SIZE( ip_header->version_and_size ) * 4 ) != 0 ) {
-        kprintf( "NET: Invalid IP checksum!\n" );
+        kprintf( WARNING, "NET: Invalid IP checksum!\n" );
         delete_packet( packet );
         return -EINVAL;
     }

@@ -1,6 +1,6 @@
 /* i386 boot code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -29,7 +29,7 @@
 .long ( MB_FLAG_ALIGN_MODULES | MB_FLAG_MEMORY_INFO ) /* flags */
 .long -( MB_HEADER_MAGIC + ( MB_FLAG_ALIGN_MODULES | MB_FLAG_MEMORY_INFO ) ) /* checksum */
 
-.section .text
+.section .kernel_init
 
 /* The entry point of the kernel */
 
@@ -72,8 +72,7 @@ _multiboot_nok:
 
 /* Kernel stack: 2048*4 = 8kB */
 
-.rept 2047
+.rept 2048
 .long 0
 .endr
 _kernel_stack_top:
-.long 0

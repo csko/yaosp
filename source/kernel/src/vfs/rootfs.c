@@ -21,18 +21,18 @@
 #include <errno.h>
 #include <scheduler.h>
 #include <kernel.h>
-#include <semaphore.h>
 #include <macros.h>
 #include <time.h>
+#include <lock/mutex.h>
 #include <mm/kmalloc.h>
 #include <vfs/rootfs.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 #include <lib/hashtable.h>
 
+static lock_id rootfs_mutex;
 static ino_t rootfs_inode_counter = 0;
 static hashtable_t rootfs_node_table;
-static semaphore_id rootfs_lock;
 
 static rootfs_node_t* rootfs_create_node( rootfs_node_t* parent, const char* name, int length, bool is_directory ) {
     int error;
@@ -142,7 +142,7 @@ static void rootfs_delete_node( rootfs_node_t* node ) {
 static int rootfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     rootfs_node_t* node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     node = ( rootfs_node_t* )hashtable_get( &rootfs_node_table, ( const void* )&inode_num );
 
@@ -152,7 +152,7 @@ static int rootfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
         node->is_loaded = true;
     }
 
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     if ( node == NULL ) {
         return -ENOENT;
@@ -168,7 +168,7 @@ static int rootfs_write_inode( void* fs_cookie, void* _node ) {
 
     node = ( rootfs_node_t* )_node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     ASSERT( node->is_loaded );
 
@@ -178,7 +178,7 @@ static int rootfs_write_inode( void* fs_cookie, void* _node ) {
         rootfs_delete_node( node );
     }
 
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return 0;
 }
@@ -219,11 +219,11 @@ static int rootfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* n
 static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
     int error;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     error = rootfs_do_lookup_inode( fs_cookie, _parent, name, name_length, inode_number );
 
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return error;
 }
@@ -269,7 +269,7 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     node = ( rootfs_node_t* )_node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     stat->st_ino = node->inode_number;
     stat->st_mode = 0777;
@@ -288,7 +288,7 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
         }
     }
 
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return 0;
 }
@@ -298,7 +298,7 @@ static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, u
 
     node = ( rootfs_node_t* )_node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     if ( mask & WSTAT_ATIME ) {
         node->atime = stat->st_atime;
@@ -312,7 +312,7 @@ static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, u
         node->ctime = stat->st_ctime;
     }
 
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return 0;
 }
@@ -331,7 +331,7 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
 
     cookie = ( rootfs_dir_cookie_t* )file_cookie;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     child = node->first_child;
     current = 0;
@@ -342,7 +342,7 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
             strncpy( entry->name, child->name, NAME_MAX );
             entry->name[ NAME_MAX ] = 0;
 
-            UNLOCK( rootfs_lock );
+            mutex_unlock( rootfs_mutex );
 
             cookie->position++;
 
@@ -355,7 +355,7 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
 
     node->atime = time( NULL );
 
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return 0;
 }
@@ -376,7 +376,7 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     rootfs_node_t* node;
     rootfs_node_t* new_node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     /* Check if this name already exists */
 
@@ -413,7 +413,7 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     error = 0;
 
 out:
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return error;
 }
@@ -426,7 +426,7 @@ static int rootfs_rmdir( void* fs_cookie, void* _node, const char* name, int nam
 
     parent = ( rootfs_node_t* )_node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     error = rootfs_do_lookup_inode( fs_cookie, _node, name, name_length, &inode_number );
 
@@ -456,7 +456,7 @@ static int rootfs_rmdir( void* fs_cookie, void* _node, const char* name, int nam
     parent->mtime = time( NULL );
 
 out:
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return error;
 }
@@ -467,7 +467,7 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     rootfs_node_t* node;
     rootfs_node_t* new_node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     /* Check if this name already exists */
 
@@ -516,7 +516,7 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     node->mtime = time( NULL );
 
 out:
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return error;
 }
@@ -526,10 +526,10 @@ static int rootfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t l
 
     node = ( rootfs_node_t* )_node;
 
-    LOCK( rootfs_lock );
+    mutex_lock( rootfs_mutex );
 
     if ( node->link_path == NULL ) {
-        UNLOCK( rootfs_lock );
+        mutex_unlock( rootfs_mutex );
 
         return -EINVAL;
     }
@@ -539,7 +539,7 @@ static int rootfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t l
 
     node->atime = time( NULL );
 
-    UNLOCK( rootfs_lock );
+    mutex_unlock( rootfs_mutex );
 
     return strlen( buffer );
 }
@@ -581,20 +581,6 @@ static void* rootfs_node_key( hashitem_t* item ) {
     return ( void* )&node->inode_number;
 }
 
-static uint32_t rootfs_node_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( ino_t ) );
-}
-
-static bool rootfs_node_compare( const void* key1, const void* key2 ) {
-    ino_t* inode_num_1;
-    ino_t* inode_num_2;
-
-    inode_num_1 = ( ino_t* )key1;
-    inode_num_2 = ( ino_t* )key2;
-
-    return ( *inode_num_1 == *inode_num_2 );
-}
-
 __init int init_root_filesystem( void ) {
     int error;
     rootfs_node_t* root_node;
@@ -602,10 +588,10 @@ __init int init_root_filesystem( void ) {
 
     /* Create rootfs lock */
 
-    rootfs_lock = create_semaphore( "devfs lock", SEMAPHORE_BINARY, 0, 1 );
+    rootfs_mutex = mutex_create( "rootfs mutex", MUTEX_NONE );
 
-    if ( rootfs_lock < 0 ) {
-        return rootfs_lock;
+    if ( rootfs_mutex < 0 ) {
+        return rootfs_mutex;
     }
 
     /* Initialize the rootfs node hashtable */
@@ -614,8 +600,8 @@ __init int init_root_filesystem( void ) {
         &rootfs_node_table,
         32,
         rootfs_node_key,
-        rootfs_node_hash,
-        rootfs_node_compare
+        hash_int64,
+        compare_int64
     );
 
     if ( error < 0 ) {

@@ -557,11 +557,11 @@ int clone_user_region(
     }
 
     if ( allocated_pmem != 0 ) {
-        spinlock_disable( &scheduler_lock );
+        scheduler_lock();
 
         new_context->process->pmem_size += allocated_pmem;
 
-        spinunlock_enable( &scheduler_lock );
+        scheduler_unlock();
     }
 
     return 0;
@@ -681,7 +681,7 @@ __init int init_paging( void ) {
     error = create_initial_region(
         "kernel_rw",
         1 * 1024 * 1024 + ro_size,
-        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + ro_size ),
+        MIN( get_total_page_count() * PAGE_SIZE, 512 * 1024 * 1024 ) - ( 1 * 1024 * 1024 + ro_size ),
         true
     );
 

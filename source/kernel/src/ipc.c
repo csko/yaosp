@@ -20,15 +20,16 @@
 #include <config.h>
 #include <macros.h>
 #include <errno.h>
+#include <lock/mutex.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
+static lock_id ipc_port_mutex;
 static int ipc_port_id_counter;
 static hashtable_t ipc_port_table;
-static semaphore_id ipc_port_lock;
 
+static lock_id named_ipc_port_mutex;
 static hashtable_t named_ipc_port_table;
-static semaphore_id named_ipc_port_lock;
 
 static int insert_ipc_port( ipc_port_t* port ) {
     int error;
@@ -61,10 +62,10 @@ ipc_port_id sys_create_ipc_port( void ) {
         goto error1;
     }
 
-    port->queue_sync = create_semaphore( "IPC queue sync", SEMAPHORE_COUNTING, 0, 0 );
+    port->queue_condition = condition_create( "IPC queue condition" );
 
-    if ( port->queue_sync < 0 ) {
-        error = port->queue_sync;
+    if ( port->queue_condition < 0 ) {
+        error = port->queue_condition;
         goto error2;
     }
 
@@ -72,11 +73,11 @@ ipc_port_id sys_create_ipc_port( void ) {
     port->message_queue = NULL;
     port->message_queue_tail = NULL;
 
-    LOCK( ipc_port_lock );
+    mutex_lock( ipc_port_mutex );
 
     error = insert_ipc_port( port );
 
-    UNLOCK( ipc_port_lock );
+    mutex_unlock( ipc_port_mutex );
 
     if ( error < 0 ) {
         goto error3;
@@ -85,7 +86,7 @@ ipc_port_id sys_create_ipc_port( void ) {
     return port->id;
 
 error3:
-    delete_semaphore( port->queue_sync );
+    condition_destroy( port->queue_condition );
 
 error2:
     kfree( port );
@@ -103,7 +104,7 @@ int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t
     ipc_port_t* port;
     ipc_message_t* message;
 
-    LOCK( ipc_port_lock );
+    mutex_lock( ipc_port_mutex );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -145,14 +146,13 @@ int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t
         port->message_queue_tail = message;
     }
 
-    UNLOCK( port->queue_sync );
-
-    UNLOCK( ipc_port_lock );
+    mutex_unlock( ipc_port_mutex );
+    condition_signal( port->queue_condition );
 
     return 0;
 
 error1:
-    UNLOCK( ipc_port_lock );
+    mutex_unlock( ipc_port_mutex );
 
     return error;
 }
@@ -161,12 +161,11 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
     int error;
     uint64_t timeout;
     ipc_port_t* port;
-    semaphore_id queue_sync;
     ipc_message_t* message;
 
     timeout = *_timeout;
 
-    LOCK( ipc_port_lock );
+    mutex_lock( ipc_port_mutex );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -176,17 +175,11 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
     }
 
     if ( timeout > 0 ) {
-        queue_sync = port->queue_sync;
-
-        UNLOCK( ipc_port_lock );
-
-        error = lock_semaphore( queue_sync, 1, timeout );
+        error = condition_timedwait( port->queue_condition, ipc_port_mutex, timeout );
 
         if ( error < 0 ) {
             goto error1;
         }
-
-        LOCK( ipc_port_lock );
 
         port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -214,7 +207,7 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         port->message_queue_tail = NULL;
     }
 
-    UNLOCK( ipc_port_lock );
+    mutex_unlock( ipc_port_mutex );
 
     if ( code != NULL ) {
         *code = message->code;
@@ -233,7 +226,7 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
     return error;
 
 error2:
-    UNLOCK( ipc_port_lock );
+    mutex_unlock( ipc_port_mutex );
 
 error1:
     return error;
@@ -242,10 +235,9 @@ error1:
 int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uint64_t* timeout ) {
     int error;
     ipc_port_t* port;
-    semaphore_id queue_sync;
     ipc_message_t* message;
 
-    LOCK( ipc_port_lock );
+    mutex_lock( ipc_port_mutex );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -254,17 +246,11 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
         goto error2;
     }
 
-    queue_sync = port->queue_sync;
-
-    UNLOCK( ipc_port_lock );
-
-    error = lock_semaphore( queue_sync, 1, *timeout );
+    error = condition_timedwait( port->queue_condition, ipc_port_mutex, *timeout );
 
     if ( error < 0 ) {
         goto error1;
     }
-
-    LOCK( ipc_port_lock );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -288,12 +274,12 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
         *size = message->size;
     }
 
-    UNLOCK( ipc_port_lock );
+    mutex_unlock( ipc_port_mutex );
 
     return 0;
 
 error2:
-    UNLOCK( ipc_port_lock );
+    mutex_unlock( ipc_port_mutex );
 
 error1:
     return error;
@@ -303,7 +289,7 @@ int sys_register_named_ipc_port( const char* name, ipc_port_id port_id ) {
     int error;
     named_ipc_port_t* port;
 
-    LOCK( named_ipc_port_lock );
+    mutex_lock( named_ipc_port_mutex );
 
     port = ( named_ipc_port_t* )hashtable_get( &named_ipc_port_table, ( const void* )name );
 
@@ -334,7 +320,7 @@ int sys_register_named_ipc_port( const char* name, ipc_port_id port_id ) {
         goto error3;
     }
 
-    UNLOCK( named_ipc_port_lock );
+    mutex_unlock( named_ipc_port_mutex );
 
     return 0;
 
@@ -345,7 +331,7 @@ error2:
     kfree( port );
 
 error1:
-    UNLOCK( named_ipc_port_lock );
+    mutex_unlock( named_ipc_port_mutex );
 
     return error;
 }
@@ -354,7 +340,7 @@ int sys_get_named_ipc_port( const char* name, ipc_port_id* port_id ) {
     int error;
     named_ipc_port_t* port;
 
-    LOCK( named_ipc_port_lock );
+    mutex_lock( named_ipc_port_mutex );
 
     port = ( named_ipc_port_t* )hashtable_get( &named_ipc_port_table, ( const void* )name );
 
@@ -366,7 +352,7 @@ int sys_get_named_ipc_port( const char* name, ipc_port_id* port_id ) {
         error = -ENOENT;
     }
 
-    UNLOCK( named_ipc_port_lock );
+    mutex_unlock( named_ipc_port_mutex );
 
     return error;
 }
@@ -379,34 +365,12 @@ static void* ipc_port_key( hashitem_t* item ) {
     return ( void* )&port->id;
 }
 
-static uint32_t ipc_port_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( ipc_port_id ) );
-}
-
-static bool ipc_port_compare( const void* key1, const void* key2 ) {
-    ipc_port_id id1;
-    ipc_port_id id2;
-
-    id1 = *( ( ipc_port_id* )key1 );
-    id2 = *( ( ipc_port_id* )key2 );
-
-    return ( id1 == id2 );
-}
-
 static void* named_ipc_port_key( hashitem_t* item ) {
     named_ipc_port_t* port;
 
     port = ( named_ipc_port_t* )item;
 
     return ( void* )port->name;
-}
-
-static uint32_t named_ipc_port_hash( const void* key ) {
-    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
-}
-
-static bool named_ipc_port_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
 }
 
 __init int init_ipc( void ) {
@@ -416,18 +380,18 @@ __init int init_ipc( void ) {
         &ipc_port_table,
         64,
         ipc_port_key,
-        ipc_port_hash,
-        ipc_port_compare
+        hash_int,
+        compare_int
     );
 
     if ( error < 0 ) {
         goto error1;
     }
 
-    ipc_port_lock = create_semaphore( "IPC port table lock", SEMAPHORE_BINARY, 0, 1 );
+    ipc_port_mutex = mutex_create( "IPC port table mutex", MUTEX_NONE );
 
-    if ( ipc_port_lock < 0 ) {
-        error = ipc_port_lock;
+    if ( ipc_port_mutex < 0 ) {
+        error = ipc_port_mutex;
         goto error2;
     }
 
@@ -435,17 +399,18 @@ __init int init_ipc( void ) {
         &named_ipc_port_table,
         8,
         named_ipc_port_key,
-        named_ipc_port_hash,
-        named_ipc_port_compare
+        hash_str,
+        compare_str
     );
 
     if ( error < 0 ) {
         goto error3;
     }
 
-    named_ipc_port_lock = create_semaphore( "Named IPC port table lock", SEMAPHORE_BINARY, 0, 1 );
+    named_ipc_port_mutex = mutex_create( "Named IPC port table mutex", MUTEX_NONE );
 
-    if ( named_ipc_port_lock < 0 ) {
+    if ( named_ipc_port_mutex < 0 ) {
+        error = named_ipc_port_mutex;
         goto error4;
     }
 
@@ -457,7 +422,7 @@ error4:
     destroy_hashtable( &named_ipc_port_table );
 
 error3:
-    delete_semaphore( ipc_port_lock );
+    mutex_destroy( ipc_port_mutex );
 
 error2:
     destroy_hashtable( &ipc_port_table );

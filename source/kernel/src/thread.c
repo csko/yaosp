@@ -140,11 +140,11 @@ void destroy_thread( thread_t* thread ) {
     if ( atomic_dec_and_test( &thread->process->thread_count ) ) {
         /* Remove the process from the hashtable */
 
-        spinlock_disable( &scheduler_lock );
+        scheduler_lock();
 
         remove_process( thread->process );
 
-        spinunlock_enable( &scheduler_lock );
+        scheduler_unlock();
 
         /* Destroy the process */
 
@@ -160,7 +160,7 @@ void destroy_thread( thread_t* thread ) {
 int insert_thread( thread_t* thread ) {
     int error;
 
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     do {
         thread->id = thread_id_counter++;
@@ -182,7 +182,7 @@ int insert_thread( thread_t* thread ) {
 int rename_thread( thread_t* thread, char* new_name ) {
     char* name;
 
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     name = strdup( new_name );
 
@@ -232,12 +232,12 @@ void thread_exit( int exit_code ) {
         parent = get_thread_by_id( thread->parent_id );
 
         if ( __unlikely( parent == NULL ) ) {
-            kprintf( "thread_exit(): Thread parent not found!\n" );
+            kprintf( ERROR, "thread_exit(): Thread parent not found!\n" );
         } else {
             do_send_signal( parent, SIGCHLD );
         }
     } else {
-        kprintf( "thread_exit(): Thread %s:%s with parent id -1 tried to exit!\n", thread->process->name, thread->name );
+        kprintf( WARNING, "thread_exit(): Thread %s:%s with parent id -1 tried to exit!\n", thread->process->name, thread->name );
     }
 
     /* Reparent the children of the current thread */
@@ -265,11 +265,11 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
 
     /* Get the kernel process */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     kernel_process = get_process_by_id( 0 );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     if ( kernel_process == NULL ) {
         error = -EINVAL;
@@ -311,7 +311,7 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
 
     /* Get an unique ID to the new thread and add to the others */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     error = insert_thread( thread );
 
@@ -319,7 +319,7 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
         error = thread->id;
     }
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     if ( error < 0 ) {
         goto error2;
@@ -390,7 +390,7 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
 
     /* Get an unique ID to the new thread and add to the others */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     error = insert_thread( thread );
 
@@ -398,7 +398,7 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
         error = thread->id;
     }
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     if ( error < 0 ) {
         goto error2;
@@ -430,7 +430,7 @@ static int do_sleep_thread( uint64_t microsecs, uint64_t* remaining ) {
     node.wakeup_time = get_system_time() + microsecs;
     node.in_queue = false;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     thread = current_thread();
 
@@ -439,15 +439,13 @@ static int do_sleep_thread( uint64_t microsecs, uint64_t* remaining ) {
 
     waitqueue_add_node( &sleep_queue, &node );
 
-    spinunlock_enable( &scheduler_lock );
-
+    scheduler_unlock();
     sched_preempt();
-
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     waitqueue_remove_node( &sleep_queue, &node );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     now = get_system_time();
 
@@ -464,7 +462,7 @@ static int do_sleep_thread( uint64_t microsecs, uint64_t* remaining ) {
     return error;
 }
 
-int sleep_thread( uint64_t microsecs ) {
+int thread_sleep( uint64_t microsecs ) {
     return do_sleep_thread( microsecs, NULL );
 }
 
@@ -500,7 +498,7 @@ static int get_thread_info_iterator( hashitem_t* item, void* _data ) {
     strncpy( info->name, thread->name, MAX_THREAD_NAME_LENGTH );
     info->name[ MAX_THREAD_NAME_LENGTH - 1 ] = 0;
     info->state = thread->state;
-    info->cpu_time = 0;
+    info->cpu_time = thread->cpu_time;
 
     data->curr_index++;
 
@@ -510,11 +508,11 @@ static int get_thread_info_iterator( hashitem_t* item, void* _data ) {
 uint32_t sys_get_thread_count_for_process( process_id id ) {
     uint32_t count;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     count = hashtable_get_filtered_item_count( &thread_table, thread_info_process_filter, ( void* )&id );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return count;
 }
@@ -526,11 +524,11 @@ uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_tab
     data.max_count = max_count;
     data.info_table = info_table;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     hashtable_filtered_iterate( &thread_table, get_thread_info_iterator, ( void* )&data, thread_info_process_filter, ( void* )&id );
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return data.curr_index;
 }
@@ -542,7 +540,7 @@ int sys_sleep_thread( uint64_t* microsecs, uint64_t* remaining ) {
 int do_wake_up_thread( thread_t* thread ) {
     int error;
 
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     if ( ( thread->state == THREAD_NEW ) ||
          ( thread->state == THREAD_WAITING ) ||
@@ -556,11 +554,11 @@ int do_wake_up_thread( thread_t* thread ) {
     return error;
 }
 
-int wake_up_thread( thread_id id ) {
+int thread_wake_up( thread_id id ) {
     int error;
     thread_t* thread;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     thread = get_thread_by_id( id );
 
@@ -570,7 +568,7 @@ int wake_up_thread( thread_id id ) {
         error = -EINVAL;
     }
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return error;
 }
@@ -579,7 +577,7 @@ int sys_wake_up_thread( thread_id id ) {
     int error;
     thread_t* thread;
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     thread = get_thread_by_id( id );
 
@@ -589,7 +587,7 @@ int sys_wake_up_thread( thread_id id ) {
         error = -EINVAL;
     }
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return error;
 }
@@ -599,13 +597,13 @@ thread_id sys_gettid( void ) {
 }
 
 uint32_t get_thread_count( void ) {
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     return hashtable_get_item_count( &thread_table );
 }
 
 thread_t* get_thread_by_id( thread_id id ) {
-    ASSERT( spinlock_is_locked( &scheduler_lock ) );
+    ASSERT( scheduler_is_locked() );
 
     return ( thread_t* )hashtable_get( &thread_table, ( const void* )&id );
 }
@@ -616,20 +614,6 @@ static void* thread_key( hashitem_t* item ) {
     thread = ( thread_t* )item;
 
     return ( void* )&thread->id;
-}
-
-static uint32_t thread_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( thread_id ) );
-}
-
-static bool thread_compare( const void* key1, const void* key2 ) {
-    thread_id id1;
-    thread_id id2;
-
-    id1 = *( ( thread_id* )key1 );
-    id2 = *( ( thread_id* )key2 );
-
-    return ( id1 == id2 );
 }
 
 #ifdef ENABLE_DEBUGGER
@@ -750,8 +734,8 @@ __init int init_threads( void ) {
         &thread_table,
         256,
         thread_key,
-        thread_hash,
-        thread_compare
+        hash_int,
+        compare_int
     );
 
     if ( error < 0 ) {

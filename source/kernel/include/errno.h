@@ -53,5 +53,6 @@
 #define ENAMETOOLONG 31
 #define ESPIPE       32
 #define EACCES       33
+#define EDEADLK      34
 
 #endif /* _ERRNO_H_ */

@@ -41,6 +41,8 @@
 extern int __k_init_start;
 extern int __kernel_end;
 
+thread_id init_thread_id;
+
 __init static void load_bootmodules( void ) {
     int i;
     int error;
@@ -52,12 +54,12 @@ __init static void load_bootmodules( void ) {
     for ( i = 0; i < module_count; i++ ) {
         bootmodule = get_bootmodule_at( i );
 
-        kprintf( "Loading module: %s\n", bootmodule->name );
+        kprintf( INFO, "Loading module: %s\n", bootmodule->name );
 
         error = load_module( bootmodule->name );
 
         if ( error < 0 ) {
-            kprintf( "Failed to load module: %s\n", bootmodule->name );
+            kprintf( INFO, "Failed to load module: %s\n", bootmodule->name );
         }
     }
 }
@@ -128,31 +130,30 @@ __init static void mount_root_filesystem( void ) {
         panic( "Failed to mount root filesystem!\n" );
     }
 
-    kprintf( "Root filesystem mounted!\n" );
+    kprintf( INFO, "Root filesystem mounted!\n" );
 }
 
 __init static void init_network( void ) {
+#if 0
     init_network_interfaces();
     init_routes();
     init_arp();
     init_socket();
     init_tcp();
     create_network_interfaces();
+#endif
 }
 
 int init_thread( void* arg ) {
     uint32_t init_page_count;
 
-    kprintf( "Init thread started!\n" );
+    DEBUG_LOG( "Init thread started!\n" );
 
 #ifdef ENABLE_SMP
     arch_boot_processors();
 #endif /* ENABLE_SMP */
 
-    kprintf( "Initializing Virtual File System ... " );
     init_vfs();
-    kprintf( "done\n" );
-
     load_bootmodules();
     mount_root_filesystem();
     init_network();
@@ -160,7 +161,7 @@ int init_thread( void* arg ) {
     /* Free init code */
 
     init_page_count = ( ( uint32_t )&__kernel_end - ( uint32_t )&__k_init_start ) / PAGE_SIZE;
-    kprintf( "Freeing %u pages containing initialization code.\n", init_page_count );
+    kprintf( INFO, "Freeing %u pages containing initialization code.\n", init_page_count );
     free_pages( ( void* )&__k_init_start, init_page_count );
 
     /* Create a new process and start the init application */
@@ -174,6 +175,20 @@ int init_thread( void* arg ) {
     while ( 1 ) {
         sys_wait4( -1, NULL, 0, NULL );
     }
+
+    return 0;
+}
+
+__init int create_init_thread( void ) {
+    /* Create the init thread */
+
+    init_thread_id = create_kernel_thread( "init", PRIORITY_NORMAL, init_thread, NULL, 0 );
+
+    if ( init_thread_id < 0 ) {
+        return init_thread_id;
+    }
+
+    thread_wake_up( init_thread_id );
 
     return 0;
 }

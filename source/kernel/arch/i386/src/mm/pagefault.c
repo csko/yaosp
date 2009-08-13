@@ -20,7 +20,6 @@
 #include <console.h>
 #include <smp.h>
 #include <errno.h>
-#include <semaphore.h>
 #include <macros.h>
 #include <scheduler.h>
 #include <debug.h>
@@ -35,17 +34,17 @@
 #include <arch/interrupt.h>
 #include <arch/mm/paging.h>
 
-extern semaphore_id region_lock;
+extern lock_id region_lock;
 
 void dump_registers( registers_t* regs );
 
 static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr2, const char* message ) {
-    kprintf( "Invalid page fault at 0x%x (%s)\n", cr2, message );
+    kprintf( ERROR, "Invalid page fault at 0x%x (%s)\n", cr2, message );
     dump_registers( regs );
     debug_print_stack_trace();
 
     if ( thread != NULL ) {
-        kprintf( "Process: %s thread: %s\n", thread->process->name, thread->name );
+        kprintf( ERROR, "Process: %s thread: %s\n", thread->process->name, thread->name );
         memory_context_dump( thread->process->memory_context );
 
         if ( regs->error_code & 0x4 ) {
@@ -235,7 +234,7 @@ int handle_page_fault( registers_t* regs ) {
         invalid_page_fault( NULL, regs, cr2, "unknown" );
     }
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     region = do_memory_context_get_region_for( thread->process->memory_context, cr2 );
 
@@ -262,11 +261,11 @@ int handle_page_fault( registers_t* regs ) {
 
         /* Update pmem of the current process */
 
-        spinlock_disable( &scheduler_lock );
+        scheduler_lock();
 
         thread->process->pmem_size += pages_loaded * PAGE_SIZE;
 
-        spinunlock_enable( &scheduler_lock );
+        scheduler_unlock();
     } else {
         uint32_t* pgd_entry;
         uint32_t* pt_entry;
@@ -278,12 +277,12 @@ int handle_page_fault( registers_t* regs ) {
         arch_context = ( i386_memory_context_t* )thread->process->memory_context->arch_data;
         pgd_entry = page_directory_entry( arch_context, cr2 );
 
-        kprintf( "Page directory entry: %x\n", *pgd_entry );
+        kprintf( ERROR, "Page directory entry: %x\n", *pgd_entry );
 
         if ( *pgd_entry != 0 ) {
             pt_entry = page_table_entry( *pgd_entry, cr2 );
 
-            kprintf( "Page table entry: %x\n", *pt_entry );
+            kprintf( ERROR, "Page table entry: %x\n", *pt_entry );
         }
 
         message = "unknown";
@@ -291,12 +290,12 @@ int handle_page_fault( registers_t* regs ) {
         goto invalid;
     }
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return 0;
 
 invalid:
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     invalid_page_fault( thread, regs, cr2, message );
 

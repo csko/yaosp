@@ -20,7 +20,7 @@
 #define _NETWORK_PACKET_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/semaphore.h>
 
 #include <arch/spinlock.h>
 
@@ -36,7 +36,7 @@ typedef struct packet {
 
 typedef struct packet_queue {
     spinlock_t lock;
-    semaphore_id sync;
+    lock_id sync;
     packet_t* first;
     packet_t* last;
 } packet_queue_t;

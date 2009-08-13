@@ -20,11 +20,11 @@
 #include <module.h>
 #include <console.h>
 #include <errno.h>
-#include <semaphore.h>
 #include <bootmodule.h>
 #include <kernel.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
+#include <lock/mutex.h>
 #include <lib/string.h>
 
 typedef struct file_module_reader {
@@ -40,8 +40,8 @@ typedef struct module_info_iter_data {
 
 module_loader_t* module_loader;
 
+static lock_id module_mutex;
 static hashtable_t module_table;
-static semaphore_id module_lock;
 
 static int do_load_module( const char* name );
 
@@ -187,6 +187,7 @@ static int do_load_module_dependencies( module_t* module, char** dependencies, s
 
         if ( error == -ELOOP ) {
             kprintf(
+                WARNING,
                 "Detected a loop in module dependencies while loading %s module!\n",
                 dependencies[ i ]
             );
@@ -247,7 +248,7 @@ static int do_load_module( const char* name ) {
         goto error2;
     }
 
-    LOCK( module_lock );
+    mutex_lock( module_mutex );
 
     module = ( module_t* )hashtable_get( &module_table, ( const void* )name );
 
@@ -262,7 +263,7 @@ static int do_load_module( const char* name ) {
                 break;
         }
 
-        UNLOCK( module_lock );
+        mutex_unlock( module_mutex );
 
         goto error2;
     }
@@ -270,7 +271,7 @@ static int do_load_module( const char* name ) {
     module = create_module( name );
 
     if ( module == NULL ) {
-        UNLOCK( module_lock );
+        mutex_unlock( module_mutex );
 
         error = -ENOMEM;
 
@@ -281,7 +282,7 @@ static int do_load_module( const char* name ) {
 
     hashtable_add( &module_table, ( hashitem_t* )module );
 
-    UNLOCK( module_lock );
+    mutex_unlock( module_mutex );
 
     /* Load the module */
 
@@ -294,7 +295,7 @@ static int do_load_module( const char* name ) {
     found = module_loader->get_symbol( module, "init_module", ( ptr_t* )&module->init );
 
     if ( !found ) {
-        kprintf( "Module %s doesn't export init_module function!\n", name );
+        kprintf( ERROR, "Module %s doesn't export init_module function!\n", name );
         error = -ENOENT;
         goto error4;
     }
@@ -302,7 +303,7 @@ static int do_load_module( const char* name ) {
     found = module_loader->get_symbol( module, "destroy_module", ( ptr_t* )&module->destroy );
 
     if ( !found ) {
-        kprintf( "Module %s doesn't export destroy_module function!\n", name );
+        kprintf( ERROR, "Module %s doesn't export destroy_module function!\n", name );
         error = -ENOENT;
         goto error4;
     }
@@ -337,11 +338,11 @@ static int do_load_module( const char* name ) {
         goto error4;
     }
 
-    LOCK( module_lock );
+    mutex_lock( module_mutex );
 
     module->status = MODULE_LOADED;
 
-    UNLOCK( module_lock );
+    mutex_unlock( module_mutex );
 
     return 0;
 
@@ -349,9 +350,9 @@ error4:
     /* TODO: unload the module */
 
 error3:
-    LOCK( module_lock );
+    mutex_lock( module_mutex );
     hashtable_remove( &module_table, ( const void* )name );
-    UNLOCK( module_lock );
+    mutex_unlock( module_mutex );
 
     destroy_module( module );
 
@@ -412,11 +413,11 @@ int sys_load_module( const char* name ) {
 uint32_t sys_get_module_count( void ) {
     uint32_t result;
 
-    LOCK( module_lock );
+    mutex_lock( module_mutex );
 
     result = hashtable_get_item_count( &module_table );
 
-    UNLOCK( module_lock );
+    mutex_unlock( module_mutex );
 
     return result;
 }
@@ -452,11 +453,11 @@ int sys_get_module_info( module_info_t* module_info, uint32_t max_count ) {
     data.max_count = max_count;
     data.info_table = module_info;
 
-    LOCK( module_lock );
+    mutex_lock( module_mutex );
 
     error = hashtable_iterate( &module_table, get_module_info_iterator, ( void* )&data );
 
-    UNLOCK( module_lock );
+    mutex_unlock( module_mutex );
 
     return error;
 }
@@ -464,7 +465,7 @@ int sys_get_module_info( module_info_t* module_info, uint32_t max_count ) {
 void set_module_loader( module_loader_t* loader ) {
     module_loader = loader;
 
-    kprintf( "Registered module loader: %s.\n", module_loader->name );
+    kprintf( INFO, "Registered module loader: %s.\n", module_loader->name );
 }
 
 static void* module_key( hashitem_t* item ) {
@@ -473,14 +474,6 @@ static void* module_key( hashitem_t* item ) {
     module = ( module_t* )item;
 
     return ( void* )module->name;
-}
-
-static uint32_t module_hash( const void* key ) {
-    return hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
-}
-
-static bool module_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
 }
 
 __init int init_module_loader( void ) {
@@ -492,18 +485,18 @@ __init int init_module_loader( void ) {
         &module_table,
         32,
         module_key,
-        module_hash,
-        module_compare
+        hash_str,
+        compare_str
     );
 
     if ( error < 0 ) {
         goto error1;
     }
 
-    module_lock = create_semaphore( "module lock", SEMAPHORE_BINARY, 0, 1 );
+    module_mutex = mutex_create( "module mutex", MUTEX_NONE );
 
-    if ( module_lock < 0 ) {
-        error = module_lock;
+    if ( module_mutex < 0 ) {
+        error = module_mutex;
         goto error2;
     }
 

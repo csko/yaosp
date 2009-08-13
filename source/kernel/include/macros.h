@@ -20,6 +20,7 @@
 #define _MACROS_H_
 
 #include <kernel.h>
+#include <config.h>
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #define MAX(a,b) ((a)<(b)?(b):(a))
@@ -40,12 +41,15 @@
 #define __likely(foo) __expect((foo),1)
 #define __unlikely(foo) __expect((foo),0)
 
+#ifdef MK_RELEASE_BUILD
+#define ASSERT(exp)
+#else
 #define ASSERT(exp) \
     if ( __unlikely( !( exp ) ) ) { \
         panic( "Assertion (%s) failed at: %s:%d\n", \
             #exp, __FILE__, __LINE__ \
         ); \
     }
-
+#endif /* MK_RELEASE_BUILD */
 
 #endif /* _MACROS_H_ */

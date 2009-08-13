@@ -19,13 +19,13 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
-#include <semaphore.h>
 #include <config.h>
 #include <loader.h>
 #include <time.h>
 #include <mm/context.h>
 #include <mm/region.h>
 #include <vfs/io_context.h>
+#include <lock/context.h>
 #include <lib/hashtable.h>
 
 #include <arch/atomic.h>
@@ -38,11 +38,11 @@ typedef struct process {
 
     process_id id;
     char* name;
-    semaphore_id lock;
+    lock_id mutex;
     atomic_t thread_count;
 
     memory_context_t* memory_context;
-    semaphore_context_t* semaphore_context;
+    lock_context_t* lock_context;
     io_context_t* io_context;
 
     region_id heap_region;

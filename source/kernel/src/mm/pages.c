@@ -64,10 +64,7 @@ static void* do_alloc_pages( memory_type_desc_t* memory_desc, uint32_t count ) {
     ptr_t region_start;
     uint32_t free_page_count;
 
-    p = NULL;
-    found = false;
     page_count = memory_desc->size / PAGE_SIZE;
-    page = &memory_pages[ memory_desc->start / PAGE_SIZE ];
 
     /* First make sure this memory region is big enough for
        the requested number of pages */
@@ -75,6 +72,12 @@ static void* do_alloc_pages( memory_type_desc_t* memory_desc, uint32_t count ) {
     if ( __unlikely( page_count < count ) ) {
         return NULL;
     }
+
+    p = NULL;
+    found = false;
+    page = &memory_pages[ memory_desc->start / PAGE_SIZE ];
+    region_start = 0;
+    free_page_count = 0;
 
     for ( i = 0; i < page_count; i++, page++ ) {
         if ( atomic_get( &page->ref_count ) == 0 ) {

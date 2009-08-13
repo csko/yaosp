@@ -26,7 +26,7 @@ void* sys_sbrk( int increment ) {
     pbreak = ( void* )-1;
     process = current_process();
 
-    LOCK( process->lock );
+    mutex_lock( process->mutex );
 
     if ( increment == 0 ) {
         /* Return the current location of the process break */
@@ -91,7 +91,7 @@ void* sys_sbrk( int increment ) {
         }
     }
 
-    UNLOCK( process->lock );
+    mutex_unlock( process->mutex );
 
     return pbreak;
 }

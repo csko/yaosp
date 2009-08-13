@@ -20,10 +20,10 @@
 #include <errno.h>
 #include <macros.h>
 #include <kernel.h>
-#include <semaphore.h>
 #include <process.h>
 #include <scheduler.h>
 #include <console.h>
+#include <lock/mutex.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -36,7 +36,7 @@
 
 memory_context_t kernel_memory_context;
 
-extern semaphore_id region_lock;
+extern lock_id region_lock;
 extern hashtable_t region_table;
 
 int memory_context_insert_region( memory_context_t* context, region_t* region ) {
@@ -132,11 +132,11 @@ region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t add
 region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
     region_t* region;
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     region = do_memory_context_get_region_for( context, address );
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return region;
 }
@@ -235,7 +235,7 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
         return NULL;
     }
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     arch_clone_memory_context( old_context, new_context );
 
@@ -290,22 +290,22 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
         }
     }
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     /* Clone the vmem_size of the old process as well ;) */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     new_process->vmem_size = old_context->process->vmem_size;
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
     return new_context;
 
 error:
     /* TODO: cleanup! */
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return NULL;
 }
@@ -314,7 +314,7 @@ int memory_context_delete_regions( memory_context_t* context ) {
     int i;
     region_t* region;
 
-    LOCK( region_lock );
+    mutex_lock( region_lock );
 
     /* Delete the requested regions */
 
@@ -324,7 +324,7 @@ int memory_context_delete_regions( memory_context_t* context ) {
         ASSERT( ( region->flags & REGION_KERNEL ) == 0 );
 
         arch_delete_region_pages( context, region );
-        hashtable_remove( &region_table, ( const void* )region->id );
+        hashtable_remove( &region_table, ( const void* )&region->id );
         destroy_region( region );
 
         context->regions[ i ] = NULL;
@@ -336,13 +336,13 @@ int memory_context_delete_regions( memory_context_t* context ) {
 
     /* Update vmem statistics */
 
-    spinlock_disable( &scheduler_lock );
+    scheduler_lock();
 
     context->process->vmem_size = 0;
 
-    spinunlock_enable( &scheduler_lock );
+    scheduler_unlock();
 
-    UNLOCK( region_lock );
+    mutex_unlock( region_lock );
 
     return 0;
 }
@@ -370,8 +370,7 @@ void memory_context_dump( memory_context_t* context ) {
     int i;
     region_t* region;
 
-    kprintf( "Memory context dump:\n" );
-    kprintf( "  region count: %d\n", context->region_count );
+    kprintf( INFO, "Memory context dump:\n" );
 
     for ( i = 0; i < context->region_count; i++ ) {
         region = context->regions[ i ];

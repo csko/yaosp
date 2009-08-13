@@ -106,11 +106,11 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
     /* Update pmem statistics */
 
     if ( allocated_pmem != 0 ) {
-        spinlock_disable( &scheduler_lock );
+        scheduler_lock();
 
         context->process->pmem_size += allocated_pmem;
 
-        spinunlock_enable( &scheduler_lock );
+        scheduler_unlock();
     }
 
     /* Invalidate the TLB if we changed anything that requires it */
@@ -157,11 +157,11 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
     /* Update pmem statistics */
 
     if ( freed_pmem != 0 ) {
-        spinlock_disable( &scheduler_lock );
+        scheduler_lock();
 
         context->process->pmem_size -= freed_pmem;
 
-        spinunlock_enable( &scheduler_lock );
+        scheduler_unlock();
     }
 
     flush_tlb_global();
@@ -202,11 +202,11 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
         free_region_pages( arch_context, region->start + new_size, region->size - new_size );
         free_region_page_tables( arch_context, region->start + new_size, region->size - new_size );
 
-        spinlock_disable( &scheduler_lock );
+        scheduler_lock();
 
         context->process->pmem_size -= ( region->size - new_size );
 
-        spinunlock_enable( &scheduler_lock );
+        scheduler_unlock();
     } else {
         uint64_t allocated_pmem = 0;
 
@@ -244,11 +244,11 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
         }
 
         if ( allocated_pmem != 0 ) {
-            spinlock_disable( &scheduler_lock );
+            scheduler_lock();
 
             context->process->pmem_size += allocated_pmem;
 
-            spinunlock_enable( &scheduler_lock );
+            scheduler_unlock();
         }
     }
 

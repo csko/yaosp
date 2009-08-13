@@ -24,11 +24,13 @@
 #include <scheduler.h>
 #include <macros.h>
 #include <kernel.h>
+#include <config.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>
 #include <arch/atomic.h>
 #include <arch/smp.h>
+#include <arch/interrupt.h>
 
 #ifdef ENABLE_SMP
 int processor_count = 0;
@@ -40,11 +42,18 @@ atomic_t active_processor_count = ATOMIC_INIT(0);
 cpu_t processor_table[ MAX_CPU_COUNT ];
 
 process_t* current_process( void ) {
-    return get_processor()->current_thread->process;
+    return current_thread()->process;
 }
 
 thread_t* current_thread( void ) {
-    return get_processor()->current_thread;
+    bool ints;
+    register thread_t* thread;
+
+    ints = disable_interrupts();
+    thread = get_processor()->current_thread;
+    if ( ints ) { enable_interrupts(); }
+
+    return thread;
 }
 
 thread_t* idle_thread( void ) {
@@ -72,6 +81,8 @@ uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_coun
         processor_info = &info_table[ i ];
 
         strncpy( processor_info->name, cpu->name, MAX_PROCESSOR_NAME_LENGTH );
+        processor_info->name[ MAX_PROCESSOR_NAME_LENGTH - 1 ] = 0;
+
         processor_info->present = cpu->present;
         processor_info->running = cpu->running;
         processor_info->core_speed = cpu->core_speed;
@@ -82,12 +93,16 @@ uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_coun
 }
 
 __init int init_smp( void ) {
-    atomic_inc( &active_processor_count );
+    cpu_t* boot_cpu;
 
     /* Make the boot CPU available */
 
-    processor_table[ 0 ].present = true;
-    processor_table[ 0 ].running = true;
+    atomic_inc( &active_processor_count );
+
+    boot_cpu = &processor_table[ 0 ];
+
+    boot_cpu->present = true;
+    boot_cpu->running = true;
 
 #ifdef ENABLE_SMP
     processor_activated();
@@ -99,20 +114,16 @@ __init int init_smp( void ) {
 __init int init_smp_late( void ) {
     int i;
     thread_id id;
+    cpu_t* processor;
 
-#ifdef ENABLE_SMP
-    /* If this is not an SMP system the processor_count won't be
-       increased so we just fix the value here manually. */
-
-    if ( processor_count == 0 ) {
-        processor_count = 1;
-    }
-#endif
+    ASSERT( processor_count > 0 );
 
     /* Create the idle thread for present processors */
 
-    for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
-        if ( !processor_table[ i ].present ) {
+    processor = processor_table;
+
+    for ( i = 0; i < MAX_CPU_COUNT; i++, processor++ ) {
+        if ( !processor->present ) {
             continue;
         }
 
@@ -128,13 +139,13 @@ __init int init_smp_late( void ) {
             return id;
         }
 
-        spinlock_disable( &scheduler_lock );
+        scheduler_lock();
 
-        processor_table[ i ].idle_thread = get_thread_by_id( id );
+        processor->idle_thread = get_thread_by_id( id );
 
-        spinunlock_enable( &scheduler_lock );
+        scheduler_unlock();
 
-        if ( processor_table[ i ].idle_thread == NULL ) {
+        if ( processor->idle_thread == NULL ) {
             return -EINVAL;
         }
     }

@@ -16,11 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <semaphore.h>
 #include <errno.h>
 #include <console.h>
 #include <kernel.h>
 #include <mm/kmalloc.h>
+#include <lock/mutex.h>
 #include <network/route.h>
 #include <lib/string.h>
 
@@ -29,8 +29,8 @@ typedef struct route_iterator_data {
     route_t* route;
 } route_iterator_data_t;
 
+static lock_id route_mutex;
 static hashtable_t route_table;
-static semaphore_id route_lock;
 
 route_t* create_route( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
     route_t* route;
@@ -60,12 +60,12 @@ int insert_route( route_t* route ) {
     int error;
     route_t* tmp;
 
-    LOCK( route_lock );
+    mutex_lock( route_mutex );
 
     tmp = ( route_t* )hashtable_get( &route_table, ( const void* )&route->network_addr[ 0 ] );
 
     if ( tmp != NULL ) {
-        kprintf( "NET: insert_route(): Route already present!\n" );
+        kprintf( WARNING, "NET: insert_route(): Route already present!\n" );
         error = -EINVAL;
         goto out;
     }
@@ -75,7 +75,7 @@ int insert_route( route_t* route ) {
     error = 0;
 
 out:
-    UNLOCK( route_lock );
+    mutex_unlock( route_mutex );
 
     return error;
 }
@@ -109,7 +109,7 @@ route_t* find_route( uint8_t* ipv4_address ) {
     data.ipv4_address = ipv4_address;
     data.route = NULL;
 
-    LOCK( route_lock );
+    mutex_lock( route_mutex );
 
     hashtable_iterate( &route_table, route_iterator, ( void* )&data );
 
@@ -117,7 +117,7 @@ route_t* find_route( uint8_t* ipv4_address ) {
         atomic_inc( &data.route->ref_count );
     }
 
-    UNLOCK( route_lock );
+    mutex_unlock( route_mutex );
 
     return data.route;
 }
@@ -127,14 +127,14 @@ void put_route( route_t* route ) {
 
     do_delete = false;
 
-    LOCK( route_lock );
+    mutex_lock( route_mutex );
 
     if ( atomic_dec_and_test( &route->ref_count ) ) {
         hashtable_remove( &route_table, ( const void* )&route->network_addr[ 0 ] );
         do_delete = true;
     }
 
-    UNLOCK( route_lock );
+    mutex_unlock( route_mutex );
 
     if ( do_delete ) {
         /* TODO: put the interface */
@@ -173,11 +173,11 @@ __init int init_routes( void ) {
         return error;
     }
 
-    route_lock = create_semaphore( "route lock", SEMAPHORE_BINARY, 0, 1 );
+    route_mutex = mutex_create( "route mutex", MUTEX_NONE );
 
-    if ( route_lock < 0 ) {
+    if ( route_mutex < 0 ) {
         destroy_hashtable( &route_table );
-        return route_lock;
+        return route_mutex;
     }
 
     return 0;

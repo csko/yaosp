@@ -20,9 +20,23 @@
 #define _CONSOLE_H_
 
 #include <types.h>
+#include <config.h>
 #include <lib/stdarg.h>
 
 struct console;
+
+#ifdef MK_RELEASE_BUILD
+#define DEBUG_LOG(args...)
+#else
+#define DEBUG_LOG(format, args...) kprintf( DEBUG, format, ##args )
+#endif /* MK_RELEASE_BUILD */
+
+enum {
+    DEBUG,
+    INFO,
+    WARNING,
+    ERROR
+};
 
 typedef enum console_color {
     COLOR_BLACK,
@@ -85,8 +99,8 @@ int console_switch_screen( console_t* new_console, console_t** old_console );
 
 int console_set_debug( console_t* console );
 
-int kprintf( const char* format, ... );
-int kvprintf( const char* format, va_list args );
+int kprintf( int loglevel, const char* format, ... );
+int kvprintf( int loglevel, const char* format, va_list args );
 
 int dprintf( const char* format, ... );
 int dprintf_unlocked( const char* format, ... );

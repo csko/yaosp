@@ -210,6 +210,7 @@ __init void arch_start( multiboot_header_t* header ) {
     init_screen();
 
     kprintf(
+        INFO,
         "Booting yaOSp %d.%d.%d built on %s %s.\n",
         KERNEL_MAJOR_VERSION,
         KERNEL_MINOR_VERSION,
@@ -220,24 +221,20 @@ __init void arch_start( multiboot_header_t* header ) {
 
     /* Setup our own Global Descriptor Table */
 
-    kprintf( "Initializing GDT ... " );
     init_gdt();
-    kprintf( "done\n" );
 
     /* Initialize CPU features */
 
     error = detect_cpu();
 
     if ( error < 0 ) {
-        kprintf( "Failed to detect CPU: %d\n", error );
+        kprintf( ERROR, "Failed to detect CPU: %d\n", error );
         return;
     }
 
     /* Initialize interrupts */
 
-    kprintf( "Initializing interrupts ... " );
     init_interrupts();
-    kprintf( "done\n" );
 
     /* Calibrate the boot CPU speed */
 
@@ -245,59 +242,44 @@ __init void arch_start( multiboot_header_t* header ) {
 
     /* Initializing bootmodules */
 
-    kprintf( "Initializing bootmodules ... " );
     init_bootmodules( header );
-    kprintf( "done\n" );
 
     if ( get_bootmodule_count() > 0 ) {
-        kprintf( "Loaded %d module(s)\n", get_bootmodule_count() );
+        kprintf( INFO, "Loaded %d module(s)\n", get_bootmodule_count() );
     }
 
     /* Initialize page allocator */
 
-    kprintf( "Initializing page allocator ... " );
-
     error = arch_init_page_allocator( header );
 
     if ( error < 0 ) {
-        kprintf( "failed (error=%d)\n", error );
+        kprintf( ERROR, "Failed to initialize page allocator (error=%d)\n", error );
         return;
     }
 
-    kprintf( "done\n" );
-    kprintf( "Free memory: %u Kb\n", get_free_page_count() * PAGE_SIZE / 1024 );
+    kprintf( INFO, "Free memory: %u Kb\n", get_free_page_count() * PAGE_SIZE / 1024 );
 
     /* Initialize kmalloc */
-
-    kprintf( "Initializing kmalloc ... " );
 
     error = init_kmalloc();
 
     if ( error < 0 ) {
-        kprintf( "failed (error=%d)\n", error );
+        kprintf( ERROR, "Failed to initialize kernel memory allocator (error=%d)\n", error );
         return;
     }
 
-    kprintf( "done\n" );
-
     /* Initialize memory region manager */
 
-    kprintf( "Initializing region manager ... " );
     preinit_regions();
-    kprintf( "done\n" );
 
     /* Initialize paging */
-
-    kprintf( "Initializing paging ... " );
 
     error = init_paging();
 
     if ( error < 0 ) {
-        kprintf( "failed (error=%d)\n", error );
+        kprintf( ERROR, "Failed to initialize paging (error=%d)\n", error );
         return;
     }
-
-    kprintf( "done\n" );
 
     /* Call the architecture independent entry
        point of the kernel */

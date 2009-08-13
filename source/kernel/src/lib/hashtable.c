@@ -250,8 +250,8 @@ uint32_t hash_number( uint8_t* data, size_t length ) {
 
     hash = 0;
 
-    for ( i = 0; i < length; i++ ) {
-        hash += data[ i ];
+    for ( i = 0; i < length; i++, data++ ) {
+        hash += *data;
         hash += ( hash << 10 );
         hash ^= ( hash >> 6 );
     }
@@ -267,8 +267,8 @@ uint32_t hash_string( uint8_t* data, size_t length ) {
     size_t i;
     uint32_t hash = 2166136261U;
 
-    for ( i = 0; i < length; i++ ) {
-        hash = ( hash ^ data[ i ] ) * 16777619;
+    for ( i = 0; i < length; i++, data++ ) {
+        hash = ( hash ^ ( *data ) ) * 16777619;
     }
 
     hash += hash << 13;
@@ -279,3 +279,50 @@ uint32_t hash_string( uint8_t* data, size_t length ) {
 
     return hash;
 }
+
+uint32_t hash_int( const void* key ) {
+    return hash_number( ( uint8_t* )key, sizeof( int ) );
+}
+
+uint32_t hash_int64( const void* key ) {
+    return hash_number( ( uint8_t* )key, sizeof( uint64_t ) );
+}
+
+uint32_t hash_str( const void* key ) {
+    const char* str;
+
+    str = ( const char* )key;
+
+    return hash_string( ( uint8_t* )str, strlen( str ) );
+}
+
+bool compare_int( const void* key1, const void* key2 ) {
+    int* int1;
+    int* int2;
+
+    int1 = ( int* )key1;
+    int2 = ( int* )key2;
+
+    return ( *int1 == *int2 );
+}
+
+bool compare_int64( const void* key1, const void* key2 ) {
+    uint64_t* int1;
+    uint64_t* int2;
+
+    int1 = ( uint64_t* )key1;
+    int2 = ( uint64_t* )key2;
+
+    return ( *int1 == *int2 );
+}
+
+bool compare_str( const void* key1, const void* key2 ) {
+    const char* str1;
+    const char* str2;
+
+    str1 = ( const char* )key1;
+    str2 = ( const char* )key2;
+
+    return ( strcmp( str1, str2 ) == 0 );
+}
+

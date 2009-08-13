@@ -20,7 +20,7 @@
 #define _VFS_VFS_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/condition.h>
 #include <kernel.h>
 #include <time.h> /* timeval_t */
 #include <vfs/inode.h>
@@ -118,7 +118,7 @@ typedef enum select_type {
 } select_type_t;
 
 typedef struct select_request {
-    semaphore_id sync;
+    lock_id sync;
     select_type_t type;
     bool ready;
     int fd;

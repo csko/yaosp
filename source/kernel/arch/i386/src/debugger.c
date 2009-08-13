@@ -54,20 +54,21 @@ static uint8_t dbg_keymap[ 128 ] = {
 
 int debug_print_stack_trace( void ) {
     int error;
-    register_t eip;
-    register_t ebp;
     thread_t* thread;
     symbol_info_t symbol_info;
+    i386_stack_frame_t* stack_frame;
 
-    ebp = get_ebp();
     thread = current_thread();
+    stack_frame = ( i386_stack_frame_t* )get_ebp();
 
-    kprintf( "Stack trace:\n" );
+    kprintf( INFO, "Stack trace:\n" );
 
-    while ( ebp != 0 ) {
-        eip = *( ( register_t* )( ebp + 4 ) );
+    while ( stack_frame != NULL ) {
+        register_t eip;
 
-        kprintf( "  %x", eip );
+        eip = stack_frame->eip;
+
+        kprintf( INFO, "  0x%08x", eip );
 
         if ( ( eip >= 0x100000 ) &&
              ( eip < ( ptr_t )&__kernel_end ) ) {
@@ -81,12 +82,12 @@ int debug_print_stack_trace( void ) {
         }
 
         if ( error >= 0 ) {
-            kprintf( " (%s+0x%x)", symbol_info.name, eip - symbol_info.address );
+            kprintf( INFO, " (%s+0x%x)", symbol_info.name, eip - symbol_info.address );
         }
 
-        kprintf( "\n" );
+        kprintf( INFO, "\n" );
 
-        ebp = *( ( register_t* )ebp );
+        stack_frame = ( i386_stack_frame_t* )stack_frame->ebp;
     }
 
     return 0;
@@ -220,7 +221,7 @@ void handle_debug_exception( registers_t* regs ) {
 #ifdef ENABLE_DEBUGGER
     start_kernel_debugger();
 #else
-    kprintf( "handle_debug_exception called!\n" );
+    kprintf( WARNING, "handle_debug_exception called!\n" );
  #endif /* ENABLE_DEBUGGER */
 
     halt_loop();

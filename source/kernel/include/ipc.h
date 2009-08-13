@@ -20,7 +20,7 @@
 #define _IPC_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/condition.h>
 
 typedef int ipc_port_id;
 
@@ -35,8 +35,8 @@ typedef struct ipc_port {
 
     ipc_port_id id;
 
-    semaphore_id queue_sync;
     size_t queue_size;
+    lock_id queue_condition;
     ipc_message_t* message_queue;
     ipc_message_t* message_queue_tail;
 } ipc_port_t;
