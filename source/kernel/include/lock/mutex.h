@@ -20,9 +20,9 @@
 #define _LOCK_MUTEX_H_
 
 #include <thread.h>
-#include <waitqueue.h>
 #include <time.h>
 #include <lock/context.h>
+#include <sched/waitqueue.h>
 
 enum mutex_flags {
     MUTEX_NONE = 0,

@@ -21,10 +21,10 @@
 #include <types.h>
 #include <thread.h>
 #include <errno.h>
-#include <scheduler.h>
 #include <macros.h>
 #include <kernel.h>
 #include <config.h>
+#include <sched/scheduler.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>

@@ -21,12 +21,12 @@
 #include <smp.h>
 #include <kernel.h>
 #include <macros.h>
-#include <scheduler.h>
 #include <console.h>
 #include <lock/mutex.h>
 #include <mm/region.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
+#include <sched/scheduler.h>
 #include <lib/string.h>
 
 #include <arch/mm/region.h>

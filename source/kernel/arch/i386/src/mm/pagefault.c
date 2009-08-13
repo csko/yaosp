@@ -21,9 +21,9 @@
 #include <smp.h>
 #include <errno.h>
 #include <macros.h>
-#include <scheduler.h>
 #include <debug.h>
 #include <signal.h>
+#include <sched/scheduler.h>
 #include <mm/region.h>
 #include <mm/context.h>
 #include <mm/pages.h>

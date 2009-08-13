@@ -18,8 +18,8 @@
 
 #include <errno.h>
 #include <kernel.h>
-#include <scheduler.h>
 #include <process.h>
+#include <sched/scheduler.h>
 #include <mm/pages.h>
 
 #include <arch/smp.h>

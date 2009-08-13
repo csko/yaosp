@@ -16,9 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <waitqueue.h>
 #include <macros.h>
-#include <scheduler.h>
+#include <sched/waitqueue.h>
+#include <sched/scheduler.h>
 
 int waitqueue_add_node( waitqueue_t* queue, waitnode_t* node ) {
     waitnode_t* current;

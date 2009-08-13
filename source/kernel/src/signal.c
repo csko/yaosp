@@ -19,13 +19,13 @@
 #include <types.h>
 #include <signal.h>
 #include <thread.h>
-#include <scheduler.h>
 #include <console.h>
 #include <errno.h>
 #include <smp.h>
 #include <debug.h>
 #include <kernel.h>
 #include <macros.h>
+#include <sched/scheduler.h>
 #include <lib/string.h>
 
 #define BLOCKABLE_SIGNALS ~( ( 1ULL << ( SIGKILL - 1 ) ) | ( 1ULL << ( SIGSTOP - 1 ) ) )

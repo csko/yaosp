@@ -20,7 +20,7 @@
 #include <types.h>
 #include <kernel.h>
 #include <macros.h>
-#include <scheduler.h>
+#include <sched/scheduler.h>
 #include <mm/context.h>
 #include <mm/pages.h>
 #include <mm/region.h>

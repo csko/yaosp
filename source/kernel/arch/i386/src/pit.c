@@ -19,9 +19,9 @@
 
 #include <irq.h>
 #include <console.h>
-#include <scheduler.h>
 #include <time.h>
 #include <kernel.h>
+#include <sched/scheduler.h>
 
 #include <arch/pit.h>
 #include <arch/io.h>

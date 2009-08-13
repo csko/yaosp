@@ -21,11 +21,11 @@
 #include <macros.h>
 #include <kernel.h>
 #include <process.h>
-#include <scheduler.h>
 #include <console.h>
 #include <lock/mutex.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
+#include <sched/scheduler.h>
 #include <lib/string.h>
 
 #include <arch/mm/config.h>

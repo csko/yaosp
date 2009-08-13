@@ -19,7 +19,6 @@
 #include <console.h>
 #include <process.h>
 #include <thread.h>
-#include <scheduler.h>
 #include <kernel.h>
 #include <module.h>
 #include <devices.h>
@@ -31,6 +30,7 @@
 #include <ipc.h>
 #include <debug.h>
 #include <symbols.h>
+#include <sched/scheduler.h>
 #include <lock/context.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>

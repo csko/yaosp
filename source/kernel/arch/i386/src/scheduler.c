@@ -17,9 +17,9 @@
  */
 
 #include <types.h>
-#include <scheduler.h>
 #include <smp.h>
 #include <macros.h>
+#include <sched/scheduler.h>
 
 #include <arch/thread.h>
 #include <arch/cpu.h>

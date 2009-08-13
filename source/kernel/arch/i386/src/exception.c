@@ -18,8 +18,8 @@
 
 #include <types.h>
 #include <console.h>
-#include <scheduler.h>
 #include <loader.h>
+#include <sched/scheduler.h>
 #include <lib/string.h>
 
 #include <arch/cpu.h>

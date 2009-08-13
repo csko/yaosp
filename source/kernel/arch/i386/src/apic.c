@@ -19,10 +19,10 @@
 #include <types.h>
 #include <errno.h>
 #include <console.h>
-#include <scheduler.h>
 #include <config.h>
 #include <kernel.h>
 #include <mm/region.h>
+#include <sched/scheduler.h>
 
 #include <arch/apic.h>
 #include <arch/cpu.h>

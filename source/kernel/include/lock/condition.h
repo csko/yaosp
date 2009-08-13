@@ -20,9 +20,9 @@
 #define _LOCK_CONDITION_H_
 
 #include <thread.h>
-#include <waitqueue.h>
 #include <time.h>
 #include <lock/context.h>
+#include <sched/waitqueue.h>
 
 typedef struct condition {
     lock_header_t header;

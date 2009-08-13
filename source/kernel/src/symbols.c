@@ -19,30 +19,8 @@
 
 #include <symbols.h>
 #include <errno.h>
-#include <console.h>
-#include <devices.h>
-#include <thread.h>
-#include <irq.h>
-#include <scheduler.h>
-#include <process.h>
-#include <debug.h>
 #include <mm/kmalloc.h>
-#include <mm/pages.h>
-#include <vfs/devfs.h>
-#include <vfs/filesystem.h>
-#include <vfs/vfs.h>
-#include <vfs/blockcache.h>
-#include <network/packet.h>
 #include <lib/string.h>
-#include <lib/hashtable.h>
-#include <lib/ctype.h>
-#include <lib/stack.h>
-
-#include <arch/atomic.h>
-#include <arch/spinlock.h>
-#include <arch/interrupt.h>
-#include <arch/pit.h>
-#include <arch/bios.h>
 
 static hashtable_t kernel_symbol_table;
 

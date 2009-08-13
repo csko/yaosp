@@ -20,11 +20,11 @@
 #include <errno.h>
 #include <console.h>
 #include <smp.h>
-#include <scheduler.h>
 #include <kernel.h>
 #include <macros.h>
 #include <mm/context.h>
 #include <mm/kmalloc.h>
+#include <sched/scheduler.h>
 #include <vfs/vfs.h>
 
 #define USER_STACK_PAGES ( USER_STACK_SIZE / PAGE_SIZE )

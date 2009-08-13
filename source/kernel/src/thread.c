@@ -19,13 +19,12 @@
 #include <thread.h>
 #include <errno.h>
 #include <kernel.h>
-#include <scheduler.h>
 #include <smp.h>
-#include <waitqueue.h>
 #include <macros.h>
 #include <console.h>
 #include <signal.h>
 #include <debug.h>
+#include <sched/scheduler.h>
 #include <mm/kmalloc.h>
 #include <mm/pages.h>
 #include <lib/hashtable.h>

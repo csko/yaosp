@@ -20,10 +20,10 @@
 #include <smp.h>
 #include <errno.h>
 #include <thread.h>
-#include <scheduler.h>
 #include <macros.h>
 #include <console.h>
 #include <mm/context.h>
+#include <sched/scheduler.h>
 #include <lib/string.h>
 
 #include <arch/fork.h>

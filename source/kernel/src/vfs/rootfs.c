@@ -19,7 +19,6 @@
 
 #include <types.h>
 #include <errno.h>
-#include <scheduler.h>
 #include <kernel.h>
 #include <macros.h>
 #include <time.h>

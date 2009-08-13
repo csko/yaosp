@@ -19,10 +19,10 @@
 #include <process.h>
 #include <errno.h>
 #include <smp.h>
-#include <scheduler.h>
 #include <macros.h>
 #include <kernel.h>
 #include <console.h>
+#include <sched/scheduler.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
 #include <vfs/vfs.h>

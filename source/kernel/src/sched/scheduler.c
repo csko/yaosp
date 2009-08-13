@@ -17,11 +17,11 @@
  */
 
 #include <thread.h>
-#include <scheduler.h>
 #include <console.h>
 #include <smp.h>
 #include <kernel.h>
 #include <macros.h>
+#include <sched/scheduler.h>
 
 #include <arch/pit.h> /* get_system_time() */
 

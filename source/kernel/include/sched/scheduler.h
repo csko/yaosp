@@ -21,7 +21,7 @@
 
 #include <types.h>
 #include <thread.h>
-#include <waitqueue.h>
+#include <sched/waitqueue.h>
 
 #include <arch/spinlock.h>
 

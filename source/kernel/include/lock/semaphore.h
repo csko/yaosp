@@ -20,8 +20,8 @@
 #define _LOCK_SEMAPHORE_H_
 
 #include <time.h>
-#include <waitqueue.h>
 #include <lock/context.h>
+#include <sched/waitqueue.h>
 
 typedef struct semaphore {
     lock_header_t header;

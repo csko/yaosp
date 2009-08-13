@@ -19,11 +19,11 @@
 #include <errno.h>
 #include <macros.h>
 #include <smp.h>
-#include <scheduler.h>
 #include <console.h>
 #include <mm/kmalloc.h>
 #include <lock/condition.h>
 #include <lock/mutex.h>
+#include <sched/scheduler.h>
 #include <lib/string.h>
 
 #include <arch/pit.h>
