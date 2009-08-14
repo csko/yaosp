@@ -21,6 +21,10 @@
 
 #include <sys/time.h>
 
+#define RUSAGE_SELF 1
+#define RUSAGE_CHILDREN 2
+#define RUSAGE_THREAD 3
+
 struct rusage {
     struct timeval ru_utime; /* user time used */
     struct timeval ru_stime; /* system time used */
@@ -39,5 +43,7 @@ struct rusage {
     long   ru_nvcsw;         /* voluntary context switches */
     long   ru_nivcsw;        /* involuntary context switches */
 };
+
+int getrusage( int who, struct rusage* usage );
 
 #endif /* _SYS_RESOURCE_H_ */

@@ -25,6 +25,10 @@
 #define time_t uint64_t
 #define suseconds_t int
 
+#define RUSAGE_SELF 1
+#define RUSAGE_CHILDREN 2
+#define RUSAGE_THREAD 3
+
 typedef struct timeval {
     time_t      tv_sec;    /* Seconds */
     suseconds_t tv_usec;   /* Microseconds */

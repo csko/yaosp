@@ -30,11 +30,12 @@
 #include <syscall.h>
 #include <mm/userspace.h>
 #include <mm/pages.h>
+#include <sched/scheduler.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
 #include <lock/mutex.h>
 
-#include <arch/interrupt.h>
+#include <arch/pit.h>
 
 static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK },
@@ -121,10 +122,14 @@ static system_call_entry_t system_call_table[] = {
     { "condition_signal", sys_condition_signal, 0 },
     { "condition_broadcast", sys_condition_broadcast, 0 },
     { "condition_create", sys_condition_create, 0 },
-    { "condition_destroy", sys_condition_destroy, 0 }
+    { "condition_destroy", sys_condition_destroy, 0 },
+    { "getrusage", sys_getrusage, 0 }
 };
 
-int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {
+int handle_system_call( uint32_t number, uint32_t* params, void* stack ) {
+    int result;
+    uint64_t now;
+    thread_t* thread;
     system_call_t* syscall;
     system_call_entry_t* syscall_entry;
 
@@ -134,23 +139,48 @@ int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {
         return -EINVAL;
     }
 
+    thread = current_thread();
     syscall_entry = &system_call_table[ number ];
+
+    /* Update timing information of the thread */
+
+    now = get_system_time();
+
+    scheduler_lock();
+    thread->in_system = 1;
+    thread->user_time += ( now - thread->prev_checkpoint );
+    thread->prev_checkpoint = now;
+    scheduler_unlock();
 
     /* Save the stack after the system call */
 
     if ( __unlikely( syscall_entry->flags & SYSCALL_SAVE_STACK ) ) {
-        current_thread()->syscall_stack = stack;
+        thread->syscall_stack = stack;
     }
 
     syscall = ( system_call_t* )syscall_entry->function;
 
     /* Call the function associated with the system call number */
 
-    return syscall(
-        parameters[ 0 ],
-        parameters[ 1 ],
-        parameters[ 2 ],
-        parameters[ 3 ],
-        parameters[ 4 ]
+    result = syscall(
+        params[ 0 ],
+        params[ 1 ],
+        params[ 2 ],
+        params[ 3 ],
+        params[ 4 ]
     );
+
+    /* Update timing information again :) */
+
+    ASSERT( thread->in_system );
+
+    now = get_system_time();
+
+    scheduler_lock();
+    thread->in_system = 0;
+    thread->sys_time += ( now - thread->prev_checkpoint );
+    thread->prev_checkpoint = now;
+    scheduler_unlock();
+
+    return result;
 }

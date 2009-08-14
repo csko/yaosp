@@ -62,7 +62,7 @@ int schedule( registers_t* regs ) {
 
     /* Ask the scheduler to select the next thread to run */
 
-    next = do_schedule();
+    next = do_schedule( current );
 
     arch_thread = ( i386_thread_t* )next->arch_data;
     arch_mem_context = ( i386_memory_context_t* )next->process->memory_context->arch_data;

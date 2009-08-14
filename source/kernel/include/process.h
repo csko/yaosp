@@ -77,6 +77,7 @@ uint32_t sys_get_process_info( process_info_t* info_table, uint32_t max_count );
 process_id sys_getpid( void );
 int sys_exit( int exit_code );
 process_id sys_wait4( process_id pid, int* status, int options, struct rusage* rusage );
+int sys_getrusage( int who, struct rusage* usage );
 
 int init_processes( void );
 

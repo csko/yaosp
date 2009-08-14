@@ -302,6 +302,8 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
         goto error2;
     }
 
+    thread->in_system = 1;
+
     current = current_thread();
 
     if ( current != NULL ) {
@@ -385,6 +387,7 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
         goto error2;
     }
 
+    thread->in_system = 0;
     thread->parent_id = current->id;
 
     /* Get an unique ID to the new thread and add to the others */

@@ -82,67 +82,89 @@ static void swap_expired_and_ready_lists( void ) {
     last_expired = NULL;
 }
 
-thread_t* do_schedule( void ) {
+static void update_prev_thread( thread_t* thread, uint64_t now ) {
+    uint64_t runtime;
+    uint64_t time_used;
+
+    /* Calculate the time how long the previous thread
+       was running */
+
+    runtime = now - thread->exec_time;
+    time_used = now - thread->prev_checkpoint;
+
+    thread->cpu_time += runtime;
+
+    if ( thread->in_system ) {
+        thread->sys_time += time_used;
+    } else {
+        thread->user_time += time_used;
+    }
+
+    /* Handle the idle thread separately */
+
+    if ( thread == idle_thread() ) {
+        thread->state = THREAD_WAITING;
+
+        return;
+    }
+
+    switch ( thread->state ) {
+        case THREAD_RUNNING :
+            if ( runtime >= thread->quantum ) {
+                add_thread_to_expired( thread );
+            } else {
+                thread->quantum -= runtime;
+                add_thread_to_ready( thread );
+            }
+
+            break;
+
+        case THREAD_READY :
+            /* The thread tried to sleep but it was woken up before
+               it could get to the scheduler */
+            break;
+
+        case THREAD_WAITING :
+        case THREAD_SLEEPING :
+            if ( runtime >= thread->quantum ) {
+                /* 0 as a quantum is used to tell the wakeup functions
+                   that this thread has to be added to the expired list
+                   instead of the ready */
+
+                thread->quantum = 0;
+            } else {
+                thread->quantum -= runtime;
+            }
+
+            break;
+
+        case THREAD_ZOMBIE :
+            break;
+
+        default :
+            panic(
+                "Thread %s with invalid state (%d) in the scheduler!\n",
+                thread->name,
+                thread->state
+            );
+
+            break;
+    }
+}
+
+static void update_next_thread( thread_t* thread, uint64_t now ) {
+    thread->exec_time = now;
+    thread->prev_checkpoint = now;
+}
+
+thread_t* do_schedule( thread_t* current ) {
     uint64_t now;
     thread_t* next;
-    thread_t* current;
 
     now = get_system_time();
-    current = current_thread();
 
     if ( __likely( current != NULL ) ) {
-        /* Calculate the time how long the previous thread
-           was running */
-
-        uint64_t runtime = now - current->exec_time;
-
-        current->cpu_time += runtime;
-
-        if ( current != idle_thread() ) {
-            switch ( current->state ) {
-                case THREAD_RUNNING :
-                    if ( runtime >= current->quantum ) {
-                        add_thread_to_expired( current );
-                    } else {
-                        current->quantum -= runtime;
-                        add_thread_to_ready( current );
-                    }
-
-                    break;
-
-                case THREAD_READY :
-                    /* The thread tried to sleep but it was woken up before
-                       it could get to the scheduler */
-                    break;
-
-                case THREAD_WAITING :
-                case THREAD_SLEEPING :
-                    if ( runtime >= current->quantum ) {
-                        /* 0 as a quantum is used to tell the wakeup functions
-                           that this thread has to be added to the expired list
-                           instead of the ready */
-
-                        current->quantum = 0;
-                    } else {
-                        current->quantum -= runtime;
-                    }
-
-                    break;
-
-                case THREAD_ZOMBIE :
-                    break;
-
-                default :
-                    panic(
-                        "Thread %s with invalid state (%d) in the scheduler!\n",
-                        current->name,
-                        current->state
-                    );
-                    break;
-            }
-        } else {
-            current->state = THREAD_WAITING;
-        }
+        update_prev_thread( current, now );
     }
 
     /* Swap the expired and ready thread lists if the ready list is
@@ -168,7 +190,7 @@ thread_t* do_schedule( void ) {
 
     /* Save the execution time of the next thread */
 
-    next->exec_time = now;
+    update_next_thread( next, now );
 
     return next;
 }

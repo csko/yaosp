@@ -348,6 +348,25 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
                 *status = 0;
             }
 
+            if ( rusage != NULL ) {
+                struct timeval* tv;
+
+                tv = &rusage->ru_utime;
+
+                tv->tv_sec = tmp->user_time / 1000000;
+                tv->tv_usec = tmp->user_time % 1000000;
+
+                DEBUG_LOG( "Thread: %s:%s\n", tmp->process->name, tmp->name );
+                DEBUG_LOG( "System time: %llu.%llu\n", tv->tv_sec, tv->tv_usec );
+
+                tv = &rusage->ru_stime;
+
+                tv->tv_sec = tmp->sys_time / 1000000;
+                tv->tv_usec = tmp->user_time % 1000000;
+
+                DEBUG_LOG( "User time: %llu.%llu\n", tv->tv_sec, tv->tv_usec );
+            }
+
             destroy_thread( tmp );
 
             return error;
@@ -375,6 +394,66 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
     /* This is never reached :) */
 
     return -EINVAL;
+}
+
+int sys_getrusage( int who, struct rusage* usage ) {
+    thread_t* thread;
+    struct timeval* tv;
+
+    thread = current_thread();
+
+    switch ( who ) {
+        case RUSAGE_SELF :
+            scheduler_lock();
+
+            tv = &usage->ru_utime;
+            tv->tv_sec = thread->user_time / 1000000;
+            tv->tv_usec = thread->user_time % 1000000;
+
+            tv = &usage->ru_stime;
+            tv->tv_sec = thread->sys_time / 1000000;
+            tv->tv_usec = thread->sys_time % 1000000;
+
+            scheduler_unlock();
+
+            /* TODO: add time usage from other threads as well */
+
+            break;
+
+        case RUSAGE_CHILDREN :
+            kprintf(
+                WARNING,
+                "sys_getrusage(): RUSAGE_CHILDREN not yet implemented!\n"
+            );
+
+            return -ENOSYS;
+
+        case RUSAGE_THREAD :
+            scheduler_lock();
+
+            tv = &usage->ru_utime;
+            tv->tv_sec = thread->user_time / 1000000;
+            tv->tv_usec = thread->user_time % 1000000;
+
+            tv = &usage->ru_stime;
+            tv->tv_sec = thread->sys_time / 1000000;
+            tv->tv_usec = thread->sys_time % 1000000;
+
+            scheduler_unlock();
+
+            break;
+
+        default :
+            kprintf(
+                WARNING,
+                "sys_getrusage(): Invalid request: %d\n",
+                who
+            );
+
+            return -EINVAL;
+    }
+
+    return 0;
 }
 
 static void* process_key( hashitem_t* item ) {

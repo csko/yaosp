@@ -72,6 +72,11 @@ typedef struct thread {
     uint64_t exec_time;
     uint64_t cpu_time;
 
+    int in_system;
+    uint64_t sys_time;
+    uint64_t user_time;
+    uint64_t prev_checkpoint;
+
     /* Kernel & user stack */
 
     uint32_t kernel_stack_pages;
