@@ -35,6 +35,7 @@
 .global clear_task_switched
 .global set_task_switched
 .global flush_tlb
+.global invlpg
 .global halt_loop
 
 /* register_t get_eflags( void ) */
@@ -153,6 +154,13 @@ flush_tlb:
     movl %eax, %cr3
     ret
 .size flush_tlb,.-flush_tlb
+
+/* void invlpg( uint32_t address ) */
+.type invlpg, @function
+invlpg:
+    invlpg 4(%esp)
+    ret
+.size invlpg,.-invlpg
 
 /* void halt_loop( void ) */
 

@@ -94,11 +94,6 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
 
     *pt_entry = ( uint32_t )p | PRESENT | WRITE | USER;
 
-    /* Invalidate the TLB because we just mapped a new page */
-
-    /* TOOD: use invlpg instead of flush_tlb()! */
-    flush_tlb();
-
     return 0;
 }
 
@@ -209,10 +204,6 @@ static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_
     if ( __unlikely( error < 0 ) ) {
         return error;
     }
-
-    /* Invalidate the TLB */
-
-    flush_tlb();
 
     *pages_loaded = page_count;
 

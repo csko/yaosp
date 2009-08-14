@@ -599,6 +599,7 @@ __init static int create_initial_region( const char* name, uint32_t start, uint3
 __init int init_paging( void ) {
     int error;
     uint32_t ro_size;
+    uint32_t heap_size;
     register_t dummy;
     memory_context_t* context;
     i386_memory_context_t* arch_context;
@@ -647,11 +648,13 @@ __init int init_paging( void ) {
         false
     );
 
+    heap_size = MIN( get_total_page_count() * PAGE_SIZE, 512 * 1024 * 1024 ) - ( 1 * 1024 * 1024 + ro_size );
+
     map_region_pages(
         arch_context,
         1 * 1024 * 1024 + ro_size,
         1 * 1024 * 1024 + ro_size,
-        512 * 1024 * 1024 - ( 1 * 1024 * 1024 + ro_size ),
+        heap_size,
         true,
         true
     );
@@ -681,7 +684,7 @@ __init int init_paging( void ) {
     error = create_initial_region(
         "kernel_rw",
         1 * 1024 * 1024 + ro_size,
-        MIN( get_total_page_count() * PAGE_SIZE, 512 * 1024 * 1024 ) - ( 1 * 1024 * 1024 + ro_size ),
+        heap_size,
         true
     );
 
