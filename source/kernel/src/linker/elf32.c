@@ -24,36 +24,12 @@
 #include <symbols.h>
 #include <errno.h>
 #include <mm/kmalloc.h>
+#include <linker/elf32.h>
 #include <lib/string.h>
-
-#include <arch/elf32.h>
 
 extern multiboot_header_t mb_header;
 
-bool elf32_check( elf_header_t* header ) {
-    if ( ( header->ident[ ID_MAGIC0 ] != ELF32_MAGIC0 ) ||
-         ( header->ident[ ID_MAGIC1 ] != ELF32_MAGIC1 ) ||
-         ( header->ident[ ID_MAGIC2 ] != ELF32_MAGIC2 ) ||
-         ( header->ident[ ID_MAGIC3 ] != ELF32_MAGIC3 ) ) {
-        return false;
-    }
-
-    if ( header->ident[ ID_CLASS ] != ELF_CLASS_32 ) {
-        return false;
-    }
-
-    if ( header->ident[ ID_DATA ] != ELF_DATA_2_LSB ) {
-        return false;
-    }
-
-    if ( header->machine != ELF_EM_386 ) {
-        return false;
-    }
-
-    return true;
-}
-
-int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader ) {
+int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader, uint16_t type ) {
     int error;
 
     error = loader->read(
@@ -67,13 +43,7 @@ int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* l
         return -EIO;
     }
 
-    if ( ( info->header.ident[ ID_MAGIC0 ] != ELF32_MAGIC0 ) ||
-         ( info->header.ident[ ID_MAGIC1 ] != ELF32_MAGIC1 ) ||
-         ( info->header.ident[ ID_MAGIC2 ] != ELF32_MAGIC2 ) ||
-         ( info->header.ident[ ID_MAGIC3 ] != ELF32_MAGIC3 ) ||
-         ( info->header.ident[ ID_CLASS ] != ELF_CLASS_32 ) ||
-         ( info->header.ident[ ID_DATA ] != ELF_DATA_2_LSB ) ||
-         ( info->header.machine != ELF_EM_386 ) ) {
+    if ( !elf_check_header( &info->header, ELF_CLASS_32, ELF_DATA_2_LSB, type, ELF_MACHINE_386 ) ) {
         return -EINVAL;
     }
 

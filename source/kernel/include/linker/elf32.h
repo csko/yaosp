@@ -23,6 +23,7 @@
 #include <types.h>
 #include <loader.h>
 #include <mm/region.h>
+#include <linker/elf.h>
 #include <lib/hashtable.h>
 
 #define ELF32_R_SYM(i)  ((i)>>8)
@@ -30,36 +31,6 @@
 
 #define ELF32_ST_BIND(i) ((i)>>4)
 #define ELF32_ST_TYPE(i) ((i)&0xF)
-
-enum {
-    ID_MAGIC0 = 0,
-    ID_MAGIC1,
-    ID_MAGIC2,
-    ID_MAGIC3,
-    ID_CLASS,
-    ID_DATA,
-    ID_VERSION,
-    ID_SIZE = 16
-};
-
-enum {
-    ELF32_MAGIC0 = 0x7F,
-    ELF32_MAGIC1 = 'E',
-    ELF32_MAGIC2 = 'L',
-    ELF32_MAGIC3 = 'F'
-};
-
-enum {
-    ELF_CLASS_32 = 1
-};
-
-enum {
-    ELF_DATA_2_LSB = 1
-};
-
-enum {
-    ELF_EM_386 = 3
-};
 
 enum {
     SECTION_NULL = 0,
@@ -99,23 +70,6 @@ enum {
     STT_OBJECT = 1,
     STT_FUNC = 2
 };
-
-typedef struct elf_header {
-    unsigned char ident[ ID_SIZE ];
-    uint16_t type;
-    uint16_t machine;
-    uint32_t version;
-    uint32_t entry;
-    uint32_t phoff;
-    uint32_t shoff;
-    uint32_t flags;
-    uint16_t ehsize;
-    uint16_t phentsize;
-    uint16_t phnum;
-    uint16_t shentsize;
-    uint16_t shnum;
-    uint16_t shstrndx;
-} __attribute__(( packed )) elf_header_t;
 
 typedef struct elf_section_header {
     uint32_t name;
@@ -193,9 +147,7 @@ typedef struct elf_application {
     region_id data_region;
 } elf_application_t;
 
-bool elf32_check( elf_header_t* header );
-
-int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader );
+int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader, uint16_t type );
 int elf32_load_section_headers( elf32_image_info_t* info, binary_loader_t* loader );
 int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* loader );
 

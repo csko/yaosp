@@ -23,11 +23,11 @@
 #include <kernel.h>
 #include <symbols.h>
 #include <macros.h>
+#include <linker/elf32.h>
 #include <mm/kmalloc.h>
 #include <mm/region.h>
 #include <lib/string.h>
 
-#include <arch/elf32.h>
 #include <arch/mm/config.h>
 
 static bool elf32_module_check( binary_loader_t* loader ) {
@@ -40,7 +40,7 @@ static bool elf32_module_check( binary_loader_t* loader ) {
         return false;
     }
 
-    error = elf32_load_and_validate_header( &info, loader );
+    error = elf32_load_and_validate_header( &info, loader, ELF_TYPE_DYN );
 
     elf32_destroy_image_info( &info );
 
@@ -301,7 +301,7 @@ static int elf32_module_load( module_t* module, binary_loader_t* loader ) {
         goto error2;
     }
 
-    error = elf32_load_and_validate_header( &elf_module->image_info, loader );
+    error = elf32_load_and_validate_header( &elf_module->image_info, loader, ELF_TYPE_DYN );
 
     if ( __unlikely( error < 0 ) ) {
         goto error3;

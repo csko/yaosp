@@ -23,11 +23,11 @@
 #include <config.h>
 #include <kernel.h>
 #include <macros.h>
+#include <linker/elf32.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
-#include <arch/elf32.h>
 #include <arch/gdt.h>
 #include <arch/mm/paging.h>
 
@@ -41,7 +41,7 @@ static bool elf32_application_check( binary_loader_t* loader ) {
         return false;
     }
 
-    error = elf32_load_and_validate_header( &info, loader );
+    error = elf32_load_and_validate_header( &info, loader, ELF_TYPE_EXEC );
 
     elf32_destroy_image_info( &info );
 
@@ -179,7 +179,7 @@ static int elf32_application_load( binary_loader_t* loader ) {
         goto error2;
     }
 
-    error = elf32_load_and_validate_header( &elf_application->image_info, loader );
+    error = elf32_load_and_validate_header( &elf_application->image_info, loader, ELF_TYPE_EXEC );
 
     if ( __unlikely( error < 0 ) ) {
         goto error3;

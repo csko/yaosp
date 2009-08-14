@@ -23,6 +23,7 @@
 #include <bootmodule.h>
 #include <version.h>
 #include <macros.h>
+#include <linker/elf32.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
 #include <mm/region.h>
@@ -33,7 +34,6 @@
 #include <arch/cpu.h>
 #include <arch/interrupt.h>
 #include <arch/pit.h>
-#include <arch/elf32.h>
 #include <arch/io.h>
 #include <arch/mp.h>
 #include <arch/apic.h>
