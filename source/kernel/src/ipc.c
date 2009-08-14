@@ -174,7 +174,8 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         goto error2;
     }
 
-    if ( timeout > 0 ) {
+    if ( ( port->message_queue == NULL ) &&
+         ( timeout > 0 ) ) {
         error = condition_timedwait( port->queue_condition, ipc_port_mutex, timeout );
 
         if ( error < 0 ) {
@@ -232,10 +233,13 @@ error1:
     return error;
 }
 
-int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uint64_t* timeout ) {
+int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uint64_t* _timeout ) {
     int error;
     ipc_port_t* port;
+    uint64_t timeout;
     ipc_message_t* message;
+
+    timeout = *_timeout;
 
     mutex_lock( ipc_port_mutex );
 
@@ -246,17 +250,20 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
         goto error2;
     }
 
-    error = condition_timedwait( port->queue_condition, ipc_port_mutex, *timeout );
+    if ( ( port->message_queue == NULL ) &&
+         ( timeout > 0 ) ) {
+        error = condition_timedwait( port->queue_condition, ipc_port_mutex, timeout );
 
-    if ( error < 0 ) {
-        goto error1;
-    }
+        if ( error < 0 ) {
+            goto error1;
+        }
 
-    port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
+        port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
-    if ( port == NULL ) {
-        error = -EINVAL;
-        goto error2;
+        if ( port == NULL ) {
+            error = -EINVAL;
+            goto error2;
+        }
     }
 
     if ( port->message_queue == NULL ) {

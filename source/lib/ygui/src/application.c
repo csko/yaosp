@@ -50,8 +50,10 @@ int create_application( void ) {
             break;
         }
 
-        slp_time.tv_sec = 1;
-        slp_time.tv_nsec = 0;
+        /* Wait 200ms ... */
+
+        slp_time.tv_sec = 0;
+        slp_time.tv_nsec = 200 * 1000 * 1000;
 
         nanosleep( &slp_time, NULL );
     }
