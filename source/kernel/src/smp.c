@@ -32,6 +32,8 @@
 #include <arch/smp.h>
 #include <arch/interrupt.h>
 
+#include <debug.h>
+
 #ifdef ENABLE_SMP
 int processor_count = 0;
 #else

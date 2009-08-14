@@ -34,6 +34,8 @@
 #include <network/socket.h>
 #include <lock/mutex.h>
 
+#include <arch/interrupt.h>
+
 static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK },
     { "execve", sys_execve, SYSCALL_SAVE_STACK },
@@ -136,7 +138,7 @@ int handle_system_call( uint32_t number, uint32_t* parameters, void* stack ) {
 
     /* Save the stack after the system call */
 
-    if ( syscall_entry->flags & SYSCALL_SAVE_STACK ) {
+    if ( __unlikely( syscall_entry->flags & SYSCALL_SAVE_STACK ) ) {
         current_thread()->syscall_stack = stack;
     }
 

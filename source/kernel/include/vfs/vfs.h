@@ -213,4 +213,4 @@ int sys_utime( const char* filename, const struct utimbuf* times );
 
 int init_vfs( void );
 
-#endif // _VFS_VFS_H_
+#endif /* _VFS_VFS_H_ */

@@ -19,7 +19,7 @@
 #include <console.h>
 #include <thread.h>
 #include <macros.h>
-#include <lock/condition.h>
+#include <lock/semaphore.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
@@ -54,7 +54,7 @@ static void kterm_putchar( console_t* console, char c ) {
 }
 
 static void kterm_flush( console_t* console ) {
-    condition_signal( kterm_sync );
+    semaphore_unlock( kterm_sync, 1 );
 }
 
 static console_operations_t kterm_console_ops = {
@@ -78,7 +78,7 @@ static int kterm_flusher_thread( void* arg ) {
 
     while ( 1 ) {
         if ( !more_data ) {
-            condition_wait( kterm_sync, -1 );
+            semaphore_lock( kterm_sync, 1 );
         }
 
         spinlock_disable( &kterm_lock );
@@ -131,7 +131,7 @@ int init_kernel_terminal( void ) {
     read_pos = 0;
     write_pos = 0;
 
-    kterm_sync = condition_create( "kterm sync" );
+    kterm_sync = semaphore_create( "kterm wait semaphore", 0 );
 
     if ( kterm_sync < 0 ) {
         close( kterm_tty );
@@ -144,7 +144,7 @@ int init_kernel_terminal( void ) {
 
     if ( kterm_flusher < 0 ) {
         close( kterm_tty );
-        condition_destroy( kterm_sync );
+        semaphore_destroy( kterm_sync );
         return kterm_flusher;
     }
 

@@ -22,23 +22,21 @@
 #include <macros.h>
 #include <mm/kmalloc.h>
 #include <lock/mutex.h>
+#include <lock/common.h>
 #include <sched/scheduler.h>
 #include <lib/string.h>
 
 #include <arch/pit.h>
 
 int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread, time_t timeout, bool try_lock ) {
+    int error;
     lock_id mutex_id;
     uint64_t wakeup_time;
-    lock_header_t* header;
 
     mutex_id = mutex->header.id;
     wakeup_time = get_system_time() + timeout;
 
     while ( mutex->holder != -1 ) {
-        waitnode_t waitnode;
-        waitnode_t sleepnode;
-
         /* Handle recursive mutexes */
 
         if ( ( mutex->holder == thread->id ) &&
@@ -57,48 +55,17 @@ int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread,
             return -ETIME;
         }
 
-        spinlock( &scheduler_lock );
-
-        waitnode.thread = thread->id;
-        waitnode.in_queue = false;
-
-        waitqueue_add_node_tail( &mutex->waiters, &waitnode );
+        /* Wait for the mutex to be released */
 
         if ( timeout != INFINITE_TIMEOUT ) {
-            sleepnode.thread = thread->id;
-            sleepnode.wakeup_time = wakeup_time;
-            sleepnode.in_queue = false;
-
-            waitqueue_add_node( &sleep_queue, &sleepnode );
+            error = lock_timed_wait_on( context, thread, MUTEX, mutex->header.id, &mutex->waiters, wakeup_time );
+        } else {
+            error = lock_wait_on( context, thread, MUTEX, mutex->header.id, &mutex->waiters );
         }
 
-        thread->state = THREAD_WAITING;
-        thread->blocking_semaphore = mutex_id; /* TODO */
-
-        spinunlock( &scheduler_lock );
-        spinunlock_enable( &context->lock );
-
-        sched_preempt();
-
-        spinlock_disable( &context->lock );
-
-        thread->blocking_semaphore = -1;
-
-        if ( timeout != INFINITE_TIMEOUT ) {
-            spinlock( &scheduler_lock );
-            waitqueue_remove_node( &sleep_queue, &sleepnode );
-            spinunlock( &scheduler_lock );
+        if ( error < 0 ) {
+            return error;
         }
-
-        header = lock_context_get( context, mutex_id );
-
-        if ( header == NULL ) {
-            return -EINVAL;
-        }
-
-        ASSERT( ( ptr_t )header == ( ptr_t )mutex );
-
-        waitqueue_remove_node( &mutex->waiters, &waitnode );
     }
 
     mutex->holder = thread->id;

@@ -22,6 +22,7 @@
 #include <console.h>
 #include <mm/kmalloc.h>
 #include <lock/semaphore.h>
+#include <lock/common.h>
 #include <sched/scheduler.h>
 #include <lib/string.h>
 
@@ -55,8 +56,7 @@ static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int
     semaphore = ( semaphore_t* )header;
 
     while ( semaphore->count < count ) {
-        waitnode_t waitnode;
-        waitnode_t sleepnode;
+        int error;
 
         if ( ( timeout != INFINITE_TIMEOUT ) &&
              ( wakeup_time <= get_system_time() ) ) {
@@ -65,50 +65,17 @@ static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int
             return -ETIME;
         }
 
-        spinlock( &scheduler_lock );
-
-        waitnode.thread = thread->id;
-        waitnode.in_queue = false;
-
-        waitqueue_add_node_tail( &semaphore->waiters, &waitnode );
+        /* Wait for the semaphore */
 
         if ( timeout != INFINITE_TIMEOUT ) {
-            sleepnode.thread = thread->id;
-            sleepnode.wakeup_time = wakeup_time;
-            sleepnode.in_queue = false;
-
-            waitqueue_add_node( &sleep_queue, &sleepnode );
+            error = lock_timed_wait_on( context, thread, SEMAPHORE, semaphore_id, &semaphore->waiters, wakeup_time );
+        } else {
+            error = lock_wait_on( context, thread, SEMAPHORE, semaphore_id, &semaphore->waiters );
         }
 
-        thread->state = THREAD_WAITING;
-        thread->blocking_semaphore = semaphore_id;
-
-        spinunlock( &scheduler_lock );
-        spinunlock_enable( &context->lock );
-
-        sched_preempt();
-
-        spinlock_disable( &context->lock );
-
-        thread->blocking_semaphore = -1;
-
-        if ( timeout != INFINITE_TIMEOUT ) {
-            spinlock( &scheduler_lock );
-            waitqueue_remove_node( &sleep_queue, &sleepnode );
-            spinunlock( &scheduler_lock );
+        if ( error < 0 ) {
+            return error;
         }
-
-        header = lock_context_get( context, semaphore_id );
-
-        if ( header == NULL ) {
-            spinunlock_enable( &context->lock );
-
-            return -EINVAL;
-        }
-
-        ASSERT( ( ptr_t )header == ( ptr_t )semaphore );
-
-        waitqueue_remove_node( &semaphore->waiters, &waitnode );
     }
 
     semaphore->count -= count;

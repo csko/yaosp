@@ -307,22 +307,13 @@ static int do_open_helper2( file_t* file, inode_t* parent, char* name, int lengt
     return 0;
 }
 
-static int do_open( bool kernel, const char* path, int flags, int perms ) {
+static int do_open( io_context_t* io_context, const char* path, int flags, int perms ) {
     int error;
     char* name;
     int length;
     file_t* file;
     struct stat st;
     inode_t* parent;
-    io_context_t* io_context;
-
-    /* Decide which I/O context to use */
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     /* Lookup the parent of the inode we want to open */
 
@@ -391,24 +382,15 @@ static int do_open( bool kernel, const char* path, int flags, int perms ) {
 }
 
 int open( const char* path, int flags ) {
-    return do_open( true, path, flags, 0666 );
+    return do_open( &kernel_io_context, path, flags, 0666 );
 }
 
 int sys_open( const char* path, int flags ) {
-    return do_open( false, path, flags, 0666 );
+    return do_open( current_process()->io_context, path, flags, 0666 );
 }
 
-static int do_close( bool kernel, int fd ) {
+static int do_close( io_context_t* io_context, int fd ) {
     int error;
-    io_context_t* io_context;
-
-    /* Decide which I/O context to use */
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = io_context_remove_file( io_context, fd );
 
@@ -420,11 +402,11 @@ static int do_close( bool kernel, int fd ) {
 }
 
 int close( int fd ) {
-    return do_close( true, fd );
+    return do_close( &kernel_io_context, fd );
 }
 
 int sys_close( int fd ) {
-    return do_close( false, fd );
+    return do_close( current_process()->io_context, fd );
 }
 
 int do_pread_helper( file_t* file, void* buffer, size_t count, off_t offset ) {
@@ -442,16 +424,9 @@ int do_pread_helper( file_t* file, void* buffer, size_t count, off_t offset ) {
     );
 }
 
-static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offset ) {
+static int do_pread( io_context_t* io_context, int fd, void* buffer, size_t count, off_t offset ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -467,7 +442,7 @@ static int do_pread( bool kernel, int fd, void* buffer, size_t count, off_t offs
 }
 
 int pread( int fd, void* buffer, size_t count, off_t offset ) {
-    return do_pread( true, fd, buffer, count, offset );
+    return do_pread( &kernel_io_context, fd, buffer, count, offset );
 }
 
 int sys_pread( int fd, void* buffer, size_t count, off_t* offset ) {
@@ -475,19 +450,12 @@ int sys_pread( int fd, void* buffer, size_t count, off_t* offset ) {
         return -EINVAL;
     }
 
-    return do_pread( false, fd, buffer, count, *offset );
+    return do_pread( current_process()->io_context, fd, buffer, count, *offset );
 }
 
-static int do_read( bool kernel, int fd, void* buffer, size_t count ) {
+static int do_read( io_context_t* io_context, int fd, void* buffer, size_t count ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -524,19 +492,12 @@ out:
 }
 
 int sys_read( int fd, void* buffer, size_t count ) {
-    return do_read( false, fd, buffer, count );
+    return do_read( current_process()->io_context, fd, buffer, count );
 }
 
-static int do_pwrite( bool kernel, int fd, const void* buffer, size_t count, off_t offset ) {
+static int do_pwrite( io_context_t* io_context, int fd, const void* buffer, size_t count, off_t offset ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -571,23 +532,16 @@ out:
 }
 
 int pwrite( int fd, const void* buffer, size_t count, off_t offset ) {
-    return do_pwrite( true, fd, buffer, count, offset );
+    return do_pwrite( &kernel_io_context, fd, buffer, count, offset );
 }
 
 int sys_pwrite( int fd, const void* buffer, size_t count, off_t* offset ) {
-    return do_pwrite( false, fd, buffer, count, *offset );
+    return do_pwrite( current_process()->io_context, fd, buffer, count, *offset );
 }
 
-static int do_write( bool kernel, int fd, const void* buffer, size_t count ) {
+static int do_write( io_context_t* io_context, int fd, const void* buffer, size_t count ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -628,19 +582,12 @@ out:
 }
 
 int sys_write( int fd, const void* buffer, size_t count ) {
-    return do_write( false, fd, buffer, count );
+    return do_write( current_process()->io_context, fd, buffer, count );
 }
 
-static int do_ioctl( bool kernel, int fd, int command, void* buffer ) {
+static int do_ioctl( io_context_t* io_context, int fd, int command, void* buffer ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -655,7 +602,7 @@ static int do_ioctl( bool kernel, int fd, int command, void* buffer ) {
             file->cookie,
             command,
             buffer,
-            kernel
+            io_context == &kernel_io_context
         );
     } else {
         error = -ENOSYS;
@@ -667,25 +614,18 @@ static int do_ioctl( bool kernel, int fd, int command, void* buffer ) {
 }
 
 int ioctl( int fd, int command, void* buffer ) {
-    return do_ioctl( true, fd, command, buffer );
+    return do_ioctl( &kernel_io_context, fd, command, buffer );
 }
 
 int sys_ioctl( int fd, int command, void* buffer ) {
-    return do_ioctl( false, fd, command, buffer );
+    return do_ioctl( current_process()->io_context, fd, command, buffer );
 }
 
-static int do_getdents( bool kernel, int fd, dirent_t* entry, unsigned int size ) {
+static int do_getdents( io_context_t* io_context, int fd, dirent_t* entry, unsigned int size ) {
     int ret;
     int error;
     file_t* file;
     unsigned int count;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -738,23 +678,16 @@ out:
 }
 
 int getdents( int fd, dirent_t* entry, unsigned int count ) {
-    return do_getdents( true, fd, entry, count );
+    return do_getdents( &kernel_io_context, fd, entry, count );
 }
 
 int sys_getdents( int fd, dirent_t* entry, unsigned int count ) {
-    return do_getdents( false, fd, entry, count );
+    return do_getdents( current_process()->io_context, fd, entry, count );
 }
 
-static int do_rewinddir( bool kernel, int fd ) {
+static int do_rewinddir( io_context_t* io_context, int fd ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -785,19 +718,12 @@ out:
 }
 
 int sys_rewinddir( int fd ) {
-    return do_rewinddir( false, fd );
+    return do_rewinddir( current_process()->io_context, fd );
 }
 
-static int do_isatty( bool kernel, int fd ) {
+static int do_isatty( io_context_t* io_context, int fd ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -822,19 +748,12 @@ static int do_isatty( bool kernel, int fd ) {
 }
 
 int sys_isatty( int fd ) {
-    return do_isatty( false, fd );
+    return do_isatty( current_process()->io_context, fd );
 }
 
-static int do_access( bool kernel, const char* path, int mode ) {
+static int do_access( io_context_t* io_context, const char* path, int mode ) {
     int error;
     inode_t* inode;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_inode( io_context, NULL, path, &inode, true, true );
 
@@ -848,21 +767,14 @@ static int do_access( bool kernel, const char* path, int mode ) {
 }
 
 int sys_access( const char* path, int mode ) {
-    return do_access( false, path, mode );
+    return do_access( current_process()->io_context, path, mode );
 }
 
-static int do_mkdir( bool kernel, const char* path, int permissions ) {
+static int do_mkdir( io_context_t* io_context, const char* path, int permissions ) {
     int error;
     char* name;
     int length;
     inode_t* parent;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_parent_inode( io_context, NULL, path, &name, &length, &parent );
 
@@ -892,26 +804,18 @@ static int do_mkdir( bool kernel, const char* path, int permissions ) {
 }
 
 int mkdir( const char* path, int permissions ) {
-    return do_mkdir( true, path, permissions );
+    return do_mkdir( &kernel_io_context, path, permissions );
 }
 
 int sys_mkdir( const char* path, int permissions ) {
-    return do_mkdir( false, path, permissions );
+    return do_mkdir( current_process()->io_context, path, permissions );
 }
 
-static int do_rmdir( bool kernel, const char* path ) {
+static int do_rmdir( io_context_t* io_context, const char* path ) {
     int error;
-    inode_t* parent;
-    io_context_t* io_context;
-
     char* name;
+    inode_t* parent;
     int name_length;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_parent_inode( io_context, NULL, path, &name, &name_length, &parent );
 
@@ -956,26 +860,18 @@ int sys_rmdir( const char* _path ) {
         path[ length - 1 ] = 0;
     }
 
-    error = do_rmdir( false, path );
+    error = do_rmdir( current_process()->io_context, path );
 
     kfree( path );
 
     return error;
 }
 
-static int do_unlink( bool kernel, const char* path ) {
+static int do_unlink( io_context_t* io_context, const char* path ) {
     int error;
-    inode_t* parent;
-    io_context_t* io_context;
-
     char* name;
+    inode_t* parent;
     int name_length;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_parent_inode( io_context, NULL, path, &name, &name_length, &parent );
 
@@ -1004,22 +900,14 @@ static int do_unlink( bool kernel, const char* path ) {
 }
 
 int sys_unlink( const char* path ) {
-    return do_unlink( false, path );
+    return do_unlink( current_process()->io_context, path );
 }
 
-static int do_symlink( bool kernel, const char* src, const char* dest ) {
+static int do_symlink( io_context_t* io_context, const char* src, const char* dest ) {
     int error;
-    io_context_t* io_context;
-
     char* name;
-    int name_length;
     inode_t* inode;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
+    int name_length;
 
     error = lookup_parent_inode( io_context, NULL, src, &name, &name_length, &inode );
 
@@ -1047,24 +935,17 @@ static int do_symlink( bool kernel, const char* src, const char* dest ) {
 }
 
 int symlink( const char* src, const char* dest ) {
-    return do_symlink( true, src, dest );
+    return do_symlink( &kernel_io_context, src, dest );
 }
 
 int sys_symlink( const char* src, const char* dest ) {
-    return do_symlink( false, src, dest );
+    return do_symlink( current_process()->io_context, src, dest );
 }
 
-static int do_fchdir( bool kernel, int fd ) {
+static int do_fchdir( io_context_t* io_context, int fd ) {
     int error = 0;
     file_t* file;
     inode_t* tmp;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -1112,7 +993,7 @@ int sys_chdir( const char* path ) {
 }
 
 int sys_fchdir( int fd ) {
-    return do_fchdir( false, fd );
+    return do_fchdir( current_process()->io_context, fd );
 }
 
 static int do_read_stat( inode_t* inode, struct stat* stat ) {
@@ -1135,18 +1016,11 @@ static int do_read_stat( inode_t* inode, struct stat* stat ) {
     return error;
 }
 
-static int do_stat( bool kernel, const char* path, struct stat* stat ) {
+static int do_stat( io_context_t* io_context, const char* path, struct stat* stat, bool follow_symlink ) {
     int error;
     inode_t* inode;
-    io_context_t* io_context;
 
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
-
-    error = lookup_inode( io_context, NULL, path, &inode, true, true );
+    error = lookup_inode( io_context, NULL, path, &inode, follow_symlink, true );
 
     if ( error < 0 ) {
         return error;
@@ -1160,47 +1034,16 @@ static int do_stat( bool kernel, const char* path, struct stat* stat ) {
 }
 
 int sys_stat( const char* path, struct stat* stat ) {
-    return do_stat( false, path, stat );
-}
-
-static int do_lstat( bool kernel, const char* path, struct stat* stat ) {
-    int error;
-    inode_t* inode;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
-
-    error = lookup_inode( io_context, NULL, path, &inode, false, true );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    error = do_read_stat( inode, stat );
-
-    put_inode( inode );
-
-    return error;
+    return do_stat( current_process()->io_context, path, stat, true );
 }
 
 int sys_lstat( const char* path, struct stat* stat ) {
-    return do_lstat( false, path, stat );
+    return do_stat( current_process()->io_context, path, stat, false );
 }
 
-static int do_fstat( bool kernel, int fd, struct stat* stat ) {
+static int do_fstat( io_context_t* io_context, int fd, struct stat* stat ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -1226,23 +1069,16 @@ static int do_fstat( bool kernel, int fd, struct stat* stat ) {
 }
 
 int fstat( int fd, struct stat* stat ) {
-    return do_fstat( true, fd, stat );
+    return do_fstat( &kernel_io_context, fd, stat );
 }
 
 int sys_fstat( int fd, struct stat* stat ) {
-    return do_fstat( false, fd, stat );
+    return do_fstat( current_process()->io_context, fd, stat );
 }
 
-static int do_lseek( bool kernel, int fd, off_t offset, int whence, off_t* new_offset ) {
+static int do_lseek( io_context_t* io_context, int fd, off_t offset, int whence, off_t* new_offset ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -1311,7 +1147,7 @@ off_t lseek( int fd, off_t offset, int whence ) {
     int error;
     off_t new_offset;
 
-    error = do_lseek( true, fd, offset, whence, &new_offset );
+    error = do_lseek( &kernel_io_context, fd, offset, whence, &new_offset );
 
     if ( error < 0 ) {
         return ( off_t )-1;
@@ -1321,19 +1157,12 @@ off_t lseek( int fd, off_t offset, int whence ) {
 }
 
 int sys_lseek( int fd, off_t* offset, int whence, off_t* new_offset ) {
-    return do_lseek( false, fd, *offset, whence, new_offset );
+    return do_lseek( current_process()->io_context, fd, *offset, whence, new_offset );
 }
 
-static int do_fcntl( bool kernel, int fd, int cmd, int arg ) {
+static int do_fcntl( io_context_t* io_context, int fd, int cmd, int arg ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, fd );
 
@@ -1396,19 +1225,12 @@ static int do_fcntl( bool kernel, int fd, int cmd, int arg ) {
 }
 
 int sys_fcntl( int fd, int cmd, int arg ) {
-    return do_fcntl( false, fd, cmd, arg );
+    return do_fcntl( current_process()->io_context, fd, cmd, arg );
 }
 
-static int do_readlink( bool kernel, const char* path, char* buffer, size_t length ) {
+static int do_readlink( io_context_t* io_context, const char* path, char* buffer, size_t length ) {
     int error;
     inode_t* inode;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_inode( io_context, NULL, path, &inode, false, true );
 
@@ -1433,22 +1255,16 @@ static int do_readlink( bool kernel, const char* path, char* buffer, size_t leng
 }
 
 int sys_readlink( const char* path, char* buffer, size_t length ) {
-    return do_readlink( false, path, buffer, length );
+    return do_readlink( current_process()->io_context, path, buffer, length );
 }
 
-int do_mount( bool kernel, const char* device, const char* dir, const char* filesystem, uint32_t mountflags ) {
+static int do_mount( io_context_t* io_context, const char* device,
+                     const char* dir, const char* filesystem, uint32_t mountflags ) {
     int error;
     inode_t* dir_inode;
-    io_context_t* io_context;
     filesystem_descriptor_t* fs_desc;
     mount_point_t* mount_point;
     ino_t root_inode_number;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_inode( io_context, NULL, dir, &dir_inode, true, false );
 
@@ -1524,25 +1340,18 @@ int do_mount( bool kernel, const char* device, const char* dir, const char* file
 }
 
 int mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags ) {
-    return do_mount( true, device, dir, filesystem, mountflags );
+    return do_mount( &kernel_io_context, device, dir, filesystem, mountflags );
 }
 
 int sys_mount( const char* device, const char* dir, const char* filesystem, uint32_t mountflags ) {
-    return do_mount( false, device, dir, filesystem, mountflags );
+    return do_mount( current_process()->io_context, device, dir, filesystem, mountflags );
 }
 
-static int do_unmount( bool kernel, const char* dir ) {
+static int do_unmount( io_context_t* io_context, const char* dir ) {
     int error;
     inode_t* inode;
     inode_t* mount_root;
-    io_context_t* io_context;
     mount_point_t* mount_point;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_inode( io_context, NULL, dir, &inode, true, false );
 
@@ -1601,14 +1410,13 @@ error1:
 }
 
 int sys_unmount( const char* dir ) {
-    return do_unmount( false, dir );
+    return do_unmount( current_process()->io_context, dir );
 }
 
-int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
+int do_select( io_context_t* io_context, int count, fd_set* readfds,
+               fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
     int i;
     int error;
-    io_context_t* io_context;
-
     lock_id sync;
     int req_count;
     int ready_count;
@@ -1617,12 +1425,6 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
 
     if ( count <= 0 ) {
         return -EINVAL;
-    }
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
     }
 
     requests = ( select_request_t* )kmalloc( sizeof( select_request_t ) * count * 3 );
@@ -1801,23 +1603,16 @@ int do_select( bool kernel, int count, fd_set* readfds, fd_set* writefds, fd_set
 }
 
 int select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
-    return do_select( true, count, readfds, writefds, exceptfds, timeout );
+    return do_select( &kernel_io_context, count, readfds, writefds, exceptfds, timeout );
 }
 
 int sys_select( int count, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout ) {
-    return do_select( false, count, readfds, writefds, exceptfds, timeout );
+    return do_select( current_process()->io_context, count, readfds, writefds, exceptfds, timeout );
 }
 
-static int do_dup( bool kernel, int old_fd ) {
+static int do_dup( io_context_t* io_context, int old_fd ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, old_fd );
 
@@ -1833,23 +1628,16 @@ static int do_dup( bool kernel, int old_fd ) {
 }
 
 int dup( int old_fd ) {
-    return do_dup( true, old_fd );
+    return do_dup( &kernel_io_context, old_fd );
 }
 
 int sys_dup( int old_fd ) {
-    return do_dup( false, old_fd );
+    return do_dup( current_process()->io_context, old_fd );
 }
 
-static int do_dup2( bool kernel, int old_fd, int new_fd ) {
+static int do_dup2( io_context_t* io_context, int old_fd, int new_fd ) {
     int error;
     file_t* file;
-    io_context_t* io_context;
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     file = io_context_get_file( io_context, old_fd );
 
@@ -1872,24 +1660,17 @@ out:
 }
 
 int sys_dup2( int old_fd, int new_fd ) {
-    return do_dup2( false, old_fd, new_fd );
+    return do_dup2( current_process()->io_context, old_fd, new_fd );
 }
 
-static int do_utime( bool kernel, const char* path, const struct utimbuf* times ) {
+static int do_utime( io_context_t* io_context, const char* path, const struct utimbuf* times ) {
     int error;
     inode_t* inode;
-    io_context_t* io_context;
 
     struct stat _stat = {
         .st_atime = times->actime,
         .st_ctime = times->modtime
     };
-
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
 
     error = lookup_inode( io_context, NULL, path, &inode, true, true );
 
@@ -1914,7 +1695,7 @@ static int do_utime( bool kernel, const char* path, const struct utimbuf* times 
 }
 
 int sys_utime( const char* filename, const struct utimbuf* times ) {
-    return do_utime( false, filename, times );
+    return do_utime( current_process()->io_context, filename, times );
 }
 
 __init int init_vfs( void ) {
@@ -1960,7 +1741,7 @@ __init int init_vfs( void ) {
         goto error1;
     }
 
-    error = do_mount( true, "", "/device", "devfs", MOUNT_NONE );
+    error = do_mount( &kernel_io_context, "", "/device", "devfs", MOUNT_NONE );
 
     if ( error < 0 ) {
         return error;

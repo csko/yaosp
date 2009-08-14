@@ -92,6 +92,7 @@ void clear_task_switched( void );
 void set_task_switched( void );
 
 void flush_tlb( void );
+void invlpg( uint32_t address );
 
 /**
  * This will execute an endless loops that halts the processor.

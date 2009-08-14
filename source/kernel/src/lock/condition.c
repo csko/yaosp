@@ -23,6 +23,7 @@
 #include <mm/kmalloc.h>
 #include <lock/condition.h>
 #include <lock/mutex.h>
+#include <lock/common.h>
 #include <sched/scheduler.h>
 #include <lib/string.h>
 
@@ -38,9 +39,6 @@ static int do_wait_condition( lock_context_t* context, lock_id condition_id, loc
     condition_t* condition;
     lock_header_t* header;
     uint64_t wakeup_time;
-
-    waitnode_t waitnode;
-    waitnode_t sleepnode;
 
     wakeup_time = get_system_time() + timeout;
 
@@ -62,95 +60,50 @@ static int do_wait_condition( lock_context_t* context, lock_id condition_id, loc
 
     condition = ( condition_t* )header;
 
-    if ( mutex_id >= 0 ) {
-        header = lock_context_get( context, mutex_id );
+    header = lock_context_get( context, mutex_id );
 
-        if ( __unlikely( ( header == NULL ) ||
-                         ( header->type != MUTEX ) ) ) {
-            spinunlock_enable( &context->lock );
-
-            return -EINVAL;
-        }
-
-        mutex = ( mutex_t* )header;
-    } else {
-        mutex = NULL;
-    }
-
-    thread = current_thread();
-
-    /* Make sure that the mutex is locked by the current thread */
-
-    if ( mutex != NULL ) {
-        if ( mutex->holder != thread->id ) {
-            spinunlock_enable( &context->lock );
-
-            return -EPERM;
-        }
-
-        /* Release the mutex */
-
-        do_release_mutex( mutex );
-    }
-
-    /* Wait for the conditional variable */
-
-    spinlock( &scheduler_lock );
-
-    waitnode.thread = thread->id;
-    waitnode.in_queue = false;
-
-    waitqueue_add_node_tail( &condition->waiters, &waitnode );
-
-    if ( timeout != INFINITE_TIMEOUT ) {
-        sleepnode.thread = thread->id;
-        sleepnode.wakeup_time = wakeup_time;
-        sleepnode.in_queue = false;
-
-        waitqueue_add_node( &sleep_queue, &sleepnode );
-    }
-
-    thread->state = THREAD_WAITING;
-    thread->blocking_semaphore = condition_id; /* TODO */
-
-    spinunlock( &scheduler_lock );
-    spinunlock_enable( &context->lock );
-
-    sched_preempt();
-
-    spinlock_disable( &context->lock );
-
-    thread->blocking_semaphore = -1;
-
-    if ( timeout != INFINITE_TIMEOUT ) {
-        spinlock( &scheduler_lock );
-        waitqueue_remove_node( &sleep_queue, &sleepnode );
-        spinunlock( &scheduler_lock );
-    }
-
-    header = lock_context_get( context, condition_id );
-
-    if ( header == NULL ) {
+    if ( __unlikely( ( header == NULL ) ||
+                     ( header->type != MUTEX ) ) ) {
         spinunlock_enable( &context->lock );
 
         return -EINVAL;
     }
 
-    ASSERT( ( ptr_t )header == ( ptr_t )condition );
+    mutex = ( mutex_t* )header;
 
-    waitqueue_remove_node( &condition->waiters, &waitnode );
+    thread = current_thread();
+
+    /* Make sure that the mutex is locked by the current thread */
+
+    if ( mutex->holder != thread->id ) {
+        spinunlock_enable( &context->lock );
+
+        return -EPERM;
+    }
+
+    /* Release the mutex */
+
+    do_release_mutex( mutex );
+
+    /* Wait for the conditional variable */
+
+    if ( timeout != INFINITE_TIMEOUT ) {
+        error = lock_timed_wait_on( context, thread, CONDITION, condition_id, &condition->waiters, wakeup_time );
+    } else {
+        error = lock_wait_on( context, thread, CONDITION, condition_id, &condition->waiters );
+    }
+
+    if ( error < 0 ) {
+        return error;
+    }
 
     /* Acquire the mutex */
 
-    if ( mutex != NULL ) {
-        error = do_acquire_mutex( context, mutex, thread, INFINITE_TIMEOUT, false );
-    } else {
-        error = 0;
-    }
+    error = do_acquire_mutex( context, mutex, thread, INFINITE_TIMEOUT, false );
 
     spinunlock_enable( &context->lock );
 
-    return 0;
+    return error;
 }
 
 int condition_wait( lock_id condition, lock_id mutex ) {

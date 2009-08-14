@@ -123,6 +123,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/lock/mutex.c</item>
         <item>src/lock/condition.c</item>
         <item>src/lock/semaphore.c</item>
+        <item>src/lock/common.c</item>
     </array>
 
     <array name="files_lib">
