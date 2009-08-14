@@ -146,7 +146,7 @@ int ps2_init_mouse( void ) {
     call_bios_interrupt( 0x11, &regs );
 
     if ( ( regs.ax & 0x04 ) == 0 ) {
-        kprintf( "PS2: Pointing device not present!\n" );
+        kprintf( INFO, "PS2: Pointing device not present!\n" );
         return -ENOENT;
     }
 
@@ -161,17 +161,17 @@ int ps2_init_mouse( void ) {
     error = ps2_write_read_command( PS2_CMD_AUX_LOOP, &data );
 
     if ( ( error < 0 ) || ( data != 0x5A ) ) {
-        kprintf( "PS2: AUX loop test failed (error=%d, data=%x)!\n", error, ( uint32_t )data );
+        kprintf( ERROR, "PS2: AUX loop test failed (error=%d, data=%x)!\n", error, ( uint32_t )data );
 
         if ( ps2_read_command( PS2_CMD_AUX_TEST, &data ) < 0 ) {
-            kprintf( "Failed -> Aux port not present!\n" );
+            kprintf( INFO, "PS2: Aux port not present!\n" );
             return -ENOENT;
         }
 
-        kprintf( "PS2: Test command returned %x\n", ( uint32_t )data );
+        kprintf( DEBUG, "PS2: Test command returned %x\n", ( uint32_t )data );
 
         if ( ( data ) && ( ( data != 0xFA ) && ( data != 0xFF ) ) ) {
-            kprintf( "PS2: Invalid return code!\n" );
+            kprintf( ERROR, "PS2: Invalid return code!\n" );
             return -ENOENT;
         }
     }
@@ -201,16 +201,16 @@ int ps2_init_mouse( void ) {
     error = ps2_write_command( PS2_CMD_WCTR, data );
 
     if ( error < 0 ) {
-        kprintf( "PS2: I/O error\n" );
+        kprintf( ERROR, "PS2: I/O error\n" );
         return -EIO;
     }
 
-    kprintf( "PS2: AUX port detected\n" );
+    kprintf( INFO, "PS2: AUX port detected\n" );
 
     error = ps2_buffer_init( &mouse_buffer );
 
     if ( error < 0 ) {
-        kprintf( "PS2: Failed to initialize mouse buffer!\n" );
+        kprintf( ERROR, "PS2: Failed to initialize mouse buffer!\n" );
         return error;
     }
 
@@ -220,7 +220,7 @@ int ps2_init_mouse( void ) {
         return error;
     }
 
-    kprintf( "PS2: Mouse initialized!\n" );
+    kprintf( INFO, "PS2: Mouse initialized!\n" );
 
     return 0;
 }

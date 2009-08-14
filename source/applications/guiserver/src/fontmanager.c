@@ -151,9 +151,9 @@ static font_style_t* create_font_style( const char* name, FT_Face face ) {
         goto error3;
     }
 
-    style->lock = create_semaphore( "Font style lock", SEMAPHORE_BINARY, 0, 1 );
+    error = pthread_mutex_init( &style->mutex, NULL );
 
-    if ( style->lock < 0 ) {
+    if ( error < 0 ) {
         goto error4;
     }
 
@@ -393,7 +393,7 @@ font_node_t* get_font( const char* family_name, const char* style_name, font_pro
         return NULL;
     }
 
-    LOCK( style->lock );
+    pthread_mutex_lock( &style->mutex );
 
     node = ( font_node_t* )hashtable_get( &style->nodes, ( const void* )properties );
 
@@ -405,7 +405,7 @@ font_node_t* get_font( const char* family_name, const char* style_name, font_pro
         }
     }
 
-    UNLOCK( style->lock );
+    pthread_mutex_unlock( &style->mutex );
 
     return node;
 }
@@ -416,7 +416,7 @@ int font_node_get_string_width( font_node_t* font, const char* text, int length 
 
     width = 0;
 
-    LOCK( font->style->lock );
+    pthread_mutex_lock( &font->style->mutex );
 
     while ( length > 0 ) {
         int char_length = utf8_char_length( *text );
@@ -437,7 +437,7 @@ int font_node_get_string_width( font_node_t* font, const char* text, int length 
         width += glyph->advance.x;
     }
 
-    UNLOCK( font->style->lock );
+    pthread_mutex_unlock( &font->style->mutex );
 
     return width;
 }

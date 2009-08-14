@@ -19,11 +19,11 @@
 #ifndef _FONTMANAGER_H_
 #define _FONTMANAGER_H_
 
+#include <pthread.h>
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_SYNTHESIS_H
-
-#include <yaosp/semaphore.h>
 
 #include <ygui/font.h>
 #include <ygui/rect.h>
@@ -57,7 +57,7 @@ typedef struct font_style {
     int glyph_count;
     int scalable;
     int fixed_width;
-    semaphore_id lock;
+    pthread_mutex_t mutex;
     hashtable_t nodes;
 } font_style_t;
 

@@ -21,7 +21,7 @@
 
 #include <types.h>
 #include "../../bus/pci/pci.h"
-#include <semaphore.h>
+#include <lock/mutex.h>
 
 /* Maximum number of ports per controller */
 
@@ -164,7 +164,7 @@ typedef struct pata_port {
     uint32_t sector_size;
 
     bool open;
-    semaphore_id lock;
+    lock_id mutex;
 
     char model_name[ 41 ];
     pata_identify_info_t identify_info;

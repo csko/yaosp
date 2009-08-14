@@ -85,7 +85,7 @@ static int msdos_scan_partitions( const char* device ) {
         new_fd = dup( fd );
 
         if ( new_fd < 0 ) {
-            kprintf( "msdos_scan_partitions(): Failed to duplicate file descriptor! (error=%d)\n", new_fd );
+            kprintf( ERROR, "msdos_scan_partitions(): Failed to duplicate file descriptor! (error=%d)\n", new_fd );
             continue;
         }
 
@@ -98,7 +98,7 @@ static int msdos_scan_partitions( const char* device ) {
         );
 
         if ( error < 0 ) {
-            kprintf( "msdos_scan_partitions(): Failed to create partition device! (error=%d)\n", error );
+            kprintf( ERROR, "msdos_scan_partitions(): Failed to create partition device! (error=%d)\n", error );
             close( new_fd );
         }
     }

@@ -19,11 +19,11 @@
 #ifndef _WINDOWMANAGER_H_
 #define _WINDOWMANAGER_H_
 
-#include <yaosp/semaphore.h>
+#include <pthread.h>
 
 #include <window.h>
 
-extern semaphore_id wm_lock;
+extern pthread_mutex_t wm_lock;
 
 int wm_register_window( window_t* window );
 int wm_bring_to_front( window_t* window );

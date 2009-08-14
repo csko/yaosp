@@ -17,8 +17,8 @@
  */
 
 #include <string.h>
+#include <pthread.h>
 #include <yaosp/ipc.h>
-#include <yaosp/semaphore.h>
 
 #include <ygui/desktop.h>
 #include <ygui/protocol.h>
@@ -26,7 +26,7 @@
 extern ipc_port_id app_reply_port;
 extern ipc_port_id app_server_port;
 
-extern semaphore_id app_lock;
+extern pthread_mutex_t app_lock;
 
 int desktop_get_size( point_t* size ) {
     int error;
@@ -36,19 +36,19 @@ int desktop_get_size( point_t* size ) {
     request.reply_port = app_reply_port;
     request.desktop = -1; /* TODO */
 
-    LOCK( app_lock );
+    pthread_mutex_lock( &app_lock );
 
     error = send_ipc_message( app_server_port, MSG_GET_DESKTOP_SIZE, &request, sizeof( msg_desk_get_size_t ) );
 
     if ( error < 0 ) {
-        UNLOCK( app_lock );
+        pthread_mutex_unlock( &app_lock );
 
         goto error1;
     }
 
     error = recv_ipc_message( app_reply_port, NULL, &reply, sizeof( msg_desk_get_size_reply_t ), INFINITE_TIMEOUT );
 
-    UNLOCK( app_lock );
+    pthread_mutex_unlock( &app_lock );
 
     if ( error < 0 ) {
         goto error1;

@@ -17,7 +17,7 @@
  */
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/mutex.h>
 #include <vfs/inode.h>
 #include <lib/hashtable.h>
 
@@ -29,7 +29,7 @@ struct ramfs_inode;
 typedef struct ramfs_cookie {
     ino_t inode_id_counter;
     hashtable_t inode_table;
-    semaphore_id lock;
+    lock_id lock;
 
     struct ramfs_inode* root_inode;
 } ramfs_cookie_t;

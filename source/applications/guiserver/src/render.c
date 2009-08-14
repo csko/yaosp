@@ -207,11 +207,9 @@ out:
 
 static int render_done( window_t* window ) {
     if ( window->is_visible ) {
-        LOCK( wm_lock );
-
+        pthread_mutex_lock( &wm_lock );
         wm_update_window_region( window, &window->client_rect );
-
-        UNLOCK( wm_lock );
+        pthread_mutex_unlock( &wm_lock );
     }
 
     return sizeof( render_header_t );

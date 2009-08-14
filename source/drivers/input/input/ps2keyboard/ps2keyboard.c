@@ -195,7 +195,7 @@ static int ps2_keyboard_start( void ) {
         return -EINVAL;
     }
 
-    error = wake_up_thread( thread );
+    error = thread_wake_up( thread );
 
     if ( error < 0 ) {
         return error;

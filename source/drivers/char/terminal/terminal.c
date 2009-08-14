@@ -31,7 +31,7 @@
 #include "terminal.h"
 #include "kterm.h"
 
-semaphore_id terminal_lock = -1;
+lock_id terminal_lock = -1;
 thread_id read_thread;
 terminal_t* active_terminal = NULL;
 terminal_t* terminals[ MAX_TERMINAL_COUNT ];
@@ -107,7 +107,7 @@ int terminal_scroll( int offset ) {
     int tmp;
     int new_start_line;
 
-    ASSERT( is_semaphore_locked( terminal_lock ) );
+    //ASSERT( is_semaphore_locked( terminal_lock ) );
 
     new_start_line = active_terminal->start_line + offset;
 
@@ -378,7 +378,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                     /* TODO: ESC M, ESC E, ESC c, etc */
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_ESC state!\n", ( int )c & 0xFF );
+                        kprintf( WARNING, "Terminal: Unknown character (%x) in IS_ESC state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -480,7 +480,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                                         break;
 
                                     default :
-                                        kprintf( "Terminal: Invalid parameter (%d) for 'm' sequence!\n", terminal->input_params[ i ] );
+                                        kprintf( WARNING, "Terminal: Invalid parameter (%d) for 'm' sequence!\n", terminal->input_params[ i ] );
                                         break;
                                 }
                             }
@@ -753,7 +753,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_BRACKET state!\n", ( int )c & 0xFF );
+                        kprintf( WARNING, "Terminal: Unknown character (%x) in IS_BRACKET state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -778,7 +778,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_OPEN_BRACKET state!\n", ( int )c & 0xFF );
+                        kprintf( WARNING, "Terminal: Unknown character (%x) in IS_OPEN_BRACKET state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -803,7 +803,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_CLOSE_BRACKET state!\n", ( int )c & 0xFF );
+                        kprintf( WARNING, "Terminal: Unknown character (%x) in IS_CLOSE_BRACKET state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -834,7 +834,7 @@ static void terminal_parse_data( terminal_t* terminal, char* data, size_t size )
                         break;
 
                     default :
-                        kprintf( "Terminal: Unknown character (%x) in IS_QUESTION state!\n", ( int )c & 0xFF );
+                        kprintf( WARNING, "Terminal: Unknown character (%x) in IS_QUESTION state!\n", ( int )c & 0xFF );
                         terminal->input_state = IS_NONE;
                         break;
                 }
@@ -857,7 +857,7 @@ static int terminal_read_thread( void* arg ) {
     buffer = ( char* )kmalloc( TERMINAL_READ_BUFFER_SIZE );
 
     if ( buffer == NULL ) {
-        kprintf( "terminal_read_thread(): Failed to create read buffer!\n" );
+        kprintf( ERROR, "terminal_read_thread(): Failed to create read buffer!\n" );
 
         return -1;
     }
@@ -877,7 +877,7 @@ static int terminal_read_thread( void* arg ) {
         count = select( max_fd + 1, &read_set, NULL, NULL, NULL );
 
         if ( __unlikely( count < 0 ) ) {
-            kprintf( "Terminal: Select error: %d\n", count );
+            kprintf( ERROR, "Terminal: Select error: %d\n", count );
             continue;
         }
 
@@ -888,11 +888,9 @@ static int terminal_read_thread( void* arg ) {
                 size = pread( terminal->master_pty, buffer, TERMINAL_READ_BUFFER_SIZE, 0 );
 
                 if ( __likely( size > 0 ) ) {
-                    LOCK( terminal_lock );
-
+                    mutex_lock( terminal_lock );
                     terminal_parse_data( terminal, buffer, size );
-
-                    UNLOCK( terminal_lock );
+                    mutex_unlock( terminal_lock );
                 }
             }
         }
@@ -956,7 +954,7 @@ int init_terminals( void ) {
         return read_thread;
     }
 
-    wake_up_thread( read_thread );
+    thread_wake_up( read_thread );
 
     return 0;
 }
@@ -964,7 +962,7 @@ int init_terminals( void ) {
 int init_module( void ) {
     int error;
 
-    terminal_lock = create_semaphore( "terminal lock", SEMAPHORE_BINARY, 0, 1 );
+    terminal_lock = mutex_create( "terminal mutex", MUTEX_NONE );
 
     if ( terminal_lock < 0 ) {
         return terminal_lock;
@@ -973,28 +971,28 @@ int init_module( void ) {
     error = mkdir( "/device/terminal", 0777 );
 
     if ( error < 0 ) {
-        kprintf( "Terminal: Failed to create /device/terminal\n" );
+        kprintf( ERROR, "Terminal: Failed to create /device/terminal\n" );
         return error;
     }
 
     error = init_pty_filesystem();
 
     if ( error < 0 ) {
-        kprintf( "Terminal: Failed to initialize pty filesystem\n" );
+        kprintf( ERROR, "Terminal: Failed to initialize pty filesystem\n" );
         return error;
     }
 
     error = mount( "", "/device/terminal", "pty", MOUNT_NONE );
 
     if ( error < 0 ) {
-        kprintf( "Terminal: Failed to mount pty filesystem!\n" );
+        kprintf( ERROR, "Terminal: Failed to mount pty filesystem!\n" );
         return error;
     }
 
     error = init_terminals();
 
     if ( error < 0 ) {
-        kprintf( "Terminal: Failed to initialize terminals!\n" );
+        kprintf( ERROR, "Terminal: Failed to initialize terminals!\n" );
         return error;
     }
 

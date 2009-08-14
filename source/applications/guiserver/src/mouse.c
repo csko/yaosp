@@ -18,8 +18,8 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <pthread.h>
 #include <sys/types.h>
-#include <yaosp/semaphore.h>
 #include <ygui/point.h>
 
 #include <mouse.h>
@@ -52,7 +52,7 @@ static point_t mouse_position = { 0, 0 };
 
 static int mouse_pointer_id_counter;
 static hashtable_t mouse_pointer_table;
-static semaphore_id mouse_pointer_lock;
+static pthread_mutex_t mouse_pointer_lock;
 
 static mouse_pointer_t* active_mouse_pointer = NULL;
 
@@ -137,17 +137,17 @@ static int do_put_mouse_pointer( mouse_pointer_t* pointer ) {
 int put_mouse_pointer( mouse_pointer_t* pointer ) {
     int error;
 
-    LOCK( mouse_pointer_lock );
+    pthread_mutex_lock( &mouse_pointer_lock );
 
     error = do_put_mouse_pointer( pointer );
 
-    UNLOCK( mouse_pointer_lock );
+    pthread_mutex_unlock( &mouse_pointer_lock );
 
     return error;
 }
 
 int activate_mouse_pointer( mouse_pointer_t* pointer ) {
-    LOCK( mouse_pointer_lock );
+    pthread_mutex_lock( &mouse_pointer_lock );
 
     if ( active_mouse_pointer != NULL ) {
         do_put_mouse_pointer( active_mouse_pointer );
@@ -157,7 +157,7 @@ int activate_mouse_pointer( mouse_pointer_t* pointer ) {
 
     pointer->ref_count++;
 
-    UNLOCK( mouse_pointer_lock );
+    pthread_mutex_unlock( &mouse_pointer_lock );
 
     return 0;
 }
@@ -302,10 +302,9 @@ int init_mouse_manager( void ) {
         goto error1;
     }
 
-    mouse_pointer_lock = create_semaphore( "mouse pointer lock", SEMAPHORE_BINARY, 0, 1 );
+    error = pthread_mutex_init( &mouse_pointer_lock, NULL );
 
-    if ( mouse_pointer_lock < 0 ) {
-        error = mouse_pointer_lock;
+    if ( error < 0 ) {
         goto error2;
     }
 
@@ -329,7 +328,7 @@ error4:
     put_mouse_pointer( pointer );
 
 error3:
-    delete_semaphore( mouse_pointer_lock );
+    pthread_mutex_destroy( &mouse_pointer_lock );
 
 error2:
     destroy_hashtable( &mouse_pointer_table );

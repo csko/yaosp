@@ -20,7 +20,8 @@
 #define _TERMINAL_PTY_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/mutex.h>
+#include <lock/condition.h>
 #include <vfs/inode.h>
 #include <vfs/vfs.h>
 #include <lib/hashtable.h>
@@ -40,9 +41,9 @@ typedef struct pty_node {
     time_t mtime;
     time_t ctime;
 
-    semaphore_id lock;
-    semaphore_id read_queue;
-    semaphore_id write_queue;
+    lock_id lock;
+    lock_id read_queue;
+    lock_id write_queue;
 
     struct pty_node* partner;
 

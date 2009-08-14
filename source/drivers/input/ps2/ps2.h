@@ -20,7 +20,7 @@
 #define _PS2_H_
 
 #include <types.h>
-#include <semaphore.h>
+#include <lock/semaphore.h>
 
 #define PS2_PORT_DATA    0x60
 #define PS2_PORT_COMMAND 0x64
@@ -59,7 +59,7 @@ typedef struct ps2_buffer {
     int write_pos;
     int buffer_size;
     uint8_t buffer[ PS2_BUFSIZE ];
-    semaphore_id sync;
+    lock_id sync;
 } ps2_buffer_t;
 
 void ps2_lock( void );
@@ -81,4 +81,4 @@ int ps2_write_read_command( uint8_t command, uint8_t* data );
 int ps2_init_keyboard( void );
 int ps2_init_mouse( void );
 
-#endif // _PS2_H_
+#endif /* _PS2_H_ */

@@ -141,7 +141,7 @@ int create_device_partition( int fd, const char* device, int index, off_t offset
         return error;
     }
 
-    kprintf( "Created device node for partition: /device/%s\n", path );
+    kprintf( INFO, "Created device node for partition: /device/%s\n", path );
 
     return 0;
 }
@@ -169,7 +169,7 @@ int init_module( void ) {
     error = mkdir( "/device/storage/partition", 0777 );
 
     if ( error < 0 ) {
-        kprintf( "Failed to create /device/storage/partition!\n" );
+        kprintf( ERROR, "Failed to create /device/storage/partition!\n" );
         return error;
     }
 
@@ -188,7 +188,7 @@ int init_module( void ) {
         error = check_device_partitions( entry.name );
 
         if ( error < 0 ) {
-            kprintf( "Failed to detect partitions on: /device/storage/%s\n", entry.name );
+            kprintf( ERROR, "Failed to detect partitions on: /device/storage/%s\n", entry.name );
         }
     }
 

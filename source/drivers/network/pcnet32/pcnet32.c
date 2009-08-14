@@ -234,13 +234,13 @@ static void pcnet32_rx_entry( pcnet32_private_t* device, pcnet32_rx_head_t* rxp,
     /* Discard oversize frames. */
 
     if ( pkt_len > PKT_BUF_SKB ) {
-        kprintf( "PCnet32: Impossible packet size %d!\n", pkt_len );
+        kprintf( ERROR, "PCnet32: Impossible packet size %d!\n", pkt_len );
         device->stats.rx_errors++;
         return;
     }
 
     if ( pkt_len < 60 ) {
-        kprintf( "PCnet32: Runt packet!\n" );
+        kprintf( ERROR, "PCnet32: Runt packet!\n" );
         device->stats.rx_errors++;
         return;
     }
@@ -248,7 +248,7 @@ static void pcnet32_rx_entry( pcnet32_private_t* device, pcnet32_rx_head_t* rxp,
     new_packet = create_packet( PKT_BUF_SKB );
 
     if ( new_packet == NULL ) {
-        kprintf( "PCnet32: No memory for new packet buffer!\n" );
+        kprintf( ERROR, "PCnet32: No memory for new packet buffer!\n" );
         return;
     }
 
@@ -326,7 +326,7 @@ static int pcnet32_tx( pcnet32_private_t* device ) {
             err_status = device->tx_ring[ entry ].misc;
             device->stats.tx_errors++;
 
-            kprintf( "PCnet32: Tx error status=%04x err_status=%08x\n", status, err_status );
+            kprintf( ERROR, "PCnet32: Tx error status=%04x err_status=%08x\n", status, err_status );
 
             must_restart = 1;
         } else {
@@ -346,7 +346,7 @@ static int pcnet32_tx( pcnet32_private_t* device ) {
     delta = ( device->cur_tx - dirty_tx ) & ( device->tx_mod_mask + device->tx_ring_size );
 
     if ( delta > device->tx_ring_size ) {
-        kprintf( "PCnet32: out-of-sync dirty pointer, %d vs. %d, full=%d.\n", dirty_tx, device->cur_tx, device->tx_full );
+        kprintf( ERROR, "PCnet32: out-of-sync dirty pointer, %d vs. %d, full=%d.\n", dirty_tx, device->cur_tx, device->tx_full );
         dirty_tx += device->tx_ring_size;
         delta -= device->tx_ring_size;
     }
@@ -470,7 +470,7 @@ static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
         if ( csr0 & 0x0800 ) {
             /* Unlike for the lance, there is no restart needed */
 
-            kprintf( "PCnet32: Bus master arbitration failure, status %x.\n", csr0 );   
+            kprintf( ERROR, "PCnet32: Bus master arbitration failure, status %x.\n", csr0 );
         }
 
         if ( csr0 & 0x0400 ) {
@@ -510,7 +510,7 @@ static int pcnet32_init_ring( pcnet32_private_t* device ) {
             packet = create_packet( PKT_BUF_SKB );
 
             if ( packet == NULL ) {
-                kprintf( "PCnet32: create_packet() failed for rx_ring entry!\n" );
+                kprintf( ERROR, "PCnet32: create_packet() failed for rx_ring entry!\n" );
 
                 return -ENOMEM;
             }
@@ -653,7 +653,7 @@ static int pcnet32_start( pcnet32_private_t* device ) {
             }
         }
     } else {
-        kprintf( "PCnet32 TODO: Support multiple PHYs\n" );
+        kprintf( WARNING, "PCnet32 TODO: Support multiple PHYs\n" );
     }
 
     device->init_block->mode = ( ( device->options & PCNET32_PORT_PORTSEL ) << 7 );
@@ -788,7 +788,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
 
     io_addr = pci_device->base[ 0 ] & PCI_ADDRESS_IO_MASK;
 
-    kprintf( "PCnet32: I/O address: 0x%X\n", io_addr );
+    kprintf( INFO, "PCnet32: I/O address: 0x%X\n", io_addr );
 
     /* Reset the chip */
 
@@ -813,7 +813,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     chip_version = access->read_csr( io_addr, 88 ) | ( access->read_csr( io_addr, 89 ) << 16 );
 
     if ( ( chip_version & 0xFFF ) != 0x003 ) {
-        kprintf( "PCnet32: Unsupported chip version.\n" );
+        kprintf( WARNING, "PCnet32: Unsupported chip version.\n" );
         return -ENODEV;
     }
 
@@ -903,11 +903,11 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
             break;
 
         default:
-            kprintf( "PCnet32: Unknown chip version.\n" );
+            kprintf( WARNING, "PCnet32: Unknown chip version.\n" );
             return -ENODEV;
     }
 
-    kprintf( "PCnet32: Found %s chip\n", chip_name );
+    kprintf( INFO, "PCnet32: Found %s chip\n", chip_name );
 
     /*
      *  On selected chips turn on the BCR18:NOUFLO bit. This stops transmit
@@ -955,7 +955,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     if ( ( memcmp( prom_addr, device->dev_address, ETH_ADDR_LEN ) ) ||
          ( !is_valid_ether_addr( device->dev_address ) ) ) {
         if ( is_valid_ether_addr( prom_addr ) ) {
-            kprintf( "PCnet32: CSR address invalid, using PROM address instead\n" );
+            kprintf( WARNING, "PCnet32: CSR address invalid, using PROM address instead\n" );
             memcpy( device->dev_address, prom_addr, ETH_ADDR_LEN );
         }
     }
@@ -967,6 +967,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     }
 
     kprintf(
+        INFO,
         "PCnet32: MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
         device->dev_address[ 0 ],
         device->dev_address[ 1 ],
@@ -1075,7 +1076,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
             device->phymask |= ( 1 << i );
             device->mii_if.phy_id = i;
 
-            kprintf( "PCnet32: Found PHY %04x:%04x at address %d.\n", id1, id2, i );
+            kprintf( INFO, "PCnet32: Found PHY %04x:%04x at address %d.\n", id1, id2, i );
         }
 
         device->access->write_bcr( io_addr, 33, ( device->mii_if.phy_id ) << 5 );
@@ -1092,7 +1093,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
         return -EINVAL;
     }
 
-    kprintf( "PCnet32: Assigned IRQ %d.\n", device->irq );
+    kprintf( INFO, "PCnet32: Assigned IRQ %d.\n", device->irq );
 
     /* Register pcnet32 device */
 
@@ -1125,7 +1126,7 @@ static int pcnet32_probe( pci_bus_t* pci_bus, pci_device_t* pci_device ) {
     }
 
     if ( ( pci_command & PCI_COMMAND_MASTER ) == 0 ) {
-        kprintf( "PCnet32: PCI master bit not set, setting it ...\n" );
+        kprintf( INFO, "PCnet32: PCI master bit not set, setting it ...\n" );
 
         pci_command |= ( PCI_COMMAND_MASTER | PCI_COMMAND_IO );
 
@@ -1150,7 +1151,7 @@ int init_module( void ) {
     pci_bus = get_bus_driver( "PCI" );
 
     if ( pci_bus == NULL ) {
-        kprintf( "PATA: PCI bus not found!\n" );
+        kprintf( WARNING, "PATA: PCI bus not found!\n" );
         return -1;
     }
 
@@ -1168,6 +1169,7 @@ int init_module( void ) {
                     cards_found++;
                 } else {
                     kprintf(
+                        ERROR,
                         "PCnet32: Failed to initialize card at %d:%d:%d\n",
                         pci_device->bus,
                         pci_device->dev,

@@ -18,7 +18,6 @@
 
 #include <console.h>
 #include <errno.h>
-#include <semaphore.h>
 #include <bitops.h>
 #include <macros.h>
 #include <vfs/devfs.h>
@@ -97,26 +96,26 @@ static int pata_cdrom_open( void* node, uint32_t flags, void** cookie ) {
 
     port = ( pata_port_t* )node;
 
-    LOCK( port->lock );
+    mutex_lock( port->mutex );
 
     if ( port->open ) {
-        UNLOCK( port->lock );
+        mutex_unlock( port->mutex );
 
         return -EBUSY;
     }
 
     port->open = true;
 
-    UNLOCK( port->lock );
+    mutex_unlock( port->mutex );
 
     error = pata_cdrom_get_capacity( port, &port->capacity );
 
     if ( error < 0 ) {
-        LOCK( port->lock );
+        mutex_lock( port->mutex );
 
         port->open = false;
 
-        UNLOCK( port->lock );
+        mutex_unlock( port->mutex );
 
         return error;
     }
@@ -129,12 +128,12 @@ static int pata_cdrom_close( void* node, void* cookie ) {
 
     port = ( pata_port_t* )node;
 
-    LOCK( port->lock );
+    mutex_lock( port->mutex );
 
     port->open = false;
     port->capacity = 0;
 
-    UNLOCK( port->lock );
+    mutex_unlock( port->mutex );
 
     return 0;
 }
@@ -178,7 +177,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
     data = ( uint8_t* )buffer;
     saved_size = size;
 
-    LOCK( port->lock );
+    mutex_lock( port->mutex );
 
     while ( size > 0 ) {
         size_t to_read = MIN( size, 32768 );
@@ -186,7 +185,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
         error = pata_cdrom_do_read( port, data, position, to_read );
 
         if ( error < 0 ) {
-            UNLOCK( port->lock );
+            mutex_unlock( port->mutex );
 
             return error;
         }
@@ -196,7 +195,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
         size -= to_read;
     }
 
-    UNLOCK( port->lock );
+    mutex_unlock( port->mutex );
 
     return saved_size;
 }
@@ -222,7 +221,7 @@ int pata_create_atapi_device_node( pata_port_t* port ) {
         '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 
-    kprintf( "PATA: Creating device node: /device/%s\n", device );
+    kprintf( INFO, "PATA: Creating device node: /device/%s\n", device );
 
     error = create_device_node( device, &pata_cdrom_calls, ( void* )port );
 

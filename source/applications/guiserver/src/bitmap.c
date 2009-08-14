@@ -19,13 +19,13 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <yaosp/semaphore.h>
+#include <pthread.h>
 
 #include <bitmap.h>
 
 static int bitmap_id_counter;
 static hashtable_t bitmap_table;
-static semaphore_id bitmap_lock;
+static pthread_mutex_t bitmap_lock;
 
 static int insert_bitmap( bitmap_t* bitmap ) {
     int error;
@@ -77,11 +77,11 @@ bitmap_t* create_bitmap( uint32_t width, uint32_t height, color_space_t color_sp
     bitmap->buffer = buffer;
     bitmap->flags = BITMAP_FREE_BUFFER;
 
-    LOCK( bitmap_lock );
+    pthread_mutex_lock( &bitmap_lock );
 
     error = insert_bitmap( bitmap );
 
-    UNLOCK( bitmap_lock );
+    pthread_mutex_unlock( &bitmap_lock );
 
     if ( error < 0 ) {
         goto error3;
@@ -117,11 +117,11 @@ bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_spac
     bitmap->buffer = buffer;
     bitmap->flags = 0;
 
-    LOCK( bitmap_lock );
+    pthread_mutex_lock( &bitmap_lock );
 
     error = insert_bitmap( bitmap );
 
-    UNLOCK( bitmap_lock );
+    pthread_mutex_unlock( &bitmap_lock );
 
     if ( error < 0 ) {
         goto error2;
@@ -141,7 +141,7 @@ int put_bitmap( bitmap_t* bitmap ) {
 
     do_delete = 0;
 
-    LOCK( bitmap_lock );
+    pthread_mutex_lock( &bitmap_lock );
 
     assert( bitmap->ref_count >= 0 );
 
@@ -150,7 +150,7 @@ int put_bitmap( bitmap_t* bitmap ) {
         do_delete = 1;
     }
 
-    UNLOCK( bitmap_lock );
+    pthread_mutex_unlock( &bitmap_lock );
 
     if ( do_delete ) {
         if ( bitmap->flags & BITMAP_FREE_BUFFER ) {
@@ -201,10 +201,9 @@ int init_bitmap( void ) {
         goto error1;
     }
 
-    bitmap_lock = create_semaphore( "bitmap lock", SEMAPHORE_BINARY, 0, 1 );
+    error = pthread_mutex_init( &bitmap_lock, NULL );
 
-    if ( bitmap_lock < 0 ) {
-        error = bitmap_lock;
+    if ( error < 0 ) {
         goto error2;
     }
 

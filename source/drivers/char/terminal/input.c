@@ -29,7 +29,7 @@ static int current_qualifiers = 0;
 static inline int terminal_send_event( terminal_t* terminal, const char* data, size_t size ) {
     int error;
 
-    UNLOCK( terminal_lock );
+    mutex_unlock( terminal_lock );
 
     error = pwrite(
         terminal->master_pty,
@@ -38,7 +38,7 @@ static inline int terminal_send_event( terminal_t* terminal, const char* data, s
         0
     );
 
-    LOCK( terminal_lock );
+    mutex_lock( terminal_lock );
 
     if ( error != ( int )size ) {
         return -1;
@@ -52,7 +52,7 @@ static int terminal_handle_event( input_event_t* event ) {
 
     event_handled = false;
 
-    LOCK( terminal_lock );
+    mutex_lock( terminal_lock );
 
     switch ( ( int )event->event ) {
         case E_KEY_PRESSED : {
@@ -154,11 +154,11 @@ static int terminal_handle_event( input_event_t* event ) {
             break;
 
         default :
-            kprintf( "Terminal: Unknown input event: %d\n", event->event );
+            kprintf( WARNING, "Terminal: Unknown input event: %d\n", event->event );
             break;
     }
 
-    UNLOCK( terminal_lock );
+    mutex_unlock( terminal_lock );
 
     return 0;
 }
@@ -175,7 +175,7 @@ static int terminal_input_thread( void* arg ) {
         error = pread( input_device, &event, sizeof( input_event_t ), 0 );
 
         if ( __unlikely( error < 0 ) ) {
-            kprintf( "Failed to read from input node: %d\n", error );
+            kprintf( ERROR, "Failed to read from input node: %d\n", error );
             break;
         }
 
@@ -225,7 +225,7 @@ int init_terminal_input( void ) {
         return thread;
     }
 
-    wake_up_thread( thread );
+    thread_wake_up( thread );
 
     return 0;
 }

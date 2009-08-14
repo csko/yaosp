@@ -21,6 +21,9 @@
 #include <time.h>
 #include <mm/kmalloc.h>
 #include <vfs/filesystem.h>
+#include <lock/mutex.h>
+#include <lock/condition.h>
+#include <lock/semaphore.h>
 #include <lib/hashtable.h>
 #include <lib/string.h>
 #include <lib/ctype.h>
@@ -29,9 +32,9 @@
 
 #define PTY_BUFSIZE 32768
 
+static lock_id pty_lock;
 static ino_t pty_inode_counter = 1;
 static hashtable_t pty_node_table;
-static semaphore_id pty_lock;
 
 static pty_node_t root_inode = {
     .inode_number = PTY_ROOT_INODE,
@@ -72,7 +75,7 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
 
     snprintf( tmp, sizeof( tmp ), "%s lock", name );
 
-    node->lock = create_semaphore( tmp, SEMAPHORE_BINARY, 0, 1 );
+    node->lock = mutex_create( tmp, MUTEX_NONE );
 
     if ( node->lock < 0 ) {
         goto error4;
@@ -80,7 +83,7 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
 
     snprintf( tmp, sizeof( tmp ), "%s read queue", name );
 
-    node->read_queue = create_semaphore( tmp, SEMAPHORE_COUNTING, 0, 0 );
+    node->read_queue = condition_create( tmp );
 
     if ( node->read_queue < 0 ) {
         goto error5;
@@ -88,7 +91,7 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
 
     snprintf( tmp,  sizeof( tmp ), "%s write queue", name );
 
-    node->write_queue = create_semaphore( tmp, SEMAPHORE_COUNTING, 0, 0 );
+    node->write_queue = condition_create( tmp );
 
     if ( node->write_queue < 0 ) {
         goto error6;
@@ -107,10 +110,10 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
     return node;
 
 error6:
-    delete_semaphore( node->read_queue );
+    condition_destroy( node->read_queue );
 
 error5:
-    delete_semaphore( node->lock );
+    mutex_destroy( node->lock );
 
 error4:
     kfree( node->buffer );
@@ -158,11 +161,11 @@ static int pty_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
         return 0;
     }
 
-    LOCK( pty_lock );
+    mutex_lock( pty_lock );
 
     node = ( pty_node_t* )hashtable_get( &pty_node_table, ( const void* )&inode_num );
 
-    UNLOCK( pty_lock );
+    mutex_unlock( pty_lock );
 
     if ( node == NULL ) {
         return -ENOINO;
@@ -202,11 +205,11 @@ static int pty_lookup_inode( void* fs_cookie, void* parent, const char* name, in
     data.length = name_length;
     data.inode_number = inode_num;
 
-    LOCK( pty_lock );
+    mutex_lock( pty_lock );
 
     error = hashtable_iterate( &pty_node_table, pty_lookup_helper, ( void* )&data );
 
-    UNLOCK( pty_lock );
+    mutex_unlock( pty_lock );
 
     if ( error == 0 ) {
         return -ENOENT;
@@ -273,12 +276,10 @@ static int pty_read( void* fs_cookie, void* _node, void* file_cookie, void* buff
     data = ( uint8_t* )buffer;
     node = ( pty_node_t* )_node;
 
-    LOCK( node->lock );
+    mutex_lock( node->lock );
 
     while ( node->size == 0 ) {
-        UNLOCK( node->lock );
-        LOCK( node->read_queue );
-        LOCK( node->lock );
+        condition_wait( node->read_queue, node->lock );
     }
 
     while ( ( size > 0 ) && ( node->size > 0 ) ) {
@@ -296,16 +297,16 @@ static int pty_read( void* fs_cookie, void* _node, void* file_cookie, void* buff
 
     while ( request != NULL ) {
         request->ready = true;
-        UNLOCK( request->sync );
+        semaphore_unlock( request->sync, 1 );
 
         request = request->next;
     }
 
-    UNLOCK( node->lock );
+    mutex_unlock( node->lock );
 
     /* Tell possibly waiting writers that we have free space */
 
-    UNLOCK( node->write_queue );
+    condition_broadcast( node->write_queue );
 
     return read;
 }
@@ -320,9 +321,7 @@ static int pty_do_write( pty_node_t* node, const void* buffer, size_t size ) {
 
     while ( size > 0 ) {
         while ( node->size == node->buffer_size ) {
-            UNLOCK( node->lock );
-            LOCK( node->write_queue );
-            LOCK( node->lock );
+            condition_wait( node->write_queue, node->lock );
         }
 
         while ( ( node->size < node->buffer_size ) && ( size > 0 ) ) {
@@ -341,14 +340,14 @@ static int pty_do_write( pty_node_t* node, const void* buffer, size_t size ) {
 
     while ( request != NULL ) {
         request->ready = true;
-        UNLOCK( request->sync );
+        semaphore_unlock( request->sync, 1 );
 
         request = request->next;
     }
 
     /* Tell possibly waiting readers that we have data */
 
-    UNLOCK( node->read_queue );
+    condition_broadcast( node->read_queue );
 
     return written;
 }
@@ -360,7 +359,7 @@ static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t s
 
     buf = ( char* )buffer;
 
-    LOCK( master->lock );
+    mutex_lock( master->lock );
 
     term_info = master->term_info;
 
@@ -408,7 +407,7 @@ static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t s
         }
     }
 
-    UNLOCK( master->lock );
+    mutex_unlock( master->lock );
 
     return size;
 }
@@ -447,7 +446,7 @@ static int pty_do_write_slave( pty_node_t* slave, const void* buffer, size_t siz
 
     data = ( char* )buffer;
 
-    LOCK( slave->lock );
+    mutex_lock( slave->lock );
 
     term_info = slave->term_info;
 
@@ -507,7 +506,7 @@ no_echo:
         ;
     }
 
-    UNLOCK( slave->lock );
+    mutex_unlock( slave->lock );
 
     return size;
 }
@@ -534,7 +533,7 @@ static int pty_ioctl( void* fs_cookie, void* _node, void* file_cookie, int comma
 
     node = ( pty_node_t* )_node;
 
-    LOCK( node->lock );
+    mutex_lock( node->lock );
 
     switch ( command ) {
         case TCGETA :
@@ -560,12 +559,12 @@ static int pty_ioctl( void* fs_cookie, void* _node, void* file_cookie, int comma
             break;
 
         default :
-            kprintf( "Terminal: Unknown pty ioctl: %x\n", command );
+            kprintf( WARNING, "Terminal: Unknown pty ioctl: %x\n", command );
             error = -ENOSYS;
             break;
     }
 
-    UNLOCK( node->lock );
+    mutex_unlock( node->lock );
 
     return error;
 }
@@ -621,11 +620,11 @@ static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, s
     data.required = cookie->current;
     data.entry = entry;
 
-    LOCK( pty_lock );
+    mutex_lock( pty_lock );
 
     error = hashtable_iterate( &pty_node_table, pty_read_dir_helper, ( void* )&data );
 
-    UNLOCK( pty_lock );
+    mutex_unlock( pty_lock );
 
     if ( error == 0 ) {
         return 0;
@@ -759,12 +758,12 @@ static int pty_create(
 
     /* Insert the nodes */
 
-    LOCK( pty_lock );
+    mutex_lock( pty_lock );
 
     pty_insert_node( master );
     pty_insert_node( slave );
 
-    UNLOCK( pty_lock );
+    mutex_unlock( pty_lock );
 
     *inode_number = master->inode_number;
 
@@ -784,7 +783,7 @@ static int pty_add_select_request( void* fs_cookie, void* _node, void* file_cook
 
     node = ( pty_node_t* )_node;
 
-    LOCK( node->lock );
+    mutex_lock( node->lock );
 
     switch ( ( int )request->type ) {
         case SELECT_READ :
@@ -793,7 +792,7 @@ static int pty_add_select_request( void* fs_cookie, void* _node, void* file_cook
 
             if ( node->size > 0 ) {
                 request->ready = true;
-                UNLOCK( request->sync );
+                semaphore_unlock( request->sync, 1 );
             }
 
             break;
@@ -804,13 +803,13 @@ static int pty_add_select_request( void* fs_cookie, void* _node, void* file_cook
 
             if ( node->size < node->buffer_size ) {
                 request->ready = true;
-                UNLOCK( request->sync );
+                semaphore_unlock( request->sync, 1 );
             }
 
             break;
     }
 
-    UNLOCK( node->lock );
+    mutex_unlock( node->lock );
 
     return 0;
 }
@@ -820,7 +819,7 @@ static int pty_remove_select_request( void* fs_cookie, void* _node, void* file_c
 
     node = ( pty_node_t* )_node;
 
-    LOCK( node->lock );
+    mutex_lock( node->lock );
 
     switch ( ( int )request->type ) {
         case SELECT_READ : {
@@ -866,7 +865,7 @@ static int pty_remove_select_request( void* fs_cookie, void* _node, void* file_c
         }
     }
 
-    UNLOCK( node->lock );
+    mutex_unlock( node->lock );
 
     return 0;
 }
@@ -937,7 +936,7 @@ int init_pty_filesystem( void ) {
         goto error1;
     }
 
-    pty_lock = create_semaphore( "PTY lock", SEMAPHORE_BINARY, 0, 1 );
+    pty_lock = mutex_create( "PTY mutex", MUTEX_NONE );
 
     if ( pty_lock < 0 ) {
         goto error2;
@@ -952,7 +951,7 @@ int init_pty_filesystem( void ) {
     return 0;
 
 error3:
-    delete_semaphore( pty_lock );
+    mutex_destroy( pty_lock );
 
 error2:
     destroy_hashtable( &pty_node_table );

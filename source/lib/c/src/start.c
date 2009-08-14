@@ -44,15 +44,6 @@ void __libc_start_main( char** argv, char** envp ) {
     environ = envp;
     __environ_allocated = 0;
 
-    /* Initialize the memory allocator */
-
-    error = init_malloc();
-
-    if ( error < 0 ) {
-        dbprintf( "Failed to initialize malloc!\n" );
-        return;
-    }
-
     /* Call the main function of the application */
 
     error = main( argc, argv, envp );

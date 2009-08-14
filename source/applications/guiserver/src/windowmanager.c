@@ -25,7 +25,7 @@
 #include <window.h>
 #include <assert.h>
 
-semaphore_id wm_lock;
+pthread_mutex_t wm_lock;
 
 static array_t window_stack;
 
@@ -187,7 +187,7 @@ int wm_register_window( window_t* window ) {
     rect_t mouse_rect;
     point_t mouse_position;
 
-    LOCK( wm_lock );
+    pthread_mutex_lock( &wm_lock );
 
     /* Insert the new window to the window stack */
 
@@ -261,12 +261,12 @@ int wm_register_window( window_t* window ) {
 
     active_window = window;
 
-    UNLOCK( wm_lock );
+    pthread_mutex_unlock( &wm_lock );
 
     return 0;
 
 error1:
-    UNLOCK( wm_lock );
+    pthread_mutex_unlock( &wm_lock );
 
     return error;
 }
@@ -456,25 +456,25 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
 }
 
 int wm_key_pressed( int key ) {
-    LOCK( wm_lock );
+    pthread_mutex_lock( &wm_lock );
 
     if ( active_window != NULL ) {
         window_key_pressed( active_window, key );
     }
 
-    UNLOCK( wm_lock );
+    pthread_mutex_unlock( &wm_lock );
 
     return 0;
 }
 
 int wm_key_released( int key ) {
-    LOCK( wm_lock );
+    pthread_mutex_lock( &wm_lock );
 
     if ( active_window != NULL ) {
         window_key_released( active_window, key );
     }
 
-    UNLOCK( wm_lock );
+    pthread_mutex_unlock( &wm_lock );
 
     return 0;
 }
@@ -485,7 +485,7 @@ int wm_mouse_moved( point_t* delta ) {
     point_t mouse_position;
     point_t old_mouse_position;
 
-    LOCK( wm_lock );
+    pthread_mutex_lock( &wm_lock );
 
     hide_mouse_pointer();
 
@@ -526,13 +526,13 @@ int wm_mouse_moved( point_t* delta ) {
 done:
     show_mouse_pointer();
 
-    UNLOCK( wm_lock );
+    pthread_mutex_unlock( &wm_lock );
 
     return 0;
 }
 
 int wm_mouse_pressed( int button ) {
-    LOCK( wm_lock );
+    pthread_mutex_lock( &wm_lock );
 
     if ( mouse_window != NULL ) {
         /* The window under the mouse is the new active window */
@@ -550,20 +550,20 @@ int wm_mouse_pressed( int button ) {
 
     mouse_down_window = mouse_window;
 
-    UNLOCK( wm_lock );
+    pthread_mutex_unlock( &wm_lock );
 
     return 0;
 }
 
 int wm_mouse_released( int button ) {
-    LOCK( wm_lock );
+    pthread_mutex_lock( &wm_lock );
 
     if ( mouse_down_window != NULL ) {
         window_mouse_released( mouse_down_window, button );
         mouse_down_window = NULL;
     }
 
-    UNLOCK( wm_lock );
+    pthread_mutex_unlock( &wm_lock );
 
     return 0;
 }
@@ -649,10 +649,9 @@ int init_windowmanager( void ) {
 
     array_set_realloc_size( &window_stack, 32 );
 
-    wm_lock = create_semaphore( "Window manager lock", SEMAPHORE_BINARY, 0, 1 );
+    error = pthread_mutex_init( &wm_lock, NULL );
 
-    if ( wm_lock < 0 ) {
-        error = wm_lock;
+    if ( error < 0 ) {
         goto error2;
     }
 

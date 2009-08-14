@@ -162,7 +162,7 @@ static int ramfs_mount( const char* device, uint32_t flags, void** fs_cookie, in
 
     cookie->inode_id_counter = 0;
 
-    cookie->lock = create_semaphore( "ramfs lock", SEMAPHORE_BINARY, 0, 1 );
+    cookie->lock = mutex_create( "ramfs mutex", MUTEX_NONE );
 
     if ( cookie->lock < 0 ) {
         error = cookie->lock;
@@ -182,7 +182,7 @@ static int ramfs_mount( const char* device, uint32_t flags, void** fs_cookie, in
     return 0;
 
 error4:
-    delete_semaphore( cookie->lock );
+    mutex_destroy( cookie->lock );
 
 error3:
     destroy_hashtable( &cookie->inode_table );
@@ -212,7 +212,7 @@ static int ramfs_unmount( void* fs_cookie ) {
 
     /* Delete the lock */
 
-    delete_semaphore( cookie->lock );
+    mutex_destroy( cookie->lock );
 
     /* Delete all inodes and the inode table */
 
@@ -232,7 +232,7 @@ static int ramfs_read_inode( void* fs_cookie, ino_t inode_number, void** node ) 
 
     cookie = ( ramfs_cookie_t* )fs_cookie;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     inode = ( ramfs_inode_t* )hashtable_get( &cookie->inode_table, ( const void* )&inode_number );
 
@@ -242,7 +242,7 @@ static int ramfs_read_inode( void* fs_cookie, ino_t inode_number, void** node ) 
         inode->is_loaded = true;
     }
 
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     if ( inode == NULL ) {
         return -ENOINO;
@@ -260,7 +260,7 @@ static int ramfs_write_inode( void* fs_cookie, void* node ) {
     cookie = ( ramfs_cookie_t* )fs_cookie;
     inode = ( ramfs_inode_t* )node;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     ASSERT( inode->is_loaded );
 
@@ -270,7 +270,7 @@ static int ramfs_write_inode( void* fs_cookie, void* node ) {
         ramfs_delete_inode( cookie, inode );
     }
 
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return 0;
 }
@@ -305,11 +305,11 @@ static int ramfs_lookup_inode( void* fs_cookie, void* _parent, const char* name,
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )_parent;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     inode = ramfs_do_lookup_inode( parent, name, name_length );
 
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     if ( inode == NULL ) {
         return -ENOENT;
@@ -390,7 +390,7 @@ static int ramfs_read( void* fs_cookie, void* node, void* file_cookie, void* buf
         return 0;
     }
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     if ( ( inode->data == NULL ) ||
          ( pos >= inode->size ) ) {
@@ -409,7 +409,7 @@ static int ramfs_read( void* fs_cookie, void* node, void* file_cookie, void* buf
     result = size;
 
 out:
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return result;
 }
@@ -432,7 +432,7 @@ static int ramfs_write( void* fs_cookie, void* node, void* _file_cookie, const v
         return 0;
     }
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     if ( file_cookie->open_flags & O_APPEND ) {
         pos = inode->size;
@@ -465,7 +465,7 @@ static int ramfs_write( void* fs_cookie, void* node, void* _file_cookie, const v
     result = size;
 
 out:
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return result;
 }
@@ -477,7 +477,7 @@ static int ramfs_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
     cookie = ( ramfs_cookie_t* )fs_cookie;
     inode = ( ramfs_inode_t* )node;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     stat->st_ino = inode->inode_number;
     stat->st_size = inode->size;
@@ -496,7 +496,7 @@ static int ramfs_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
       }
     }
 
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return 0;
 }
@@ -508,7 +508,7 @@ static int ramfs_write_stat( void* fs_cookie, void* node, struct stat* stat, uin
     cookie = ( ramfs_cookie_t* )fs_cookie;
     inode = ( ramfs_inode_t* )node;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     if ( mask & WSTAT_ATIME ) {
         inode->atime = stat->st_atime;
@@ -522,7 +522,7 @@ static int ramfs_write_stat( void* fs_cookie, void* node, struct stat* stat, uin
         inode->ctime = stat->st_ctime;
     }
 
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return 0;
 }
@@ -543,7 +543,7 @@ static int ramfs_read_directory( void* fs_cookie, void* node, void* file_cookie,
 
     ASSERT( parent->is_directory );
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     inode = parent->first_children;
 
@@ -569,7 +569,7 @@ static int ramfs_read_directory( void* fs_cookie, void* node, void* file_cookie,
 
     parent->atime = time( NULL );
 
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return result;
 }
@@ -593,7 +593,7 @@ static int ramfs_create( void* fs_cookie, void* node, const char* name, int name
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )node;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     new_inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -619,7 +619,7 @@ static int ramfs_create( void* fs_cookie, void* node, const char* name, int name
     *inode_number = new_inode->inode_number;
 
 out:
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return error;
 }
@@ -633,7 +633,7 @@ static int ramfs_unlink( void* fs_cookie, void* node, const char* name, int name
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )node;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -650,7 +650,7 @@ static int ramfs_unlink( void* fs_cookie, void* node, const char* name, int name
     ramfs_delete_inode( cookie, inode );
 
 out:
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return error;
 }
@@ -668,7 +668,7 @@ static int ramfs_mkdir( void* fs_cookie, void* node, const char* name, int name_
         return -EINVAL;
     }
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     new_inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -687,7 +687,7 @@ static int ramfs_mkdir( void* fs_cookie, void* node, const char* name, int name_
     parent->mtime = time( NULL );
 
 out:
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return error;
 }
@@ -701,7 +701,7 @@ static int ramfs_rmdir( void* fs_cookie, void* node, const char* name, int name_
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )node;
 
-    LOCK( cookie->lock );
+    mutex_lock( cookie->lock );
 
     inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -725,7 +725,7 @@ static int ramfs_rmdir( void* fs_cookie, void* node, const char* name, int name_
     parent->mtime = time( NULL );
 
 out:
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return error;
 }
@@ -737,7 +737,8 @@ static int ramfs_symlink( void* fs_cookie, void* _node, const char* name, int na
     ramfs_inode_t* new_node;
 
     cookie = ( ramfs_cookie_t* )fs_cookie;
-    LOCK( cookie->lock );
+
+    mutex_lock( cookie->lock );
 
     /* Check if this name already exists */
 
@@ -786,7 +787,7 @@ static int ramfs_symlink( void* fs_cookie, void* _node, const char* name, int na
     node->mtime = time( NULL );
 
 out:
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return error;
 }
@@ -798,10 +799,11 @@ static int ramfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t le
     node = ( ramfs_inode_t* )_node;
 
     cookie = ( ramfs_cookie_t* )fs_cookie;
-    LOCK( cookie->lock );
+
+    mutex_lock( cookie->lock );
 
     if ( node->link_path == NULL ) {
-        UNLOCK( cookie->lock );
+        mutex_unlock( cookie->lock );
 
         return -EINVAL;
     }
@@ -811,7 +813,7 @@ static int ramfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t le
 
     node->atime = time( NULL );
 
-    UNLOCK( cookie->lock );
+    mutex_unlock( cookie->lock );
 
     return strlen( buffer );
 }
@@ -848,7 +850,7 @@ static filesystem_calls_t ramfs_calls = {
 int init_module( void ) {
     int error;
 
-    kprintf( "RAMFS: Registering filesystem driver\n" );
+    kprintf( INFO, "RAMFS: Registering filesystem driver\n" );
 
     error = register_filesystem( "ramfs", &ramfs_calls );
 

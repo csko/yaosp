@@ -17,7 +17,6 @@
  */
 
 #include <types.h>
-#include <semaphore.h>
 #include <errno.h>
 #include <macros.h>
 #include <mm/kmalloc.h>
@@ -28,7 +27,7 @@
 #include "input.h"
 
 static stack_t input_stack;
-static semaphore_id input_stack_lock = -1;
+static lock_id input_stack_lock = -1;
 static uint32_t input_node_counter = 0;
 
 static input_device_t* active_input_receiver = NULL;
@@ -57,12 +56,10 @@ static int input_device_read( void* node, void* cookie, void* buffer, off_t posi
 
     device = ( input_device_t* )node;
 
-    LOCK( input_stack_lock );
+    mutex_lock( input_stack_lock );
 
     while ( device->first_event == NULL ) {
-        UNLOCK( input_stack_lock );
-        LOCK( device->sync );
-        LOCK( input_stack_lock );
+        condition_wait( device->sync, input_stack_lock );
     }
 
     wrapper = device->first_event;
@@ -72,7 +69,7 @@ static int input_device_read( void* node, void* cookie, void* buffer, off_t posi
         device->last_event = NULL;
     }
 
-    UNLOCK( input_stack_lock );
+    mutex_unlock( input_stack_lock );
 
     memcpy( buffer, &wrapper->e, sizeof( input_event_t ) );
 
@@ -102,7 +99,7 @@ input_device_t* create_input_device( int flags ) {
         goto error1;
     }
 
-    device->sync = create_semaphore( "input node sync", SEMAPHORE_COUNTING, 0, 0 );
+    device->sync = condition_create( "input node sync" );
 
     if ( device->sync < 0 ) {
         error = device->sync;
@@ -122,7 +119,7 @@ input_device_t* create_input_device( int flags ) {
     return device;
 
 error3:
-    delete_semaphore( device->sync );
+    condition_destroy( device->sync );
 
 error2:
     kfree( device );
@@ -142,7 +139,7 @@ int insert_input_device( input_device_t* device ) {
     void* dummy;
     char node[ 64 ];
 
-    error = LOCK( input_stack_lock );
+    error = mutex_lock( input_stack_lock );
 
     if ( __unlikely( error < 0 ) ) {
         return error;
@@ -168,7 +165,7 @@ int insert_input_device( input_device_t* device ) {
 
     active_input_receiver = device;
 
-    UNLOCK( input_stack_lock );
+    mutex_unlock( input_stack_lock );
 
     return 0;
 
@@ -176,17 +173,17 @@ error2:
     stack_pop( &input_stack, &dummy );
 
 error1:
-    UNLOCK( input_stack_lock );
+    mutex_unlock( input_stack_lock );
 
     return error;
 }
 
 int insert_input_event( input_event_t* event ) {
     bool skip_event = false;
-    semaphore_id active_sync = -1;
+    lock_id active_sync = -1;
     input_event_wrapper_t* wrapper;
 
-    LOCK( input_stack_lock );
+    mutex_lock( input_stack_lock );
 
     if ( active_input_receiver != NULL ) {
         switch ( event->event ) {
@@ -230,12 +227,12 @@ int insert_input_event( input_event_t* event ) {
         }
     }
 
-    UNLOCK( input_stack_lock );
+    mutex_unlock( input_stack_lock );
 
     /* Tell the readers that they have something to read ;) */
 
     if ( active_sync != -1 ) {
-        UNLOCK( active_sync );
+        condition_signal( active_sync );
     }
 
     return 0;
@@ -250,7 +247,7 @@ int init_node_manager( void ) {
         goto error1;
     }
 
-    input_stack_lock = create_semaphore( "input stack lock", SEMAPHORE_BINARY, 0, 1 );
+    input_stack_lock = mutex_create( "input stack mutex", MUTEX_NONE );
 
     if ( input_stack_lock < 0 ) {
         error = input_stack_lock;

@@ -32,7 +32,7 @@ int pata_port_wait( pata_port_t* port, uint8_t set, uint8_t clear, bool check_er
     end_time = get_system_time() + timeout;
 
     inb( port->ctrl_base );
-    sleep_thread( 1 );
+    thread_sleep( 1 );
 
     while ( get_system_time() < end_time ) {
         uint8_t status;
@@ -40,7 +40,7 @@ int pata_port_wait( pata_port_t* port, uint8_t set, uint8_t clear, bool check_er
         status = inb( port->ctrl_base );
 
         if ( ( check_error ) && ( ( status & PATA_STATUS_ERROR ) != 0 ) ) {
-            kprintf( "PATA: pata_port_wait(): Error! (status=%x)\n", status );
+            kprintf( ERROR, "PATA: pata_port_wait(): Error! (status=%x)\n", status );
             return -1;
         }
 
@@ -60,7 +60,7 @@ void pata_port_select( pata_port_t* port ) {
     }
 
     inb( port->ctrl_base );
-    sleep_thread( 1 );
+    thread_sleep( 1 );
 }
 
 bool pata_is_port_present( pata_port_t* port ) {
@@ -73,7 +73,7 @@ bool pata_is_port_present( pata_port_t* port ) {
     outb( 0x55, port->cmd_base + PATA_REG_LBA_LOW );
 
     inb( port->ctrl_base );
-    sleep_thread( 1 );
+    thread_sleep( 1 );
 
     count = inb( port->cmd_base + PATA_REG_COUNT );
     lba_low = inb( port->cmd_base + PATA_REG_LBA_LOW );
@@ -120,7 +120,7 @@ int pata_port_identify( pata_port_t* port ) {
         uint8_t err;
 
         err = inb( port->cmd_base + PATA_REG_ERROR );
-        kprintf( "PATA: Identify command timed out (error=%x)\n", err );
+        kprintf( ERROR, "PATA: Identify command timed out (error=%x)\n", err );
 
         return error;
     }

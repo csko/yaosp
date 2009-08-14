@@ -213,7 +213,7 @@ int generic_draw_text( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font
 
     point_copy( &current_point, point );
 
-    LOCK( font->style->lock );
+    pthread_mutex_lock( &font->style->mutex );
 
     while ( length > 0 ) {
         int char_length = utf8_char_length( *text );
@@ -236,7 +236,7 @@ int generic_draw_text( bitmap_t* bitmap, point_t* point, rect_t* clip_rect, font
         current_point.x += glyph->advance.x;
     }
 
-    UNLOCK( font->style->lock );
+    pthread_mutex_unlock( &font->style->mutex );
 
     return 0;
 }

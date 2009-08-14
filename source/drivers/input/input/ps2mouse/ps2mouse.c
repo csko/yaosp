@@ -139,7 +139,7 @@ static int ps2_mouse_init( void ) {
     id = ps2_mouse_read_id();
 
     if ( id == PS2_AUX_ID_ERROR ) {
-        kprintf( "PS/2 mouse: Invalid mouse ID: %x\n", id );
+        kprintf( ERROR, "PS/2 mouse: Invalid mouse ID: %x\n", id );
         return -EINVAL;
     }
 
@@ -209,7 +209,7 @@ static int ps2_mouse_thread( void* arg ) {
 
     while ( 1 ) {
         if ( pread( mouse_device, &data, 1, 0 ) != 1 ) {
-            kprintf( "PS2mouse: Failed to read data from the device!\n" );
+            kprintf( ERROR, "PS2mouse: Failed to read data from the device!\n" );
             break;
         }
 
@@ -249,7 +249,7 @@ static int ps2_mouse_start( void ) {
         return mouse_thread;
     }
 
-    error = wake_up_thread( mouse_thread );
+    error = thread_wake_up( mouse_thread );
 
     if ( error < 0 ) {
         return error;

@@ -291,7 +291,7 @@ static int ext2_flush_superblock( ext2_cookie_t* cookie ) {
     error = pwrite( cookie->fd, ( void* )&cookie->super_block, sizeof( ext2_super_block_t ), 1024 );
 
     if ( __unlikely( error != sizeof( ext2_super_block_t ) ) ) {
-        kprintf( "ext2: Failed to flush superblock\n" );
+        kprintf( ERROR, "ext2: Failed to flush superblock\n" );
         return -EIO;
     }
 
@@ -1635,7 +1635,7 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     /* Validate the superblock */
 
     if ( cookie->super_block.s_magic != EXT2_SUPER_MAGIC ) {
-        kprintf( "ext2: Bad magic number: 0x%x\n", cookie->super_block.s_magic );
+        kprintf( ERROR, "ext2: Bad magic number: 0x%x\n", cookie->super_block.s_magic );
         result = -EINVAL;
         goto error2;
     }
@@ -1643,7 +1643,7 @@ static int ext2_mount( const char* device, uint32_t flags, void** fs_cookie, ino
     /* Check fs state */
 
     if ( cookie->super_block.s_state != EXT2_VALID_FS ) {
-        kprintf( "ext2: Partition is damaged or was not cleanly unmounted!\n" );
+        kprintf( ERROR, "ext2: Partition is damaged or was not cleanly unmounted!\n" );
         result = -EINVAL;
         goto error2;
     }
@@ -1824,7 +1824,7 @@ static filesystem_calls_t ext2_calls = {
 int init_module( void ) {
     int error;
 
-    kprintf( "ext2: Registering filesystem driver\n" );
+    kprintf( INFO, "ext2: Registering filesystem driver\n" );
 
     error = register_filesystem( "ext2", &ext2_calls );
 

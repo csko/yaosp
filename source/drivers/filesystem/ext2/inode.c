@@ -283,7 +283,7 @@ int ext2_do_free_inode_blocks( ext2_cookie_t* cookie, ext2_inode_t* inode ) {
 
     for ( i = 0; i < MIN( remaining_blocks, EXT2_NDIR_BLOCKS ); i++, remaining_blocks-- ) {
         if ( fs_inode->i_block[ i ] == 0 ) {
-            kprintf( "ext2: Non-allocated block found while freeing inode blocks!\n" );
+            kprintf( WARNING, "ext2: Non-allocated block found while freeing inode blocks!\n" );
             goto done;
         }
 

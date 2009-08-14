@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
-#include <yaosp/semaphore.h>
+#include <pthread.h>
 
 #include <region.h>
 
@@ -28,7 +28,7 @@
 #define INITIAL_FREE_CLIP_RECT 32
 
 static int free_clip_rect_count = 0;
-static semaphore_id clip_rect_lock = -1;
+static pthread_mutex_t clip_rect_lock;
 static clip_rect_t* clip_rect_list = NULL;
 
 static clip_rect_t* get_clip_rect( void ) {
@@ -36,7 +36,7 @@ static clip_rect_t* get_clip_rect( void ) {
 
     rect = NULL;
 
-    LOCK( clip_rect_lock );
+    pthread_mutex_lock( &clip_rect_lock );
 
     if ( free_clip_rect_count > 0 ) {
         assert( clip_rect_list != NULL );
@@ -47,7 +47,7 @@ static clip_rect_t* get_clip_rect( void ) {
         free_clip_rect_count--;
     }
 
-    UNLOCK( clip_rect_lock );
+    pthread_mutex_unlock( &clip_rect_lock );
 
     if ( rect == NULL ) {
         rect = ( clip_rect_t* )malloc( sizeof( clip_rect_t ) );
@@ -63,7 +63,7 @@ static clip_rect_t* get_clip_rect( void ) {
 }
 
 static void put_clip_rect( clip_rect_t* rect ) {
-    LOCK( clip_rect_lock );
+    pthread_mutex_lock( &clip_rect_lock );
 
     if ( free_clip_rect_count < MAX_FREE_CLIP_RECT ) {
         rect->next = clip_rect_list;
@@ -74,7 +74,7 @@ static void put_clip_rect( clip_rect_t* rect ) {
         rect = NULL;
     }
 
-    UNLOCK( clip_rect_lock );
+    pthread_mutex_unlock( &clip_rect_lock );
 
     if ( rect != NULL ) {
         free( rect );
@@ -236,6 +236,7 @@ int region_duplicate( region_t* old_region, region_t* new_region ) {
 
 int init_region_manager( void ) {
     int i;
+    int error;
     clip_rect_t* rect;
 
     for ( i = 0; i < INITIAL_FREE_CLIP_RECT; i++ ) {
@@ -249,10 +250,10 @@ int init_region_manager( void ) {
         clip_rect_list = rect;
     }
 
-    clip_rect_lock = create_semaphore( "clip rect list lock", SEMAPHORE_BINARY, 0, 1 );
+    error = pthread_mutex_init( &clip_rect_lock, NULL );
 
-    if ( clip_rect_lock < 0 ) {
-        return clip_rect_lock;
+    if ( error < 0 ) {
+        return error;
     }
 
     return 0;

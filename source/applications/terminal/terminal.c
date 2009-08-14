@@ -227,7 +227,7 @@ int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
     int new_last_line;
     int current_last_line;
 
-    LOCK( terminal->lock );
+    pthread_mutex_lock( &terminal->lock );
 
     current_last_line = terminal->last_line;
 
@@ -253,7 +253,7 @@ int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
 
     new_last_line = terminal->last_line;
 
-    UNLOCK( terminal->lock );
+    pthread_mutex_unlock( &terminal->lock );
 
     if ( new_last_line > current_last_line ) {
         window_insert_callback( window, terminal_update_widget, NULL );
@@ -281,9 +281,7 @@ terminal_t* create_terminal( int width, int height ) {
 
     memset( terminal->lines, 0, sizeof( terminal_line_t ) * terminal->max_lines );
 
-    terminal->lock = create_semaphore( "terminal lock", SEMAPHORE_BINARY, 0, 1 );
-
-    if ( terminal->lock < 0 ) {
+    if ( pthread_mutex_init( &terminal->lock, NULL ) < 0 ) {
         goto error3;
     }
 

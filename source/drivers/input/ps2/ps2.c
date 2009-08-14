@@ -36,7 +36,7 @@ static int ps2_wait_read( void ) {
     }
 
     if ( i == 0 ) {
-        kprintf( "ps2_wait_read(): Timed out!\n" );
+        kprintf( ERROR, "ps2_wait_read(): Timed out!\n" );
         return -ETIME;
     }
 
@@ -52,7 +52,7 @@ static int ps2_wait_write( void ) {
     }
 
     if ( i == 0 ) {
-        kprintf( "ps2_wait_write(): Timed out!\n" );
+        kprintf( ERROR, "ps2_wait_write(): Timed out!\n" );
         return -ETIME;
     }
 
@@ -109,13 +109,13 @@ int ps2_read_command( uint8_t command, uint8_t* data ) {
 
     error = ps2_wait_read();
 
-    if ( error < 0 ) {  
+    if ( error < 0 ) {
         goto out;
     }
 
     *data = inb( PS2_PORT_DATA );
 
-out:    
+out:
     spinunlock_enable( &ps2_spinlock );
 
     return error;
@@ -202,7 +202,7 @@ static int ps2_controller_test( void ) {
     }
 
     if ( data != PS2_RET_CTL_TEST ) {
-        kprintf( "PS2: Contorller selftest failed!\n" );
+        kprintf( ERROR, "PS2: Contorller selftest failed!\n" );
         return -EINVAL;
     }
 

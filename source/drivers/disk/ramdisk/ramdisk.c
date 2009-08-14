@@ -18,10 +18,10 @@
 
 #include <console.h>
 #include <errno.h>
-#include <semaphore.h>
 #include <macros.h>
 #include <vfs/devfs.h>
 #include <vfs/vfs.h>
+#include <lock/mutex.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -29,8 +29,8 @@
 
 #include "ramdisk.h"
 
+static lock_id ramdisk_lock;
 static int ramdisk_id_counter = 0;
-static semaphore_id ramdisk_lock;
 static hashtable_t ramdisk_table;
 
 static int ramdisk_read( void* node, void* cookie, void* buffer, off_t position, size_t size ) {
@@ -121,7 +121,7 @@ ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info ) {
 
     node->size = info->size;
 
-    LOCK( ramdisk_lock );
+    mutex_lock( ramdisk_lock );
 
     do {
         node->id = ramdisk_id_counter++;
@@ -133,7 +133,7 @@ ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info ) {
 
     hashtable_add( &ramdisk_table, ( hashitem_t* )node );
 
-    UNLOCK( ramdisk_lock );
+    mutex_unlock( ramdisk_lock );
 
     snprintf( path, sizeof( path ), "storage/ram%d", node->id );
 
@@ -151,7 +151,7 @@ ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info ) {
         struct stat st;
         size_t to_read;
 
-        kprintf( "Loading ramdisk data from file: %s\n", info->image_file );
+        kprintf( INFO, "Loading ramdisk data from file: %s\n", info->image_file );
 
         fd = open( info->image_file, O_RDONLY );
 
@@ -209,7 +209,7 @@ static bool ramdisk_compare( const void* key1, const void* key2 ) {
 int init_module( void ) {
     int error;
 
-    ramdisk_lock = create_semaphore( "ramdisk lock", SEMAPHORE_BINARY, 0, 1 );
+    ramdisk_lock = mutex_create( "ramdisk mutex", MUTEX_NONE );
 
     if ( ramdisk_lock < 0 ) {
         error = ramdisk_lock;
@@ -240,7 +240,7 @@ error3:
     destroy_hashtable( &ramdisk_table );
 
 error2:
-    delete_semaphore( ramdisk_lock );
+    mutex_destroy( ramdisk_lock );
 
 error1:
     return error;

@@ -1,3 +1,5 @@
+#if 0
+
 /* Semaphore functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
@@ -45,3 +47,5 @@ int lock_semaphore( semaphore_id id, int count, uint64_t timeout );
 int unlock_semaphore( semaphore_id id, int count );
 
 #endif // _YAOSP_SEMAPHORE_H_
+
+#endif

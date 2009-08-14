@@ -18,8 +18,8 @@
 
 #include <console.h>
 #include <thread.h>
-#include <semaphore.h>
 #include <macros.h>
+#include <lock/condition.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
 
@@ -36,7 +36,7 @@ static size_t size;
 static size_t read_pos;
 static size_t write_pos;
 static char kterm_buffer[ KTERM_BUFSIZE ];
-static semaphore_id kterm_sync;
+static lock_id kterm_sync;
 static spinlock_t kterm_lock = INIT_SPINLOCK( "kernel terminal" );
 static thread_id kterm_flusher;
 
@@ -54,7 +54,7 @@ static void kterm_putchar( console_t* console, char c ) {
 }
 
 static void kterm_flush( console_t* console ) {
-    UNLOCK( kterm_sync );
+    condition_signal( kterm_sync );
 }
 
 static console_operations_t kterm_console_ops = {
@@ -78,7 +78,7 @@ static int kterm_flusher_thread( void* arg ) {
 
     while ( 1 ) {
         if ( !more_data ) {
-            LOCK( kterm_sync );
+            condition_wait( kterm_sync, -1 );
         }
 
         spinlock_disable( &kterm_lock );
@@ -121,7 +121,7 @@ int init_kernel_terminal( void ) {
     kterm_tty = open( buf, O_WRONLY );
 
     if ( kterm_tty < 0 ) {
-        kprintf( "Terminal: Failed to open slave tty for kernel!\n" );
+        kprintf( ERROR, "Terminal: Failed to open slave tty for kernel!\n" );
         return kterm_tty;
     }
 
@@ -131,7 +131,7 @@ int init_kernel_terminal( void ) {
     read_pos = 0;
     write_pos = 0;
 
-    kterm_sync = create_semaphore( "kterm sync", SEMAPHORE_COUNTING, 0, 0 );
+    kterm_sync = condition_create( "kterm sync" );
 
     if ( kterm_sync < 0 ) {
         close( kterm_tty );
@@ -144,11 +144,11 @@ int init_kernel_terminal( void ) {
 
     if ( kterm_flusher < 0 ) {
         close( kterm_tty );
-        delete_semaphore( kterm_sync );
+        condition_destroy( kterm_sync );
         return kterm_flusher;
     }
 
-    wake_up_thread( kterm_flusher );
+    thread_wake_up( kterm_flusher );
 
     /* Set our conosle as the screen */
 

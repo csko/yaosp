@@ -1,3 +1,5 @@
+#if 0
+
 /* Semaphore functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
@@ -53,3 +55,5 @@ int unlock_semaphore( semaphore_id id, int count ) {
         count
     );
 }
+
+#endif

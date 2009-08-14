@@ -33,7 +33,7 @@ int ps2_buffer_add( ps2_buffer_t* buffer, uint8_t data ) {
     buffer->write_pos = ( buffer->write_pos + 1 ) % PS2_BUFSIZE;
     buffer->buffer_size++;
 
-    UNLOCK( buffer->sync );
+    semaphore_unlock( buffer->sync, 1 );
 
     return 0;
 }
@@ -43,7 +43,9 @@ int ps2_buffer_size( ps2_buffer_t* buffer ) {
 }
 
 int ps2_buffer_sync( ps2_buffer_t* buffer ) {
-    return LOCK( buffer->sync );
+    semaphore_lock( buffer->sync, 1 );
+
+    return 0;
 }
 
 uint8_t ps2_buffer_get( ps2_buffer_t* buffer ) {
@@ -63,7 +65,7 @@ int ps2_buffer_init( ps2_buffer_t* buffer ) {
     buffer->write_pos = 0;
     buffer->buffer_size = 0;
 
-    buffer->sync = create_semaphore( "PS/2 buffer sync", SEMAPHORE_COUNTING, 0, 0 );
+    buffer->sync = semaphore_create( "PS/2 buffer semaphore", 0 );
 
     if ( buffer->sync < 0 ) {
         return buffer->sync;

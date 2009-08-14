@@ -19,9 +19,8 @@
 #ifndef _TERMINAL_H_
 #define _TERMINAL_H_
 
+#include <pthread.h>
 #include <sys/types.h>
-
-#include <yaosp/semaphore.h>
 
 #define TERMINAL_MAX_PARAMS 10
 
@@ -57,7 +56,7 @@ typedef struct terminal_line {
 } terminal_line_t;
 
 typedef struct terminal {
-    semaphore_id lock;
+    pthread_mutex_t lock;
 
     int width;
     int height;

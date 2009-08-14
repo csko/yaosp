@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <yaosp/semaphore.h>
+#include <pthread.h>
 #include <yaosp/ipc.h>
 
 #include <ygui/font.h>
@@ -28,7 +28,7 @@
 extern ipc_port_id app_reply_port;
 extern ipc_port_id app_server_port;
 
-extern semaphore_id app_lock;
+extern pthread_mutex_t app_lock;
 
 int font_get_height( font_t* font ) {
     if ( font == NULL ) {
@@ -96,21 +96,21 @@ int font_get_string_width( font_t* font, const char* text, int length ) {
 
     memcpy( ( void* )( request + 1 ), text, length );
 
-    LOCK( app_lock );
+    pthread_mutex_lock( &app_lock );
 
     error = send_ipc_message( app_server_port, MSG_GET_STRING_WIDTH, request, request_len );
 
     free( request );
 
     if ( error < 0 ) {
-        UNLOCK( app_lock );
+        pthread_mutex_unlock( &app_lock );
 
         goto error1;
     }
 
     error = recv_ipc_message( app_reply_port, NULL, &reply, sizeof( msg_get_str_width_reply_t ), INFINITE_TIMEOUT );
 
-    UNLOCK( app_lock );
+    pthread_mutex_unlock( &app_lock );
 
     if ( error < 0 ) {
         goto error1;
@@ -158,21 +158,21 @@ font_t* create_font( const char* family, const char* style, font_properties_t* p
     memcpy( ( void* )( request + 1 ), family, family_len + 1 );
     memcpy( ( uint8_t* )( request + 1 ) + family_len + 1, style, style_len + 1 );
 
-    LOCK( app_lock );
+    pthread_mutex_lock( &app_lock );
 
     error = send_ipc_message( app_server_port, MSG_CREATE_FONT, request, request_len );
 
     free( request );
 
     if ( error < 0 ) {
-        UNLOCK( app_lock );
+        pthread_mutex_unlock( &app_lock );
 
         goto error2;
     }
 
     error = recv_ipc_message( app_reply_port, NULL, &reply, sizeof( msg_create_font_reply_t ), INFINITE_TIMEOUT );
 
-    UNLOCK( app_lock );
+    pthread_mutex_unlock( &app_lock );
 
     if ( ( error < 0 ) ||
          ( reply.handle < 0 ) ) {

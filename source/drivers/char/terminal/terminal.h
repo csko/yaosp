@@ -21,7 +21,7 @@
 
 #include <types.h>
 #include <console.h>
-#include <semaphore.h>
+#include <lock/mutex.h>
 
 #define MAX_TERMINAL_COUNT 6
 
@@ -80,7 +80,7 @@ typedef struct terminal {
     terminal_buffer_t* lines;
 } terminal_t;
 
-extern semaphore_id terminal_lock;
+extern lock_id terminal_lock;
 extern terminal_t* active_terminal;
 extern terminal_t* terminals[ MAX_TERMINAL_COUNT ];
 

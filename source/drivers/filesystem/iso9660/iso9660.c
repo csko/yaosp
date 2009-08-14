@@ -118,7 +118,7 @@ static int iso9660_mount( const char* _device, uint32_t flags, void** fs_cookie,
     root = ( iso9660_volume_descriptor_t* )block;
 
     if ( memcmp( root->identifier, "CD001", 5 ) != 0 ) {
-        kprintf( "ISO9660: Not a valid filesystem!\n" );
+        kprintf( WARNING, "iso9660: Not a valid filesystem!\n" );
         error = -EINVAL;
         goto error3;
     }
@@ -769,12 +769,12 @@ static filesystem_calls_t iso9660_calls = {
 int init_module( void ) {
     int error;
 
-    kprintf( "ISO9660: Registering filesystem driver!\n" );
+    kprintf( INFO, "iso9660: Registering filesystem driver!\n" );
 
     error = register_filesystem( "iso9660", &iso9660_calls );
 
     if ( error < 0 ) {
-        kprintf( "ISO9660: Failed to register filesystem driver\n" );
+        kprintf( ERROR, "iso9660: Failed to register filesystem driver\n" );
         return error;
     }
 

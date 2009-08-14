@@ -122,7 +122,7 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     terminal_widget->current_bg_color = T_COLOR_BLACK;
     terminal_widget->current_fg_color = T_COLOR_WHITE;
 
-    LOCK( terminal->lock );
+    pthread_mutex_lock( &terminal->lock );
 
     for ( i = 0, term_line = terminal->lines; i < terminal->max_lines; i++, term_line++ ) {
         terminal_paint_line( terminal_widget, gc, term_line, &pos );
@@ -130,7 +130,7 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
         pos.y += font_get_height( terminal_widget->font );
     }
 
-    UNLOCK( terminal->lock );
+    pthread_mutex_unlock( &terminal->lock );
 
     return 0;
 }

@@ -63,12 +63,12 @@ static int pata_disk_do_transfer( pata_port_t* port, void* buffer, uint64_t offs
     need_lba48 = ( ( sector + sector_count ) > 0xFFFFFFF ) || ( sector_count >= 0x100 );
 
     if ( ( need_lba48 ) && ( !port->use_lba48 ) ) {
-        kprintf( "PATA: Transfer requires LBA48, but it's not supported by the controller!\n" );
+        kprintf( WARNING, "PATA: Transfer requires LBA48, but it's not supported by the controller!\n" );
         return -EIO;
     }
 
     if ( need_lba48 ) {
-        kprintf( "PATA: LBA48 not yet supported!\n" );
+        kprintf( WARNING, "PATA: LBA48 not yet supported!\n" );
         return -EIO;
     } else if ( port->use_lba ) {
         command = do_read ? PATA_CMD_READ_SECTORS : PATA_CMD_WRITE_SECTORS;
@@ -199,7 +199,7 @@ static int pata_disk_read( void* node, void* cookie, void* buffer, off_t positio
     data = ( uint8_t* )buffer;
     saved_size = size;
 
-    LOCK( port->lock );
+    mutex_lock( port->mutex );
 
     while ( size > 0 ) {
         size_t to_read = MIN( size, 32768 );
@@ -207,7 +207,7 @@ static int pata_disk_read( void* node, void* cookie, void* buffer, off_t positio
         error = pata_disk_do_transfer( port, data, position, to_read, true );
 
         if ( error < 0 ) {
-            UNLOCK( port->lock );
+            mutex_unlock( port->mutex );
 
             return error;
         }
@@ -217,7 +217,7 @@ static int pata_disk_read( void* node, void* cookie, void* buffer, off_t positio
         size -= to_read;
     }
 
-    UNLOCK( port->lock );
+    mutex_unlock( port->mutex );
 
     return saved_size;
 }
@@ -249,7 +249,7 @@ static int pata_disk_write( void* node, void* cookie, const void* buffer, off_t 
     data = ( uint8_t* )buffer;
     saved_size = size;
 
-    LOCK( port->lock );
+    mutex_lock( port->mutex );
 
     while ( size > 0 ) {
         size_t to_write = MIN( size, 32768 );
@@ -257,7 +257,7 @@ static int pata_disk_write( void* node, void* cookie, const void* buffer, off_t 
         error = pata_disk_do_transfer( port, data, position, to_write, false );
 
         if ( error < 0 ) {
-            UNLOCK( port->lock );
+            mutex_unlock( port->mutex );
 
             return error;
         }
@@ -267,7 +267,7 @@ static int pata_disk_write( void* node, void* cookie, const void* buffer, off_t 
         size -= to_write;
     }
 
-    UNLOCK( port->lock );
+    mutex_unlock( port->mutex );
 
     return saved_size;
 }
@@ -293,7 +293,7 @@ int pata_create_ata_device_node( pata_port_t* port ) {
         '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 
-    kprintf( "PATA: Creating device node: /device/%s\n", device );
+    kprintf( INFO, "PATA: Creating device node: /device/%s\n", device );
 
     error = create_device_node( device, &pata_disk_calls, ( void* )port );
 

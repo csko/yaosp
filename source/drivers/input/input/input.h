@@ -21,7 +21,7 @@
 
 #include <types.h>
 #include <input.h>
-#include <semaphore.h>
+#include <lock/condition.h>
 
 #define INPUT_DRV_COUNT 2
 
@@ -44,7 +44,7 @@ typedef struct input_device {
     int flags;
     uint32_t node_number;
 
-    semaphore_id sync;
+    lock_id sync;
 
     input_state_t input_state;
 

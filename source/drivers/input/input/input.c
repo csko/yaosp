@@ -42,7 +42,7 @@ int init_module( void ) {
         return error;
     }
 
-    kprintf( "Input: Initialized.\n" );
+    kprintf( INFO, "Input: Initialized.\n" );
 
     return 0;
 }

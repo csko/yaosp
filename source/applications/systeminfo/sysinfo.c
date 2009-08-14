@@ -140,6 +140,7 @@ static int do_get_module_info( void ) {
 
 static int do_get_processor_info( void ) {
     uint32_t i;
+    uint32_t j;
     uint32_t processor_count;
     processor_info_t* info;
     processor_info_t* info_table;
@@ -167,14 +168,18 @@ static int do_get_processor_info( void ) {
             continue;
         }
 
+        if ( i > 0 ) {
+            printf( "\n" );
+        }
+
         printf( "Processor:    %u\n", i );
         printf( "Model name:   %s\n", info->name );
         printf( "Speed:        %u MHz\n", ( uint32_t )( info->core_speed / 1000000 ) );
         printf( "Features:" );
 
-        for ( i = 0; i386_features[ i ].feature != 0; i++ ) {
-            if ( ( info->features & i386_features[ i ].feature ) != 0 ) {
-                printf( " %s", i386_features[ i ].name );
+        for ( j = 0; i386_features[ j ].feature != 0; j++ ) {
+            if ( ( info->features & i386_features[ j ].feature ) != 0 ) {
+                printf( " %s", i386_features[ j ].name );
             }
         }
 
