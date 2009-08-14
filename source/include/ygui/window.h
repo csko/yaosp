@@ -22,7 +22,6 @@
 #include <sys/types.h>
 
 #include <yaosp/ipc.h>
-#include <yaosp/semaphore.h>
 #include <yaosp/thread.h>
 
 #include <ygui/point.h>
