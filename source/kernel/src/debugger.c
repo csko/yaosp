@@ -26,6 +26,7 @@
 
 #ifdef ENABLE_DEBUGGER
 
+static int dbg_running;
 static console_t* dbg_screen = NULL;
 
 static char dbg_line_buffer[ 64 ];
@@ -34,12 +35,14 @@ static bool dbg_scroll_mode = false;
 static int dbg_scroll_line_count = 0;
 
 static int dbg_show_help( const char* params );
+static int dbg_exit( const char* params );
 
 static dbg_command_t debugger_commands[] = {
     { "list-threads",      dbg_list_threads,           "List threads" },
     { "show-thread-info",  dbg_show_thread_info,       "Show the informations of the specified thread" },
     { "trace-thread",      dbg_trace_thread,           "Prints the backtrace of the selected thread" },
     { "help",              dbg_show_help,              "Displays this message :)" },
+    { "exit",              dbg_exit,                   "Exit from the kernel debugger" },
     { NULL, NULL }
 };
 
@@ -102,6 +105,12 @@ static int dbg_show_help( const char* params ) {
     return 0;
 }
 
+static int dbg_exit( const char* params ) {
+    dbg_running = 0;
+
+    return 0;
+}
+
 static char* dbg_get_line( const char* prompt ) {
     char c;
     int line_pos;
@@ -153,6 +162,7 @@ int start_kernel_debugger( void ) {
 
     /* Initialize the screen */
 
+    dbg_running = 1;
     dbg_screen = console_get_real_screen();
 
     dbg_screen->ops->clear( dbg_screen );
@@ -160,7 +170,7 @@ int start_kernel_debugger( void ) {
 
     /* Start the mainloop of the debugger */
 
-    while ( 1 ) {
+    while ( dbg_running ) {
         int i;
         char* params;
 

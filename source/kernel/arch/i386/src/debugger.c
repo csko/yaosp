@@ -222,7 +222,6 @@ void handle_debug_exception( registers_t* regs ) {
     start_kernel_debugger();
 #else
     kprintf( WARNING, "handle_debug_exception called!\n" );
- #endif /* ENABLE_DEBUGGER */
-
     halt_loop();
+#endif /* ENABLE_DEBUGGER */
 }
