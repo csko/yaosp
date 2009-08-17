@@ -177,8 +177,7 @@ static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_
         file_data_size = region->file_size - region_offset;
         file_data_size = MIN( file_data_size, page_count * PAGE_SIZE );
 
-        ASSERT( file_data_size > 0 );
-        ASSERT( file_data_size <= page_count * PAGE_SIZE );
+        ASSERT( ( file_data_size > 0 ) && ( file_data_size <= page_count * PAGE_SIZE ) );
 
         if ( do_pread_helper( region->file, p, file_data_size, file_read_offset ) != file_data_size ) {
             free_pages( p, page_count );
@@ -235,12 +234,10 @@ int handle_page_fault( registers_t* regs ) {
     }
 
     if ( region->alloc_method == ALLOC_LAZY ) {
-        uint32_t pages_loaded;
+        uint32_t pages_loaded = 1;
 
         if ( region->file == NULL ) {
             error = handle_lazy_page_allocation( region, cr2 );
-
-            pages_loaded = 1;
         } else {
             error = handle_lazy_page_loading( region, cr2, &pages_loaded );
         }
@@ -253,14 +250,11 @@ int handle_page_fault( registers_t* regs ) {
         /* Update pmem of the current process */
 
         scheduler_lock();
-
         thread->process->pmem_size += pages_loaded * PAGE_SIZE;
-
         scheduler_unlock();
     } else {
         uint32_t* pgd_entry;
         uint32_t* pt_entry;
-
         i386_memory_context_t* arch_context;
 
         memory_region_dump( region, -1 );

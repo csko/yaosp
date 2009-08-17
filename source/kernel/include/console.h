@@ -28,7 +28,7 @@ struct console;
 #ifdef MK_RELEASE_BUILD
 #define DEBUG_LOG(args...)
 #else
-#define DEBUG_LOG(format, args...) kprintf( DEBUG, format, ##args )
+#define DEBUG_LOG(format, args...) dprintf( format, ##args )
 #endif /* MK_RELEASE_BUILD */
 
 enum {
