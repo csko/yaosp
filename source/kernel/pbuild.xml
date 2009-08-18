@@ -22,14 +22,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="arch_files_asm">
-        <item>arch/i386/src/boot.S</item>
-        <item>arch/i386/src/atomic.S</item>
-        <item>arch/i386/src/i386.S</item>
-        <item>arch/i386/src/isr.S</item>
-        <item>arch/i386/src/switch.S</item>
-        <item>arch/i386/src/smp_entry.S</item>
-        <item>arch/i386/src/network/network.S</item>
-        <item>arch/i386/src/lib/string.S</item>
+        <item>arch/i386/src/asm/boot.S</item>
+        <item>arch/i386/src/asm/atomic.S</item>
+        <item>arch/i386/src/asm/i386.S</item>
+        <item>arch/i386/src/asm/isr.S</item>
+        <item>arch/i386/src/asm/switch.S</item>
+        <item>arch/i386/src/asm/smp_entry.S</item>
+        <item>arch/i386/src/asm/network.S</item>
+        <item>arch/i386/src/asm/string.S</item>
     </array>
 
     <array name="arch_files_c">
