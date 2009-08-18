@@ -21,16 +21,14 @@
 
 #include <config.h>
 #include <mm/region.h>
+#include <lib/array.h>
 
 struct process;
 
 typedef struct memory_context {
     struct memory_context* next;
 
-    int max_regions;
-    int region_count;
-    region_t** regions;
-
+    array_t regions;
     struct process* process;
 
     void* arch_data;
@@ -113,5 +111,7 @@ int memory_context_translate_address( memory_context_t* context, ptr_t linear, p
 #endif /* ENABLE_DEBUGGER */
 
 void memory_context_dump( memory_context_t* context );
+
+int memory_context_init( memory_context_t* context );
 
 #endif /* _MM_CONTEXT_H_ */

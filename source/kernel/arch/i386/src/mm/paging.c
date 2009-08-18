@@ -609,7 +609,12 @@ __init int init_paging( void ) {
     context = &kernel_memory_context;
     arch_context = &i386_kernel_memory_context;
 
-    memset( context, 0, sizeof( memory_context_t ) );
+    error = memory_context_init( context );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
     memset( arch_context, 0, sizeof( i386_memory_context_t ) );
 
     context->next = context;

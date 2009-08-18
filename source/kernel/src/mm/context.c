@@ -41,92 +41,61 @@ extern hashtable_t region_table;
 
 int memory_context_insert_region( memory_context_t* context, region_t* region ) {
     int i;
-    int regions_to_move;
+    int error;
+    int region_count;
 
-    /* First check if we have free space for the new region */
-
-    if ( ( context->region_count + 1 ) >= context->max_regions ) {
-        int new_max;
-        region_t** new_regions;
-
-        new_max = context->max_regions + REGION_STEP_SIZE;
-        new_regions = ( region_t** )kmalloc( sizeof( region_t* ) * new_max );
-
-        if ( new_regions == NULL ) {
-            return -ENOMEM;
-        }
-
-        if ( context->region_count > 0 ) {
-            memcpy( new_regions, context->regions, sizeof( region_t* ) * context->region_count );
-        }
-
-        kfree( context->regions );
-
-        context->regions = new_regions;
-        context->max_regions = new_max;
-    }
+    region_count = array_get_size( &context->regions );
 
     /* Insert the region to the list */
 
-    for ( i = 0; i < context->region_count; i++ ) {
-        if ( region->start < context->regions[ i ]->start ) {
+    for ( i = 0; i < region_count; i++ ) {
+        region_t* tmp_region;
+
+        tmp_region = ( region_t* )array_get_item( &context->regions, i );
+
+        if ( region->start < tmp_region->start ) {
             break;
         }
     }
 
-    regions_to_move = context->region_count - i;
+    error = array_insert_item( &context->regions, i, ( void* )region );
 
-    if ( regions_to_move > 0 ) {
-        memmove( &context->regions[ i + 1 ], &context->regions[ i ], sizeof( region_t* ) * regions_to_move );
+    if ( error < 0 ) {
+        return error;
     }
-
-    context->regions[ i ] = region;
-    context->region_count++;
 
     return 0;
 }
 
 int memory_context_remove_region( memory_context_t* context, region_t* region ) {
-    int i;
-    int regions_to_move;
-    bool found = false;
+    int error;
 
-    for ( i = 0; i < context->region_count; i++ ) {
-        if ( context->regions[ i ] == region ) {
-            found = true;
-            break;
-        }
+    error = array_remove_item( &context->regions, ( void* )region );
+
+    if ( error < 0 ) {
+        return error;
     }
-
-    if ( !found ) {
-        return -EINVAL;
-    }
-
-    regions_to_move = context->region_count - i;
-
-    if ( regions_to_move > 0 ) {
-        memmove( &context->regions[ i ], &context->regions[ i + 1 ], sizeof( region_t* ) * regions_to_move );
-    }
-
-    context->regions[ context->region_count - 1 ] = NULL;
-    context->region_count--;
 
     return 0;
 }
 
 region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
     int i;
-    region_t* region = NULL;
+    int region_count;
+    region_t* region;
 
-    for ( i = 0; i < context->region_count; i++ ) {
-        if ( ( context->regions[ i ]->start <= address ) &&
-             ( address < ( context->regions[ i ]->start + context->regions[ i ]->size ) ) ) {
-            region = context->regions[ i ];
-            break;
+    region_count = array_get_size( &context->regions );
+
+    for ( i = 0; i < region_count; i++ ) {
+        region = ( region_t* )array_get_item( &context->regions, i );
+
+        if ( ( region->start <= address ) &&
+             ( address <= ( region->start + region->size - 1 ) ) ) {
+            return region;
         }
     }
 
-    return region;
+    return NULL;
 }
 
 region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
@@ -141,20 +110,24 @@ region_t* memory_context_get_region_for( memory_context_t* context, ptr_t addres
     return region;
 }
 
-bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start, ptr_t end, uint32_t size, ptr_t* address ) {
-    int i;
+bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start, ptr_t end,
+                                          uint32_t size, ptr_t* address ) {
+    int region_count;
 
-    if ( context->region_count == 0 ) {
+    region_count = array_get_size( &context->regions );
+
+    if ( region_count == 0 ) {
         if ( ( start + size - 1 ) <= end ) {
             *address = start;
 
             return true;
         }
     } else {
+        int i;
         region_t* region;
 
-        for ( i = 0; i < context->region_count; i++ ) {
-            region = context->regions[ i ];
+        for ( i = 0; i < region_count; i++ ) {
+            region = ( region_t* )array_get_item( &context->regions, i );
 
             if ( start + size <= region->start ) {
                 *address = start;
@@ -176,21 +149,21 @@ bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start
 }
 
 bool memory_context_can_resize_region( memory_context_t* context, region_t* region, uint32_t new_size ) {
-    int i;
-    bool found = false;
+    int index;
+    region_t* tmp_region;
 
-    for ( i = 0; i < context->region_count; i++ ) {
-        if ( context->regions[ i ] == region ) {
-            found = true;
-            break;
-        }
-    }
+    index = array_index_of( &context->regions, ( void* )region );
 
-    if ( !found ) {
+    if ( index == -1 ) {
+        kprintf(
+            WARNING,
+            "memory_context_can_resize_region(): Region not found in the memory context!\n"
+        );
+
         return false;
     }
 
-    if ( i == context->region_count - 1 ) {
+    if ( index == array_get_size( &context->regions ) - 1 ) {
         ptr_t end_address;
 
         if ( region->flags & REGION_KERNEL ) {
@@ -199,19 +172,18 @@ bool memory_context_can_resize_region( memory_context_t* context, region_t* regi
             end_address = LAST_USER_ADDRESS;
         }
 
-        if ( ( region->start + new_size - 1 ) > end_address ) {
-            return false;
-        }
-
-        return true;
+        return ( ( region->start + new_size - 1 ) <= end_address );
     }
 
-    return ( ( region->start + new_size - 1 ) < context->regions[ i + 1 ]->start );
+    tmp_region = ( region_t* )array_get_item( &context->regions, index + 1 );
+
+    return ( ( region->start + new_size - 1 ) < tmp_region->start );
 }
 
 memory_context_t* memory_context_clone( memory_context_t* old_context, process_t* new_process ) {
     int i;
     int error;
+    int region_count;
     memory_context_t* new_context;
 
     /* Allocate a new memory context */
@@ -222,7 +194,12 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
         return NULL;
     }
 
-    memset( new_context, 0, sizeof( memory_context_t ) );
+    error = memory_context_init( new_context );
+
+    if ( error < 0 ) {
+        kfree( new_context );
+        return NULL;
+    }
 
     new_context->process = new_process;
 
@@ -241,11 +218,13 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
 
     /* Go throught regions and clone each one */
 
-    for ( i = 0; i < old_context->region_count; i++ ) {
+    region_count = array_get_size( &old_context->regions );
+
+    for ( i = 0; i < region_count; i++ ) {
         region_t* region;
         region_t* new_region;
 
-        region = old_context->regions[ i ];
+        region = ( region_t* )array_get_item( &old_context->regions, i );
 
         /* Don't clone kernel regions */
 
@@ -295,9 +274,7 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
     /* Clone the vmem_size of the old process as well ;) */
 
     scheduler_lock();
-
     new_process->vmem_size = old_context->process->vmem_size;
-
     scheduler_unlock();
 
     return new_context;
@@ -312,34 +289,34 @@ error:
 
 int memory_context_delete_regions( memory_context_t* context ) {
     int i;
-    region_t* region;
+    int region_count;
 
     mutex_lock( region_lock );
 
-    /* Delete the requested regions */
+    /* Delete all memory regions */
 
-    for ( i = 0; i < context->region_count; i++ ) {
-        region = context->regions[ i ];
+    region_count = array_get_size( &context->regions );
+
+    for ( i = 0; i < region_count; i++ ) {
+        region_t* region;
+
+        region = ( region_t* )array_get_item( &context->regions, i );
 
         ASSERT( ( region->flags & REGION_KERNEL ) == 0 );
 
         arch_delete_region_pages( context, region );
         hashtable_remove( &region_table, ( const void* )&region->id );
         destroy_region( region );
-
-        context->regions[ i ] = NULL;
     }
 
     /* Set the new size of memory regions in the context */
 
-    context->region_count = 0;
+    array_make_empty( &context->regions );
 
     /* Update vmem statistics */
 
     scheduler_lock();
-
     context->process->vmem_size = 0;
-
     scheduler_unlock();
 
     mutex_unlock( region_lock );
@@ -350,7 +327,7 @@ int memory_context_delete_regions( memory_context_t* context ) {
 void memory_context_destroy( memory_context_t* context ) {
     arch_destroy_memory_context( context );
 
-    kfree( context->regions );
+    array_destroy( &context->regions );
     kfree( context );
 }
 
@@ -368,13 +345,37 @@ int memory_context_translate_address( memory_context_t* context, ptr_t linear, p
 
 void memory_context_dump( memory_context_t* context ) {
     int i;
-    region_t* region;
+    int region_count;
 
     kprintf( INFO, "Memory context dump:\n" );
 
-    for ( i = 0; i < context->region_count; i++ ) {
-        region = context->regions[ i ];
+    region_count = array_get_size( &context->regions );
+
+    for ( i = 0; i < region_count; i++ ) {
+        region_t* region;
+
+        region = ( region_t* )array_get_item( &context->regions, i );
 
         memory_region_dump( region, i );
     }
+}
+
+int memory_context_init( memory_context_t* context ) {
+    int error;
+
+    memset(
+        context,
+        0,
+        sizeof( memory_context_t )
+    );
+
+    error = array_init( &context->regions );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    array_set_realloc_size( &context->regions, 32 );
+
+    return 0;
 }
