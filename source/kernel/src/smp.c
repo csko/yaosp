@@ -142,9 +142,7 @@ __init int init_smp_late( void ) {
         }
 
         scheduler_lock();
-
         processor->idle_thread = get_thread_by_id( id );
-
         scheduler_unlock();
 
         if ( processor->idle_thread == NULL ) {

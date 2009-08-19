@@ -224,6 +224,37 @@ int mutex_update( mutex_t* mutex, thread_id new_thread ) {
     return 0;
 }
 
+static int do_mutex_is_locked( lock_context_t* context, lock_id mutex_id ) {
+    int locked;
+    mutex_t* mutex;
+    thread_t* thread;
+    lock_header_t* header;
+
+    spinlock_disable( &context->lock );
+
+    header = lock_context_get( context, mutex_id );
+
+    if ( __unlikely( ( header == NULL ) ||
+                     ( header->type != MUTEX ) ) ) {
+        spinunlock_enable( &context->lock );
+
+        return -EINVAL;
+    }
+
+    mutex = ( mutex_t* )header;
+    thread = current_thread();
+
+    locked = ( mutex->holder == thread->id );
+
+    spinunlock_enable( &context->lock );
+
+    return locked;
+}
+
+int mutex_is_locked( lock_id mutex ) {
+    return do_mutex_is_locked( &kernel_lock_context, mutex );
+}
+
 static int do_create_mutex( lock_context_t* context, const char* name, int flags ) {
     int error;
     mutex_t* mutex;

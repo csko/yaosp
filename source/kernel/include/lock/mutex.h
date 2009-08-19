@@ -47,6 +47,8 @@ int mutex_unlock( lock_id mutex );
 int mutex_clone( mutex_t* old, mutex_t* new );
 int mutex_update( mutex_t* mutex, thread_id new_thread );
 
+int mutex_is_locked( lock_id mutex );
+
 int sys_mutex_lock( lock_id mutex );
 int sys_mutex_trylock( lock_id mutex );
 int sys_mutex_timedlock( lock_id mutex, time_t* timeout );

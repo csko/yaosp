@@ -50,8 +50,6 @@ int lock_wait_on( lock_context_t* context, thread_t* thread, lock_type_t type, l
         return -EINVAL;
     }
 
-    //ASSERT( ( ptr_t )header == ( ptr_t )mutex );
-
     waitqueue_remove_node( queue, &waitnode );
 
     return 0;
@@ -98,8 +96,6 @@ int lock_timed_wait_on( lock_context_t* context, thread_t* thread, lock_type_t t
          ( header->type != type ) )  {
         return -EINVAL;
     }
-
-    //ASSERT( ( ptr_t )header == ( ptr_t )mutex );
 
     waitqueue_remove_node( queue, &waitnode );
 

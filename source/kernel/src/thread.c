@@ -236,7 +236,12 @@ void thread_exit( int exit_code ) {
             do_send_signal( parent, SIGCHLD );
         }
     } else {
-        kprintf( WARNING, "thread_exit(): Thread %s:%s with parent id -1 tried to exit!\n", thread->process->name, thread->name );
+        kprintf(
+            WARNING,
+            "thread_exit(): Thread %s:%s with parent id -1 tried to exit!\n",
+            thread->process->name,
+            thread->name
+        );
     }
 
     /* Reparent the children of the current thread */

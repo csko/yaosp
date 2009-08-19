@@ -110,7 +110,7 @@ error1:
 }
 
 int region_remove( memory_context_t* context, memory_region_t* region ) {
-    //ASSERT( is_semaphore_locked( region_lock ) );
+    ASSERT( mutex_is_locked( region_lock ) );
 
     hashtable_remove( &region_table, ( const void* )&region->id );
     memory_context_remove_region( context, region );
@@ -214,9 +214,7 @@ region_id do_create_region(
     /* Update process vmem statistics */
 
     scheduler_lock();
-
     context->process->vmem_size += region->size;
-
     scheduler_unlock();
 
     *_address = ( void* )address;
@@ -299,9 +297,7 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
     /* Update process vmem statistics */
 
     scheduler_lock();
-
     region->context->process->vmem_size -= region->size;
-
     scheduler_unlock();
 
     destroy_region( region );
@@ -421,10 +417,8 @@ int resize_region( region_id id, uint32_t new_size ) {
     /* Update process vmem statistics */
 
     scheduler_lock();
-
     context->process->vmem_size -= region->size;
     context->process->vmem_size += new_size;
-
     scheduler_unlock();
 
     region->size = new_size;
