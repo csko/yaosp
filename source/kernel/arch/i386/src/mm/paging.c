@@ -345,9 +345,9 @@ int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtu
 
 static int clone_user_region_pages(
     i386_memory_context_t* old_arch_context,
-    region_t* old_region,
+    memory_region_t* old_region,
     i386_memory_context_t* new_arch_context,
-    region_t* new_region
+    memory_region_t* new_region
 ) {
     void* p;
     uint32_t i;
@@ -393,9 +393,9 @@ static int clone_user_region_pages(
 
 static int clone_user_region_contiguous(
     i386_memory_context_t* old_arch_context,
-    region_t* old_region,
+    memory_region_t* old_region,
     i386_memory_context_t* new_arch_context,
-    region_t* new_region
+    memory_region_t* new_region
 ) {
     int i;
     void* p;
@@ -441,9 +441,9 @@ static int clone_user_region_contiguous(
 
 static int clone_user_region_lazy(
     i386_memory_context_t* old_arch_context,
-    region_t* old_region,
+    memory_region_t* old_region,
     i386_memory_context_t* new_arch_context,
-    region_t* new_region,
+    memory_region_t* new_region,
     uint64_t* _allocated_pmem
 ) {
     int i;
@@ -495,9 +495,9 @@ static int clone_user_region_lazy(
 
 int clone_user_region(
     memory_context_t* old_context,
-    region_t* old_region,
+    memory_region_t* old_region,
     memory_context_t* new_context,
-    region_t* new_region
+    memory_region_t* new_region
 ) {
     int error;
     uint64_t allocated_pmem;
@@ -569,7 +569,7 @@ int clone_user_region(
 
 __init static int create_initial_region( const char* name, uint32_t start, uint32_t size, bool writable ) {
     int error;
-    region_t* region;
+    memory_region_t* region;
 
     region = allocate_region( name );
 

@@ -36,33 +36,28 @@ hashtable_t region_table;
 
 static int region_id_counter = 0;
 
-region_t* allocate_region( const char* name ) {
-    region_t* region;
+memory_region_t* allocate_region( const char* name ) {
+    size_t name_length;
+    memory_region_t* region;
 
-    region = ( region_t* )kmalloc( sizeof( region_t ) );
+    name_length = strlen( name );
+
+    region = ( memory_region_t* )kmalloc( sizeof( memory_region_t ) + name_length + 1 );
 
     if ( __unlikely( region == NULL ) ) {
-        goto error1;
+        return NULL;
     }
 
-    memset( region, 0, sizeof( region_t ) );
+    memset( region, 0, sizeof( memory_region_t ) );
 
-    region->name = strdup( name );
+    region->name = ( char* )( region + 1 );
 
-    if ( __unlikely( region->name == NULL ) ) {
-        goto error2;
-    }
+    memcpy( region->name, name, name_length + 1 );
 
     return region;
-
-error2:
-    kfree( region );
-
-error1:
-    return NULL;
 }
 
-void destroy_region( region_t* region ) {
+void destroy_region( memory_region_t* region ) {
     if ( region->file != NULL ) {
         io_context_t* io_context;
 
@@ -75,13 +70,10 @@ void destroy_region( region_t* region ) {
         region->file = NULL;
     }
 
-    kfree( region->name );
-    region->name = NULL;
-
     kfree( region );
 }
 
-int region_insert( memory_context_t* context, region_t* region ) {
+int region_insert( memory_context_t* context, memory_region_t* region ) {
     int error;
 
     /* Insert the new region to the hashtable */
@@ -117,7 +109,7 @@ error1:
     return error;
 }
 
-int region_remove( memory_context_t* context, region_t* region ) {
+int region_remove( memory_context_t* context, memory_region_t* region ) {
     //ASSERT( is_semaphore_locked( region_lock ) );
 
     hashtable_remove( &region_table, ( const void* )&region->id );
@@ -137,7 +129,7 @@ region_id do_create_region(
     int error = -1;
     bool found;
     ptr_t address;
-    region_t* region;
+    memory_region_t* region;
     memory_context_t* context;
 
     /* Do some sanity checking */
@@ -288,9 +280,9 @@ region_id sys_create_region(
 }
 
 static int do_delete_region( region_id id, bool allow_kernel_region ) {
-    region_t* region;
+    memory_region_t* region;
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
+    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
         return -EINVAL;
@@ -338,9 +330,9 @@ int sys_delete_region( region_id id ) {
 }
 
 int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region ) {
-    region_t* region;
+    memory_region_t* region;
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
+    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
         return -EINVAL;
@@ -385,7 +377,7 @@ int sys_remap_region( region_id id, ptr_t address ) {
 
 int resize_region( region_id id, uint32_t new_size ) {
     int error;
-    region_t* region;
+    memory_region_t* region;
     memory_context_t* context;
 
     if ( ( new_size == 0 ) || ( ( new_size % PAGE_SIZE ) != 0 ) ) {
@@ -394,7 +386,7 @@ int resize_region( region_id id, uint32_t new_size ) {
 
     mutex_lock( region_lock );
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
+    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
         mutex_unlock( region_lock );
@@ -444,7 +436,7 @@ int resize_region( region_id id, uint32_t new_size ) {
 
 int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
     file_t* file;
-    region_t* region;
+    memory_region_t* region;
     io_context_t* io_context;
 
     io_context = current_process()->io_context;
@@ -461,7 +453,7 @@ int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
 
     mutex_lock( region_lock );
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
+    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( ( region == NULL ) ||
          ( region->alloc_method != ALLOC_LAZY ) ||
@@ -484,11 +476,11 @@ int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
 
 int get_region_info( region_id id, region_info_t* info ) {
     int error;
-    region_t* region;
+    memory_region_t* region;
 
     mutex_lock( region_lock );
 
-    region = ( region_t* )hashtable_get( &region_table, ( const void* )&id );
+    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
     if ( region == NULL ) {
         error = -EINVAL;
@@ -504,7 +496,7 @@ int get_region_info( region_id id, region_info_t* info ) {
     return error;
 }
 
-void memory_region_dump( region_t* region, int index ) {
+void memory_region_dump( memory_region_t* region, int index ) {
     kprintf(
         INFO,
         "  id: %2d region: %08p-%08p flags: ",
@@ -522,9 +514,9 @@ void memory_region_dump( region_t* region, int index ) {
 }
 
 static void* region_key( hashitem_t* item ) {
-    region_t* region;
+    memory_region_t* region;
 
-    region = ( region_t* )item;
+    region = ( memory_region_t* )item;
 
     return ( void* )&region->id;
 }

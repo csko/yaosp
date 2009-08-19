@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <kernel.h>
 #include <process.h>
+#include <macros.h>
 #include <sched/scheduler.h>
 #include <mm/pages.h>
 
@@ -27,7 +28,7 @@
 #include <arch/mm/context.h>
 #include <arch/mm/paging.h>
 
-int arch_create_region_pages( memory_context_t* context, region_t* region ) {
+int arch_create_region_pages( memory_context_t* context, memory_region_t* region ) {
     int error;
     bool do_tlb_flush;
     uint64_t allocated_pmem;
@@ -122,7 +123,7 @@ int arch_create_region_pages( memory_context_t* context, region_t* region ) {
     return 0;
 }
 
-int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
+int arch_delete_region_pages( memory_context_t* context, memory_region_t* region ) {
     uint64_t freed_pmem;
     i386_memory_context_t* arch_context;
 
@@ -169,7 +170,7 @@ int arch_delete_region_pages( memory_context_t* context, region_t* region ) {
     return 0;
 }
 
-int arch_remap_region_pages( struct memory_context* context, region_t* region, ptr_t address ) {
+int arch_remap_region_pages( struct memory_context* context, memory_region_t* region, ptr_t address ) {
     int error;
     i386_memory_context_t* arch_context;
 
@@ -193,7 +194,7 @@ int arch_remap_region_pages( struct memory_context* context, region_t* region, p
     return 0;
 }
 
-int arch_resize_region( struct memory_context* context, region_t* region, uint32_t new_size ) {
+int arch_resize_region( struct memory_context* context, memory_region_t* region, uint32_t new_size ) {
     i386_memory_context_t* arch_context;
 
     arch_context = ( i386_memory_context_t* )context->arch_data;
@@ -259,17 +260,11 @@ int arch_resize_region( struct memory_context* context, region_t* region, uint32
 
 int arch_clone_memory_region(
     memory_context_t* old_context,
-    region_t* old_region,
+    memory_region_t* old_region,
     memory_context_t* new_context,
-    region_t* new_region
+    memory_region_t* new_region
 ) {
-    int error;
+    ASSERT( ( old_region->flags & REGION_KERNEL ) == 0 );
 
-    if ( old_region->flags & REGION_KERNEL ) {
-        error = 0;
-    } else {
-        error = clone_user_region( old_context, old_region, new_context, new_region );
-    }
-
-    return error;
+    return clone_user_region( old_context, old_region, new_context, new_region );
 }

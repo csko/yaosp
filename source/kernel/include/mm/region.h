@@ -44,7 +44,7 @@ typedef enum region_flags {
     REGION_STACK = ( 1 << 4 )
 } region_flags_t;
 
-typedef struct region {
+typedef struct memory_region {
     hashitem_t hash;
 
     region_id id;
@@ -59,18 +59,18 @@ typedef struct region {
     size_t file_size;
 
     struct memory_context* context;
-} region_t;
+} memory_region_t;
 
 typedef struct region_info {
     ptr_t start;
     ptr_t size;
 } region_info_t;
 
-region_t* allocate_region( const char* name );
-void destroy_region( region_t* region );
+memory_region_t* allocate_region( const char* name );
+void destroy_region( memory_region_t* region );
 
-int region_insert( struct memory_context* context, region_t* region );
-int region_remove( struct memory_context* context, region_t* region );
+int region_insert( struct memory_context* context, memory_region_t* region );
+int region_remove( struct memory_context* context, memory_region_t* region );
 
 region_id do_create_region(
     const char* name,
@@ -144,9 +144,9 @@ int sys_delete_region( region_id id );
 
 int sys_remap_region( region_id id, ptr_t address );
 
-void memory_region_dump( region_t* region, int index );
+void memory_region_dump( memory_region_t* region, int index );
 
 int preinit_regions( void );
 int init_regions( void );
 
-#endif // _MM_REGION_H_
+#endif /* _MM_REGION_H_ */

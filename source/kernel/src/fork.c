@@ -57,8 +57,8 @@ int sys_fork( void ) {
     }
 
     if ( this_process->heap_region >= 0 ) {
-        region_t* heap_region;
         region_info_t region_info;
+        memory_region_t* heap_region;
 
         error = get_region_info( this_process->heap_region, &region_info );
 
@@ -114,8 +114,8 @@ int sys_fork( void ) {
        out the region ID of the cloned stack region. */
 
     if ( this_thread->user_stack_region >= 0 ) {
-        region_t* stack_region;
         region_info_t region_info;
+        memory_region_t* stack_region;
 
         error = get_region_info( this_thread->user_stack_region, &region_info );
 

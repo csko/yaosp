@@ -55,9 +55,9 @@ int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtu
 
 int clone_user_region(
     memory_context_t* old_context,
-    region_t* old_region,
+    memory_region_t* old_region,
     memory_context_t* new_context,
-    region_t* new_region
+    memory_region_t* new_region
 );
 
 int init_paging( void );

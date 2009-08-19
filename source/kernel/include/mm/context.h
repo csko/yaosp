@@ -45,7 +45,7 @@ extern memory_context_t kernel_memory_context;
  * @param region The region to insert
  * @return On success 0 is returned
  */
-int memory_context_insert_region( memory_context_t* context, region_t* region );
+int memory_context_insert_region( memory_context_t* context, memory_region_t* region );
 
 /**
  * Removes a memory region from the memory context.
@@ -54,10 +54,10 @@ int memory_context_insert_region( memory_context_t* context, region_t* region );
  * @param region The region to remove
  * @return On success 0 is returned
  */
-int memory_context_remove_region( memory_context_t* context, region_t* region );
+int memory_context_remove_region( memory_context_t* context, memory_region_t* region );
 
-region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t address );
-region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address );
+memory_region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t address );
+memory_region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address );
 
 /**
  * Searches for a size byte(s) long unmapped memory region in the specified
@@ -82,7 +82,7 @@ bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start
  * @param new_size The new size of the memory region
  * @return True is returned if the resize is allowed
  */
-bool memory_context_can_resize_region( memory_context_t* context, region_t* region, uint32_t new_size );
+bool memory_context_can_resize_region( memory_context_t* context, memory_region_t* region, uint32_t new_size );
 
 /**
  * Clones an existing memory context.

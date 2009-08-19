@@ -32,9 +32,9 @@ int arch_destroy_memory_context( memory_context_t* context );
 int arch_clone_memory_context( memory_context_t* old_context, memory_context_t* new_context );
 int arch_clone_memory_region(
     memory_context_t* old_context,
-    region_t* old_region,
+    memory_region_t* old_region,
     memory_context_t* new_context,
-    region_t* new_region
+    memory_region_t* new_region
 );
 
 #ifdef ENABLE_DEBUGGER

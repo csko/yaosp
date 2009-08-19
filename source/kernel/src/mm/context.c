@@ -39,7 +39,7 @@ memory_context_t kernel_memory_context;
 extern lock_id region_lock;
 extern hashtable_t region_table;
 
-int memory_context_insert_region( memory_context_t* context, region_t* region ) {
+int memory_context_insert_region( memory_context_t* context, memory_region_t* region ) {
     int i;
     int error;
     int region_count;
@@ -49,9 +49,9 @@ int memory_context_insert_region( memory_context_t* context, region_t* region ) 
     /* Insert the region to the list */
 
     for ( i = 0; i < region_count; i++ ) {
-        region_t* tmp_region;
+        memory_region_t* tmp_region;
 
-        tmp_region = ( region_t* )array_get_item( &context->regions, i );
+        tmp_region = ( memory_region_t* )array_get_item( &context->regions, i );
 
         if ( region->start < tmp_region->start ) {
             break;
@@ -67,7 +67,7 @@ int memory_context_insert_region( memory_context_t* context, region_t* region ) 
     return 0;
 }
 
-int memory_context_remove_region( memory_context_t* context, region_t* region ) {
+int memory_context_remove_region( memory_context_t* context, memory_region_t* region ) {
     int error;
 
     error = array_remove_item( &context->regions, ( void* )region );
@@ -79,15 +79,15 @@ int memory_context_remove_region( memory_context_t* context, region_t* region ) 
     return 0;
 }
 
-region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
+memory_region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
     int i;
     int region_count;
-    region_t* region;
+    memory_region_t* region;
 
     region_count = array_get_size( &context->regions );
 
     for ( i = 0; i < region_count; i++ ) {
-        region = ( region_t* )array_get_item( &context->regions, i );
+        region = ( memory_region_t* )array_get_item( &context->regions, i );
 
         if ( ( region->start <= address ) &&
              ( address <= ( region->start + region->size - 1 ) ) ) {
@@ -98,8 +98,8 @@ region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t add
     return NULL;
 }
 
-region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
-    region_t* region;
+memory_region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
+    memory_region_t* region;
 
     mutex_lock( region_lock );
 
@@ -124,10 +124,10 @@ bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start
         }
     } else {
         int i;
-        region_t* region;
+        memory_region_t* region;
 
         for ( i = 0; i < region_count; i++ ) {
-            region = ( region_t* )array_get_item( &context->regions, i );
+            region = ( memory_region_t* )array_get_item( &context->regions, i );
 
             if ( start + size <= region->start ) {
                 *address = start;
@@ -148,9 +148,9 @@ bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start
     return false;
 }
 
-bool memory_context_can_resize_region( memory_context_t* context, region_t* region, uint32_t new_size ) {
+bool memory_context_can_resize_region( memory_context_t* context, memory_region_t* region, uint32_t new_size ) {
     int index;
-    region_t* tmp_region;
+    memory_region_t* tmp_region;
 
     index = array_index_of( &context->regions, ( void* )region );
 
@@ -175,7 +175,7 @@ bool memory_context_can_resize_region( memory_context_t* context, region_t* regi
         return ( ( region->start + new_size - 1 ) <= end_address );
     }
 
-    tmp_region = ( region_t* )array_get_item( &context->regions, index + 1 );
+    tmp_region = ( memory_region_t* )array_get_item( &context->regions, index + 1 );
 
     return ( ( region->start + new_size - 1 ) < tmp_region->start );
 }
@@ -221,10 +221,10 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
     region_count = array_get_size( &old_context->regions );
 
     for ( i = 0; i < region_count; i++ ) {
-        region_t* region;
-        region_t* new_region;
+        memory_region_t* region;
+        memory_region_t* new_region;
 
-        region = ( region_t* )array_get_item( &old_context->regions, i );
+        region = ( memory_region_t* )array_get_item( &old_context->regions, i );
 
         /* Don't clone kernel regions */
 
@@ -298,9 +298,9 @@ int memory_context_delete_regions( memory_context_t* context ) {
     region_count = array_get_size( &context->regions );
 
     for ( i = 0; i < region_count; i++ ) {
-        region_t* region;
+        memory_region_t* region;
 
-        region = ( region_t* )array_get_item( &context->regions, i );
+        region = ( memory_region_t* )array_get_item( &context->regions, i );
 
         ASSERT( ( region->flags & REGION_KERNEL ) == 0 );
 
@@ -352,9 +352,9 @@ void memory_context_dump( memory_context_t* context ) {
     region_count = array_get_size( &context->regions );
 
     for ( i = 0; i < region_count; i++ ) {
-        region_t* region;
+        memory_region_t* region;
 
-        region = ( region_t* )array_get_item( &context->regions, i );
+        region = ( memory_region_t* )array_get_item( &context->regions, i );
 
         memory_region_dump( region, i );
     }

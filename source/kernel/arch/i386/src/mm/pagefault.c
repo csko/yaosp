@@ -58,7 +58,7 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
     }
 }
 
-static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
+static int handle_lazy_page_allocation( memory_region_t* region, uint32_t address ) {
     void* p;
     uint32_t* pgd_entry;
     uint32_t* pt_entry;
@@ -99,7 +99,7 @@ static int handle_lazy_page_allocation( region_t* region, uint32_t address ) {
 
 #define MAX_PAGES_PER_LOAD 6
 
-static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_t* pages_loaded ) {
+static int handle_lazy_page_loading( memory_region_t* region, uint32_t address, uint32_t* pages_loaded ) {
     int i;
     void* p;
     int error;
@@ -212,9 +212,9 @@ static int handle_lazy_page_loading( region_t* region, uint32_t address, uint32_
 int handle_page_fault( registers_t* regs ) {
     int error;
     uint32_t cr2;
-    region_t* region;
     thread_t* thread;
     const char* message;
+    memory_region_t* region;
 
     cr2 = get_cr2();
 
