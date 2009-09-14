@@ -220,7 +220,7 @@ static int elf32_relocate_module( elf_module_t* elf_module ) {
                 }
 
                 target = ( uint32_t* )( elf_module->text_address + reloc->offset );
-                *target = *target + elf_symbol->address;
+                *target = *target + elf_symbol->address + elf_module->text_address;
 
                 break;
             }
