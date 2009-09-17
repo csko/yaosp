@@ -121,7 +121,7 @@ int run_application( void ) {
 
         if ( error < 0 ) {
             dbprintf( "run_application(): Failed to receive message: %d\n", error );
-            break;
+            continue;
         }
 
         switch ( code ) {

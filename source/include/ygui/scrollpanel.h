@@ -22,6 +22,10 @@
 #include <ygui/widget.h>
 #include <ygui/yconstants.h>
 
+int scroll_panel_get_v_size( widget_t* widget );
+
+int scroll_panel_set_v_offset( widget_t* widget, int offset );
+
 widget_t* create_scroll_panel( scrollbar_policy_t v_scroll_policy, scrollbar_policy_t h_scroll_policy );
 
 #endif /* _YGUI_SCROLLPANEL_H_ */

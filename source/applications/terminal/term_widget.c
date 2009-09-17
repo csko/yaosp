@@ -97,8 +97,6 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     terminal_line_t* term_line;
     terminal_widget_t* terminal_widget;
 
-    /* 190, 190, 190 */
-
     static color_t bg_color = { 0, 0, 0, 255 };
     static color_t fg_color = { 255, 255, 255, 255 };
 
@@ -111,16 +109,18 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     gc_set_pen_color( gc, &bg_color );
     gc_fill_rect( gc, &bounds );
 
-    /* Set the terminal font */
+    /* Set the terminal colors & font */
 
     gc_set_font( gc, terminal_widget->font );
-
-    point_t pos = { .x = 0, .y = font_get_ascender( terminal_widget->font ) };
-
     gc_set_pen_color( gc, &fg_color );
 
     terminal_widget->current_bg_color = T_COLOR_BLACK;
     terminal_widget->current_fg_color = T_COLOR_WHITE;
+
+    point_t pos = {
+        .x = 0,
+        .y = font_get_ascender( terminal_widget->font )
+    };
 
     pthread_mutex_lock( &terminal->lock );
 

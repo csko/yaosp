@@ -37,6 +37,7 @@
 #include "term_widget.h"
 
 window_t* window;
+widget_t* scrollpanel;
 widget_t* terminal_widget;
 
 int master_pty;
@@ -156,7 +157,7 @@ static int initialize_gui( void ) {
     point_t point = { .x = 50, 50 };
     point_t size;
 
-    widget_t* scrollpanel = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_NEVER );
+    scrollpanel = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_NEVER );
 
     widget_get_preferred_size( scrollpanel, &tmp );
 

@@ -356,6 +356,10 @@ static void do_v_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
     widget_t* child;
     scrollpanel_t* scrollpanel;
 
+    if ( amount == 0 ) {
+        return;
+    }
+
     scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
 
     /* Get the child widget */
@@ -385,8 +389,46 @@ static void do_v_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
     widget_invalidate( widget, 1 );
 }
 
+static void do_v_scroll_set( widget_t* widget, scrollbar_t* scrollbar, int value ) {
+    widget_t* child;
+    scrollpanel_t* scrollpanel;
+
+    scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
+
+    /* Get the child widget */
+
+    if ( widget_get_child_count( widget ) == 0 ) {
+        return;
+    }
+
+    child = widget_get_child_at( widget, 0 );
+
+    /* Update the scroll offset of the child widget */
+
+    if ( child->scroll_offset.y == value ) {
+        return;
+    }
+
+    child->scroll_offset.y = value;
+
+    if ( child->scroll_offset.y > 0 ) {
+        child->scroll_offset.y = 0;
+    } else if ( -child->scroll_offset.y > child->full_size.y - child->visible_size.y ) {
+        child->scroll_offset.y = MIN( 0, child->visible_size.y - child->full_size.y );
+    }
+
+    /* Recalculate the position of the vertical slider */
+
+    scrollbar_calc_vertical_slider( widget, scrollbar, child, scrollpanel->horizontal.visible );
+
+    /* Invalidate the scrollpanel */
+
+    widget_invalidate( widget, 1 );
+}
+
 static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
     double p;
+    int new_offset;
     widget_t* child;
 
     /* Get the child widget */
@@ -403,7 +445,13 @@ static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
 
     p = ( double )( scrollbar->slider.top - SCROLL_BTN_SIZE ) / scrollbar->slider_space;
 
-    child->scroll_offset.y = -( ( int )( ( child->full_size.y - child->visible_size.y ) * p ) );
+    new_offset = -( ( int )( ( child->full_size.y - child->visible_size.y ) * p ) );
+
+    if ( child->scroll_offset.y == new_offset ) {
+        return;
+    }
+
+    child->scroll_offset.y = new_offset;
 
     widget_invalidate( widget, 1 );
 }
@@ -411,6 +459,10 @@ static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
 static void do_h_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) {
     widget_t* child;
     scrollpanel_t* scrollpanel;
+
+    if ( amount == 0 ) {
+        return;
+    }
 
     scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
 
@@ -443,6 +495,7 @@ static void do_h_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
 
 static void do_h_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
     double p;
+    int new_offset;
     widget_t* child;
 
     /* Get the child widget */
@@ -459,7 +512,13 @@ static void do_h_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
 
     p = ( double )( scrollbar->slider.left - SCROLL_BTN_SIZE ) / scrollbar->slider_space;
 
-    child->scroll_offset.x = -( ( int )( ( child->full_size.x - child->visible_size.x ) * p ) );
+    new_offset = -( ( int )( ( child->full_size.x - child->visible_size.x ) * p ) );
+
+    if ( child->scroll_offset.x == new_offset ) {
+        return;
+    }
+
+    child->scroll_offset.x = new_offset;
 
     widget_invalidate( widget, 1 );
 }
@@ -988,6 +1047,33 @@ static widget_operations_t scrollpanel_ops = {
     .size_changed = scrollpanel_size_changed,
     .child_added = scrollpanel_child_added
 };
+
+int scroll_panel_get_v_size( widget_t* widget ) {
+    widget_t* child;
+
+    if ( ( widget_get_id( widget ) != W_SCROLLPANEL ) ||
+         ( widget_get_child_count( widget ) == 0 ) ) {
+        return 0;
+    }
+
+    child = widget_get_child_at( widget, 0 );
+
+    return -MIN( 0, child->visible_size.y - child->full_size.y );
+}
+
+int scroll_panel_set_v_offset( widget_t* widget, int offset ) {
+    scrollpanel_t* scrollpanel;
+
+    if ( widget_get_id( widget ) != W_SCROLLPANEL ) {
+        return -1;
+    }
+
+    scrollpanel = widget_get_data( widget );
+
+    do_v_scroll_set( widget, &scrollpanel->vertical, -offset );
+
+    return 0;
+}
 
 widget_t* create_scroll_panel( scrollbar_policy_t v_scroll_policy, scrollbar_policy_t h_scroll_policy ) {
     widget_t* widget;

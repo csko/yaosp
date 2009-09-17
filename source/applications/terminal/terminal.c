@@ -22,17 +22,31 @@
 #include <yaosp/debug.h>
 
 #include <ygui/window.h>
+#include <ygui/scrollpanel.h>
 
 #include "terminal.h"
 #include "term_widget.h"
 
 extern window_t* window;
+extern widget_t* scrollpanel;
 extern widget_t* terminal_widget;
 
 static int terminal_update_widget( void* data ) {
+    /* The preferred size of the widget may changed. Signal the
+       event listeners ... */
+
     widget_signal_event_handler(
         terminal_widget,
         terminal_widget->event_ids[ E_PREF_SIZE_CHANGED ]
+    );
+
+    /* Move the scrollpanel to the bottom */
+
+    int v_size = scroll_panel_get_v_size( scrollpanel );
+
+    scroll_panel_set_v_offset(
+        scrollpanel,
+        v_size
     );
 
     return 0;
@@ -105,7 +119,7 @@ static void terminal_update_mode( terminal_t* terminal ) {
                 break;
 
             default :
-                dbprintf( "%s() Unknown mode parameter: %d\n", __FUNCTION__, terminal->parameters[ i ] );
+                dbprintf( "%s(): Unknown mode parameter: %d\n", __FUNCTION__, terminal->parameters[ i ] );
                 break;
         }
     }

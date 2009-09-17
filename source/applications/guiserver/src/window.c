@@ -51,7 +51,7 @@ static int window_thread( void* arg ) {
 
         if ( error < 0 ) {
             dbprintf( "window_thread(): Failed to receive message: %d\n", error );
-            break;
+            continue;
         }
 
         switch ( code ) {
