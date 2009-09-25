@@ -533,7 +533,13 @@ uint32_t sys_get_thread_info_for_process( process_id id, thread_info_t* info_tab
 
     scheduler_lock();
 
-    hashtable_filtered_iterate( &thread_table, get_thread_info_iterator, ( void* )&data, thread_info_process_filter, ( void* )&id );
+    hashtable_filtered_iterate(
+        &thread_table,
+        get_thread_info_iterator,
+        ( void* )&data,
+        thread_info_process_filter,
+        ( void* )&id
+    );
 
     scheduler_unlock();
 

@@ -32,6 +32,14 @@ enum {
     PTHREAD_MUTEX_RECURSIVE
 };
 
+typedef struct pthread_attr {
+    int dummy;
+} pthread_attr_t;
+
+typedef struct pthread {
+    int thread_id;
+} pthread_t;
+
 typedef struct pthread_mutexattr {
     int flags;
 } pthread_mutexattr_t;
@@ -40,6 +48,9 @@ typedef struct pthread_mutex {
     uint32_t init_magic;
     int mutex_id;
 } pthread_mutex_t;
+
+int pthread_create( pthread_t* thread, const pthread_attr_t* attr,
+                    void *( *start_routine )( void* ), void* arg );
 
 int pthread_mutexattr_init( pthread_mutexattr_t* attr );
 int pthread_mutexattr_destroy( pthread_mutexattr_t* attr );

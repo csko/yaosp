@@ -1,4 +1,4 @@
-/* yaosp C library
+/* pthread thread functions
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,33 +16,45 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/thread.h>
+#include <errno.h>
+#include <pthread.h>
 
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
-thread_id create_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t user_stack_size ) {
-    return syscall5(
+enum {
+    PRIORITY_HIGH = 31,
+    PRIORITY_DISPLAY = 23,
+    PRIORITY_NORMAL = 15,
+    PRIORITY_LOW = 7,
+    PRIORITY_IDLE = 0
+};
+
+int pthread_create( pthread_t* thread, const pthread_attr_t* attr,
+                    void *( *start_routine )( void* ), void* arg ) {
+    if ( ( thread == NULL ) ||
+         ( start_routine == NULL ) ) {
+        return EINVAL;
+    }
+
+    thread->thread_id = syscall5(
         SYS_create_thread,
-        ( int )name,
-        priority,
-        ( int )entry,
+        ( int )"pthread",
+        PRIORITY_NORMAL,
+        ( int )start_routine,
         ( int )arg,
-        user_stack_size
+        0
     );
-}
 
-int wake_up_thread( thread_id id ) {
-    return syscall1(
+    if ( thread->thread_id < 0 ) {
+        return thread->thread_id;
+    }
+
+    syscall1(
         SYS_wake_up_thread,
-        id
+        thread->thread_id
     );
-}
 
-int kill_thread( thread_id id, int signal ) {
-    return syscall2(
-        SYS_kill_thread,
-        id,
-        signal
-    );
+
+    return 0;
 }

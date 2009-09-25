@@ -18,7 +18,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
-#include <yaosp/thread.h>
+#include <pthread.h>
 #include <yaosp/debug.h>
 
 #include <ygui/protocol.h>
@@ -82,7 +82,7 @@ static int handle_get_desktop_size( msg_desk_get_size_t* request ) {
     return 0;
 }
 
-static int application_thread( void* arg ) {
+static void* application_thread( void* arg ) {
     int error;
     void* buffer;
     uint32_t code;
@@ -93,7 +93,7 @@ static int application_thread( void* arg ) {
     buffer = malloc( MAX_APPLICATION_BUFSIZE );
 
     if ( buffer == NULL ) {
-        return -ENOMEM;
+        return NULL;
     }
 
     while ( 1 ) {
@@ -127,12 +127,13 @@ static int application_thread( void* arg ) {
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 int handle_create_application( msg_create_app_t* request ) {
+    int error;
     application_t* app;
-    thread_id app_thread;
+    pthread_t app_thread;
     msg_create_app_reply_t reply;
 
     app = ( application_t* )malloc( sizeof( application_t ) );
@@ -149,19 +150,16 @@ int handle_create_application( msg_create_app_t* request ) {
 
     app->client_port = request->client_port;
 
-    app_thread = create_thread(
-        "application",
-        PRIORITY_NORMAL,
+    error = pthread_create(
+        &app_thread,
+        NULL,
         application_thread,
-        ( void* )app,
-        0
+        ( void* )app
     );
 
-    if ( app_thread < 0 ) {
+    if ( error != 0 ) {
         goto error3;
     }
-
-    wake_up_thread( app_thread );
 
     reply.server_port = app->server_port;
 

@@ -21,24 +21,23 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <assert.h>
 #include <sys/ioctl.h>
 #include <yaosp/debug.h>
-#include <yaosp/thread.h>
 #include <yaosp/input.h>
 
 #include <input.h>
 #include <windowmanager.h>
 
 static int input_device = -1;
-static thread_id input_thread;
+static pthread_t input_thread;
 
-static int input_thread_entry( void* arg ) {
+static void* input_thread_entry( void* arg ) {
     int error;
     input_event_t event;
 
-    if ( input_device < 0 ) {
-        return 0;
-    }
+    assert( input_device >= 0 );
 
     while ( 1 ) {
         error = read( input_device, &event, sizeof( input_event_t ) );
@@ -86,7 +85,7 @@ static int input_thread_entry( void* arg ) {
 
     close( input_device );
 
-    return 0;
+    return NULL;
 }
 
 int init_input_system( void ) {
@@ -119,19 +118,12 @@ int init_input_system( void ) {
         return input_device;
     }
 
-    input_thread = create_thread(
-        "input dispatcher",
-        PRIORITY_DISPLAY,
-        input_thread_entry,
+    pthread_create(
+        &input_thread,
         NULL,
-        0
+        input_thread_entry,
+        NULL
     );
-
-    if ( input_thread < 0 ) {
-        return input_thread;
-    }
-
-    wake_up_thread( input_thread );
 
     return 0;
 }

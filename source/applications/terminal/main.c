@@ -22,9 +22,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <yaosp/debug.h>
-#include <yaosp/thread.h>
 
 #include <ygui/application.h>
 #include <ygui/window.h>
@@ -44,7 +44,7 @@ int master_pty;
 pid_t shell_pid;
 terminal_t* terminal;
 
-static int pty_read_thread_entry( void* arg ) {
+static void* pty_read_thread_entry( void* arg ) {
     int size;
     uint8_t buffer[ 512 ];
 
@@ -70,7 +70,7 @@ static int pty_read_thread_entry( void* arg ) {
         widget_invalidate( terminal_widget, 1 );
     }
 
-    return 0;
+    return NULL;
 }
 
 static int initialize_terminal( void ) {
@@ -144,8 +144,14 @@ static int initialize_pty( void ) {
         return shell_pid;
     }
 
-    thread_id pty_read_thread = create_thread( "pty read thread", PRIORITY_NORMAL, pty_read_thread_entry, NULL, 0 );
-    wake_up_thread( pty_read_thread );
+    pthread_t pty_read_thread;
+
+    pthread_create(
+        &pty_read_thread,
+        NULL,
+        pty_read_thread_entry,
+        NULL
+    );
 
     return 0;
 }

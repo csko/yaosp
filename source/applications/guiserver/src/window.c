@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <yaosp/thread.h>
+#include <pthread.h>
 #include <yaosp/debug.h>
 
 #include <window.h>
@@ -32,7 +32,7 @@
 
 extern window_decorator_t* window_decorator;
 
-static int window_thread( void* arg ) {
+static void* window_thread( void* arg ) {
     int error;
     uint32_t code;
     void* buffer;
@@ -43,7 +43,7 @@ static int window_thread( void* arg ) {
     buffer = malloc( MAX_WINDOW_BUFSIZE );
 
     if ( buffer == NULL ) {
-        return -ENOMEM;
+        return NULL;
     }
 
     while ( 1 ) {
@@ -72,7 +72,7 @@ static int window_thread( void* arg ) {
 
     free( buffer );
 
-    return 0;
+    return NULL;
 }
 
 int handle_create_window( msg_create_win_t* request ) {
@@ -80,7 +80,7 @@ int handle_create_window( msg_create_win_t* request ) {
     int width;
     int height;
     window_t* window;
-    thread_id thread;
+    pthread_t thread;
     msg_create_win_reply_t reply;
 
     window = ( window_t* )malloc( sizeof( window_t ) );
@@ -164,19 +164,16 @@ int handle_create_window( msg_create_win_t* request ) {
         window_decorator->calculate_regions( window );
     }
 
-    thread = create_thread(
-        "window",
-        PRIORITY_DISPLAY,
+    error = pthread_create(
+        &thread,
+        NULL,
         window_thread,
-        window,
-        0
+        ( void* )window
     );
 
-    if ( thread < 0 ) {
+    if ( error != 0 ) {
         goto error7;
     }
-
-    wake_up_thread( thread );
 
     reply.server_port = window->server_port;
 

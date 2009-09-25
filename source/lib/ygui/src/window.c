@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <assert.h>
 #include <unistd.h>
-#include <yaosp/thread.h>
 #include <yaosp/debug.h>
 
 #include <ygui/window.h>
@@ -120,7 +119,7 @@ static widget_t* window_find_widget_at( window_t* window, point_t* position ) {
     return window_find_widget_at_helper( window->container, position, &lefttop, &visible_rect );
 }
 
-static int window_thread( void* arg ) {
+static void* window_thread( void* arg ) {
     int error;
     void* buffer;
     uint32_t code;
@@ -131,7 +130,7 @@ static int window_thread( void* arg ) {
     buffer = malloc( MAX_WINDOW_BUFSIZE );
 
     if ( buffer == NULL ) {
-        return -ENOMEM;
+        return NULL;
     }
 
     while ( 1 ) {
@@ -334,11 +333,11 @@ static int window_thread( void* arg ) {
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 int window_insert_callback( window_t* window, window_callback_t* callback, void* data ) {
-    if ( gettid() == window->thread_id ) {
+    if ( gettid() == window->thread.thread_id ) {
         callback( data );
     } else {
         msg_window_callback_t msg;
@@ -459,19 +458,16 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     window->server_port = reply.server_port;
 
-    window->thread_id = create_thread(
-        "window",
-        PRIORITY_DISPLAY,
+    error = pthread_create(
+        &window->thread,
+        NULL,
         window_thread,
-        ( void* )window,
-        0
+        ( void* )window
     );
 
-    if ( window->thread_id < 0 ) {
+    if ( error != 0 ) {
         goto error7;
     }
-
-    wake_up_thread( window->thread_id );
 
     return window;
 

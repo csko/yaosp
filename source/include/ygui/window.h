@@ -19,10 +19,10 @@
 #ifndef _YGUI_WINDOW_H_
 #define _YGUI_WINDOW_H_
 
+#include <pthread.h>
 #include <sys/types.h>
 
 #include <yaosp/ipc.h>
-#include <yaosp/thread.h>
 
 #include <ygui/point.h>
 #include <ygui/widget.h>
@@ -31,7 +31,7 @@
 typedef struct window {
     /* Window IPC ports */
 
-    thread_id thread_id;
+    pthread_t thread;
     ipc_port_id client_port;
     ipc_port_id server_port;
     ipc_port_id reply_port;

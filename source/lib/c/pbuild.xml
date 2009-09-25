@@ -264,7 +264,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/yaosp/region.c</item>
         <item>src/yaosp/module.c</item>
         <item>src/yaosp/yaosp.c</item>
-        <item>src/yaosp/thread.c</item>
         <item>src/yaosp/ipc.c</item>
         <item>src/trio/trio.c</item>
         <item>src/trio/trionan.c</item>
@@ -278,6 +277,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/inet_ntoa.c</item>
         <item>src/pthread/mutex.c</item>
         <item>src/pthread/mutexattr.c</item>
+        <item>src/pthread/thread.c</item>
     </array>
 
     <target name="clean">
