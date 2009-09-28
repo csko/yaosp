@@ -119,6 +119,11 @@ int run_application( void ) {
     while ( 1 ) {
         error = recv_ipc_message( app_client_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
 
+        if ( error == -ENOENT ) {
+            dbprintf( "run_application(): Received ENOENT, skipping ...\n" );
+            continue;
+        }
+
         if ( error < 0 ) {
             dbprintf( "run_application(): Failed to receive message: %d\n", error );
             continue;

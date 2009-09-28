@@ -192,14 +192,6 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
     }
 
     if ( port->message_queue == NULL ) {
-        DEBUG_LOG(
-            "sys_recv_ipc_message(): port = %d, code = %p, buffer = %p, size = %u, timeout = %llu\n",
-            port,
-            code,
-            buffer,
-            size,
-            timeout
-        );
         error = -ENOENT;
         goto error2;
     }
@@ -276,14 +268,6 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
     }
 
     if ( port->message_queue == NULL ) {
-        DEBUG_LOG(
-            "sys_peek_ipc_message(): port = %d, code = %p, size = %p, timeout = %llu\n",
-            port,
-            code,
-            size,
-            timeout
-        );
-
         error = -ENOENT;
         goto error2;
     }

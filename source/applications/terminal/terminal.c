@@ -32,7 +32,10 @@ extern window_t* window;
 extern widget_t* scrollpanel;
 extern widget_t* terminal_widget;
 
-static int terminal_update_widget( void* data ) {
+int terminal_update_widget( void* data ) {
+    widget_invalidate( terminal_widget, 1 );
+
+#if 0
     /* The preferred size of the widget may changed. Signal the
        event listeners ... */
 
@@ -49,95 +52,53 @@ static int terminal_update_widget( void* data ) {
         scrollpanel,
         v_size
     );
+#endif
 
     return 0;
 }
 
-static int terminal_ensure_line( terminal_t* terminal, int line ) {
-    int i;
-    char* buffer;
-    terminal_line_t* term_line;
-    terminal_color_item_t* color_item;
-
-    if ( ( line < 0 ) ||
-         ( line >= terminal->max_lines ) ) {
-        return -EINVAL;
-    }
-
-    term_line = &terminal->lines[ line ];
-
-    if ( term_line->max_size >= terminal->width ) {
-        return 0;
-    }
-
-    term_line->buffer = ( char* )realloc( term_line->buffer, terminal->width );
-
-    if ( term_line->buffer == NULL ) {
-        return -ENOMEM;
-    }
-
-    term_line->buffer_color = ( terminal_color_item_t* )realloc(
-        term_line->buffer_color,
-        sizeof( terminal_color_item_t ) * terminal->width
-    );
-
-    if ( term_line->buffer_color == NULL ) {
-        return -ENOMEM;
-    }
-
-    for ( i = term_line->max_size,
-          buffer = term_line->buffer + term_line->max_size,
-          color_item = &term_line->buffer_color[ term_line->max_size ];
-          i < terminal->width;
-          i++, buffer++, color_item++ ) {
-        *buffer = ' ';
-
-        color_item->bg_color = T_COLOR_BLACK;
-        color_item->fg_color = T_COLOR_WHITE;
-    }
-
-    term_line->max_size = terminal->width;
-
-    return 0;
-}
-
-static void terminal_update_mode( terminal_t* terminal ) {
+void terminal_update_mode( terminal_t* terminal ) {
     int i;
 
     for ( i = 0; i < terminal->parameter_count; i++ ) {
         switch ( terminal->parameters[ i ] ) {
             case 0 :
-                terminal->bg_color = T_COLOR_BLACK;
-                terminal->fg_color = T_COLOR_WHITE;
+                terminal->attr.bg_color = T_COLOR_BLACK;
+                terminal->attr.fg_color = T_COLOR_WHITE;
                 break;
 
             case 1 :
+                /* bold */
+                break;
+
+            case 2 :
+                /* normal */
                 break;
 
             case 7 : {
                 terminal_color_t tmp;
 
-                tmp = terminal->bg_color;
-                terminal->bg_color = terminal->fg_color;
-                terminal->fg_color = tmp;
+                tmp = terminal->attr.bg_color;
+                terminal->attr.bg_color = terminal->attr.fg_color;
+                terminal->attr.fg_color = tmp;
 
                 break;
             }
 
             case 30 ... 37 :
-                terminal->fg_color = terminal->parameters[ i ] - 30;
+                terminal->attr.fg_color = terminal->parameters[ i ] - 30;
                 break;
 
             case 39 :
-                terminal->fg_color = T_COLOR_WHITE;
+                terminal->attr.fg_color = T_COLOR_WHITE;
                 break;
 
             case 40 ... 47 :
-                terminal->bg_color = terminal->parameters[ i ] - 40;
+                terminal->attr.bg_color = terminal->parameters[ i ] - 40;
                 break;
 
             case 49 :
-                terminal->bg_color = T_COLOR_BLACK;
+                terminal->attr.bg_color = T_COLOR_BLACK;
                 break;
 
             default :
@@ -147,9 +108,7 @@ static void terminal_update_mode( terminal_t* terminal ) {
     }
 }
 
-static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
-    int error;
-
+void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
     switch ( data ) {
         case 27 :
             terminal->state = STATE_ESCAPE;
@@ -158,24 +117,15 @@ static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
             break;
 
         case '\r' :
-            terminal->cursor_x = 0;
+            terminal_buffer_insert_cr( &terminal->buffer );
             break;
 
         case '\n' :
-            terminal->cursor_y++;
-            terminal->cursor_x = 0;
+            terminal_buffer_insert_lf( &terminal->buffer );
             break;
 
         case '\b' :
-            if ( terminal->cursor_x == 0 ) {
-                if ( terminal->cursor_y > 0 ) {
-                    terminal->cursor_y--;
-                    terminal->cursor_x = terminal->width - 1;
-                }
-            } else {
-                terminal->cursor_x--;
-            }
-
+            terminal_buffer_insert_backspace( &terminal->buffer );
             break;
 
         case '\t' :
@@ -183,41 +133,22 @@ static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
             break;
 
         default : {
-            terminal_line_t* term_line;
-
             if ( data < 32 ) {
                 break;
             }
 
-            error = terminal_ensure_line( terminal, terminal->cursor_y );
-
-            if ( error < 0 ) {
-                return;
-            }
-
-            term_line = &terminal->lines[ terminal->cursor_y ];
-
-            term_line->buffer[ terminal->cursor_x ] = data;
-            term_line->buffer_color[ terminal->cursor_x ].bg_color = terminal->bg_color;
-            term_line->buffer_color[ terminal->cursor_x ].fg_color = terminal->fg_color;
-
-            terminal->cursor_x++;
-
-            term_line->size = terminal->cursor_x;
-
-            if ( terminal->cursor_x == terminal->width ) {
-                terminal->cursor_x = 0;
-                terminal->cursor_y++;
-            }
-
-            terminal->last_line = MAX( terminal->last_line, terminal->cursor_y );
+            terminal_buffer_insert_char(
+                &terminal->buffer,
+                &terminal->attr,
+                data
+            );
 
             break;
         }
     }
 }
 
-static void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
+void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
     switch ( data ) {
         case '(' :
             terminal->state = STATE_BRACKET;
@@ -227,6 +158,39 @@ static void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
             terminal->state = STATE_SQUARE_BRACKET;
             break;
 
+        case 'M' :
+            if ( terminal->buffer.cursor_y == 0 ) {
+                terminal_buffer_scroll_by(
+                    &terminal->buffer,
+                    -1
+                );
+            } else {
+                terminal_buffer_move_cursor(
+                    &terminal->buffer,
+                    0,
+                    -1
+                );
+            }
+
+            terminal->state = STATE_NONE;
+
+            break;
+
+        case '7' :
+            terminal_buffer_save_cursor( &terminal->buffer );
+            terminal->state = STATE_NONE;
+            break;
+
+        case '8' :
+            terminal_buffer_restore_cursor( &terminal->buffer );
+            terminal->state = STATE_NONE;
+            break;
+
+        case '=' :
+            /* ??? */
+            terminal->state = STATE_NONE;
+            break;
+
         default :
             dbprintf( "%s(): Unhandled data: %d\n", __FUNCTION__, data );
             terminal->state = STATE_NONE;
@@ -234,7 +198,7 @@ static void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
     }
 }
 
-static void terminal_data_state_bracket( terminal_t* terminal, uint8_t data ) {
+void terminal_data_state_bracket( terminal_t* terminal, uint8_t data ) {
     switch ( data ) {
         case 'B' :
             /* TODO */
@@ -248,7 +212,7 @@ static void terminal_data_state_bracket( terminal_t* terminal, uint8_t data ) {
     }
 }
 
-static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t data ) {
+void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t data ) {
     switch ( data ) {
         case '0' ... '9' :
             if ( terminal->first_number ) {
@@ -275,39 +239,18 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
                     ( terminal->parameter_count == 1 ) );
 
             if ( terminal->parameter_count == 0 ) {
-                int i;
-                terminal_line_t* line;
-
-                /* TODO: not fully OK! */
-
-                line = &terminal->lines[ terminal->cursor_y ];
-
-                for ( i = terminal->cursor_y; i < terminal->height; i++, line++ ) {
-                    line->size = 0;
-                }
+                terminal_buffer_erase_below( &terminal->buffer );
             } else {
-                int i;
-                terminal_line_t* line;
-
                 switch ( terminal->parameters[ 0 ] ) {
                     case 1 :
-                        line = &terminal->lines[ terminal->cursor_y ];
-
-                        for ( i = terminal->cursor_y; i >= 0; i--, line-- ) {
-                            line->size = 0;
-                        }
-
+                        terminal_buffer_erase_above( &terminal->buffer );
                         break;
 
                     case 2 :
-                        line = &terminal->lines[ 0 ];
+                        terminal_buffer_erase_above( &terminal->buffer );
+                        terminal_buffer_erase_below( &terminal->buffer );
 
-                        for ( i = 0; i < terminal->height; i++, line++ ) {
-                            line->size = 0;
-                        }
-
-                        terminal->cursor_x = 0;
-                        terminal->cursor_y = 0;
+                        terminal_buffer_move_cursor_to( &terminal->buffer, 0, 0 );
 
                         break;
                 }
@@ -322,39 +265,16 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
                     ( terminal->parameter_count == 1 ) );
 
             if ( terminal->parameter_count == 0 ) {
-                int i;
-                char* buffer;
-
-                buffer = terminal->lines[ terminal->cursor_y ].buffer + terminal->cursor_x;
-
-                for ( i = terminal->cursor_x; i < terminal->width; i++, buffer++ ) {
-                    *buffer = ' ';
-                }
+                terminal_buffer_erase_after( &terminal->buffer );
             } else {
-                int i;
-                char* buffer;
-
                 switch ( terminal->parameters[ 0 ] ) {
                     case 1 :
-                        buffer = terminal->lines[ terminal->cursor_y ].buffer + terminal->cursor_x;
-
-                        for ( i = terminal->cursor_x; i >= 0; i--, buffer-- ) {
-                            *buffer = ' ';
-                        }
-
+                        terminal_buffer_erase_before( &terminal->buffer );
                         break;
 
                     case 2 :
-                        buffer = terminal->lines[ terminal->cursor_y ].buffer;
-
-                        for ( i = 0; i < terminal->width; i++, buffer++ ) {
-                            *buffer = ' ';
-                        }
-
-                        break;
-
-                    default :
-                        dbprintf( "%s(): Unhandled parameter at K: %d\n", terminal->parameters[ 0 ] );
+                        terminal_buffer_erase_before( &terminal->buffer );
+                        terminal_buffer_erase_after( &terminal->buffer );
                         break;
                 }
             }
@@ -368,17 +288,18 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
             assert( ( terminal->parameter_count == 0 ) ||
                     ( terminal->parameter_count == 2 ) );
 
-            /* TODO: y setting is not fully correct! */
-
             switch ( terminal->parameter_count ) {
                 case 0 :
-                    terminal->cursor_y = 0;
-                    terminal->cursor_x = 0;
+                    terminal_buffer_move_cursor_to( &terminal->buffer, 0, 0 );
                     break;
 
                 case 2 :
-                    terminal->cursor_y = terminal->parameters[ 0 ] - 1;
-                    terminal->cursor_x = terminal->parameters[ 1 ] - 1;
+                    terminal_buffer_move_cursor_to(
+                        &terminal->buffer,
+                        terminal->parameters[ 1 ] - 1,
+                        terminal->parameters[ 0 ] - 1
+                    );
+
                     break;
             }
 
@@ -389,9 +310,12 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
         case 'd' :
             assert( terminal->parameter_count == 1 );
 
-            /* TODO: y setting is not fully correct! */
+            terminal_buffer_move_cursor_to(
+                &terminal->buffer,
+                -1,
+                terminal->parameters[ 0 ] - 1
+            );
 
-            terminal->cursor_y = terminal->parameters[ 0 ] = 1;
             terminal->state = STATE_NONE;
 
             break;
@@ -399,15 +323,141 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
         case 'G' :
             assert( terminal->parameter_count == 1 );
 
-            terminal->cursor_x = terminal->parameters[ 0 ] - 1;
+            terminal_buffer_move_cursor_to(
+                &terminal->buffer,
+                terminal->parameters[ 0 ] - 1,
+                -1
+            );
+
             terminal->state = STATE_NONE;
 
             break;
+
+        case 'A' : {
+            int dy = 1;
+
+            if ( terminal->parameter_count == 1 ) {
+                dy = terminal->parameters[ 0 ];
+            }
+
+            terminal_buffer_move_cursor(
+                &terminal->buffer,
+                0,
+                -dy
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+        }
+
+        case 'B' : {
+            int dy = 1;
+
+            if ( terminal->parameter_count == 1 ) {
+                dy = terminal->parameters[ 0 ];
+            }
+
+            terminal_buffer_move_cursor(
+                &terminal->buffer,
+                0,
+                dy
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+        }
+
+        case 'C' : {
+            int dx = 1;
+
+            if ( terminal->parameter_count == 1 ) {
+                dx = terminal->parameters[ 0 ];
+            }
+
+            terminal_buffer_move_cursor(
+                &terminal->buffer,
+                dx,
+                0
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+        }
+
+        case 'D' : {
+            int dx = 1;
+
+            if ( terminal->parameter_count == 1 ) {
+                dx = terminal->parameters[ 0 ];
+            }
+
+            terminal_buffer_move_cursor(
+                &terminal->buffer,
+                -dx,
+                0
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+        }
 
         case 'r' :
-            /* TODO: scrolling */
+            assert( terminal->parameter_count == 2 );
+
+            terminal_buffer_set_scroll_region(
+                &terminal->buffer,
+                terminal->parameters[ 0 ] - 1,
+                terminal->parameters[ 1 ] - 1
+            );
+
             terminal->state = STATE_NONE;
+
             break;
+
+        case 'S' :
+            assert( terminal->parameter_count == 1 );
+
+            terminal_buffer_scroll_by(
+                &terminal->buffer,
+                terminal->parameters[ 0 ]
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+
+        case 'T' :
+            assert( terminal->parameter_count == 1 );
+
+            terminal_buffer_scroll_by(
+                &terminal->buffer,
+                -terminal->parameters[ 0 ]
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+
+        case '@' : {
+            int count = 1;
+
+            if ( terminal->parameter_count == 1 ) {
+                count = terminal->parameters[ 0 ];
+            }
+
+            terminal_buffer_insert_space(
+                &terminal->buffer,
+                count
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+        }
 
         case 'l' :
             /* TODO */
@@ -425,7 +475,7 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
     }
 }
 
-static void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
+void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
     switch ( data ) {
         case '0' ... '9' :
             break;
@@ -447,14 +497,17 @@ static void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
 
 int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
     int i;
-    int new_last_line;
-    int current_last_line;
 
     pthread_mutex_lock( &terminal->lock );
 
-    current_last_line = terminal->last_line;
-
     for ( i = 0; i < size; i++, data++ ) {
+#if 0
+        if ( *data == 27 || *data == '\r' || *data == '\n' )
+            dbprintf( "%x ", *data );
+        else
+            dbprintf( "%c", *data );
+#endif
+
         switch ( terminal->state ) {
             case STATE_NONE :
                 terminal_data_state_none( terminal, *data );
@@ -478,8 +531,6 @@ int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
         }
     }
 
-    new_last_line = terminal->last_line;
-
     pthread_mutex_unlock( &terminal->lock );
 
     window_insert_callback( window, terminal_update_widget, NULL );
@@ -488,6 +539,7 @@ int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
 }
 
 terminal_t* create_terminal( int width, int height ) {
+    int error;
     terminal_t* terminal;
 
     terminal = ( terminal_t* )malloc( sizeof( terminal_t ) );
@@ -496,32 +548,23 @@ terminal_t* create_terminal( int width, int height ) {
         goto error1;
     }
 
-    terminal->max_lines = 500;
+    error = terminal_buffer_init( &terminal->buffer, width, height );
 
-    terminal->lines = ( terminal_line_t* )malloc( sizeof( terminal_line_t ) * terminal->max_lines );
-
-    if ( terminal->lines == NULL ) {
+    if ( error < 0 ) {
         goto error2;
     }
-
-    memset( terminal->lines, 0, sizeof( terminal_line_t ) * terminal->max_lines );
 
     if ( pthread_mutex_init( &terminal->lock, NULL ) < 0 ) {
         goto error3;
     }
 
-    terminal->width = width;
-    terminal->height = height;
-    terminal->cursor_x = 0;
-    terminal->cursor_y = 0;
-    terminal->bg_color = T_COLOR_BLACK;
-    terminal->fg_color = T_COLOR_WHITE;
-    terminal->last_line = 0;
+    terminal->attr.bg_color = T_COLOR_BLACK;
+    terminal->attr.fg_color = T_COLOR_WHITE;
 
     return terminal;
 
  error3:
-    free( terminal->lines );
+    /* TODO */
 
  error2:
     free( terminal );

@@ -22,19 +22,9 @@
 #include <pthread.h>
 #include <sys/types.h>
 
-#define TERMINAL_MAX_PARAMS 10
+#include "buffer.h"
 
-typedef enum terminal_color {
-    T_COLOR_BLACK,
-    T_COLOR_RED,
-    T_COLOR_GREEN,
-    T_COLOR_YELLOW,
-    T_COLOR_BLUE,
-    T_COLOR_MAGENTA,
-    T_COLOR_CYAN,
-    T_COLOR_WHITE,
-    T_COLOR_COUNT
-} terminal_color_t;
+#define TERMINAL_MAX_PARAMS 10
 
 typedef enum terminal_state {
     STATE_NONE,
@@ -44,37 +34,17 @@ typedef enum terminal_state {
     STATE_QUESTION
 } terminal_state_t;
 
-typedef struct terminal_color_item {
-    terminal_color_t bg_color;
-    terminal_color_t fg_color;
-} terminal_color_item_t;
-
-typedef struct terminal_line {
-    int size;
-    int max_size;
-    char* buffer;
-    terminal_color_item_t* buffer_color;
-} terminal_line_t;
-
 typedef struct terminal {
     pthread_mutex_t lock;
 
-    int width;
-    int height;
-
-    int cursor_x;
-    int cursor_y;
-    terminal_color_t bg_color;
-    terminal_color_t fg_color;
 
     int first_number;
     int parameter_count;
     int parameters[ TERMINAL_MAX_PARAMS ];
     terminal_state_t state;
 
-    int max_lines;
-    int last_line;
-    terminal_line_t* lines;
+    terminal_attr_t attr;
+    terminal_buffer_t buffer;
 } terminal_t;
 
 int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size );

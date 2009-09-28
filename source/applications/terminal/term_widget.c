@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <yaosp/input.h>
+
 #include "term_widget.h"
 
 #define W_TERMINAL W_TYPE_COUNT
@@ -46,11 +48,10 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
     index = 0;
 
     while ( index < term_line->size ) {
-        terminal_color_item_t* color_item;
+        terminal_attr_t* attr;
 
-        for ( j = index, color_item = &term_line->buffer_color[ index ]; j < term_line->size; j++, color_item++ ) {
-            if ( ( color_item->bg_color != terminal_widget->current_bg_color ) ||
-                 ( color_item->fg_color != terminal_widget->current_fg_color ) ) {
+        for ( j = index, attr = &term_line->attr[ index ]; j < term_line->size; j++, attr++ ) {
+            if ( terminal_attr_compare( &terminal_widget->current_attr, attr ) != 0 ) {
                 break;
             }
         }
@@ -60,10 +61,10 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
 
             width = font_get_string_width( terminal_widget->font, term_line->buffer + index, j - index );
 
-            if ( color_item->bg_color != T_COLOR_BLACK ) {
+            if ( term_line->attr[ index ].bg_color != T_COLOR_BLACK ) {
                 rect_t tmp;
 
-                gc_set_pen_color( gc, &terminal_color_table[ terminal_widget->current_bg_color ] );
+                gc_set_pen_color( gc, &terminal_color_table[ term_line->attr[ index ].bg_color ] );
 
                 rect_init(
                     &tmp,
@@ -76,7 +77,7 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
                 gc_fill_rect( gc, &tmp );
             }
 
-            gc_set_pen_color( gc, &terminal_color_table[ terminal_widget->current_fg_color ] );
+            gc_set_pen_color( gc, &terminal_color_table[ terminal_widget->current_attr.fg_color ] );
             gc_draw_text( gc, pos, term_line->buffer + index, j - index );
 
             pos->x += width;
@@ -84,8 +85,7 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
 
         index = j;
 
-        terminal_widget->current_bg_color = color_item->bg_color;
-        terminal_widget->current_fg_color = color_item->fg_color;
+        terminal_attr_copy( &terminal_widget->current_attr, &term_line->attr[ index ] );
     }
 
     return 0;
@@ -114,8 +114,8 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     gc_set_font( gc, terminal_widget->font );
     gc_set_pen_color( gc, &fg_color );
 
-    terminal_widget->current_bg_color = T_COLOR_BLACK;
-    terminal_widget->current_fg_color = T_COLOR_WHITE;
+    terminal_widget->current_attr.bg_color = T_COLOR_BLACK;
+    terminal_widget->current_attr.fg_color = T_COLOR_WHITE;
 
     point_t pos = {
         .x = 0,
@@ -124,7 +124,7 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
 
     pthread_mutex_lock( &terminal->lock );
 
-    for ( i = 0, term_line = terminal->lines; i < terminal->max_lines; i++, term_line++ ) {
+    for ( i = 0, term_line = terminal->buffer.lines; i < terminal->buffer.height; i++, term_line++ ) {
         terminal_paint_line( terminal_widget, gc, term_line, &pos );
 
         pos.y += font_get_height( terminal_widget->font );
@@ -136,8 +136,29 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
 }
 
 static int terminal_key_pressed( widget_t* widget, int key ) {
-    if ( key < 256 ) {
-        write( master_pty, &key, 1 );
+    switch ( key ) {
+        case KEY_UP :
+            write( master_pty, "\x1b[A", 3 );
+            break;
+
+        case KEY_DOWN :
+            write( master_pty, "\x1b[B", 3 );
+            break;
+
+        case KEY_LEFT :
+            write( master_pty, "\x1b[D", 3 );
+            break;
+
+        case KEY_RIGHT :
+            write( master_pty, "\x1b[C", 3 );
+            break;
+
+        default :
+            if ( key < 256 ) {
+                write( master_pty, &key, 1 );
+            }
+
+            break;
     }
 
     return 0;
@@ -151,7 +172,7 @@ static int terminal_get_preferred_size( widget_t* widget, point_t* size ) {
     point_init(
         size,
         font_get_string_width( terminal_widget->font, "A", 1 ) * 80,
-        font_get_height( terminal_widget->font ) * MAX( 25, ( terminal_widget->terminal->last_line + 1 ) )
+        font_get_height( terminal_widget->font ) * 25
     );
 
     return 0;

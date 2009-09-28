@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>main.c</item>
         <item>terminal.c</item>
         <item>term_widget.c</item>
+        <item>buffer.c</item>
     </array>
 
     <target name="clean">

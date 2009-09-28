@@ -136,6 +136,11 @@ static void* window_thread( void* arg ) {
     while ( 1 ) {
         error = recv_ipc_message( window->client_port, &code, buffer, MAX_WINDOW_BUFSIZE, INFINITE_TIMEOUT );
 
+        if ( error == -ENOENT ) {
+            dbprintf( "window_thread(): Received ENOENT, skipping ...\n" );
+            continue;
+        }
+
         if ( error < 0 ) {
             dbprintf( "window_thread(): Failed to receive message: %d\n", error );
             break;
