@@ -60,6 +60,13 @@ int terminal_update_widget( void* data ) {
 void terminal_update_mode( terminal_t* terminal ) {
     int i;
 
+    if ( terminal->parameter_count == 0 ) {
+        terminal->attr.bg_color = T_COLOR_BLACK;
+        terminal->attr.fg_color = T_COLOR_WHITE;
+
+        return;
+    }
+
     for ( i = 0; i < terminal->parameter_count; i++ ) {
         switch ( terminal->parameters[ i ] ) {
             case 0 :
@@ -178,11 +185,13 @@ void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
 
         case '7' :
             terminal_buffer_save_cursor( &terminal->buffer );
+            terminal_attr_copy( &terminal->saved_attr, &terminal->attr );
             terminal->state = STATE_NONE;
             break;
 
         case '8' :
             terminal_buffer_restore_cursor( &terminal->buffer );
+            terminal_attr_copy( &terminal->attr, &terminal->saved_attr );
             terminal->state = STATE_NONE;
             break;
 
