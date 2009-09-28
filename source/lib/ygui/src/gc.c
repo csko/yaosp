@@ -158,6 +158,12 @@ int gc_rollback_translate( gc_t* gc ) {
     return 0;
 }
 
+int gc_get_pen_color( gc_t* gc, color_t* color ) {
+    color_copy( color, &gc->pen_color );
+
+    return 0;
+}
+
 int gc_set_pen_color( gc_t* gc, color_t* color ) {
     int error;
     r_set_pen_color_t* packet;
@@ -170,6 +176,8 @@ int gc_set_pen_color( gc_t* gc, color_t* color ) {
 
     packet->header.command = R_SET_PEN_COLOR;
     color_copy( &packet->color, color );
+
+    color_copy( &gc->pen_color, color );
 
     return 0;
 }

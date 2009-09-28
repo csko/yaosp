@@ -83,7 +83,24 @@ static int buffer_do_scroll( terminal_buffer_t* buffer, int top, int bottom, int
     } else {
         /* scroll down */
 
-        dbprintf( "SCROLL DOWN!\n" );
+        assert( lines != 0 );
+        lines = -lines;
+
+        for ( i = 0; i < height - lines; i++ ) {
+            terminal_line_t* to = &buffer->lines[ bottom - i ];
+            terminal_line_t* from = &buffer->lines[ bottom - ( i + lines ) ];
+
+            memcpy( to->buffer, from->buffer, buffer->width );
+            memcpy( to->attr, from->attr, sizeof( terminal_attr_t ) * buffer->width );
+            to->size = from->size;
+        }
+
+        for ( i = 0; i < lines; i++ ) {
+            line = &buffer->lines[ top + i ];
+
+            buffer_do_clear_line( line, &dummy_attr, 0, buffer->width - 1 );
+            line->size = 0;
+        }
     }
 
     return 0;
@@ -257,6 +274,33 @@ int terminal_buffer_erase_after( terminal_buffer_t* buffer ) {
     return 0;
 }
 
+int terminal_buffer_delete( terminal_buffer_t* buffer, int count ) {
+    int remaining;
+    terminal_line_t* line;
+
+    line = buffer->lines + buffer->cursor_y;
+
+    remaining = buffer->width - ( buffer->cursor_x + 1 );
+
+    if ( remaining > 0 ) {
+        memmove(
+            &line->buffer[ buffer->cursor_x ],
+            &line->buffer[ buffer->cursor_x + count ],
+            remaining
+        );
+
+        memmove(
+            &line->attr[ buffer->cursor_x ],
+            &line->attr[ buffer->cursor_x + count ],
+            sizeof( terminal_attr_t ) * remaining
+        );
+    }
+
+    line->size = buffer->cursor_x + remaining;
+
+    return 0;
+}
+
 int terminal_buffer_save_cursor( terminal_buffer_t* buffer ) {
     assert( ( buffer->saved_cursor_x == -1 ) && ( buffer->saved_cursor_y == -1 ) );
 
@@ -322,7 +366,7 @@ int terminal_buffer_set_scroll_region( terminal_buffer_t* buffer, int top, int b
 }
 
 int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
-    int i;
+    int i, j;
     terminal_line_t* line;
 
     buffer->width = width;
@@ -356,6 +400,13 @@ int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
         }
 
         line->size = 0;
+
+        for ( j = 0; j < width; j++ ) {
+            line->buffer[ j ] = ' ';
+
+            line->attr[ j ].bg_color = T_COLOR_BLACK;
+            line->attr[ j ].fg_color = T_COLOR_WHITE;
+        }
     }
 
     return 0;

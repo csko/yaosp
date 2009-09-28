@@ -40,7 +40,7 @@ static color_t terminal_color_table[ T_COLOR_COUNT ] = {
     { 255, 255, 255, 255 }  /* white */
 };
 
-static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, terminal_line_t* term_line, point_t* pos ) {
+static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, terminal_line_t* term_line, point_t* pos, int cursor_x ) {
     int j;
     int index;
 
@@ -88,6 +88,39 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
         terminal_attr_copy( &terminal_widget->current_attr, &term_line->attr[ index ] );
     }
 
+    if ( cursor_x != -1 ) {
+        color_t tmp;
+        point_t cursor_pos;
+        rect_t cursor_rect;
+        int char_width;
+
+        char_width = font_get_string_width( terminal_widget->font, "A", 1 );
+
+        gc_get_pen_color( gc, &tmp );
+
+        rect_init(
+            &cursor_rect,
+            cursor_x * char_width,
+            pos->y - font_get_ascender( terminal_widget->font ),
+            ( cursor_x + 1 ) * char_width - 1,
+            pos->y - font_get_descender( terminal_widget->font ) + font_get_line_gap( terminal_widget->font ) - 1
+        );
+
+        gc_set_pen_color( gc, &terminal_color_table[ term_line->attr[ cursor_x ].fg_color ] );
+        gc_fill_rect( gc, &cursor_rect );
+
+        point_init(
+            &cursor_pos,
+            char_width * cursor_x,
+            pos->y
+        );
+
+        gc_set_pen_color( gc, &terminal_color_table[ term_line->attr[ cursor_x ].bg_color ] );
+        gc_draw_text( gc, &cursor_pos, term_line->buffer + cursor_x, 1 );
+
+        gc_set_pen_color( gc, &tmp );
+    }
+
     return 0;
 }
 
@@ -125,7 +158,13 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     pthread_mutex_lock( &terminal->lock );
 
     for ( i = 0, term_line = terminal->buffer.lines; i < terminal->buffer.height; i++, term_line++ ) {
-        terminal_paint_line( terminal_widget, gc, term_line, &pos );
+        terminal_paint_line(
+            terminal_widget,
+            gc,
+            term_line,
+            &pos,
+            ( i == terminal->buffer.cursor_y ) ? terminal->buffer.cursor_x : -1
+        );
 
         pos.y += font_get_height( terminal_widget->font );
     }
@@ -151,6 +190,18 @@ static int terminal_key_pressed( widget_t* widget, int key ) {
 
         case KEY_RIGHT :
             write( master_pty, "\x1b[C", 3 );
+            break;
+
+        case KEY_HOME :
+            write( master_pty, "\x1b[H", 3 );
+            break;
+
+        case KEY_END :
+            write( master_pty, "\x1b[F", 3 );
+            break;
+
+        case KEY_DELETE :
+            write( master_pty, "\x1b[3~", 4 );
             break;
 
         default :

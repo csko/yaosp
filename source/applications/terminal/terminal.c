@@ -158,20 +158,20 @@ void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
             terminal->state = STATE_SQUARE_BRACKET;
             break;
 
-        case 'M' :
-            if ( terminal->buffer.cursor_y == 0 ) {
-                terminal_buffer_scroll_by(
-                    &terminal->buffer,
-                    -1
-                );
-            } else {
-                terminal_buffer_move_cursor(
-                    &terminal->buffer,
-                    0,
-                    -1
-                );
-            }
+        case 'D' :
+            terminal_buffer_scroll_by(
+                &terminal->buffer,
+                1
+            );
+            terminal->state = STATE_NONE;
 
+            break;
+
+        case 'M' :
+            terminal_buffer_scroll_by(
+                &terminal->buffer,
+                -1
+            );
             terminal->state = STATE_NONE;
 
             break;
@@ -186,6 +186,7 @@ void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
             terminal->state = STATE_NONE;
             break;
 
+        case '>' :
         case '=' :
             /* ??? */
             terminal->state = STATE_NONE;
@@ -459,6 +460,23 @@ void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t data ) {
             break;
         }
 
+        case 'P' : {
+            int count = 1;
+
+            if ( terminal->parameter_count == 1 ) {
+                count = terminal->parameters[ 0 ];
+            }
+
+            terminal_buffer_delete(
+                &terminal->buffer,
+                count
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+        }
+
         case 'l' :
             /* TODO */
             terminal->state = STATE_NONE;
@@ -501,13 +519,6 @@ int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
     pthread_mutex_lock( &terminal->lock );
 
     for ( i = 0; i < size; i++, data++ ) {
-#if 0
-        if ( *data == 27 || *data == '\r' || *data == '\n' )
-            dbprintf( "%x ", *data );
-        else
-            dbprintf( "%c", *data );
-#endif
-
         switch ( terminal->state ) {
             case STATE_NONE :
                 terminal_data_state_none( terminal, *data );

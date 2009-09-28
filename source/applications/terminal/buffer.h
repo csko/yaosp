@@ -74,6 +74,7 @@ int terminal_buffer_erase_above( terminal_buffer_t* buffer );
 int terminal_buffer_erase_below( terminal_buffer_t* buffer );
 int terminal_buffer_erase_before( terminal_buffer_t* buffer );
 int terminal_buffer_erase_after( terminal_buffer_t* buffer );
+int terminal_buffer_delete( terminal_buffer_t* buffer, int count );
 
 /* cursor */
 

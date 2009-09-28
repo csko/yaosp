@@ -30,11 +30,14 @@ struct window;
 typedef struct gc {
     point_t lefttop;
     rect_t clip_rect;
+    color_t pen_color;
     int is_clip_valid;
     struct window* window;
     stack_t tr_stack;
     stack_t res_area_stack;
 } gc_t;
+
+int gc_get_pen_color( gc_t* gc, color_t* color );
 
 int gc_set_pen_color( gc_t* gc, color_t* color );
 int gc_set_font( gc_t* gc, font_t* font );
