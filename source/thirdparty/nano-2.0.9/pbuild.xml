@@ -1,0 +1,55 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2009 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <target name="clean">
+        <cleandir>nano-2.0.9</cleandir>
+        <rmdir>nano-2.0.9</rmdir>
+    </target>
+
+    <target name="get_source">
+        <httpget address="http://files.yaosp.org/source/nano/nano-2.0.9.tar.gz"
+                 to="nano-2.0.9.tar.gz"
+                 md5="2be94dc43fb60fff4626a2401a977220"/>
+
+        <echo>Extracting nano source</echo>
+
+        <exec executable="tar">
+            <arg>-zxf</arg>
+            <arg>nano-2.0.9.tar.gz</arg>
+        </exec>
+
+        <echo>Patching nano source</echo>
+
+        <exec executable="patch">
+            <arg>-t</arg>
+            <arg>-p0</arg>
+            <arg>-i</arg>
+            <arg>nano-2.0.9.patch</arg>
+        </exec>
+    </target>
+
+    <target name="all">
+        <call target="clean"/>
+        <call target="get_source"/>
+        <call target="all" directory="nano-2.0.9"/>
+    </target>
+</build>
