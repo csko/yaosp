@@ -144,6 +144,18 @@ static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
             terminal->cursor_x = 0;
             break;
 
+        case '\b' :
+            if ( terminal->cursor_x == 0 ) {
+                if ( terminal->cursor_y > 0 ) {
+                    terminal->cursor_y--;
+                    terminal->cursor_x = terminal->width - 1;
+                }
+            } else {
+                terminal->cursor_x--;
+            }
+
+            break;
+
         default : {
             terminal_line_t* term_line;
 
@@ -195,7 +207,8 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
                 terminal->first_number = 0;
                 terminal->parameters[ terminal->parameter_count++ ] = ( data - '0' );
             } else {
-                terminal->parameters[ terminal->parameter_count - 1 ] = terminal->parameters[ terminal->parameter_count - 1 ] * 10 + ( data - '0' );
+                terminal->parameters[ terminal->parameter_count - 1 ] =
+                    terminal->parameters[ terminal->parameter_count - 1 ] * 10 + ( data - '0' );
             }
 
             break;
@@ -214,7 +227,7 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
             break;
 
         default :
-            dbprintf( "%s() Unhandled data: %d\n", __FUNCTION__, data );
+            dbprintf( "%s(): Unhandled data: %d\n", __FUNCTION__, data );
             terminal->state = STATE_NONE;
             break;
     }
@@ -230,7 +243,7 @@ static void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
             break;
 
         default :
-            dbprintf( "%s() Unhandled data: %d\n", __FUNCTION__, data );
+            dbprintf( "%s(): Unhandled data: %d\n", __FUNCTION__, data );
             terminal->state = STATE_NONE;
             break;
     }

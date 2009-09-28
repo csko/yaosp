@@ -103,7 +103,13 @@ static int textfield_paint( widget_t* widget, gc_t* gc ) {
     gc_set_pen_color( gc, &fg_color );
     gc_set_font( gc, textfield->font );
     gc_set_clip_rect( gc, &bounds );
-    gc_draw_text( gc, &text_position, string_c_str( &textfield->buffer ) + textfield->text_start, -1 );
+
+    gc_draw_text(
+        gc,
+        &text_position,
+        string_c_str( &textfield->buffer ) + textfield->text_start,
+        -1
+    );
 
     return 0;
 }
@@ -121,6 +127,9 @@ static int textfield_key_pressed( widget_t* widget, int key ) {
             break;
 
         case KEY_TAB :
+            break;
+
+        case KEY_DELETE :
             break;
 
         case KEY_BACKSPACE :
