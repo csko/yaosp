@@ -39,6 +39,7 @@ typedef enum terminal_color {
 typedef enum terminal_state {
     STATE_NONE,
     STATE_ESCAPE,
+    STATE_BRACKET,
     STATE_SQUARE_BRACKET,
     STATE_QUESTION
 } terminal_state_t;

@@ -98,10 +98,12 @@ int do_send_signal( thread_t* thread, int signal ) {
     ASSERT( signal > 0 );
 
     dprintf_unlocked(
-        "do_send_signal(): Sending signal %d to %s:%s\n",
+        "do_send_signal(): Sending signal %d to %s:%s from %s:%s\n",
         signal,
         thread->process->name,
-        thread->name
+        thread->name,
+        current_process()->name,
+        current_thread()->name
     );
 
     signal--;
