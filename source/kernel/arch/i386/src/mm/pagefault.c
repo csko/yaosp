@@ -43,7 +43,7 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
     dump_registers( regs );
     debug_print_stack_trace();
 
-    if ( thread != NULL ) {
+    if ( __likely( thread != NULL ) ) {
         kprintf( ERROR, "Process: %s thread: %s\n", thread->process->name, thread->name );
         memory_context_dump( thread->process->memory_context );
 
@@ -73,7 +73,7 @@ static int handle_lazy_page_allocation( memory_region_t* region, uint32_t addres
     if ( *pgd_entry == 0 ) {
         p = alloc_pages( 1, MEM_COMMON );
 
-        if ( p == NULL ) {
+        if ( __unlikely( p == NULL ) ) {
             return -ENOMEM;
         }
 
@@ -134,8 +134,8 @@ static int handle_lazy_page_loading( memory_region_t* region, uint32_t address, 
 
     /* Count the unmapped pages */
 
-    pgd_index = address >> PGDIR_SHIFT;
-    pt_index = ( address >> PAGE_SHIFT ) & 1023;
+    pgd_index = PGD_INDEX( address );
+    pt_index = PT_INDEX( address );
     pt = ( uint32_t* )( arch_context->page_directory[ pgd_index ] & PAGE_MASK );
 
     for ( i = 0; i < page_count; i++ ) {
@@ -143,7 +143,7 @@ static int handle_lazy_page_loading( memory_region_t* region, uint32_t address, 
             break;
         }
 
-        if ( pt_index == 1023 ) {
+        if ( __unlikely( pt_index == 1023 ) ) {
             pgd_index++;
             pt_index = 0;
 
@@ -233,7 +233,7 @@ int handle_page_fault( registers_t* regs ) {
         goto invalid;
     }
 
-    if ( region->alloc_method == ALLOC_LAZY ) {
+    if ( __likely( region->alloc_method == ALLOC_LAZY ) ) {
         uint32_t pages_loaded = 1;
 
         if ( region->file == NULL ) {

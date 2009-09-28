@@ -104,6 +104,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>
         <item>src/unistd/execv.c</item>
+        <item>src/unistd/execl.c</item>
         <item>src/unistd/execlp.c</item>
         <item>src/unistd/dup.c</item>
         <item>src/unistd/dup2.c</item>
@@ -249,6 +250,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/signal/sigdelset.c</item>
         <item>src/signal/sigismember.c</item>
         <item>src/signal/sigprocmask.c</item>
+        <item>src/signal/sigsetjmp.c</item>
+        <item>src/signal/siglongjmp.c</item>
         <item>src/locale/localeconv.c</item>
         <item>src/locale/setlocale.c</item>
         <item>src/termios/tcflush.c</item>
@@ -278,6 +281,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/pthread/mutex.c</item>
         <item>src/pthread/mutexattr.c</item>
         <item>src/pthread/thread.c</item>
+        <item>src/regex/collate.c</item>
+        <item>src/regex/collcmp.c</item>
+        <item>src/regex/regcomp.c</item>
+        <item>src/regex/regerror.c</item>
+        <item>src/regex/regexec.c</item>
+        <item>src/regex/regfree.c</item>
     </array>
 
     <target name="clean">

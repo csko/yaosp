@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <assert.h>
 #include <yaosp/debug.h>
 
 #include <ygui/window.h>
@@ -75,7 +76,10 @@ static int terminal_ensure_line( terminal_t* terminal, int line ) {
         return -ENOMEM;
     }
 
-    term_line->buffer_color = ( terminal_color_item_t* )realloc( term_line->buffer_color, sizeof( terminal_color_item_t ) * terminal->width );
+    term_line->buffer_color = ( terminal_color_item_t* )realloc(
+        term_line->buffer_color,
+        sizeof( terminal_color_item_t ) * terminal->width
+    );
 
     if ( term_line->buffer_color == NULL ) {
         return -ENOMEM;
@@ -156,8 +160,16 @@ static void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
 
             break;
 
+        case '\t' :
+            /* Just skip tab for now ... */
+            break;
+
         default : {
             terminal_line_t* term_line;
+
+            if ( data < 32 ) {
+                break;
+            }
 
             error = terminal_ensure_line( terminal, terminal->cursor_y );
 
@@ -194,7 +206,7 @@ static void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
             break;
 
         default :
-            dbprintf( "%s() Unhandled data: %d\n", __FUNCTION__, data );
+            dbprintf( "%s(): Unhandled data: %d\n", __FUNCTION__, data );
             terminal->state = STATE_NONE;
             break;
     }
@@ -220,6 +232,52 @@ static void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t da
         case 'm' :
             terminal_update_mode( terminal );
             terminal->state = STATE_NONE;
+            break;
+
+        case 'K' :
+            assert( ( terminal->parameter_count == 0 ) ||
+                    ( terminal->parameter_count == 1 ) );
+
+            if ( terminal->parameter_count == 0 ) {
+                int i;
+                char* buffer;
+
+                buffer = terminal->lines[ terminal->cursor_y ].buffer + terminal->cursor_x;
+
+                for ( i = terminal->cursor_x; i < terminal->width; i++, buffer++ ) {
+                    *buffer = ' ';
+                }
+            } else {
+                int i;
+                char* buffer;
+
+                switch ( terminal->parameters[ 0 ] ) {
+                    case 1 :
+                        buffer = terminal->lines[ terminal->cursor_y ].buffer + terminal->cursor_x;
+
+                        for ( i = terminal->cursor_x; i >= 0; i--, buffer-- ) {
+                            *buffer = ' ';
+                        }
+
+                        break;
+
+                    case 2 :
+                        buffer = terminal->lines[ terminal->cursor_y ].buffer;
+
+                        for ( i = 0; i < terminal->width; i++, buffer++ ) {
+                            *buffer = ' ';
+                        }
+
+                        break;
+
+                    default :
+                        dbprintf( "%s(): Unhandled parameter at K: %d\n", terminal->parameters[ 0 ] );
+                        break;
+                }
+            }
+
+            terminal->state = STATE_NONE;
+
             break;
 
         case '?' :
@@ -298,7 +356,7 @@ terminal_t* create_terminal( int width, int height ) {
         goto error1;
     }
 
-    terminal->max_lines = 50;
+    terminal->max_lines = 500;
 
     terminal->lines = ( terminal_line_t* )malloc( sizeof( terminal_line_t ) * terminal->max_lines );
 

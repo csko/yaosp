@@ -28,12 +28,15 @@
 #define WRITE   0x2
 #define USER    0x4
 
+#define PGD_INDEX(addr) ((addr)>>PGDIR_SHIFT)
+#define PT_INDEX(addr)  (((addr)>>PAGE_SHIFT) & 1023)
+
 static inline uint32_t* page_directory_entry( i386_memory_context_t* context, ptr_t address ) {
-    return &( context->page_directory[ address >> PGDIR_SHIFT ] );
+    return &( context->page_directory[ PGD_INDEX( address ) ] );
 }
 
 static inline uint32_t* page_table_entry( uint32_t table, ptr_t address ) {
-    return &( ( ( uint32_t* )( table & PAGE_MASK ) )[ ( address / PAGE_SIZE ) & 1023 ] );
+    return &( ( ( uint32_t* )( table & PAGE_MASK ) )[ PT_INDEX( address ) ] );
 }
 
 int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel );

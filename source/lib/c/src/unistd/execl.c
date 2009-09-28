@@ -1,4 +1,4 @@
-/* yaosp C library
+/* execl function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SETJMP_H_
-#define _SETJMP_H_
+#include <stdarg.h>
+#include <unistd.h>
 
-#include <signal.h>
+#define ARGV_MAX 512
 
-typedef unsigned long jmp_buf[ 6 ];
+int execl( const char* path, const char* arg, ... ) {
+    int i;
+    va_list ap;
+    const char* argv[ ARGV_MAX ];
 
-typedef struct _sigjmp_buf {
-    jmp_buf buf;
-    int restore_mask;
-    sigset_t mask;
-} sigjmp_buf[1];
+    argv[ 0 ] = arg;
+    va_start( ap, arg );
 
-int setjmp( jmp_buf env );
-int sigsetjmp( sigjmp_buf env, int savemask );
+    for ( i = 1; i < ARGV_MAX; i++ ) {
+        argv[ i ] = va_arg( ap, const char* );
 
-void longjmp( jmp_buf env, int val );
-void siglongjmp( sigjmp_buf env, int val );
+        if ( argv[ i ] == NULL ) {
+            break;
+        }
+    }
 
-#endif /* _SETJMP_H_ */
+    va_end( ap );
+
+    return execv( path, ( char* const* )argv );
+}

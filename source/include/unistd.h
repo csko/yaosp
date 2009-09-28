@@ -93,6 +93,7 @@ pid_t fork( void );
 int execv( const char* file, char* const argv[] );
 int execve( const char* filename, char* const argv[], char* const envp[] );
 int execvp( const char* filename, char* const argv[] );
+int execl( const char* path, const char *arg, ... );
 int execlp( const char* file, const char* arg, ... );
 
 void* sbrk( int increment );

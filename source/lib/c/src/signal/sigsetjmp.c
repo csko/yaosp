@@ -1,4 +1,4 @@
-/* yaosp C library
+/* sigsetjmp function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,23 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SETJMP_H_
-#define _SETJMP_H_
+#include <setjmp.h>
 
-#include <signal.h>
+int sigsetjmp( sigjmp_buf env, int savemask ) {
+    if ( savemask ) {
+        sigprocmask( SIG_BLOCK, NULL, &env->mask );
+    }
 
-typedef unsigned long jmp_buf[ 6 ];
+    env->restore_mask = savemask;
 
-typedef struct _sigjmp_buf {
-    jmp_buf buf;
-    int restore_mask;
-    sigset_t mask;
-} sigjmp_buf[1];
-
-int setjmp( jmp_buf env );
-int sigsetjmp( sigjmp_buf env, int savemask );
-
-void longjmp( jmp_buf env, int val );
-void siglongjmp( sigjmp_buf env, int val );
-
-#endif /* _SETJMP_H_ */
+    return setjmp( env->buf );
+}
