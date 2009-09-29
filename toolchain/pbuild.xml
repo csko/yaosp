@@ -111,10 +111,15 @@
         <chdir directory=".."/>
     </target>
 
+    <target name="finalize">
+        <copy from="libg.a" to="../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libg.a"/>
+    </target>
+
     <target name="all">
         <call target="prepare"/>
         <call target="get_sources"/>
         <call target="compile_binutils"/>
         <call target="compile_gcc"/>
+        <call target="finalize"/>
     </target>
 </build>

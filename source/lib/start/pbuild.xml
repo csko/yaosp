@@ -67,6 +67,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
+        <copy from="objs/start.o" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/crt0.o"/>
     </target>
 
     <target name="all">
