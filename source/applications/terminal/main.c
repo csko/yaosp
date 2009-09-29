@@ -23,7 +23,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <pthread.h>
+#include <termios.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <yaosp/debug.h>
 
 #include <ygui/application.h>
@@ -116,6 +118,7 @@ static int initialize_pty( void ) {
     if ( shell_pid == 0 ) {
         int error;
         int slave_tty;
+        struct winsize win_size;
 
         snprintf( path, sizeof( path ), "/device/terminal/tty%d", i );
 
@@ -130,6 +133,11 @@ static int initialize_pty( void ) {
         dup2( slave_tty, 0 );
         dup2( slave_tty, 1 );
         dup2( slave_tty, 2 );
+
+        win_size.ws_col = 80;
+        win_size.ws_row = 24;
+
+        ioctl( slave_tty, TIOCSWINSZ, &win_size );
 
         char* argv[] = { "bash", NULL };
 

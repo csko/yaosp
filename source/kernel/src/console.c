@@ -19,6 +19,7 @@
 #include <types.h>
 #include <console.h>
 #include <macros.h>
+#include <config.h>
 #include <lib/stdarg.h>
 #include <lib/printf.h>
 
@@ -172,6 +173,7 @@ static int dprintf_helper( void* data, char c ) {
 }
 
 int dprintf( const char* format, ... ) {
+#ifndef MK_RELEASE_BUILD
     va_list args;
 
     spinlock_disable( &console_lock );
@@ -190,11 +192,13 @@ int dprintf( const char* format, ... ) {
     }
 
     spinunlock_enable( &console_lock );
+#endif /* !MK_RELEASE_BUILD */
 
     return 0;
 }
 
 int dprintf_unlocked( const char* format, ... ) {
+#ifndef MK_RELEASE_BUILD
     va_list args;
 
     /* Print the text */
@@ -208,6 +212,7 @@ int dprintf_unlocked( const char* format, ... ) {
     if ( ( debug != NULL ) && ( debug->ops->flush != NULL ) ) {
         debug->ops->flush( debug );
     }
+#endif /* !MK_RELEASE_BUILD */
 
     return 0;
 }

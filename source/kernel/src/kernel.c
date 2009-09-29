@@ -142,6 +142,7 @@ int sys_get_kernel_statistics( statistics_info_t* statistics_info ) {
 }
 
 int sys_dbprintf( const char* format, char** parameters ) {
+#ifndef MK_RELEASE_BUILD
     char buf[ 256 ];
 
     snprintf(
@@ -157,6 +158,7 @@ int sys_dbprintf( const char* format, char** parameters ) {
     );
 
     DEBUG_LOG( "%s", buf );
+#endif /* !MK_RELEASE_BUILD */
 
     return 0;
 }

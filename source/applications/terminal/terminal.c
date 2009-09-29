@@ -28,35 +28,6 @@
 #include "terminal.h"
 #include "term_widget.h"
 
-extern window_t* window;
-extern widget_t* scrollpanel;
-extern widget_t* terminal_widget;
-
-int terminal_update_widget( void* data ) {
-    widget_invalidate( terminal_widget, 1 );
-
-#if 0
-    /* The preferred size of the widget may changed. Signal the
-       event listeners ... */
-
-    widget_signal_event_handler(
-        terminal_widget,
-        terminal_widget->event_ids[ E_PREF_SIZE_CHANGED ]
-    );
-
-    /* Move the scrollpanel to the bottom */
-
-    int v_size = scroll_panel_get_v_size( scrollpanel );
-
-    scroll_panel_set_v_offset(
-        scrollpanel,
-        v_size
-    );
-#endif
-
-    return 0;
-}
-
 void terminal_update_mode( terminal_t* terminal ) {
     int i;
 
@@ -440,6 +411,25 @@ void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t data ) {
 
             break;
 
+        case 'X' : {
+            int count;
+
+            if ( terminal->parameter_count == 0 ) {
+                count = 1;
+            } else {
+                count = terminal->parameters[ 0 ];
+            }
+
+            terminal_buffer_scroll_by(
+                &terminal->buffer,
+                -count
+            );
+
+            terminal->state = STATE_NONE;
+
+            break;
+        }
+
         case 'T' :
             assert( terminal->parameter_count == 1 );
 
@@ -552,8 +542,6 @@ int terminal_handle_data( terminal_t* terminal, uint8_t* data, int size ) {
     }
 
     pthread_mutex_unlock( &terminal->lock );
-
-    window_insert_callback( window, terminal_update_widget, NULL );
 
     return 0;
 }

@@ -204,6 +204,14 @@ static int terminal_key_pressed( widget_t* widget, int key ) {
             write( master_pty, "\x1b[3~", 4 );
             break;
 
+        case KEY_PAGE_UP :
+            write( master_pty, "\x1b[5~", 4 );
+            break;
+
+        case KEY_PAGE_DOWN :
+            write( master_pty, "\x1b[6~", 4 );
+            break;
+
         default :
             if ( key < 256 ) {
                 write( master_pty, &key, 1 );
