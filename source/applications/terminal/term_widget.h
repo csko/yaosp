@@ -26,9 +26,7 @@
 
 typedef struct terminal_widget {
     font_t* font;
-
     terminal_t* terminal;
-    terminal_attr_t current_attr;
 } terminal_widget_t;
 
 int terminal_widget_get_character_size( widget_t* widget, int* width, int* height );

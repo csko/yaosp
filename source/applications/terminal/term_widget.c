@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include <yaosp/input.h>
 
@@ -40,63 +41,78 @@ static color_t terminal_color_table[ T_COLOR_COUNT ] = {
     { 255, 255, 255, 255 }  /* white */
 };
 
-static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, terminal_line_t* term_line, point_t* pos, int cursor_x ) {
-    int j;
-    int index;
+static inline int terminal_paint_line_part( terminal_widget_t* term_widget, gc_t* gc, terminal_line_t* term_line,
+                                     point_t* pos, int start, int end ) {
+    int width;
+    int length;
+    terminal_attr_t* attr;
+
+    assert( start <= end );
+
+    attr = &term_line->attr[ start ];
+    length = end - start + 1;
+    width = font_get_string_width( term_widget->font, term_line->buffer + start, length );
+
+    if ( attr->bg_color != T_COLOR_BLACK ) {
+        rect_t tmp;
+
+        rect_init(
+            &tmp,
+            pos->x,
+            pos->y - font_get_ascender( term_widget->font ),
+            pos->x + width - 1,
+            pos->y - font_get_descender( term_widget->font ) + font_get_line_gap( term_widget->font ) - 1
+        );
+
+        gc_set_pen_color( gc, &terminal_color_table[ attr->bg_color ] );
+        gc_fill_rect( gc, &tmp );
+    }
+
+    gc_set_pen_color( gc, &terminal_color_table[ attr->fg_color ] );
+    gc_draw_text( gc, pos, term_line->buffer + start, length );
+
+    pos->x += width;
+
+    return 0;
+}
+
+static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, terminal_line_t* term_line,
+                                point_t* pos, int cursor_x ) {
+    int i, index;
 
     pos->x = 0;
     index = 0;
 
     while ( index < term_line->size ) {
         terminal_attr_t* attr;
+        terminal_attr_t current_attr;
 
-        for ( j = index, attr = &term_line->attr[ index ]; j < term_line->size; j++, attr++ ) {
-            if ( terminal_attr_compare( &terminal_widget->current_attr, attr ) != 0 ) {
+        terminal_attr_copy( &current_attr, &term_line->attr[ index ] );
+
+        for ( i = index, attr = &term_line->attr[ index ]; i < term_line->size; i++, attr++ ) {
+            if ( terminal_attr_compare( &current_attr, attr ) != 0 ) {
                 break;
             }
         }
 
-        if ( j > index ) {
-            int width;
+        terminal_paint_line_part(
+            terminal_widget,
+            gc,
+            term_line,
+            pos,
+            index,
+            i - 1
+        );
 
-            width = font_get_string_width( terminal_widget->font, term_line->buffer + index, j - index );
-
-            if ( term_line->attr[ index ].bg_color != T_COLOR_BLACK ) {
-                rect_t tmp;
-
-                gc_set_pen_color( gc, &terminal_color_table[ term_line->attr[ index ].bg_color ] );
-
-                rect_init(
-                    &tmp,
-                    pos->x,
-                    pos->y - font_get_ascender( terminal_widget->font ),
-                    pos->x + width - 1,
-                    pos->y - font_get_descender( terminal_widget->font ) + font_get_line_gap( terminal_widget->font ) - 1
-                );
-
-                gc_fill_rect( gc, &tmp );
-            }
-
-            gc_set_pen_color( gc, &terminal_color_table[ terminal_widget->current_attr.fg_color ] );
-            gc_draw_text( gc, pos, term_line->buffer + index, j - index );
-
-            pos->x += width;
-        }
-
-        index = j;
-
-        terminal_attr_copy( &terminal_widget->current_attr, &term_line->attr[ index ] );
+        index = i;
     }
 
     if ( cursor_x != -1 ) {
-        color_t tmp;
+        int char_width;
         point_t cursor_pos;
         rect_t cursor_rect;
-        int char_width;
 
         char_width = font_get_string_width( terminal_widget->font, "A", 1 );
-
-        gc_get_pen_color( gc, &tmp );
 
         rect_init(
             &cursor_rect,
@@ -117,8 +133,6 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
 
         gc_set_pen_color( gc, &terminal_color_table[ term_line->attr[ cursor_x ].bg_color ] );
         gc_draw_text( gc, &cursor_pos, term_line->buffer + cursor_x, 1 );
-
-        gc_set_pen_color( gc, &tmp );
     }
 
     return 0;
@@ -146,9 +160,6 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
 
     gc_set_font( gc, terminal_widget->font );
     gc_set_pen_color( gc, &fg_color );
-
-    terminal_widget->current_attr.bg_color = T_COLOR_BLACK;
-    terminal_widget->current_attr.fg_color = T_COLOR_WHITE;
 
     point_t pos = {
         .x = 0,

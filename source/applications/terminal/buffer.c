@@ -324,13 +324,39 @@ int terminal_buffer_restore_cursor( terminal_buffer_t* buffer ) {
 
 int terminal_buffer_move_cursor( terminal_buffer_t* buffer, int dx, int dy ) {
     buffer->cursor_x += dx;
-    buffer->cursor_y += dy;
 
     if ( buffer->cursor_x < 0 ) { buffer->cursor_x = 0; }
     else if ( buffer->cursor_x >= buffer->width ) { buffer->cursor_x = buffer->width - 1; }
 
-    if ( buffer->cursor_y < 0 ) { buffer->cursor_y = 0; }
-    else if ( buffer->cursor_y >= buffer->height ) { buffer->cursor_y = buffer->height - 1; }
+    buffer->cursor_y += dy;
+
+    if ( buffer->cursor_y < buffer->scroll_top ) {
+        int lines = buffer->scroll_top - buffer->cursor_y;
+
+        buffer_do_scroll(
+            buffer,
+            buffer->scroll_top,
+            buffer->scroll_bottom,
+            lines
+        );
+
+        buffer->cursor_y += lines;
+        assert( buffer->cursor_y == buffer->scroll_top );
+    } else if ( buffer->cursor_y > buffer->scroll_bottom ) {
+        int lines = buffer->scroll_bottom - buffer->cursor_y;
+
+        buffer_do_scroll(
+            buffer,
+            buffer->scroll_top,
+            buffer->scroll_bottom,
+            lines
+        );
+
+        buffer->cursor_y += lines;
+        assert( buffer->cursor_y == buffer->scroll_bottom );
+    }
+
+    assert( ( buffer->cursor_y >= 0 ) && ( buffer->cursor_y < buffer->height ) );
 
     return 0;
 }

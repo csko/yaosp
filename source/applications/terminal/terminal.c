@@ -43,6 +43,7 @@ void terminal_update_mode( terminal_t* terminal ) {
             case 0 :
                 terminal->attr.bg_color = T_COLOR_BLACK;
                 terminal->attr.fg_color = T_COLOR_WHITE;
+
                 break;
 
             case 1 :
@@ -137,19 +138,23 @@ void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
             break;
 
         case 'D' :
-            terminal_buffer_scroll_by(
+            terminal_buffer_move_cursor(
                 &terminal->buffer,
+                0,
                 1
             );
+
             terminal->state = STATE_NONE;
 
             break;
 
         case 'M' :
-            terminal_buffer_scroll_by(
+            terminal_buffer_move_cursor(
                 &terminal->buffer,
+                0,
                 -1
             );
+
             terminal->state = STATE_NONE;
 
             break;
@@ -182,7 +187,7 @@ void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
 void terminal_data_state_bracket( terminal_t* terminal, uint8_t data ) {
     switch ( data ) {
         case 'B' :
-            /* TODO */
+            /* North American ASCII set */
             terminal->state = STATE_NONE;
             break;
 
@@ -495,14 +500,48 @@ void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t data ) {
 void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
     switch ( data ) {
         case '0' ... '9' :
+            if ( terminal->first_number ) {
+                terminal->first_number = 0;
+                terminal->parameters[ terminal->parameter_count++ ] = ( data - '0' );
+            } else {
+                terminal->parameters[ terminal->parameter_count - 1 ] =
+                    terminal->parameters[ terminal->parameter_count - 1 ] * 10 + ( data - '0' );
+            }
+
             break;
 
         case 'h' :
+            assert( terminal->parameter_count == 1 );
+
+            switch ( terminal->parameters[ 0 ] ) {
+                case 1 :
+                    /* TODO: set alternate cursor keys */
+                    break;
+
+                default :
+                    dbprintf( "%s(): h with param: %d\n", __FUNCTION__, terminal->parameters[ 0 ] );
+                    break;
+            }
+
             terminal->state = STATE_NONE;
+
             break;
 
         case 'l' :
+            assert( terminal->parameter_count == 1 );
+
+            switch ( terminal->parameters[ 0 ] ) {
+                case 1 :
+                    /* TODO: unset alternate cursor keys */
+                    break;
+
+                default :
+                    dbprintf( "%s(): l with param: %d\n", __FUNCTION__, terminal->parameters[ 0 ] );
+                    break;
+            }
+
             terminal->state = STATE_NONE;
+
             break;
 
         default :
