@@ -145,7 +145,6 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     terminal_widget_t* terminal_widget;
 
     static color_t bg_color = { 0, 0, 0, 255 };
-    static color_t fg_color = { 255, 255, 255, 255 };
 
     terminal_widget = ( terminal_widget_t* )widget_get_data( widget );
 
@@ -156,10 +155,9 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     gc_set_pen_color( gc, &bg_color );
     gc_fill_rect( gc, &bounds );
 
-    /* Set the terminal colors & font */
+    /* Set the terminal font */
 
     gc_set_font( gc, terminal_widget->font );
-    gc_set_pen_color( gc, &fg_color );
 
     point_t pos = {
         .x = 0,
