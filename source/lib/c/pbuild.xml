@@ -100,6 +100,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strcspn.c</item>
         <item>src/string/strtok_r.c</item>
         <item>src/string/strtok.c</item>
+        <item>src/unistd/sync.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
         <item>src/unistd/execve.c</item>

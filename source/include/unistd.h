@@ -115,6 +115,7 @@ int fchdir( int fd );
 int getdents( int fd, struct dirent* entry, unsigned int count );
 int ftruncate( int fd, off_t length );
 
+void sync( void );
 int link( const char* oldpath, const char* newpath );
 int access( const char* pathname, int mode );
 int unlink( const char* pathname );
