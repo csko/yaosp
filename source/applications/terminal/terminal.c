@@ -32,8 +32,8 @@ void terminal_update_mode( terminal_t* terminal ) {
     int i;
 
     if ( terminal->parameter_count == 0 ) {
-        terminal->attr.bg_color = T_COLOR_BLACK;
-        terminal->attr.fg_color = T_COLOR_WHITE;
+        terminal_buffer_set_bg( &terminal->buffer, T_COLOR_BLACK );
+        terminal_buffer_set_fg( &terminal->buffer, T_COLOR_WHITE );
 
         return;
     }
@@ -41,9 +41,8 @@ void terminal_update_mode( terminal_t* terminal ) {
     for ( i = 0; i < terminal->parameter_count; i++ ) {
         switch ( terminal->parameters[ i ] ) {
             case 0 :
-                terminal->attr.bg_color = T_COLOR_BLACK;
-                terminal->attr.fg_color = T_COLOR_WHITE;
-
+                terminal_buffer_set_bg( &terminal->buffer, T_COLOR_BLACK );
+                terminal_buffer_set_fg( &terminal->buffer, T_COLOR_WHITE );
                 break;
 
             case 1 :
@@ -54,30 +53,24 @@ void terminal_update_mode( terminal_t* terminal ) {
                 /* normal */
                 break;
 
-            case 7 : {
-                terminal_color_t tmp;
-
-                tmp = terminal->attr.bg_color;
-                terminal->attr.bg_color = terminal->attr.fg_color;
-                terminal->attr.fg_color = tmp;
-
+            case 7 :
+                terminal_buffer_swap_bgfg( &terminal->buffer );
                 break;
-            }
 
             case 30 ... 37 :
-                terminal->attr.fg_color = terminal->parameters[ i ] - 30;
+                terminal_buffer_set_fg( &terminal->buffer, terminal->parameters[ i ] - 30 );
                 break;
 
             case 39 :
-                terminal->attr.fg_color = T_COLOR_WHITE;
+                terminal_buffer_set_fg( &terminal->buffer, T_COLOR_WHITE );
                 break;
 
             case 40 ... 47 :
-                terminal->attr.bg_color = terminal->parameters[ i ] - 40;
+                terminal_buffer_set_bg( &terminal->buffer, terminal->parameters[ i ] - 40 );
                 break;
 
             case 49 :
-                terminal->attr.bg_color = T_COLOR_BLACK;
+                terminal_buffer_set_bg( &terminal->buffer, T_COLOR_BLACK );
                 break;
 
             default :
@@ -118,7 +111,6 @@ void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
 
             terminal_buffer_insert_char(
                 &terminal->buffer,
-                &terminal->attr,
                 data
             );
 
@@ -149,11 +141,18 @@ void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
             break;
 
         case 'M' :
+            terminal_buffer_scroll_by(
+                &terminal->buffer,
+                -1
+            );
+
+#if 0
             terminal_buffer_move_cursor(
                 &terminal->buffer,
                 0,
                 -1
             );
+#endif
 
             terminal->state = STATE_NONE;
 
@@ -161,13 +160,13 @@ void terminal_data_state_escape( terminal_t* terminal, uint8_t data ) {
 
         case '7' :
             terminal_buffer_save_cursor( &terminal->buffer );
-            terminal_attr_copy( &terminal->saved_attr, &terminal->attr );
+            terminal_buffer_save_attr( &terminal->buffer );
             terminal->state = STATE_NONE;
             break;
 
         case '8' :
             terminal_buffer_restore_cursor( &terminal->buffer );
-            terminal_attr_copy( &terminal->attr, &terminal->saved_attr );
+            terminal_buffer_restore_attr( &terminal->buffer );
             terminal->state = STATE_NONE;
             break;
 
@@ -425,10 +424,7 @@ void terminal_data_state_square_bracket( terminal_t* terminal, uint8_t data ) {
                 count = terminal->parameters[ 0 ];
             }
 
-            terminal_buffer_scroll_by(
-                &terminal->buffer,
-                -count
-            );
+            terminal_buffer_erase( &terminal->buffer, count );
 
             terminal->state = STATE_NONE;
 
@@ -604,9 +600,6 @@ terminal_t* create_terminal( int width, int height ) {
     if ( pthread_mutex_init( &terminal->lock, NULL ) < 0 ) {
         goto error3;
     }
-
-    terminal->attr.bg_color = T_COLOR_BLACK;
-    terminal->attr.fg_color = T_COLOR_WHITE;
 
     return terminal;
 

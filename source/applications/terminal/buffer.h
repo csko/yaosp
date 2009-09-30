@@ -54,11 +54,22 @@ typedef struct terminal_buffer {
     int scroll_top;
     int scroll_bottom;
 
+    terminal_attr_t attr;
+    terminal_attr_t saved_attr;
+
     terminal_line_t* lines;
 } terminal_buffer_t;
 
 #define terminal_attr_compare(a1,a2) memcmp((void*)(a1),(void*)(a2),sizeof(terminal_attr_t))
 #define terminal_attr_copy(a1,a2)    memcpy((void*)(a1),(void*)(a2),sizeof(terminal_attr_t))
+
+/* attributes */
+
+int terminal_buffer_set_bg( terminal_buffer_t* buffer, terminal_color_t bg );
+int terminal_buffer_set_fg( terminal_buffer_t* buffer, terminal_color_t fg );
+int terminal_buffer_swap_bgfg( terminal_buffer_t* buffer );
+int terminal_buffer_save_attr( terminal_buffer_t* buffer );
+int terminal_buffer_restore_attr( terminal_buffer_t* buffer );
 
 /* insert */
 
@@ -66,7 +77,7 @@ int terminal_buffer_insert_cr( terminal_buffer_t* buffer );
 int terminal_buffer_insert_lf( terminal_buffer_t* buffer );
 int terminal_buffer_insert_backspace( terminal_buffer_t* buffer );
 int terminal_buffer_insert_space( terminal_buffer_t* buffer, int count );
-int terminal_buffer_insert_char( terminal_buffer_t* buffer, terminal_attr_t* attr, char c );
+int terminal_buffer_insert_char( terminal_buffer_t* buffer, char c );
 
 /* erase */
 
@@ -74,6 +85,7 @@ int terminal_buffer_erase_above( terminal_buffer_t* buffer );
 int terminal_buffer_erase_below( terminal_buffer_t* buffer );
 int terminal_buffer_erase_before( terminal_buffer_t* buffer );
 int terminal_buffer_erase_after( terminal_buffer_t* buffer );
+int terminal_buffer_erase( terminal_buffer_t* buffer, int count );
 int terminal_buffer_delete( terminal_buffer_t* buffer, int count );
 
 /* cursor */
@@ -87,6 +99,8 @@ int terminal_buffer_move_cursor_to( terminal_buffer_t* buffer, int x, int y );
 
 int terminal_buffer_scroll_by( terminal_buffer_t* buffer, int lines );
 int terminal_buffer_set_scroll_region( terminal_buffer_t* buffer, int top, int bottom );
+
+int terminal_buffer_dump( terminal_buffer_t* buffer );
 
 int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height );
 

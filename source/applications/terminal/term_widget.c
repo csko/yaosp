@@ -211,6 +211,13 @@ static int terminal_key_pressed( widget_t* widget, int key ) {
 
         case KEY_DELETE :
             write( master_pty, "\x1b[3~", 4 );
+
+#if 0
+            terminal_buffer_dump(
+                &( ( terminal_widget_t* )widget_get_data( widget ) )->terminal->buffer
+            );
+#endif
+
             break;
 
         case KEY_PAGE_UP :

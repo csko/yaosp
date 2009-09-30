@@ -42,12 +42,6 @@ static int buffer_do_scroll( terminal_buffer_t* buffer, int top, int bottom, int
     int height;
     terminal_line_t* line;
 
-    /* TOOD */
-    terminal_attr_t dummy_attr = {
-        .fg_color = T_COLOR_WHITE,
-        .bg_color = T_COLOR_BLACK
-    };
-
     assert( ( top >= 0 ) && ( top < buffer->height ) );
     assert( ( bottom >= 0 ) && ( bottom < buffer->height ) );
     assert( top <= bottom );
@@ -59,7 +53,7 @@ static int buffer_do_scroll( terminal_buffer_t* buffer, int top, int bottom, int
         /* clear the lines simply */
 
         for ( line = buffer->lines + top; top <= bottom; top++, line++ ) {
-            buffer_do_clear_line( line, &dummy_attr, 0, buffer->width - 1 );
+            buffer_do_clear_line( line, &buffer->attr, 0, buffer->width - 1 );
             line->size = 0;
         }
     } else if ( lines > 0 ) {
@@ -77,7 +71,7 @@ static int buffer_do_scroll( terminal_buffer_t* buffer, int top, int bottom, int
         for ( i = bottom - lines + 1; i <= bottom; i++ ) {
             line = &buffer->lines[ i ];
 
-            buffer_do_clear_line( line, &dummy_attr, 0, buffer->width - 1 );
+            buffer_do_clear_line( line, &buffer->attr, 0, buffer->width - 1 );
             line->size = 0;
         }
     } else {
@@ -98,10 +92,44 @@ static int buffer_do_scroll( terminal_buffer_t* buffer, int top, int bottom, int
         for ( i = 0; i < lines; i++ ) {
             line = &buffer->lines[ top + i ];
 
-            buffer_do_clear_line( line, &dummy_attr, 0, buffer->width - 1 );
+            buffer_do_clear_line( line, &buffer->attr, 0, buffer->width - 1 );
             line->size = 0;
         }
     }
+
+    return 0;
+}
+
+int terminal_buffer_set_bg( terminal_buffer_t* buffer, terminal_color_t bg ) {
+    buffer->attr.bg_color = bg;
+
+    return 0;
+}
+
+int terminal_buffer_set_fg( terminal_buffer_t* buffer, terminal_color_t fg ) {
+    buffer->attr.fg_color = fg;
+
+    return 0;
+}
+
+int terminal_buffer_swap_bgfg( terminal_buffer_t* buffer ) {
+    terminal_color_t tmp;
+
+    tmp = buffer->attr.bg_color;
+    buffer->attr.bg_color = buffer->attr.fg_color;
+    buffer->attr.fg_color = tmp;
+
+    return 0;
+}
+
+int terminal_buffer_save_attr( terminal_buffer_t* buffer ) {
+    terminal_attr_copy( &buffer->saved_attr, &buffer->attr );
+
+    return 0;
+}
+
+int terminal_buffer_restore_attr( terminal_buffer_t* buffer ) {
+    terminal_attr_copy( &buffer->attr, &buffer->saved_attr );
 
     return 0;
 }
@@ -166,7 +194,7 @@ int terminal_buffer_insert_space( terminal_buffer_t* buffer, int count ) {
     return 0;
 }
 
-int terminal_buffer_insert_char( terminal_buffer_t* buffer, terminal_attr_t* attr, char c ) {
+int terminal_buffer_insert_char( terminal_buffer_t* buffer, char c ) {
     terminal_line_t* line;
 
     /* Make sure that the cursor position is valid */
@@ -181,7 +209,7 @@ int terminal_buffer_insert_char( terminal_buffer_t* buffer, terminal_attr_t* att
     /* Put the new character and attribute into the buffer */
 
     line->buffer[ buffer->cursor_x ] = c;
-    terminal_attr_copy( &line->attr[ buffer->cursor_x ], attr );
+    terminal_attr_copy( &line->attr[ buffer->cursor_x ], &buffer->attr );
 
     /* Save the last dirty character in the line */
 
@@ -208,14 +236,8 @@ int terminal_buffer_erase_above( terminal_buffer_t* buffer ) {
     int i;
     terminal_line_t* line;
 
-    /* TOOD */
-    terminal_attr_t dummy_attr = {
-        .fg_color = T_COLOR_WHITE,
-        .bg_color = T_COLOR_BLACK
-    };
-
     for ( i = 0, line = buffer->lines; i <= buffer->cursor_y; i++, line++ ) {
-        buffer_do_clear_line( line, &dummy_attr, 0, buffer->width - 1 );
+        buffer_do_clear_line( line, &buffer->attr, 0, buffer->width - 1 );
         line->size = 0;
     }
 
@@ -226,14 +248,8 @@ int terminal_buffer_erase_below( terminal_buffer_t* buffer ) {
     int i;
     terminal_line_t* line;
 
-    /* TOOD */
-    terminal_attr_t dummy_attr = {
-        .fg_color = T_COLOR_WHITE,
-        .bg_color = T_COLOR_BLACK
-    };
-
     for ( i = buffer->cursor_y, line = buffer->lines + buffer->cursor_y; i < buffer->height; i++, line++ ) {
-        buffer_do_clear_line( line, &dummy_attr, 0, buffer->width - 1 );
+        buffer_do_clear_line( line, &buffer->attr, 0, buffer->width - 1 );
         line->size = 0;
     }
 
@@ -241,15 +257,9 @@ int terminal_buffer_erase_below( terminal_buffer_t* buffer ) {
 }
 
 int terminal_buffer_erase_before( terminal_buffer_t* buffer ) {
-    /* TOOD */
-    terminal_attr_t dummy_attr = {
-        .fg_color = T_COLOR_WHITE,
-        .bg_color = T_COLOR_BLACK
-    };
-
     buffer_do_clear_line(
         buffer->lines + buffer->cursor_y,
-        &dummy_attr,
+        &buffer->attr,
         0,
         buffer->cursor_x
     );
@@ -258,18 +268,31 @@ int terminal_buffer_erase_before( terminal_buffer_t* buffer ) {
 }
 
 int terminal_buffer_erase_after( terminal_buffer_t* buffer ) {
-    /* TOOD */
-    terminal_attr_t dummy_attr = {
-        .fg_color = T_COLOR_WHITE,
-        .bg_color = T_COLOR_BLACK
-    };
-
     buffer_do_clear_line(
         buffer->lines + buffer->cursor_y,
-        &dummy_attr,
+        &buffer->attr,
         buffer->cursor_x,
         buffer->width - 1
     );
+
+    return 0;
+}
+
+int terminal_buffer_erase( terminal_buffer_t* buffer, int count ) {
+    int i;
+    char* buf;
+    terminal_attr_t* attr;
+    terminal_line_t* line;
+
+    line = buffer->lines + buffer->cursor_y;
+
+    buf = line->buffer + buffer->cursor_x;
+    attr = line->attr + buffer->cursor_x;
+
+    for ( i = buffer->cursor_x; i < MIN( buffer->cursor_x + count, buffer->width ); i++, buf++, attr++ ) {
+        *buf = ' ';
+        terminal_attr_copy( attr, &buffer->attr );
+    }
 
     return 0;
 }
@@ -330,6 +353,7 @@ int terminal_buffer_move_cursor( terminal_buffer_t* buffer, int dx, int dy ) {
 
     buffer->cursor_y += dy;
 
+#if 0
     if ( buffer->cursor_y < buffer->scroll_top ) {
         int lines = buffer->scroll_top - buffer->cursor_y;
 
@@ -355,6 +379,7 @@ int terminal_buffer_move_cursor( terminal_buffer_t* buffer, int dx, int dy ) {
         buffer->cursor_y += lines;
         assert( buffer->cursor_y == buffer->scroll_bottom );
     }
+#endif
 
     assert( ( buffer->cursor_y >= 0 ) && ( buffer->cursor_y < buffer->height ) );
 
@@ -391,6 +416,45 @@ int terminal_buffer_set_scroll_region( terminal_buffer_t* buffer, int top, int b
     return 0;
 }
 
+int terminal_buffer_dump( terminal_buffer_t* buffer ) {
+    int i, j;
+
+    dbprintf( "Terminal buffer info:\n" );
+    dbprintf( "  size: w=%d, h=%d\n", buffer->width, buffer->height );
+    dbprintf( "  cursor: x=%d, y=%d\n", buffer->cursor_x, buffer->cursor_y );
+    dbprintf( "  scrolled region: top=%d, bottom=%d\n", buffer->scroll_top, buffer->scroll_bottom );
+
+    dbprintf( "Attribute map:\n" );
+
+    for ( i = 0; i < buffer->height; i++ ) {
+        terminal_attr_t* attr = buffer->lines[ i ].attr;
+
+        dbprintf( " " );
+
+        for ( j = 0; j < buffer->width; j++, attr++ ) {
+            dbprintf( " %d:%d", attr->bg_color, attr->fg_color );
+        }
+
+        dbprintf( "\n" );
+    }
+
+    dbprintf( "Character map:\n" );
+
+    for ( i = 0; i < buffer->height; i++ ) {
+        char* buf = buffer->lines[ i ].buffer;
+
+        dbprintf( "  '" );
+
+        for ( j = 0; j < buffer->width; j++, buf++ ) {
+            dbprintf( "%c", *buf );
+        }
+
+        dbprintf( "' size=%d\n", buffer->lines[i].size );
+    }
+
+    return 0;
+}
+
 int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
     int i, j;
     terminal_line_t* line;
@@ -403,6 +467,9 @@ int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
     buffer->saved_cursor_y = -1;
     buffer->scroll_top = 0;
     buffer->scroll_bottom = height - 1;
+
+    buffer->attr.bg_color = T_COLOR_BLACK;
+    buffer->attr.fg_color = T_COLOR_WHITE;
 
     buffer->lines = ( terminal_line_t* )malloc( sizeof( terminal_line_t ) * height );
 

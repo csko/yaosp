@@ -42,9 +42,6 @@ typedef struct terminal {
     int parameters[ TERMINAL_MAX_PARAMS ];
     terminal_state_t state;
 
-    terminal_attr_t attr;
-    terminal_attr_t saved_attr;
-
     terminal_buffer_t buffer;
 } terminal_t;
 
