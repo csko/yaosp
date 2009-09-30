@@ -39,6 +39,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>symlink</item>
         <item>copy</item>
         <item>unmount</item>
+        <item>clear</item>
     </array>
 
     <target name="all">
