@@ -101,12 +101,16 @@ static int buffer_do_scroll( terminal_buffer_t* buffer, int top, int bottom, int
 }
 
 int terminal_buffer_set_bg( terminal_buffer_t* buffer, terminal_color_t bg ) {
+    assert( ( bg >= 0 ) && ( bg < T_COLOR_COUNT ) );
+
     buffer->attr.bg_color = bg;
 
     return 0;
 }
 
 int terminal_buffer_set_fg( terminal_buffer_t* buffer, terminal_color_t fg ) {
+    assert( ( fg >= 0 ) && ( fg < T_COLOR_COUNT ) );
+
     buffer->attr.fg_color = fg;
 
     return 0;
@@ -186,7 +190,7 @@ int terminal_buffer_insert_space( terminal_buffer_t* buffer, int count ) {
 
     for ( i = 0; i < count; i++ ) {
         line->buffer[ buffer->cursor_x + i ] = ' ';
-        /* TODO: attrib! */
+        terminal_attr_copy( &line->attr[ buffer->cursor_x + i ], &buffer->attr );
     }
 
     line->size = MIN( line->size + count, buffer->width );
@@ -303,7 +307,7 @@ int terminal_buffer_delete( terminal_buffer_t* buffer, int count ) {
 
     line = buffer->lines + buffer->cursor_y;
 
-    remaining = buffer->width - ( buffer->cursor_x + 1 );
+    remaining = buffer->width - ( buffer->cursor_x + count );
 
     if ( remaining > 0 ) {
         memmove(
