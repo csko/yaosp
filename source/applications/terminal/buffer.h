@@ -19,28 +19,7 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
-typedef enum terminal_color {
-    T_COLOR_BLACK,
-    T_COLOR_RED,
-    T_COLOR_GREEN,
-    T_COLOR_YELLOW,
-    T_COLOR_BLUE,
-    T_COLOR_MAGENTA,
-    T_COLOR_CYAN,
-    T_COLOR_WHITE,
-    T_COLOR_COUNT
-} terminal_color_t;
-
-typedef struct terminal_attr {
-    terminal_color_t bg_color;
-    terminal_color_t fg_color;
-} terminal_attr_t;
-
-typedef struct terminal_line {
-    int size;
-    char* buffer;
-    terminal_attr_t* attr;
-} terminal_line_t;
+#include "history.h"
 
 typedef struct terminal_buffer {
     int width;
@@ -58,6 +37,7 @@ typedef struct terminal_buffer {
     terminal_attr_t saved_attr;
 
     terminal_line_t* lines;
+    terminal_history_t history;
 } terminal_buffer_t;
 
 #define terminal_attr_compare(a1,a2) memcmp((void*)(a1),(void*)(a2),sizeof(terminal_attr_t))
@@ -100,6 +80,11 @@ int terminal_buffer_move_cursor_to( terminal_buffer_t* buffer, int x, int y );
 int terminal_buffer_scroll_by( terminal_buffer_t* buffer, int lines );
 int terminal_buffer_set_scroll_region( terminal_buffer_t* buffer, int top, int bottom );
 
+/* misc */
+
+terminal_line_t* terminal_buffer_get_line_at( terminal_buffer_t* buffer, int index );
+int terminal_buffer_get_line_count( terminal_buffer_t* buffer );
+int terminal_buffer_get_history_size( terminal_buffer_t* buffer );
 int terminal_buffer_dump( terminal_buffer_t* buffer );
 
 int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height );

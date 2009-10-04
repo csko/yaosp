@@ -141,6 +141,7 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
 static int terminal_paint( widget_t* widget, gc_t* gc ) {
     int i;
     rect_t bounds;
+    int history_size;
     terminal_line_t* term_line;
     terminal_widget_t* terminal_widget;
 
@@ -166,13 +167,17 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
 
     pthread_mutex_lock( &terminal->lock );
 
-    for ( i = 0, term_line = terminal->buffer.lines; i < terminal->buffer.height; i++, term_line++ ) {
+    history_size = terminal_buffer_get_history_size( &terminal->buffer );
+
+    for ( i = 0; i < terminal_buffer_get_line_count( &terminal->buffer ); i++ ) {
+        term_line = terminal_buffer_get_line_at( &terminal->buffer, i );
+
         terminal_paint_line(
             terminal_widget,
             gc,
             term_line,
             &pos,
-            ( i == terminal->buffer.cursor_y ) ? terminal->buffer.cursor_x : -1
+            ( i == history_size + terminal->buffer.cursor_y ) ? terminal->buffer.cursor_x : -1
         );
 
         pos.y += font_get_height( terminal_widget->font );
@@ -247,7 +252,7 @@ static int terminal_get_preferred_size( widget_t* widget, point_t* size ) {
     point_init(
         size,
         font_get_string_width( terminal_widget->font, "A", 1 ) * 80,
-        font_get_height( terminal_widget->font ) * 25
+        font_get_height( terminal_widget->font ) * MAX( 25, terminal_buffer_get_line_count( &terminal->buffer ) )
     );
 
     return 0;

@@ -49,6 +49,21 @@ static int buffer_do_scroll( terminal_buffer_t* buffer, int top, int bottom, int
 
     height = bottom - top + 1;
 
+    /* Save the scrolled lines to the history */
+
+    if ( ( top == 0 ) &&
+         ( lines > 0 ) ) {
+        int count;
+
+        count = MIN( lines, height );
+
+        for ( i = 0, line = buffer->lines; i < count; i++, line++ ) {
+            terminal_history_add_line( &buffer->history, line );
+        }
+    }
+
+    /* Scroll the region */
+
     if ( abs( lines ) >= height ) {
         /* clear the lines simply */
 
@@ -420,6 +435,31 @@ int terminal_buffer_set_scroll_region( terminal_buffer_t* buffer, int top, int b
     return 0;
 }
 
+terminal_line_t* terminal_buffer_get_line_at( terminal_buffer_t* buffer, int index ) {
+    int line_count;
+    int history_size;
+
+    line_count = terminal_buffer_get_line_count( buffer );
+
+    assert( ( index >= 0 ) && ( index < line_count ) );
+
+    history_size = terminal_history_get_size( &buffer->history );
+
+    if ( index < history_size ) {
+        return terminal_history_get_line_at( &buffer->history, index );
+    } else {
+        return buffer->lines + ( index - history_size );
+    }
+}
+
+int terminal_buffer_get_line_count( terminal_buffer_t* buffer ) {
+    return ( buffer->height + terminal_history_get_size( &buffer->history ) );
+}
+
+int terminal_buffer_get_history_size( terminal_buffer_t* buffer ) {
+    return terminal_history_get_size( &buffer->history );
+}
+
 int terminal_buffer_dump( terminal_buffer_t* buffer ) {
     int i, j;
 
@@ -461,7 +501,14 @@ int terminal_buffer_dump( terminal_buffer_t* buffer ) {
 
 int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
     int i, j;
+    int error;
     terminal_line_t* line;
+
+    error = terminal_history_init( &buffer->history, width );
+
+    if ( error < 0 ) {
+        goto error1;
+    }
 
     buffer->width = width;
     buffer->height = height;
@@ -478,7 +525,8 @@ int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
     buffer->lines = ( terminal_line_t* )malloc( sizeof( terminal_line_t ) * height );
 
     if ( buffer->lines == NULL ) {
-        return -ENOMEM;
+        error = -ENOMEM;
+        goto error2;
     }
 
     line = buffer->lines;
@@ -507,4 +555,10 @@ int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
     }
 
     return 0;
+
+ error2:
+    /* TODO: destroy the history */
+
+ error1:
+    return error;
 }

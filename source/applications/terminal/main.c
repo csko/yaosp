@@ -46,6 +46,27 @@ int master_pty;
 pid_t shell_pid;
 terminal_t* terminal;
 
+static int terminal_update_widget( void* data ) {
+    /* The preferred size of the widget may changed. Signal the
+       event listeners ... */
+
+    widget_signal_event_handler(
+        terminal_widget,
+        terminal_widget->event_ids[ E_PREF_SIZE_CHANGED ]
+    );
+
+    /* Move the scrollpanel to the bottom */
+
+    int v_size = scroll_panel_get_v_size( scrollpanel );
+
+    scroll_panel_set_v_offset(
+        scrollpanel,
+        v_size
+    );
+
+    return 0;
+}
+
 static void* pty_read_thread_entry( void* arg ) {
     int size;
     uint8_t buffer[ 512 ];
@@ -69,7 +90,7 @@ static void* pty_read_thread_entry( void* arg ) {
 
         /* Invalidate the terminal widget to repaint it */
 
-        widget_invalidate( terminal_widget, 1 );
+        window_insert_callback( window, terminal_update_widget, NULL );
     }
 
     return NULL;
