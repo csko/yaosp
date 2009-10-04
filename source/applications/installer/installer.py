@@ -113,8 +113,17 @@ print
 print
 print "Installing yaOSp base package ..."
 
-os.mkdir( "/media/install" )
-os.mount( partition[ "name" ], "/media/install", "ext2" )
+try :
+    os.mkdir( "/media/install" )
+except OSError, e :
+    print "Failed to create /media/install directory!"
+    sys.exit(0)
+
+try :
+    os.mount( partition[ "name" ], "/media/install", "ext2" )
+except OSError, e :
+    print "Failed to mount %s to /media/install" % ( partition[ "name" ] )
+    sys.exit(0)
 
 try :
     base = tarfile.open( "/yaosp/yaosp.tar.bz2" )
