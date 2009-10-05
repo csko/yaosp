@@ -96,24 +96,25 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="objs/guiserver" to="../../../build/image/application/guiserver"/>
 
         <echo>Downloading DejaVu fonts</echo>
-        <httpget address="http://files.yaosp.org/source/dejavu-fonts/dejavu-fonts-ttf-2.29.tar.bz2"
-                 to="dejavu-fonts-ttf-2.29.tar.bz2"
-                 md5="d8feb7d57d8b7cbac409df435daa9849"/>
+        <httpget address="http://files.yaosp.org/source/dejavu-fonts/dejavu-fonts-ttf-2.30.tar.bz2"
+                 to="dejavu-fonts-ttf-2.30.tar.bz2"
+                 md5="545b3bfc69893075a90a7c6e6f4a7e67"/>
 
         <echo>Installing fonts</echo>
 
         <cleandir>fonts</cleandir>
         <rmdir>fonts</rmdir>
+
         <mkdir>fonts</mkdir>
         <exec executable="tar">
             <arg>-jxf</arg>
-            <arg>dejavu-fonts-ttf-2.29.tar.bz2</arg>
+            <arg>dejavu-fonts-ttf-2.30.tar.bz2</arg>
             <arg>-C</arg>
             <arg>fonts</arg>
         </exec>
 
         <mkdir>../../../build/image/system/fonts</mkdir>
-        <copy from="fonts/dejavu-fonts-ttf-2.29/ttf/*.ttf" to="../../../build/image/system/fonts"/>
+        <copy from="fonts/dejavu-fonts-ttf-2.30/ttf/*.ttf" to="../../../build/image/system/fonts"/>
     </target>
 
     <target name="all">

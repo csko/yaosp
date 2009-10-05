@@ -217,6 +217,7 @@ static int draw_text( window_t* window, uint8_t* buffer ) {
 
 static int draw_bitmap( window_t* window, uint8_t* buffer ) {
     rect_t tmp;
+    point_t lefttop;
     bitmap_t* bitmap;
     r_draw_bitmap_t* cmd;
 
@@ -242,10 +243,19 @@ static int draw_bitmap( window_t* window, uint8_t* buffer ) {
         bitmap->width - 1,
         bitmap->height - 1
     );
+    rect_add_point( &tmp, &cmd->position );
+    rect_and( &tmp, &window->clip_rect );
+
+    if ( !rect_is_valid( &tmp ) ) {
+        goto out;
+    }
+
+    rect_lefttop( &tmp, &lefttop );
+    rect_sub_point( &tmp, &cmd->position );
 
     graphics_driver->blit_bitmap(
         window->bitmap,
-        &cmd->position,
+        &lefttop,
         bitmap,
         &tmp,
         window->drawing_mode
