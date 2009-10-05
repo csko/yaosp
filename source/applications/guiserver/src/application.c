@@ -27,6 +27,7 @@
 #include <window.h>
 #include <fontmanager.h>
 #include <graphicsdriver.h>
+#include <bitmap.h>
 
 #define MAX_APPLICATION_BUFSIZE 512
 
@@ -99,7 +100,10 @@ static void* application_thread( void* arg ) {
     while ( 1 ) {
         error = recv_ipc_message( app->server_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
 
-        if ( error < 0 ) {
+        if ( error == -ENOENT ) {
+            dbprintf( "application_thread(): Skipping -ENOENT ...\n" );
+            continue;
+        } else if ( error < 0 ) {
             dbprintf( "application_thread(): Failed to receive message: %d\n", error );
             break;
         }
@@ -111,6 +115,10 @@ static void* application_thread( void* arg ) {
 
             case MSG_CREATE_FONT :
                 handle_create_font( ( msg_create_font_t* )buffer );
+                break;
+
+            case MSG_CREATE_BITMAP :
+                handle_create_bitmap( ( msg_create_bitmap_t* )buffer );
                 break;
 
             case MSG_GET_STRING_WIDTH :

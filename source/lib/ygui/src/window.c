@@ -183,7 +183,11 @@ static void* window_thread( void* arg ) {
 
                 /* Send the rendering commands to the guiserver */
 
-                flush_render_buffer( window );
+                error = flush_render_buffer( window );
+
+                if ( error < 0 ) {
+                    dbprintf( "window_thread(): Failed to flush render buffer: %d.\n", error );
+                }
 
                 /* Show the window (if needed) */
 

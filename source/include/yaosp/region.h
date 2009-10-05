@@ -19,6 +19,9 @@
 #ifndef _YAOSP_REGION_H_
 #define _YAOSP_REGION_H_
 
+#define PAGE_SIZE 4096
+#define PAGE_ALIGN(s) (((s)+PAGE_SIZE-1)&~(PAGE_SIZE-1))
+
 typedef int region_id;
 
 typedef enum alloc_type {
@@ -33,8 +36,10 @@ typedef enum region_flags {
     REGION_WRITE = ( 1 << 1 )
 } region_flags_t;
 
-region_id create_region( const char* name, uint32_t size, region_flags_t flags, alloc_type_t alloc_method, void** _address );
+region_id create_region( const char* name, uint32_t size, region_flags_t flags,
+                         alloc_type_t alloc_method, void** _address );
 int delete_region( region_id id );
 int remap_region( region_id id, void* address );
+region_id clone_region( region_id id, void** address );
 
-#endif // _YAOSP_REGION_H_
+#endif /* _YAOSP_REGION_H_ */

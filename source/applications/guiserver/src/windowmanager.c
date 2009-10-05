@@ -314,6 +314,7 @@ int wm_update_window_region( window_t* window, rect_t* region ) {
         rect_and_n( &visible_rect, region, &clip_rect->rect );
 
         if ( !rect_is_valid( &visible_rect ) ) {
+            dbprintf( "%s(): skipping at %d\n", __FUNCTION__, __LINE__ );
             continue;
         }
 

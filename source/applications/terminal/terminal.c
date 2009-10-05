@@ -104,7 +104,7 @@ void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
             /* Just skip tab for now ... */
             break;
 
-        default : {
+        default :
             if ( data < 32 ) {
                 break;
             }
@@ -115,7 +115,6 @@ void terminal_data_state_none( terminal_t* terminal, uint8_t data ) {
             );
 
             break;
-        }
     }
 }
 
@@ -600,6 +599,8 @@ terminal_t* create_terminal( int width, int height ) {
     if ( pthread_mutex_init( &terminal->lock, NULL ) < 0 ) {
         goto error3;
     }
+
+    terminal->state = STATE_NONE;
 
     return terminal;
 

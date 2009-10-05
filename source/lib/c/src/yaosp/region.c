@@ -45,3 +45,11 @@ int remap_region( region_id id, void* address ) {
         ( int )address
     );
 }
+
+region_id clone_region( region_id id, void** address ) {
+    return syscall2(
+        SYS_clone_region,
+        id,
+        ( int )address
+    );
+}

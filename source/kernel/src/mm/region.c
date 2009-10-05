@@ -371,6 +371,82 @@ int sys_remap_region( region_id id, ptr_t address ) {
     return error;
 }
 
+int sys_clone_region( region_id id, void** _address ) {
+    int error;
+    ptr_t address;
+    memory_region_t* region;
+    memory_context_t* context;
+    memory_region_t* new_region;
+    memory_context_t* new_context;
+
+    mutex_lock( region_lock );
+
+    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
+
+    if ( region == NULL ) {
+        mutex_unlock( region_lock );
+
+        return -EINVAL;
+    }
+
+    context = region->context;
+    new_context = current_process()->memory_context;
+
+    if ( !memory_context_find_unmapped_region(
+            new_context,
+            FIRST_USER_REGION_ADDRESS,
+            LAST_USER_ADDRESS,
+            region->size,
+            &address
+        ) ) {
+        mutex_unlock( region_lock );
+
+        return -ENOSPC;
+    }
+
+    new_region = allocate_region( region->name );
+
+    if ( __unlikely( new_region == NULL ) ) {
+        return -ENOMEM;
+    }
+
+    new_region->flags = region->flags | REGION_REMAPPED;
+    new_region->alloc_method = ALLOC_NONE;
+    new_region->start = address;
+    new_region->size = region->size;
+    new_region->context = new_context;
+
+    error = arch_clone_region( region, new_region );
+
+    if ( error < 0 ) {
+        /* TODO: destroy the new region */
+
+        mutex_unlock( region_lock );
+
+        return error;
+    }
+
+    error = region_insert( new_context, new_region );
+
+    if ( error < 0 ) {
+        /* TODO: destroy ... */
+
+        mutex_unlock( region_lock );
+
+        return error;
+    }
+
+    scheduler_lock();
+    new_context->process->vmem_size += new_region->size;
+    scheduler_unlock();
+
+    mutex_unlock( region_lock );
+
+    *_address = ( void* )address;
+
+    return new_region->id;
+}
+
 int resize_region( region_id id, uint32_t new_size ) {
     int error;
     memory_region_t* region;

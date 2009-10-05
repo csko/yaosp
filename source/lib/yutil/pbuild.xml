@@ -25,6 +25,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/array.c</item>
         <item>src/string.c</item>
         <item>src/stack.c</item>
+        <item>src/list.c</item>
+        <item>src/blockbuffer.c</item>
     </array>
 
     <target name="clean">

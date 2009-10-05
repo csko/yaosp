@@ -92,6 +92,7 @@ static system_call_entry_t system_call_table[] = {
     { "create_region", sys_create_region, 0 },
     { "delete_region", sys_delete_region, 0 },
     { "remap_region", sys_remap_region, 0 },
+    { "clone_region", sys_clone_region, 0 },
     { "getpid", sys_getpid, 0 },
     { "gettid", sys_gettid, 0 },
     { "load_module", sys_load_module, 0 },

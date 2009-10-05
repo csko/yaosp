@@ -52,6 +52,13 @@ static int event_button_clicked( widget_t* widget, void* data ) {
     return 0;
 }
 
+#include <ygui/bitmap.h>
+static void test_png_stuff( void ) {
+    return;
+    bitmap_t* bmp = bitmap_load_from_file( "/system/test.png" );
+    dbprintf( "%s(): bmp = %p\n", __FUNCTION__, bmp );
+}
+
 int main( int argc, char** argv ) {
     int error;
     window_t* win;
@@ -62,6 +69,10 @@ int main( int argc, char** argv ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
         return error;
     }
+
+    // ---
+    test_png_stuff();
+    // ---
 
     point_t point = { .x = 0, .y = 0 };
     point_t size;

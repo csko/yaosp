@@ -1,4 +1,4 @@
-/* Memory region handling
+/* List implementation
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,16 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_MM_REGION_H_
-#define _ARCH_MM_REGION_H_
+#ifndef _YUTIL_LIST_H_
+#define _YUTIL_LIST_H_
 
-#include <mm/context.h>
-#include <mm/region.h>
+typedef struct list_item {
+    void* data;
+    struct list_item* next;
+} list_item_t;
 
-int arch_create_region_pages( memory_context_t* context, memory_region_t* region );
-int arch_delete_region_pages( memory_context_t* context, memory_region_t* region );
-int arch_remap_region_pages( memory_context_t* context, memory_region_t* region, ptr_t address );
-int arch_resize_region( memory_context_t* context, memory_region_t* region, uint32_t new_size );
-int arch_clone_region( memory_region_t* old_region, memory_region_t* new_region );
+typedef struct list {
+    int size;
+    list_item_t* head;
+    list_item_t* tail;
 
-#endif /* _ARCH_MM_REGION_H_ */
+    int cur_free;
+    int max_free;
+    list_item_t* free;
+} list_t;
+
+int list_add_item( list_t* list, void* data );
+int list_get_size( list_t* list );
+void* list_get_head( list_t* list );
+void* list_get_tail( list_t* list );
+void* list_pop_head( list_t* list );
+
+int list_set_max_free( list_t* list, int max_free );
+
+int init_list( list_t* list );
+int destroy_list( list_t* list );
+
+#endif /* _YUTIL_LIST_H_ */

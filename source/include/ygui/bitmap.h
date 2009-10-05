@@ -1,4 +1,4 @@
-/* Memory region handling
+/* yaosp GUI library
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,16 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_MM_REGION_H_
-#define _ARCH_MM_REGION_H_
+#ifndef _YGUI_BITMAP_H_
+#define _YGUI_BITMAP_H_
 
-#include <mm/context.h>
-#include <mm/region.h>
+#include <sys/types.h>
+#include <yaosp/region.h>
 
-int arch_create_region_pages( memory_context_t* context, memory_region_t* region );
-int arch_delete_region_pages( memory_context_t* context, memory_region_t* region );
-int arch_remap_region_pages( memory_context_t* context, memory_region_t* region, ptr_t address );
-int arch_resize_region( memory_context_t* context, memory_region_t* region, uint32_t new_size );
-int arch_clone_region( memory_region_t* old_region, memory_region_t* new_region );
+#include <ygui/yconstants.h>
 
-#endif /* _ARCH_MM_REGION_H_ */
+typedef struct bitmap {
+    int id;
+    int width;
+    int height;
+    color_space_t color_space;
+    region_id region;
+    uint8_t* data;
+} bitmap_t;
+
+bitmap_t* bitmap_create( int width, int height, color_space_t color_space );
+
+bitmap_t* bitmap_load_from_file( const char* file );
+
+#endif /* _YGUI_BITMAP_H_ */

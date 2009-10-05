@@ -1,4 +1,4 @@
-/* Memory region handling
+/* Image loader handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,16 +16,38 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_MM_REGION_H_
-#define _ARCH_MM_REGION_H_
+#include <errno.h>
 
-#include <mm/context.h>
-#include <mm/region.h>
+#include <ygui/image/imageloader.h>
 
-int arch_create_region_pages( memory_context_t* context, memory_region_t* region );
-int arch_delete_region_pages( memory_context_t* context, memory_region_t* region );
-int arch_remap_region_pages( memory_context_t* context, memory_region_t* region, ptr_t address );
-int arch_resize_region( memory_context_t* context, memory_region_t* region, uint32_t new_size );
-int arch_clone_region( memory_region_t* old_region, memory_region_t* new_region );
+extern image_loader_t png_loader;
 
-#endif /* _ARCH_MM_REGION_H_ */
+static image_loader_t* image_loaders[] = {
+    &png_loader,
+    NULL
+};
+
+int image_loader_find( uint8_t* data, size_t size, image_loader_t** _loader, void** _private ) {
+    int i;
+    image_loader_t* loader;
+
+    if ( ( _loader == NULL ) ||
+         ( _private == NULL ) ) {
+        return -EINVAL;
+    }
+
+    for ( i = 0; image_loaders[ i ] != NULL; i++ ) {
+        loader = image_loaders[ i ];
+
+        if ( loader->identify( data, size ) == 0 ) {
+            goto found;
+        }
+    }
+
+    return -1;
+
+ found:
+    *_loader = loader;
+
+    return loader->create( _private );
+}

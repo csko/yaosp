@@ -258,6 +258,66 @@ int arch_resize_region( struct memory_context* context, memory_region_t* region,
     return 0;
 }
 
+int arch_clone_region( memory_region_t* old_region, memory_region_t* new_region ) {
+    i386_memory_context_t* old_context;
+    i386_memory_context_t* new_context;
+
+    old_context = ( i386_memory_context_t* )old_region->context->arch_data;
+    new_context = ( i386_memory_context_t* )new_region->context->arch_data;
+
+    int error;
+    uint32_t i;
+    uint32_t count;
+    uint32_t old_pd_index;
+    uint32_t old_pt_index;
+    uint32_t new_pd_index;
+    uint32_t new_pt_index;
+    uint32_t* old_pt;
+    uint32_t* new_pt;
+
+    /* Create the page tables if required */
+
+    error = map_region_page_tables( new_context, new_region->start, new_region->size, false );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    /* Do the page mapping */
+
+    count = new_region->size / PAGE_SIZE;
+    old_pd_index = old_region->start >> PGDIR_SHIFT;
+    old_pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
+    old_pt = ( uint32_t* )( old_context->page_directory[ old_pd_index ] & PAGE_MASK );
+    new_pd_index = new_region->start >> PGDIR_SHIFT;
+    new_pt_index = ( new_region->start >> PAGE_SHIFT ) & 1023;
+    new_pt = ( uint32_t* )( new_context->page_directory[ new_pd_index ] & PAGE_MASK );
+
+    for ( i = 0; i < count; i++ ) {
+        new_pt[ new_pt_index ] = old_pt[ old_pt_index ];
+
+        if ( old_pt_index == 1023 ) {
+            old_pt_index = 0;
+            old_pd_index++;
+
+            old_pt = ( uint32_t* )( old_context->page_directory[ old_pd_index ] & PAGE_MASK );
+        } else {
+            old_pt_index++;
+        }
+
+        if ( new_pt_index == 1023 ) {
+            new_pt_index = 0;
+            new_pd_index++;
+
+            new_pt = ( uint32_t* )( new_context->page_directory[ new_pd_index ] & PAGE_MASK );
+        } else {
+            new_pt_index++;
+        }
+    }
+
+    return 0;
+}
+
 int arch_clone_memory_region(
     memory_context_t* old_context,
     memory_region_t* old_region,

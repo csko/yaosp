@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <string.h>
 #include <pthread.h>
+#include <yaosp/region.h>
 
 #include <bitmap.h>
 
@@ -160,6 +161,51 @@ int put_bitmap( bitmap_t* bitmap ) {
 
         free( bitmap );
     }
+
+    return 0;
+}
+
+int handle_create_bitmap( msg_create_bitmap_t* request ) {
+    int size;
+    void* buffer;
+    bitmap_t* bitmap;
+    region_id bitmap_region;
+    msg_create_bmp_reply_t reply;
+
+    size = request->width * request->height * colorspace_to_bpp( request->color_space );
+
+    bitmap_region = create_region(
+        "bitmap",
+        PAGE_ALIGN( size ),
+        REGION_READ | REGION_WRITE,
+        ALLOC_PAGES,
+        &buffer
+    );
+
+    if ( bitmap_region < 0 ) {
+        goto error1;
+    }
+
+    bitmap = create_bitmap_from_buffer( request->width, request->height, request->color_space, buffer );
+
+    if ( bitmap == NULL ) {
+        goto error2;
+    }
+
+    reply.id = bitmap->id;
+    reply.bitmap_region = bitmap_region;
+
+    send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_bmp_reply_t ) );
+
+    return 0;
+
+ error2:
+    delete_region( bitmap_region );
+
+ error1:
+    reply.id = -1;
+
+    send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_bmp_reply_t ) );
 
     return 0;
 }

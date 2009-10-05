@@ -20,7 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="test">
-    <target name="test">
+    <target name="test_string">
         <gcc>
             <input>tst_string.c</input>
             <input>../objs/libyutil.a</input>
@@ -31,5 +31,39 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </gcc>
 
         <exec executable="./tst_string"/>
+    </target>
+
+    <target name="test_list">
+        <gcc>
+            <input>tst_list.c</input>
+            <input>../objs/libyutil.a</input>
+            <output>tst_list</output>
+            <flag>-O2</flag>
+            <flag>-m32</flag>
+            <flag>-Wall</flag>
+        </gcc>
+
+        <exec executable="./tst_list"/>
+    </target>
+
+<!--
+    <target name="test_blockbuffer">
+        <gcc>
+            <input>tst_blockbuffer.c</input>
+            <input>../objs/libyutil.a</input>
+            <output>tst_blockbuffer</output>
+            <flag>-O2</flag>
+            <flag>-m32</flag>
+            <flag>-Wall</flag>
+        </gcc>
+
+        <exec executable="./tst_blockbuffer"/>
+    </target>
+-->
+
+    <target name="test">
+        <call target="test_string"/>
+        <call target="test_list"/>
+        <!--<call target="test_blockbuffer"/>-->
     </target>
 </build>

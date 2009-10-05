@@ -24,10 +24,12 @@
 #define _YGUI_PROTOCOL_H_
 
 #include <yaosp/ipc.h>
+#include <yaosp/region.h>
 
 #include <ygui/point.h>
 #include <ygui/rect.h>
 #include <ygui/font.h>
+#include <ygui/yconstants.h>
 
 enum {
     MSG_CREATE_APPLICATION = 1,
@@ -48,7 +50,8 @@ enum {
     MSG_MOUSE_PRESSED,
     MSG_MOUSE_RELEASED,
     MSG_GET_DESKTOP_SIZE,
-    MSG_WINDOW_CALLBACK
+    MSG_WINDOW_CALLBACK,
+    MSG_CREATE_BITMAP
 };
 
 /* MSG_CREATE_APPLICATION */
@@ -148,5 +151,19 @@ typedef struct msg_window_callback {
     void* callback;
     void* data;
 } msg_window_callback_t;
+
+/* MSG_CREATE_BITMAP */
+
+typedef struct msg_create_bitmap {
+    ipc_port_id reply_port;
+    int width;
+    int height;
+    color_space_t color_space;
+} msg_create_bitmap_t;
+
+typedef struct msg_create_bmp_reply {
+    int id;
+    region_id bitmap_region;
+} msg_create_bmp_reply_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

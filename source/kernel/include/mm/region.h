@@ -143,6 +143,7 @@ region_id sys_create_region(
 int sys_delete_region( region_id id );
 
 int sys_remap_region( region_id id, ptr_t address );
+int sys_clone_region( region_id id, void** address );
 
 void memory_region_dump( memory_region_t* region, int index );
 
