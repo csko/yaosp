@@ -1,0 +1,104 @@
+diff -Nru zlib-1.2.3-orig/pbuild.xml zlib-1.2.3/pbuild.xml
+--- zlib-1.2.3-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ zlib-1.2.3/pbuild.xml	2009-10-05 09:18:57.000000000 +0200
+@@ -0,0 +1,100 @@
++<!--
++
++This file is part of the yaosp build system
++
++Copyright (c) 2009 Zoltan Kovacs
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of version 2 of the GNU General Public License
++as published by the Free Software Foundation.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along
++with this program; if not, write to the Free Software Foundation, Inc.,
++51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++
++-->
++
++<build default="all">
++    <array name="files">
++        <item>adler32.c</item>
++        <item>compress.c</item>
++        <item>crc32.c</item>
++        <item>gzio.c</item>
++        <item>uncompr.c</item>
++        <item>deflate.c</item>
++        <item>trees.c</item>
++        <item>zutil.c</item>
++        <item>inflate.c</item>
++        <item>infback.c</item>
++        <item>inftrees.c</item>
++        <item>inffast.c</item>
++    </array>
++
++    <array name="headers_to_install">
++        <item>zlib.h</item>
++        <item>zconf.h</item>
++    </array>
++
++    <target name="clean">
++        <delete>objs/*</delete>
++        <rmdir>objs</rmdir>
++    </target>
++
++    <target name="prepare" type="private">
++        <mkdir>objs</mkdir>
++    </target>
++
++    <target name="compile">
++        <call target="prepare"/>
++
++        <echo>Compiling zlib 1.2.3</echo>
++
++        <for var="i" array="${files}">
++            <echo>-> ${i}</echo>
++            <gcc>
++                <input>${i}</input>
++                <output>objs/filename(${i}).o</output>
++                <include>../../../include</include>
++                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
++                <include>./</include>
++                <flag>-c</flag>
++                <flag>-O2</flag>
++                <flag>-m32</flag>
++                <flag>-Wall</flag>
++                <flag>-nostdinc</flag>
++                <flag>-nostdlib</flag>
++                <flag>-fno-builtin</flag>
++                <flag>-fno-strict-aliasing</flag>
++            </gcc>
++        </for>
++
++        <echo>Linking zlib 1.2.3</echo>
++        <echo>-> objs/libz.a</echo>
++
++        <exec executable="ar">
++            <arg>-rc</arg>
++            <arg>objs/libz.a</arg>
++            <arg>objs/*.o</arg>
++        </exec>
++    </target>
++
++    <target name="install">
++        <echo>Installing zlib 1.2.3 headers</echo>
++
++        <for var="i" array="${headers_to_install}">
++            <echo>-> ${i}</echo>
++            <copy from="${i}" to="../../../include/${i}"/>
++        </for>
++    </target>
++
++    <target name="all">
++        <call target="clean"/>
++        <call target="compile"/>
++        <call target="install"/>
++    </target>
++</build>

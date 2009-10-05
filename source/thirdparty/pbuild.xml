@@ -25,6 +25,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>readline-6.0</item>
         <item>freetype-2.3.9</item>
         <item>bzip2-1.0.5</item>
+        <item>zlib-1.2.3</item>
+        <item>libpng-1.2.40</item>
         <item>python-2.5.4</item>
         <item>bash-4.0</item>
     </array>
@@ -35,5 +37,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
     </target>
 
-    <target name="clean"/>
+    <target name="clean">
+        <for var="i" array="${libraries}">
+            <call target="clean" directory="${i}"/>
+        </for>
+    </target>
 </build>
