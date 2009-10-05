@@ -277,6 +277,22 @@ int gc_translate_xy( gc_t* gc, int x, int y ) {
     return gc_translate( gc, &tmp );
 }
 
+int gc_set_drawing_mode( gc_t* gc, drawing_mode_t mode ) {
+    int error;
+    r_set_drawing_mode_t* packet;
+
+    error = allocate_render_packet( gc->window, sizeof( r_set_drawing_mode_t ), ( void** )&packet );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    packet->header.command = R_SET_DRAWING_MODE;
+    packet->mode = mode;
+
+    return 0;
+}
+
 int gc_draw_rect( gc_t* gc, rect_t* rect ) {
     int error;
     rect_t tmp;
@@ -364,6 +380,27 @@ int gc_draw_text( gc_t* gc, point_t* position, const char* text, int length ) {
 
     point_add_n( &packet->position, position, &gc->lefttop );
     memcpy( ( void* )( packet + 1 ), text, length );
+
+    return 0;
+}
+
+int gc_draw_bitmap( gc_t* gc, bitmap_t* bitmap, point_t* position ) {
+    int error;
+    r_draw_bitmap_t* packet;
+
+    if ( !gc->is_clip_valid ) {
+        return 0;
+    }
+
+    error = allocate_render_packet( gc->window, sizeof( r_draw_bitmap_t ), ( void** )&packet );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    packet->header.command = R_DRAW_BITMAP;
+    packet->bitmap_id = bitmap->id;
+    point_add_n( &packet->position, position, &gc->lefttop );
 
     return 0;
 }

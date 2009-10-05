@@ -23,6 +23,7 @@
 #include <ygui/rect.h>
 #include <ygui/point.h>
 #include <ygui/font.h>
+#include <ygui/bitmap.h>
 #include <yutil/stack.h>
 
 struct window;
@@ -44,9 +45,11 @@ int gc_set_font( gc_t* gc, font_t* font );
 int gc_set_clip_rect( gc_t* gc, rect_t* rect );
 int gc_translate( gc_t* gc, point_t* point );
 int gc_translate_xy( gc_t* gc, int x, int y );
+int gc_set_drawing_mode( gc_t* gc, drawing_mode_t mode );
 int gc_draw_rect( gc_t* gc, rect_t* rect );
 int gc_fill_rect( gc_t* gc, rect_t* rect );
 int gc_draw_text( gc_t* gc, point_t* position, const char* text, int length );
+int gc_draw_bitmap( gc_t* gc, bitmap_t* bitmap, point_t* position );
 
 int gc_clean_up( gc_t* gc );
 

@@ -137,7 +137,23 @@ error1:
     return NULL;
 }
 
-int put_bitmap( bitmap_t* bitmap ) {
+bitmap_t* bitmap_get( bitmap_id id ) {
+    bitmap_t* bitmap;
+
+    pthread_mutex_lock( &bitmap_lock );
+
+    bitmap = ( bitmap_t* )hashtable_get( &bitmap_table, ( const void* )&id );
+
+    if ( bitmap != NULL ) {
+        bitmap->ref_count++;
+    }
+
+    pthread_mutex_unlock( &bitmap_lock );
+
+    return bitmap;
+}
+
+int bitmap_put( bitmap_t* bitmap ) {
     int do_delete;
 
     do_delete = 0;

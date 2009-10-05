@@ -45,7 +45,9 @@ typedef struct bitmap {
 
 bitmap_t* create_bitmap( uint32_t width, uint32_t height, color_space_t color_space );
 bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_space_t color_space, void* buffer );
-int put_bitmap( bitmap_t* bitmap );
+
+bitmap_t* bitmap_get( bitmap_id id );
+int bitmap_put( bitmap_t* bitmap );
 
 int handle_create_bitmap( msg_create_bitmap_t* request );
 

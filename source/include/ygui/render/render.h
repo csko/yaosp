@@ -23,6 +23,7 @@
 
 #include <ygui/rect.h>
 #include <ygui/color.h>
+#include <ygui/yconstants.h>
 
 #define DEFAULT_RENDER_BUFFER_SIZE 8192
 
@@ -30,9 +31,11 @@ enum {
     R_SET_PEN_COLOR = 1,
     R_SET_FONT,
     R_SET_CLIP_RECT,
+    R_SET_DRAWING_MODE,
     R_DRAW_RECT,
     R_FILL_RECT,
     R_DRAW_TEXT,
+    R_DRAW_BITMAP,
     R_DONE
 };
 
@@ -55,6 +58,11 @@ typedef struct r_set_clip_rect {
     rect_t clip_rect;
 } __attribute__(( packed )) r_set_clip_rect_t;
 
+typedef struct r_set_drawing_mode {
+    render_header_t header;
+    drawing_mode_t mode;
+} __attribute__(( packed )) r_set_drawing_mode_t;
+
 typedef struct r_draw_rect {
     render_header_t header;
     rect_t rect;
@@ -70,5 +78,11 @@ typedef struct r_draw_text {
     point_t position;
     int length;
 } __attribute__(( packed )) r_draw_text_t;
+
+typedef struct r_draw_bitmap {
+    render_header_t header;
+    int bitmap_id;
+    point_t position;
+} __attribute__(( packed )) r_draw_bitmap_t;
 
 #endif /* _YAOSP_RENDER_H_ */

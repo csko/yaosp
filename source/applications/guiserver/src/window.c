@@ -112,6 +112,7 @@ int handle_create_window( msg_create_win_t* request ) {
     window->is_visible = 0;
     window->is_moving = 0;
     window->mouse_on_decorator = 0;
+    window->drawing_mode = DM_COPY;
 
     /* Initialize rendering stuffs */
 
@@ -185,7 +186,7 @@ error7:
     }
 
 error6:
-    put_bitmap( window->bitmap );
+    bitmap_put( window->bitmap );
 
 error5:
     destroy_region( &window->visible_regions );

@@ -171,8 +171,6 @@ static void png_info_callback( png_structp png_ptr, png_infop info ) {
         NULL
     );
 
-    dbprintf( "%s(): width = %d, height = %d\n", __FUNCTION__, width, height );
-
     img_info.width = width;
     img_info.height = height;
     img_info.color_space = CS_RGB32;

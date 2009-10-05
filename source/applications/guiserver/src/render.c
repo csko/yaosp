@@ -69,6 +69,16 @@ static int set_clip_rect( window_t* window, uint8_t* buffer ) {
     return sizeof( r_set_clip_rect_t );
 }
 
+static int set_drawing_mode( window_t* window, uint8_t* buffer ) {
+    r_set_drawing_mode_t* cmd;
+
+    cmd = ( r_set_drawing_mode_t* )buffer;
+
+    window->drawing_mode = cmd->mode;
+
+    return sizeof( r_set_drawing_mode_t );
+}
+
 static int draw_rect( window_t* window, uint8_t* buffer ) {
     rect_t tmp;
     rect_t rect;
@@ -96,7 +106,7 @@ static int draw_rect( window_t* window, uint8_t* buffer ) {
             window->bitmap,
             &tmp,
             &window->pen_color,
-            DM_COPY
+            window->drawing_mode
         );
     }
 
@@ -110,7 +120,7 @@ static int draw_rect( window_t* window, uint8_t* buffer ) {
             window->bitmap,
             &tmp,
             &window->pen_color,
-            DM_COPY
+            window->drawing_mode
         );
     }
 
@@ -124,7 +134,7 @@ static int draw_rect( window_t* window, uint8_t* buffer ) {
             window->bitmap,
             &tmp,
             &window->pen_color,
-            DM_COPY
+            window->drawing_mode
         );
     }
 
@@ -138,7 +148,7 @@ static int draw_rect( window_t* window, uint8_t* buffer ) {
             window->bitmap,
             &tmp,
             &window->pen_color,
-            DM_COPY
+            window->drawing_mode
         );
     }
 
@@ -168,7 +178,7 @@ static int fill_rect( window_t* window, uint8_t* buffer ) {
             window->bitmap,
             &tmp,
             &window->pen_color,
-            DM_COPY
+            window->drawing_mode
         );
     }
 
@@ -201,8 +211,50 @@ static int draw_text( window_t* window, uint8_t* buffer ) {
         cmd->length
     );
 
-out:
+ out:
     return ( sizeof( r_draw_text_t ) + cmd->length );
+}
+
+static int draw_bitmap( window_t* window, uint8_t* buffer ) {
+    rect_t tmp;
+    bitmap_t* bitmap;
+    r_draw_bitmap_t* cmd;
+
+    cmd = ( r_draw_bitmap_t* )buffer;
+
+    bitmap = bitmap_get( cmd->bitmap_id );
+
+    if ( bitmap == NULL ) {
+        goto out;
+    }
+
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        point_add(
+            &cmd->position,
+            &window_decorator->lefttop_offset
+        );
+    }
+
+    rect_init(
+        &tmp,
+        0,
+        0,
+        bitmap->width - 1,
+        bitmap->height - 1
+    );
+
+    graphics_driver->blit_bitmap(
+        window->bitmap,
+        &cmd->position,
+        bitmap,
+        &tmp,
+        window->drawing_mode
+    );
+
+    bitmap_put( bitmap );
+
+ out:
+    return sizeof( r_draw_bitmap_t );
 }
 
 static int render_done( window_t* window ) {
@@ -243,6 +295,10 @@ int window_do_render( window_t* window, uint8_t* buffer, int size ) {
                 buffer += set_clip_rect( window, buffer );
                 break;
 
+            case R_SET_DRAWING_MODE :
+                buffer += set_drawing_mode( window, buffer );
+                break;
+
             case R_DRAW_RECT :
                 buffer += draw_rect( window, buffer );
                 break;
@@ -253,6 +309,10 @@ int window_do_render( window_t* window, uint8_t* buffer, int size ) {
 
             case R_DRAW_TEXT :
                 buffer += draw_text( window, buffer );
+                break;
+
+            case R_DRAW_BITMAP :
+                buffer += draw_bitmap( window, buffer );
                 break;
 
             case R_DONE :

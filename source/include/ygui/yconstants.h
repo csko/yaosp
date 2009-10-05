@@ -44,6 +44,12 @@ typedef enum color_space {
     CS_RGB32
 } color_space_t;
 
+typedef enum drawing_mode {
+    DM_COPY,
+    DM_BLEND,
+    DM_INVERT
+} drawing_mode_t;
+
 static inline int colorspace_to_bpp( color_space_t color_space ) {
     switch ( color_space ) {
         case CS_RGB16 : return 2;

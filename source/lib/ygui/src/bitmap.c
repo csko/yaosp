@@ -75,13 +75,6 @@ bitmap_t* bitmap_create( int width, int height, color_space_t color_space ) {
         goto error3;
     }
 
-    dbprintf(
-        "%s(): cloned bitmap region = %d, address = %p\n",
-        __FUNCTION__,
-        bitmap->region,
-        bitmap->data
-    );
-
     bitmap->id = reply.id;
     bitmap->width = width;
     bitmap->height = height;
@@ -171,8 +164,6 @@ bitmap_t* bitmap_load_from_file( const char* file ) {
         data = read( f, buf, IMAGE_BUF_SIZE );
         finalize = ( data < IMAGE_BUF_SIZE );
 
-        dbprintf( "%s(): Writing %d bytes to the image loader\n", __FUNCTION__, data );
-
         loader->add_data( private, buf, data, finalize );
 
         if ( bitmap == NULL ) {
@@ -198,8 +189,6 @@ bitmap_t* bitmap_load_from_file( const char* file ) {
             if ( avail > 0 ) {
                 int size;
 
-                dbprintf( "%s(): Reading %d bytes from the image loader\n", __FUNCTION__, avail );
-
                 size = loader->read_data( private, bitmap_data, avail );
 
                 bitmap_data += size;
@@ -219,14 +208,11 @@ bitmap_t* bitmap_load_from_file( const char* file ) {
         if ( avail > 0 ) {
             int size;
 
-            dbprintf( "%s(): Reading %d bytes from the image loader\n", __FUNCTION__, avail );
-
             size = loader->read_data( private, bitmap_data, avail );
 
             bitmap_data += size;
             bitmap_size -= size;
         } else {
-            dbprintf( "%s(): No more data available ...\n", __FUNCTION__ );
             break;
         }
     }

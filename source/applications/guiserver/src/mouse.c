@@ -109,10 +109,10 @@ mouse_pointer_t* create_mouse_pointer( uint32_t width, uint32_t height, color_sp
     return pointer;
 
 error4:
-    put_bitmap( pointer->hidden_bitmap );
+    bitmap_put( pointer->hidden_bitmap );
 
 error3:
-    put_bitmap( pointer->pointer_bitmap );
+    bitmap_put( pointer->pointer_bitmap );
 
 error2:
     free( pointer );
@@ -125,14 +125,13 @@ static int do_put_mouse_pointer( mouse_pointer_t* pointer ) {
     assert( pointer->ref_count >= 0 );
 
     if ( --pointer->ref_count == 0 ) {
-        put_bitmap( pointer->pointer_bitmap );
-        put_bitmap( pointer->hidden_bitmap );
+        bitmap_put( pointer->pointer_bitmap );
+        bitmap_put( pointer->hidden_bitmap );
         free( pointer );
     }
 
     return 0;
 }
-
 
 int put_mouse_pointer( mouse_pointer_t* pointer ) {
     int error;

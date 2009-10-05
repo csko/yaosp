@@ -21,6 +21,7 @@
 
 #include <ygui/protocol.h>
 #include <ygui/color.h>
+#include <ygui/yconstants.h>
 
 #include <region.h>
 #include <bitmap.h>
@@ -49,6 +50,7 @@ typedef struct window {
     rect_t clip_rect;
     color_t pen_color;
     font_node_t* font;
+    drawing_mode_t drawing_mode;
 } window_t;
 
 enum {

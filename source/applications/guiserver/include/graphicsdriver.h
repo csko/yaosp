@@ -25,15 +25,10 @@
 #include <ygui/rect.h>
 #include <ygui/color.h>
 #include <ygui/point.h>
+#include <ygui/yconstants.h>
 
 #include <bitmap.h>
 #include <fontmanager.h>
-
-typedef enum drawing_mode {
-    DM_COPY,
-    DM_BLEND,
-    DM_INVERT
-} drawing_mode_t;
 
 typedef struct screen_mode {
     uint32_t width;
