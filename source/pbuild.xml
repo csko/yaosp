@@ -21,23 +21,35 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
-    <array name="subdirs">
+    <array name="subdirs_before">
         <item>kernel</item>
         <item>drivers</item>
+    </array>
+
+    <array name="subdirs_after">
         <item>lib</item>
         <item>thirdparty</item>
         <item>applications</item>
     </array>
 
     <target name="all">
-        <for var="i" array="${subdirs}">
+        <for var="i" array="${subdirs_before}">
             <call target="all" directory="${i}"/>
-            <echo></echo>
+        </for>
+
+        <call target="all-libs-only" directory="thirdparty"/>
+
+        <for var="i" array="${subdirs_after}">
+            <call target="all" directory="${i}"/>
         </for>
     </target>
 
     <target name="clean">
-        <for var="i" array="${subdirs}">
+        <for var="i" array="${subdirs_before}">
+            <call target="clean" directory="${i}"/>
+        </for>
+        
+        <for var="i" array="${subdirs_after}">
             <call target="clean" directory="${i}"/>
         </for>
     </target>
