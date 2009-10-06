@@ -36,6 +36,7 @@ enum {
     W_BUTTON,
     W_TEXTFIELD,
     W_SCROLLPANEL,
+    W_IMAGE,
     W_TYPE_COUNT
 };
 

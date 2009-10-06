@@ -92,6 +92,24 @@ bitmap_t* bitmap_create( int width, int height, color_space_t color_space ) {
     return NULL;
 }
 
+int bitmap_get_width( bitmap_t* bitmap ) {
+    return bitmap->width;
+}
+
+int bitmap_get_height( bitmap_t* bitmap ) {
+    return bitmap->height;
+}
+
+int bitmap_inc_ref( bitmap_t* bitmap ) {
+    /* TODO */
+    return 0;
+}
+
+int bitmap_dec_ref( bitmap_t* bitmap ) {
+    /* TODO */
+    return 0;
+}
+
 bitmap_t* bitmap_load_from_file( const char* file ) {
     int f;
     int data;

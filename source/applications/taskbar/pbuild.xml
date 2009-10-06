@@ -24,6 +24,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>taskbar.c</item>
     </array>
 
+    <array name="images">
+        <item>start.png</item>
+    </array>
+
     <target name="clean">
         <delete>objs/*</delete>
         <rmdir>objs</rmdir>
@@ -79,7 +83,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/taskbar" to="../../../build/image/application/taskbar"/>
+        <mkdir>../../../build/image/application/taskbar</mkdir>
+        <mkdir>../../../build/image/application/taskbar/images</mkdir>
+
+        <copy from="objs/taskbar" to="../../../build/image/application/taskbar/taskbar"/>
+
+        <for var="i" array="${images}">
+            <copy from="images/${i}" to="../../../build/image/application/taskbar/images/${i}"/>
+        </for>
     </target>
 
     <target name="all">

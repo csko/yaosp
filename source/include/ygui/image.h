@@ -16,31 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_BITMAP_H_
-#define _YGUI_BITMAP_H_
+#ifndef _YGUI_IMAGE_H_
+#define _YGUI_IMAGE_H_
 
-#include <sys/types.h>
-#include <yaosp/region.h>
+#include <ygui/widget.h>
+#include <ygui/bitmap.h>
 
-#include <ygui/yconstants.h>
+widget_t* create_image( bitmap_t* bitmap );
 
-typedef struct bitmap {
-    int id;
-    int width;
-    int height;
-    color_space_t color_space;
-    region_id region;
-    uint8_t* data;
-} bitmap_t;
-
-bitmap_t* bitmap_create( int width, int height, color_space_t color_space );
-
-int bitmap_get_width( bitmap_t* bitmap );
-int bitmap_get_height( bitmap_t* bitmap );
-
-int bitmap_inc_ref( bitmap_t* bitmap );
-int bitmap_dec_ref( bitmap_t* bitmap );
-
-bitmap_t* bitmap_load_from_file( const char* file );
-
-#endif /* _YGUI_BITMAP_H_ */
+#endif /* _YGUI_IMAGE_H_ */

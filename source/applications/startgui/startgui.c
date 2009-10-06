@@ -48,7 +48,7 @@ int main( int argc, char** argv ) {
     if ( pid == 0 ) {
         char* const argv[] = { "taskbar", NULL };
 
-        execv( "/application/taskbar", argv );
+        execv( "/application/taskbar/taskbar", argv );
         _exit( 0 );
     } else {
         printf( "Taskbar started with pid: #%d\n", pid );

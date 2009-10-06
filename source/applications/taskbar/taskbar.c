@@ -27,6 +27,7 @@
 #include <ygui/textfield.h>
 #include <ygui/button.h>
 #include <ygui/desktop.h>
+#include <ygui/image.h>
 #include <ygui/layout/borderlayout.h>
 
 static widget_t* textfield;
@@ -52,13 +53,6 @@ static int event_button_clicked( widget_t* widget, void* data ) {
     return 0;
 }
 
-#include <ygui/bitmap.h>
-static void test_png_stuff( void ) {
-    return;
-    bitmap_t* bmp = bitmap_load_from_file( "/system/test.png" );
-    dbprintf( "%s(): bmp = %p\n", __FUNCTION__, bmp );
-}
-
 int main( int argc, char** argv ) {
     int error;
     window_t* win;
@@ -69,10 +63,6 @@ int main( int argc, char** argv ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
         return error;
     }
-
-    // ---
-    test_png_stuff();
-    // ---
 
     point_t point = { .x = 0, .y = 0 };
     point_t size;
@@ -93,14 +83,24 @@ int main( int argc, char** argv ) {
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
-    /* Create a test label */
+    widget_t* image = create_image( bitmap_load_from_file( "/application/taskbar/images/start.png" ) );
+    widget_add( container, image, BRD_LINE_START );
+    widget_dec_ref( image );
+
+    widget_t* panel = create_panel();
+    layout = create_border_layout();
+    panel_set_layout( panel, layout );
+    layout_dec_ref( layout );
+
+    widget_add( container, panel, BRD_CENTER );
+    widget_dec_ref( panel );
 
     widget_t* button = create_button( "Press me!" );
-    widget_add( container, button, BRD_PAGE_END );
+    widget_add( panel, button, BRD_PAGE_END );
     widget_dec_ref( button );
 
     textfield = create_textfield();
-    widget_add( container, textfield, BRD_CENTER );
+    widget_add( panel, textfield, BRD_CENTER );
     widget_dec_ref( textfield );
 
     widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
