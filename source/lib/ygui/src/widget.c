@@ -207,7 +207,6 @@ int widget_paint( widget_t* widget, gc_t* gc ) {
     int i;
     int size;
     rect_t res_area;
-    widget_t* child;
 
     /* Calculate the restricted area of the current widget */
 
@@ -264,7 +263,11 @@ int widget_paint( widget_t* widget, gc_t* gc ) {
     size = array_get_size( &widget->children );
 
     for ( i = 0; i < size; i++ ) {
-        child = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
+        widget_t* child;
+        widget_wrapper_t* wrapper;
+
+        wrapper = array_get_item( &widget->children, i );
+        child = wrapper->widget;
 
         gc_push_translate_checkpoint( gc );
         gc_translate( gc, &child->position );
@@ -345,6 +348,8 @@ int widget_mouse_moved( widget_t* widget, point_t* position ) {
 }
 
 int widget_mouse_pressed( widget_t* widget, point_t* position, int mouse_button ) {
+    widget_signal_event_handler( widget, widget->event_ids[ E_MOUSE_DOWN ] );
+
     if ( widget->ops->mouse_pressed == NULL ) {
         return 0;
     }
@@ -461,7 +466,8 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
     /* Add widget related events */
 
     event_type_t widget_events[] = {
-        { "preferred-size-changed", &widget->event_ids[ E_PREF_SIZE_CHANGED ] }
+        { "preferred-size-changed", &widget->event_ids[ E_PREF_SIZE_CHANGED ] },
+        { "mouse-down", &widget->event_ids[ E_MOUSE_DOWN ] }
     };
 
     error = widget_add_events( widget, widget_events, widget->event_ids, E_WIDGET_COUNT );

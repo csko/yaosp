@@ -28,6 +28,8 @@
 #include <ygui/button.h>
 #include <ygui/desktop.h>
 #include <ygui/image.h>
+#include <ygui/menu.h>
+#include <ygui/menuitem.h>
 #include <ygui/layout/borderlayout.h>
 
 static widget_t* textfield;
@@ -49,6 +51,22 @@ static int event_button_clicked( widget_t* widget, void* data ) {
     }
 
     textfield_set_text( textfield, NULL );
+
+    return 0;
+}
+
+static int event_open_taskbar( widget_t* widget, void* data ) {
+    menu_t* menu = create_menu();
+    widget_t* item = create_menuitem_with_label( "Hello" );
+    menu_add_item( menu, item );
+    item = create_menuitem_with_label_and_image(
+        "Terminal",
+        bitmap_load_from_file( "/application/taskbar/images/terminal.png" )
+    );
+    menu_add_item( menu, item );
+    item = create_menuitem_with_label( ":)" );
+    menu_add_item( menu, item );
+    menu_popup_at_xy( menu, 0, 40 );
 
     return 0;
 }
@@ -87,6 +105,8 @@ int main( int argc, char** argv ) {
     widget_add( container, image, BRD_LINE_START );
     widget_dec_ref( image );
 
+    widget_connect_event_handler( image, "mouse-down", event_open_taskbar, NULL );
+
     widget_t* panel = create_panel();
     layout = create_border_layout();
     panel_set_layout( panel, layout );
@@ -107,7 +127,7 @@ int main( int argc, char** argv ) {
 
     /* Show the window */
 
-    show_window( win );
+    window_show( win );
 
     run_application();
 

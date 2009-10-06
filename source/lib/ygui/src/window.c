@@ -119,6 +119,18 @@ static widget_t* window_find_widget_at( window_t* window, point_t* position ) {
     return window_find_widget_at_helper( window->container, position, &lefttop, &visible_rect );
 }
 
+static void window_signal_event_handler( window_t* window, int event ) {
+    window_event_data_t* event_data;
+
+    assert( ( event >= 0 ) && ( event < WE_COUNT ) );
+
+    event_data = &window->event_handlers[ event ];
+
+    if ( event_data->callback != NULL ) {
+        event_data->callback( window, event_data->data );
+    }
+}
+
 static void* window_thread( void* arg ) {
     int error;
     void* buffer;
@@ -147,7 +159,7 @@ static void* window_thread( void* arg ) {
         }
 
         switch ( code ) {
-            case MSG_DO_SHOW_WINDOW :
+            case MSG_WINDOW_DO_SHOW :
             case MSG_WIDGET_INVALIDATED : {
                 int error;
                 rect_t res_area;
@@ -191,12 +203,90 @@ static void* window_thread( void* arg ) {
 
                 /* Show the window (if needed) */
 
-                if ( code == MSG_DO_SHOW_WINDOW ) {
-                    send_ipc_message( window->server_port, MSG_SHOW_WINDOW, NULL, 0 );
+                if ( code == MSG_WINDOW_DO_SHOW ) {
+                    send_ipc_message( window->server_port, MSG_WINDOW_SHOW, NULL, 0 );
                 }
 
                 break;
             }
+
+            case MSG_WINDOW_DO_RESIZE : {
+                int error;
+                point_t position = { .x = 0, .y = 0 };
+                msg_win_resized_t reply;
+
+                error = send_ipc_message(
+                    window->server_port,
+                    MSG_WINDOW_DO_RESIZE,
+                    buffer,
+                    sizeof( msg_win_do_resize_t )
+                );
+
+                if ( error < 0 ) {
+                    dbprintf( "window_thread(): Failed to send resize request!\n" );
+                    break;
+                }
+
+                error = recv_ipc_message(
+                    window->reply_port,
+                    NULL,
+                    &reply,
+                    sizeof( msg_win_resized_t ),
+                    INFINITE_TIMEOUT
+                );
+
+                if ( error < 0 ) {
+                    dbprintf( "window_thread(): Failed to get resize reply!\n" );
+                    break;
+                }
+
+                widget_set_position_and_size(
+                    window->container,
+                    &position,
+                    &reply.size
+                );
+
+                break;
+            }
+
+            case MSG_WINDOW_DO_MOVE : {
+                int error;
+                msg_win_moved_t reply;
+
+                error = send_ipc_message(
+                    window->server_port,
+                    MSG_WINDOW_DO_MOVE,
+                    buffer,
+                    sizeof( msg_win_do_move_t )
+                );
+
+                if ( error < 0 ) {
+                    dbprintf( "window_thread(): Failed to send move request!\n" );
+                    break;
+                }
+
+                error = recv_ipc_message(
+                    window->reply_port,
+                    NULL,
+                    &reply,
+                    sizeof( msg_win_moved_t ),
+                    INFINITE_TIMEOUT
+                );
+
+                if ( error < 0 ) {
+                    dbprintf( "window_thread(): Failed to get resize reply!\n" );
+                }
+
+                break;
+            }
+
+            case MSG_WINDOW_ACTIVATED :
+                window_signal_event_handler( window, WE_ACTIVATED );
+                break;
+
+            case MSG_WINDOW_DEACTIVATED :
+                window_signal_event_handler( window, WE_DEACTIVATED );
+                break;
 
             case MSG_KEY_PRESSED : {
                 msg_key_pressed_t* cmd;
@@ -345,6 +435,23 @@ static void* window_thread( void* arg ) {
     return NULL;
 }
 
+int window_set_event_handler( window_t* window, int event, window_event_callback_t* callback, void* data ) {
+    window_event_data_t* event_data;
+
+    if ( ( window == NULL ) ||
+         ( event < 0 ) ||
+         ( event >= WE_COUNT ) ) {
+        return -EINVAL;
+    }
+
+    event_data = &window->event_handlers[ event ];
+
+    event_data->callback = callback;
+    event_data->data = data;
+
+    return 0;
+}
+
 int window_insert_callback( window_t* window, window_callback_t* callback, void* data ) {
     if ( gettid() == window->thread.thread_id ) {
         callback( data );
@@ -369,9 +476,7 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     /* Do some sanity checking */
 
-    if ( ( title == NULL ) ||
-         ( position == NULL ) ||
-         ( size == NULL ) ) {
+    if ( title == NULL ) {
         goto error1;
     }
 
@@ -407,13 +512,15 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     widget_set_window( window->container, window );
 
-    point_t container_position = { .x = 0, .y = 0 };
+    if ( size != NULL ) {
+        point_t container_position = { .x = 0, .y = 0 };
 
-    widget_set_position_and_size(
-        window->container,
-        &container_position,
-        size
-    );
+        widget_set_position_and_size(
+            window->container,
+            &container_position,
+            size
+        );
+    }
 
     window->render_buffer = ( uint8_t* )malloc( DEFAULT_RENDER_BUFFER_SIZE );
 
@@ -442,8 +549,19 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     request->reply_port = window->reply_port;
     request->client_port = window->client_port;
-    point_copy( &request->position, position );
-    point_copy( &request->size, size );
+
+    if ( position == NULL ) {
+        point_init( &request->position, 0, 0 );
+    } else {
+        point_copy( &request->position, position );
+    }
+
+    if ( size == NULL ) {
+        point_init( &request->size, 0, 0 );
+    } else {
+        point_copy( &request->size, size );
+    }
+
     memcpy( ( void* )( request + 1 ), title, title_size + 1 );
     request->flags = flags;
 
@@ -502,14 +620,24 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     return NULL;
 }
 
-int show_window( window_t* window ) {
+int window_resize( window_t* window, point_t* size ) {
     int error;
+    msg_win_do_resize_t request;
 
-    if ( window == NULL ) {
+    if ( ( window == NULL ) ||
+         ( size == NULL ) ) {
         return -EINVAL;
     }
 
-    error = send_ipc_message( window->client_port, MSG_DO_SHOW_WINDOW, NULL, 0 );
+    request.reply_port = window->reply_port;
+    point_copy( &request.size, size );
+
+    error = send_ipc_message(
+        window->client_port,
+        MSG_WINDOW_DO_RESIZE,
+        ( void* )&request,
+        sizeof( msg_win_do_resize_t )
+    );
 
     if ( error < 0 ) {
         return error;
@@ -518,14 +646,56 @@ int show_window( window_t* window ) {
     return 0;
 }
 
-int hide_window( window_t* window ) {
+int window_move( window_t* window, point_t* position ) {
+    int error;
+    msg_win_do_move_t request;
+
+    if ( ( window == NULL ) ||
+         ( position == NULL ) ) {
+        return -EINVAL;
+    }
+
+    request.reply_port = window->reply_port;
+    point_copy( &request.position, position );
+
+    error = send_ipc_message(
+        window->client_port,
+        MSG_WINDOW_DO_MOVE,
+        ( void* )&request,
+        sizeof( msg_win_do_move_t )
+    );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+int window_show( window_t* window ) {
     int error;
 
     if ( window == NULL ) {
         return -EINVAL;
     }
 
-    error = send_ipc_message( window->client_port, MSG_DO_HIDE_WINDOW, NULL, 0 );
+    error = send_ipc_message( window->client_port, MSG_WINDOW_DO_SHOW, NULL, 0 );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+int window_hide( window_t* window ) {
+    int error;
+
+    if ( window == NULL ) {
+        return -EINVAL;
+    }
+
+    error = send_ipc_message( window->client_port, MSG_WINDOW_DO_HIDE, NULL, 0 );
 
     if ( error < 0 ) {
         return error;

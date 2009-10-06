@@ -37,6 +37,7 @@ enum {
     W_TEXTFIELD,
     W_SCROLLPANEL,
     W_IMAGE,
+    W_MENUITEM,
     W_TYPE_COUNT
 };
 
@@ -44,6 +45,7 @@ enum {
 
 enum {
     E_PREF_SIZE_CHANGED,
+    E_MOUSE_DOWN,
     E_WIDGET_COUNT
 };
 

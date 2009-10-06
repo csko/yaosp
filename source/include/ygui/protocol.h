@@ -34,10 +34,16 @@
 enum {
     MSG_CREATE_APPLICATION = 1,
     MSG_CREATE_WINDOW,
-    MSG_SHOW_WINDOW,
-    MSG_DO_SHOW_WINDOW,
-    MSG_HIDE_WINDOW,
-    MSG_DO_HIDE_WINDOW,
+    MSG_WINDOW_SHOW,
+    MSG_WINDOW_DO_SHOW,
+    MSG_WINDOW_HIDE,
+    MSG_WINDOW_DO_HIDE,
+    MSG_WINDOW_DO_RESIZE,
+    MSG_WINDOW_RESIZED,
+    MSG_WINDOW_DO_MOVE,
+    MSG_WINDOW_MOVED,
+    MSG_WINDOW_ACTIVATED,
+    MSG_WINDOW_DEACTIVATED,
     MSG_RENDER_COMMANDS,
     MSG_CREATE_FONT,
     MSG_GET_STRING_WIDTH,
@@ -165,5 +171,27 @@ typedef struct msg_create_bmp_reply {
     int id;
     region_id bitmap_region;
 } msg_create_bmp_reply_t;
+
+/* MSG_WINDOW_DO_RESIZE */
+
+typedef struct msg_win_do_resize {
+    ipc_port_id reply_port;
+    point_t size;
+} msg_win_do_resize_t;
+
+typedef struct msg_win_resized {
+    point_t size;
+} msg_win_resized_t;
+
+/* MSG_WINDOW_DO_MOVE */
+
+typedef struct msg_win_do_move {
+    ipc_port_id reply_port;
+    point_t position;
+} msg_win_do_move_t;
+
+typedef struct msg_win_moved {
+    point_t position;
+} msg_win_moved_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

@@ -259,7 +259,13 @@ int wm_register_window( window_t* window ) {
 
     /* Update the active window */
 
+    if ( active_window != NULL ) {
+        window_deactivated( active_window );
+    }
+
     active_window = window;
+
+    window_activated( window );
 
     pthread_mutex_unlock( &wm_lock );
 
@@ -269,6 +275,37 @@ error1:
     pthread_mutex_unlock( &wm_lock );
 
     return error;
+}
+
+int wm_unregister_window( window_t* window ) {
+    int i;
+    int size;
+    int index;
+    clip_rect_t* clip_rect;
+
+    pthread_mutex_lock( &wm_lock );
+
+    /* Remove the window from the stack */
+
+    index = array_index_of( &window_stack, window );
+    array_remove_item_from( &window_stack, index );
+    size = array_get_size( &window_stack );
+
+    /* Generate new visible regions */
+
+    for ( i = index; i < size; i++ ) {
+        generate_visible_regions_by_index( i );
+    }
+
+    /* Hide regions from the unregistered window */
+
+    for ( clip_rect = window->visible_regions.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
+        /* TODO: hide regions ... */
+    }
+
+    pthread_mutex_unlock( &wm_lock );
+
+    return 0;
 }
 
 int wm_bring_to_front( window_t* window ) {
@@ -314,7 +351,6 @@ int wm_update_window_region( window_t* window, rect_t* region ) {
         rect_and_n( &visible_rect, region, &clip_rect->rect );
 
         if ( !rect_is_valid( &visible_rect ) ) {
-            dbprintf( "%s(): skipping at %d\n", __FUNCTION__, __LINE__ );
             continue;
         }
 
@@ -456,6 +492,46 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
     return 0;
 }
 
+int wm_window_resized( window_t* window ) {
+    int i;
+    int size;
+    int index;
+
+    index = array_index_of( &window_stack, window );
+
+    if ( index == -1 ) {
+        return 0;
+    }
+
+    size = array_get_size( &window_stack );
+
+    for ( i = index; i < size; i++ ) {
+        generate_visible_regions_by_index( i );
+    }
+
+    return 0;
+}
+
+int wm_window_moved( window_t* window ) {
+    int i;
+    int size;
+    int index;
+
+    index = array_index_of( &window_stack, window );
+
+    if ( index == -1 ) {
+        return 0;
+    }
+
+    size = array_get_size( &window_stack );
+
+    for ( i = index; i < size; i++ ) {
+        generate_visible_regions_by_index( i );
+    }
+
+    return 0;
+}
+
 int wm_key_pressed( int key ) {
     pthread_mutex_lock( &wm_lock );
 
@@ -538,7 +614,13 @@ int wm_mouse_pressed( int button ) {
     if ( mouse_window != NULL ) {
         /* The window under the mouse is the new active window */
 
+        if ( active_window != NULL ) {
+            window_deactivated( active_window );
+        }
+
         active_window = mouse_window;
+
+        window_activated( mouse_window );
 
         /* Bring the window to the front */
 

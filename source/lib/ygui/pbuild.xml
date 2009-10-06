@@ -34,6 +34,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/gc.c</item>
         <item>src/bitmap.c</item>
         <item>src/image.c</item>
+        <item>src/menu.c</item>
+        <item>src/menuitem.c</item>
         <item>src/layout/layout.c</item>
         <item>src/layout/borderlayout.c</item>
         <item>src/render/render.c</item>

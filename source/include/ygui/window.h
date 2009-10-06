@@ -28,6 +28,21 @@
 #include <ygui/widget.h>
 #include <ygui/gc.h>
 
+enum {
+    WE_ACTIVATED = 0,
+    WE_DEACTIVATED,
+    WE_COUNT
+};
+
+struct window;
+
+typedef int window_event_callback_t( struct window* window, void* data );
+
+typedef struct window_event_data {
+    window_event_callback_t* callback;
+    void* data;
+} window_event_data_t;
+
 typedef struct window {
     /* Window IPC ports */
 
@@ -42,6 +57,10 @@ typedef struct window {
     widget_t* focused_widget;
     widget_t* mouse_widget;
     widget_t* mouse_down_widget;
+
+    /* Event handling */
+
+    window_event_data_t event_handlers[ WE_COUNT ];
 
     /* Rendering informations */
 
@@ -66,11 +85,16 @@ widget_t* window_get_container( window_t* window );
 
 /* Window callback handling */
 
+int window_set_event_handler( window_t* window, int event, window_event_callback_t* callback, void* data );
+
 int window_insert_callback( window_t* window, window_callback_t* callback, void* data );
 
 window_t* create_window( const char* title, point_t* position, point_t* size, int flags );
 
-int show_window( window_t* window );
-int hide_window( window_t* window );
+int window_resize( window_t* window, point_t* size );
+int window_move( window_t* window, point_t* position );
+
+int window_show( window_t* window );
+int window_hide( window_t* window );
 
 #endif /* _YGUI_WINDOW_H_ */

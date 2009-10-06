@@ -32,6 +32,100 @@
 
 extern window_decorator_t* window_decorator;
 
+static void window_do_resize( window_t* window, msg_win_do_resize_t* request ) {
+    int width;
+    int height;
+    msg_win_resized_t reply;
+
+    if ( ( request->size.x == 0 ) ||
+         ( request->size.y == 0 ) ) {
+        dbprintf(
+            "window_do_resize(): Invalid resize request! (x=%d, y=%d)\n",
+            request->size.x,
+            request->size.y
+        );
+    }
+
+    /* Lock the window manager if the window is visible */
+
+    if ( window->is_visible ) {
+        pthread_mutex_lock( &wm_lock );
+    }
+
+    /* Put the current bitmap of the window */
+
+    if ( window->bitmap != NULL ) {
+        bitmap_put( window->bitmap );
+    }
+
+    if ( window->flags & WINDOW_NO_BORDER ) {
+        rect_init(
+            &window->screen_rect,
+            window->screen_rect.left,
+            window->screen_rect.top,
+            window->screen_rect.left + request->size.x - 1,
+            window->screen_rect.top + request->size.y - 1
+        );
+
+        rect_copy( &window->client_rect, &window->screen_rect );
+    } else {
+        dbprintf( "window_do_resize(): Resizing a window with border not yet implemented ...\n" );
+    }
+
+    rect_bounds( &window->screen_rect, &width, &height );
+
+    window->bitmap = create_bitmap( width, height, CS_RGB32 );
+
+    if ( window->bitmap == NULL ) {
+        dbprintf( "window_do_resize(): No memory for new window bitmap!\n" );
+        /* TODO: handle the error properly */
+    }
+
+    if ( window->is_visible ) {
+        wm_window_resized( window );
+
+        pthread_mutex_unlock( &wm_lock );
+    }
+
+    point_copy( &reply.size, &request->size );
+
+    send_ipc_message( request->reply_port, MSG_WINDOW_RESIZED, &reply, sizeof( msg_win_resized_t ) );
+}
+
+static void window_do_move( window_t* window, msg_win_do_move_t* request ) {
+    msg_win_moved_t reply;
+
+    /* Lock the window manager if the window is visible */
+
+    if ( window->is_visible ) {
+        pthread_mutex_lock( &wm_lock );
+    }
+
+    if ( window->flags & WINDOW_NO_BORDER ) {
+        rect_init(
+            &window->screen_rect,
+            request->position.x,
+            request->position.y,
+            request->position.x + window->bitmap->width - 1,
+            request->position.y + window->bitmap->height - 1
+        );
+
+        rect_copy( &window->client_rect, &window->screen_rect );
+    } else {
+        dbprintf( "window_do_move(): Moving a window with border not yet implemented ...\n" );
+    }
+
+    if ( window->is_visible ) {
+        wm_window_moved( window );
+
+        pthread_mutex_unlock( &wm_lock );
+    }
+
+    point_copy( &reply.position, &request->position );
+
+    send_ipc_message( request->reply_port, MSG_WINDOW_MOVED, &reply, sizeof( msg_win_moved_t ) );
+}
+
 static void* window_thread( void* arg ) {
     int error;
     uint32_t code;
@@ -59,9 +153,22 @@ static void* window_thread( void* arg ) {
                 window_do_render( window, ( uint8_t* )buffer, error );
                 break;
 
-            case MSG_SHOW_WINDOW :
+            case MSG_WINDOW_SHOW :
                 wm_register_window( window );
                 window->is_visible = 1;
+                break;
+
+            case MSG_WINDOW_HIDE :
+                wm_unregister_window( window );
+                window->is_visible = 0;
+                break;
+
+            case MSG_WINDOW_DO_RESIZE :
+                window_do_resize( window, ( msg_win_do_resize_t* )buffer );
+                break;
+
+            case MSG_WINDOW_DO_MOVE :
+                window_do_move( window, ( msg_win_do_move_t* )buffer );
                 break;
 
             default :
@@ -147,12 +254,16 @@ int handle_create_window( msg_create_win_t* request ) {
         );
     }
 
-    rect_bounds( &window->screen_rect, &width, &height );
+    if ( rect_is_valid( &window->screen_rect ) ) {
+        rect_bounds( &window->screen_rect, &width, &height );
 
-    window->bitmap = create_bitmap( width, height, CS_RGB32 );
+        window->bitmap = create_bitmap( width, height, CS_RGB32 );
 
-    if ( window->bitmap == NULL ) {
-        goto error5;
+        if ( window->bitmap == NULL ) {
+            goto error5;
+        }
+    } else {
+        window->bitmap = NULL;
     }
 
     if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
@@ -186,7 +297,9 @@ error7:
     }
 
 error6:
-    bitmap_put( window->bitmap );
+    if ( window->bitmap != NULL ) {
+        bitmap_put( window->bitmap );
+    }
 
 error5:
     destroy_region( &window->visible_regions );
@@ -205,6 +318,18 @@ error1:
 
 out:
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_win_reply_t ) );
+
+    return 0;
+}
+
+int window_activated( window_t* window ) {
+    send_ipc_message( window->client_port, MSG_WINDOW_ACTIVATED, NULL, 0 );
+
+    return 0;
+}
+
+int window_deactivated( window_t* window ) {
+    send_ipc_message( window->client_port, MSG_WINDOW_DEACTIVATED, NULL, 0 );
 
     return 0;
 }

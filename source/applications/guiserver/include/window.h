@@ -61,6 +61,8 @@ int window_do_render( window_t* window, uint8_t* buffer, int size );
 
 int handle_create_window( msg_create_win_t* request );
 
+int window_activated( window_t* window );
+int window_deactivated( window_t* window );
 int window_key_pressed( window_t* window, int key );
 int window_key_released( window_t* window, int key );
 int window_mouse_entered( window_t* window, point_t* mouse_position );

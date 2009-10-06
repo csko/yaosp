@@ -282,6 +282,12 @@ int window_do_render( window_t* window, uint8_t* buffer, int size ) {
     r_buf_header_t* header;
 
     header = ( r_buf_header_t* )buffer;
+
+    if ( window->bitmap == NULL ) {
+        dbprintf( "window_do_render(): Tried to render to a window without bitmap! Skipping ...\n" );
+        goto out;
+    }
+
     buffer_end = buffer + size;
 
     size -= sizeof( r_buf_header_t );
@@ -335,6 +341,7 @@ int window_do_render( window_t* window, uint8_t* buffer, int size ) {
         }
     }
 
+ out:
     /* Tell the window that rendering is done */
 
     send_ipc_message( header->reply_port, 0, NULL, 0 );

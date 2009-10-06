@@ -242,7 +242,7 @@ int main( int argc, char** argv ) {
 
     /* Show the window */
 
-    show_window( window );
+    window_show( window );
 
     run_application();
 

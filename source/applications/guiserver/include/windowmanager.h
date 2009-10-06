@@ -26,10 +26,15 @@
 extern pthread_mutex_t wm_lock;
 
 int wm_register_window( window_t* window );
+int wm_unregister_window( window_t* window );
+
 int wm_bring_to_front( window_t* window );
 
 int wm_update_window_region( window_t* window, rect_t* region );
 int wm_hide_window_region( window_t* window, rect_t* region );
+
+int wm_window_resized( window_t* window );
+int wm_window_moved( window_t* window );
 
 int wm_key_pressed( int key );
 int wm_key_released( int key );
