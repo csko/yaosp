@@ -281,9 +281,12 @@ int wm_unregister_window( window_t* window ) {
     int i;
     int size;
     int index;
-    clip_rect_t* clip_rect;
 
     pthread_mutex_lock( &wm_lock );
+
+    /* Hide regions from the unregistered window */
+
+    wm_hide_window_region( window, &window->screen_rect );
 
     /* Remove the window from the stack */
 
@@ -297,10 +300,10 @@ int wm_unregister_window( window_t* window ) {
         generate_visible_regions_by_index( i );
     }
 
-    /* Hide regions from the unregistered window */
+    /* Update active window */
 
-    for ( clip_rect = window->visible_regions.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
-        /* TODO: hide regions ... */
+    if ( active_window == window ) {
+        active_window = ( window_t* )array_get_item( &window_stack, 0 );
     }
 
     pthread_mutex_unlock( &wm_lock );

@@ -38,7 +38,8 @@ widget_t* window_get_container( window_t* window ) {
     return window->container;
 }
 
-static widget_t* window_find_widget_at_helper( widget_t* widget, point_t* position, point_t* lefttop, rect_t* visible_rect ) {
+static widget_t* window_find_widget_at_helper( widget_t* widget, point_t* position,
+                                               point_t* lefttop, rect_t* visible_rect ) {
     int i;
     int count;
     rect_t widget_rect;
@@ -56,7 +57,7 @@ static widget_t* window_find_widget_at_helper( widget_t* widget, point_t* positi
     rect_and( &widget_rect, visible_rect );
 
     if ( ( !rect_is_valid( &widget_rect ) ) ||
-        ( !rect_has_point( &widget_rect, position ) ) ) {
+         ( !rect_has_point( &widget_rect, position ) ) ) {
         return NULL;
     }
 
@@ -209,6 +210,10 @@ static void* window_thread( void* arg ) {
 
                 break;
             }
+
+            case MSG_WINDOW_DO_HIDE :
+                send_ipc_message( window->server_port, MSG_WINDOW_HIDE, NULL, 0 );
+                break;
 
             case MSG_WINDOW_DO_RESIZE : {
                 int error;
