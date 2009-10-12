@@ -56,7 +56,7 @@ static int input_device_read( void* node, void* cookie, void* buffer, off_t posi
 
     device = ( input_device_t* )node;
 
-    mutex_lock( input_stack_lock );
+    mutex_lock( input_stack_lock, LOCK_IGNORE_SIGNAL );
 
     while ( device->first_event == NULL ) {
         condition_wait( device->sync, input_stack_lock );
@@ -139,7 +139,7 @@ int insert_input_device( input_device_t* device ) {
     void* dummy;
     char node[ 64 ];
 
-    error = mutex_lock( input_stack_lock );
+    error = mutex_lock( input_stack_lock, LOCK_IGNORE_SIGNAL );
 
     if ( __unlikely( error < 0 ) ) {
         return error;
@@ -183,7 +183,7 @@ int insert_input_event( input_event_t* event ) {
     lock_id active_sync = -1;
     input_event_wrapper_t* wrapper;
 
-    mutex_lock( input_stack_lock );
+    mutex_lock( input_stack_lock, LOCK_IGNORE_SIGNAL );
 
     if ( active_input_receiver != NULL ) {
         switch ( event->event ) {

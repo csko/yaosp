@@ -161,7 +161,7 @@ static int pty_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
         return 0;
     }
 
-    mutex_lock( pty_lock );
+    mutex_lock( pty_lock, LOCK_IGNORE_SIGNAL );
 
     node = ( pty_node_t* )hashtable_get( &pty_node_table, ( const void* )&inode_num );
 
@@ -205,7 +205,7 @@ static int pty_lookup_inode( void* fs_cookie, void* parent, const char* name, in
     data.length = name_length;
     data.inode_number = inode_num;
 
-    mutex_lock( pty_lock );
+    mutex_lock( pty_lock, LOCK_IGNORE_SIGNAL );
 
     error = hashtable_iterate( &pty_node_table, pty_lookup_helper, ( void* )&data );
 
@@ -276,7 +276,7 @@ static int pty_read( void* fs_cookie, void* _node, void* file_cookie, void* buff
     data = ( uint8_t* )buffer;
     node = ( pty_node_t* )_node;
 
-    mutex_lock( node->lock );
+    mutex_lock( node->lock, LOCK_IGNORE_SIGNAL );
 
     while ( node->size == 0 ) {
         condition_wait( node->read_queue, node->lock );
@@ -359,7 +359,7 @@ static int pty_do_write_master( pty_node_t* master, const void* buffer, size_t s
 
     buf = ( char* )buffer;
 
-    mutex_lock( master->lock );
+    mutex_lock( master->lock, LOCK_IGNORE_SIGNAL );
 
     term_info = master->term_info;
 
@@ -446,7 +446,7 @@ static int pty_do_write_slave( pty_node_t* slave, const void* buffer, size_t siz
 
     data = ( char* )buffer;
 
-    mutex_lock( slave->lock );
+    mutex_lock( slave->lock, LOCK_IGNORE_SIGNAL );
 
     term_info = slave->term_info;
 
@@ -533,7 +533,7 @@ static int pty_ioctl( void* fs_cookie, void* _node, void* file_cookie, int comma
 
     node = ( pty_node_t* )_node;
 
-    mutex_lock( node->lock );
+    mutex_lock( node->lock, LOCK_IGNORE_SIGNAL );
 
     switch ( command ) {
         case TCGETA :
@@ -620,7 +620,7 @@ static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, s
     data.required = cookie->current;
     data.entry = entry;
 
-    mutex_lock( pty_lock );
+    mutex_lock( pty_lock, LOCK_IGNORE_SIGNAL );
 
     error = hashtable_iterate( &pty_node_table, pty_read_dir_helper, ( void* )&data );
 
@@ -758,7 +758,7 @@ static int pty_create(
 
     /* Insert the nodes */
 
-    mutex_lock( pty_lock );
+    mutex_lock( pty_lock, LOCK_IGNORE_SIGNAL );
 
     pty_insert_node( master );
     pty_insert_node( slave );
@@ -783,7 +783,7 @@ static int pty_add_select_request( void* fs_cookie, void* _node, void* file_cook
 
     node = ( pty_node_t* )_node;
 
-    mutex_lock( node->lock );
+    mutex_lock( node->lock, LOCK_IGNORE_SIGNAL );
 
     switch ( ( int )request->type ) {
         case SELECT_READ :
@@ -819,7 +819,7 @@ static int pty_remove_select_request( void* fs_cookie, void* _node, void* file_c
 
     node = ( pty_node_t* )_node;
 
-    mutex_lock( node->lock );
+    mutex_lock( node->lock, LOCK_IGNORE_SIGNAL );
 
     switch ( ( int )request->type ) {
         case SELECT_READ : {

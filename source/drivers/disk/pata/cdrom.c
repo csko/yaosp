@@ -96,7 +96,7 @@ static int pata_cdrom_open( void* node, uint32_t flags, void** cookie ) {
 
     port = ( pata_port_t* )node;
 
-    mutex_lock( port->mutex );
+    mutex_lock( port->mutex, LOCK_IGNORE_SIGNAL );
 
     if ( port->open ) {
         mutex_unlock( port->mutex );
@@ -111,7 +111,7 @@ static int pata_cdrom_open( void* node, uint32_t flags, void** cookie ) {
     error = pata_cdrom_get_capacity( port, &port->capacity );
 
     if ( error < 0 ) {
-        mutex_lock( port->mutex );
+        mutex_lock( port->mutex, LOCK_IGNORE_SIGNAL );
 
         port->open = false;
 
@@ -128,7 +128,7 @@ static int pata_cdrom_close( void* node, void* cookie ) {
 
     port = ( pata_port_t* )node;
 
-    mutex_lock( port->mutex );
+    mutex_lock( port->mutex, LOCK_IGNORE_SIGNAL );
 
     port->open = false;
     port->capacity = 0;
@@ -177,7 +177,7 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
     data = ( uint8_t* )buffer;
     saved_size = size;
 
-    mutex_lock( port->mutex );
+    mutex_lock( port->mutex, LOCK_IGNORE_SIGNAL );
 
     while ( size > 0 ) {
         size_t to_read = MIN( size, 32768 );

@@ -393,7 +393,7 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
     int size;
     int error;
     int win_pos;
-    int mouse_hidden;
+    int mouse_damaged;
     point_t lefttop;
     rect_t mouse_rect;
     rect_t visible_rect;
@@ -403,7 +403,7 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
 
     assert( win_pos != -1 );
 
-    mouse_hidden = 0;
+    mouse_damaged = 0;
     mouse_get_rect( &mouse_rect );
 
     size = array_get_size( &window_stack );
@@ -436,16 +436,12 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
             /* Hide the mouse if it's not already hidden and we're going to
                draw above the mouse cursor */
 
-            if ( !mouse_hidden ) {
+            if ( !mouse_damaged ) {
                 rect_t hidden_mouse_rect;
 
                 rect_and_n( &hidden_mouse_rect, &mouse_rect, &visible_rect );
 
-                if ( rect_is_valid( &hidden_mouse_rect ) ) {
-                    hide_mouse_pointer();
-
-                    mouse_hidden = 1;
-                }
+                mouse_damaged = rect_is_valid( &hidden_mouse_rect );
             }
 
             region_exclude( &window->visible_regions, &visible_rect );
@@ -466,16 +462,12 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
     }
 
     for ( clip_rect = window->visible_regions.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
-        if ( !mouse_hidden ) {
+        if ( !mouse_damaged ) {
             rect_t hidden_mouse_rect;
 
-            rect_and_n( &hidden_mouse_rect, &mouse_rect, &visible_rect );
+            rect_and_n( &hidden_mouse_rect, &mouse_rect, &clip_rect->rect );
 
-            if ( rect_is_valid( &hidden_mouse_rect ) ) {
-                hide_mouse_pointer();
-
-                mouse_hidden = 1;
-            }
+            mouse_damaged = rect_is_valid( &hidden_mouse_rect );
         }
 
         static color_t tmp_color = { 0x11, 0x22, 0x33, 0x00 };
@@ -488,7 +480,10 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
         );
     }
 
-    if ( mouse_hidden ) {
+    if ( mouse_damaged ) {
+        dbprintf( "hiding and showing mouse ...\n" );
+
+        hide_mouse_pointer();
         show_mouse_pointer();
     }
 
@@ -617,13 +612,15 @@ int wm_mouse_pressed( int button ) {
     if ( mouse_window != NULL ) {
         /* The window under the mouse is the new active window */
 
-        if ( active_window != NULL ) {
-            window_deactivated( active_window );
+        if ( active_window != mouse_window ) {
+            if ( active_window != NULL ) {
+                window_deactivated( active_window );
+            }
+
+            active_window = mouse_window;
+
+            window_activated( mouse_window );
         }
-
-        active_window = mouse_window;
-
-        window_activated( mouse_window );
 
         /* Bring the window to the front */
 

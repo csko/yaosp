@@ -888,7 +888,7 @@ static int terminal_read_thread( void* arg ) {
                 size = pread( terminal->master_pty, buffer, TERMINAL_READ_BUFFER_SIZE, 0 );
 
                 if ( __likely( size > 0 ) ) {
-                    mutex_lock( terminal_lock );
+                    mutex_lock( terminal_lock, LOCK_IGNORE_SIGNAL );
                     terminal_parse_data( terminal, buffer, size );
                     mutex_unlock( terminal_lock );
                 }

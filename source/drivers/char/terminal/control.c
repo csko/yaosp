@@ -36,7 +36,7 @@ static int term_ctrl_ioctl( void* node, void* cookie, uint32_t command, void* ar
 
             active = *( ( int* )args );
 
-            mutex_lock( terminal_lock );
+            mutex_lock( terminal_lock, LOCK_IGNORE_SIGNAL );
             terminal_switch_to( active );
             mutex_unlock( terminal_lock );
 

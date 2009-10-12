@@ -232,7 +232,7 @@ static int ramfs_read_inode( void* fs_cookie, ino_t inode_number, void** node ) 
 
     cookie = ( ramfs_cookie_t* )fs_cookie;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     inode = ( ramfs_inode_t* )hashtable_get( &cookie->inode_table, ( const void* )&inode_number );
 
@@ -260,7 +260,7 @@ static int ramfs_write_inode( void* fs_cookie, void* node ) {
     cookie = ( ramfs_cookie_t* )fs_cookie;
     inode = ( ramfs_inode_t* )node;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     ASSERT( inode->is_loaded );
 
@@ -305,7 +305,7 @@ static int ramfs_lookup_inode( void* fs_cookie, void* _parent, const char* name,
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )_parent;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -390,7 +390,7 @@ static int ramfs_read( void* fs_cookie, void* node, void* file_cookie, void* buf
         return 0;
     }
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     if ( ( inode->data == NULL ) ||
          ( pos >= inode->size ) ) {
@@ -432,7 +432,7 @@ static int ramfs_write( void* fs_cookie, void* node, void* _file_cookie, const v
         return 0;
     }
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     if ( file_cookie->open_flags & O_APPEND ) {
         pos = inode->size;
@@ -477,7 +477,7 @@ static int ramfs_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
     cookie = ( ramfs_cookie_t* )fs_cookie;
     inode = ( ramfs_inode_t* )node;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     stat->st_ino = inode->inode_number;
     stat->st_size = inode->size;
@@ -508,7 +508,7 @@ static int ramfs_write_stat( void* fs_cookie, void* node, struct stat* stat, uin
     cookie = ( ramfs_cookie_t* )fs_cookie;
     inode = ( ramfs_inode_t* )node;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     if ( mask & WSTAT_ATIME ) {
         inode->atime = stat->st_atime;
@@ -543,7 +543,7 @@ static int ramfs_read_directory( void* fs_cookie, void* node, void* file_cookie,
 
     ASSERT( parent->is_directory );
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     inode = parent->first_children;
 
@@ -593,7 +593,7 @@ static int ramfs_create( void* fs_cookie, void* node, const char* name, int name
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )node;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     new_inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -633,7 +633,7 @@ static int ramfs_unlink( void* fs_cookie, void* node, const char* name, int name
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )node;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -668,7 +668,7 @@ static int ramfs_mkdir( void* fs_cookie, void* node, const char* name, int name_
         return -EINVAL;
     }
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     new_inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -701,7 +701,7 @@ static int ramfs_rmdir( void* fs_cookie, void* node, const char* name, int name_
     cookie = ( ramfs_cookie_t* )fs_cookie;
     parent = ( ramfs_inode_t* )node;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     inode = ramfs_do_lookup_inode( parent, name, name_length );
 
@@ -738,7 +738,7 @@ static int ramfs_symlink( void* fs_cookie, void* _node, const char* name, int na
 
     cookie = ( ramfs_cookie_t* )fs_cookie;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     /* Check if this name already exists */
 
@@ -800,7 +800,7 @@ static int ramfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t le
 
     cookie = ( ramfs_cookie_t* )fs_cookie;
 
-    mutex_lock( cookie->lock );
+    mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
 
     if ( node->link_path == NULL ) {
         mutex_unlock( cookie->lock );

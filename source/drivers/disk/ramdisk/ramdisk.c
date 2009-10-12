@@ -121,7 +121,7 @@ ramdisk_node_t* create_ramdisk_node( ramdisk_create_info_t* info ) {
 
     node->size = info->size;
 
-    mutex_lock( ramdisk_lock );
+    mutex_lock( ramdisk_lock, LOCK_IGNORE_SIGNAL );
 
     do {
         node->id = ramdisk_id_counter++;

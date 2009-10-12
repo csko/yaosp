@@ -199,7 +199,7 @@ static int pata_disk_read( void* node, void* cookie, void* buffer, off_t positio
     data = ( uint8_t* )buffer;
     saved_size = size;
 
-    mutex_lock( port->mutex );
+    mutex_lock( port->mutex, LOCK_IGNORE_SIGNAL );
 
     while ( size > 0 ) {
         size_t to_read = MIN( size, 32768 );
@@ -249,7 +249,7 @@ static int pata_disk_write( void* node, void* cookie, const void* buffer, off_t 
     data = ( uint8_t* )buffer;
     saved_size = size;
 
-    mutex_lock( port->mutex );
+    mutex_lock( port->mutex, LOCK_IGNORE_SIGNAL );
 
     while ( size > 0 ) {
         size_t to_write = MIN( size, 32768 );

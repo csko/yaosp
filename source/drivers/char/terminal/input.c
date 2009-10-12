@@ -38,7 +38,7 @@ static inline int terminal_send_event( terminal_t* terminal, const char* data, s
         0
     );
 
-    mutex_lock( terminal_lock );
+    mutex_lock( terminal_lock, LOCK_IGNORE_SIGNAL );
 
     if ( error != ( int )size ) {
         return -1;
@@ -52,7 +52,7 @@ static int terminal_handle_event( input_event_t* event ) {
 
     event_handled = false;
 
-    mutex_lock( terminal_lock );
+    mutex_lock( terminal_lock, LOCK_IGNORE_SIGNAL );
 
     switch ( ( int )event->event ) {
         case E_KEY_PRESSED : {
