@@ -48,7 +48,7 @@ int register_bus_driver( const char* name, void* bus ) {
 
     driver->bus = bus;
 
-    error = mutex_lock( bus_table_mutex );
+    error = mutex_lock( bus_table_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( __unlikely( error < 0 ) ) {
         goto error2;
@@ -79,7 +79,7 @@ int unregister_bus_driver( const char* name ) {
     int error;
     bus_driver_t* driver;
 
-    error = mutex_lock( bus_table_mutex );
+    error = mutex_lock( bus_table_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( __unlikely( error < 0 ) ) {
         return error;
@@ -108,7 +108,7 @@ void* get_bus_driver( const char* name ) {
     void* bus;
     bus_driver_t* driver;
 
-    error = mutex_lock( bus_table_mutex );
+    error = mutex_lock( bus_table_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( __unlikely( error < 0 ) ) {
         return NULL;

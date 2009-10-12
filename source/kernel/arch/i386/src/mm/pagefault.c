@@ -224,7 +224,7 @@ int handle_page_fault( registers_t* regs ) {
         invalid_page_fault( NULL, regs, cr2, "unknown" );
     }
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = do_memory_context_get_region_for( thread->process->memory_context, cr2 );
 

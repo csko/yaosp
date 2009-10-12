@@ -248,7 +248,7 @@ region_id create_region(
 
     flags &= ( REGION_READ | REGION_WRITE | REGION_KERNEL | REGION_STACK );
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = do_create_region( name, size, flags, alloc_method, _address, false );
 
@@ -268,7 +268,7 @@ region_id sys_create_region(
 
     flags &= ( REGION_READ | REGION_WRITE );
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = do_create_region( name, size, flags, alloc_method, _address, true );
 
@@ -308,7 +308,7 @@ static int do_delete_region( region_id id, bool allow_kernel_region ) {
 int delete_region( region_id id ) {
     int error;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
     error = do_delete_region( id, true );
     mutex_unlock( region_lock );
 
@@ -318,7 +318,7 @@ int delete_region( region_id id ) {
 int sys_delete_region( region_id id ) {
     int error;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
     error = do_delete_region( id, false );
     mutex_unlock( region_lock );
 
@@ -350,7 +350,7 @@ int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region ) {
 int remap_region( region_id id, ptr_t address ) {
     int error;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     error = do_remap_region( id, address, true );
 
@@ -362,7 +362,7 @@ int remap_region( region_id id, ptr_t address ) {
 int sys_remap_region( region_id id, ptr_t address ) {
     int error;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     error = do_remap_region( id, address, false );
 
@@ -379,7 +379,7 @@ int sys_clone_region( region_id id, void** _address ) {
     memory_region_t* new_region;
     memory_context_t* new_context;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
@@ -456,7 +456,7 @@ int resize_region( region_id id, uint32_t new_size ) {
         return -EINVAL;
     }
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
@@ -521,7 +521,7 @@ int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
 
     ASSERT( atomic_get( &file->ref_count ) >= 2 );
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 
@@ -548,7 +548,7 @@ int get_region_info( region_id id, region_info_t* info ) {
     int error;
     memory_region_t* region;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
 

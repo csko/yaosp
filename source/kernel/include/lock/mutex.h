@@ -22,6 +22,7 @@
 #include <thread.h>
 #include <time.h>
 #include <lock/context.h>
+#include <lock/common.h>
 #include <sched/waitqueue.h>
 
 enum mutex_flags {
@@ -39,9 +40,9 @@ typedef struct mutex {
     waitqueue_t waiters;
 } mutex_t;
 
-int mutex_lock( lock_id mutex );
-int mutex_trylock( lock_id mutex );
-int mutex_timedlock( lock_id mutex, time_t timeout );
+int mutex_lock( lock_id mutex, int flags );
+int mutex_trylock( lock_id mutex, int flags );
+int mutex_timedlock( lock_id mutex, time_t timeout, int flags );
 int mutex_unlock( lock_id mutex );
 
 int mutex_clone( mutex_t* old, mutex_t* new );

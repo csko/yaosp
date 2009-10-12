@@ -22,6 +22,7 @@
 #include <thread.h>
 #include <time.h>
 #include <lock/context.h>
+#include <lock/common.h>
 #include <sched/waitqueue.h>
 
 typedef struct condition {

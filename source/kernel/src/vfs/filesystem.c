@@ -54,7 +54,7 @@ int register_filesystem( const char* name, filesystem_calls_t* calls ) {
 
     fs_desc->calls = calls;
 
-    mutex_lock( filesystem_mutex );
+    mutex_lock( filesystem_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( hashtable_get( &filesystem_table, ( const void* )name ) != NULL ) {
         error = -EEXIST;
@@ -77,7 +77,7 @@ int register_filesystem( const char* name, filesystem_calls_t* calls ) {
 filesystem_descriptor_t* get_filesystem( const char* name ) {
     filesystem_descriptor_t* fs_desc;
 
-    mutex_lock( filesystem_mutex );
+    mutex_lock( filesystem_mutex, LOCK_IGNORE_SIGNAL );
 
     fs_desc = ( filesystem_descriptor_t* )hashtable_get( &filesystem_table, ( const void* )name );
 
@@ -114,7 +114,7 @@ filesystem_descriptor_t* probe_filesystem( const char* device ) {
     data.device = device;
     data.fs_desc = NULL;
 
-    mutex_lock( filesystem_mutex );
+    mutex_lock( filesystem_mutex, LOCK_IGNORE_SIGNAL );
 
     hashtable_iterate( &filesystem_table, probe_fs_iterator, ( void* )&data );
 

@@ -101,7 +101,7 @@ memory_region_t* do_memory_context_get_region_for( memory_context_t* context, pt
 memory_region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address ) {
     memory_region_t* region;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     region = do_memory_context_get_region_for( context, address );
 
@@ -212,7 +212,7 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
         return NULL;
     }
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     arch_clone_memory_context( old_context, new_context );
 
@@ -226,9 +226,9 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
 
         region = ( memory_region_t* )array_get_item( &old_context->regions, i );
 
-        /* Don't clone kernel regions */
+        /* Don't clone kernel regions, and skip remapped region as well for now :) */
 
-        if ( region->flags & REGION_KERNEL ) {
+        if ( region->flags & ( REGION_KERNEL | REGION_REMAPPED ) ) {
             ASSERT( region->file == NULL );
 
             continue;
@@ -291,7 +291,7 @@ int memory_context_delete_regions( memory_context_t* context ) {
     int i;
     int region_count;
 
-    mutex_lock( region_lock );
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     /* Delete all memory regions */
 

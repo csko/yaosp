@@ -60,7 +60,7 @@ int insert_route( route_t* route ) {
     int error;
     route_t* tmp;
 
-    mutex_lock( route_mutex );
+    mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
 
     tmp = ( route_t* )hashtable_get( &route_table, ( const void* )&route->network_addr[ 0 ] );
 
@@ -109,7 +109,7 @@ route_t* find_route( uint8_t* ipv4_address ) {
     data.ipv4_address = ipv4_address;
     data.route = NULL;
 
-    mutex_lock( route_mutex );
+    mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
 
     hashtable_iterate( &route_table, route_iterator, ( void* )&data );
 
@@ -127,7 +127,7 @@ void put_route( route_t* route ) {
 
     do_delete = false;
 
-    mutex_lock( route_mutex );
+    mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( atomic_dec_and_test( &route->ref_count ) ) {
         hashtable_remove( &route_table, ( const void* )&route->network_addr[ 0 ] );

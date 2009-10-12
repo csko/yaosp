@@ -37,7 +37,7 @@ static mount_point_t* socket_mount_point;
 static int socket_read_inode( void* fs_cookie, ino_t inode_number, void** node ) {
     socket_t* socket;
 
-    mutex_lock( socket_mutex );
+    mutex_lock( socket_mutex, LOCK_IGNORE_SIGNAL );
 
     socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&inode_number );
 
@@ -57,7 +57,7 @@ static int socket_write_inode( void* fs_cookie, void* node ) {
 
     socket = ( socket_t* )node;
 
-    mutex_lock( socket_mutex );
+    mutex_lock( socket_mutex, LOCK_IGNORE_SIGNAL );
 
     hashtable_remove( &socket_inode_table, ( const void* )&socket->inode_number );
 
@@ -263,7 +263,7 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
         goto error2;
     }
 
-    mutex_lock( socket_mutex );
+    mutex_lock( socket_mutex, LOCK_IGNORE_SIGNAL );
 
     do {
         socket->inode_number = socket_inode_counter++;
@@ -292,7 +292,7 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
     return error;
 
 error4:
-    mutex_lock( socket_mutex );
+    mutex_lock( socket_mutex, LOCK_IGNORE_SIGNAL );
     hashtable_remove( &socket_inode_table, ( const void* )&socket->inode_number );
     mutex_unlock( socket_mutex );
 

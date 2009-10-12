@@ -20,6 +20,7 @@
 #include <smp.h>
 #include <macros.h>
 #include <syscall_table.h>
+#include <errno.h>
 #include <lib/string.h>
 
 #include <arch/thread.h>
@@ -138,6 +139,13 @@ int arch_handle_signals( registers_t* regs ) {
     /* Call the architecture independent part of the signal handler code */
 
     handle_signals( thread );
+
+    /* Check if syscall restarting is required */
+
+    /* TODO: implement proper syscall restarting! */
+    if ( regs->eax == -EINTR ) {
+        kprintf( WARNING, "System call restarting may required...\n" );
+    }
 
     /* Reset the saved signal stack */
 

@@ -24,6 +24,10 @@
 #include <sched/waitqueue.h>
 #include <lock/context.h>
 
+enum {
+    LOCK_IGNORE_SIGNAL = ( 1 << 0 )
+};
+
 int lock_wait_on( lock_context_t* context, thread_t* thread, lock_type_t type, lock_id id, waitqueue_t* queue );
 int lock_timed_wait_on( lock_context_t* context, thread_t* thread, lock_type_t type,
                         lock_id id, waitqueue_t* queue, time_t wakeup_time );

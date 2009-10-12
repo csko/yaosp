@@ -20,6 +20,8 @@
 #include <lock/common.h>
 #include <sched/scheduler.h>
 
+#include <arch/pit.h>
+
 int lock_wait_on( lock_context_t* context, thread_t* thread, lock_type_t type, lock_id id, waitqueue_t* queue ) {
     waitnode_t waitnode;
     lock_header_t* header;

@@ -33,7 +33,7 @@ inode_t* get_inode( mount_point_t* mount_point, ino_t inode_number ) {
 
     cache = &mount_point->inode_cache;
 
-    mutex_lock( cache->mutex );
+    mutex_lock( cache->mutex, LOCK_IGNORE_SIGNAL );
 
     /* Get the inode from the hashtable */
 
@@ -144,7 +144,7 @@ int put_inode( inode_t* inode ) {
     mount_point = inode->mount_point;
     cache = &mount_point->inode_cache;
 
-    mutex_lock( cache->mutex );
+    mutex_lock( cache->mutex, LOCK_IGNORE_SIGNAL );
 
     ASSERT( atomic_get( &inode->ref_count ) > 0 );
 
@@ -253,7 +253,7 @@ int do_lookup_inode( io_context_t* io_context, inode_t* parent, const char* name
          ( parent->inode_number == parent->mount_point->root_inode_number ) ) {
         bool is_root;
 
-        mutex_lock( io_context->mutex );
+        mutex_lock( io_context->mutex, LOCK_IGNORE_SIGNAL );
 
         is_root = ( ( parent->inode_number == io_context->root_directory->inode_number ) &&
                     ( parent->mount_point == io_context->root_directory->mount_point ) );
@@ -323,7 +323,7 @@ int lookup_parent_inode(
     int error;
     char* sep;
 
-    mutex_lock( io_context->mutex );
+    mutex_lock( io_context->mutex, LOCK_IGNORE_SIGNAL );
 
     if ( path[ 0 ] == '/' ) {
         parent = io_context->root_directory;
@@ -439,7 +439,7 @@ int lookup_inode( io_context_t* io_context, inode_t* parent, const char* path, i
 uint32_t get_inode_cache_size( inode_cache_t* cache ) {
     uint32_t size;
 
-    mutex_lock( cache->mutex );
+    mutex_lock( cache->mutex, LOCK_IGNORE_SIGNAL );
 
     size = hashtable_get_item_count( &cache->inode_table );
 

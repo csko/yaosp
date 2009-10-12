@@ -65,7 +65,7 @@ error1:
 }
 
 static int insert_network_interface( net_interface_t* interface ) {
-    mutex_lock( interface_mutex );
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
 
     atomic_set( &interface->ref_count, 1 );
 
@@ -143,7 +143,7 @@ static int network_rx_thread( void* data ) {
 static int get_interface_count( void ) {
     int count;
 
-    mutex_lock( interface_mutex );
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
 
     count = hashtable_get_item_count( &interface_table );
 

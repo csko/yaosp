@@ -205,7 +205,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     tcp_socket = ( tcp_socket_t* )socket->data;
     in_address = ( struct sockaddr_in* )address;
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     if ( tcp_socket->state != TCP_STATE_CLOSED ) {
         mutex_unlock( tcp_socket->mutex );
@@ -260,7 +260,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     /* Put the new endpoint to the table */
 
-    mutex_lock( tcp_endpoint_lock );
+    mutex_lock( tcp_endpoint_lock, LOCK_IGNORE_SIGNAL );
 
     hashtable_add( &tcp_endpoint_table, ( hashitem_t* )tcp_socket );
 
@@ -285,7 +285,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     /* Calculate the return value */
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     if ( tcp_socket->state == TCP_STATE_ESTABLISHED ) {
         error = 0;
@@ -309,7 +309,7 @@ static int tcp_read( socket_t* socket, void* data, size_t length ) {
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
 
@@ -338,7 +338,7 @@ static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
     data = ( uint8_t* )_data;
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     while ( length > 0 ) {
         size_t to_copy;
@@ -394,7 +394,7 @@ static int tcp_add_select_request( socket_t* socket, struct select_request* requ
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     switch ( ( int )request->type ) {
         case SELECT_READ :
@@ -444,7 +444,7 @@ static int tcp_remove_select_request( socket_t* socket, struct select_request* r
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     switch ( ( int )request->type ) {
         case SELECT_READ :
@@ -670,7 +670,7 @@ static tcp_socket_t* get_tcp_endpoint( packet_t* packet ) {
     memcpy( &endpoint_key.src_address, ip_header->dest_address, IPV4_ADDR_LEN );
     endpoint_key.src_port = ntohw( tcp_header->dest_port );
 
-    mutex_lock( tcp_endpoint_lock );
+    mutex_lock( tcp_endpoint_lock, LOCK_IGNORE_SIGNAL );
 
     tcp_socket = ( tcp_socket_t* )hashtable_get( &tcp_endpoint_table, ( const void* )&endpoint_key );
 
@@ -690,7 +690,7 @@ void put_tcp_endpoint( tcp_socket_t* tcp_socket ) {
 
     do_delete = false;
 
-    mutex_lock( tcp_endpoint_lock );
+    mutex_lock( tcp_endpoint_lock, LOCK_IGNORE_SIGNAL );
 
     if ( atomic_dec_and_test( &tcp_socket->ref_count ) ) {
         hashtable_remove( &tcp_endpoint_table, ( const void* )&tcp_socket->endpoint_info );
@@ -918,7 +918,7 @@ int tcp_input( packet_t* packet ) {
         goto out;
     }
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     switch ( ( int )tcp_socket->state ) {
         case TCP_STATE_SYN_SENT :
@@ -968,7 +968,7 @@ static int get_tcp_socket_iterator( hashitem_t* hash, void* _data ) {
     tcp_socket = ( tcp_socket_t* )hash;
     data = ( tcp_socket_t** )_data;
 
-    mutex_lock( tcp_socket->mutex );
+    mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     /* Check if we have something to send ... */
 
@@ -1008,12 +1008,12 @@ static int tcp_timer_thread_entry( void* data ) {
 
     while ( 1 ) {
         do {
-            mutex_lock( tcp_endpoint_lock );
+            mutex_lock( tcp_endpoint_lock, LOCK_IGNORE_SIGNAL );
             tcp_socket = get_tcp_socket_for_work();
             mutex_unlock( tcp_endpoint_lock );
 
             if ( tcp_socket != NULL ) {
-                mutex_lock( tcp_socket->mutex );
+                mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
                 tcp_handle_transmit( tcp_socket );
                 mutex_unlock( tcp_socket->mutex );
             }

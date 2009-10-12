@@ -113,7 +113,7 @@ static int devfs_mount( const char* device, uint32_t flags, void** fs_cookie, in
 static int devfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     devfs_node_t* node;
 
-    mutex_lock( devfs_mutex );
+    mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
 
     node = ( devfs_node_t* )hashtable_get( &devfs_node_table, ( const void* )&inode_num );
 
@@ -175,7 +175,7 @@ out:
 static int devfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
     int error;
 
-    mutex_lock( devfs_mutex );
+    mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
 
     error = devfs_do_lookup_inode( fs_cookie, _parent, name, name_length, inode_num );
 
@@ -299,7 +299,7 @@ static int devfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     node = ( devfs_node_t* )_node;
 
-    mutex_lock( devfs_mutex );
+    mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
 
     stat->st_ino = node->inode_number;
     stat->st_mode = 0777;
@@ -323,7 +323,7 @@ static int devfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, ui
 
     node = ( devfs_node_t* )_node;
 
-    mutex_lock( devfs_mutex );
+    mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( mask & WSTAT_ATIME ) {
         node->atime = stat->st_atime;
@@ -356,7 +356,7 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
 
     cookie = ( devfs_dir_cookie_t* )file_cookie;
 
-    mutex_lock( devfs_mutex );
+    mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
 
     child = node->first_child;
     current = 0;
@@ -403,7 +403,7 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
     devfs_node_t* node;
     ino_t dummy;
 
-    mutex_lock( devfs_mutex );
+    mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
 
     parent = devfs_root_node;
 
@@ -485,7 +485,7 @@ static int devfs_mkdir( void* fs_cookie, void* _node, const char* name, int name
     devfs_node_t* node;
     devfs_node_t* new_node;
 
-    mutex_lock( devfs_mutex );
+    mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
 
     /* Check if this name already exists */
 

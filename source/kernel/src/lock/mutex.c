@@ -28,7 +28,8 @@
 
 #include <arch/pit.h>
 
-int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread, time_t timeout, bool try_lock ) {
+int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread,
+                      time_t timeout, bool try_lock, int flags ) {
     int error;
     lock_id mutex_id;
     uint64_t wakeup_time;
@@ -58,9 +59,28 @@ int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread,
         /* Wait for the mutex to be released */
 
         if ( timeout != INFINITE_TIMEOUT ) {
+            uint64_t now;
+
             error = lock_timed_wait_on( context, thread, MUTEX, mutex->header.id, &mutex->waiters, wakeup_time );
+
+            if ( ( error == 0 ) &&
+                 ( mutex->holder != -1 ) ) {
+                now = get_system_time();
+
+                if ( now < wakeup_time ) {
+                    error = -EINTR;
+                } else {
+                    return -ETIME;
+                }
+            }
         } else {
             error = lock_wait_on( context, thread, MUTEX, mutex->header.id, &mutex->waiters );
+        }
+
+        if ( ( mutex->holder != -1 ) &&
+             ( is_signal_pending( thread ) ) &&
+             ( ( flags & LOCK_IGNORE_SIGNAL ) == 0 ) ) {
+            continue;
         }
 
         if ( error < 0 ) {
@@ -74,7 +94,7 @@ int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread,
     return 0;
 }
 
-static int do_lock_mutex( lock_context_t* context, lock_id mutex_id, bool try_lock, time_t timeout ) {
+static int do_lock_mutex( lock_context_t* context, lock_id mutex_id, bool try_lock, time_t timeout, int flags ) {
     int error;
     mutex_t* mutex;
     thread_t* thread;
@@ -116,23 +136,23 @@ static int do_lock_mutex( lock_context_t* context, lock_id mutex_id, bool try_lo
         return -EDEADLK;
     }
 
-    error = do_acquire_mutex( context, mutex, thread, timeout, try_lock );
+    error = do_acquire_mutex( context, mutex, thread, timeout, try_lock, flags );
 
     spinunlock_enable( &context->lock );
 
     return error;
 }
 
-int mutex_lock( lock_id mutex ) {
-    return do_lock_mutex( &kernel_lock_context, mutex, false, INFINITE_TIMEOUT );
+int mutex_lock( lock_id mutex, int flags ) {
+    return do_lock_mutex( &kernel_lock_context, mutex, false, INFINITE_TIMEOUT, flags );
 }
 
-int mutex_trylock( lock_id mutex ) {
-    return do_lock_mutex( &kernel_lock_context, mutex, true, INFINITE_TIMEOUT );
+int mutex_trylock( lock_id mutex, int flags ) {
+    return do_lock_mutex( &kernel_lock_context, mutex, true, INFINITE_TIMEOUT, flags );
 }
 
-int mutex_timedlock( lock_id mutex, time_t timeout ) {
-    return do_lock_mutex( &kernel_lock_context, mutex, false, timeout );
+int mutex_timedlock( lock_id mutex, time_t timeout, int flags ) {
+    return do_lock_mutex( &kernel_lock_context, mutex, false, timeout, flags );
 }
 
 void do_release_mutex( mutex_t* mutex ) {
@@ -338,15 +358,15 @@ int mutex_destroy( lock_id mutex ) {
 }
 
 int sys_mutex_lock( lock_id mutex ) {
-    return do_lock_mutex( current_process()->lock_context, mutex, false, INFINITE_TIMEOUT );
+    return do_lock_mutex( current_process()->lock_context, mutex, false, INFINITE_TIMEOUT, 0 );
 }
 
 int sys_mutex_trylock( lock_id mutex ) {
-    return do_lock_mutex( current_process()->lock_context, mutex, true, INFINITE_TIMEOUT );
+    return do_lock_mutex( current_process()->lock_context, mutex, true, INFINITE_TIMEOUT, 0 );
 }
 
 int sys_mutex_timedlock( lock_id mutex, time_t* timeout ) {
-    return do_lock_mutex( current_process()->lock_context, mutex, false, *timeout );
+    return do_lock_mutex( current_process()->lock_context, mutex, false, *timeout, 0 );
 }
 
 int sys_mutex_unlock( lock_id mutex ) {

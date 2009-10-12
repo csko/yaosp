@@ -958,7 +958,7 @@ static int do_fchdir( io_context_t* io_context, int fd ) {
         goto out;
     }
 
-    mutex_lock( io_context->mutex );
+    mutex_lock( io_context->mutex, LOCK_IGNORE_SIGNAL );
 
     tmp = io_context->current_directory;
     io_context->current_directory = file->inode;

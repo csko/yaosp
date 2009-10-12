@@ -74,7 +74,7 @@ ipc_port_id sys_create_ipc_port( void ) {
     port->message_queue = NULL;
     port->message_queue_tail = NULL;
 
-    mutex_lock( ipc_port_mutex );
+    mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
     error = insert_ipc_port( port );
 
@@ -105,7 +105,7 @@ int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t
     ipc_port_t* port;
     ipc_message_t* message;
 
-    mutex_lock( ipc_port_mutex );
+    mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -166,7 +166,11 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
 
     timeout = *_timeout;
 
-    mutex_lock( ipc_port_mutex );
+    if ( timeout != INFINITE_TIMEOUT ) {
+        kprintf( WARNING, "sys_recv_ipc_message(): Anything other than INFINITE_TIMEOUT may not work properly!\n" );
+}
+
+    mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -175,12 +179,9 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         goto error2;
     }
 
-    if ( ( port->message_queue == NULL ) &&
-         ( timeout > 0 ) ) {
-        error = condition_timedwait( port->queue_condition, ipc_port_mutex, timeout );
-
-        if ( error < 0 ) {
-            goto error1;
+    if ( timeout > 0 ) {
+        while ( port->message_queue == NULL ) {
+            condition_timedwait( port->queue_condition, ipc_port_mutex, timeout );
         }
 
         port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
@@ -230,7 +231,7 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
 error2:
     mutex_unlock( ipc_port_mutex );
 
-error1:
+//error1:
     return error;
 }
 
@@ -242,7 +243,7 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
 
     timeout = *_timeout;
 
-    mutex_lock( ipc_port_mutex );
+    mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -297,7 +298,7 @@ int sys_register_named_ipc_port( const char* name, ipc_port_id port_id ) {
     int error;
     named_ipc_port_t* port;
 
-    mutex_lock( named_ipc_port_mutex );
+    mutex_lock( named_ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
     port = ( named_ipc_port_t* )hashtable_get( &named_ipc_port_table, ( const void* )name );
 
@@ -348,7 +349,7 @@ int sys_get_named_ipc_port( const char* name, ipc_port_id* port_id ) {
     int error;
     named_ipc_port_t* port;
 
-    mutex_lock( named_ipc_port_mutex );
+    mutex_lock( named_ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
     port = ( named_ipc_port_t* )hashtable_get( &named_ipc_port_table, ( const void* )name );
 

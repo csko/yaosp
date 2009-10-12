@@ -248,7 +248,7 @@ static int do_load_module( const char* name ) {
         goto error2;
     }
 
-    mutex_lock( module_mutex );
+    mutex_lock( module_mutex, LOCK_IGNORE_SIGNAL );
 
     module = ( module_t* )hashtable_get( &module_table, ( const void* )name );
 
@@ -338,7 +338,7 @@ static int do_load_module( const char* name ) {
         goto error4;
     }
 
-    mutex_lock( module_mutex );
+    mutex_lock( module_mutex, LOCK_IGNORE_SIGNAL );
 
     module->status = MODULE_LOADED;
 
@@ -350,7 +350,7 @@ error4:
     /* TODO: unload the module */
 
 error3:
-    mutex_lock( module_mutex );
+    mutex_lock( module_mutex, LOCK_IGNORE_SIGNAL );
     hashtable_remove( &module_table, ( const void* )name );
     mutex_unlock( module_mutex );
 
@@ -413,7 +413,7 @@ int sys_load_module( const char* name ) {
 uint32_t sys_get_module_count( void ) {
     uint32_t result;
 
-    mutex_lock( module_mutex );
+    mutex_lock( module_mutex, LOCK_IGNORE_SIGNAL );
 
     result = hashtable_get_item_count( &module_table );
 
@@ -453,7 +453,7 @@ int sys_get_module_info( module_info_t* module_info, uint32_t max_count ) {
     data.max_count = max_count;
     data.info_table = module_info;
 
-    mutex_lock( module_mutex );
+    mutex_lock( module_mutex, LOCK_IGNORE_SIGNAL );
 
     error = hashtable_iterate( &module_table, get_module_info_iterator, ( void* )&data );
 

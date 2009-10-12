@@ -37,7 +37,7 @@ int block_cache_get_block( block_cache_t* cache, uint64_t block_index, void** bu
         return -EINVAL;
     }
 
-    mutex_lock( cache->mutex );
+    mutex_lock( cache->mutex, LOCK_IGNORE_SIGNAL );
 
     block = ( block_t* )hashtable_get( &cache->block_table, ( const void* )&block_index );
 
@@ -111,7 +111,7 @@ int block_cache_read_blocks( block_cache_t* cache, uint64_t start_block, uint64_
         return -EINVAL;
     }
 
-    mutex_lock( cache->mutex );
+    mutex_lock( cache->mutex, LOCK_IGNORE_SIGNAL );
 
     /* TODO */
 

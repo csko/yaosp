@@ -29,7 +29,8 @@
 
 #include <arch/pit.h>
 
-int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread, time_t timeout, bool try_lock );
+int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread,
+                      time_t timeout, bool try_lock, int flags );
 void do_release_mutex( mutex_t* mutex );
 
 static int do_wait_condition( lock_context_t* context, lock_id condition_id, lock_id mutex_id, time_t timeout ) {
@@ -93,13 +94,9 @@ static int do_wait_condition( lock_context_t* context, lock_id condition_id, loc
         error = lock_wait_on( context, thread, CONDITION, condition_id, &condition->waiters );
     }
 
-    if ( error < 0 ) {
-        return error;
-    }
-
     /* Acquire the mutex */
 
-    error = do_acquire_mutex( context, mutex, thread, INFINITE_TIMEOUT, false );
+    do_acquire_mutex( context, mutex, thread, INFINITE_TIMEOUT, false, LOCK_IGNORE_SIGNAL );
 
     spinunlock_enable( &context->lock );
 

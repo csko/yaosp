@@ -141,7 +141,7 @@ static void rootfs_delete_node( rootfs_node_t* node ) {
 static int rootfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
     rootfs_node_t* node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     node = ( rootfs_node_t* )hashtable_get( &rootfs_node_table, ( const void* )&inode_num );
 
@@ -167,7 +167,7 @@ static int rootfs_write_inode( void* fs_cookie, void* _node ) {
 
     node = ( rootfs_node_t* )_node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     ASSERT( node->is_loaded );
 
@@ -218,7 +218,7 @@ static int rootfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* n
 static int rootfs_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
     int error;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     error = rootfs_do_lookup_inode( fs_cookie, _parent, name, name_length, inode_number );
 
@@ -268,7 +268,7 @@ static int rootfs_read_stat( void* fs_cookie, void* _node, struct stat* stat ) {
 
     node = ( rootfs_node_t* )_node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     stat->st_ino = node->inode_number;
     stat->st_mode = 0777;
@@ -297,7 +297,7 @@ static int rootfs_write_stat( void* fs_cookie, void* _node, struct stat* stat, u
 
     node = ( rootfs_node_t* )_node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( mask & WSTAT_ATIME ) {
         node->atime = stat->st_atime;
@@ -330,7 +330,7 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
 
     cookie = ( rootfs_dir_cookie_t* )file_cookie;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     child = node->first_child;
     current = 0;
@@ -375,7 +375,7 @@ static int rootfs_mkdir( void* fs_cookie, void* _node, const char* name, int nam
     rootfs_node_t* node;
     rootfs_node_t* new_node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     /* Check if this name already exists */
 
@@ -425,7 +425,7 @@ static int rootfs_rmdir( void* fs_cookie, void* _node, const char* name, int nam
 
     parent = ( rootfs_node_t* )_node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     error = rootfs_do_lookup_inode( fs_cookie, _node, name, name_length, &inode_number );
 
@@ -466,7 +466,7 @@ static int rootfs_symlink( void* fs_cookie, void* _node, const char* name, int n
     rootfs_node_t* node;
     rootfs_node_t* new_node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     /* Check if this name already exists */
 
@@ -525,7 +525,7 @@ static int rootfs_readlink( void* fs_cookie, void* _node, char* buffer, size_t l
 
     node = ( rootfs_node_t* )_node;
 
-    mutex_lock( rootfs_mutex );
+    mutex_lock( rootfs_mutex, LOCK_IGNORE_SIGNAL );
 
     if ( node->link_path == NULL ) {
         mutex_unlock( rootfs_mutex );
