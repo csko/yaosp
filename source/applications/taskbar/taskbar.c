@@ -32,41 +32,27 @@
 #include <ygui/menuitem.h>
 #include <ygui/layout/borderlayout.h>
 
-static widget_t* textfield;
-
-static int event_button_clicked( widget_t* widget, void* data ) {
-    char* text;
-
-    text = textfield_get_text( textfield );
-
-    if ( text != NULL ) {
-        if ( fork() == 0 ) {
-            char* argv[] = { text, NULL };
-
-            execv( text, argv );
-            _exit( 1 );
-        }
-
-        free( text );
+static int event_open_terminal( widget_t* widget, void* data ) {
+    if ( fork() == 0 ) {
+        char* argv[] = { "terminal", NULL };
+        execv( "/application/terminal", argv );
+        _exit( 1 );
     }
-
-    textfield_set_text( textfield, NULL );
 
     return 0;
 }
 
 static int event_open_taskbar( widget_t* widget, void* data ) {
     menu_t* menu = create_menu();
-    widget_t* item = create_menuitem_with_label( "Hello" );
-    menu_add_item( menu, item );
-    item = create_menuitem_with_label_and_image(
+    widget_t* item = create_menuitem_with_label_and_image(
         "Terminal",
         bitmap_load_from_file( "/application/taskbar/images/terminal.png" )
     );
-    menu_add_item( menu, item );
-    item = create_menuitem_with_label( ":)" );
+
     menu_add_item( menu, item );
     menu_popup_at_xy( menu, 0, 40 );
+
+    widget_connect_event_handler( item, "clicked", event_open_terminal, NULL );
 
     return 0;
 }
@@ -106,24 +92,6 @@ int main( int argc, char** argv ) {
     widget_dec_ref( image );
 
     widget_connect_event_handler( image, "mouse-down", event_open_taskbar, NULL );
-
-    widget_t* panel = create_panel();
-    layout = create_border_layout();
-    panel_set_layout( panel, layout );
-    layout_dec_ref( layout );
-
-    widget_add( container, panel, BRD_CENTER );
-    widget_dec_ref( panel );
-
-    widget_t* button = create_button( "Press me!" );
-    widget_add( panel, button, BRD_PAGE_END );
-    widget_dec_ref( button );
-
-    textfield = create_textfield();
-    widget_add( panel, textfield, BRD_CENTER );
-    widget_dec_ref( textfield );
-
-    widget_connect_event_handler( button, "clicked", event_button_clicked, NULL );
 
     /* Show the window */
 

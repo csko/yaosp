@@ -21,11 +21,20 @@
 
 #include <ygui/window.h>
 #include <ygui/gc.h>
+#include <ygui/menu.h>
 
 typedef struct widget_wrapper {
     widget_t* widget;
     void* data;
 } widget_wrapper_t;
+
+typedef struct menu_item {
+    char* text;
+    font_t* font;
+    bitmap_t* image;
+    int active;
+    menu_t* parent_menu;
+} menu_item_t;
 
 int initialize_render_buffer( window_t* window );
 int allocate_render_packet( window_t* window, size_t size, void** buffer );

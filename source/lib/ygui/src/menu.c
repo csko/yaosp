@@ -22,6 +22,8 @@
 
 #include <ygui/menu.h>
 
+#include "internal.h"
+
 static int menu_window_deactivated( window_t* window, void* data ) {
     window_hide( window );
 
@@ -68,16 +70,24 @@ menu_t* create_menu( void ) {
 
 int menu_add_item( menu_t* menu, widget_t* item ) {
     widget_t* container;
+    menu_item_t* menu_item;
 
     if ( widget_get_id( item ) != W_MENUITEM ) {
+        return -EINVAL;
+    }
+
+    menu_item = ( menu_item_t* )widget_get_data( item );
+
+    if ( menu_item->parent_menu != NULL ) {
         return -EINVAL;
     }
 
     array_add_item( &menu->items, ( void* )item );
 
     container = window_get_container( menu->window );
-
     widget_add( container, item, NULL );
+
+    menu_item->parent_menu = menu;
 
     return 0;
 }

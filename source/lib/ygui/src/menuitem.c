@@ -20,13 +20,22 @@
 #include <string.h>
 
 #include <ygui/menuitem.h>
+#include <ygui/menu.h>
 
-typedef struct menu_item {
-    char* text;
-    font_t* font;
-    bitmap_t* image;
-    int active;
-} menu_item_t;
+#include "internal.h"
+
+enum {
+    E_CLICKED,
+    E_COUNT
+};
+
+static int menu_item_events[ E_COUNT ] = {
+    -1
+};
+
+static event_type_t menu_item_event_types[ E_COUNT ] = {
+    { "clicked", &menu_item_events[ E_CLICKED ] }
+};
 
 static int menu_item_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
@@ -106,6 +115,22 @@ static int menu_item_mouse_exited( widget_t* widget ) {
     return 0;
 }
 
+static int menu_item_mouse_released( widget_t* widget, int mount_button ) {
+    menu_item_t* item;
+
+    item = ( menu_item_t* )widget_get_data( widget );
+
+    /* Hide the window menu */
+
+    window_hide( item->parent_menu->window );
+
+    /* Fire event listeners */
+
+    widget_signal_event_handler( widget, menu_item_events[ E_CLICKED ] );
+
+    return 0;
+}
+
 static int menu_item_get_preferred_size( widget_t* widget, point_t* size ) {
     int img_width;
     int img_height;
@@ -141,7 +166,7 @@ static widget_operations_t menu_item_ops = {
     .mouse_exited = menu_item_mouse_exited,
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
-    .mouse_released = NULL,
+    .mouse_released = menu_item_mouse_released,
     .get_minimum_size = NULL,
     .get_preferred_size = menu_item_get_preferred_size,
     .get_maximum_size = NULL,
@@ -154,6 +179,7 @@ widget_t* create_menuitem_with_label( const char* text ) {
 }
 
 widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* image ) {
+    int error;
     widget_t* widget;
     menu_item_t* item;
     font_properties_t properties;
@@ -185,8 +211,15 @@ widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* imag
         goto error4;
     }
 
+    error = widget_add_events( widget, menu_item_event_types, menu_item_events, E_COUNT );
+
+    if ( error < 0 ) {
+        goto error5;
+    }
+
     item->active = 0;
     item->image = image;
+    item->parent_menu = NULL;
 
     if ( image != NULL ) {
         bitmap_inc_ref( image );
@@ -194,16 +227,19 @@ widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* imag
 
     return widget;
 
-error4:
+ error5:
+    /* TODO: free the widget */
+
+ error4:
     /* TODO: free the font */
 
-error3:
+ error3:
     free( item->text );
 
-error2:
+ error2:
     free( item );
 
-error1:
+ error1:
     return NULL;
 }
 
