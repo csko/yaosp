@@ -38,7 +38,7 @@ switch_to_thread:
 
 /* void sched_preempt( void ) */
 
-.type sched_preempty, @function
+.type sched_preempt, @function
 sched_preempt:
     movl 0(%esp), %eax
     addl $4, %esp
