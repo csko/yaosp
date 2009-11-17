@@ -163,6 +163,7 @@ static int handle_file_mapping( memory_region_t* region, uint32_t address ) {
     );
 
     if ( __unlikely( error < 0 ) ) {
+        mutex_unlock( context->mutex );
         return error;
     }
 
@@ -194,6 +195,7 @@ static int handle_file_mapping( memory_region_t* region, uint32_t address ) {
     void* p = alloc_pages( page_count, MEM_COMMON );
 
     if ( __unlikely( p == NULL ) ) {
+        mutex_unlock( context->mutex );
         return -ENOMEM;
     }
 
@@ -212,6 +214,7 @@ static int handle_file_mapping( memory_region_t* region, uint32_t address ) {
         ASSERT( ( file_data_size > 0 ) && ( file_data_size <= page_count * PAGE_SIZE ) );
 
         if ( do_pread_helper( region->file, p, file_data_size, file_read_offset ) != file_data_size ) {
+            mutex_unlock( context->mutex );
             free_pages( p, page_count );
             return -EIO;
         }
@@ -240,6 +243,8 @@ static int handle_file_mapping( memory_region_t* region, uint32_t address ) {
             pt_ind++;
         }
     }
+
+    mutex_unlock( context->mutex );
 
     invlpg( address );
 
