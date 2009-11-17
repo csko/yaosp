@@ -229,22 +229,16 @@ void free_pages( void* address, uint32_t count ) {
 }
 
 uint32_t get_free_page_count( void ) {
-    int i;
-    uint32_t count;
-    memory_type_desc_t* memory_desc;
-
-    count = 0;
+    uint32_t i;
+    uint32_t count = 0;
+    memory_page_t* page;
 
     spinlock_disable( &pages_lock );
 
-    for ( i = 0; i < MAX_MEMORY_TYPES; i++ ) {
-        memory_desc = &memory_descriptors[ i ];
-
-        if ( memory_desc->free ) {
-            continue;
+    for ( i = 0, page = memory_pages; i < ( memory_size / PAGE_SIZE ); i++, page++ ) {
+        if ( page->ref_count == 0 ) {
+            count++;
         }
-
-        count += memory_desc->free_pages;
     }
 
     spinunlock_enable( &pages_lock );
