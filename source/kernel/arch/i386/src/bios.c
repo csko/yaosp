@@ -159,7 +159,7 @@ __init int init_bios_access( void ) {
     }
 
     do_memory_region_remap_pages( below_1mb_region, 0x0 );
-    memory_region_insert( &kernel_memory_context, below_1mb_region );
+    memory_context_insert_region( &kernel_memory_context, below_1mb_region );
 
     below_1mb = ( uint8_t* )below_1mb_region->address;
 

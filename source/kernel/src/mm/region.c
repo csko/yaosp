@@ -71,10 +71,10 @@ void memory_region_destroy( memory_region_t* region ) {
     kfree( region );
 }
 
-int memory_region_insert( memory_context_t* context, memory_region_t* region ) {
+static int memory_region_insert_global( memory_region_t* region ) {
     int error;
 
-    /* Insert the new region to the hashtable */
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     do {
         region->id = region_id_counter++;
@@ -86,34 +86,9 @@ int memory_region_insert( memory_context_t* context, memory_region_t* region ) {
 
     error = hashtable_add( &region_table, ( hashitem_t* )region );
 
-    if ( __unlikely( error < 0 ) ) {
-        goto error1;
-    }
+    mutex_unlock( region_lock );
 
-    /* Insert it to the memory context */
-
-    error = memory_context_insert_region( context, region );
-
-    if ( __unlikely( error < 0 ) ) {
-        goto error2;
-    }
-
-    return 0;
-
-error2:
-    hashtable_remove( &region_table, ( const void* )&region->id );
-
-error1:
     return error;
-}
-
-int memory_region_remove( memory_context_t* context, memory_region_t* region ) {
-    ASSERT( mutex_is_locked( region_lock ) );
-
-    hashtable_remove( &region_table, ( const void* )&region->id );
-    memory_context_remove_region( context, region );
-
-    return 0;
 }
 
 memory_region_t* memory_region_get( region_id id ) {
@@ -399,19 +374,7 @@ int sys_memory_region_create( const char* name, uint64_t* size, uint32_t flags, 
         return -ENOMEM;
     }
 
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    do {
-        region->id = region_id_counter++;
-
-        if ( region_id_counter < 0 ) {
-            region_id_counter = 0;
-        }
-    } while ( hashtable_get( &region_table, ( void* )&region->id ) != NULL );
-
-    error = hashtable_add( &region_table, ( hashitem_t* )region );
-
-    mutex_unlock( region_lock );
+    error = memory_region_insert_global( region );
 
     if ( error < 0 ) {
         memory_region_put( region );
@@ -498,19 +461,12 @@ int sys_memory_region_clone_pages( region_id id, void** address ) {
         goto out;
     }
 
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
+    error = memory_region_insert_global( new_region );
 
-    do {
-        new_region->id = region_id_counter++;
-
-        if ( region_id_counter < 0 ) {
-            region_id_counter = 0;
-        }
-    } while ( hashtable_get( &region_table, ( void* )&new_region->id ) != NULL );
-
-    hashtable_add( &region_table, ( hashitem_t* )new_region );
-
-    mutex_unlock( region_lock );
+    if ( error != 0 ) {
+        memory_region_put( new_region );
+        goto out;
+    }
 
     error = new_region->id;
     *address = ( void* )new_region->address;

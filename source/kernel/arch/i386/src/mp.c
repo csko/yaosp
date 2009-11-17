@@ -191,7 +191,7 @@ __init static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_float
     }
 
     do_memory_region_remap_pages( region, ( ptr_t )addr & PAGE_MASK );
-    memory_region_insert( &kernel_memory_context, region );
+    memory_context_insert_region( &kernel_memory_context, region );
 
     for ( offset = 0; offset < size; offset += 16 ) {
         fp = ( mp_floating_pointer_t* )( ( uint8_t* )addr + offset );

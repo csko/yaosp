@@ -205,7 +205,7 @@ __init int init_apic( void ) {
     }
 #endif
 
-    memory_region_insert( &kernel_memory_context, lapic_region );
+    memory_context_insert_region( &kernel_memory_context, lapic_region );
 
     /* Setup the local APIC */
 

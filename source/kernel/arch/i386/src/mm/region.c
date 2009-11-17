@@ -234,6 +234,8 @@ int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint
 
     spinunlock_enable( &pages_lock );
 
+    flush_tlb();
+
     return 0;
 }
 

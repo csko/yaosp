@@ -220,7 +220,7 @@ __init int init_paging( void ) {
     );
 
     do_memory_region_remap_pages( region, 0xB8000 );
-    memory_region_insert( context, region );
+    memory_context_insert_region( context, region );
 
     /* Map the read-only part of the kernel */
 
@@ -235,7 +235,7 @@ __init int init_paging( void ) {
     );
 
     do_memory_region_remap_pages( region, 0x100000 );
-    memory_region_insert( context, region );
+    memory_context_insert_region( context, region );
 
     /* Map the read-write part of the kernel */
 
@@ -250,7 +250,7 @@ __init int init_paging( void ) {
     );
 
     do_memory_region_remap_pages( region, ( ptr_t )&__data_start );
-    memory_region_insert( context, region );
+    memory_context_insert_region( context, region );
 
     /* Map the kernel heap */
 
@@ -266,7 +266,7 @@ __init int init_paging( void ) {
     );
 
     do_memory_region_remap_pages( region, ( ptr_t )&__kernel_end );
-    memory_region_insert( context, region );
+    memory_context_insert_region( context, region );
 
     /* Load CR3 */
 

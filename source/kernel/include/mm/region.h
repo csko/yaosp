@@ -70,9 +70,6 @@ typedef struct region_info {
 memory_region_t* memory_region_allocate( const char* name );
 void memory_region_destroy( memory_region_t* region );
 
-int memory_region_insert( struct memory_context* context, memory_region_t* region );
-int memory_region_remove( struct memory_context* context, memory_region_t* region );
-
 memory_region_t* memory_region_get( region_id id );
 int memory_region_put( memory_region_t* region );
 
