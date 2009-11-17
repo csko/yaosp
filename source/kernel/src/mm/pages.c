@@ -94,7 +94,6 @@ void* do_alloc_pages( memory_type_desc_t* memory_desc, uint32_t count ) {
 
                 for ( j = 0; j < count; j++, tmp++ ) {
                     tmp->ref_count = 1;
-                    memory_desc->free_pages--;
                 }
 
                 p = ( void* )( memory_desc->start + ( region_start * PAGE_SIZE ) );
@@ -222,7 +221,6 @@ void free_pages( void* address, uint32_t count ) {
 
     for ( i = 0; i < count; i++, tmp++ ) {
         tmp->ref_count = 0;
-        memory_desc->free_pages++;
     }
 
     spinunlock_enable( &pages_lock );
@@ -277,7 +275,6 @@ int reserve_memory_pages( ptr_t start, ptr_t size ) {
     for ( i = 0; i < count; i++, page++ ) {
         if ( page->ref_count == 0 ) {
             page->ref_count++;
-            memory_desc->free_pages--;
         }
     }
 
@@ -300,7 +297,6 @@ __init int register_memory_type( int mem_type, ptr_t start, ptr_t size ) {
     memory_desc->free = false;
     memory_desc->start = start;
     memory_desc->size = size;
-    memory_desc->free_pages = size / PAGE_SIZE;
 
     return 0;
 }
@@ -318,7 +314,6 @@ __init int init_page_allocator( ptr_t page_map_address, uint64_t _memory_size ) 
         memory_desc->free = true;
         memory_desc->start = 0;
         memory_desc->size = 0;
-        memory_desc->free_pages = 0;
     }
 
     /* Setup the page structures for the whole memory */

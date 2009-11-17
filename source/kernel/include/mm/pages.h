@@ -33,7 +33,6 @@ typedef struct memory_type_desc {
     bool free;
     ptr_t start;
     ptr_t size;
-    ptr_t free_pages;
 } memory_type_desc_t;
 
 /**
