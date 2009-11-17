@@ -56,9 +56,6 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
         disable_interrupts();
         halt_loop();
     }
-
-    disable_interrupts();
-    halt_loop();
 }
 
 static int handle_cow_page( memory_context_t* context, uint32_t address ) {

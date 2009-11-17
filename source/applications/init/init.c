@@ -29,24 +29,16 @@
 #include <yaosp/sysinfo.h>
 
 static int create_temp_directory( void ) {
-    int error;
-
-    error = mkdir( "/temp", 0777 );
-
-    if ( error < 0 ) {
-        return error;
+    if ( mkdir( "/temp", 0777 ) != 0 ) {
+        return -1;
     }
 
-    error = load_module( "ramfs" );
-
-    if ( error < 0 ) {
-        return error;
+    if ( load_module( "ramfs" ) != 0 ) {
+        return -1;
     }
 
-    error = mount( "", "/temp", "ramfs", 0, NULL );
-
-    if ( error < 0 ) {
-        return error;
+    if ( mount( "", "/temp", "ramfs", 0, NULL ) != 0 ) {
+        return -1;
     }
 
     return 0;
