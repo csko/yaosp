@@ -39,7 +39,7 @@ extern lock_id region_lock;
 void dump_registers( registers_t* regs );
 
 static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr2, const char* message ) {
-    kprintf( ERROR, "Invalid page fault at 0x%x (%s)\n", cr2, message );
+    kprintf( ERROR, "Invalid page fault at 0x%08x (%s)\n", cr2, message );
     dump_registers( regs );
     debug_print_stack_trace();
 
@@ -56,155 +56,73 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
         disable_interrupts();
         halt_loop();
     }
+
+    disable_interrupts();
+    halt_loop();
 }
 
-static int handle_lazy_page_allocation( memory_region_t* region, uint32_t address ) {
-    void* p;
-    uint32_t* pgd_entry;
-    uint32_t* pt_entry;
-    memory_context_t* context;
+static int handle_cow_page( memory_context_t* context, uint32_t address ) {
+    uint32_t ptr;
+    uint32_t index;
+    int copy_page;
+    memory_page_t* page;
+
     i386_memory_context_t* arch_context;
+    uint32_t* page_directory;
+    uint32_t* page_table;
 
-    context = region->context;
     arch_context = ( i386_memory_context_t* )context->arch_data;
+    page_directory = arch_context->page_directory;
 
-    pgd_entry = page_directory_entry( arch_context, address );
+    index = PGD_INDEX( address );
+    ASSERT( page_directory[ index ] != 0 );
+    page_table = ( uint32_t* )( page_directory[ index ] & PAGE_MASK );
 
-    if ( *pgd_entry == 0 ) {
-        p = alloc_pages( 1, MEM_COMMON );
+    index = PT_INDEX( address );
+    ASSERT( page_table[ index ] != 0 );
+    ptr = page_table[ index ] & PAGE_MASK;
+    ASSERT( ( ptr != 0 ) && ( ptr < memory_size ) );
 
-        if ( __unlikely( p == NULL ) ) {
+    spinlock_disable( &pages_lock );
+
+    page = &memory_pages[ ptr / PAGE_SIZE ];
+    ASSERT( page->ref_count > 0 );
+
+    copy_page = ( page->ref_count > 1 );
+
+    if ( copy_page ) {
+        /* We have to copy this page */
+
+        void* new_page = do_alloc_pages( &memory_descriptors[ MEM_COMMON ], 1 );
+
+        if ( new_page == NULL ) {
+            spinunlock_enable( &pages_lock );
+
             return -ENOMEM;
         }
 
-        memsetl( p, 0, PAGE_SIZE / 4 );
+        memcpy( new_page, ( void* )ptr, PAGE_SIZE );
 
-        *pgd_entry = ( uint32_t )p | PRESENT | WRITE | USER;
-    }
+        page->ref_count--;
+        ASSERT( page->ref_count > 0 );
 
-    pt_entry = page_table_entry( *pgd_entry, address );
-
-    p = alloc_pages( 1, MEM_COMMON );
-
-    if ( __unlikely( p == NULL ) ) {
-        return -ENOMEM;
-    }
-
-    memsetl( p, 0, PAGE_SIZE / 4 );
-
-    *pt_entry = ( uint32_t )p | PRESENT | WRITE | USER;
-
-    return 0;
-}
-
-#define MAX_PAGES_PER_LOAD 6
-
-static int handle_lazy_page_loading( memory_region_t* region, uint32_t address, uint32_t* pages_loaded ) {
-    int i;
-    void* p;
-    int error;
-    uint32_t* pt;
-    uint32_t pt_index;
-    uint32_t pgd_index;
-    uint32_t page_count;
-    uint32_t region_offset;
-    memory_context_t* context;
-    i386_memory_context_t* arch_context;
-
-    context = region->context;
-    arch_context = ( i386_memory_context_t* )context->arch_data;
-
-    address &= PAGE_MASK;
-    ASSERT( address >= region->start );
-
-    region_offset = address - region->start;
-
-    /* Calculate the number of pages that we can load */
-
-    page_count = PAGE_ALIGN( region->size - region_offset ) / PAGE_SIZE;
-    page_count = MIN( page_count, MAX_PAGES_PER_LOAD );
-
-    /* Map the page tables */
-
-    error = map_region_page_tables( arch_context, address, page_count * PAGE_SIZE, false );
-
-    if ( __unlikely( error < 0 ) ) {
-        return error;
-    }
-
-    /* Count the unmapped pages */
-
-    pgd_index = PGD_INDEX( address );
-    pt_index = PT_INDEX( address );
-    pt = ( uint32_t* )( arch_context->page_directory[ pgd_index ] & PAGE_MASK );
-
-    for ( i = 0; i < page_count; i++ ) {
-        if ( pt[ pt_index ] != 0 ) {
-            break;
-        }
-
-        if ( __unlikely( pt_index == 1023 ) ) {
-            pgd_index++;
-            pt_index = 0;
-
-            pt = ( uint32_t* )( arch_context->page_directory[ pgd_index ] & PAGE_MASK );
-        } else {
-            pt_index++;
-        }
-    }
-
-    ASSERT( i > 0 );
-
-    page_count = i;
-
-    /* Allocate memory for the new pages */
-
-    p = alloc_pages( page_count, MEM_COMMON );
-
-    if ( __unlikely( p == NULL ) ) {
-        return -ENOMEM;
-    }
-
-    /* Load the data to the newly allocated pages */
-
-    if ( region_offset >= region->file_size ) {
-        memsetl( p, 0, page_count * PAGE_SIZE / 4 );
+        page_table[ index ] = ( uint32_t )new_page | PAGE_PRESENT | PAGE_USER | PAGE_WRITE;
     } else {
-        off_t file_read_offset;
-        uint32_t file_data_size;
+        /* Copy-on-write already done on this page,
+           simply give write access back. */
 
-        file_read_offset = region->file_offset + region_offset;
-        file_data_size = region->file_size - region_offset;
-        file_data_size = MIN( file_data_size, page_count * PAGE_SIZE );
-
-        ASSERT( ( file_data_size > 0 ) && ( file_data_size <= page_count * PAGE_SIZE ) );
-
-        if ( do_pread_helper( region->file, p, file_data_size, file_read_offset ) != file_data_size ) {
-            free_pages( p, page_count );
-            return -EIO;
-        }
-
-        if ( file_data_size < page_count * PAGE_SIZE ) {
-            memset( ( uint8_t* )p + file_data_size, 0, page_count * PAGE_SIZE - file_data_size );
-        }
+        page_table[ index ] |= PAGE_WRITE;
     }
 
-    /* Map the new pages */
+    spinunlock_enable( &pages_lock );
 
-    error = map_region_pages(
-        arch_context,
-        address,
-        ( ptr_t )p,
-        page_count * PAGE_SIZE,
-        false,
-        ( region->flags & REGION_WRITE ) != 0
-    );
-
-    if ( __unlikely( error < 0 ) ) {
-        return error;
+    if ( copy_page ) {
+        scheduler_lock();
+        context->process->pmem_size += PAGE_SIZE;
+        scheduler_unlock();
     }
 
-    *pages_loaded = page_count;
+    invlpg( address );
 
     return 0;
 }
@@ -213,76 +131,36 @@ int handle_page_fault( registers_t* regs ) {
     int error;
     uint32_t cr2;
     thread_t* thread;
-    const char* message;
     memory_region_t* region;
 
     cr2 = get_cr2();
-
     thread = current_thread();
 
-    if ( __unlikely( thread == NULL ) ) {
-        invalid_page_fault( NULL, regs, cr2, "unknown" );
+    region = memory_context_get_region_for( thread->process->memory_context, cr2 );
+
+    /* If no region was found, this is an invalid memory access. */
+
+    if ( region == NULL ) {
+        invalid_page_fault( thread, regs, cr2, "invalid access" );
+        return 0;
     }
 
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
+    /* Handle copy-on-write pages */
 
-    region = do_memory_context_get_region_for( thread->process->memory_context, cr2 );
-
-    if ( __unlikely( region == NULL ) ) {
-        message = "no region for address";
-        goto invalid;
-    }
-
-    if ( __likely( region->alloc_method == ALLOC_LAZY ) ) {
-        uint32_t pages_loaded = 1;
-
-        if ( region->file == NULL ) {
-            error = handle_lazy_page_allocation( region, cr2 );
-        } else {
-            error = handle_lazy_page_loading( region, cr2, &pages_loaded );
-        }
-
-        if ( __unlikely( error < 0 ) ) {
-            message = "lazy page allocation failed";
-            goto invalid;
-        }
-
-        /* Update pmem of the current process */
-
-        scheduler_lock();
-        thread->process->pmem_size += pages_loaded * PAGE_SIZE;
-        scheduler_unlock();
+    if ( ( regs->error_code == 7 ) &&
+         ( region->flags & REGION_WRITE ) ) {
+        error = handle_cow_page( thread->process->memory_context, cr2 );
     } else {
-        uint32_t* pgd_entry;
-        uint32_t* pt_entry;
-        i386_memory_context_t* arch_context;
-
-        memory_region_dump( region, -1 );
-
-        arch_context = ( i386_memory_context_t* )thread->process->memory_context->arch_data;
-        pgd_entry = page_directory_entry( arch_context, cr2 );
-
-        kprintf( ERROR, "Page directory entry: %x\n", *pgd_entry );
-
-        if ( *pgd_entry != 0 ) {
-            pt_entry = page_table_entry( *pgd_entry, cr2 );
-
-            kprintf( ERROR, "Page table entry: %x\n", *pt_entry );
-        }
-
-        message = "unknown";
-
-        goto invalid;
+        error = -EINVAL;
     }
 
-    mutex_unlock( region_lock );
+    memory_region_put( region );
 
-    return 0;
+    /* In case of any error, this is an invalid page fault */
 
-invalid:
-    mutex_unlock( region_lock );
-
-    invalid_page_fault( thread, regs, cr2, message );
+    if ( error != 0 ) {
+        invalid_page_fault( thread, regs, cr2, "???" );
+    }
 
     return 0;
 }

@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <kernel.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
 #include <mm/pages.h>
@@ -26,7 +27,7 @@
 #include <arch/mm/context.h>
 #include <arch/mm/paging.h>
 
-int arch_init_memory_context( memory_context_t* context ) {
+int arch_memory_context_init( memory_context_t* context ) {
     i386_memory_context_t* arch_context;
 
     /* Create the arch. specific memory context */
@@ -55,10 +56,14 @@ int arch_init_memory_context( memory_context_t* context ) {
     return 0;
 }
 
-int arch_destroy_memory_context( memory_context_t* context ) {
+int arch_memory_context_destroy( memory_context_t* context ) {
     i386_memory_context_t* arch_context;
 
     arch_context = ( i386_memory_context_t* )context->arch_data;
+
+    if ( arch_context == NULL ) {
+        return 0;
+    }
 
     free_pages( ( void* )arch_context->page_directory, 1 );
     kfree( arch_context );
@@ -66,7 +71,7 @@ int arch_destroy_memory_context( memory_context_t* context ) {
     return 0;
 }
 
-int arch_clone_memory_context( memory_context_t* old_context, memory_context_t* new_context ) {
+int arch_memory_context_clone( memory_context_t* old_context, memory_context_t* new_context ) {
     i386_memory_context_t* old_arch_context;
     i386_memory_context_t* new_arch_context;
 
@@ -94,15 +99,15 @@ int arch_memory_context_translate_address( memory_context_t* context, ptr_t line
 
     arch_context = ( i386_memory_context_t* )context->arch_data;
 
-    pgd_entry = page_directory_entry( arch_context, linear );
+    pgd_entry = &arch_context->page_directory[ PGD_INDEX( linear ) ];
 
-    if ( ( ( *pgd_entry ) & PRESENT ) == 0 ) {
+    if ( ( ( *pgd_entry ) & PAGE_PRESENT ) == 0 ) {
         return -EINVAL;
     }
 
-    pt_entry = page_table_entry( *pgd_entry, linear );
+    pt_entry = &( ( uint32_t* )( *pgd_entry & PAGE_MASK ) )[ PT_INDEX( linear ) ];
 
-    if ( ( ( *pt_entry ) & PRESENT ) == 0 ) {
+    if ( ( ( *pt_entry ) & PAGE_PRESENT ) == 0 ) {
         return -EINVAL;
     }
 

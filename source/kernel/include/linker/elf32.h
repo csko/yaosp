@@ -135,16 +135,16 @@ typedef struct elf_module {
 
     uint32_t text_address;
     size_t text_size;
-    region_id text_region;
 
-    region_id data_region;
+    memory_region_t* text_region;
+    memory_region_t* data_region;
 } elf_module_t;
 
 typedef struct elf_application {
     elf32_image_info_t image_info;
 
-    region_id text_region;
-    region_id data_region;
+    memory_region_t* text_region;
+    memory_region_t* data_region;
 } elf_application_t;
 
 int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader, uint16_t type );

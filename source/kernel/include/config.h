@@ -22,7 +22,7 @@
 //#define MK_RELEASE_BUILD 1
 
 //#define ENABLE_SMP 1
-#define ENABLE_DEBUGGER 1
+//#define ENABLE_DEBUGGER 1
 
 /**
  * The maximum number of CPUs supported.

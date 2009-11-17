@@ -21,6 +21,7 @@
 
 #include <config.h>
 #include <mm/region.h>
+#include <lock/mutex.h>
 #include <lib/array.h>
 
 struct process;
@@ -28,6 +29,7 @@ struct process;
 typedef struct memory_context {
     struct memory_context* next;
 
+    lock_id mutex;
     array_t regions;
     struct process* process;
 
@@ -56,7 +58,6 @@ int memory_context_insert_region( memory_context_t* context, memory_region_t* re
  */
 int memory_context_remove_region( memory_context_t* context, memory_region_t* region );
 
-memory_region_t* do_memory_context_get_region_for( memory_context_t* context, ptr_t address );
 memory_region_t* memory_context_get_region_for( memory_context_t* context, ptr_t address );
 
 /**
@@ -82,7 +83,7 @@ bool memory_context_find_unmapped_region( memory_context_t* context, ptr_t start
  * @param new_size The new size of the memory region
  * @return True is returned if the resize is allowed
  */
-bool memory_context_can_resize_region( memory_context_t* context, memory_region_t* region, uint32_t new_size );
+bool memory_context_can_resize_region( memory_context_t* context, memory_region_t* region, uint64_t new_size );
 
 /**
  * Clones an existing memory context.
@@ -104,8 +105,6 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, struct pr
  */
 int memory_context_delete_regions( memory_context_t* context );
 
-void memory_context_destroy( memory_context_t* context );
-
 #ifdef ENABLE_DEBUGGER
 int memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical );
 #endif /* ENABLE_DEBUGGER */
@@ -113,5 +112,6 @@ int memory_context_translate_address( memory_context_t* context, ptr_t linear, p
 void memory_context_dump( memory_context_t* context );
 
 int memory_context_init( memory_context_t* context );
+void memory_context_destroy( memory_context_t* context );
 
 #endif /* _MM_CONTEXT_H_ */

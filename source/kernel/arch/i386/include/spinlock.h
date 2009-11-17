@@ -79,4 +79,4 @@ void spinunlock_enable( spinlock_t* lock );
  */
 bool spinlock_is_locked( spinlock_t* lock );
 
-#endif // _ARCH_SPINLOCK_H_
+#endif /* _ARCH_SPINLOCK_H_ */

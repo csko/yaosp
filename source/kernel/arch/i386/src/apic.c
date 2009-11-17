@@ -36,8 +36,9 @@ static int fake_lapic_id = 0;
 
 bool apic_present = false;
 
+memory_region_t* lapic_region;
+
 uint32_t local_apic_base = 0;
-region_id local_apic_region;
 uint32_t local_apic_address = ( uint32_t )&fake_lapic_id - LAPIC_ID;
 
 #ifdef ENABLE_SMP
@@ -170,8 +171,6 @@ __init void setup_local_apic( void ) {
 }
 
 __init int init_apic( void ) {
-    int error;
-
     /* First check if we found the APIC in the system */
 
     if ( local_apic_base == 0 ) {
@@ -182,20 +181,19 @@ __init int init_apic( void ) {
 
     /* Create a memory region for the local APIC registers */
 
-    local_apic_region = do_create_region(
-        "local APIC registers",
-        PAGE_SIZE,
+    lapic_region = do_create_memory_region(
+        &kernel_memory_context,
+        "lapic registers",
         REGION_READ | REGION_WRITE | REGION_KERNEL,
-        ALLOC_NONE,
-        ( void** )&local_apic_address,
-        false
+        PAGE_SIZE
     );
 
-    if ( local_apic_region < 0 ) {
+    if ( lapic_region == NULL ) {
         kprintf( ERROR, "Failed to create memory region for local APIC registers!\n" );
-        return local_apic_region;
+        return -ENOMEM;
     }
 
+#if 0
     /* Remap the created region */
 
     error = do_remap_region( local_apic_region, ( ptr_t )local_apic_base, true );
@@ -205,6 +203,9 @@ __init int init_apic( void ) {
         /* TODO: delete region */
         return error;
     }
+#endif
+
+    memory_region_insert( &kernel_memory_context, lapic_region );
 
     /* Setup the local APIC */
 

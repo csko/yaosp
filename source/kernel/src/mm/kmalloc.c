@@ -131,6 +131,11 @@ void* kmalloc( uint32_t size ) {
     uint32_t min_size;
     kmalloc_block_t* block;
 
+    if ( __unlikely( size == 0 ) ) {
+        kprintf( WARNING, "kmalloc(): Called with 0 size!\n" );
+        return NULL;
+    }
+
     spinlock_disable( &kmalloc_lock );
 
     block = root;

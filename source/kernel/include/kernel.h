@@ -40,6 +40,10 @@ typedef struct statistics_info {
     uint32_t semaphore_count;
 } statistics_info_t;
 
+extern int __ro_end;
+extern int __data_start;
+extern int __kernel_end;
+
 extern thread_id init_thread_id;
 
 int parse_kernel_parameters( const char* params );

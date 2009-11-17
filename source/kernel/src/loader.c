@@ -120,33 +120,34 @@ static int clone_param_array( char** old_array, char*** _new_array, int* new_siz
     int old_size;
     char** new_array;
 
-    if ( old_array == NULL ) {
+    if ( __unlikely( old_array == NULL ) ) {
         old_size = 0;
+        new_array = NULL;
     } else {
         for ( old_size = 0; old_array[ old_size ] != NULL; old_size++ ) ;
-    }
 
-    new_array = ( char** )kmalloc( sizeof( char* ) * old_size );
+        new_array = ( char** )kmalloc( sizeof( char* ) * old_size );
 
-    if ( new_array == NULL ) {
-        return -ENOMEM;
-    }
+        if ( new_array == NULL ) {
+            return -ENOMEM;
+        }
 
-    for ( i = 0; i < old_size; i++ ) {
-        if ( old_array[ i ] == NULL ) {
-            new_array[ i ] = NULL;
-        } else {
-            size_t len;
+        for ( i = 0; i < old_size; i++ ) {
+            if ( old_array[ i ] == NULL ) {
+                new_array[ i ] = NULL;
+            } else {
+                size_t len;
 
-            len = strlen( old_array[ i ] );
+                len = strlen( old_array[ i ] );
 
-            new_array[ i ] = ( char* )kmalloc( len + 1 );
+                new_array[ i ] = ( char* )kmalloc( len + 1 );
 
-            if ( new_array[ i ] == NULL ) {
-                return -ENOMEM;
+                if ( new_array[ i ] == NULL ) {
+                    return -ENOMEM;
+                }
+
+                memcpy( new_array[ i ], old_array[ i ], len + 1 );
             }
-
-            memcpy( new_array[ i ], old_array[ i ], len + 1 );
         }
     }
 
@@ -210,7 +211,6 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     char* new_name;
     uint8_t* stack;
     thread_t* thread;
-    void* stack_address;
     application_loader_t* loader;
     interpreter_loader_t* interpreter_loader;
 
@@ -289,12 +289,11 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     memory_context_delete_regions( thread->process->memory_context );
 
-    thread->process->heap_region = -1;
+    thread->process->heap_region = NULL;
 
     /* Empty the locking context of the process */
 
     lock_context_make_empty( thread->process->lock_context );
-
     /* TODO: close those files that have close_on_exec flag turned on! */
 
     /* Set default signal handling values */
@@ -319,17 +318,17 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     /* Create stack for the userspace thread */
 
-    thread->user_stack_region = create_region(
+    thread->user_stack_region = memory_region_create(
         "stack",
         USER_STACK_PAGES * PAGE_SIZE,
-        REGION_READ | REGION_WRITE | REGION_STACK,
-        ALLOC_PAGES,
-        &stack_address
+        REGION_READ | REGION_WRITE | REGION_STACK
     );
 
-    if ( thread->user_stack_region < 0 ) {
+    if ( thread->user_stack_region == NULL ) {
         goto error2;
     }
+
+    memory_region_alloc_pages( thread->user_stack_region ); /* todo: check return value */
 
     /* Copy argv and envp item values to the user */
 
@@ -345,7 +344,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
         goto error4;
     }
 
-    stack = ( uint8_t* )stack_address;
+    stack = ( uint8_t* )thread->user_stack_region->address;
     stack += ( USER_STACK_PAGES * PAGE_SIZE );
 
     stack = copy_param_array_to_user( cloned_argv, user_argv, argc, stack );
@@ -412,13 +411,13 @@ error4:
     kfree( user_argv );
 
 error3:
-    delete_region( thread->user_stack_region );
+    memory_region_put( thread->user_stack_region );
 
 error2:
     /* TODO: destroy loaded stuff */
 
 error1:
-    thread->user_stack_region = -1;
+    thread->user_stack_region = NULL;
 
     kprintf( ERROR, "Failed to execute %s.\n", thread->process->name );
 

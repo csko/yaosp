@@ -84,7 +84,7 @@ typedef struct thread {
     void* kernel_stack_end;
 
     void* user_stack_end;
-    region_id user_stack_region;
+    memory_region_t* user_stack_region;
 
     void* syscall_stack;
 

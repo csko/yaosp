@@ -45,7 +45,7 @@ typedef struct process {
     lock_context_t* lock_context;
     io_context_t* io_context;
 
-    region_id heap_region;
+    memory_region_t* heap_region;
 
     uint64_t vmem_size;
     uint64_t pmem_size;

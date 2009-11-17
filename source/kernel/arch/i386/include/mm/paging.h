@@ -24,44 +24,21 @@
 #include <arch/mm/config.h>
 #include <arch/mm/context.h>
 
-#define PRESENT 0x1
-#define WRITE   0x2
-#define USER    0x4
+#define PAGE_PRESENT 0x1
+#define PAGE_WRITE   0x2
+#define PAGE_USER    0x4
 
 #define PGD_INDEX(addr) ((addr)>>PGDIR_SHIFT)
 #define PT_INDEX(addr)  (((addr)>>PAGE_SHIFT) & 1023)
 
-static inline uint32_t* page_directory_entry( i386_memory_context_t* context, ptr_t address ) {
-    return &( context->page_directory[ PGD_INDEX( address ) ] );
-}
+int get_paging_flags_for_region( memory_region_t* region );
 
-static inline uint32_t* page_table_entry( uint32_t table, ptr_t address ) {
-    return &( ( ( uint32_t* )( table & PAGE_MASK ) )[ PT_INDEX( address ) ] );
-}
-
-int map_region_page_tables( i386_memory_context_t* arch_context, ptr_t start, uint32_t size, bool kernel );
-int map_region_pages(
-    i386_memory_context_t* arch_context,
-    ptr_t virtual,
-    ptr_t physical,
-    uint32_t size,
-    bool kernel,
-    bool write
-);
-int create_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool kernel, bool write );
-int clear_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size, bool fail_on_nonpresent_pt );
-int free_region_page_tables( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
-int free_region_pages( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
-int free_region_pages_contiguous( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
-int free_region_pages_lazy( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
-int free_region_pages_remapped( i386_memory_context_t* arch_context, ptr_t virtual, uint32_t size );
-
-int clone_user_region(
-    memory_context_t* old_context,
-    memory_region_t* old_region,
-    memory_context_t* new_context,
-    memory_region_t* new_region
-);
+int paging_alloc_table_entries( uint32_t* table, uint32_t from, uint32_t to, uint32_t flags );
+int paging_fill_table_entries( uint32_t* table, uint32_t address, uint32_t from, uint32_t to, uint32_t flags );
+int paging_clear_table_entries( uint32_t* table, uint32_t from, uint32_t to );
+int paging_free_table_entries( uint32_t* table, uint32_t from, uint32_t to );
+int paging_clone_table_entries( uint32_t* old_table, uint32_t* new_table,
+    uint32_t from, uint32_t to, int remove_write );
 
 int init_paging( void );
 

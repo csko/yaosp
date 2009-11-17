@@ -26,6 +26,7 @@ SECTIONS {
 
     . = ALIGN(0x1000);
     __ro_end = .;
+    __data_start = .;
 
     .data : {
         *(.data)

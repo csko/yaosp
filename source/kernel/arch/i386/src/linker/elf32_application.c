@@ -49,7 +49,6 @@ static bool elf32_application_check( binary_loader_t* loader ) {
 }
 
 static int elf32_application_map( binary_loader_t* loader, elf_application_t* elf_application ) {
-    int error;
     uint32_t i;
     elf_section_header_t* section_header;
 
@@ -58,14 +57,12 @@ static int elf32_application_map( binary_loader_t* loader, elf_application_t* el
     uint32_t text_end = 0;
     uint32_t text_size;
     uint32_t text_offset = 0;
-    void* text_address;
 
     bool data_found = false;
     uint32_t data_start = 0;
     uint32_t data_end = 0;
     uint32_t data_size;
     uint32_t data_offset = 0;
-    void* data_address;
 
     uint32_t bss_end = 0;
     uint32_t data_size_with_bss;
@@ -118,44 +115,29 @@ static int elf32_application_map( binary_loader_t* loader, elf_application_t* el
     data_size = data_end - data_start + 1;
     data_size_with_bss = bss_end - data_start + 1;
 
-    elf_application->text_region = create_region(
-        "ro",
-        PAGE_ALIGN( text_size ),
-        REGION_READ,
-        ALLOC_LAZY,
-        &text_address
-    );
+    elf_application->text_region = memory_region_create( "ro", PAGE_ALIGN( text_size ), REGION_READ | REGION_WRITE | REGION_EXECUTE );
 
-    if ( elf_application->text_region < 0 ) {
-        return elf_application->text_region;
+    if ( elf_application->text_region == NULL ) {
+        return -1;
     }
 
-    error = map_region_to_file( elf_application->text_region, loader->get_fd( loader->private ), text_offset, text_size );
-
-    if ( error < 0 ) {
-        return error;
-    }
+    memory_region_alloc_pages( elf_application->text_region );
+    int ret = loader->read( loader->private, ( void* )elf_application->text_region->address, text_offset, text_size );
+    ASSERT( ret == text_size );
 
     if ( data_found > 0 ) {
-        elf_application->data_region = create_region(
-            "rw",
-            PAGE_ALIGN( data_size_with_bss ),
-            REGION_READ | REGION_WRITE,
-            ALLOC_LAZY,
-            &data_address
-        );
+        elf_application->data_region = memory_region_create( "rw", PAGE_ALIGN( data_size_with_bss ), REGION_READ | REGION_WRITE );
 
-        if ( elf_application->data_region < 0 ) {
+        if ( elf_application->data_region == NULL ) {
             /* TODO: delete text region */
-            return elf_application->data_region;
+            return -1;
         }
 
-        if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
-            error = map_region_to_file( elf_application->data_region, loader->get_fd( loader->private ), data_offset, data_size );
+        memory_region_alloc_pages( elf_application->data_region );
 
-            if ( error < 0 ) {
-                return error;
-            }
+        if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
+            ret = loader->read( loader->private, ( void* )elf_application->data_region->address, data_offset, data_size );
+            ASSERT( ret == data_size );
         }
     }
 

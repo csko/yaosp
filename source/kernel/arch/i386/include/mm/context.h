@@ -26,16 +26,10 @@ typedef struct i386_memory_context {
     uint32_t* page_directory;
 } i386_memory_context_t;
 
-int arch_init_memory_context( memory_context_t* context );
-int arch_destroy_memory_context( memory_context_t* context );
+int arch_memory_context_init( memory_context_t* context );
+int arch_memory_context_destroy( memory_context_t* context );
 
-int arch_clone_memory_context( memory_context_t* old_context, memory_context_t* new_context );
-int arch_clone_memory_region(
-    memory_context_t* old_context,
-    memory_region_t* old_region,
-    memory_context_t* new_context,
-    memory_region_t* new_region
-);
+int arch_memory_context_clone( memory_context_t* old_context, memory_context_t* new_context );
 
 #ifdef ENABLE_DEBUGGER
 int arch_memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical );

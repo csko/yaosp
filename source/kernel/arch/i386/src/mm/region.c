@@ -20,311 +20,314 @@
 #include <kernel.h>
 #include <process.h>
 #include <macros.h>
+#include <console.h>
 #include <sched/scheduler.h>
 #include <mm/pages.h>
+#include <lib/string.h>
 
 #include <arch/smp.h>
+#include <arch/interrupt.h>
 #include <arch/mm/region.h>
 #include <arch/mm/context.h>
 #include <arch/mm/paging.h>
 
-int arch_create_region_pages( memory_context_t* context, memory_region_t* region ) {
+int arch_memory_region_remap_pages( memory_region_t* region, ptr_t physical_address ) {
     int error;
-    bool do_tlb_flush;
-    uint64_t allocated_pmem;
+    uint32_t curr_pt;
+    uint32_t last_pt;
+    uint32_t paging_flags;
+    uint32_t* page_directory;
     i386_memory_context_t* arch_context;
 
-    allocated_pmem = 0;
-    do_tlb_flush = true;
-    arch_context = ( i386_memory_context_t* )context->arch_data;
+    paging_flags = get_paging_flags_for_region( region );
+    arch_context = ( i386_memory_context_t* )region->context->arch_data;
+    page_directory = arch_context->page_directory;
 
-    /* Create the physical pages for the memory region */
+    /* Allocate possibly missing page tables */
 
-    switch ( region->alloc_method ) {
-        case ALLOC_PAGES :
-            error = create_region_pages(
-                arch_context,
-                region->start,
-                region->size,
-                ( region->flags & REGION_KERNEL ) != 0,
-                ( region->flags & REGION_WRITE ) != 0
-            );
+    curr_pt = PGD_INDEX( region->address );
+    last_pt = PGD_INDEX( region->address + region->size - 1 );
 
-            if ( error < 0 ) {
-                return error;
-            }
-
-            allocated_pmem = region->size;
-
-            break;
-
-        case ALLOC_CONTIGUOUS : {
-            void* p;
-
-            p = alloc_pages( region->size / PAGE_SIZE, MEM_COMMON );
-
-            if ( p == NULL ) {
-                return -ENOMEM;
-            }
-
-            error = map_region_pages(
-                arch_context,
-                region->start,
-                ( ptr_t )p,
-                region->size,
-                ( region->flags & REGION_KERNEL ) != 0,
-                ( region->flags & REGION_WRITE ) != 0
-            );
-
-            if ( error < 0 ) {
-                return error;
-            }
-
-            allocated_pmem = region->size;
-
-            break;
-        }
-
-        case ALLOC_LAZY :
-            error = clear_region_pages(
-                arch_context,
-                region->start,
-                region->size,
-                false
-            );
-
-            if ( error < 0 ) {
-                return error;
-            }
-
-            break;
-
-        case ALLOC_NONE :
-            do_tlb_flush = false;
-            break;
-    }
-
-    /* Update pmem statistics */
-
-    if ( allocated_pmem != 0 ) {
-        scheduler_lock();
-
-        context->process->pmem_size += allocated_pmem;
-
-        scheduler_unlock();
-    }
-
-    /* Invalidate the TLB if we changed anything that requires it */
-
-    if ( do_tlb_flush ) {
-        flush_tlb_global();
-    }
-
-    return 0;
-}
-
-int arch_delete_region_pages( memory_context_t* context, memory_region_t* region ) {
-    uint64_t freed_pmem;
-    i386_memory_context_t* arch_context;
-
-    freed_pmem = 0;
-    arch_context = ( i386_memory_context_t* )context->arch_data;
-
-    if ( ( region->flags & REGION_REMAPPED ) == 0 ) {
-        switch ( region->alloc_method ) {
-            case ALLOC_PAGES :
-                free_region_pages( arch_context, region->start, region->size );
-                freed_pmem = region->size;
-                break;
-
-            case ALLOC_CONTIGUOUS :
-                free_region_pages_contiguous( arch_context, region->start, region->size );
-                freed_pmem = region->size;
-                break;
-
-            case ALLOC_LAZY :
-                free_region_pages_lazy( arch_context, region->start, region->size );
-                break;
-
-            case ALLOC_NONE :
-                break;
-        }
-    } else {
-        free_region_pages_remapped( arch_context, region->start, region->size );
-    }
-
-    free_region_page_tables( arch_context, region->start, region->size );
-
-    /* Update pmem statistics */
-
-    if ( freed_pmem != 0 ) {
-        scheduler_lock();
-
-        context->process->pmem_size -= freed_pmem;
-
-        scheduler_unlock();
-    }
-
-    flush_tlb_global();
-
-    return 0;
-}
-
-int arch_remap_region_pages( struct memory_context* context, memory_region_t* region, ptr_t address ) {
-    int error;
-    i386_memory_context_t* arch_context;
-
-    arch_context = ( i386_memory_context_t* )context->arch_data;
-
-    error = map_region_pages(
-        arch_context,
-        region->start,
-        address,
-        region->size,
-        ( region->flags & REGION_KERNEL ) != 0,
-        ( region->flags & REGION_WRITE ) != 0
+    error = paging_alloc_table_entries(
+        page_directory,
+        curr_pt,
+        last_pt,
+        paging_flags | PAGE_WRITE
     );
 
-    if ( error < 0 ) {
+    if ( __unlikely( error < 0 ) ) {
         return error;
     }
 
-    flush_tlb_global();
+    /* Map the pages of the region */
+
+    uint32_t first_page = PT_INDEX( region->address );
+    uint32_t last_page = ( curr_pt == last_pt ? PT_INDEX( region->address + region->size - 1 ) : 1023 );
+
+    error = paging_fill_table_entries(
+        ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+        physical_address, first_page,
+        last_page, paging_flags
+    );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    curr_pt++;
+    physical_address += ( last_page - first_page + 1 ) * PAGE_SIZE;
+
+    for ( ; curr_pt < last_pt; curr_pt++ ) {
+        error = paging_fill_table_entries(
+            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+            physical_address, 0,
+            1023, paging_flags
+        );
+
+        if ( __unlikely( error < 0 ) ) {
+            return error;
+        }
+
+        physical_address += 1024 * PAGE_SIZE;
+    }
+
+    if ( curr_pt == last_pt ) {
+        error = paging_fill_table_entries(
+            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+            physical_address, 0,
+            PT_INDEX( region->address + region->size - 1 ), paging_flags
+        );
+
+        if ( __unlikely( error < 0 ) ) {
+            return error;
+        }
+    }
 
     return 0;
 }
 
-int arch_resize_region( struct memory_context* context, memory_region_t* region, uint32_t new_size ) {
+int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint64_t size ) {
+    int error;
+    uint32_t curr_pt;
+    uint32_t last_pt;
+    uint32_t paging_flags;
+    uint32_t* page_directory;
     i386_memory_context_t* arch_context;
 
-    arch_context = ( i386_memory_context_t* )context->arch_data;
+    paging_flags = get_paging_flags_for_region( region );
+    arch_context = ( i386_memory_context_t* )region->context->arch_data;
+    page_directory = arch_context->page_directory;
 
-    if ( new_size < region->size ) {
-        free_region_pages( arch_context, region->start + new_size, region->size - new_size );
-        free_region_page_tables( arch_context, region->start + new_size, region->size - new_size );
+    /* Allocate possibly missing page tables */
 
-        scheduler_lock();
+    curr_pt = PGD_INDEX( virtual );
+    last_pt = PGD_INDEX( virtual + size - 1 );
 
-        context->process->pmem_size -= ( region->size - new_size );
+    error = paging_alloc_table_entries(
+        page_directory, curr_pt,
+        last_pt, paging_flags | PAGE_WRITE
+    );
 
-        scheduler_unlock();
-    } else {
-        uint64_t allocated_pmem = 0;
-
-        switch ( region->alloc_method ) {
-            case ALLOC_LAZY :
-                panic( "Resizing lazy allocated memory region not yet implemented!\n" );
-                break;
-
-            case ALLOC_PAGES : {
-                int error;
-
-                error = create_region_pages(
-                    arch_context,
-                    region->start + region->size,
-                    new_size - region->size,
-                    ( region->flags & REGION_KERNEL ) != 0,
-                    ( region->flags & REGION_WRITE ) != 0
-                );
-
-                if ( error < 0 ) {
-                    return error;
-                }
-
-                allocated_pmem = new_size - region->size;
-
-                break;
-            }
-
-            case ALLOC_CONTIGUOUS :
-                panic( "Resizing contiguous allocated memory region not yet implemented!\n" );
-                break;
-
-            case ALLOC_NONE :
-                break;
-        }
-
-        if ( allocated_pmem != 0 ) {
-            scheduler_lock();
-
-            context->process->pmem_size += allocated_pmem;
-
-            scheduler_unlock();
-        }
-    }
-
-    flush_tlb_global();
-
-    return 0;
-}
-
-int arch_clone_region( memory_region_t* old_region, memory_region_t* new_region ) {
-    i386_memory_context_t* old_context;
-    i386_memory_context_t* new_context;
-
-    old_context = ( i386_memory_context_t* )old_region->context->arch_data;
-    new_context = ( i386_memory_context_t* )new_region->context->arch_data;
-
-    int error;
-    uint32_t i;
-    uint32_t count;
-    uint32_t old_pd_index;
-    uint32_t old_pt_index;
-    uint32_t new_pd_index;
-    uint32_t new_pt_index;
-    uint32_t* old_pt;
-    uint32_t* new_pt;
-
-    /* Create the page tables if required */
-
-    error = map_region_page_tables( new_context, new_region->start, new_region->size, false );
-
-    if ( error < 0 ) {
+    if ( __unlikely( error < 0 ) ) {
         return error;
     }
 
-    /* Do the page mapping */
+    /* Allocate the pages of the region */
 
-    count = new_region->size / PAGE_SIZE;
-    old_pd_index = old_region->start >> PGDIR_SHIFT;
-    old_pt_index = ( old_region->start >> PAGE_SHIFT ) & 1023;
-    old_pt = ( uint32_t* )( old_context->page_directory[ old_pd_index ] & PAGE_MASK );
-    new_pd_index = new_region->start >> PGDIR_SHIFT;
-    new_pt_index = ( new_region->start >> PAGE_SHIFT ) & 1023;
-    new_pt = ( uint32_t* )( new_context->page_directory[ new_pd_index ] & PAGE_MASK );
+    uint32_t first_page = PT_INDEX( region->address );
+    uint32_t last_page = ( curr_pt == last_pt ? PT_INDEX( virtual + size - 1 ) : 1023 );
 
-    for ( i = 0; i < count; i++ ) {
-        new_pt[ new_pt_index ] = old_pt[ old_pt_index ];
+    error = paging_alloc_table_entries(
+        ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+        first_page, last_page, paging_flags
+    );
 
-        if ( old_pt_index == 1023 ) {
-            old_pt_index = 0;
-            old_pd_index++;
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
 
-            old_pt = ( uint32_t* )( old_context->page_directory[ old_pd_index ] & PAGE_MASK );
-        } else {
-            old_pt_index++;
+    curr_pt++;
+
+    for ( ; curr_pt < last_pt; curr_pt++ ) {
+        error = paging_alloc_table_entries(
+            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+            0, 1023, paging_flags
+        );
+
+        if ( __unlikely( error < 0 ) ) {
+            return error;
         }
+    }
 
-        if ( new_pt_index == 1023 ) {
-            new_pt_index = 0;
-            new_pd_index++;
+    if ( curr_pt == last_pt ) {
+        error = paging_alloc_table_entries(
+            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+            0, PT_INDEX( virtual + size - 1 ), paging_flags
+        );
 
-            new_pt = ( uint32_t* )( new_context->page_directory[ new_pd_index ] & PAGE_MASK );
-        } else {
-            new_pt_index++;
+        if ( __unlikely( error < 0 ) ) {
+            return error;
         }
     }
 
     return 0;
 }
 
-int arch_clone_memory_region(
-    memory_context_t* old_context,
-    memory_region_t* old_region,
-    memory_context_t* new_context,
-    memory_region_t* new_region
-) {
-    ASSERT( ( old_region->flags & REGION_KERNEL ) == 0 );
+typedef int table_unmap_func_t( uint32_t* table, uint32_t from, uint32_t to );
 
-    return clone_user_region( old_context, old_region, new_context, new_region );
+int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint64_t size ) {
+    uint32_t curr_pt;
+    uint32_t last_pt;
+    uint32_t* page_directory;
+    table_unmap_func_t* unmap_function;
+    i386_memory_context_t* arch_context;
+
+    arch_context = ( i386_memory_context_t* )region->context->arch_data;
+    page_directory = arch_context->page_directory;
+
+    switch ( region->flags & REGION_MAPPING_FLAGS ) {
+        case REGION_REMAPPED :
+            unmap_function = paging_clear_table_entries;
+            break;
+
+        case REGION_ALLOCATED :
+            unmap_function = paging_free_table_entries;
+            break;
+
+        case REGION_FILE_MAPPED :
+            kprintf( WARNING, "%s(): REGION_FILE_MAPPED not yet supported!\n", __FUNCTION__ );
+
+        default :
+            return -1;
+    }
+
+    curr_pt = PGD_INDEX( virtual );
+    last_pt = PGD_INDEX( virtual + size - 1 );
+
+    uint32_t first_page = PT_INDEX( virtual );
+    uint32_t last_page = ( curr_pt == last_pt ? PT_INDEX( virtual + size - 1 ) : 1023 );
+
+    /* Unmap the pages of the region */
+
+    spinlock_disable( &pages_lock );
+
+    unmap_function(
+        ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+        first_page, last_page
+    );
+
+    curr_pt++;
+
+    for ( ; curr_pt < last_pt; curr_pt++ ) {
+        unmap_function(
+            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+            0, 1023
+        );
+    }
+
+    if ( curr_pt == last_pt ) {
+        unmap_function(
+            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
+            0, PT_INDEX( virtual + size - 1 )
+        );
+    }
+
+    spinunlock_enable( &pages_lock );
+
+    return 0;
+}
+
+static int do_clone_allocated_region_pages( memory_region_t* old_region, memory_region_t* new_region ) {
+    int error;
+    uint32_t curr_pt;
+    uint32_t last_pt;
+    uint32_t paging_flags;
+    uint32_t* old_page_directory;
+    uint32_t* new_page_directory;
+    i386_memory_context_t* arch_context;
+
+    paging_flags = get_paging_flags_for_region( new_region );
+
+    arch_context = ( i386_memory_context_t* )old_region->context->arch_data;
+    old_page_directory = arch_context->page_directory;
+    arch_context = ( i386_memory_context_t* )new_region->context->arch_data;
+    new_page_directory = arch_context->page_directory;
+
+    /* Allocate possibly missing page tables */
+
+    curr_pt = PGD_INDEX( new_region->address );
+    last_pt = PGD_INDEX( new_region->address + new_region->size - 1 );
+
+    error = paging_alloc_table_entries(
+        new_page_directory,
+        curr_pt,
+        last_pt,
+        paging_flags | PAGE_WRITE
+    );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    int remove_write = ( new_region->flags & REGION_WRITE );
+    uint32_t first_page = PT_INDEX( new_region->address );
+    uint32_t last_page = ( curr_pt == last_pt ? PT_INDEX( new_region->address + new_region->size - 1 ) : 1023 );
+
+    /* Clone the pages of the region */
+
+    spinlock_disable( &pages_lock );
+
+    paging_clone_table_entries(
+        ( uint32_t* )( old_page_directory[ curr_pt ] & PAGE_MASK ),
+        ( uint32_t* )( new_page_directory[ curr_pt ] & PAGE_MASK ),
+        first_page, last_page, remove_write
+    );
+
+    curr_pt++;
+
+    for ( ; curr_pt < last_pt; curr_pt++ ) {
+        paging_clone_table_entries(
+            ( uint32_t* )( old_page_directory[ curr_pt ] & PAGE_MASK ),
+            ( uint32_t* )( new_page_directory[ curr_pt ] & PAGE_MASK ),
+            0, 1023, remove_write
+        );
+    }
+
+    if ( curr_pt == last_pt ) {
+        paging_clone_table_entries(
+            ( uint32_t* )( old_page_directory[ curr_pt ] & PAGE_MASK ),
+            ( uint32_t* )( new_page_directory[ curr_pt ] & PAGE_MASK ),
+            0, PT_INDEX( new_region->address + new_region->size - 1 ), remove_write
+        );
+    }
+
+    spinunlock_enable( &pages_lock );
+
+    /* We need to flush the TLB as we might remove write access
+       from the pages of the currently running process. */
+
+    if ( remove_write ) {
+        flush_tlb();
+    }
+
+    return 0;
+}
+
+int arch_memory_region_clone_pages( memory_region_t* old_region, memory_region_t* new_region ) {
+    switch ( new_region->flags & REGION_MAPPING_FLAGS ) {
+        case REGION_REMAPPED :
+            kprintf( WARNING, "%s(): REGION_REMAPPED not yet supported!\n", __FUNCTION__ );
+            return -1;
+
+        case REGION_ALLOCATED :
+            return do_clone_allocated_region_pages( old_region, new_region );
+
+        case REGION_FILE_MAPPED :
+            kprintf( WARNING, "%s(): REGION_FILE_MAPPED not yet supported!\n", __FUNCTION__ );
+            return -1;
+
+        default :
+            kprintf( WARNING, "%s(): Invalid mapping mode!\n", __FUNCTION__ );
+            return -1;
+    }
 }

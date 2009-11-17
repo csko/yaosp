@@ -22,6 +22,7 @@
 #include <multiboot.h>
 
 #include <arch/atomic.h>
+#include <arch/spinlock.h>
 
 enum memory_type {
     MEM_COMMON,
@@ -43,9 +44,9 @@ typedef struct memory_type_desc {
  * manage the status (allocated/free) of all physical memory
  * pages.
  */
-typedef struct page {
-    atomic_t ref_count;
-} page_t;
+typedef struct memory_page {
+    int ref_count;
+} memory_page_t;
 
 /**
  * @struct memory_info
@@ -57,6 +58,13 @@ typedef struct memory_info {
     uint32_t free_page_count;
     uint32_t total_page_count;
 } memory_info_t;
+
+extern uint64_t memory_size;
+extern memory_page_t* memory_pages;
+extern spinlock_t pages_lock;
+extern memory_type_desc_t memory_descriptors[ MAX_MEMORY_TYPES ];
+
+void* do_alloc_pages( memory_type_desc_t* memory_desc, uint32_t count );
 
 /**
  * Allocates a number of physical memory pages.
@@ -99,4 +107,4 @@ int register_memory_type( int mem_type, ptr_t start, ptr_t size );
 int init_page_allocator( ptr_t page_map_address, uint64_t _memory_size );
 int init_page_allocator_late( void );
 
-#endif // _MM_PAGES_H_
+#endif /* _MM_PAGES_H_ */

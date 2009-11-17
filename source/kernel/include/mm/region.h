@@ -29,19 +29,17 @@ struct file;
 
 typedef int region_id;
 
-typedef enum alloc_type {
-    ALLOC_NONE,
-    ALLOC_LAZY,
-    ALLOC_PAGES,
-    ALLOC_CONTIGUOUS
-} alloc_type_t;
-
 typedef enum region_flags {
     REGION_READ = ( 1 << 0 ),
     REGION_WRITE = ( 1 << 1 ),
-    REGION_KERNEL = ( 1 << 2 ),
-    REGION_REMAPPED = ( 1 << 3 ),
-    REGION_STACK = ( 1 << 4 )
+    REGION_EXECUTE = ( 1 << 2 ),
+    REGION_KERNEL = ( 1 << 3 ),
+    REGION_STACK = ( 1 << 4 ),
+    REGION_REMAPPED = ( 1 << 5 ),
+    REGION_ALLOCATED = ( 1 << 6 ),
+    REGION_FILE_MAPPED = ( 1 << 7 ),
+    REGION_USER_FLAGS = ( REGION_READ | REGION_WRITE | REGION_EXECUTE | REGION_KERNEL | REGION_STACK ),
+    REGION_MAPPING_FLAGS = ( REGION_REMAPPED | REGION_ALLOCATED | REGION_FILE_MAPPED )
 } region_flags_t;
 
 typedef struct memory_region {
@@ -49,14 +47,17 @@ typedef struct memory_region {
 
     region_id id;
     char* name;
-    region_flags_t flags;
-    alloc_type_t alloc_method;
-    ptr_t start;
-    ptr_t size;
+    int ref_count;
 
+    region_flags_t flags;
+    ptr_t address;
+    uint64_t size;
+
+#if 0
     struct file* file;
     off_t file_offset;
     size_t file_size;
+#endif
 
     struct memory_context* context;
 } memory_region_t;
@@ -66,84 +67,39 @@ typedef struct region_info {
     ptr_t size;
 } region_info_t;
 
-memory_region_t* allocate_region( const char* name );
-void destroy_region( memory_region_t* region );
+memory_region_t* memory_region_allocate( const char* name );
+void memory_region_destroy( memory_region_t* region );
 
-int region_insert( struct memory_context* context, memory_region_t* region );
-int region_remove( struct memory_context* context, memory_region_t* region );
+int memory_region_insert( struct memory_context* context, memory_region_t* region );
+int memory_region_remove( struct memory_context* context, memory_region_t* region );
 
-region_id do_create_region(
-    const char* name,
-    uint32_t size,
-    region_flags_t flags,
-    alloc_type_t alloc_method,
-    void** _address,
-    bool call_from_userspace
-);
+memory_region_t* memory_region_get( region_id id );
+int memory_region_put( memory_region_t* region );
 
-/**
- * Creates a new memory region in the memory context of the
- * current process.
- *
- * @param name The name of the new memory region
- * @param size The size of the new memory region (has to be page aligned)
- * @param flags Some extra information for the region allocator
- * @param alloc_method The method how the pages in the region should be allocated
- * @param _address A pointer to a memory region where the virtual address of the
- *                 created region will be stored
- * @return On success a non-negative region ID is returned
- */
-region_id create_region(
-    const char* name,
-    uint32_t size,
-    region_flags_t flags,
-    alloc_type_t alloc_method,
-    void** _address
-);
+/* Helper functions */
 
-/**
- * Deletes a memory region.
- *
- * @param id The id of the region to delete
- * @return On success 0 is returned
- */
-int delete_region( region_id id );
+memory_region_t* do_create_memory_region( struct memory_context* context, const char* name,
+                                          uint64_t size, uint32_t flags );
+memory_region_t* do_create_memory_region_at( struct memory_context* context, const char* name,
+                                             ptr_t address, uint64_t size, uint32_t flags );
 
-int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region );
-int remap_region( region_id id, ptr_t address );
+int do_memory_region_remap_pages( memory_region_t* region, ptr_t physical_address );
+int do_memory_region_alloc_pages( memory_region_t* region );
 
-/**
- * Resizes a memory region.
- *
- * @param id The id of the memory region to resize
- * @param new_size The new size of the memory region
- * @return On success 0 is returned
- */
-int resize_region( region_id id, uint32_t new_size );
+/* Memory region handling */
 
-int map_region_to_file( region_id id, int fd, off_t offset, size_t length );
+memory_region_t* memory_region_create( const char* name, uint64_t size, uint32_t flags );
+int memory_region_remap_pages( memory_region_t* region, ptr_t physical_address );
+int memory_region_alloc_pages( memory_region_t* region );
 
-/**
- * Gets information about a memory region.
- *
- * @param id The id of the region to get information from
- * @param info A pointer to a region info structure to store informations
- * @return On success 0 is returned
- */
-int get_region_info( region_id id, region_info_t* info );
+int memory_region_resize( memory_region_t* region, uint64_t new_size );
 
-region_id sys_create_region(
-    const char* name,
-    uint32_t size,
-    region_flags_t flags,
-    alloc_type_t alloc_method,
-    void** _address
-);
+/* System calls */
 
-int sys_delete_region( region_id id );
-
-int sys_remap_region( region_id id, ptr_t address );
-int sys_clone_region( region_id id, void** address );
+int sys_memory_region_create( const char* name, uint64_t size, uint32_t flags );
+int sys_memory_region_put( region_id id );
+int sys_memory_region_map( region_id id, uint64_t* offset, ptr_t physical, uint64_t* size );
+int sys_memory_region_clone( region_id id );
 
 void memory_region_dump( memory_region_t* region, int index );
 

@@ -62,7 +62,7 @@ process_t* allocate_process( char* name ) {
     }
 
     process->id = -1;
-    process->heap_region = -1;
+    process->heap_region = NULL;
 
     atomic_set( &process->thread_count, 0 );
 

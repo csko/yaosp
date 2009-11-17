@@ -169,7 +169,29 @@ __init static void mp_handle_default_cfg( void ) {
 
 __init static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_floating_pointer_t** _fp ) {
     uint32_t offset;
+    uint32_t real_size;
+    memory_region_t* region;
     mp_floating_pointer_t* fp;
+
+    return 0; /* TODO: MM */
+
+    real_size = PAGE_ALIGN( size + ( ( ptr_t )addr & ~PAGE_MASK ) );
+
+    region = do_create_memory_region_at(
+        &kernel_memory_context,
+        "mp fp",
+        ( ptr_t )addr & PAGE_MASK,
+        real_size,
+        REGION_READ | REGION_KERNEL
+    );
+
+    if ( region == NULL ) {
+        kprintf( WARNING, "mp_find_floating_pointer(): Failed to create memory region!\n" );
+        return false;
+    }
+
+    do_memory_region_remap_pages( region, ( ptr_t )addr & PAGE_MASK );
+    memory_region_insert( &kernel_memory_context, region );
 
     for ( offset = 0; offset < size; offset += 16 ) {
         fp = ( mp_floating_pointer_t* )( ( uint8_t* )addr + offset );
@@ -181,6 +203,8 @@ __init static bool mp_find_floating_pointer( void* addr, uint32_t size, mp_float
             return true;
         }
     }
+
+    /* TODO: MM put memory region without locking! */
 
     return false;
 }

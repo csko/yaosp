@@ -29,7 +29,7 @@
 #include "x86emu/x86emu.h"
 
 static uint8_t* below_1mb = NULL;
-static region_id below_1mb_region = -1;
+static memory_region_t* below_1mb_region = NULL;
 
 static u8 x86emu_rdb( u32 address ) {
     return *( below_1mb + address );
@@ -147,32 +147,21 @@ int call_bios_interrupt( int num, bios_regs_t* regs ) {
 }
 
 __init int init_bios_access( void ) {
-    int error;
-
-    below_1mb_region = do_create_region(
-        "below_1mb",
+    below_1mb_region = do_create_memory_region(
+        &kernel_memory_context,
+        "below 1mb",
         1 * 1024 * 1024,
-        REGION_READ | REGION_WRITE | REGION_KERNEL,
-        ALLOC_NONE,
-        ( void** )&below_1mb,
-        false
+        REGION_READ | REGION_WRITE | REGION_KERNEL
     );
 
-    if ( below_1mb_region < 0 ) {
-        kprintf( ERROR, "Failed to create memory region for <1mb access!\n" );
+    if ( below_1mb_region == NULL ) {
         return -ENOMEM;
     }
 
-    error = do_remap_region(
-        below_1mb_region,
-        0x0,
-        true
-    );
+    do_memory_region_remap_pages( below_1mb_region, 0x0 );
+    memory_region_insert( &kernel_memory_context, below_1mb_region );
 
-    if ( error < 0 ) {
-        kprintf( ERROR, "Failed to remap memory region for <1mb access!\n" );
-        return error;
-    }
+    below_1mb = ( uint8_t* )below_1mb_region->address;
 
     X86EMU_setupMemFuncs( &x86emu_mem_funcs );
     X86EMU_setupPioFuncs( &x86emu_pio_funcs );

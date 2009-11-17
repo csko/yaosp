@@ -36,7 +36,7 @@ hashtable_t region_table;
 
 static int region_id_counter = 0;
 
-memory_region_t* allocate_region( const char* name ) {
+memory_region_t* memory_region_allocate( const char* name ) {
     size_t name_length;
     memory_region_t* region;
 
@@ -57,23 +57,23 @@ memory_region_t* allocate_region( const char* name ) {
     return region;
 }
 
-void destroy_region( memory_region_t* region ) {
+void memory_region_destroy( memory_region_t* region ) {
+#if 0
     if ( region->file != NULL ) {
         io_context_t* io_context;
 
         io_context = region->context->process->io_context;
-
         ASSERT( io_context != NULL );
 
         io_context_put_file( io_context, region->file );
-
         region->file = NULL;
     }
+#endif
 
     kfree( region );
 }
 
-int region_insert( memory_context_t* context, memory_region_t* region ) {
+int memory_region_insert( memory_context_t* context, memory_region_t* region ) {
     int error;
 
     /* Insert the new region to the hashtable */
@@ -109,7 +109,7 @@ error1:
     return error;
 }
 
-int region_remove( memory_context_t* context, memory_region_t* region ) {
+int memory_region_remove( memory_context_t* context, memory_region_t* region ) {
     ASSERT( mutex_is_locked( region_lock ) );
 
     hashtable_remove( &region_table, ( const void* )&region->id );
@@ -118,28 +118,113 @@ int region_remove( memory_context_t* context, memory_region_t* region ) {
     return 0;
 }
 
-region_id do_create_region(
-    const char* name,
-    uint32_t size,
-    region_flags_t flags,
-    alloc_type_t alloc_method,
-    void** _address,
-    bool call_from_userspace
-) {
-    int error = -1;
-    bool found;
+memory_region_t* memory_region_get( region_id id ) {
+    memory_region_t* region;
+
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
+
+    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
+
+    if ( region != NULL ) {
+        region->ref_count++;
+    }
+
+    mutex_unlock( region_lock );
+
+    return region;
+}
+
+int memory_region_put( memory_region_t* region ) {
+    int do_delete = 0;
+
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
+
+    if ( --region->ref_count == 0 ) {
+        hashtable_remove( &region_table, ( const void* )&region->id );
+        do_delete = 1;
+    }
+
+    mutex_unlock( region_lock );
+
+    if ( do_delete ) {
+        memory_context_t* context;
+
+        context = region->context;
+
+        mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
+        memory_context_remove_region( context, region );
+        mutex_unlock( context->mutex );
+
+        arch_memory_region_unmap_pages( region, region->address, region->size );
+        memory_region_destroy( region );
+    }
+
+    return 0;
+}
+
+memory_region_t* do_create_memory_region( memory_context_t* context, const char* name,
+                                          uint64_t size, uint32_t flags ) {
+    ptr_t start;
+    ptr_t end;
     ptr_t address;
+    memory_region_t* region;
+
+    if ( flags & REGION_KERNEL ) {
+        start = FIRST_KERNEL_ADDRESS;
+        end = LAST_KERNEL_ADDRESS;
+    } else {
+        start = FIRST_USER_ADDRESS;
+        end = LAST_USER_ADDRESS;
+    }
+
+    if ( !memory_context_find_unmapped_region( context, start, end, size, &address ) ) {
+        return NULL;
+    }
+
+    region = memory_region_allocate( name );
+
+    if ( region == NULL ) {
+        return NULL;
+    }
+
+    region->ref_count = 1;
+    region->flags = flags;
+    region->address = address;
+    region->size = size;
+    region->context = context;
+
+    return region;
+}
+
+memory_region_t* do_create_memory_region_at( struct memory_context* context, const char* name,
+                                             ptr_t address, uint64_t size, uint32_t flags ) {
+    ptr_t dummy;
+    memory_region_t* region;
+
+    if ( !memory_context_find_unmapped_region( context, address, address + size - 1, size, &dummy ) ) {
+        return NULL;
+    }
+
+    region = memory_region_allocate( name );
+
+    if ( region == NULL ) {
+        return NULL;
+    }
+
+    region->ref_count = 1;
+    region->flags = flags;
+    region->address = address;
+    region->size = size;
+    region->context = context;
+
+    return region;
+}
+
+memory_region_t* memory_region_create( const char* name, uint64_t size, uint32_t flags ) {
     memory_region_t* region;
     memory_context_t* context;
 
-    /* Do some sanity checking */
-
-    if ( ( size == 0 ) ||
-         ( ( size % PAGE_SIZE ) != 0 ) ) {
-        return -EINVAL;
-    }
-
-    /* Decide which memory context to use */
+    flags &= REGION_USER_FLAGS;
 
     if ( flags & REGION_KERNEL ) {
         context = &kernel_memory_context;
@@ -147,423 +232,118 @@ region_id do_create_region(
         context = current_process()->memory_context;
     }
 
-    /* Search for a suitable unmapped memory region */
+    mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
 
-    if ( ( flags & REGION_KERNEL ) != 0 ) {
-        found = memory_context_find_unmapped_region(
-            context,
-            FIRST_KERNEL_ADDRESS,
-            LAST_KERNEL_ADDRESS,
-            size,
-            &address
-        );
-    } else {
-        ptr_t start_address;
+    region = do_create_memory_region( context, name, size, flags );
 
-        if ( ( flags & REGION_STACK ) != 0 ) {
-            start_address = FIRST_USER_STACK_ADDRESS;
-        } else {
-            start_address = ( call_from_userspace ? FIRST_USER_REGION_ADDRESS : FIRST_USER_ADDRESS );
-        }
-
-        found = memory_context_find_unmapped_region(
-            context,
-            start_address,
-            LAST_USER_ADDRESS,
-            size,
-            &address
-        );
+    if ( region != NULL ) {
+        memory_context_insert_region( context, region );
     }
 
-    /* Not found? :( */
+    mutex_unlock( context->mutex );
 
-    if ( !found ) {
-        return -ENOMEM;
+    if ( region != NULL ) {
+        scheduler_lock();
+        context->process->vmem_size += region->size;
+        scheduler_unlock();
     }
-
-    /* Allocate a new region instance */
-
-    region = allocate_region( name );
-
-    if ( __unlikely( region == NULL ) ) {
-        return -ENOMEM;
-    }
-
-    region->flags = flags;
-    region->alloc_method = alloc_method;
-    region->start = address;
-    region->size = size;
-    region->context = context;
-
-    /* Allocate memory pages for the newly created region */
-
-    error = arch_create_region_pages( context, region );
-
-    if ( error < 0 ) {
-        goto error1;
-    }
-
-    /* Insert the new region to the memory context */
-
-    error = region_insert( context, region );
-
-    if ( error < 0 ) {
-        goto error2;
-    }
-
-    /* Update process vmem statistics */
-
-    scheduler_lock();
-    context->process->vmem_size += region->size;
-    scheduler_unlock();
-
-    *_address = ( void* )address;
-
-    return region->id;
-
-error2:
-    arch_delete_region_pages( context, region );
-
-error1:
-    destroy_region( region );
-
-    return error;
-}
-
-region_id create_region(
-    const char* name,
-    uint32_t size,
-    region_flags_t flags,
-    alloc_type_t alloc_method,
-    void** _address
-) {
-    region_id region;
-
-    /* Lazy page allocation is not allowed for kernel regions */
-
-    if ( ( flags & REGION_KERNEL ) &&
-         ( alloc_method == ALLOC_LAZY ) ) {
-        return -EINVAL;
-    }
-
-    flags &= ( REGION_READ | REGION_WRITE | REGION_KERNEL | REGION_STACK );
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    region = do_create_region( name, size, flags, alloc_method, _address, false );
-
-    mutex_unlock( region_lock );
 
     return region;
 }
 
-region_id sys_create_region(
-    const char* name,
-    uint32_t size,
-    region_flags_t flags,
-    alloc_type_t alloc_method,
-    void** _address
-) {
-    region_id region;
-
-    flags &= ( REGION_READ | REGION_WRITE );
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    region = do_create_region( name, size, flags, alloc_method, _address, true );
-
-    mutex_unlock( region_lock );
-
-    return region;
-}
-
-static int do_delete_region( region_id id, bool allow_kernel_region ) {
-    memory_region_t* region;
-
-    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
-
-    if ( region == NULL ) {
+int do_memory_region_remap_pages( memory_region_t* region, ptr_t physical_address ) {
+    if ( region->flags & REGION_MAPPING_FLAGS ) {
         return -EINVAL;
     }
-
-    if ( ( region->flags & REGION_KERNEL ) &&
-         ( !allow_kernel_region ) ) {
-        return -EPERM;
-    }
-
-    arch_delete_region_pages( region->context, region );
-    region_remove( region->context, region );
-
-    /* Update process vmem statistics */
-
-    scheduler_lock();
-    region->context->process->vmem_size -= region->size;
-    scheduler_unlock();
-
-    destroy_region( region );
-
-    return 0;
-}
-
-int delete_region( region_id id ) {
-    int error;
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-    error = do_delete_region( id, true );
-    mutex_unlock( region_lock );
-
-    return error;
-}
-
-int sys_delete_region( region_id id ) {
-    int error;
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-    error = do_delete_region( id, false );
-    mutex_unlock( region_lock );
-
-    return error;
-}
-
-int do_remap_region( region_id id, ptr_t address, bool allow_kernel_region ) {
-    memory_region_t* region;
-
-    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
-
-    if ( region == NULL ) {
-        return -EINVAL;
-    }
-
-    if ( ( region->flags & REGION_KERNEL ) &&
-         ( !allow_kernel_region ) ) {
-        return -EPERM;
-    }
-
-    arch_delete_region_pages( region->context, region );
-    arch_remap_region_pages( region->context, region, address );
 
     region->flags |= REGION_REMAPPED;
 
-    return 0;
+    return arch_memory_region_remap_pages( region, physical_address );
 }
 
-int remap_region( region_id id, ptr_t address ) {
-    int error;
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    error = do_remap_region( id, address, true );
-
-    mutex_unlock( region_lock );
-
-    return error;
-}
-
-int sys_remap_region( region_id id, ptr_t address ) {
-    int error;
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    error = do_remap_region( id, address, false );
-
-    mutex_unlock( region_lock );
-
-    return error;
-}
-
-int sys_clone_region( region_id id, void** _address ) {
-    int error;
-    ptr_t address;
-    memory_region_t* region;
+int memory_region_remap_pages( memory_region_t* region, ptr_t physical_address ) {
+    int ret;
     memory_context_t* context;
-    memory_region_t* new_region;
-    memory_context_t* new_context;
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
-
-    if ( region == NULL ) {
-        mutex_unlock( region_lock );
-
-        return -EINVAL;
-    }
-
-    context = region->context;
-    new_context = current_process()->memory_context;
-
-    if ( !memory_context_find_unmapped_region(
-            new_context,
-            FIRST_USER_REGION_ADDRESS,
-            LAST_USER_ADDRESS,
-            region->size,
-            &address
-        ) ) {
-        mutex_unlock( region_lock );
-
-        return -ENOSPC;
-    }
-
-    new_region = allocate_region( region->name );
-
-    if ( __unlikely( new_region == NULL ) ) {
-        return -ENOMEM;
-    }
-
-    new_region->flags = region->flags | REGION_REMAPPED;
-    new_region->alloc_method = ALLOC_NONE;
-    new_region->start = address;
-    new_region->size = region->size;
-    new_region->context = new_context;
-
-    error = arch_clone_region( region, new_region );
-
-    if ( error < 0 ) {
-        /* TODO: destroy the new region */
-
-        mutex_unlock( region_lock );
-
-        return error;
-    }
-
-    error = region_insert( new_context, new_region );
-
-    if ( error < 0 ) {
-        /* TODO: destroy ... */
-
-        mutex_unlock( region_lock );
-
-        return error;
-    }
-
-    scheduler_lock();
-    new_context->process->vmem_size += new_region->size;
-    scheduler_unlock();
-
-    mutex_unlock( region_lock );
-
-    *_address = ( void* )address;
-
-    return new_region->id;
-}
-
-int resize_region( region_id id, uint32_t new_size ) {
-    int error;
-    memory_region_t* region;
-    memory_context_t* context;
-
-    if ( ( new_size == 0 ) || ( ( new_size % PAGE_SIZE ) != 0 ) ) {
-        return -EINVAL;
-    }
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
-
-    if ( region == NULL ) {
-        mutex_unlock( region_lock );
-
-        return -EINVAL;
-    }
 
     context = region->context;
 
-    /* If the new size of the region is bigger than the current we
-       have to check if we have free space after the region in the
-       memory context. */
+    mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
+    ret = do_memory_region_remap_pages( region, physical_address );
+    mutex_unlock( context->mutex );
 
-    if ( new_size > region->size ) {
-        if ( !memory_context_can_resize_region( context, region, new_size ) ) {
-            mutex_unlock( region_lock );
+    return ret;
+}
 
-            return -ENOMEM;
+int do_memory_region_alloc_pages( memory_region_t* region ) {
+    if ( region->flags & REGION_MAPPING_FLAGS ) {
+        return -EINVAL;
+    }
+
+    region->flags |= REGION_ALLOCATED;
+
+    return arch_memory_region_alloc_pages( region, region->address, region->size );
+}
+
+int memory_region_alloc_pages( memory_region_t* region ) {
+    int ret;
+    memory_context_t* context;
+
+    context = region->context;
+
+    mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
+    ret = do_memory_region_alloc_pages( region );
+    mutex_unlock( context->mutex );
+
+    return ret;
+}
+
+int memory_region_resize( memory_region_t* region, uint64_t new_size ) {
+    int ret = 0;
+    memory_context_t* context;
+
+    context = region->context;
+
+    mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
+
+    if ( new_size < region->size ) {
+        arch_memory_region_unmap_pages( region, region->address + new_size, region->size - new_size );
+        region->size = new_size;
+    } else if ( new_size > region->size ) {
+        if ( memory_context_can_resize_region( context, region, new_size ) ) {
+            switch ( region->flags & REGION_MAPPING_FLAGS ) {
+                case REGION_ALLOCATED :
+                    ret = arch_memory_region_alloc_pages( region, region->address + region->size, new_size - region->size );
+                    break;
+            }
+
+            if ( ret == 0 ) {
+                region->size = new_size;
+            }
+        } else {
+            memory_context_dump( region->context );
+            ret = -ENOSPC;
         }
     }
 
-    /* Let the architecture resize the region */
+    mutex_unlock( context->mutex );
 
-    error = arch_resize_region( context, region, new_size );
-
-    if ( error < 0 ) {
-        mutex_unlock( region_lock );
-
-        return error;
-    }
-
-    /* Update process vmem statistics */
-
-    scheduler_lock();
-    context->process->vmem_size -= region->size;
-    context->process->vmem_size += new_size;
-    scheduler_unlock();
-
-    region->size = new_size;
-
-    mutex_unlock( region_lock );
-
-    return 0;
+    return ret;
 }
 
-int map_region_to_file( region_id id, int fd, off_t offset, size_t length ) {
-    file_t* file;
-    memory_region_t* region;
-    io_context_t* io_context;
-
-    io_context = current_process()->io_context;
-
-    ASSERT( io_context != NULL );
-
-    file = io_context_get_file( io_context, fd );
-
-    if ( file == NULL ) {
-        return -EINVAL;
-    }
-
-    ASSERT( atomic_get( &file->ref_count ) >= 2 );
-
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
-
-    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
-
-    if ( ( region == NULL ) ||
-         ( region->alloc_method != ALLOC_LAZY ) ||
-         ( region->file != NULL ) ) {
-        mutex_unlock( region_lock );
-
-        io_context_put_file( io_context, file );
-
-        return -EINVAL;
-    }
-
-    region->file = file;
-    region->file_offset = offset;
-    region->file_size = length;
-
-    mutex_unlock( region_lock );
-
-    return 0;
+int sys_memory_region_create( const char* name, uint64_t size, uint32_t flags ) {
+    return -1;
 }
 
-int get_region_info( region_id id, region_info_t* info ) {
-    int error;
-    memory_region_t* region;
+int sys_memory_region_put( region_id id ) {
+    return -1;
+}
 
-    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
+int sys_memory_region_map( region_id id, uint64_t* offset, ptr_t physical, uint64_t* size ) {
+    return -1;
+}
 
-    region = ( memory_region_t* )hashtable_get( &region_table, ( const void* )&id );
-
-    if ( region == NULL ) {
-        error = -EINVAL;
-    } else {
-        error = 0;
-
-        info->start = region->start;
-        info->size = region->size;
-    }
-
-    mutex_unlock( region_lock );
-
-    return error;
+int sys_memory_region_clone( region_id id ) {
+    return -1;
 }
 
 void memory_region_dump( memory_region_t* region, int index ) {
@@ -571,14 +351,13 @@ void memory_region_dump( memory_region_t* region, int index ) {
         INFO,
         "  id: %2d region: %08p-%08p flags: ",
         region->id,
-        region->start,
-        region->start + region->size - 1
+        region->address,
+        region->address + region->size - 1
     );
 
     if ( region->flags & REGION_READ ) { kprintf( INFO, "r" ); } else { kprintf( INFO, "-" ); }
     if ( region->flags & REGION_WRITE ) { kprintf( INFO, "w" ); } else { kprintf( INFO, "-" ); }
     if ( region->flags & REGION_STACK ) { kprintf( INFO, "S" ); } else { kprintf( INFO, "-" ); }
-    if ( region->flags & REGION_REMAPPED ) { kprintf( INFO, "R" ); } else { kprintf( INFO, "-" ); }
 
     kprintf( INFO, " %s\n", region->name );
 }

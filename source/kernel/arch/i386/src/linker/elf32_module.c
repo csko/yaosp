@@ -58,14 +58,12 @@ static int elf32_module_map( elf_module_t* elf_module, binary_loader_t* loader )
     uint32_t text_end = 0;
     uint32_t text_size;
     uint32_t text_offset = 0;
-    void* text_address;
 
     bool data_found = false;
     uint32_t data_start = 0;
     uint32_t data_end = 0;
     uint32_t data_size;
     uint32_t data_offset = 0;
-    void* data_address;
 
     uint32_t bss_end = 0;
     uint32_t data_size_with_bss = 0;
@@ -121,39 +119,45 @@ static int elf32_module_map( elf_module_t* elf_module, binary_loader_t* loader )
 
     snprintf( region_name, sizeof( region_name ), "%s_ro", loader->get_name( loader->private ) );
 
-    elf_module->text_region = create_region(
+    elf_module->text_region = memory_region_create(
         region_name,
         PAGE_ALIGN( text_size ),
-        REGION_READ | REGION_KERNEL,
-        ALLOC_PAGES,
-        &text_address
+        REGION_READ | REGION_WRITE | REGION_KERNEL
     );
 
-    if ( __unlikely( elf_module->text_region < 0 ) ) {
-        error = elf_module->text_region;
+    if ( __unlikely( elf_module->text_region == NULL ) ) {
+        error = -ENOMEM;
         goto error1;
+    }
+
+    if ( memory_region_alloc_pages( elf_module->text_region ) != 0 ) {
+        error = -ENOMEM;
+        goto error1; /* todo */
     }
 
     snprintf( region_name, sizeof( region_name ), "%s_rw", loader->get_name( loader->private ) );
 
-    elf_module->data_region = create_region(
+    elf_module->data_region = memory_region_create(
         region_name,
         PAGE_ALIGN( data_size_with_bss ),
-        REGION_READ | REGION_WRITE | REGION_KERNEL,
-        ALLOC_PAGES,
-        &data_address
+        REGION_READ | REGION_WRITE | REGION_KERNEL
     );
 
-    if ( __unlikely( elf_module->data_region < 0 ) ) {
-        error = elf_module->data_region;
+    if ( __unlikely( elf_module->data_region == NULL ) ) {
+        error = -ENOMEM;
         goto error2;
+    }
+
+    if ( memory_region_alloc_pages( elf_module->data_region ) != 0 ) {
+        error = -ENOMEM;
+        goto error2; /* todo */
     }
 
     /* Copy text and data in */
 
     error = loader->read(
         loader->private,
-        text_address,
+        ( void* )elf_module->text_region->address,
         text_offset,
         text_size
     );
@@ -165,7 +169,7 @@ static int elf32_module_map( elf_module_t* elf_module, binary_loader_t* loader )
 
     error = loader->read(
         loader->private,
-        data_address,
+        ( void* )elf_module->data_region->address,
         data_offset,
         data_size
     );
@@ -177,20 +181,20 @@ static int elf32_module_map( elf_module_t* elf_module, binary_loader_t* loader )
 
     ASSERT( data_size_with_bss >= data_size );
 
-    memset( ( char* )data_address + data_size, 0, data_size_with_bss - data_size );
+    memset( ( char* )elf_module->data_region->address + data_size, 0, data_size_with_bss - data_size );
 
-    elf_module->text_address = ( uint32_t )text_address;
+    elf_module->text_address = ( uint32_t )elf_module->text_region->address;
     elf_module->text_size = PAGE_ALIGN( text_size );
 
     return 0;
 
 error3:
-    delete_region( elf_module->data_region );
-    elf_module->data_region = -1;
+    memory_region_put( elf_module->data_region );
+    elf_module->data_region = NULL;
 
 error2:
-    delete_region( elf_module->text_region );
-    elf_module->text_region = -1;
+    memory_region_put( elf_module->text_region );
+    elf_module->text_region = NULL;
 
 error1:
     return error;

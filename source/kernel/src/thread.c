@@ -86,7 +86,7 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
     thread->priority = priority;
     thread->process = process;
     thread->user_stack_end = NULL;
-    thread->user_stack_region = -1;
+    thread->user_stack_region = NULL;
 
     atomic_inc( &process->thread_count );
 
@@ -125,9 +125,9 @@ void destroy_thread( thread_t* thread ) {
 
     /* Delete the userspace stack region */
 
-    if ( thread->user_stack_region >= 0 ) {
-        delete_region( thread->user_stack_region );
-        thread->user_stack_region = -1;
+    if ( thread->user_stack_region != NULL ) {
+        memory_region_put( thread->user_stack_region );
+        thread->user_stack_region = NULL;
     }
 
     /* Free the kernel stack */
@@ -140,9 +140,7 @@ void destroy_thread( thread_t* thread ) {
         /* Remove the process from the hashtable */
 
         scheduler_lock();
-
         remove_process( thread->process );
-
         scheduler_unlock();
 
         /* Destroy the process */
@@ -369,19 +367,20 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
         goto error1;
     }
 
-    thread->user_stack_region = create_region(
+    thread->user_stack_region = memory_region_create(
         "stack",
         user_stack_size,
-        REGION_READ | REGION_WRITE | REGION_STACK,
-        ALLOC_PAGES,
-        ( void** )&user_stack
+        REGION_READ | REGION_WRITE | REGION_STACK
     );
 
-    if ( thread->user_stack_region < 0 ) {
-        error = thread->user_stack_region;
+    if ( thread->user_stack_region == NULL ) {
+        error = -ENOMEM;
         goto error2;
     }
 
+    /* TODO: allocate user stack pages! */
+
+    user_stack = ( uint8_t* )thread->user_stack_region->address;
     thread->user_stack_end = ( void* )( user_stack + user_stack_size );
 
     /* Initialize the architecture dependent part of the thread */

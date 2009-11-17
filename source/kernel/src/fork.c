@@ -56,22 +56,13 @@ int sys_fork( void ) {
         goto error2;
     }
 
-    if ( this_process->heap_region >= 0 ) {
-        region_info_t region_info;
-        memory_region_t* heap_region;
+    if ( this_process->heap_region != NULL ) {
+        new_process->heap_region = memory_context_get_region_for(
+            new_process->memory_context,
+            this_process->heap_region->address
+        );
 
-        error = get_region_info( this_process->heap_region, &region_info );
-
-        if ( error >= 0 ) {
-            heap_region = memory_context_get_region_for(
-                new_process->memory_context,
-                region_info.start
-            );
-
-            ASSERT( heap_region != NULL );
-
-            new_process->heap_region = heap_region->id;
-        }
+        memory_region_put( new_process->heap_region );
     }
 
     /* Clone the I/O context */
@@ -113,22 +104,13 @@ int sys_fork( void ) {
     /* If the process has an userspace stack region then we have to find
        out the region ID of the cloned stack region. */
 
-    if ( this_thread->user_stack_region >= 0 ) {
-        region_info_t region_info;
-        memory_region_t* stack_region;
+    if ( this_thread->user_stack_region != NULL ) {
+        new_thread->user_stack_region = memory_context_get_region_for(
+            new_process->memory_context,
+            this_thread->user_stack_region->address
+        );
 
-        error = get_region_info( this_thread->user_stack_region, &region_info );
-
-        if ( error >= 0 ) {
-            stack_region = memory_context_get_region_for(
-                new_process->memory_context,
-                region_info.start
-            );
-
-            ASSERT( stack_region != NULL );
-
-            new_thread->user_stack_region = stack_region->id;
-        }
+        memory_region_put( new_thread->user_stack_region );
     }
 
     error = arch_do_fork( this_thread, new_thread );

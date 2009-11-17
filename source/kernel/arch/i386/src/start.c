@@ -48,7 +48,7 @@ multiboot_header_t mb_header;
 __init static int arch_init_page_allocator( multiboot_header_t* header ) {
     int error;
     int module_count;
-    uint32_t memory_size;
+    uint32_t mem_size;
     uint32_t mmap_length;
     ptr_t first_free_address;
     multiboot_mmap_entry_t* mmap_entry;
@@ -96,9 +96,9 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
 
     /* Initialize the page allocator */
 
-    memory_size = header->memory_upper * 1024 + 1024 * 1024;
+    mem_size = header->memory_upper * 1024 + 1024 * 1024;
 
-    error = init_page_allocator( first_free_address, memory_size );
+    error = init_page_allocator( first_free_address, mem_size );
 
     if ( error < 0 ) {
         return error;
@@ -177,12 +177,12 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
 
             /* Make sure the region is inside the available physical memory */
 
-            if ( real_base >= memory_size ) {
+            if ( real_base >= mem_size ) {
                 continue;
             }
 
-            if ( real_length > ( memory_size - real_base ) ) {
-                real_length = memory_size - real_base;
+            if ( real_length > ( mem_size - real_base ) ) {
+                real_length = mem_size - real_base;
             }
 
             /* Reserve the region */
