@@ -56,11 +56,9 @@ typedef struct memory_region {
     ptr_t address;
     uint64_t size;
 
-#if 0
     struct file* file;
     off_t file_offset;
     size_t file_size;
-#endif
 
     struct memory_context* context;
 } memory_region_t;
@@ -94,6 +92,7 @@ int do_memory_region_alloc_pages( memory_region_t* region );
 memory_region_t* memory_region_create( const char* name, uint64_t size, uint32_t flags );
 int memory_region_remap_pages( memory_region_t* region, ptr_t physical_address );
 int memory_region_alloc_pages( memory_region_t* region );
+int memory_region_map_to_file( memory_region_t* region, int fd, off_t offset, size_t length );
 
 int memory_region_resize( memory_region_t* region, uint64_t new_size );
 

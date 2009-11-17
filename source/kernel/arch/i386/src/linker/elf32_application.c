@@ -35,9 +35,7 @@ static bool elf32_application_check( binary_loader_t* loader ) {
     int error;
     elf32_image_info_t info;
 
-    error = elf32_init_image_info( &info );
-
-    if ( __unlikely( error < 0 ) ) {
+    if ( elf32_init_image_info( &info ) != 0 ) {
         return false;
     }
 
@@ -115,29 +113,34 @@ static int elf32_application_map( binary_loader_t* loader, elf_application_t* el
     data_size = data_end - data_start + 1;
     data_size_with_bss = bss_end - data_start + 1;
 
-    elf_application->text_region = memory_region_create( "ro", PAGE_ALIGN( text_size ), REGION_READ | REGION_WRITE | REGION_EXECUTE );
+    elf_application->text_region = memory_region_create( "ro", PAGE_ALIGN( text_size ),
+                                                         REGION_READ | REGION_EXECUTE );
 
     if ( elf_application->text_region == NULL ) {
         return -1;
     }
 
-    memory_region_alloc_pages( elf_application->text_region );
-    int ret = loader->read( loader->private, ( void* )elf_application->text_region->address, text_offset, text_size );
-    ASSERT( ret == text_size );
+    memory_region_map_to_file(
+        elf_application->text_region, loader->get_fd( loader->private ),
+        text_offset, text_size
+    );
 
     if ( data_found > 0 ) {
-        elf_application->data_region = memory_region_create( "rw", PAGE_ALIGN( data_size_with_bss ), REGION_READ | REGION_WRITE );
+        elf_application->data_region = memory_region_create( "rw", PAGE_ALIGN( data_size_with_bss ),
+                                                             REGION_READ | REGION_WRITE );
 
         if ( elf_application->data_region == NULL ) {
             /* TODO: delete text region */
             return -1;
         }
 
-        memory_region_alloc_pages( elf_application->data_region );
-
         if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
-            ret = loader->read( loader->private, ( void* )elf_application->data_region->address, data_offset, data_size );
-            ASSERT( ret == data_size );
+            memory_region_map_to_file(
+                elf_application->data_region, loader->get_fd( loader->private ),
+                data_offset, data_size
+            );
+        } else {
+            kprintf( WARNING, "%s(): nothing has been mapped to data region!\n", __FUNCTION__ );
         }
     }
 

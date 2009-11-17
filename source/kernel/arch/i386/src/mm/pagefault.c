@@ -71,6 +71,8 @@ static int handle_cow_page( memory_context_t* context, uint32_t address ) {
     arch_context = ( i386_memory_context_t* )context->arch_data;
     page_directory = arch_context->page_directory;
 
+    mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
+
     index = PGD_INDEX( address );
     ASSERT( page_directory[ index ] != 0 );
     page_table = ( uint32_t* )( page_directory[ index ] & PAGE_MASK );
@@ -94,6 +96,7 @@ static int handle_cow_page( memory_context_t* context, uint32_t address ) {
 
         if ( new_page == NULL ) {
             spinunlock_enable( &pages_lock );
+            mutex_unlock( context->mutex );
 
             return -ENOMEM;
         }
@@ -112,11 +115,130 @@ static int handle_cow_page( memory_context_t* context, uint32_t address ) {
     }
 
     spinunlock_enable( &pages_lock );
+    mutex_unlock( context->mutex );
 
     if ( copy_page ) {
         scheduler_lock();
         context->process->pmem_size += PAGE_SIZE;
         scheduler_unlock();
+    }
+
+    invlpg( address );
+
+    return 0;
+}
+
+#define MAX_PAGES_PER_LOAD 6
+
+static int handle_file_mapping( memory_region_t* region, uint32_t address ) {
+    int error;
+    uint32_t page_count;
+    uint32_t paging_flags;
+    uint32_t region_offset;
+    uint32_t* page_directory;
+    memory_context_t* context;
+    i386_memory_context_t* arch_context;
+
+    context = region->context;
+    arch_context = ( i386_memory_context_t* )context->arch_data;
+    page_directory = arch_context->page_directory;
+    paging_flags = get_paging_flags_for_region( region );
+
+    address &= PAGE_MASK;
+    ASSERT( address >= region->address );
+
+    region_offset = address - region->address;
+    page_count = PAGE_ALIGN( region->size - region_offset ) / PAGE_SIZE;
+    page_count = MIN( page_count, MAX_PAGES_PER_LOAD );
+
+    mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
+
+    /* Map the page table of this page */
+
+    error = paging_alloc_table_entries(
+        page_directory,
+        PGD_INDEX( address ),
+        PGD_INDEX( address ),
+        paging_flags | PAGE_WRITE
+    );
+
+    if ( __unlikely( error < 0 ) ) {
+        return error;
+    }
+
+    /* Count the unmapped pages */
+
+    uint32_t i;
+    uint32_t pgd_ind = PGD_INDEX( address );
+    uint32_t pt_ind = PT_INDEX( address );
+    uint32_t* pt = ( uint32_t* )( page_directory[ pgd_ind ] & PAGE_MASK );
+
+    for ( i = 0; i < page_count; i++ ) {
+        if ( pt[ pt_ind ] != 0 ) {
+            break;
+        }
+
+        if ( __unlikely( pt_ind == 1023 ) ) {
+            pt = ( uint32_t* )( page_directory[ ++pgd_ind ] & PAGE_MASK );
+            pt_ind = 0;
+        } else {
+            pt_ind++;
+        }
+    }
+
+    ASSERT( i > 0 );
+    page_count = i;
+
+    /* Allocate memory for the new pages */
+
+    void* p = alloc_pages( page_count, MEM_COMMON );
+
+    if ( __unlikely( p == NULL ) ) {
+        return -ENOMEM;
+    }
+
+    /* Load the data to the newly allocated pages */
+
+    if ( region_offset >= region->file_size ) {
+        memsetl( p, 0, page_count * PAGE_SIZE / 4 );
+    } else {
+        off_t file_read_offset;
+        uint32_t file_data_size;
+
+        file_read_offset = region->file_offset + region_offset;
+        file_data_size = region->file_size - region_offset;
+        file_data_size = MIN( file_data_size, page_count * PAGE_SIZE );
+
+        ASSERT( ( file_data_size > 0 ) && ( file_data_size <= page_count * PAGE_SIZE ) );
+
+        if ( do_pread_helper( region->file, p, file_data_size, file_read_offset ) != file_data_size ) {
+            free_pages( p, page_count );
+            return -EIO;
+        }
+
+        if ( file_data_size < page_count * PAGE_SIZE ) {
+            memset( ( uint8_t* )p + file_data_size, 0, page_count * PAGE_SIZE - file_data_size );
+        }
+    }
+
+    /* Map the new pages */
+
+    uint32_t p2 = ( uint32_t )p;
+
+    pgd_ind = PGD_INDEX( address );
+    pt_ind = PT_INDEX( address );
+    pt = ( uint32_t* )( page_directory[ pgd_ind ] & PAGE_MASK );
+
+    for ( i = 0; i < page_count; i++, p2 += PAGE_SIZE ) {
+        ASSERT( pt[ pt_ind ] == 0 );
+        pt[ pt_ind ] = p2 | paging_flags;
+
+        if ( __unlikely( pt_ind == 1023 ) ) {
+            pt = ( uint32_t* )( page_directory[ ++pgd_ind ] & PAGE_MASK );
+            pt_ind = 0;
+        } else {
+            pt_ind++;
+        }
     }
 
     invlpg( address );
@@ -146,7 +268,10 @@ int handle_page_fault( registers_t* regs ) {
 
     if ( ( regs->error_code == 7 ) &&
          ( region->flags & REGION_WRITE ) ) {
-        error = handle_cow_page( thread->process->memory_context, cr2 );
+        error = handle_cow_page( region->context, cr2 );
+    } else if ( ( ( regs->error_code & 1 ) == 0 ) &&
+                ( region->file != NULL ) ) {
+        error = handle_file_mapping( region, cr2 );
     } else {
         error = -EINVAL;
     }

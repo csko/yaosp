@@ -254,7 +254,8 @@ __init int init_paging( void ) {
 
     /* Map the kernel heap */
 
-    size = MIN( get_total_page_count() * PAGE_SIZE, 512 * 1024 * 1024 ) - ( 1 * 1024 * 1024 + ( ( uint32_t )__kernel_end - 0x100000 ) );
+    size = MIN( get_total_page_count() * PAGE_SIZE,
+                512 * 1024 * 1024 ) - ( 1 * 1024 * 1024 + ( ( uint32_t )__kernel_end - 0x100000 ) );
 
     region = do_create_memory_region_at(
         context,

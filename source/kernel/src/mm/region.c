@@ -58,7 +58,6 @@ memory_region_t* memory_region_allocate( const char* name ) {
 }
 
 void memory_region_destroy( memory_region_t* region ) {
-#if 0
     if ( region->file != NULL ) {
         io_context_t* io_context;
 
@@ -68,7 +67,6 @@ void memory_region_destroy( memory_region_t* region ) {
         io_context_put_file( io_context, region->file );
         region->file = NULL;
     }
-#endif
 
     kfree( region );
 }
@@ -312,6 +310,46 @@ int memory_region_alloc_pages( memory_region_t* region ) {
     mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
     ret = do_memory_region_alloc_pages( region );
     mutex_unlock( context->mutex );
+
+    return ret;
+}
+
+int memory_region_map_to_file( memory_region_t* region, int fd, off_t offset, size_t length ) {
+    int ret;
+    file_t* file;
+    memory_context_t* context;
+
+    context = region->context;
+
+    file = io_context_get_file( current_process()->io_context, fd );
+
+    if ( file == NULL ) {
+        return -EINVAL;
+    }
+
+    ASSERT( atomic_get( &file->ref_count ) >= 2 );
+
+    mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
+
+    if ( region->flags & REGION_MAPPING_FLAGS ) {
+        ret = -EINVAL;
+        goto out;
+    }
+
+    region->flags |= REGION_ALLOCATED;
+
+    region->file = file;
+    region->file_offset = offset;
+    region->file_size = length;
+
+    ret = 0;
+
+ out:
+    mutex_unlock( context->mutex );
+
+    if ( ret != 0 ) {
+        io_context_put_file( current_process()->io_context, file );
+    }
 
     return ret;
 }

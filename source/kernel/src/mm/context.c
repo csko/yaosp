@@ -243,7 +243,16 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
         new_region->flags = old_region->flags;
         new_region->address = old_region->address;
         new_region->size = old_region->size;
+        new_region->file = old_region->file;
+        new_region->file_offset = old_region->file_offset;
+        new_region->file_size = old_region->file_size;
         new_region->context = new_context;
+
+        /* Increase the reference count of the file because the new region will use it as well */
+
+        if ( new_region->file != NULL ) {
+            atomic_inc( &new_region->file->ref_count );
+        }
 
         /* Clone the pages of this region */
 

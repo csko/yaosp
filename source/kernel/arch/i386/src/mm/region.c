@@ -176,6 +176,7 @@ int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint
 typedef int table_unmap_func_t( uint32_t* table, uint32_t from, uint32_t to );
 
 int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint64_t size ) {
+    uint32_t* pd;
     uint32_t curr_pt;
     uint32_t last_pt;
     uint32_t* page_directory;
@@ -212,25 +213,22 @@ int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint
 
     spinlock_disable( &pages_lock );
 
-    unmap_function(
-        ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
-        first_page, last_page
-    );
+    pd = ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK );
+
+    if ( pd != NULL ) {
+        unmap_function( pd, first_page, last_page );
+    }
 
     curr_pt++;
 
     for ( ; curr_pt < last_pt; curr_pt++ ) {
-        unmap_function(
-            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
-            0, 1023
-        );
+        pd = ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK );
+        unmap_function( pd, 0, 1023 );
     }
 
     if ( curr_pt == last_pt ) {
-        unmap_function(
-            ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
-            0, PT_INDEX( virtual + size - 1 )
-        );
+        pd = ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK );
+        unmap_function( pd, 0, PT_INDEX( virtual + size - 1 ) );
     }
 
     spinunlock_enable( &pages_lock );
