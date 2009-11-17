@@ -486,9 +486,12 @@ int sys_memory_region_clone_pages( region_id id, void** address ) {
         goto out;
     }
 
-    new_region->flags |= REGION_CLONED;
+    mutex_lock( new_region->context->mutex, LOCK_IGNORE_SIGNAL );
 
+    new_region->flags |= REGION_CLONED;
     error = arch_memory_region_clone_pages( old_region, new_region );
+
+    mutex_unlock( new_region->context->mutex );
 
     if ( error != 0 ) {
         memory_region_put( new_region );
