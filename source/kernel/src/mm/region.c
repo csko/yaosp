@@ -173,7 +173,14 @@ memory_region_t* do_create_memory_region( memory_context_t* context, const char*
         start = FIRST_KERNEL_ADDRESS;
         end = LAST_KERNEL_ADDRESS;
     } else {
-        start = FIRST_USER_ADDRESS;
+        if ( flags & REGION_STACK ) {
+            start = FIRST_USER_STACK_ADDRESS;
+        } else if ( flags & REGION_CALL_FROM_USERSPACE ) {
+            start = FIRST_USER_REGION_ADDRESS;
+        } else {
+            start = FIRST_USER_ADDRESS;
+        }
+
         end = LAST_USER_ADDRESS;
     }
 
@@ -320,7 +327,6 @@ int memory_region_resize( memory_region_t* region, uint64_t new_size ) {
                 region->size = new_size;
             }
         } else {
-            memory_context_dump( region->context );
             ret = -ENOSPC;
         }
     }
@@ -330,19 +336,69 @@ int memory_region_resize( memory_region_t* region, uint64_t new_size ) {
     return ret;
 }
 
-int sys_memory_region_create( const char* name, uint64_t size, uint32_t flags ) {
+int sys_memory_region_create( const char* name, uint64_t* size, uint32_t flags, void** address ) {
+    int error;
+    memory_region_t* region;
+
+    flags &= REGION_USER_FLAGS;
+    flags &= ~REGION_KERNEL;
+
+    region = memory_region_create( name, *size, flags | REGION_CALL_FROM_USERSPACE );
+
+    if ( region == NULL ) {
+        return -ENOMEM;
+    }
+
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
+
+    do {
+        region->id = region_id_counter++;
+
+        if ( region_id_counter < 0 ) {
+            region_id_counter = 0;
+        }
+    } while ( hashtable_get( &region_table, ( void* )&region->id ) != NULL );
+
+    error = hashtable_add( &region_table, ( hashitem_t* )region );
+
+    mutex_unlock( region_lock );
+
+    if ( error < 0 ) {
+        memory_region_put( region );
+        return error;
+    }
+
+    *address = ( void* )region->address;
+
+    return region->id;
+}
+
+int sys_memory_region_delete( region_id id ) {
     return -1;
 }
 
-int sys_memory_region_put( region_id id ) {
+int sys_memory_region_remap_pages( region_id id, void* physical ) {
+    int error;
+    memory_region_t* region;
+
+    region = memory_region_get( id );
+
+    if ( region == NULL ) {
+        return -EINVAL;
+    }
+
+    error = memory_region_remap_pages( region, ( ptr_t )physical );
+
+    memory_region_put( region );
+
+    return error;
+}
+
+int sys_memory_region_alloc_pages( region_id id ) {
     return -1;
 }
 
-int sys_memory_region_map( region_id id, uint64_t* offset, ptr_t physical, uint64_t* size ) {
-    return -1;
-}
-
-int sys_memory_region_clone( region_id id ) {
+int sys_memory_region_clone_pages( region_id id, void** address ) {
     return -1;
 }
 

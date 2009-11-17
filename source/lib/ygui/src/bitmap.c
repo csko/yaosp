@@ -69,7 +69,7 @@ bitmap_t* bitmap_create( int width, int height, color_space_t color_space ) {
         goto error2;
     }
 
-    bitmap->region = clone_region( reply.bitmap_region, ( void** )&bitmap->data );
+    bitmap->region = memory_region_clone_pages( reply.bitmap_region, ( void** )&bitmap->data );
 
     if ( bitmap->region < 0 ) {
         goto error3;

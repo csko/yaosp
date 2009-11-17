@@ -33,6 +33,10 @@ static int image_paint( widget_t* widget, gc_t* gc ) {
 
     image = ( image_t* )widget_get_data( widget );
 
+    if ( image->bitmap == NULL ) {
+        return 0;
+    }
+
     gc_set_drawing_mode( gc, DM_BLEND );
 
     if ( rect_width( &bounds ) > bitmap_get_width( image->bitmap ) ) {
@@ -48,7 +52,6 @@ static int image_paint( widget_t* widget, gc_t* gc ) {
     }
 
     gc_draw_bitmap( gc, image->bitmap, &position );
-
     gc_set_drawing_mode( gc, DM_COPY );
 
     return 0;
@@ -59,11 +62,15 @@ static int image_get_preferred_size( widget_t* widget, point_t* size ) {
 
     image = ( image_t* )widget_get_data( widget );
 
-    point_init(
-        size,
-        bitmap_get_width( image->bitmap ),
-        bitmap_get_height( image->bitmap )
-    );
+    if ( image->bitmap == NULL ) {
+        point_init( size, 0, 0 );
+    } else {
+        point_init(
+            size,
+            bitmap_get_width( image->bitmap ),
+            bitmap_get_height( image->bitmap )
+        );
+    }
 
     return 0;
 }

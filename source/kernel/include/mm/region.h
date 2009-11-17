@@ -38,7 +38,8 @@ typedef enum region_flags {
     REGION_REMAPPED = ( 1 << 5 ),
     REGION_ALLOCATED = ( 1 << 6 ),
     REGION_FILE_MAPPED = ( 1 << 7 ),
-    REGION_USER_FLAGS = ( REGION_READ | REGION_WRITE | REGION_EXECUTE | REGION_KERNEL | REGION_STACK ),
+    REGION_CALL_FROM_USERSPACE = ( 1 << 8 ),
+    REGION_USER_FLAGS = ( REGION_READ | REGION_WRITE | REGION_EXECUTE | REGION_KERNEL | REGION_STACK | REGION_CALL_FROM_USERSPACE ),
     REGION_MAPPING_FLAGS = ( REGION_REMAPPED | REGION_ALLOCATED | REGION_FILE_MAPPED )
 } region_flags_t;
 
@@ -96,10 +97,11 @@ int memory_region_resize( memory_region_t* region, uint64_t new_size );
 
 /* System calls */
 
-int sys_memory_region_create( const char* name, uint64_t size, uint32_t flags );
-int sys_memory_region_put( region_id id );
-int sys_memory_region_map( region_id id, uint64_t* offset, ptr_t physical, uint64_t* size );
-int sys_memory_region_clone( region_id id );
+int sys_memory_region_create( const char* name, uint64_t* size, uint32_t flags, void** address );
+int sys_memory_region_delete( region_id id );
+int sys_memory_region_remap_pages( region_id id, void* physical );
+int sys_memory_region_alloc_pages( region_id id );
+int sys_memory_region_clone_pages( region_id id, void** address );
 
 void memory_region_dump( memory_region_t* region, int index );
 

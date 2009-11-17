@@ -190,13 +190,7 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
 
     size = request->width * request->height * colorspace_to_bpp( request->color_space );
 
-    bitmap_region = create_region(
-        "bitmap",
-        PAGE_ALIGN( size ),
-        REGION_READ | REGION_WRITE,
-        ALLOC_PAGES,
-        &buffer
-    );
+    bitmap_region = memory_region_create( "bitmap", PAGE_ALIGN( size ), REGION_READ, &buffer );
 
     if ( bitmap_region < 0 ) {
         goto error1;
@@ -216,7 +210,7 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
     return 0;
 
  error2:
-    delete_region( bitmap_region );
+    memory_region_delete( bitmap_region );
 
  error1:
     reply.id = -1;

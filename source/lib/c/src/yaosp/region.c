@@ -20,52 +20,28 @@
 #include <yaosp/syscall_table.h>
 #include <yaosp/region.h>
 
-region_id create_region( const char* name, uint32_t size, region_flags_t flags, alloc_type_t alloc_method, void** _address ) {
-#if 0
-    return syscall5(
-        SYS_create_region,
+region_id memory_region_create( const char* name, uint64_t size, uint32_t flags, void** address ) {
+    return syscall4(
+        SYS_memory_region_create,
         ( int )name,
-        size,
+        ( int )&size,
         ( int )flags,
-        ( int )alloc_method,
-        ( int )_address
-    );
-#endif
-
-    return -1;
-}
-
-int delete_region( region_id id ) {
-#if 0
-    return syscall1(
-        SYS_delete_region,
-        id
-    );
-#endif
-
-    return -1;
-}
-
-int remap_region( region_id id, void* address ) {
-#if 0
-    return syscall2(
-        SYS_remap_region,
-        id,
         ( int )address
     );
-#endif
-
-    return -1;
 }
 
-region_id clone_region( region_id id, void** address ) {
-#if 0
-    return syscall2(
-        SYS_clone_region,
-        id,
-        ( int )address
-    );
-#endif
+int memory_region_delete( region_id id ) {
+    return syscall1( SYS_memory_region_delete, id );
+}
 
-    return -1;
+int memory_region_remap_pages( region_id id, void* address ) {
+    return syscall2( SYS_memory_region_remap_pages, id, ( int )address );
+}
+
+int memory_region_alloc_pages( region_id id ) {
+    return syscall1( SYS_memory_region_alloc_pages, id );
+}
+
+region_id memory_region_clone_pages( region_id id, void** address ) {
+    return syscall2( SYS_memory_region_clone_pages, id, ( int )address );
 }

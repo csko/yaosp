@@ -378,7 +378,7 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
         goto error2;
     }
 
-    /* TODO: allocate user stack pages! */
+    memory_region_alloc_pages( thread->user_stack_region ); /* todo: check return value */
 
     user_stack = ( uint8_t* )thread->user_stack_region->address;
     thread->user_stack_end = ( void* )( user_stack + user_stack_size );

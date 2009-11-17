@@ -24,22 +24,16 @@
 
 typedef int region_id;
 
-typedef enum alloc_type {
-    ALLOC_NONE,
-    ALLOC_LAZY,
-    ALLOC_PAGES,
-    ALLOC_CONTIGUOUS
-} alloc_type_t;
-
 typedef enum region_flags {
     REGION_READ = ( 1 << 0 ),
     REGION_WRITE = ( 1 << 1 )
 } region_flags_t;
 
-region_id create_region( const char* name, uint32_t size, region_flags_t flags,
-                         alloc_type_t alloc_method, void** _address );
-int delete_region( region_id id );
-int remap_region( region_id id, void* address );
-region_id clone_region( region_id id, void** address );
+region_id memory_region_create( const char* name, uint64_t size, uint32_t flags, void** address );
+int memory_region_delete( region_id id );
+
+int memory_region_remap_pages( region_id id, void* address );
+int memory_region_alloc_pages( region_id id );
+region_id memory_region_clone_pages( region_id id, void** address );
 
 #endif /* _YAOSP_REGION_H_ */

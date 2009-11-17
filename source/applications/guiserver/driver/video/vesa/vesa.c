@@ -150,11 +150,10 @@ static int vesa_set_mode( screen_mode_t* screen_mode ) {
 
     current_mode = vesa_mode;
 
-    fb_region = create_region(
-        "vesa_framebuffer",
+    fb_region = memory_region_create(
+        "vesa_fb",
         current_mode->screen_mode.width * current_mode->screen_mode.height * colorspace_to_bpp( current_mode->screen_mode.color_space ),
         REGION_READ | REGION_WRITE,
-        ALLOC_NONE,
         &fb_address
     );
 
@@ -162,7 +161,7 @@ static int vesa_set_mode( screen_mode_t* screen_mode ) {
         return fb_region;
     }
 
-    error = remap_region( fb_region, vesa_mode->phys_base_ptr );
+    error = memory_region_remap_pages( fb_region, vesa_mode->phys_base_ptr );
 
     if ( error < 0 ) {
         return error;
