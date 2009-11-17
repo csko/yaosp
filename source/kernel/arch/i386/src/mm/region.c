@@ -196,10 +196,11 @@ int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint
             unmap_function = paging_free_table_entries;
             break;
 
-        case REGION_FILE_MAPPED :
-            kprintf( WARNING, "%s(): REGION_FILE_MAPPED not yet supported!\n", __FUNCTION__ );
-
         default :
+            kprintf(
+                WARNING, "arch_memory_region_unmap_pages(): invalid mapping mode: %x\n",
+                region->flags & REGION_MAPPING_FLAGS
+            );
             return -1;
     }
 
@@ -384,10 +385,6 @@ int arch_memory_region_clone_pages( memory_region_t* old_region, memory_region_t
 
             ASSERT( ( new_region->flags & REGION_MAPPING_FLAGS ) != REGION_ALLOCATED );
             return do_clone_region_pages( old_region, new_region );
-
-        case REGION_FILE_MAPPED :
-            kprintf( WARNING, "%s(): REGION_FILE_MAPPED not yet supported!\n", __FUNCTION__ );
-            return -1;
 
         default :
             kprintf( WARNING, "%s(): Invalid mapping mode!\n", __FUNCTION__ );
