@@ -259,13 +259,19 @@ memory_region_t* memory_region_create( const char* name, uint64_t size, uint32_t
 }
 
 int do_memory_region_remap_pages( memory_region_t* region, ptr_t physical_address ) {
+    int error;
+
     if ( region->flags & REGION_MAPPING_FLAGS ) {
         return -EINVAL;
     }
 
-    region->flags |= REGION_REMAPPED;
+    error = arch_memory_region_remap_pages( region, physical_address );
 
-    return arch_memory_region_remap_pages( region, physical_address );
+    if ( error == 0 ) {
+        region->flags |= REGION_REMAPPED;
+    }
+
+    return error;
 }
 
 int memory_region_remap_pages( memory_region_t* region, ptr_t physical_address ) {
@@ -282,13 +288,19 @@ int memory_region_remap_pages( memory_region_t* region, ptr_t physical_address )
 }
 
 int do_memory_region_alloc_pages( memory_region_t* region ) {
+    int error;
+
     if ( region->flags & REGION_MAPPING_FLAGS ) {
         return -EINVAL;
     }
 
-    region->flags |= REGION_ALLOCATED;
+    error = arch_memory_region_alloc_pages( region, region->address, region->size );
 
-    return arch_memory_region_alloc_pages( region, region->address, region->size );
+    if ( error == 0 ) {
+        region->flags |= REGION_ALLOCATED;
+    }
+
+    return error;
 }
 
 int memory_region_alloc_pages( memory_region_t* region ) {
@@ -374,6 +386,8 @@ int sys_memory_region_create( const char* name, uint64_t* size, uint32_t flags, 
 }
 
 int sys_memory_region_delete( region_id id ) {
+    kprintf( WARNING, "sys_memory_region_delete() called!\n" );
+
     return -1;
 }
 
@@ -395,11 +409,75 @@ int sys_memory_region_remap_pages( region_id id, void* physical ) {
 }
 
 int sys_memory_region_alloc_pages( region_id id ) {
-    return -1;
+    int error;
+    memory_region_t* region;
+
+    region = memory_region_get( id );
+
+    if ( region == NULL ) {
+        return -EINVAL;
+    }
+
+    error = memory_region_alloc_pages( region );
+
+    memory_region_put( region );
+
+    return error;
 }
 
 int sys_memory_region_clone_pages( region_id id, void** address ) {
-    return -1;
+    int error;
+    memory_region_t* old_region;
+    memory_region_t* new_region;
+
+    old_region = memory_region_get( id );
+
+    if ( old_region == NULL ) {
+        return -EINVAL;
+    }
+
+    if ( ( old_region->flags & REGION_MAPPING_FLAGS ) != REGION_ALLOCATED ) {
+        error = -EINVAL;
+        goto out;
+    }
+
+    new_region = memory_region_create( old_region->name, old_region->size, old_region->flags & REGION_USER_FLAGS );
+
+    if ( new_region == NULL ) {
+        error = -ENOMEM;
+        goto out;
+    }
+
+    new_region->flags |= REGION_CLONED;
+
+    error = arch_memory_region_clone_pages( old_region, new_region );
+
+    if ( error != 0 ) {
+        memory_region_put( new_region );
+        goto out;
+    }
+
+    mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
+
+    do {
+        new_region->id = region_id_counter++;
+
+        if ( region_id_counter < 0 ) {
+            region_id_counter = 0;
+        }
+    } while ( hashtable_get( &region_table, ( void* )&new_region->id ) != NULL );
+
+    hashtable_add( &region_table, ( hashitem_t* )new_region );
+
+    mutex_unlock( region_lock );
+
+    error = new_region->id;
+    *address = ( void* )new_region->address;
+
+ out:
+    memory_region_put( old_region );
+
+    return error;
 }
 
 void memory_region_dump( memory_region_t* region, int index ) {

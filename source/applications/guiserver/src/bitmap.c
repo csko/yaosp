@@ -190,11 +190,13 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
 
     size = request->width * request->height * colorspace_to_bpp( request->color_space );
 
-    bitmap_region = memory_region_create( "bitmap", PAGE_ALIGN( size ), REGION_READ, &buffer );
+    bitmap_region = memory_region_create( "bitmap", PAGE_ALIGN( size ), REGION_READ | REGION_WRITE, &buffer );
 
     if ( bitmap_region < 0 ) {
         goto error1;
     }
+
+    memory_region_alloc_pages( bitmap_region );
 
     bitmap = create_bitmap_from_buffer( request->width, request->height, request->color_space, buffer );
 
