@@ -531,6 +531,15 @@ void memory_region_dump( memory_region_t* region, int index ) {
     if ( region->flags & REGION_WRITE ) { kprintf( INFO, "w" ); } else { kprintf( INFO, "-" ); }
     if ( region->flags & REGION_STACK ) { kprintf( INFO, "S" ); } else { kprintf( INFO, "-" ); }
 
+    uint32_t mapping_flags = region->flags & REGION_MAPPING_FLAGS;
+
+    switch ( mapping_flags ) {
+        case REGION_ALLOCATED : kprintf( INFO, "A" ); break;
+        case REGION_REMAPPED : kprintf( INFO, "R" ); break;
+        case REGION_CLONED : kprintf( INFO, "C" ); break;
+        default : kprintf( INFO, "?" ); break;
+    }
+
     kprintf( INFO, " %s\n", region->name );
 }
 
