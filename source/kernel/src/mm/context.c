@@ -233,20 +233,15 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, process_t
             continue;
         }
 
-        new_region = memory_region_allocate( old_region->name );
+        new_region = memory_region_allocate( new_context, old_region->name, old_region->address, old_region->size, old_region->flags );
 
         if ( new_region == NULL ) {
             goto error;
         }
 
-        new_region->ref_count = 1;
-        new_region->flags = old_region->flags;
-        new_region->address = old_region->address;
-        new_region->size = old_region->size;
         new_region->file = old_region->file;
         new_region->file_offset = old_region->file_offset;
         new_region->file_size = old_region->file_size;
-        new_region->context = new_context;
 
         /* Increase the reference count of the file because the new region will use it as well */
 
@@ -302,7 +297,9 @@ int memory_context_delete_regions( memory_context_t* context ) {
         ASSERT( region->ref_count == 1 );
         ASSERT( ( region->flags & REGION_KERNEL ) == 0 );
 
-        hashtable_remove( &region_table, ( const void* )&region->id );
+        if ( region->id != -1 ) {
+            hashtable_remove( &region_table, ( const void* )&region->id );
+        }
     }
 
     mutex_unlock( region_lock );

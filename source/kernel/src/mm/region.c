@@ -36,7 +36,7 @@ hashtable_t region_table;
 
 static int region_id_counter = 0;
 
-memory_region_t* memory_region_allocate( const char* name ) {
+memory_region_t* memory_region_allocate( memory_context_t* context, const char* name, ptr_t address, uint64_t size, uint32_t flags ) {
     size_t name_length;
     memory_region_t* region;
 
@@ -50,7 +50,13 @@ memory_region_t* memory_region_allocate( const char* name ) {
 
     memset( region, 0, sizeof( memory_region_t ) );
 
+    region->id = -1;
     region->name = ( char* )( region + 1 );
+    region->ref_count = 1;
+    region->address = address;
+    region->size = size;
+    region->flags = flags;
+    region->context = context;
 
     memcpy( region->name, name, name_length + 1 );
 
@@ -113,7 +119,10 @@ int memory_region_put( memory_region_t* region ) {
     mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
     if ( --region->ref_count == 0 ) {
-        hashtable_remove( &region_table, ( const void* )&region->id );
+        if ( region->id != -1 ) {
+            hashtable_remove( &region_table, ( const void* )&region->id );
+        }
+
         do_delete = 1;
     }
 
@@ -140,7 +149,6 @@ memory_region_t* do_create_memory_region( memory_context_t* context, const char*
     ptr_t start;
     ptr_t end;
     ptr_t address;
-    memory_region_t* region;
 
     if ( flags & REGION_KERNEL ) {
         start = FIRST_KERNEL_ADDRESS;
@@ -161,43 +169,18 @@ memory_region_t* do_create_memory_region( memory_context_t* context, const char*
         return NULL;
     }
 
-    region = memory_region_allocate( name );
-
-    if ( region == NULL ) {
-        return NULL;
-    }
-
-    region->ref_count = 1;
-    region->flags = flags;
-    region->address = address;
-    region->size = size;
-    region->context = context;
-
-    return region;
+    return memory_region_allocate( context, name, address, size, flags );
 }
 
 memory_region_t* do_create_memory_region_at( struct memory_context* context, const char* name,
                                              ptr_t address, uint64_t size, uint32_t flags ) {
     ptr_t dummy;
-    memory_region_t* region;
 
     if ( !memory_context_find_unmapped_region( context, address, address + size - 1, size, &dummy ) ) {
         return NULL;
     }
 
-    region = memory_region_allocate( name );
-
-    if ( region == NULL ) {
-        return NULL;
-    }
-
-    region->ref_count = 1;
-    region->flags = flags;
-    region->address = address;
-    region->size = size;
-    region->context = context;
-
-    return region;
+    return memory_region_allocate( context, name, address, size, flags );
 }
 
 memory_region_t* memory_region_create( const char* name, uint64_t size, uint32_t flags ) {

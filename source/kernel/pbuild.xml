@@ -312,7 +312,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="generate_syscall_table">
-
         <copy from="include/syscall_table.h" to="../include/yaosp/syscall_table.h"/>
     </target>
 

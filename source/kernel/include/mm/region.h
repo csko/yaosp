@@ -67,7 +67,7 @@ typedef struct region_info {
     ptr_t size;
 } region_info_t;
 
-memory_region_t* memory_region_allocate( const char* name );
+memory_region_t* memory_region_allocate( struct memory_context* context, const char* name, ptr_t address, uint64_t size, uint32_t flags );
 void memory_region_destroy( memory_region_t* region );
 
 memory_region_t* memory_region_get( region_id id );
