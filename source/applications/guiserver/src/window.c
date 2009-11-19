@@ -76,6 +76,10 @@ static window_t* window_create( const char* title, uint32_t flags ) {
 }
 
 static int window_destroy( window_t* window ) {
+    if ( window->icon != NULL ) {
+        bitmap_put( window->icon );
+    }
+
     if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
         window_decorator->destroy( window );
     }
@@ -187,6 +191,14 @@ static void window_do_move( window_t* window, msg_win_do_move_t* request ) {
     send_ipc_message( request->reply_port, MSG_WINDOW_MOVED, &reply, sizeof( msg_win_moved_t ) );
 }
 
+static int window_set_icon( window_t* window, msg_win_set_icon_t* request ) {
+    window->icon = bitmap_get( request->icon_bitmap );
+
+    send_ipc_message( request->reply_port, MSG_WINDOW_ICON_UPDATED, NULL, 0 );
+
+    return 0;
+}
+
 static void* window_thread( void* arg ) {
     int error;
     int running;
@@ -238,6 +250,10 @@ static void* window_thread( void* arg ) {
 
             case MSG_WINDOW_DO_MOVE :
                 window_do_move( window, ( msg_win_do_move_t* )buffer );
+                break;
+
+            case MSG_WINDOW_SET_ICON :
+                window_set_icon( window, ( msg_win_set_icon_t* )buffer );
                 break;
 
             default :

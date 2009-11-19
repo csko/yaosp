@@ -40,6 +40,7 @@ typedef struct window {
     ipc_port_id server_port;
 
     bitmap_t* bitmap;
+    bitmap_t* icon;
     region_t visible_regions;
 
     int is_visible;

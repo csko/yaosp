@@ -231,6 +231,28 @@ static int decorator_update_border( window_t* window ) {
         -1
     );
 
+    /* Window icon */
+
+    if ( window->icon != NULL ) {
+        point_init(
+            &point,
+            3, ( 21 - window->icon->height ) / 2
+        );
+        rect_init(
+            &rect,
+            0, 0,
+            window->icon->width - 1, window->icon->height - 1
+        );
+
+        graphics_driver->blit_bitmap(
+            bitmap,
+            &point,
+            window->icon,
+            &rect,
+            DM_BLEND
+        );
+    }
+
     return 0;
 }
 

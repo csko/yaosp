@@ -69,6 +69,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../lib/start/objs/libstart.a</input>
             <input>../../lib/ygui/objs/libygui.a</input>
+            <input>../../thirdparty/libpng-1.2.40/libpng-1.2.40/objs/libpng.a</input>
+            <input>../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
             <input>../../lib/yutil/objs/libyutil.a</input>
             <input>../../lib/c/objs/libc.a</input>
             <output>objs/terminal</output>
@@ -81,7 +83,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/terminal" to="../../../build/image/application/terminal"/>
+        <mkdir>../../../build/image/application/terminal</mkdir>
+        <mkdir>../../../build/image/application/terminal/images</mkdir>
+
+        <copy from="objs/terminal" to="../../../build/image/application/terminal/terminal"/>
+        <copy from="images/terminal.png" to="../../../build/image/application/terminal/images/terminal.png"/>
     </target>
 
     <target name="all">

@@ -36,6 +36,7 @@
 #include "window_list.h"
 
 window_t* window;
+point_t win_lefttop;
 widget_t* win_list_widget;
 
 static menu_t* menu;
@@ -64,7 +65,7 @@ static int taskbar_msg_handler( uint32_t code, void* data ) {
 static int event_open_terminal( widget_t* widget, void* data ) {
     if ( fork() == 0 ) {
         char* argv[] = { "terminal", NULL };
-        execv( "/application/terminal", argv );
+        execv( "/application/terminal/terminal", argv );
         _exit( 1 );
     }
 
@@ -72,7 +73,15 @@ static int event_open_terminal( widget_t* widget, void* data ) {
 }
 
 static int event_open_taskbar( widget_t* widget, void* data ) {
-    menu_popup_at_xy( menu, 0, 40 );
+    point_t size;
+    point_t position;
+
+    menu_get_size( menu, &size );
+
+    position.x = 0;
+    position.y = win_lefttop.y - size.y;
+
+    menu_popup_at( menu, &position );
 
     return 0;
 }
@@ -94,21 +103,23 @@ static int taskbar_create_menu( void ) {
 }
 
 int main( int argc, char** argv ) {
+    point_t size;
+
     if ( application_init() != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
         return EXIT_FAILURE;
     }
 
-    point_t point = { .x = 0, .y = 0 };
-    point_t size;
-
     desktop_get_size( &size );
 
-    size.y = 40;
+    win_lefttop.x = 0;
+    win_lefttop.y = size.y - 22;
+
+    size.y = 22;
 
     /* Create a window */
 
-    window = create_window( "Taskbar", &point, &size, WINDOW_NO_BORDER );
+    window = create_window( "Taskbar", &win_lefttop, &size, WINDOW_NO_BORDER );
 
     widget_t* container = window_get_container( window );
 

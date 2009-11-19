@@ -730,6 +730,18 @@ int window_move( window_t* window, point_t* position ) {
     return 0;
 }
 
+int window_set_icon( window_t* window, bitmap_t* bitmap ) {
+    msg_win_set_icon_t request;
+
+    request.reply_port = window->reply_port;
+    request.icon_bitmap = bitmap->id;
+
+    send_ipc_message( window->server_port, MSG_WINDOW_SET_ICON, &request, sizeof( msg_win_set_icon_t ) );
+    recv_ipc_message( window->reply_port, NULL, NULL, 0, INFINITE_TIMEOUT );
+
+    return 0;
+}
+
 int window_show( window_t* window ) {
     int error;
 

@@ -65,6 +65,8 @@ enum {
     MSG_MOUSE_PRESSED,
     MSG_MOUSE_RELEASED,
     MSG_WINDOW_CALLBACK,
+    MSG_WINDOW_SET_ICON,
+    MSG_WINDOW_ICON_UPDATED,
 
     /* Other message codes ... */
 
@@ -212,5 +214,10 @@ typedef struct msg_win_moved {
 typedef struct msg_win_info {
     int id;
 } msg_win_info_t;
+
+typedef struct msg_win_set_icon {
+    ipc_port_id reply_port;
+    int icon_bitmap;
+} msg_win_set_icon_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

@@ -92,6 +92,29 @@ int menu_add_item( menu_t* menu, widget_t* item ) {
     return 0;
 }
 
+int menu_get_size( menu_t* menu, point_t* size ) {
+    int i;
+    int count;
+
+    point_init( size, 0, 0 );
+
+    count = array_get_size( &menu->items );
+
+    for ( i = 0; i < count; i++ ) {
+        widget_t* item;
+        point_t  preferred_size;
+
+        item = ( widget_t* )array_get_item( &menu->items, i );
+
+        widget_get_preferred_size( item, &preferred_size );
+
+        size->x = MAX( size->x, preferred_size.x );
+        size->y += preferred_size.y;
+    }
+
+    return 0;
+}
+
 int menu_popup_at( menu_t* menu, point_t* position ) {
     int i;
     int size;

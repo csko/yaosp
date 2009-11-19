@@ -60,6 +60,9 @@ static widget_operations_t panel_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
     .mouse_released = NULL,
+    .get_minimum_size = NULL,
+    .get_preferred_size = NULL,
+    .get_maximum_size = NULL,
     .do_validate = panel_do_validate,
     .size_changed = NULL
 };

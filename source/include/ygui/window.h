@@ -100,6 +100,8 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 int window_resize( window_t* window, point_t* size );
 int window_move( window_t* window, point_t* position );
 
+int window_set_icon( window_t* window, bitmap_t* bitmap );
+
 int window_show( window_t* window );
 int window_hide( window_t* window );
 int window_bring_to_front( int window_id );

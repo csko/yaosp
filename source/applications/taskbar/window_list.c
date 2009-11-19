@@ -30,7 +30,7 @@
 
 #define W_WINDOW_LIST W_TYPE_COUNT
 
-#define WL_ROWS 2
+#define WL_ROWS 1
 #define WL_MAX_ITEM_WIDTH 150
 
 static array_t window_table;

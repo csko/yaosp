@@ -31,6 +31,8 @@ menu_t* create_menu( void );
 
 int menu_add_item( menu_t* menu, widget_t* item );
 
+int menu_get_size( menu_t* menu, point_t* size );
+
 int menu_popup_at( menu_t* menu, point_t* position );
 int menu_popup_at_xy( menu_t* menu, int x, int y );
 
