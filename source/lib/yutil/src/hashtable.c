@@ -161,7 +161,7 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
     return -EINVAL;
 }
 
-uint32_t hash_number( uint8_t* data, size_t length ) {
+uint32_t do_hash_number( uint8_t* data, size_t length ) {
     size_t i;
     uint32_t hash;
 
@@ -180,7 +180,7 @@ uint32_t hash_number( uint8_t* data, size_t length ) {
     return hash;
 }
 
-uint32_t hash_string( uint8_t* data, size_t length ) {
+uint32_t do_hash_string( uint8_t* data, size_t length ) {
     size_t i;
     uint32_t hash = 2166136261U;
 
@@ -195,4 +195,26 @@ uint32_t hash_string( uint8_t* data, size_t length ) {
     hash += hash << 5;
 
     return hash;
+}
+
+uint32_t hash_int( const void* key ) {
+    return do_hash_number( ( uint8_t* )key, sizeof( int ) );
+}
+
+uint32_t hash_string( const void* key ) {
+    return do_hash_string( ( uint8_t* )key, strlen( ( const char* )key ) );
+}
+
+int compare_int( const void* _key1, const void* _key2 ) {
+    int* key1 = ( int* )_key1;
+    int* key2 = ( int* )_key2;
+
+    return ( *key1 == *key2 );
+}
+
+int compare_string( const void* _key1, const void* _key2 ) {
+    const char* key1 = ( const char* )_key1;
+    const char* key2 = ( const char* )_key2;
+
+    return ( strcmp( key1, key2 ) == 0 );
 }

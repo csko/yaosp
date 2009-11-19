@@ -1,4 +1,4 @@
-/* yaosp GUI library
+/* Taskbar application
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,15 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_APPLICATION_H_
-#define _YGUI_APPLICATION_H_
+#ifndef _TASKBAR_WINDOW_LIST_H_
+#define _TASKBAR_WINDOW_LIST_H_
 
-typedef int msg_handler_t( uint32_t code, void* buffer );
+#include <inttypes.h>
 
-int application_set_message_handler( msg_handler_t* handler );
-int application_register_window_listener( int get_window_list );
+#include <ygui/protocol.h>
+#include <ygui/widget.h>
 
-int application_init( void );
-int application_run( void );
+int taskbar_handle_window_list( uint8_t* data );
+int taskbar_handle_window_opened( msg_win_info_t* win_info );
+int taskbar_handle_window_closed( msg_win_info_t* win_info );
 
-#endif /* _YGUI_APPLICATION_H_ */
+widget_t* window_list_create( void );
+
+#endif /* _TASKBAR_WINDOW_LIST_H_ */

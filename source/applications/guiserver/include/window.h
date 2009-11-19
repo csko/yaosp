@@ -28,6 +28,9 @@
 #include <fontmanager.h>
 
 typedef struct window {
+    hashitem_t hash;
+
+    int id;
     char* title;
     int flags;
     rect_t screen_rect;

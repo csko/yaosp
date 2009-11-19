@@ -16,7 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <errno.h>
 #include <yutil/array.h>
+#include <yutil/hashtable.h>
 
 #include <windowmanager.h>
 #include <graphicsdriver.h>
@@ -29,6 +31,9 @@ pthread_mutex_t wm_lock;
 
 static array_t window_stack;
 
+static int window_next_id = 0;
+static hashtable_t window_table;
+
 static window_t* mouse_window = NULL;
 static window_t* active_window = NULL;
 static window_t* mouse_down_window = NULL;
@@ -36,7 +41,79 @@ static window_t* mouse_down_window = NULL;
 static rect_t moving_rect;
 static window_t* moving_window = NULL;
 
+static array_t window_listeners;
+
 window_decorator_t* window_decorator = &default_decorator;
+
+static inline int window_table_insert( window_t* window ) {
+    do {
+        window->id = window_next_id++;
+
+        if ( window_next_id < 0 ) {
+            window_next_id = 0;
+        }
+    } while ( hashtable_get( &window_table, ( const void* )&window->id ) != NULL );
+
+    return hashtable_add( &window_table, ( hashitem_t* )window );
+}
+
+static inline int window_table_remove( window_t* window ) {
+    hashtable_remove( &window_table, ( const void* )&window->id );
+
+    return 0;
+}
+
+static int window_opened( window_t* window ) {
+    int i;
+    int size;
+    void* data;
+    int title_len;
+    msg_win_info_t* win_info;
+
+    title_len = strlen( window->title );
+    data = malloc( sizeof( msg_win_info_t ) + title_len + 1 );
+
+    if ( data == NULL ) {
+        return -ENOMEM;
+    }
+
+    win_info = ( msg_win_info_t* )data;
+
+    win_info->id = window->id;
+    memcpy( win_info + 1, window->title, title_len + 1 );
+
+    size = array_get_size( &window_listeners );
+
+    for ( i = 0; i < size; i++ ) {
+        application_t* listener;
+
+        listener = ( application_t* )array_get_item( &window_listeners, i );
+        send_ipc_message( listener->client_port, MSG_WINDOW_OPENED, data, sizeof( msg_win_info_t ) + title_len + 1 );
+    }
+
+    free( data );
+
+    return 0;
+}
+
+static int window_closed( window_t* window ) {
+    int i;
+    int size;
+    msg_win_info_t win_info;
+
+    win_info.id = window->id;
+
+    size = array_get_size( &window_listeners );
+
+    for ( i = 0; i < size; i++ ) {
+        application_t* listener;
+
+        listener = ( application_t* )array_get_item( &window_listeners, i );
+        send_ipc_message( listener->client_port, MSG_WINDOW_CLOSED, &win_info, sizeof( msg_win_info_t ) );
+    }
+
+    return 0;
+}
 
 static window_t* get_window_at( point_t* position ) {
     int i;
@@ -189,12 +266,18 @@ int wm_register_window( window_t* window ) {
 
     pthread_mutex_lock( &wm_lock );
 
-    /* Insert the new window to the window stack */
+    /* Insert the new window to the window stack and table */
 
     error = array_insert_item( &window_stack, 0, window );
 
     if ( error < 0 ) {
         goto error1;
+    }
+
+    error = window_table_insert( window );
+
+    if ( error < 0 ) {
+        goto error2;
     }
 
     /* Generate visible regions of the new window */
@@ -267,11 +350,18 @@ int wm_register_window( window_t* window ) {
 
     window_activated( window );
 
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        window_opened( window );
+    }
+
     pthread_mutex_unlock( &wm_lock );
 
     return 0;
 
-error1:
+ error2:
+    array_remove_item( &window_stack, ( void* )window );
+
+ error1:
     pthread_mutex_unlock( &wm_lock );
 
     return error;
@@ -288,11 +378,13 @@ int wm_unregister_window( window_t* window ) {
 
     wm_hide_window_region( window, &window->screen_rect );
 
-    /* Remove the window from the stack */
+    /* Remove the window from the stack and the table */
 
     index = array_index_of( &window_stack, window );
     array_remove_item_from( &window_stack, index );
     size = array_get_size( &window_stack );
+
+    window_table_remove( window );
 
     /* Generate new visible regions */
 
@@ -304,6 +396,10 @@ int wm_unregister_window( window_t* window ) {
 
     if ( active_window == window ) {
         active_window = ( window_t* )array_get_item( &window_stack, 0 );
+    }
+
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        window_closed( window );
     }
 
     pthread_mutex_unlock( &wm_lock );
@@ -705,6 +801,47 @@ done:
     return 0;
 }
 
+int wm_add_window_listener( application_t* app ) {
+    if ( array_index_of( &window_listeners, ( void* )app ) != -1 ) {
+        return -EEXIST;
+    }
+
+    return array_add_item( &window_listeners, ( void* )app );
+}
+
+int wm_remove_window_listener( application_t* app ) {
+    /* TODO */
+
+    return 0;
+}
+
+int wm_iterate_window_list( win_iter_callback_t* callback, void* data ) {
+    int i;
+    int size;
+
+    size = array_get_size( &window_stack );
+
+    for ( i = 0; i < size; i++ ) {
+        window_t* window;
+
+        window = ( window_t* )array_get_item( &window_stack, i );
+
+        if ( callback( window, data ) != 0 ) {
+            break;
+        }
+    }
+
+    return 0;
+}
+
+static void* window_key( hashitem_t* item ) {
+    window_t* window;
+
+    window = ( window_t* )item;
+
+    return ( void* )&window->id;
+}
+
 int init_windowmanager( void ) {
     int error;
 
@@ -716,13 +853,34 @@ int init_windowmanager( void ) {
 
     array_set_realloc_size( &window_stack, 32 );
 
-    error = pthread_mutex_init( &wm_lock, NULL );
+    error = init_hashtable(
+        &window_table, 256,
+        window_key, hash_int, compare_int
+    );
 
     if ( error < 0 ) {
         goto error2;
     }
 
+    error = pthread_mutex_init( &wm_lock, NULL );
+
+    if ( error < 0 ) {
+        goto error3;
+    }
+
+    error = init_array( &window_listeners );
+
+    if ( error < 0 ) {
+        goto error4;
+    }
+
     return 0;
+
+ error4:
+    pthread_mutex_destroy( &wm_lock );
+
+ error3:
+    destroy_hashtable( &window_table );
 
  error2:
     destroy_array( &window_stack );

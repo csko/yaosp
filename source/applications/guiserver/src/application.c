@@ -28,6 +28,7 @@
 #include <fontmanager.h>
 #include <graphicsdriver.h>
 #include <bitmap.h>
+#include <windowmanager.h>
 
 #define MAX_APPLICATION_BUFSIZE 512
 
@@ -83,6 +84,77 @@ static int handle_get_desktop_size( msg_desk_get_size_t* request ) {
     return 0;
 }
 
+typedef struct {
+    size_t size;
+    uint8_t* data;
+} window_list_t;
+
+static int window_register_helper( window_t* window, void* data ) {
+    int title_len;
+    size_t new_size;
+    uint8_t* new_data;
+    msg_win_info_t* win_info;
+    window_list_t* list = ( window_list_t* )data;
+
+    if ( window->flags & WINDOW_NO_BORDER ) {
+        return 0;
+    }
+
+    *( int* )list->data += 1;
+
+    title_len = strlen( window->title );
+    new_size = list->size + sizeof( msg_win_info_t ) + title_len + 1;
+
+    new_data = ( uint8_t* )realloc( list->data, new_size );
+
+    if ( new_data == NULL ) {
+        return -ENOMEM;
+    }
+
+    win_info = ( msg_win_info_t* )( new_data + list->size );
+
+    win_info->id = window->id;
+    memcpy( win_info + 1, window->title, title_len + 1 );
+
+    list->size = new_size;
+    list->data = new_data;
+
+    return 0;
+}
+
+static int handle_reg_window_listener( application_t* app, int get_window_list ) {
+    window_list_t list;
+
+    if ( get_window_list ) {
+        list.size = sizeof( int );
+        list.data = ( uint8_t* )malloc( list.size );
+
+        if ( list.data == NULL ) {
+            return -ENOMEM;
+        }
+
+        *( int* )list.data = 0;
+    }
+
+    pthread_mutex_lock( &wm_lock );
+
+    /* Send the current window list to the application */
+
+    if ( get_window_list ) {
+        wm_iterate_window_list( window_register_helper, ( void* )&list );
+        send_ipc_message( app->client_port, MSG_WINDOW_LIST, ( void* )list.data, list.size );
+        free( list.data );
+    }
+
+    /* Register the application as a window listener */
+
+    wm_add_window_listener( app );
+
+    pthread_mutex_unlock( &wm_lock );
+
+    return 0;
+}
+
 static void* application_thread( void* arg ) {
     int error;
     void* buffer;
@@ -100,10 +172,7 @@ static void* application_thread( void* arg ) {
     while ( 1 ) {
         error = recv_ipc_message( app->server_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
 
-        if ( error == -ENOENT ) {
-            dbprintf( "application_thread(): Skipping -ENOENT ...\n" );
-            continue;
-        } else if ( error < 0 ) {
+        if ( error < 0 ) {
             dbprintf( "application_thread(): Failed to receive message: %d\n", error );
             break;
         }
@@ -127,6 +196,10 @@ static void* application_thread( void* arg ) {
 
             case MSG_DESK_GET_SIZE :
                 handle_get_desktop_size( ( msg_desk_get_size_t* )buffer );
+                break;
+
+            case MSG_REG_WINDOW_LISTENER :
+                handle_reg_window_listener( app, *( int* )buffer );
                 break;
 
             default :

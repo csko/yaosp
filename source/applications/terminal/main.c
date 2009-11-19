@@ -232,13 +232,8 @@ static int initialize_gui( void ) {
 }
 
 int main( int argc, char** argv ) {
-    int error;
-
-    error = create_application();
-
-    if ( error < 0 ) {
+    if ( application_init() != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
-
         return EXIT_FAILURE;
     }
 
@@ -250,7 +245,7 @@ int main( int argc, char** argv ) {
 
     window_show( window );
 
-    run_application();
+    application_run();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

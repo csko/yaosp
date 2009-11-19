@@ -230,29 +230,12 @@ static void* bitmap_key( hashitem_t* item ) {
     return ( void* )&bitmap->id;
 }
 
-static uint32_t bitmap_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( bitmap_id ) );
-}
-
-static int bitmap_compare( const void* key1, const void* key2 ) {
-    bitmap_id* id1;
-    bitmap_id* id2;
-
-    id1 = ( bitmap_id* )key1;
-    id2 = ( bitmap_id* )key2;
-
-    return ( *id1 == *id2 );
-}
-
 int init_bitmap( void ) {
     int error;
 
     error = init_hashtable(
-        &bitmap_table,
-        256,
-        bitmap_key,
-        bitmap_hash,
-        bitmap_compare
+        &bitmap_table, 256,
+        bitmap_key, hash_int, compare_int
     );
 
     if ( error < 0 ) {

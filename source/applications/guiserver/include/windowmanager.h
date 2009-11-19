@@ -22,8 +22,11 @@
 #include <pthread.h>
 
 #include <window.h>
+#include <application.h>
 
 extern pthread_mutex_t wm_lock;
+
+typedef int win_iter_callback_t( window_t* window, void* data );
 
 int wm_register_window( window_t* window );
 int wm_unregister_window( window_t* window );
@@ -43,6 +46,10 @@ int wm_mouse_pressed( int button );
 int wm_mouse_released( int button );
 
 int wm_set_moving_window( window_t* window );
+
+int wm_add_window_listener( application_t* app );
+int wm_remove_window_listener( application_t* app );
+int wm_iterate_window_list( win_iter_callback_t* callback, void* data );
 
 int init_windowmanager( void );
 

@@ -30,7 +30,36 @@
 #include <ygui/image.h>
 #include <ygui/menu.h>
 #include <ygui/menuitem.h>
+#include <ygui/protocol.h>
 #include <ygui/layout/borderlayout.h>
+
+#include "window_list.h"
+
+window_t* window;
+widget_t* win_list_widget;
+
+static menu_t* menu;
+
+static int taskbar_msg_handler( uint32_t code, void* data ) {
+    switch ( code ) {
+        case MSG_WINDOW_LIST :
+            taskbar_handle_window_list( ( uint8_t* )data );
+            break;
+
+        case MSG_WINDOW_OPENED :
+            taskbar_handle_window_opened( ( msg_win_info_t* )data );
+            break;
+
+        case MSG_WINDOW_CLOSED :
+            taskbar_handle_window_closed( ( msg_win_info_t* )data );
+            break;
+
+        default :
+            return -1;
+    }
+
+    return 0;
+}
 
 static int event_open_terminal( widget_t* widget, void* data ) {
     if ( fork() == 0 ) {
@@ -43,29 +72,31 @@ static int event_open_terminal( widget_t* widget, void* data ) {
 }
 
 static int event_open_taskbar( widget_t* widget, void* data ) {
-    menu_t* menu = create_menu();
-    widget_t* item = create_menuitem_with_label_and_image(
+    menu_popup_at_xy( menu, 0, 40 );
+
+    return 0;
+}
+
+static int taskbar_create_menu( void ) {
+    widget_t* item;
+
+    menu = create_menu();
+
+    item = create_menuitem_with_label_and_image(
         "Terminal",
         bitmap_load_from_file( "/application/taskbar/images/terminal.png" )
     );
+    widget_connect_event_handler( item, "clicked", event_open_terminal, NULL );
 
     menu_add_item( menu, item );
-    menu_popup_at_xy( menu, 0, 40 );
-
-    widget_connect_event_handler( item, "clicked", event_open_terminal, NULL );
 
     return 0;
 }
 
 int main( int argc, char** argv ) {
-    int error;
-    window_t* win;
-
-    error = create_application();
-
-    if ( error < 0 ) {
+    if ( application_init() != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
-        return error;
+        return EXIT_FAILURE;
     }
 
     point_t point = { .x = 0, .y = 0 };
@@ -77,9 +108,9 @@ int main( int argc, char** argv ) {
 
     /* Create a window */
 
-    win = create_window( "Taskbar", &point, &size, WINDOW_NO_BORDER );
+    window = create_window( "Taskbar", &point, &size, WINDOW_NO_BORDER );
 
-    widget_t* container = window_get_container( win );
+    widget_t* container = window_get_container( window );
 
     /* Set the layout of the window */
 
@@ -93,11 +124,26 @@ int main( int argc, char** argv ) {
 
     widget_connect_event_handler( image, "mouse-down", event_open_taskbar, NULL );
 
+    win_list_widget = window_list_create();
+    widget_add( container, win_list_widget, BRD_CENTER );
+    widget_dec_ref( win_list_widget );
+
+    /* Create the menu */
+
+    taskbar_create_menu();
+
     /* Show the window */
 
-    window_show( win );
+    window_show( window );
 
-    run_application();
+    /* Register taskbar application for listening window list events */
 
-    return 0;
+    application_set_message_handler( taskbar_msg_handler );
+    application_register_window_listener( 1 );
+
+    /* Start the mainloop of the application ... */
+
+    application_run();
+
+    return EXIT_SUCCESS;
 }

@@ -55,7 +55,13 @@ int hashtable_add( hashtable_t* table, hashitem_t* item );
 hashitem_t* hashtable_get( hashtable_t* table, const void* key );
 int hashtable_remove( hashtable_t* table, const void* key );
 
-uint32_t hash_number( uint8_t* data, size_t length );
-uint32_t hash_string( uint8_t* data, size_t length );
+uint32_t do_hash_number( uint8_t* data, size_t length );
+uint32_t do_hash_string( uint8_t* data, size_t length );
+
+uint32_t hash_int( const void* key );
+uint32_t hash_string( const void* key );
+
+int compare_int( const void* key1, const void* key2 );
+int compare_string( const void* key1, const void* key2 );
 
 #endif /* _YUTIL_HASHTABLE_H_ */

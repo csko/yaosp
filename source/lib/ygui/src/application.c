@@ -25,6 +25,7 @@
 #include <yaosp/debug.h>
 
 #include <ygui/protocol.h>
+#include <ygui/application.h>
 
 ipc_port_id guiserver_port = -1;
 
@@ -34,7 +35,21 @@ ipc_port_id app_server_port = -1;
 
 pthread_mutex_t app_lock = PTHREAD_MUTEX_INITIALIZER;
 
-int create_application( void ) {
+static msg_handler_t* unknown_msg_handler = NULL;
+
+int application_set_message_handler( msg_handler_t* handler ) {
+    unknown_msg_handler = handler;
+
+    return 0;
+}
+
+int application_register_window_listener( int get_window_list ) {
+    send_ipc_message( app_server_port, MSG_REG_WINDOW_LISTENER, &get_window_list, sizeof( int ) );
+
+    return 0;
+}
+
+int application_init( void ) {
     int error;
     struct timespec slp_time;
 
@@ -98,7 +113,7 @@ int create_application( void ) {
 
 #define MAX_APPLICATION_BUFSIZE 512
 
-int run_application( void ) {
+int application_run( void ) {
     int error;
     uint32_t code;
     void* buffer;
@@ -119,20 +134,27 @@ int run_application( void ) {
     while ( 1 ) {
         error = recv_ipc_message( app_client_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
 
-        if ( error == -ENOENT ) {
-            dbprintf( "run_application(): Received ENOENT, skipping ...\n" );
-            continue;
-        }
-
         if ( error < 0 ) {
             dbprintf( "run_application(): Failed to receive message: %d\n", error );
             continue;
         }
 
         switch ( code ) {
-            default :
-                dbprintf( "run_application(): Received unknown message: %x\n", code );
+            default : {
+                int handled;
+
+                if ( unknown_msg_handler != NULL ) {
+                    handled = unknown_msg_handler( code, buffer );
+                } else {
+                    handled = -1;
+                }
+
+                if ( handled != 0 ) {
+                    dbprintf( "run_application(): Received unknown message: %x\n", code );
+                }
+
                 break;
+            }
         }
     }
 

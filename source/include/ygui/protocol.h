@@ -65,6 +65,13 @@ enum {
     MSG_MOUSE_PRESSED,
     MSG_MOUSE_RELEASED,
     MSG_WINDOW_CALLBACK,
+
+    /* Other message codes ... */
+
+    MSG_REG_WINDOW_LISTENER,
+    MSG_WINDOW_LIST,
+    MSG_WINDOW_OPENED,
+    MSG_WINDOW_CLOSED
 };
 
 /* MSG_CREATE_APPLICATION */
@@ -200,5 +207,9 @@ typedef struct msg_win_do_move {
 typedef struct msg_win_moved {
     point_t position;
 } msg_win_moved_t;
+
+typedef struct msg_win_info {
+    int id;
+} msg_win_info_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */

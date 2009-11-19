@@ -271,30 +271,16 @@ static void* mouse_pointer_key( hashitem_t* item ) {
     return ( void* )&pointer->id;
 }
 
-static uint32_t mouse_pointer_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( mouse_pointer_id ) );
-}
-
-static int mouse_pointer_compare( const void* key1, const void* key2 ) {
-    mouse_pointer_id* id1;
-    mouse_pointer_id* id2;
-
-    id1 = ( mouse_pointer_id* )key1;
-    id2 = ( mouse_pointer_id* )key2;
-
-    return ( *id1 == *id2 );
-}
-
 int init_mouse_manager( void ) {
     int error;
     mouse_pointer_t* pointer;
 
     error = init_hashtable(
         &mouse_pointer_table,
-        256,
+        64,
         mouse_pointer_key,
-        mouse_pointer_hash,
-        mouse_pointer_compare
+        hash_int,
+        compare_int
     );
 
     if ( error < 0 ) {

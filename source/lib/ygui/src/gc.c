@@ -237,6 +237,34 @@ int gc_set_clip_rect( gc_t* gc, rect_t* rect ) {
     return 0;
 }
 
+int gc_reset_clip_rect( gc_t* gc ) {
+    int error;
+    rect_t* res_area;
+    r_set_clip_rect_t* packet;
+
+    assert( stack_size( &gc->res_area_stack ) > 0 );
+
+    error = stack_peek( &gc->res_area_stack, ( void** )&res_area );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    gc->is_clip_valid = 1;
+    rect_copy( &gc->clip_rect, res_area );
+
+    error = allocate_render_packet( gc->window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    packet->header.command = R_SET_CLIP_RECT;
+    rect_copy( &packet->clip_rect, res_area );
+
+    return 0;
+}
+
 int gc_translate( gc_t* gc, point_t* point ) {
     int error;
     tr_entry_t* entry;

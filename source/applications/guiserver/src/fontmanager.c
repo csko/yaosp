@@ -34,17 +34,6 @@ static void* family_key( hashitem_t* item ) {
     return ( void* )family->name;
 }
 
-static uint32_t family_hash( const void* key ) {
-    return hash_string(
-        ( uint8_t* )key,
-        strlen( ( const char* )key )
-    );
-}
-
-static int family_compare( const void* key1, const void* key2 ) {
-    return ( strcmp( ( const char* )key1, ( const char* )key2 ) == 0 );
-}
-
 static void* style_key( hashitem_t* item ) {
     font_style_t* style;
 
@@ -62,7 +51,7 @@ static void* node_key( hashitem_t* item ) {
 }
 
 static uint32_t node_hash( const void* key ) {
-    return hash_number(
+    return do_hash_number(
         ( uint8_t* )key,
         sizeof( font_properties_t )
     );
@@ -88,15 +77,12 @@ static font_family_t* create_font_family( const char* name ) {
         goto error2;
     }
 
-    /* NOTE: We can use family_hash and family_compare because we use the name
-             strings as keys for both font families and font styles. */
-
     error = init_hashtable(
         &family->styles,
         32,
         style_key,
-        family_hash,
-        family_compare
+        hash_string,
+        compare_string
     );
 
     if ( error < 0 ) {
@@ -546,8 +532,8 @@ int init_font_manager( void ) {
         &family_table,
         64,
         family_key,
-        family_hash,
-        family_compare
+        hash_string,
+        compare_string
     );
 
     if ( result < 0 ) {

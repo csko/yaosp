@@ -57,6 +57,7 @@ static window_t* window_create( const char* title, uint32_t flags ) {
         goto error4;
     }
 
+    window->id = -1;
     window->flags = flags;
 
     return window;
