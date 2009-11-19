@@ -202,6 +202,10 @@ static void* application_thread( void* arg ) {
                 handle_reg_window_listener( app, *( int* )buffer );
                 break;
 
+            case MSG_WINDOW_BRING_TO_FRONT :
+                wm_bring_to_front_by_id( *( int* )buffer );
+                break;
+
             default :
                 dbprintf( "application_thread(): Received unknown message: %x\n", code );
                 break;

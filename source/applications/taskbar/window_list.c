@@ -212,6 +212,46 @@ static int window_list_paint( widget_t* widget, gc_t* gc ) {
     return 0;
 }
 
+static int window_list_mouse_pressed( widget_t* widget, point_t* position, int button ) {
+    int size;
+    int real_x;
+    int real_y;
+    int item_width;
+    int item_height;
+    int items_per_row;
+    int index;
+    rect_t bounds;
+    msg_win_info_t* win_info;
+
+    widget_get_bounds( widget, &bounds );
+
+    size = array_get_size( &window_table );
+    items_per_row = size / WL_ROWS;
+
+    item_height = ( rect_height( &bounds ) - ( WL_ROWS + 1 ) ) / WL_ROWS;
+
+    if ( items_per_row == 0 ) {
+        item_width = WL_MAX_ITEM_WIDTH;
+    } else {
+        item_width = ( rect_width( &bounds ) - ( items_per_row + 1 ) ) / items_per_row;
+        item_width = MIN( item_width, WL_MAX_ITEM_WIDTH );
+    }
+
+    real_x = position->x - ( position->x / item_width + 1 );
+    real_y = position->y - ( position->y / item_height + 1 );
+
+    index = real_x / item_width * WL_ROWS + real_y / item_height;
+
+    if ( index >= array_get_size( &window_table ) ) {
+        return 0;
+    }
+
+    win_info = ( msg_win_info_t* )array_get_item( &window_table, index );
+    window_bring_to_front( win_info->id );
+
+    return 0;
+}
+
 static widget_operations_t win_list_ops = {
     .paint = window_list_paint,
     .key_pressed = NULL,
@@ -219,7 +259,7 @@ static widget_operations_t win_list_ops = {
     .mouse_entered = NULL,
     .mouse_exited = NULL,
     .mouse_moved = NULL,
-    .mouse_pressed = NULL,
+    .mouse_pressed = window_list_mouse_pressed,
     .mouse_released = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = NULL,

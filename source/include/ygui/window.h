@@ -102,5 +102,6 @@ int window_move( window_t* window, point_t* position );
 
 int window_show( window_t* window );
 int window_hide( window_t* window );
+int window_bring_to_front( int window_id );
 
 #endif /* _YGUI_WINDOW_H_ */

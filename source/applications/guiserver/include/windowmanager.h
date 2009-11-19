@@ -32,6 +32,7 @@ int wm_register_window( window_t* window );
 int wm_unregister_window( window_t* window );
 
 int wm_bring_to_front( window_t* window );
+int wm_bring_to_front_by_id( int id );
 
 int wm_update_window_region( window_t* window, rect_t* region );
 int wm_hide_window_region( window_t* window, rect_t* region );

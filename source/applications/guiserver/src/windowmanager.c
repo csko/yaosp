@@ -435,6 +435,22 @@ int wm_bring_to_front( window_t* window ) {
     return 0;
 }
 
+int wm_bring_to_front_by_id( int id ) {
+    window_t* window;
+
+    pthread_mutex_lock( &wm_lock );
+
+    window = ( window_t* )hashtable_get( &window_table, ( const void* )&id );
+
+    if ( window != NULL ) {
+        wm_bring_to_front( window );
+    }
+
+    pthread_mutex_unlock( &wm_lock );
+
+    return 0;
+}
+
 int wm_update_window_region( window_t* window, rect_t* region ) {
     point_t lefttop;
     int mouse_hidden;

@@ -761,3 +761,9 @@ int window_hide( window_t* window ) {
 
     return 0;
 }
+
+int window_bring_to_front( int window_id ) {
+    send_ipc_message( app_server_port, MSG_WINDOW_BRING_TO_FRONT, &window_id, sizeof( int ) );
+
+    return 0;
+}
