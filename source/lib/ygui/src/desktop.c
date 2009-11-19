@@ -38,7 +38,7 @@ int desktop_get_size( point_t* size ) {
 
     pthread_mutex_lock( &app_lock );
 
-    error = send_ipc_message( app_server_port, MSG_GET_DESKTOP_SIZE, &request, sizeof( msg_desk_get_size_t ) );
+    error = send_ipc_message( app_server_port, MSG_DESK_GET_SIZE, &request, sizeof( msg_desk_get_size_t ) );
 
     if ( error < 0 ) {
         pthread_mutex_unlock( &app_lock );

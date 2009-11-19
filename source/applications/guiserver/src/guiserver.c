@@ -163,7 +163,7 @@ static int guiserver_mainloop( void ) {
         }
 
         switch ( code ) {
-            case MSG_CREATE_APPLICATION :
+            case MSG_APPLICATION_CREATE :
                 handle_create_application( ( msg_create_app_t* )buffer );
                 break;
 

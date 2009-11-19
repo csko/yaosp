@@ -59,6 +59,8 @@ typedef struct decorator_data {
     rect_t left_border;
     rect_t right_border;
     rect_t bottom_border;
+
+    rect_t close_button;
 } decorator_data_t;
 
 static font_node_t* title_font;
@@ -79,7 +81,9 @@ static int decorator_initialize( window_t* window ) {
 }
 
 static int decorator_destroy( window_t* window ) {
-    assert( window->decorator_data != NULL );
+    if ( window->decorator_data == NULL ) {
+        return 0;
+    }
 
     free( window->decorator_data );
     window->decorator_data = NULL;
@@ -135,6 +139,16 @@ static int decorator_calculate_regions( window_t* window ) {
         screen_rect->bottom,
         screen_rect->right,
         screen_rect->bottom
+    );
+
+    /* Close button */
+
+    rect_init(
+        &data->close_button,
+        screen_rect->right - 21 + 1,
+        screen_rect->top,
+        screen_rect->right,
+        screen_rect->top + 21 - 1
     );
 
     return 0;
@@ -259,7 +273,9 @@ static int decorator_mouse_pressed( window_t* window, int button ) {
 
     mouse_get_position( &mouse_position );
 
-    if ( rect_has_point( &data->header, &mouse_position ) ) {
+    if ( rect_has_point( &data->close_button, &mouse_position ) ) {
+        window_close_request( window );
+    } else if ( rect_has_point( &data->header, &mouse_position ) ) {
         wm_set_moving_window( window );
     }
 

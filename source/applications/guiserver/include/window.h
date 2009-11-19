@@ -71,4 +71,6 @@ int window_mouse_moved( window_t* window, point_t* mouse_position );
 int window_mouse_pressed( window_t* window, int button );
 int window_mouse_released( window_t* window, int button );
 
+int window_close_request( window_t* window );
+
 #endif /* _WINDOW_H_ */

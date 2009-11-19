@@ -98,7 +98,7 @@ int font_get_string_width( font_t* font, const char* text, int length ) {
 
     pthread_mutex_lock( &app_lock );
 
-    error = send_ipc_message( app_server_port, MSG_GET_STRING_WIDTH, request, request_len );
+    error = send_ipc_message( app_server_port, MSG_FONT_GET_STR_WIDTH, request, request_len );
 
     free( request );
 
@@ -160,7 +160,7 @@ font_t* create_font( const char* family, const char* style, font_properties_t* p
 
     pthread_mutex_lock( &app_lock );
 
-    error = send_ipc_message( app_server_port, MSG_CREATE_FONT, request, request_len );
+    error = send_ipc_message( app_server_port, MSG_FONT_CREATE, request, request_len );
 
     free( request );
 

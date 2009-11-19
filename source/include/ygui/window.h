@@ -34,6 +34,11 @@ enum {
     WE_COUNT
 };
 
+enum {
+    WINDOW_HIDE = 0,
+    WINDOW_DESTROY
+};
+
 struct window;
 
 typedef int window_event_callback_t( struct window* window, void* data );
@@ -60,6 +65,7 @@ typedef struct window {
 
     /* Event handling */
 
+    int close_operation;
     window_event_data_t event_handlers[ WE_COUNT ];
 
     /* Rendering informations */

@@ -109,23 +109,23 @@ static void* application_thread( void* arg ) {
         }
 
         switch ( code ) {
-            case MSG_CREATE_WINDOW :
+            case MSG_WINDOW_CREATE :
                 handle_create_window( ( msg_create_win_t* )buffer );
                 break;
 
-            case MSG_CREATE_FONT :
+            case MSG_FONT_CREATE :
                 handle_create_font( ( msg_create_font_t* )buffer );
                 break;
 
-            case MSG_CREATE_BITMAP :
-                handle_create_bitmap( ( msg_create_bitmap_t* )buffer );
-                break;
-
-            case MSG_GET_STRING_WIDTH :
+            case MSG_FONT_GET_STR_WIDTH :
                 handle_get_string_width( ( msg_get_str_width_t* )buffer );
                 break;
 
-            case MSG_GET_DESKTOP_SIZE :
+            case MSG_BITMAP_CREATE :
+                handle_create_bitmap( ( msg_create_bitmap_t* )buffer );
+                break;
+
+            case MSG_DESK_GET_SIZE :
                 handle_get_desktop_size( ( msg_desk_get_size_t* )buffer );
                 break;
 

@@ -52,7 +52,7 @@ bitmap_t* bitmap_create( int width, int height, color_space_t color_space ) {
 
     pthread_mutex_lock( &app_lock );
 
-    error = send_ipc_message( app_server_port, MSG_CREATE_BITMAP, &request, sizeof( msg_create_bitmap_t )  );
+    error = send_ipc_message( app_server_port, MSG_BITMAP_CREATE, &request, sizeof( msg_create_bitmap_t )  );
 
     if ( error < 0 ) {
         pthread_mutex_unlock( &app_lock );

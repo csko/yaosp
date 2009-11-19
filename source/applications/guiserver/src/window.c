@@ -32,6 +32,66 @@
 
 extern window_decorator_t* window_decorator;
 
+static window_t* window_create( const char* title, uint32_t flags ) {
+    window_t* window;
+
+    window = ( window_t* )calloc( 1, sizeof( window_t ) );
+
+    if ( window == NULL ) {
+        goto error1;
+    }
+
+    window->title = strdup( title );
+
+    if ( window->title == NULL ) {
+        goto error2;
+    }
+
+    window->server_port = create_ipc_port();
+
+    if ( window->server_port < 0 ) {
+        goto error3;
+    }
+
+    if ( init_region( &window->visible_regions ) != 0 ) {
+        goto error4;
+    }
+
+    window->flags = flags;
+
+    return window;
+
+ error4:
+    destroy_ipc_port( window->server_port );
+
+ error3:
+    free( window->title );
+
+ error2:
+    free( window );
+
+ error1:
+    return NULL;
+}
+
+static int window_destroy( window_t* window ) {
+    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
+        window_decorator->destroy( window );
+    }
+
+    if ( window->bitmap != NULL ) {
+        bitmap_put( window->bitmap );
+        window->bitmap = NULL;
+    }
+
+    destroy_region( &window->visible_regions );
+    destroy_ipc_port( window->server_port );
+    free( window->title );
+    free( window );
+
+    return 0;
+}
+
 static void window_do_resize( window_t* window, msg_win_do_resize_t* request ) {
     int width;
     int height;
@@ -128,6 +188,7 @@ static void window_do_move( window_t* window, msg_win_do_move_t* request ) {
 
 static void* window_thread( void* arg ) {
     int error;
+    int running;
     uint32_t code;
     void* buffer;
     window_t* window;
@@ -140,7 +201,9 @@ static void* window_thread( void* arg ) {
         return NULL;
     }
 
-    while ( 1 ) {
+    running = 1;
+
+    while ( running ) {
         error = recv_ipc_message( window->server_port, &code, buffer, MAX_WINDOW_BUFSIZE, INFINITE_TIMEOUT );
 
         if ( error < 0 ) {
@@ -163,6 +226,11 @@ static void* window_thread( void* arg ) {
                 window->is_visible = 0;
                 break;
 
+            case MSG_WINDOW_DESTROY :
+                wm_unregister_window( window );
+                running = 0;
+                break;
+
             case MSG_WINDOW_DO_RESIZE :
                 window_do_resize( window, ( msg_win_do_resize_t* )buffer );
                 break;
@@ -177,6 +245,7 @@ static void* window_thread( void* arg ) {
         }
     }
 
+    window_destroy( window );
     free( buffer );
 
     return NULL;
@@ -190,32 +259,13 @@ int handle_create_window( msg_create_win_t* request ) {
     pthread_t thread;
     msg_create_win_reply_t reply;
 
-    window = ( window_t* )malloc( sizeof( window_t ) );
+    window = window_create( ( const char* )( request + 1 ), request->flags );
 
     if ( window == NULL ) {
         goto error1;
     }
 
-    window->title = strdup( ( const char* )( request + 1 ) );
-
-    if ( window->title == NULL ) {
-        goto error2;
-    }
-
-    window->server_port = create_ipc_port();
-
-    if ( window->server_port < 0 ) {
-        goto error3;
-    }
-
-    error = init_region( &window->visible_regions );
-
-    if ( error < 0 ) {
-        goto error4;
-    }
-
     window->client_port = request->client_port;
-    window->flags = request->flags;
     window->is_visible = 0;
     window->is_moving = 0;
     window->mouse_on_decorator = 0;
@@ -270,7 +320,7 @@ int handle_create_window( msg_create_win_t* request ) {
         error = window_decorator->initialize( window );
 
         if ( error < 0 ) {
-            goto error6;
+            goto error5;
         }
 
         window_decorator->calculate_regions( window );
@@ -284,34 +334,15 @@ int handle_create_window( msg_create_win_t* request ) {
     );
 
     if ( error != 0 ) {
-        goto error7;
+        goto error5;
     }
 
     reply.server_port = window->server_port;
 
     goto out;
 
-error7:
-    if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
-        window_decorator->destroy( window );
-    }
-
-error6:
-    if ( window->bitmap != NULL ) {
-        bitmap_put( window->bitmap );
-    }
-
 error5:
-    destroy_region( &window->visible_regions );
-
-error4:
-    /* TODO: Delete server port */
-
-error3:
-    free( window->title );
-
-error2:
-    free( window );
+    window_destroy( window );
 
 error1:
     reply.server_port = -1;
@@ -468,6 +499,12 @@ int window_mouse_released( window_t* window, int mouse_button ) {
 
         send_ipc_message( window->client_port, MSG_MOUSE_RELEASED, &cmd, sizeof( msg_mouse_released_t ) );
     }
+
+    return 0;
+}
+
+int window_close_request( window_t* window ) {
+    send_ipc_message( window->client_port, MSG_WINDOW_CLOSE_REQUEST, NULL, 0 );
 
     return 0;
 }

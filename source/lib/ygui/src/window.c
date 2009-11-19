@@ -34,6 +34,96 @@ extern ipc_port_id app_server_port;
 
 #define MAX_WINDOW_BUFSIZE 256
 
+static window_t* window_create( point_t* size ) {
+    window_t* window;
+
+    window = ( window_t* )calloc( 1, sizeof( window_t ) );
+
+    if ( window == NULL ) {
+        goto error1;
+    }
+
+    window->reply_port = create_ipc_port();
+
+    if ( window->reply_port < 0 ) {
+        goto error2;
+    }
+
+    window->client_port = create_ipc_port();
+
+    if ( window->reply_port < 0 ) {
+        goto error3;
+    }
+
+    /* Initialize render buffer */
+
+    window->render_buffer = ( uint8_t* )malloc( DEFAULT_RENDER_BUFFER_SIZE );
+
+    if ( window->render_buffer == NULL ) {
+        goto error4;
+    }
+
+    initialize_render_buffer( window );
+    window->render_buffer_max_size = DEFAULT_RENDER_BUFFER_SIZE;
+
+    /* Create the root container */
+
+    window->container = create_panel();
+
+    if ( window->container == NULL ) {
+        goto error5;
+    }
+
+    widget_set_window( window->container, window );
+
+    if ( size != NULL ) {
+        point_t container_position = { .x = 0, .y = 0 };
+
+        widget_set_position_and_size(
+            window->container,
+            &container_position,
+            size
+        );
+    }
+
+    /* Initialize the graphics context of the window */
+
+    if ( init_gc( window, &window->gc ) != 0 ) {
+        goto error6;
+    }
+
+    return window;
+
+ error6:
+    widget_dec_ref( window->container );
+
+ error5:
+    free( window->render_buffer );
+
+ error4:
+    destroy_ipc_port( window->client_port );
+
+ error3:
+    destroy_ipc_port( window->reply_port );
+
+ error2:
+    free( window );
+
+ error1:
+    return NULL;
+}
+
+static int window_destroy( window_t* window ) {
+    destroy_gc( &window->gc );
+    widget_dec_ref( window->container );
+    free( window->render_buffer );
+    destroy_ipc_port( window->client_port );
+    destroy_ipc_port( window->reply_port );
+    free( window );
+
+    return 0;
+}
+
 widget_t* window_get_container( window_t* window ) {
     return window->container;
 }
@@ -134,6 +224,7 @@ static void window_signal_event_handler( window_t* window, int event ) {
 
 static void* window_thread( void* arg ) {
     int error;
+    int running;
     void* buffer;
     uint32_t code;
     window_t* window;
@@ -146,7 +237,9 @@ static void* window_thread( void* arg ) {
         return NULL;
     }
 
-    while ( 1 ) {
+    running = 1;
+
+    while ( running ) {
         error = recv_ipc_message( window->client_port, &code, buffer, MAX_WINDOW_BUFSIZE, INFINITE_TIMEOUT );
 
         if ( error == -ENOENT ) {
@@ -431,11 +524,28 @@ static void* window_thread( void* arg ) {
                 break;
             }
 
+            case MSG_WINDOW_CLOSE_REQUEST :
+                switch ( window->close_operation ) {
+                    case WINDOW_HIDE :
+                        send_ipc_message( window->server_port, MSG_WINDOW_HIDE, NULL, 0 );
+                        break;
+
+                    case WINDOW_DESTROY :
+                        send_ipc_message( window->server_port, MSG_WINDOW_DESTROY, NULL, 0 );
+                        running = 0;
+                        break;
+                }
+
+                break;
+
             default :
                 dbprintf( "window_thread(): Received unknown message: %x\n", code );
                 break;
         }
     }
+
+    window_destroy( window );
+    free( buffer );
 
     return NULL;
 }
@@ -489,59 +599,10 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
 
     /* Create the window object */
 
-    window = ( window_t* )malloc( sizeof( window_t ) );
+    window = window_create( size );
 
     if ( window == NULL ) {
         goto error1;
-    }
-
-    memset( window, 0, sizeof( window_t ) );
-
-    window->reply_port = create_ipc_port();
-
-    if ( window->reply_port < 0 ) {
-        goto error2;
-    }
-
-    window->client_port = create_ipc_port();
-
-    if ( window->reply_port < 0 ) {
-        goto error3;
-    }
-
-    window->container = create_panel();
-
-    if ( window->container == NULL ) {
-        goto error4;
-    }
-
-    widget_set_window( window->container, window );
-
-    if ( size != NULL ) {
-        point_t container_position = { .x = 0, .y = 0 };
-
-        widget_set_position_and_size(
-            window->container,
-            &container_position,
-            size
-        );
-    }
-
-    window->render_buffer = ( uint8_t* )malloc( DEFAULT_RENDER_BUFFER_SIZE );
-
-    if ( window->render_buffer == NULL ) {
-        goto error5;
-    }
-
-    initialize_render_buffer( window );
-    window->render_buffer_max_size = DEFAULT_RENDER_BUFFER_SIZE;
-
-    /* Initialize the graphics context of the window */
-
-    error = init_gc( window, &window->gc );
-
-    if ( error < 0 ) {
-        goto error6;
     }
 
     /* Register the window to the guiserver */
@@ -549,7 +610,7 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     request = ( msg_create_win_t* )malloc( sizeof( msg_create_win_t ) + title_size + 1 );
 
     if ( request == NULL ) {
-        goto error6;
+        goto error2;
     }
 
     request->reply_port = window->reply_port;
@@ -570,24 +631,22 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     memcpy( ( void* )( request + 1 ), title, title_size + 1 );
     request->flags = flags;
 
-    error = send_ipc_message( app_server_port, MSG_CREATE_WINDOW, request, sizeof( msg_create_win_t ) + title_size + 1 );
+    error = send_ipc_message( app_server_port, MSG_WINDOW_CREATE, request, sizeof( msg_create_win_t ) + title_size + 1 );
 
     free( request );
 
     if ( error < 0 ) {
-        goto error6;
+        goto error2;
     }
 
     error = recv_ipc_message( window->reply_port, NULL, &reply, sizeof( msg_create_win_reply_t ), INFINITE_TIMEOUT );
 
-    if ( error < 0 ) {
-        goto error6;
+    if ( ( error < 0 ) ||
+         ( reply.server_port < 0 ) ) {
+        goto error2;
     }
 
-    if ( reply.server_port < 0 ) {
-        goto error6;
-    }
-
+    window->close_operation = WINDOW_DESTROY;
     window->server_port = reply.server_port;
 
     error = pthread_create(
@@ -598,28 +657,16 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     );
 
     if ( error != 0 ) {
-        goto error7;
+        goto error3;
     }
 
     return window;
 
- error7:
-    /* TODO: Unregister the window from the guiserver */
-
- error6:
-    /* TODO: free the render buffer */
-
- error5:
-    /* TODO: free the container */
-
- error4:
-    /* TODO: Delete the client port */
-
  error3:
-    /* TODO: Delete the reply port */
+    /* TODO: unregister the window from the guiserver */
 
  error2:
-    free( window );
+    window_destroy( window );
 
  error1:
     return NULL;

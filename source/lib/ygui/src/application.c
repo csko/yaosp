@@ -75,7 +75,7 @@ int create_application( void ) {
     request.reply_port = app_reply_port;
     request.client_port = app_client_port;
 
-    error = send_ipc_message( guiserver_port, MSG_CREATE_APPLICATION, &request, sizeof( msg_create_app_t ) );
+    error = send_ipc_message( guiserver_port, MSG_APPLICATION_CREATE, &request, sizeof( msg_create_app_t ) );
 
     if ( error < 0 ) {
         return error;
