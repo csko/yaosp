@@ -134,7 +134,7 @@ int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint
 
     /* Allocate the pages of the region */
 
-    uint32_t first_page = PT_INDEX( region->address );
+    uint32_t first_page = PT_INDEX( virtual );
     uint32_t last_page = ( curr_pt == last_pt ? PT_INDEX( virtual + size - 1 ) : 1023 );
 
     error = paging_alloc_table_entries(

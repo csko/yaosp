@@ -167,8 +167,6 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
     va_list args;
     thread_t* thread;
 
-    //disable_interrupts();
-
     kprintf( ERROR, "Panic at %s:%d: ", file, line );
 
     va_start( args, format );
@@ -182,7 +180,6 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
     }
 
     debug_print_stack_trace();
-
     memory_context_dump( &kernel_memory_context );
 
     halt_loop();
