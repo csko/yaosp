@@ -61,6 +61,7 @@ typedef struct decorator_data {
     rect_t bottom_border;
 } decorator_data_t;
 
+static font_node_t* title_font;
 static bitmap_t* bmp_close_focused;
 
 static int decorator_initialize( window_t* window ) {
@@ -146,10 +147,10 @@ static int decorator_update_border( window_t* window ) {
     rect_t rect;
     point_t point;
     color_t* color;
+    color_t tmp_color;
     bitmap_t* bitmap;
 
     bitmap = window->bitmap;
-
     rect_bounds( &window->screen_rect, &width, &height );
 
     color = &top_border_colors[ 20 ];
@@ -180,15 +181,40 @@ static int decorator_update_border( window_t* window ) {
         graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
     }
 
+    /* Close button */
+
     point_init( &point, width - 22, 0 );
     rect_init( &rect, 0, 0, 20, 20 );
 
     graphics_driver->blit_bitmap(
-        bitmap,
-        &point,
+        bitmap, &point,
         bmp_close_focused,
+        &rect, DM_COPY
+    );
+
+    /* Window title */
+
+    point_init(
+        &point,
+        ( bitmap->width - font_node_get_string_width( title_font, window->title, strlen( window->title ) ) ) / 2,
+        ( 21 /* title height */ - ( title_font->ascender - title_font->descender ) ) / 2 + title_font->ascender
+    );
+    rect_init(
         &rect,
-        DM_COPY
+        0, 0,
+        bitmap->width - 1,
+        bitmap->height - 1
+    );
+    color_init(
+        &tmp_color,
+        255, 255, 255, 0
+    );
+
+    graphics_driver->draw_text(
+        bitmap, &point,
+        &rect, title_font,
+        &tmp_color, window->title,
+        -1
     );
 
     return 0;
@@ -249,6 +275,8 @@ static int decorator_mouse_released( window_t* window, int button ) {
 }
 
 int init_default_decorator( void ) {
+    font_properties_t properties;
+
     bmp_close_focused = create_bitmap_from_buffer(
         21,
         21,
@@ -257,10 +285,25 @@ int init_default_decorator( void ) {
     );
 
     if ( bmp_close_focused == NULL ) {
-        return -ENOMEM;
+        goto error1;
+    }
+
+    properties.point_size = 8 * 64;
+    properties.flags = FONT_SMOOTHED;
+
+    title_font = font_manager_get( "DejaVu Sans", "Bold", &properties );
+
+    if ( title_font == NULL ) {
+        goto error2;
     }
 
     return 0;
+
+ error2:
+    /* TODO: free close button bitmap */
+
+ error1:
+    return -ENOMEM;
 }
 
 window_decorator_t default_decorator = {

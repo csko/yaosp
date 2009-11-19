@@ -68,9 +68,10 @@ typedef struct font_family {
 } font_family_t;
 
 font_glyph_t* font_node_get_glyph( font_node_t* node, unsigned int character );
-
-font_node_t* get_font( const char* family_name, const char* style_name, font_properties_t* properties );
 int font_node_get_string_width( font_node_t* font, const char* text, int length );
+int font_node_get_height( font_node_t* font );
+
+font_node_t* font_manager_get( const char* family_name, const char* style_name, font_properties_t* properties );
 
 int init_font_manager( void );
 

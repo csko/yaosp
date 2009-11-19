@@ -40,7 +40,7 @@ static int handle_create_font( msg_create_font_t* request ) {
     family = ( char* )( request + 1 );
     style = family + strlen( family ) + 1;
 
-    font = get_font( family, style, &request->properties );
+    font = font_manager_get( family, style, &request->properties );
 
     if ( font == NULL ) {
         reply.handle = -1;

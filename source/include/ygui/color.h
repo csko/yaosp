@@ -50,4 +50,11 @@ static inline void color_invert( color_t* color ) {
     color->blue = 255 - color->blue;
 }
 
+static inline void color_init( color_t* color, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha ) {
+    color->red = red;
+    color->green = green;
+    color->blue = blue;
+    color->alpha = alpha;
+}
+
 #endif /* _YGUI_COLOR_H_ */

@@ -376,7 +376,43 @@ error1:
     return NULL;
 }
 
-font_node_t* get_font( const char* family_name, const char* style_name, font_properties_t* properties ) {
+int font_node_get_string_width( font_node_t* font, const char* text, int length ) {
+    int width;
+    font_glyph_t* glyph;
+
+    width = 0;
+
+    pthread_mutex_lock( &font->style->mutex );
+
+    while ( length > 0 ) {
+        int char_length = utf8_char_length( *text );
+
+        if ( char_length > length ) {
+            break;
+        }
+
+        glyph = font_node_get_glyph( font, utf8_to_unicode( text ) );
+
+        text += char_length;
+        length -= char_length;
+
+        if ( glyph == NULL ) {
+            continue;
+        }
+
+        width += glyph->advance.x;
+    }
+
+    pthread_mutex_unlock( &font->style->mutex );
+
+    return width;
+}
+
+int font_node_get_height( font_node_t* font ) {
+    return ( font->ascender - font->descender + font->line_gap );
+}
+
+font_node_t* font_manager_get( const char* family_name, const char* style_name, font_properties_t* properties ) {
     font_family_t* family;
     font_style_t* style;
     font_node_t* node;
@@ -408,38 +444,6 @@ font_node_t* get_font( const char* family_name, const char* style_name, font_pro
     pthread_mutex_unlock( &style->mutex );
 
     return node;
-}
-
-int font_node_get_string_width( font_node_t* font, const char* text, int length ) {
-    int width;
-    font_glyph_t* glyph;
-
-    width = 0;
-
-    pthread_mutex_lock( &font->style->mutex );
-
-    while ( length > 0 ) {
-        int char_length = utf8_char_length( *text );
-
-        if ( char_length > length ) {
-            break;
-        }
-
-        glyph = font_node_get_glyph( font, utf8_to_unicode( text ) );
-
-        text += char_length;
-        length -= char_length;
-
-        if ( glyph == NULL ) {
-            continue;
-        }
-
-        width += glyph->advance.x;
-    }
-
-    pthread_mutex_unlock( &font->style->mutex );
-
-    return width;
 }
 
 static void load_fonts( void ) {
