@@ -257,6 +257,7 @@ int handle_create_window( msg_create_win_t* request ) {
     int height;
     window_t* window;
     pthread_t thread;
+    pthread_attr_t attrib;
     msg_create_win_reply_t reply;
 
     window = window_create( ( const char* )( request + 1 ), request->flags );
@@ -326,12 +327,17 @@ int handle_create_window( msg_create_win_t* request ) {
         window_decorator->calculate_regions( window );
     }
 
+    pthread_attr_init( &attrib );
+    pthread_attr_setname( &attrib, "win_event" );
+
     error = pthread_create(
         &thread,
-        NULL,
+        &attrib,
         window_thread,
         ( void* )window
     );
+
+    pthread_attr_destroy( &attrib );
 
     if ( error != 0 ) {
         goto error5;

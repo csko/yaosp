@@ -142,6 +142,7 @@ int handle_create_application( msg_create_app_t* request ) {
     int error;
     application_t* app;
     pthread_t app_thread;
+    pthread_attr_t attrib;
     msg_create_app_reply_t reply;
 
     app = ( application_t* )malloc( sizeof( application_t ) );
@@ -158,12 +159,17 @@ int handle_create_application( msg_create_app_t* request ) {
 
     app->client_port = request->client_port;
 
+    pthread_attr_init( &attrib );
+    pthread_attr_setname( &attrib, "app_event" );
+
     error = pthread_create(
         &app_thread,
-        NULL,
+        &attrib,
         application_thread,
         ( void* )app
     );
+
+    pthread_attr_destroy( &attrib );
 
     if ( error != 0 ) {
         goto error3;

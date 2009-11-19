@@ -586,6 +586,7 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     int error;
     window_t* window;
     size_t title_size;
+    pthread_attr_t attrib;
     msg_create_win_t* request;
     msg_create_win_reply_t reply;
 
@@ -649,12 +650,17 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     window->close_operation = WINDOW_DESTROY;
     window->server_port = reply.server_port;
 
+    pthread_attr_init( &attrib );
+    pthread_attr_setname( &attrib, "win_event" );
+
     error = pthread_create(
         &window->thread,
-        NULL,
+        &attrib,
         window_thread,
         ( void* )window
     );
+
+    pthread_attr_destroy( &attrib );
 
     if ( error != 0 ) {
         goto error3;

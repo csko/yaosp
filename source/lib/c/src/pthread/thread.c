@@ -32,14 +32,22 @@ enum {
 
 int pthread_create( pthread_t* thread, const pthread_attr_t* attr,
                     void *( *start_routine )( void* ), void* arg ) {
+    char* name;
+
     if ( ( thread == NULL ) ||
          ( start_routine == NULL ) ) {
         return EINVAL;
     }
 
+    if ( ( attr != NULL ) && ( attr->name != NULL ) ) {
+        name = attr->name;
+    } else {
+        name = "pthread";
+    }
+
     thread->thread_id = syscall5(
         SYS_create_thread,
-        ( int )"pthread",
+        ( int )name,
         PRIORITY_NORMAL,
         ( int )start_routine,
         ( int )arg,

@@ -33,7 +33,7 @@ enum {
 };
 
 typedef struct pthread_attr {
-    int dummy;
+    char* name;
 } pthread_attr_t;
 
 typedef struct pthread {
@@ -62,6 +62,11 @@ int pthread_mutexattr_setprioceiling( pthread_mutexattr_t* attr, int prioceiling
 int pthread_mutexattr_setprotocol( pthread_mutexattr_t* attr, int protocol );
 int pthread_mutexattr_setpshared( pthread_mutexattr_t* attr, int shared );
 int pthread_mutexattr_settype( pthread_mutexattr_t* attr, int type );
+
+int pthread_attr_init( pthread_attr_t* attr );
+int pthread_attr_destroy( pthread_attr_t* attr );
+int pthread_attr_getname( pthread_attr_t* attr, char** name );
+int pthread_attr_setname( pthread_attr_t* attr, char* name );
 
 int pthread_mutex_init( pthread_mutex_t* mutex, pthread_mutexattr_t* attr );
 int pthread_mutex_destroy( pthread_mutex_t* mutex );

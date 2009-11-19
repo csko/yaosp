@@ -174,13 +174,19 @@ static int initialize_pty( void ) {
     }
 
     pthread_t pty_read_thread;
+    pthread_attr_t attrib;
+
+    pthread_attr_init( &attrib );
+    pthread_attr_setname( &attrib, "pty_reader" );
 
     pthread_create(
         &pty_read_thread,
-        NULL,
+        &attrib,
         pty_read_thread_entry,
         NULL
     );
+
+    pthread_attr_destroy( &attrib );
 
     return 0;
 }
