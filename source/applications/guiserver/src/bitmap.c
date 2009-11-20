@@ -154,16 +154,17 @@ bitmap_t* bitmap_get( bitmap_id id ) {
     return bitmap;
 }
 
-int bitmap_put( bitmap_t* bitmap ) {
+static int do_bitmap_put_times( bitmap_t* bitmap, int times ) {
     int do_delete;
 
     do_delete = 0;
 
     pthread_mutex_lock( &bitmap_lock );
 
-    assert( bitmap->ref_count >= 0 );
+    assert( bitmap->ref_count >= times );
+    bitmap->ref_count -= times;
 
-    if ( --bitmap->ref_count == 0 ) {
+    if ( bitmap->ref_count == 0 ) {
         hashtable_remove( &bitmap_table, ( const void* )&bitmap->id );
         do_delete = 1;
     }
@@ -176,10 +177,19 @@ int bitmap_put( bitmap_t* bitmap ) {
             bitmap->buffer = NULL;
         }
 
+        if ( bitmap->region != -1 ) {
+            memory_region_delete( bitmap->region );
+            bitmap->region = -1;
+        }
+
         free( bitmap );
     }
 
     return 0;
+}
+
+int bitmap_put( bitmap_t* bitmap ) {
+    return do_bitmap_put_times( bitmap, 1 );
 }
 
 int handle_create_bitmap( msg_create_bitmap_t* request ) {
@@ -249,6 +259,20 @@ int handle_clone_bitmap( msg_clone_bitmap_t* request ) {
     reply.bitmap_region = -1;
 
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_clone_bmp_reply_t ) );
+
+    return 0;
+}
+
+int handle_delete_bitmap( msg_delete_bitmap_t* request ) {
+    bitmap_t* bitmap;
+
+    bitmap = bitmap_get( request->bitmap_id );
+
+    if ( bitmap == NULL ) {
+        return -1;
+    }
+
+    do_bitmap_put_times( bitmap, 2 );
 
     return 0;
 }

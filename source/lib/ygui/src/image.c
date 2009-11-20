@@ -108,7 +108,6 @@ widget_t* create_image( bitmap_t* bitmap ) {
     }
 
     image->bitmap = bitmap;
-
     bitmap_inc_ref( image->bitmap );
 
     return widget;

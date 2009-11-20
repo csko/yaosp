@@ -205,6 +205,10 @@ static void* application_thread( void* arg ) {
                 handle_clone_bitmap( ( msg_clone_bitmap_t* )buffer );
                 break;
 
+            case MSG_BITMAP_DELETE :
+                handle_delete_bitmap( ( msg_delete_bitmap_t* )buffer );
+                break;
+
             case MSG_DESK_GET_SIZE :
                 handle_get_desktop_size( ( msg_desk_get_size_t* )buffer );
                 break;

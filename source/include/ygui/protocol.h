@@ -40,6 +40,7 @@ enum {
     MSG_DESK_GET_SIZE,
     MSG_BITMAP_CREATE,
     MSG_BITMAP_CLONE,
+    MSG_BITMAP_DELETE,
 
     /* Window related messages */
 
@@ -201,6 +202,10 @@ typedef struct msg_clone_bmp_reply {
     color_space_t color_space;
     region_id bitmap_region;
 } msg_clone_bmp_reply_t;
+
+typedef struct msg_delete_bitmap {
+    int bitmap_id;
+} msg_delete_bitmap_t;
 
 /* MSG_WINDOW_DO_RESIZE */
 

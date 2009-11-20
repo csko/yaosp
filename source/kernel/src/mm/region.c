@@ -113,12 +113,15 @@ memory_region_t* memory_region_get( region_id id ) {
     return region;
 }
 
-int memory_region_put( memory_region_t* region ) {
+static int do_memory_region_put_times( memory_region_t* region, int times ) {
     int do_delete = 0;
 
     mutex_lock( region_lock, LOCK_IGNORE_SIGNAL );
 
-    if ( --region->ref_count == 0 ) {
+    ASSERT( region->ref_count >= times );
+    region->ref_count -= times;
+
+    if ( region->ref_count == 0 ) {
         if ( region->id != -1 ) {
             hashtable_remove( &region_table, ( const void* )&region->id );
         }
@@ -142,6 +145,10 @@ int memory_region_put( memory_region_t* region ) {
     }
 
     return 0;
+}
+
+int memory_region_put( memory_region_t* region ) {
+    return do_memory_region_put_times( region, 1 );
 }
 
 memory_region_t* do_create_memory_region( memory_context_t* context, const char* name,
@@ -370,9 +377,15 @@ int sys_memory_region_create( const char* name, uint64_t* size, uint32_t flags, 
 }
 
 int sys_memory_region_delete( region_id id ) {
-    kprintf( WARNING, "sys_memory_region_delete() called!\n" );
+    memory_region_t* region;
 
-    return -1;
+    region = memory_region_get( id );
+
+    if ( region == NULL ) {
+        return -EINVAL;
+    }
+
+    return do_memory_region_put_times( region, 2 );
 }
 
 int sys_memory_region_remap_pages( region_id id, void* physical ) {

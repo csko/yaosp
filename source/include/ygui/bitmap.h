@@ -26,9 +26,12 @@
 
 typedef struct bitmap {
     int id;
+    int ref_count;
+
     int width;
     int height;
     color_space_t color_space;
+
     region_id region;
     uint8_t* data;
 } bitmap_t;

@@ -53,6 +53,7 @@ int bitmap_put( bitmap_t* bitmap );
 
 int handle_create_bitmap( msg_create_bitmap_t* request );
 int handle_clone_bitmap( msg_clone_bitmap_t* request );
+int handle_delete_bitmap( msg_delete_bitmap_t* request );
 
 int init_bitmap( void );
 

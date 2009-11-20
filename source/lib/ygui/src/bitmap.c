@@ -33,13 +33,31 @@ extern ipc_port_id app_server_port;
 
 extern pthread_mutex_t app_lock;
 
+static bitmap_t* bitmap_allocate( int width, int height, color_space_t color_space ) {
+    bitmap_t* bitmap;
+
+    bitmap = ( bitmap_t* )calloc( 1, sizeof( bitmap_t ) );
+
+    if ( bitmap == NULL ) {
+        return NULL;
+    }
+
+    bitmap->id = -1;
+    bitmap->ref_count = 1;
+    bitmap->width = width;
+    bitmap->height = height;
+    bitmap->color_space = color_space;
+
+    return bitmap;
+}
+
 bitmap_t* bitmap_create( int width, int height, color_space_t color_space ) {
     int error;
     bitmap_t* bitmap;
     msg_create_bitmap_t request;
     msg_create_bmp_reply_t reply;
 
-    bitmap = ( bitmap_t* )malloc( sizeof( bitmap_t ) );
+    bitmap = bitmap_allocate( width, height, color_space );
 
     if ( bitmap == NULL ) {
         goto error1;
@@ -69,16 +87,12 @@ bitmap_t* bitmap_create( int width, int height, color_space_t color_space ) {
         goto error2;
     }
 
+    bitmap->id = reply.id;
     bitmap->region = memory_region_clone_pages( reply.bitmap_region, ( void** )&bitmap->data );
 
     if ( bitmap->region < 0 ) {
         goto error3;
     }
-
-    bitmap->id = reply.id;
-    bitmap->width = width;
-    bitmap->height = height;
-    bitmap->color_space = color_space;
 
     return bitmap;
 
@@ -98,12 +112,6 @@ bitmap_t* bitmap_clone( int id ) {
     msg_clone_bitmap_t request;
     msg_clone_bmp_reply_t reply;
 
-    bitmap = ( bitmap_t* )malloc( sizeof( bitmap_t ) );
-
-    if ( bitmap == NULL ) {
-        goto error1;
-    }
-
     request.reply_port = app_reply_port;
     request.bitmap_id = id;
 
@@ -114,7 +122,7 @@ bitmap_t* bitmap_clone( int id ) {
     if ( error < 0 ) {
         pthread_mutex_unlock( &app_lock );
 
-        goto error2;
+        goto error1;
     }
 
     error = recv_ipc_message( app_reply_port, NULL, &reply, sizeof( msg_clone_bmp_reply_t ), INFINITE_TIMEOUT );
@@ -123,14 +131,16 @@ bitmap_t* bitmap_clone( int id ) {
 
     if ( ( error < 0 ) ||
          ( reply.bitmap_region < 0 ) ) {
+        goto error1;
+    }
+
+    bitmap = bitmap_allocate( reply.width, reply.height, reply.color_space );
+
+    if ( bitmap == NULL ) {
         goto error2;
     }
 
     bitmap->id = id;
-    bitmap->width = reply.width;
-    bitmap->height = reply.height;
-    bitmap->color_space = reply.color_space;
-
     bitmap->region = memory_region_clone_pages( reply.bitmap_region, ( void** )&bitmap->data );
 
     if ( bitmap->region < 0 ) {
@@ -140,13 +150,12 @@ bitmap_t* bitmap_clone( int id ) {
     return bitmap;
 
  error3:
-    /* TODO: destroy in GUI server ... */
-
- error2:
     free( bitmap );
 
- error1:
+ error2:
+    /* TODO: destroy the bitmap in the GUI server ... */
 
+ error1:
     return NULL;
 }
 
@@ -159,12 +168,22 @@ int bitmap_get_height( bitmap_t* bitmap ) {
 }
 
 int bitmap_inc_ref( bitmap_t* bitmap ) {
-    /* TODO */
+    bitmap->ref_count++;
+
     return 0;
 }
 
 int bitmap_dec_ref( bitmap_t* bitmap ) {
-    /* TODO */
+    if ( --bitmap->ref_count == 0 ) {
+        msg_delete_bitmap_t request;
+        request.bitmap_id = bitmap->id;
+
+        send_ipc_message( app_server_port, MSG_BITMAP_DELETE, &request, sizeof( msg_delete_bitmap_t ) );
+
+        memory_region_delete( bitmap->region );
+        free( bitmap );
+    }
+
     return 0;
 }
 
