@@ -181,7 +181,8 @@ static int window_list_paint( widget_t* widget, gc_t* gc ) {
     int items_per_row;
 
     static color_t black = { 0, 0, 0, 255 };
-    static color_t background = { 216, 216, 216, 0xFF };
+    static color_t background = { 216, 216, 216, 255 };
+    static color_t darker_bg = { 181, 181, 181, 255 };
 
     widget_get_bounds( widget, &bounds );
 
@@ -190,7 +191,6 @@ static int window_list_paint( widget_t* widget, gc_t* gc ) {
 
     item_height = ( rect_height( &bounds ) - ( WL_ROWS + 1 ) ) / WL_ROWS;
 
-    gc_set_pen_color( gc, &black );
     gc_set_font( gc, list_font );
 
     size = array_get_size( &window_table );
@@ -216,10 +216,15 @@ static int window_list_paint( widget_t* widget, gc_t* gc ) {
         item_rect.right = item_rect.left + item_width - 1;
         item_rect.bottom = item_rect.top + item_height - 1;
 
+        gc_set_pen_color( gc, &black );
         gc_draw_rect( gc, &item_rect );
 
         rect_resize( &item_rect, 1, 1, -1, -1 );
 
+        gc_set_pen_color( gc, &darker_bg );
+        gc_fill_rect( gc, &item_rect );
+
+        gc_set_pen_color( gc, &black );
         gc_set_clip_rect( gc, &item_rect );
 
         point_init(
