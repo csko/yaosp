@@ -20,7 +20,6 @@
 #include <assert.h>
 #include <string.h>
 #include <pthread.h>
-#include <yaosp/region.h>
 
 #include <bitmap.h>
 
@@ -77,6 +76,7 @@ bitmap_t* create_bitmap( uint32_t width, uint32_t height, color_space_t color_sp
     bitmap->color_space = color_space;
     bitmap->buffer = buffer;
     bitmap->flags = BITMAP_FREE_BUFFER;
+    bitmap->region = -1;
 
     pthread_mutex_lock( &bitmap_lock );
 
@@ -117,6 +117,7 @@ bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_spac
     bitmap->color_space = color_space;
     bitmap->buffer = buffer;
     bitmap->flags = 0;
+    bitmap->region = -1;
 
     pthread_mutex_lock( &bitmap_lock );
 
@@ -196,13 +197,15 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
         goto error1;
     }
 
-    memory_region_alloc_pages( bitmap_region );
+    memory_region_alloc_pages( bitmap_region ); /* todo: error checking */
 
     bitmap = create_bitmap_from_buffer( request->width, request->height, request->color_space, buffer );
 
     if ( bitmap == NULL ) {
         goto error2;
     }
+
+    bitmap->region = bitmap_region;
 
     reply.id = bitmap->id;
     reply.bitmap_region = bitmap_region;
@@ -218,6 +221,34 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
     reply.id = -1;
 
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_bmp_reply_t ) );
+
+    return 0;
+}
+
+int handle_clone_bitmap( msg_clone_bitmap_t* request ) {
+    bitmap_t* bitmap;
+    msg_clone_bmp_reply_t reply;
+
+    bitmap = bitmap_get( request->bitmap_id );
+
+    if ( ( bitmap == NULL ) ||
+         ( bitmap->region == -1 ) ) {
+        goto error1;
+    }
+
+    reply.width = bitmap->width;
+    reply.height = bitmap->height;
+    reply.color_space = bitmap->color_space;
+    reply.bitmap_region = bitmap->region;
+
+    send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_clone_bmp_reply_t ) );
+
+    return 0;
+
+ error1:
+    reply.bitmap_region = -1;
+
+    send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_clone_bmp_reply_t ) );
 
     return 0;
 }

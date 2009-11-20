@@ -80,6 +80,13 @@ static int window_opened( window_t* window ) {
     win_info = ( msg_win_info_t* )data;
 
     win_info->id = window->id;
+
+    if ( window->icon == NULL ) {
+        win_info->icon_bitmap = -1;
+    } else {
+        win_info->icon_bitmap = window->icon->id;
+    }
+
     memcpy( win_info + 1, window->title, title_len + 1 );
 
     size = array_get_size( &window_listeners );

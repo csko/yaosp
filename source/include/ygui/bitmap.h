@@ -34,6 +34,7 @@ typedef struct bitmap {
 } bitmap_t;
 
 bitmap_t* bitmap_create( int width, int height, color_space_t color_space );
+bitmap_t* bitmap_clone( int id );
 
 int bitmap_get_width( bitmap_t* bitmap );
 int bitmap_get_height( bitmap_t* bitmap );

@@ -23,6 +23,13 @@
 
 #include <ygui/protocol.h>
 #include <ygui/widget.h>
+#include <ygui/bitmap.h>
+
+typedef struct window_item {
+    int id;
+    char* title;
+    bitmap_t* icon;
+} window_item_t;
 
 int taskbar_handle_window_list( uint8_t* data );
 int taskbar_handle_window_opened( msg_win_info_t* win_info );

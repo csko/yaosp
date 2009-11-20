@@ -36,24 +36,52 @@
 static array_t window_table;
 
 static font_t* list_font = NULL;
+static bitmap_t* unknown_app = NULL;
+
 extern window_t* window;
 extern widget_t* win_list_widget;
 
-static msg_win_info_t* window_info_dup( msg_win_info_t* info ) {
-    int title_length;
-    msg_win_info_t* new_info;
+static window_item_t* window_item_create( msg_win_info_t* info ) {
+    window_item_t* item;
 
-    title_length = strlen( ( const char* )( info + 1 ) );
+    item = ( window_item_t* )malloc( sizeof( window_item_t ) );
 
-    new_info = ( msg_win_info_t* )malloc( sizeof( msg_win_info_t ) + title_length + 1 );
-
-    if ( new_info == NULL ) {
-        return NULL;
+    if ( item == NULL ) {
+        goto error1;
     }
 
-    memcpy( new_info, info, sizeof( msg_win_info_t ) + title_length + 1 );
+    item->title = strdup( ( const char* )( info + 1 ) );
 
-    return new_info;
+    if ( item->title == NULL ) {
+        goto error2;
+    }
+
+    if ( info->icon_bitmap == -1 ) {
+        item->icon = NULL;
+    } else {
+        item->icon = bitmap_clone( info->icon_bitmap );
+    }
+
+    item->id = info->id;
+
+    return item;
+
+ error2:
+    free( item );
+
+ error1:
+    return NULL;
+}
+
+static int window_item_free( window_item_t* item ) {
+    if ( item->icon != NULL ) {
+        bitmap_dec_ref( item->icon );
+    }
+
+    free( item->title );
+    free( item );
+
+    return 0;
 }
 
 static int window_list_add( void* data ) {
@@ -74,13 +102,13 @@ static int window_list_remove( void* data ) {
     size = array_get_size( &window_table );
 
     for ( i = 0; i < size; i++ ) {
-        msg_win_info_t* info;
+        window_item_t* item;
 
-        info = ( msg_win_info_t* )array_get_item( &window_table, i );
+        item = ( window_item_t* )array_get_item( &window_table, i );
 
-        if ( info->id == id ) {
+        if ( item->id == id ) {
             array_remove_item_from( &window_table, i );
-            free( info );
+            window_item_free( item );
 
             widget_invalidate( win_list_widget, 1 );
 
@@ -101,13 +129,15 @@ int taskbar_handle_window_list( uint8_t* data ) {
     data += sizeof( int );
 
     for ( i = 0; i < win_count; i++ ) {
+        window_item_t* win_item;
+
         win_info = ( msg_win_info_t* )data;
         title_len = strlen( ( const char* )( win_info + 1 ) );
 
-        win_info = window_info_dup( win_info );
+        win_item = window_item_create( win_info );
 
-        if ( win_info != NULL ) {
-            window_insert_callback( window, window_list_add, ( void* )win_info );
+        if ( win_item != NULL ) {
+            window_insert_callback( window, window_list_add, ( void* )win_item );
         }
 
         data += sizeof( msg_win_info_t );
@@ -118,10 +148,12 @@ int taskbar_handle_window_list( uint8_t* data ) {
 }
 
 int taskbar_handle_window_opened( msg_win_info_t* win_info ) {
-    win_info = window_info_dup( win_info );
+    window_item_t* win_item;
 
-    if ( win_info != NULL ) {
-        window_insert_callback( window, window_list_add, ( void* )win_info );
+    win_item = window_item_create( win_info );
+
+    if ( win_item != NULL ) {
+        window_insert_callback( window, window_list_add, ( void* )win_item );
     }
 
     return 0;
@@ -176,10 +208,10 @@ static int window_list_paint( widget_t* widget, gc_t* gc ) {
     item_rect.top = 1;
 
     for ( i = 0; i < size; i++ ) {
-        point_t text_position;
-        msg_win_info_t* win_info;
+        point_t position;
+        window_item_t* win_item;
 
-        win_info = ( msg_win_info_t* )array_get_item( &window_table, i );
+        win_item = ( window_item_t* )array_get_item( &window_table, i );
 
         item_rect.right = item_rect.left + item_width - 1;
         item_rect.bottom = item_rect.top + item_height - 1;
@@ -187,14 +219,30 @@ static int window_list_paint( widget_t* widget, gc_t* gc ) {
         gc_draw_rect( gc, &item_rect );
 
         rect_resize( &item_rect, 1, 1, -1, -1 );
-        point_init(
-            &text_position,
-            item_rect.left + 1,
-            item_rect.bottom - ( 1 + font_get_line_gap( list_font ) - font_get_descender( list_font ) )
-        );
 
         gc_set_clip_rect( gc, &item_rect );
-        gc_draw_text( gc, &text_position, ( const char* )( win_info + 1 ), -1 );
+
+        point_init(
+            &position,
+            item_rect.left + 1,
+            item_rect.top + 1
+        );
+
+        gc_set_drawing_mode( gc, DM_BLEND );
+
+        if ( win_item->icon != NULL ) {
+            gc_draw_bitmap( gc, win_item->icon, &position );
+            position.x += bitmap_get_width( win_item->icon ) + 1;
+        } else {
+            gc_draw_bitmap( gc, unknown_app, &position );
+            position.x += bitmap_get_width( unknown_app ) + 1;
+        }
+
+        gc_set_drawing_mode( gc, DM_COPY );
+
+        position.y = item_rect.bottom - ( 1 + font_get_line_gap( list_font ) - font_get_descender( list_font ) );
+        gc_draw_text( gc, &position, win_item->title, -1 );
+
         gc_reset_clip_rect( gc );
 
         rect_resize( &item_rect, -1, -1, 1, 1 );
@@ -221,7 +269,7 @@ static int window_list_mouse_pressed( widget_t* widget, point_t* position, int b
     int items_per_row;
     int index;
     rect_t bounds;
-    msg_win_info_t* win_info;
+    window_item_t* win_item;
 
     widget_get_bounds( widget, &bounds );
 
@@ -246,8 +294,8 @@ static int window_list_mouse_pressed( widget_t* widget, point_t* position, int b
         return 0;
     }
 
-    win_info = ( msg_win_info_t* )array_get_item( &window_table, index );
-    window_bring_to_front( win_info->id );
+    win_item = ( window_item_t* )array_get_item( &window_table, index );
+    window_bring_to_front( win_item->id );
 
     return 0;
 }
@@ -286,7 +334,16 @@ widget_t* window_list_create( void ) {
         goto error2;
     }
 
+    unknown_app = bitmap_load_from_file( "/application/taskbar/images/unknown.png" );
+
+    if ( unknown_app == NULL ) {
+        goto error3;
+    }
+
     return create_widget( W_WINDOW_LIST, &win_list_ops, NULL );
+
+ error3:
+    /* TODO: destroy the font */
 
  error2:
     destroy_array( &window_table );

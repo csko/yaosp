@@ -20,6 +20,7 @@
 #define _BITMAP_H_
 
 #include <sys/types.h>
+#include <yaosp/region.h>
 #include <ygui/yconstants.h>
 #include <ygui/protocol.h>
 #include <yutil/hashtable.h>
@@ -41,6 +42,7 @@ typedef struct bitmap {
     color_space_t color_space;
     void* buffer;
     uint32_t flags;
+    region_id region;
 } bitmap_t;
 
 bitmap_t* create_bitmap( uint32_t width, uint32_t height, color_space_t color_space );
@@ -50,6 +52,7 @@ bitmap_t* bitmap_get( bitmap_id id );
 int bitmap_put( bitmap_t* bitmap );
 
 int handle_create_bitmap( msg_create_bitmap_t* request );
+int handle_clone_bitmap( msg_clone_bitmap_t* request );
 
 int init_bitmap( void );
 

@@ -114,6 +114,13 @@ static int window_register_helper( window_t* window, void* data ) {
     win_info = ( msg_win_info_t* )( new_data + list->size );
 
     win_info->id = window->id;
+
+    if ( window->icon == NULL ) {
+        win_info->icon_bitmap = -1;
+    } else {
+        win_info->icon_bitmap = window->icon->id;
+    }
+
     memcpy( win_info + 1, window->title, title_len + 1 );
 
     list->size = new_size;
@@ -192,6 +199,10 @@ static void* application_thread( void* arg ) {
 
             case MSG_BITMAP_CREATE :
                 handle_create_bitmap( ( msg_create_bitmap_t* )buffer );
+                break;
+
+            case MSG_BITMAP_CLONE :
+                handle_clone_bitmap( ( msg_clone_bitmap_t* )buffer );
                 break;
 
             case MSG_DESK_GET_SIZE :

@@ -39,6 +39,7 @@ enum {
     MSG_FONT_GET_STR_WIDTH,
     MSG_DESK_GET_SIZE,
     MSG_BITMAP_CREATE,
+    MSG_BITMAP_CLONE,
 
     /* Window related messages */
 
@@ -189,6 +190,18 @@ typedef struct msg_create_bmp_reply {
     region_id bitmap_region;
 } msg_create_bmp_reply_t;
 
+typedef struct msg_clone_bitmap {
+    ipc_port_id reply_port;
+    int bitmap_id;
+} msg_clone_bitmap_t;
+
+typedef struct msg_clone_bmp_reply {
+    int width;
+    int height;
+    color_space_t color_space;
+    region_id bitmap_region;
+} msg_clone_bmp_reply_t;
+
 /* MSG_WINDOW_DO_RESIZE */
 
 typedef struct msg_win_do_resize {
@@ -213,6 +226,7 @@ typedef struct msg_win_moved {
 
 typedef struct msg_win_info {
     int id;
+    int icon_bitmap;
 } msg_win_info_t;
 
 typedef struct msg_win_set_icon {
