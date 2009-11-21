@@ -126,6 +126,11 @@ static int clone_param_array( char** old_array, char*** _new_array, int* new_siz
     } else {
         for ( old_size = 0; old_array[ old_size ] != NULL; old_size++ ) ;
 
+        if ( old_size == 0 ) {
+            new_array = NULL;
+            goto out;
+        }
+
         new_array = ( char** )kmalloc( sizeof( char* ) * old_size );
 
         if ( new_array == NULL ) {
@@ -151,6 +156,7 @@ static int clone_param_array( char** old_array, char*** _new_array, int* new_siz
         }
     }
 
+ out:
     *_new_array = new_array;
     *new_size = old_size;
 

@@ -44,30 +44,10 @@ static int create_temp_directory( void ) {
     return 0;
 }
 
-int main( int argc, char** argv ) {
+static int start_shells( void ) {
     int i;
     int f;
     pid_t child;
-
-    /* Make sure this is the first time when init was executed */
-
-    if ( ( get_process_count() != 2 ) ||
-         ( getpid() != 1 ) ) {
-        return EXIT_FAILURE;
-    }
-
-    /* Create symbolic links and directories */
-
-    symlink( "/application", "/yaosp/application" );
-    symlink( "/system", "/yaosp/system" );
-
-    mkdir( "/media", 0777 );
-
-    /* Create and mount the /temp directory */
-
-    create_temp_directory();
-
-    /* Start shells */
 
     dbprintf( "Starting shells ...\n" );
 
@@ -125,6 +105,60 @@ int main( int argc, char** argv ) {
 
         close( f );
     }
+
+    return 0;
+}
+
+static int start_gui( void ) {
+    load_module( "vesa" );
+
+    if ( fork() == 0 ) {
+        char* const argv[] = { "guiserver", NULL };
+
+        execv( "/application/guiserver", argv );
+        _exit( 0 );
+    }
+
+    if ( fork() == 0 ) {
+        char* const argv[] = { "taskbar", NULL };
+        char* const envv[] = {
+            "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
+            "HOME=/",
+            "TERM=xterm",
+            "TEMP=/temp",
+            NULL
+        };
+
+        execve( "/application/taskbar/taskbar", argv, envv );
+        _exit( 0 );
+    }
+
+    return 0;
+}
+
+int main( int argc, char** argv ) {
+    /* Make sure this is the first time when init was executed */
+
+    if ( ( get_process_count() != 2 ) ||
+         ( getpid() != 1 ) ) {
+        return EXIT_FAILURE;
+    }
+
+    /* Create symbolic links and directories */
+
+    symlink( "/application", "/yaosp/application" );
+    symlink( "/system", "/yaosp/system" );
+
+    mkdir( "/media", 0777 );
+
+    /* Create and mount the /temp directory */
+
+    create_temp_directory();
+
+    /* Start shells */
+
+    //start_shells();
+    start_gui();
 
     return EXIT_SUCCESS;
 }
