@@ -32,6 +32,7 @@
 #include <mouse.h>
 #include <application.h>
 #include <windowmanager.h>
+#include <splash.h>
 
 #include "../driver/video/vesa/vesa.h"
 
@@ -117,11 +118,11 @@ static int setup_graphics_mode( void ) {
         return -ENOMEM;
     }
 
-    rect_init( &screen_rect, 0, 0, active_screen_mode.width - 1, active_screen_mode.height - 1 );
-
-    color_t tmp_color = { 0x11, 0x22, 0x33, 0x00 };
-
-    graphics_driver->fill_rect( screen_bitmap, &screen_rect, &tmp_color, DM_COPY );
+    rect_init(
+        &screen_rect,
+        0, 0,
+        active_screen_mode.width - 1, active_screen_mode.height - 1
+    );
 
     return 0;
 }
@@ -155,6 +156,8 @@ static int guiserver_mainloop( void ) {
         goto error3;
     }
 
+    splash_inc_progress();
+
     while ( 1 ) {
         error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, INFINITE_TIMEOUT );
 
@@ -165,6 +168,12 @@ static int guiserver_mainloop( void ) {
         switch ( code ) {
             case MSG_APPLICATION_CREATE :
                 handle_create_application( ( msg_create_app_t* )buffer );
+                break;
+
+            case MSG_TASKBAR_STARTED :
+                wm_enable();
+                input_system_start();
+                show_mouse_pointer();
                 break;
 
             default :
@@ -190,80 +199,71 @@ error1:
 int main( int argc, char** argv ) {
     int error;
 
-    error = init_bitmap();
-
-    if ( error < 0 ) {
+    if ( init_bitmap() != 0 ) {
         printf( "Failed to initialize bitmaps\n" );
+        return EXIT_FAILURE;
+    }
+
+    if ( ( choose_graphics_driver() != 0 ) ||
+         ( choose_graphics_mode() != 0 ) ) {
+        printf( "Failed to select proper graphics driver and/or mode!\n" );
+        return EXIT_FAILURE;
+    }
+
+    printf( "Using graphics driver: %s\n", graphics_driver->name );
+    printf(
+        "Using screen mode: %dx%dx%d\n",
+        active_screen_mode.width, active_screen_mode.height,
+        colorspace_to_bpp( active_screen_mode.color_space ) * 4
+    );
+
+    if ( setup_graphics_mode() != 0 ) {
+        dbprintf( "Failed to setup graphics mode!\n" );
+        return EXIT_FAILURE;
+    }
+
+    init_splash();
+
+    splash_count_total = 5 /* + font_count */;
+
+    if (  init_font_manager() != 0 ) {
+        dbprintf( "Failed to initialize font manager\n" );
         return error;
     }
 
-    error = init_font_manager();
+    font_manager_load_fonts();
 
-    if ( error < 0 ) {
-        printf( "Failed to initialize font manager\n" );
-        return error;
+    if ( init_default_decorator() != 0 ) {
+        dbprintf( "Failed to initialize default window decorator\n" );
+        return EXIT_FAILURE;
     }
 
-    init_default_decorator();
+    splash_inc_progress();
 
-    error = init_mouse_manager();
-
-    if ( error < 0 ) {
+    if ( init_mouse_manager() != 0 ) {
         printf( "Failed to initialize mouse manager\n" );
         return error;
     }
 
-    error = init_windowmanager();
+    splash_inc_progress();
 
-    if ( error < 0 ) {
+    if ( init_windowmanager() != 0 ) {
         printf( "Failed to initialize window manager\n" );
         return error;
     }
 
-    error = choose_graphics_driver();
+    splash_inc_progress();
 
-    if ( error < 0 ) {
-        printf( "Failed to select proper graphics driver!\n" );
-        return error;
-    }
-
-    printf( "Using graphics driver: %s\n", graphics_driver->name );
-
-    error = choose_graphics_mode();
-
-    if ( error < 0 ) {
-        printf( "Failed to select proper graphics mode!\n" );
-        return error;
-    }
-
-    printf(
-        "Using screen mode: %dx%dx%d\n",
-        active_screen_mode.width,
-        active_screen_mode.height,
-        colorspace_to_bpp( active_screen_mode.color_space ) * 4
-    );
-
-    error = setup_graphics_mode();
-
-    if ( error < 0 ) {
-        dbprintf( "Failed to setup graphics mode!\n" );
-        return error;
-    }
-
-    show_mouse_pointer();
-
-    error = init_input_system();
-
-    if ( error < 0 ) {
+    if ( init_input_system() != 0 ) {
         dbprintf( "Failed to initialize input system!\n" );
         return error;
     }
 
-    error = guiserver_mainloop();
+    splash_inc_progress();
 
-    if ( error < 0 ) {
-        return error;
+    if (  guiserver_mainloop() != 0 ) {
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

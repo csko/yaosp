@@ -88,6 +88,17 @@ static void* input_thread_entry( void* arg ) {
     return NULL;
 }
 
+int input_system_start( void ) {
+    pthread_create(
+        &input_thread,
+        NULL,
+        input_thread_entry,
+        NULL
+    );
+
+    return 0;
+}
+
 int init_input_system( void ) {
     int fd;
     int error;
@@ -117,13 +128,6 @@ int init_input_system( void ) {
     if ( input_device < 0 ) {
         return input_device;
     }
-
-    pthread_create(
-        &input_thread,
-        NULL,
-        input_thread_entry,
-        NULL
-    );
 
     return 0;
 }

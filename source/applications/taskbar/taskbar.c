@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <yaosp/debug.h>
+#include <yaosp/ipc.h>
 
 #include <ygui/application.h>
 #include <ygui/window.h>
@@ -40,6 +41,8 @@ point_t win_lefttop;
 widget_t* win_list_widget;
 
 static menu_t* menu;
+
+extern ipc_port_id guiserver_port;
 
 static int taskbar_msg_handler( uint32_t code, void* data ) {
     switch ( code ) {
@@ -102,6 +105,12 @@ static int taskbar_create_menu( void ) {
     return 0;
 }
 
+static int send_guiserver_notification( void ) {
+    send_ipc_message( guiserver_port, MSG_TASKBAR_STARTED, NULL, 0 );
+
+    return 0;
+}
+
 int main( int argc, char** argv ) {
     point_t size;
 
@@ -151,6 +160,10 @@ int main( int argc, char** argv ) {
 
     application_set_message_handler( taskbar_msg_handler );
     application_register_window_listener( 1 );
+
+    /* Tell the GUI server that the taskbar is running */
+
+    send_guiserver_notification();
 
     /* Start the mainloop of the application ... */
 

@@ -27,9 +27,9 @@
 #include <window.h>
 #include <assert.h>
 
-pthread_mutex_t wm_lock;
-
+static int wm_running = 0;
 static array_t window_stack;
+static color_t wm_bg_color = { 51, 102, 152, 255 };
 
 static int window_next_id = 0;
 static hashtable_t window_table;
@@ -43,6 +43,7 @@ static window_t* moving_window = NULL;
 
 static array_t window_listeners;
 
+pthread_mutex_t wm_lock;
 window_decorator_t* window_decorator = &default_decorator;
 
 static inline int window_table_insert( window_t* window ) {
@@ -260,6 +261,42 @@ static int generate_visible_regions_by_index( int index ) {
     return 0;
 }
 
+int wm_enable( void ) {
+    int i;
+    int size;
+
+    if ( wm_running ) {
+        return 0;
+    }
+
+    pthread_mutex_lock( &wm_lock );
+
+    /* Fill the background */
+
+    graphics_driver->fill_rect(
+        screen_bitmap, &screen_rect,
+        &wm_bg_color, DM_COPY
+    );
+
+    /* Draw all the visible windows */
+
+    size = array_get_size( &window_stack );
+
+    for ( i = 0; i < size; i++ ) {
+        window_t* window;
+
+        window = ( window_t* )array_get_item( &window_stack, i );
+
+        wm_update_window_region( window, &window->screen_rect );
+    }
+
+    wm_running = 1;
+
+    pthread_mutex_unlock( &wm_lock );
+
+    return 0;
+}
+
 int wm_register_window( window_t* window ) {
     int i;
     int size;
@@ -318,16 +355,18 @@ int wm_register_window( window_t* window ) {
 
     /* Draw the window */
 
-    rect_lefttop( &window->screen_rect, &lefttop );
-    rect_sub_point_n( &winrect, &window->screen_rect, &lefttop );
+    if ( wm_running ) {
+        rect_lefttop( &window->screen_rect, &lefttop );
+        rect_sub_point_n( &winrect, &window->screen_rect, &lefttop );
 
-    graphics_driver->blit_bitmap(
-        screen_bitmap,
-        &lefttop,
-        window->bitmap,
-        &winrect,
-        DM_COPY
-    );
+        graphics_driver->blit_bitmap(
+            screen_bitmap,
+            &lefttop,
+            window->bitmap,
+            &winrect,
+            DM_COPY
+        );
+    }
 
     /* Update the mouse window if required */
 
@@ -576,12 +615,10 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
     }
 
     for ( clip_rect = window->visible_regions.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
-        static color_t tmp_color = { 0x11, 0x22, 0x33, 0x00 };
-
         graphics_driver->fill_rect(
             screen_bitmap,
             &clip_rect->rect,
-            &tmp_color,
+            &wm_bg_color,
             DM_COPY
         );
     }

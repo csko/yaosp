@@ -73,6 +73,8 @@ int font_node_get_height( font_node_t* font );
 
 font_node_t* font_manager_get( const char* family_name, const char* style_name, font_properties_t* properties );
 
+int font_manager_load_fonts( void );
+
 int init_font_manager( void );
 
 #endif /* _FONTMANAGER_H_ */

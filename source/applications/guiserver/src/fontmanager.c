@@ -19,8 +19,10 @@
 #include <dirent.h>
 #include <string.h>
 #include <yaosp/debug.h>
+#include <yutil/array.h>
 
 #include <fontmanager.h>
+#include <splash.h>
 
 static FT_Library ft_library;
 
@@ -62,7 +64,6 @@ static int node_compare( const void* key1, const void* key2 ) {
 }
 
 static font_family_t* create_font_family( const char* name ) {
-    int error;
     font_family_t* family;
 
     family = ( font_family_t* )malloc( sizeof( font_family_t ) );
@@ -77,15 +78,7 @@ static font_family_t* create_font_family( const char* name ) {
         goto error2;
     }
 
-    error = init_hashtable(
-        &family->styles,
-        32,
-        style_key,
-        hash_string,
-        compare_string
-    );
-
-    if ( error < 0 ) {
+    if ( init_hashtable( &family->styles,  32, style_key, hash_string, compare_string ) != 0 ) {
         goto error3;
     }
 
@@ -110,7 +103,6 @@ static font_family_t* get_font_family( const char* name ) {
 }
 
 static font_style_t* create_font_style( const char* name, FT_Face face ) {
-    int error;
     font_style_t* style;
 
     style = ( font_style_t* )malloc( sizeof( font_style_t ) );
@@ -125,21 +117,11 @@ static font_style_t* create_font_style( const char* name, FT_Face face ) {
         goto error2;
     }
 
-    error = init_hashtable(
-        &style->nodes,
-        32,
-        node_key,
-        node_hash,
-        node_compare
-    );
-
-    if ( error < 0 ) {
+    if ( init_hashtable( &style->nodes, 32, node_key, node_hash, node_compare ) != 0 ) {
         goto error3;
     }
 
-    error = pthread_mutex_init( &style->mutex, NULL );
-
-    if ( error < 0 ) {
+    if ( pthread_mutex_init( &style->mutex, NULL ) != 0 ) {
         goto error4;
     }
 
@@ -432,10 +414,9 @@ font_node_t* font_manager_get( const char* family_name, const char* style_name, 
     return node;
 }
 
-static void load_fonts( void ) {
+int font_manager_load_fonts( void ) {
     int i;
     DIR* dir;
-    char path[ 128 ];
     struct dirent* entry;
 
     FT_Face face;
@@ -445,13 +426,25 @@ static void load_fonts( void ) {
     font_family_t* family;
     font_style_t* style;
 
+    int size;
+    array_t font_files;
+
+    if ( init_array( &font_files ) != 0 ) {
+        return -1;
+    }
+
+    array_set_realloc_size( &font_files, 32 );
+
     dir = opendir( "/yaosp/system/fonts" );
 
     if ( dir == NULL ) {
-        return;
+        destroy_array( &font_files );
+        return -1;
     }
 
     while ( ( entry = readdir( dir ) ) != NULL ) {
+        char path[ 256 ];
+
         if ( ( strcmp( entry->d_name, "." ) == 0 ) ||
              ( strcmp( entry->d_name, ".." ) == 0 ) ) {
             continue;
@@ -459,17 +452,29 @@ static void load_fonts( void ) {
 
         snprintf( path, sizeof( path ), "/yaosp/system/fonts/%s", entry->d_name );
 
-        dbprintf( "Loading font: %s\n", path );
+        array_add_item( &font_files, strdup( path ) );
+    }
+
+    closedir( dir );
+
+    size = array_get_size( &font_files );
+    splash_count_total += size;
+
+    for ( i = 0; i < size; i++ ) {
+        int j;
+        char* path;
+
+        path = ( char* )array_get_item( &font_files, i );
 
         error = FT_New_Face( ft_library, path, 0, &face );
 
         if ( error != 0 ) {
             dbprintf( "Failed to load font: %s (%d)\n", path, error );
-            continue;
+            goto next_font;
         }
 
-        for ( i = 0; i < face->num_charmaps; i++ ) {
-            char_map = face->charmaps[ i ];
+        for ( j = 0; j < face->num_charmaps; j++ ) {
+            char_map = face->charmaps[ j ];
 
             if ( ( char_map->platform_id == 3 ) &&
                  ( char_map->encoding_id == 1 ) ) {
@@ -479,7 +484,7 @@ static void load_fonts( void ) {
 
         FT_Done_Face( face );
 
-        continue;
+        goto next_font;
 
 found:
         face->charmap = char_map;
@@ -491,7 +496,7 @@ found:
 
             if ( family == NULL ) {
                 /* TODO: clean up? */
-                continue;
+                goto next_font;
             }
 
             insert_font_family( family );
@@ -501,20 +506,26 @@ found:
 
         if ( style != NULL ) {
             /* TODO: clean up? */
-            continue;
+            goto next_font;
         }
 
         style = create_font_style( face->style_name, face );
 
         if ( style == NULL ) {
             /* TODO: clean up? */
-            continue;
+            goto next_font;
         }
 
         insert_font_style( family, style );
+
+    next_font:
+        splash_inc_progress();
+        free( path );
     }
 
-    closedir( dir );
+    destroy_array( &font_files );
+
+    return 0;
 }
 
 int init_font_manager( void ) {
@@ -539,8 +550,6 @@ int init_font_manager( void ) {
     if ( result < 0 ) {
         return result;
     }
-
-    load_fonts();
 
     return 0;
 }

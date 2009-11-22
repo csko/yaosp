@@ -16,12 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _GUISERVER_INPUT_H_
-#define _GUISERVER_INPUT_H_
+#ifndef _SPLASH_H_
+#define _SPLASH_H_
 
-int input_system_start( void );
+extern int splash_count_current;
+extern int splash_count_total;
 
-int init_input_system( void );
+int splash_inc_progress( void );
 
-#endif /* _GUISERVER_INPUT_H_ */
+int init_splash( void );
 
+#endif /* _SPLASH_H_ */

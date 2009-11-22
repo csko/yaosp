@@ -28,6 +28,8 @@ extern pthread_mutex_t wm_lock;
 
 typedef int win_iter_callback_t( window_t* window, void* data );
 
+int wm_enable( void );
+
 int wm_register_window( window_t* window );
 int wm_unregister_window( window_t* window );
 
