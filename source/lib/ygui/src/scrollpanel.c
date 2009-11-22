@@ -107,6 +107,27 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
 
     gc_fill_rect( gc, &tmp );
 
+    /* ^ */
+
+    rect_init(
+        &tmp,
+        rect_width( &scrollbar->prev ) / 2,
+        ( SCROLL_BAR_SIZE - 3 ) / 2,
+        rect_width( &scrollbar->prev ) / 2,
+        ( SCROLL_BAR_SIZE - 3 ) / 2
+    );
+    gc_fill_rect( gc, &tmp );
+    tmp.top++; tmp.bottom++;
+    tmp.left--; tmp.right--;
+    gc_fill_rect( gc, &tmp );
+    tmp.left += 2; tmp.right += 2;
+    gc_fill_rect( gc, &tmp );
+    tmp.top++; tmp.bottom++;
+    tmp.left++; tmp.right++;
+    gc_fill_rect( gc, &tmp );
+    tmp.left -= 4; tmp.right -= 4;
+    gc_fill_rect( gc, &tmp );
+
     /* Down button */
 
     rect_init(
@@ -127,6 +148,27 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         scrollbar->next.bottom
     );
 
+    gc_fill_rect( gc, &tmp );
+
+    /* V */
+
+    rect_init(
+        &tmp,
+        rect_width( &scrollbar->next ) / 2,
+        scrollbar->next.top + ( SCROLL_BAR_SIZE - 3 ) / 2 + 3 - 1,
+        rect_width( &scrollbar->next ) / 2,
+        scrollbar->next.top + ( SCROLL_BAR_SIZE - 3 ) / 2 + 3 - 1
+    );
+    gc_fill_rect( gc, &tmp );
+    tmp.top--; tmp.bottom--;
+    tmp.left--; tmp.right--;
+    gc_fill_rect( gc, &tmp );
+    tmp.left += 2; tmp.right += 2;
+    gc_fill_rect( gc, &tmp );
+    tmp.top--; tmp.bottom--;
+    tmp.left++; tmp.right++;
+    gc_fill_rect( gc, &tmp );
+    tmp.left -= 4; tmp.right -=4 ;
     gc_fill_rect( gc, &tmp );
 
     /* Slider */
@@ -246,6 +288,27 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
 
     gc_fill_rect( gc, &tmp );
 
+    /* < */
+
+    rect_init(
+        &tmp,
+        ( SCROLL_BAR_SIZE - 3 ) / 2,
+        rect_height( &scrollbar->prev ) / 2,
+        ( SCROLL_BAR_SIZE - 3 ) / 2,
+        rect_height( &scrollbar->prev ) / 2
+    );
+    gc_fill_rect( gc, &tmp );
+    tmp.left++; tmp.right++;
+    tmp.top--; tmp.bottom--;
+    gc_fill_rect( gc, &tmp );
+    tmp.top += 2; tmp.bottom += 2;
+    gc_fill_rect( gc, &tmp );
+    tmp.left++; tmp.right++;
+    tmp.top++; tmp.bottom++;
+    gc_fill_rect( gc, &tmp );
+    tmp.top -= 4; tmp.bottom -= 4;
+    gc_fill_rect( gc, &tmp );
+
     /* Down button */
 
     rect_init(
@@ -266,6 +329,27 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         SCROLL_BAR_SIZE - 2
     );
 
+    gc_fill_rect( gc, &tmp );
+
+    /* > */
+
+    rect_init(
+        &tmp,
+        scrollbar->next.left + ( SCROLL_BAR_SIZE - 3 ) / 2 + 2,
+        rect_height( &scrollbar->next ) / 2,
+        scrollbar->next.left + ( SCROLL_BAR_SIZE - 3 ) / 2 + 2,
+        rect_height( &scrollbar->next ) / 2
+    );
+    gc_fill_rect( gc, &tmp );
+    tmp.left--; tmp.right--;
+    tmp.top--; tmp.bottom--;
+    gc_fill_rect( gc, &tmp );
+    tmp.top += 2; tmp.bottom += 2;
+    gc_fill_rect( gc, &tmp );
+    tmp.left--; tmp.right--;
+    tmp.top++; tmp.bottom++;
+    gc_fill_rect( gc, &tmp );
+    tmp.top -= 4; tmp.bottom -= 4;
     gc_fill_rect( gc, &tmp );
 
     /* Slider */
