@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <console.h>
 #include <lock/mutex.h>
+#include <lock/semaphore.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
 
@@ -63,14 +64,13 @@ ipc_port_id sys_create_ipc_port( void ) {
         goto error1;
     }
 
-    port->queue_condition = condition_create( "IPC queue condition" );
+    port->queue_semaphore = semaphore_create( "IPC queue semaphore", 0 );
 
-    if ( port->queue_condition < 0 ) {
-        error = port->queue_condition;
+    if ( port->queue_semaphore < 0 ) {
+        error = port->queue_semaphore;
         goto error2;
     }
 
-    port->queue_size = 0;
     port->message_queue = NULL;
     port->message_queue_tail = NULL;
 
@@ -87,7 +87,7 @@ ipc_port_id sys_create_ipc_port( void ) {
     return port->id;
 
 error3:
-    condition_destroy( port->queue_condition );
+    semaphore_destroy( port->queue_semaphore );
 
 error2:
     kfree( port );
@@ -97,6 +97,8 @@ error1:
 }
 
 int sys_destroy_ipc_port( ipc_port_id port_id ) {
+    /* todo */
+
     return -ENOSYS;
 }
 
@@ -111,11 +113,6 @@ int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t
 
     if ( port == NULL ) {
         error = -EINVAL;
-        goto error1;
-    }
-
-    if ( ( port->queue_size + size ) > MAX_IPC_MSG_QUEUE_SIZE ) {
-        error = -E2BIG;
         goto error1;
     }
 
@@ -147,8 +144,8 @@ int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t
         port->message_queue_tail = message;
     }
 
+    semaphore_unlock( port->queue_semaphore, 1 );
     mutex_unlock( ipc_port_mutex );
-    condition_signal( port->queue_condition );
 
     return 0;
 
@@ -166,10 +163,6 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
 
     timeout = *_timeout;
 
-    if ( timeout != INFINITE_TIMEOUT ) {
-        kprintf( WARNING, "sys_recv_ipc_message(): Anything other than INFINITE_TIMEOUT may not work properly!\n" );
-}
-
     mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
     port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
@@ -179,10 +172,16 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         goto error2;
     }
 
-    if ( timeout > 0 ) {
-        while ( port->message_queue == NULL ) {
-            condition_timedwait( port->queue_condition, ipc_port_mutex, timeout );
+    if ( timeout != 0 ) {
+        mutex_unlock( ipc_port_mutex );
+
+        error = semaphore_timedlock( port->queue_semaphore, 1, LOCK_IGNORE_SIGNAL, timeout );
+
+        if ( error < 0 ) {
+            goto error1;
         }
+
+        mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
         port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -228,10 +227,10 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
 
     return error;
 
-error2:
+ error2:
     mutex_unlock( ipc_port_mutex );
 
-//error1:
+ error1:
     return error;
 }
 
@@ -254,11 +253,15 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
 
     if ( ( port->message_queue == NULL ) &&
          ( timeout > 0 ) ) {
-        error = condition_timedwait( port->queue_condition, ipc_port_mutex, timeout );
+        mutex_unlock( ipc_port_mutex );
+
+        error = semaphore_timedlock( port->queue_semaphore, 1, LOCK_IGNORE_SIGNAL, timeout );
 
         if ( error < 0 ) {
             goto error1;
         }
+
+        mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
         port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&port_id );
 
@@ -287,10 +290,10 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
 
     return 0;
 
-error2:
+ error2:
     mutex_unlock( ipc_port_mutex );
 
-error1:
+ error1:
     return error;
 }
 

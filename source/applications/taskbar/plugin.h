@@ -1,4 +1,4 @@
-/* Semaphore definitions
+/* Taskbar application
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LOCK_SEMAPHORE_H_
-#define _LOCK_SEMAPHORE_H_
+#ifndef _PLUGIN_H_
+#define _PLUGIN_H_
 
-#include <time.h>
-#include <lock/context.h>
-#include <lock/common.h>
-#include <sched/waitqueue.h>
+#include <ygui/widget.h>
 
-typedef struct semaphore {
-    lock_header_t header;
+typedef struct taskbar_plugin {
+    const char* name;
+    widget_t* ( *create )( void );
+} taskbar_plugin_t;
 
-    int count;
-    waitqueue_t waiters;
-} semaphore_t;
-
-int semaphore_lock( lock_id semaphore, int count, int flags );
-int semaphore_timedlock( lock_id semaphore, int count, int flags, time_t timeout );
-int semaphore_unlock( lock_id semaphore, int count );
-
-lock_id semaphore_create( const char* name, int count );
-int semaphore_destroy( lock_id semaphore );
-
-#endif /* _LOCK_SEMAPHORE_H_ */
+#endif /* _PLUGIN_H_ */

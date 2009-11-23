@@ -76,9 +76,4 @@
 #define KERNEL_PARAM_BUF_SIZE 4096
 #define MAX_KERNEL_PARAMS 64
 
-/**
- * Maximum size of an IPC message queue
- */
-#define MAX_IPC_MSG_QUEUE_SIZE ( 64 * 1024 )
-
 #endif /* _CONFIG_H_ */

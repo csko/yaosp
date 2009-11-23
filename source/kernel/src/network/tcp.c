@@ -281,7 +281,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     /* Wait until the connection is established */
 
-    semaphore_lock( tcp_socket->sync, 1 );
+    semaphore_lock( tcp_socket->sync, LOCK_IGNORE_SIGNAL, 1 );
 
     /* Calculate the return value */
 

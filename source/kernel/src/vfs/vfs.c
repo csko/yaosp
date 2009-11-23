@@ -1524,13 +1524,13 @@ int do_select( io_context_t* io_context, int count, fd_set* readfds,
     }
 
     if ( timeout == NULL ) {
-        semaphore_lock( sync, 1 );
+        semaphore_lock( sync, 1, LOCK_IGNORE_SIGNAL );
     } else {
         uint64_t _timeout;
 
         _timeout = ( uint64_t )timeout->tv_sec * 1000000 + ( uint64_t )timeout->tv_usec;
 
-        semaphore_timedlock( sync, 1, _timeout );
+        semaphore_timedlock( sync, 1, LOCK_IGNORE_SIGNAL, _timeout );
     }
 
     if ( readfds != NULL ) {

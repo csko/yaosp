@@ -43,7 +43,7 @@ int ps2_buffer_size( ps2_buffer_t* buffer ) {
 }
 
 int ps2_buffer_sync( ps2_buffer_t* buffer ) {
-    semaphore_lock( buffer->sync, 1 );
+    semaphore_lock( buffer->sync, 1, LOCK_IGNORE_SIGNAL );
 
     return 0;
 }

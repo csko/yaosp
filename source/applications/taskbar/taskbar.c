@@ -35,6 +35,7 @@
 #include <ygui/layout/borderlayout.h>
 
 #include "window_list.h"
+#include "plugin.h"
 
 window_t* window;
 point_t win_lefttop;
@@ -43,6 +44,7 @@ widget_t* win_list_widget;
 static menu_t* menu;
 
 extern ipc_port_id guiserver_port;
+extern taskbar_plugin_t datetime_plugin;
 
 static int taskbar_msg_handler( uint32_t code, void* data ) {
     switch ( code ) {
@@ -147,6 +149,10 @@ int main( int argc, char** argv ) {
     win_list_widget = window_list_create();
     widget_add( container, win_list_widget, BRD_CENTER );
     widget_dec_ref( win_list_widget );
+
+    widget_t* plugin = datetime_plugin.create();
+    widget_add( container, plugin, BRD_LINE_END );
+    widget_dec_ref( plugin );
 
     /* Create the menu */
 

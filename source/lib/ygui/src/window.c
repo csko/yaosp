@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <yaosp/debug.h>
+#include <yaosp/time.h>
 
 #include <ygui/window.h>
 #include <ygui/protocol.h>
@@ -92,7 +93,18 @@ static window_t* window_create( point_t* size ) {
         goto error6;
     }
 
+    /* Initialize timer array */
+
+    if ( init_array( &window->timers ) != 0 ) {
+        goto error7;
+    }
+
+    pthread_mutex_init( &window->timer_lock, NULL );
+
     return window;
+
+ error7:
+    destroy_gc( &window->gc );
 
  error6:
     widget_dec_ref( window->container );
@@ -114,6 +126,17 @@ static window_t* window_create( point_t* size ) {
 }
 
 static int window_destroy( window_t* window ) {
+    int i;
+    int size;
+
+    size = array_get_size( &window->timers );
+
+    for ( i = 0; i < size; i++ ) {
+        free( array_get_item( &window->timers, i ) );
+    }
+
+    pthread_mutex_destroy( &window->timer_lock );
+    destroy_array( &window->timers );
     destroy_gc( &window->gc );
     widget_dec_ref( window->container );
     free( window->render_buffer );
@@ -222,6 +245,110 @@ static void window_signal_event_handler( window_t* window, int event ) {
     }
 }
 
+static int do_window_insert_timer( window_t* window, window_timer_t* timer ) {
+    int i;
+    int size;
+
+    size = array_get_size( &window->timers );
+
+    for ( i = 0; i < size; i++ ) {
+        window_timer_t* tmp;
+
+        tmp = ( window_timer_t* )array_get_item( &window->timers, i );
+
+        if ( timer->expire_time < tmp->expire_time ) {
+            break;
+        }
+    }
+
+    array_insert_item( &window->timers, i, ( void* )timer );
+
+    return 0;
+}
+
+static uint64_t window_get_sleep_time( window_t* window ) {
+    uint64_t sleep_time;
+
+    pthread_mutex_lock( &window->timer_lock );
+
+    if ( array_get_size( &window->timers ) == 0 ) {
+        sleep_time = 1 * 1000 * 1000;
+    } else {
+        uint64_t now;
+        window_timer_t* timer;
+
+        now = get_system_time();
+        timer = ( window_timer_t* )array_get_item( &window->timers, 0 );
+
+        if ( timer->expire_time <= now ) {
+            sleep_time = 0;
+        } else {
+            sleep_time = timer->expire_time - now;
+        }
+    }
+
+    pthread_mutex_unlock( &window->timer_lock );
+
+    return sleep_time;
+}
+
+static int window_handle_timers( window_t* window ) {
+    int i;
+    int j;
+    int size;
+    uint64_t now;
+    array_t tmp_timers;
+
+    if ( init_array( &tmp_timers ) != 0 ) {
+        return -1;
+    }
+
+    now = get_system_time();
+
+    pthread_mutex_lock( &window->timer_lock );
+
+    size = array_get_size( &window->timers );
+
+    for ( i = 0; i < size; i++ ) {
+        window_timer_t* timer;
+
+        timer = ( window_timer_t* )array_get_item( &window->timers, i );
+
+        if ( timer->expire_time <= now ) {
+            timer->callback( window, timer->data );
+        } else {
+            break;
+        }
+
+        if ( timer->periodic ) {
+            array_add_item( &tmp_timers, timer );
+        } else {
+            free( timer );
+        }
+    }
+
+    for ( j = 0; j < i; j++ ) {
+        array_remove_item_from( &window->timers, 0 );
+    }
+
+    size = array_get_size( &tmp_timers );
+
+    for ( i = 0; i < size; i++ ) {
+        window_timer_t* timer;
+
+        timer = ( window_timer_t* )array_get_item( &tmp_timers, i );
+        timer->expire_time = now + timer->timeout;
+
+        do_window_insert_timer( window, timer );
+    }
+
+    pthread_mutex_unlock( &window->timer_lock );
+
+    destroy_array( &tmp_timers );
+
+    return 0;
+}
+
 static void* window_thread( void* arg ) {
     int error;
     int running;
@@ -240,16 +367,22 @@ static void* window_thread( void* arg ) {
     running = 1;
 
     while ( running ) {
-        error = recv_ipc_message( window->client_port, &code, buffer, MAX_WINDOW_BUFSIZE, INFINITE_TIMEOUT );
+        uint64_t sleep_time;
 
-        if ( error == -ENOENT ) {
-            dbprintf( "window_thread(): Received ENOENT, skipping ...\n" );
-            continue;
-        }
+        sleep_time = window_get_sleep_time( window );
 
-        if ( error < 0 ) {
+        error = recv_ipc_message( window->client_port, &code, buffer, MAX_WINDOW_BUFSIZE, sleep_time );
+
+        if ( ( error < 0 ) &&
+             ( error != -ETIME ) ) {
             dbprintf( "window_thread(): Failed to receive message: %d\n", error );
             break;
+        }
+
+        window_handle_timers( window );
+
+        if ( error < 0 ) {
+            continue;
         }
 
         switch ( code ) {
@@ -578,6 +711,28 @@ int window_insert_callback( window_t* window, window_callback_t* callback, void*
 
         send_ipc_message( window->client_port, MSG_WINDOW_CALLBACK, &msg, sizeof( msg_window_callback_t ) );
     }
+
+    return 0;
+}
+
+int window_insert_timer( window_t* window, uint64_t timeout, int periodic, window_event_callback_t* callback, void* data ) {
+    window_timer_t* timer;
+
+    timer = ( window_timer_t* )malloc( sizeof( window_timer_t ) );
+
+    if ( timer == NULL ) {
+        return -ENOMEM;
+    }
+
+    timer->expire_time = get_system_time() + timeout;
+    timer->timeout = timeout;
+    timer->periodic = periodic;
+    timer->callback = callback;
+    timer->data = data;
+
+    pthread_mutex_lock( &window->timer_lock );
+    do_window_insert_timer( window, timer );
+    pthread_mutex_unlock( &window->timer_lock );
 
     return 0;
 }

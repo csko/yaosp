@@ -78,7 +78,7 @@ static int kterm_flusher_thread( void* arg ) {
 
     while ( 1 ) {
         if ( !more_data ) {
-            semaphore_lock( kterm_sync, 1 );
+            semaphore_lock( kterm_sync, 1, LOCK_IGNORE_SIGNAL );
         }
 
         spinlock_disable( &kterm_lock );

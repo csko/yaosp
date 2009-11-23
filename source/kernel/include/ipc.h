@@ -34,9 +34,7 @@ typedef struct ipc_port {
     hashitem_t hash;
 
     ipc_port_id id;
-
-    size_t queue_size;
-    lock_id queue_condition;
+    lock_id queue_semaphore;
     ipc_message_t* message_queue;
     ipc_message_t* message_queue_tail;
 } ipc_port_t;

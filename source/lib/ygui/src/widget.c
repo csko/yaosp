@@ -83,10 +83,8 @@ widget_t* widget_get_child_at( widget_t* widget, int index ) {
 int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
     rect_init(
         bounds,
-        0,
-        0,
-        widget->full_size.x - 1,
-        widget->full_size.y - 1
+        0, 0,
+        widget->full_size.x - 1, widget->full_size.y - 1
     );
 
     return 0;
@@ -94,11 +92,7 @@ int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
 
 int widget_get_minimum_size( widget_t* widget, point_t* size ) {
     if ( widget->ops->get_minimum_size == NULL ) {
-        point_init(
-            size,
-            0,
-            0
-        );
+        point_init( size, 0, 0 );
     } else {
         widget->ops->get_minimum_size( widget, size );
     }
@@ -112,11 +106,7 @@ int widget_get_preferred_size( widget_t* widget, point_t* size ) {
     } else if ( widget->ops->get_preferred_size != NULL ) {
         widget->ops->get_preferred_size( widget, size );
     } else {
-        point_init(
-            size,
-            0,
-            0
-        );
+        point_init( size, 0, 0 );
     }
 
     return 0;
@@ -124,11 +114,7 @@ int widget_get_preferred_size( widget_t* widget, point_t* size ) {
 
 int widget_get_maximum_size( widget_t* widget, point_t* size ) {
     if ( widget->ops->get_maximum_size == NULL ) {
-        point_init(
-            size,
-            INT_MAX,
-            INT_MAX
-        );
+        point_init( size, INT_MAX, INT_MAX );
     } else {
         widget->ops->get_maximum_size( widget, size );
     }
@@ -142,6 +128,10 @@ int widget_set_window( widget_t* widget, struct window* window ) {
     widget_t* child;
 
     widget->window = window;
+
+    if ( widget->ops->added_to_window != NULL ) {
+        widget->ops->added_to_window( widget );
+    }
 
     size = array_get_size( &widget->children );
 

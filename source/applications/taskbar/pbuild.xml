@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="files">
         <item>taskbar.c</item>
         <item>window_list.c</item>
+        <item>plugin/datetime/datetime.c</item>
     </array>
 
     <array name="images">

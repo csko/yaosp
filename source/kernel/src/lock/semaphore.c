@@ -28,7 +28,7 @@
 
 #include <arch/pit.h>
 
-static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int count, uint64_t timeout ) {
+static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int count, int flags, uint64_t timeout ) {
     thread_t* thread;
     uint64_t wakeup_time;
     lock_header_t* header;
@@ -58,16 +58,13 @@ static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int
     while ( semaphore->count < count ) {
         int error;
 
-        if ( ( timeout != INFINITE_TIMEOUT ) &&
-             ( wakeup_time <= get_system_time() ) ) {
-            spinunlock_enable( &context->lock );
-
-            return -ETIME;
-        }
-
-        /* Wait for the semaphore */
-
         if ( timeout != INFINITE_TIMEOUT ) {
+            if ( wakeup_time <= get_system_time() ) {
+                spinunlock_enable( &context->lock );
+
+                return -ETIME;
+            }
+
             error = lock_timed_wait_on( context, thread, SEMAPHORE, semaphore_id, &semaphore->waiters, wakeup_time );
         } else {
             error = lock_wait_on( context, thread, SEMAPHORE, semaphore_id, &semaphore->waiters );
@@ -75,6 +72,13 @@ static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int
 
         if ( error < 0 ) {
             return error;
+        }
+
+        if ( ( is_signal_pending( thread ) ) &&
+             ( ( flags & LOCK_IGNORE_SIGNAL ) == 0 ) ) {
+            spinunlock_enable( &context->lock );
+
+            return -EINTR;
         }
     }
 
@@ -85,16 +89,15 @@ static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int
     return 0;
 }
 
-int semaphore_lock( lock_id semaphore, int count ) {
-    return do_lock_semaphore( &kernel_lock_context, semaphore, count, INFINITE_TIMEOUT );
+int semaphore_lock( lock_id semaphore, int count, int flags ) {
+    return do_lock_semaphore( &kernel_lock_context, semaphore, count, flags, INFINITE_TIMEOUT );
 }
 
-int semaphore_timedlock( lock_id semaphore, int count, time_t timeout ) {
-    return do_lock_semaphore( &kernel_lock_context, semaphore, count, timeout );
+int semaphore_timedlock( lock_id semaphore, int count, int flags, time_t timeout ) {
+    return do_lock_semaphore( &kernel_lock_context, semaphore, count, flags, timeout );
 }
 
 static int do_unlock_semaphore( lock_context_t* context, lock_id semaphore_id, int count ) {
-    thread_t* thread;
     lock_header_t* header;
     semaphore_t* semaphore;
 
@@ -110,9 +113,6 @@ static int do_unlock_semaphore( lock_context_t* context, lock_id semaphore_id, i
     }
 
     semaphore = ( semaphore_t* )header;
-
-    thread = current_thread();
-
     semaphore->count += count;
 
     spinlock( &scheduler_lock );

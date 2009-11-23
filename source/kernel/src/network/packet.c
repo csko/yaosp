@@ -115,7 +115,9 @@ int packet_queue_insert( packet_queue_t* queue, packet_t* packet ) {
 packet_t* packet_queue_pop_head( packet_queue_t* queue, uint64_t timeout ) {
     packet_t* packet;
 
-    semaphore_timedlock( queue->sync, 1, timeout );
+    if ( semaphore_timedlock( queue->sync, 1, LOCK_IGNORE_SIGNAL, timeout ) != 0 ) {
+        return NULL;
+    }
 
     spinlock_disable( &queue->lock );
 

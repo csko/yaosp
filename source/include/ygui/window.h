@@ -27,6 +27,7 @@
 #include <ygui/point.h>
 #include <ygui/widget.h>
 #include <ygui/gc.h>
+#include <yutil/array.h>
 
 enum {
     WE_ACTIVATED = 0,
@@ -48,6 +49,14 @@ typedef struct window_event_data {
     void* data;
 } window_event_data_t;
 
+typedef struct window_timer {
+    uint64_t expire_time;
+    uint64_t timeout;
+    int periodic;
+    window_event_callback_t* callback;
+    void* data;
+} window_timer_t;
+
 typedef struct window {
     /* Window IPC ports */
 
@@ -67,6 +76,9 @@ typedef struct window {
 
     int close_operation;
     window_event_data_t event_handlers[ WE_COUNT ];
+
+    array_t timers;
+    pthread_mutex_t timer_lock;
 
     /* Rendering informations */
 
@@ -94,6 +106,7 @@ widget_t* window_get_container( window_t* window );
 int window_set_event_handler( window_t* window, int event, window_event_callback_t* callback, void* data );
 
 int window_insert_callback( window_t* window, window_callback_t* callback, void* data );
+int window_insert_timer( window_t* window, uint64_t timeout, int periodic, window_event_callback_t* callback, void* data );
 
 window_t* create_window( const char* title, point_t* position, point_t* size, int flags );
 
