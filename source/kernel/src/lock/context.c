@@ -289,7 +289,29 @@ int lock_context_init( lock_context_t* context ) {
     return 0;
 }
 
+static int lock_context_destroy_helper( hashitem_t* item, void* data ) {
+    lock_header_t* header;
+
+    header = ( lock_header_t* )item;
+
+    switch ( ( int )header->type ) {
+        case MUTEX :
+        case SEMAPHORE :
+        case CONDITION :
+            kfree( header );
+            break;
+
+        case RWLOCK :
+            break;
+    }
+
+    return 0;
+}
+
 int lock_context_destroy( lock_context_t* context ) {
+    hashtable_iterate( &context->lock_table, lock_context_destroy_helper, NULL );
+    destroy_hashtable( &context->lock_table );
+
     return 0;
 }
 
