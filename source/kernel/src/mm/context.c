@@ -306,8 +306,6 @@ int memory_context_delete_regions( memory_context_t* context ) {
 
     /* Clean up memory regions */
 
-    region_count = array_get_size( &context->regions );
-
     for ( i = 0; i < region_count; i++ ) {
         region = ( memory_region_t* )array_get_item( &context->regions, i );
 
