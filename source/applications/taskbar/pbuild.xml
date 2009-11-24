@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>window_list.c</item>
         <item>plugin/datetime/datetime.c</item>
         <item>plugin/cpuload/cpuload.c</item>
+        <item>plugin/memoryusage/memoryusage.c</item>
     </array>
 
     <array name="images">

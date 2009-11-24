@@ -47,9 +47,11 @@ static menu_t* menu;
 extern ipc_port_id guiserver_port;
 extern taskbar_plugin_t datetime_plugin;
 extern taskbar_plugin_t cpuload_plugin;
+extern taskbar_plugin_t memoryusage_plugin;
 
 static taskbar_plugin_t* plugins[] = {
     &cpuload_plugin,
+    &memoryusage_plugin,
     &datetime_plugin,
     NULL
 };
