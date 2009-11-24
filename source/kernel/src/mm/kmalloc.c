@@ -28,6 +28,9 @@
 #include <arch/spinlock.h>
 #include <arch/mm/config.h>
 
+static uint32_t used_pages = 0;
+static uint32_t alloc_size = 0;
+
 static spinlock_t kmalloc_lock = INIT_SPINLOCK( "kmalloc" );
 static kmalloc_block_t* root = NULL;
 
@@ -40,6 +43,8 @@ static kmalloc_block_t* __kmalloc_create_block( uint32_t pages ) {
     if ( __unlikely( block == NULL ) ) {
         return NULL;
     }
+
+    used_pages += pages;
 
     block->magic = KMALLOC_BLOCK_MAGIC;
     block->pages = pages;
@@ -79,6 +84,7 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
     }
 
     chunk->type = CHUNK_ALLOCATED;
+    chunk->real_size = size;
     p = ( void* )( chunk + 1 );
 
     if ( chunk->size > ( size + sizeof( kmalloc_chunk_t ) + 4 ) ) {
@@ -177,6 +183,8 @@ block_found:
     spinunlock_enable( &kmalloc_lock );
 
     if ( __likely( p != NULL ) ) {
+        alloc_size += size;
+
         memset( p, 0xAA, size );
     }
 
@@ -201,6 +209,8 @@ void kfree( void* p ) {
     if ( __unlikely( chunk->type != CHUNK_ALLOCATED ) ) {
         panic( "kfree(): Tried to free a non-allocated memory region! (%x)\n", p );
     }
+
+    alloc_size -= chunk->real_size;
 
     /* make the current chunk free */
 
@@ -256,6 +266,15 @@ void kfree( void* p ) {
     if ( chunk->size > chunk->block->biggest_free ) {
         chunk->block->biggest_free = chunk->size;
     }
+
+    spinunlock_enable( &kmalloc_lock );
+}
+
+void kmalloc_get_statistics( uint32_t* _used_pages, uint32_t* _alloc_size ) {
+    spinlock_disable( &kmalloc_lock );
+
+    *_used_pages = used_pages;
+    *_alloc_size = alloc_size;
 
     spinunlock_enable( &kmalloc_lock );
 }

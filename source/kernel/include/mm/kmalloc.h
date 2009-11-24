@@ -27,6 +27,7 @@
  * aligned.
  */
 #define KMALLOC_BLOCK_SIZE      131072
+
 /**
  * The size of the root block that is allocated during the
  * kernel initialization. This value has to be page aligned.
@@ -37,8 +38,8 @@
 #define KMALLOC_CHUNK_MAGIC 0xDEADBEEF
 
 enum kmalloc_chunk_type {
-  CHUNK_FREE = 1,
-  CHUNK_ALLOCATED
+    CHUNK_FREE = 1,
+    CHUNK_ALLOCATED
 };
 
 struct kmalloc_chunk;
@@ -55,6 +56,7 @@ typedef struct kmalloc_chunk {
     uint32_t magic;
     uint32_t type;
     uint32_t size;
+    uint32_t real_size;
     struct kmalloc_block* block;
     struct kmalloc_chunk* prev;
     struct kmalloc_chunk* next;
@@ -76,6 +78,8 @@ void* kmalloc( uint32_t size ) __attribute__(( malloc ));
  */
 void kfree( void* p );
 
+void kmalloc_get_statistics( uint32_t* used_pages, uint32_t* alloc_size );
+
 /**
  * Initializes the kernel memory allocator. This function is called
  * during the kernel initialization.
@@ -84,4 +88,4 @@ void kfree( void* p );
  */
 int init_kmalloc( void );
 
-#endif // _MM_KMALLOC_H_
+#endif /* _MM_KMALLOC_H_ */

@@ -54,8 +54,15 @@ typedef struct memory_page {
  * userspace applications.
  */
 typedef struct memory_info {
+    /* Global page informations */
+
     uint32_t free_page_count;
     uint32_t total_page_count;
+
+    /* kmalloc related informations */
+
+    uint32_t kmalloc_used_pages;
+    uint32_t kmalloc_alloc_size;
 } memory_info_t;
 
 extern uint64_t memory_size;

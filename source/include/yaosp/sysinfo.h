@@ -96,6 +96,8 @@ typedef struct processor_info {
 typedef struct memory_info {
     uint32_t free_page_count;
     uint32_t total_page_count;
+    uint32_t kmalloc_used_pages;
+    uint32_t kmalloc_alloc_size;
 } memory_info_t;
 
 int get_kernel_info( kernel_info_t* kernel_info );

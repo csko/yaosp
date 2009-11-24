@@ -23,6 +23,7 @@
 #include <macros.h>
 #include <config.h>
 #include <mm/pages.h>
+#include <mm/kmalloc.h>
 #include <lib/string.h>
 
 #include <arch/mm/config.h>
@@ -251,6 +252,11 @@ uint32_t get_total_page_count( void ) {
 int sys_get_memory_info( memory_info_t* info ) {
     info->free_page_count = get_free_page_count();
     info->total_page_count = get_total_page_count();
+
+    kmalloc_get_statistics(
+        &info->kmalloc_used_pages,
+        &info->kmalloc_alloc_size
+    );
 
     return 0;
 }

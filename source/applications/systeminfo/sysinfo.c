@@ -193,6 +193,7 @@ static int do_get_processor_info( void ) {
 
 static int do_get_memory_info( void ) {
     int error;
+    int pagesize;
     memory_info_t memory_info;
 
     error = get_memory_info( &memory_info );
@@ -202,8 +203,15 @@ static int do_get_memory_info( void ) {
         return EXIT_FAILURE;
     }
 
-    printf( "Total memory: %u Kb\n", ( memory_info.total_page_count * getpagesize() / 1024 ) );
-    printf( "Free memory:  %u Kb\n", ( memory_info.free_page_count * getpagesize() / 1024 ) );
+    pagesize = getpagesize();
+
+    printf( "System memory\n" );
+    printf( "  total: %u Kb\n", ( memory_info.total_page_count * pagesize / 1024 ) );
+    printf( "  free:  %u Kb\n", ( memory_info.free_page_count * pagesize / 1024 ) );
+    printf( "\n" );
+    printf( "Kmalloc memory\n" );
+    printf( "  used:      %u Kb\n", ( memory_info.kmalloc_used_pages * pagesize / 1024 ) );
+    printf( "  allocated: %u Kb\n", ( memory_info.kmalloc_alloc_size / 1024 ) );
 
     return EXIT_SUCCESS;
 }
