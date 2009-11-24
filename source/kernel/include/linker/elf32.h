@@ -17,8 +17,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ARCH_ELF32_H_
-#define _ARCH_ELF32_H_
+#ifndef _ELF32_H_
+#define _ELF32_H_
 
 #include <types.h>
 #include <loader.h>
@@ -161,4 +161,4 @@ int init_elf32_kernel_symbols( void );
 int init_elf32_module_loader( void );
 int init_elf32_application_loader( void );
 
-#endif /* _ARCH_ELF32_H_ */
+#endif /* _ELF32_H_ */

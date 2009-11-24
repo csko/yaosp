@@ -592,18 +592,22 @@ int elf32_destroy_image_info( elf32_image_info_t* info ) {
 
     kfree( info->string_table );
     info->string_table = NULL;
+    kfree( info->sh_string_table );
+    info->sh_string_table = NULL;
+    kfree( info->dyn_string_table );
+    info->dyn_string_table = NULL;
 
-    info->symbol_count = 0;
     kfree( info->symbol_table );
     info->symbol_table = NULL;
+    info->symbol_count = 0;
 
-    info->dyn_symbol_count = 0;
     kfree( info->dyn_symbol_table );
     info->dyn_symbol_table = NULL;
+    info->dyn_symbol_count = 0;
 
-    info->reloc_count = 0;
     kfree( info->reloc_table );
     info->reloc_table = NULL;
+    info->reloc_count = 0;
 
     return 0;
 }
