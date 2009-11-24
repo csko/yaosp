@@ -57,6 +57,8 @@ int arch_memory_context_init( memory_context_t* context ) {
 }
 
 int arch_memory_context_destroy( memory_context_t* context ) {
+    int i;
+    uint32_t* page_directory;
     i386_memory_context_t* arch_context;
 
     arch_context = ( i386_memory_context_t* )context->arch_data;
@@ -65,7 +67,17 @@ int arch_memory_context_destroy( memory_context_t* context ) {
         return 0;
     }
 
-    free_pages( ( void* )arch_context->page_directory, 1 );
+    page_directory = arch_context->page_directory;
+
+    for ( i = FIRST_USER_ADDRESS / PGDIR_SIZE; i < 1024; i++ ) {
+        if ( page_directory[ i ] == 0 ) {
+            continue;
+        }
+
+        free_pages( ( void* )( page_directory[ i ] & PAGE_MASK ), 1 );
+    }
+
+    free_pages( ( void* )page_directory, 1 );
     kfree( arch_context );
 
     return 0;

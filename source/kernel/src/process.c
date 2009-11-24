@@ -82,6 +82,12 @@ void destroy_process( process_t* process ) {
     /* NOTE: We don't delete the heap region here because the call to
              the memory_context_delete_regions() will do it for us! */
 
+    /* Destroy the application loader related structures */
+
+    if ( process->loader != NULL ) {
+        process->loader->destroy( process->loader_data );
+    }
+
     /* Destroy the memory context */
 
     if ( process->memory_context != NULL ) {

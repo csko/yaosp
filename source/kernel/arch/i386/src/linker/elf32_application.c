@@ -243,12 +243,24 @@ static int elf32_application_get_symbol_info( thread_t* thread, ptr_t address, s
     return elf32_get_symbol_info( &elf_application->image_info, address, info );
 }
 
+static int elf32_application_destroy( void* data ) {
+    elf_application_t* app;
+
+    app = ( elf_application_t* )data;
+
+    elf32_destroy_image_info( &app->image_info );
+    kfree( app );
+
+    return 0;
+}
+
 static application_loader_t elf32_application_loader = {
     .name = "ELF32",
     .check = elf32_application_check,
     .load = elf32_application_load,
     .execute = elf32_application_execute,
-    .get_symbol_info = elf32_application_get_symbol_info
+    .get_symbol_info = elf32_application_get_symbol_info,
+    .destroy = elf32_application_destroy
 };
 
 __init int init_elf32_application_loader( void ) {

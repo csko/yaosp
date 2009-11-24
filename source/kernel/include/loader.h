@@ -44,6 +44,7 @@ typedef bool check_application_t( binary_loader_t* loader );
 typedef int load_application_t( binary_loader_t* loader );
 typedef int execute_application_t( void );
 typedef int get_symbol_info_t( struct thread* thread, ptr_t address, symbol_info_t* info );
+typedef int destroy_application_t( void* data );
 
 typedef struct application_loader {
     const char* name;
@@ -52,6 +53,7 @@ typedef struct application_loader {
     load_application_t* load;
     execute_application_t* execute;
     get_symbol_info_t* get_symbol_info;
+    destroy_application_t* destroy;
 
     struct application_loader* next;
 } application_loader_t;

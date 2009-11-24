@@ -199,10 +199,10 @@ static int elf32_load_symtab_section( elf32_image_info_t* info, binary_loader_t*
 
     return 0;
 
-error2:
+ error2:
     kfree( elf_symbols );
 
-error1:
+ error1:
     return error;
 }
 
