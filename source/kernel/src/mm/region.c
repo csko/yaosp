@@ -531,5 +531,13 @@ __init int init_regions( void ) {
         return region_lock;
     }
 
+    kernel_memory_context.mutex = mutex_create( "Memory context mutex", MUTEX_NONE );
+
+    if ( kernel_memory_context.mutex < 0 ) {
+        mutex_destroy( region_lock );
+
+        return kernel_memory_context.mutex;
+    }
+
     return 0;
 }

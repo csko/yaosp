@@ -369,17 +369,31 @@ int memory_context_init( memory_context_t* context ) {
     error = array_init( &context->regions );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
     }
 
     array_set_realloc_size( &context->regions, 32 );
 
+    context->mutex = mutex_create( "Memory context mutex", MUTEX_NONE );
+
+    if ( context->mutex < 0 ) {
+        error = context->mutex;
+        goto error2;
+    }
+
     return 0;
+
+ error2:
+    array_destroy( &context->regions );
+
+ error1:
+    return error;
 }
 
 void memory_context_destroy( memory_context_t* context ) {
     arch_memory_context_destroy( context );
 
     array_destroy( &context->regions );
+    mutex_destroy( context->mutex );
     kfree( context );
 }

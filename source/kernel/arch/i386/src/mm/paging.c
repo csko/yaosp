@@ -188,14 +188,21 @@ __init int init_paging( void ) {
     context = &kernel_memory_context;
     arch_context = &i386_kernel_memory_context;
 
-    error = memory_context_init( context );
+    /* .. we can't use memory_context_init() here because
+       that function uses locking related calls but the
+       locking part of the kernel is not yet initialized. */
+
+    memset( context, 0, sizeof( memory_context_t ) );
+    memset( arch_context, 0, sizeof( i386_memory_context_t ) );
+
+    error = array_init( &context->regions );
 
     if ( error < 0 ) {
         return error;
     }
 
-    memset( arch_context, 0, sizeof( i386_memory_context_t ) );
-
+    array_set_realloc_size( &context->regions, 32 );
+    context->mutex = -1;
     context->next = context;
     context->arch_data = arch_context;
 
