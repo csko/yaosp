@@ -39,6 +39,20 @@ static int panel_paint( widget_t* widget, gc_t* gc ) {
     return 0;
 }
 
+static int panel_get_preferred_size( widget_t* widget, point_t* size ) {
+    panel_t* panel;
+
+    panel = ( panel_t* )widget_get_data( widget );
+
+    if ( panel->layout == NULL ) {
+        point_init( size, 0, 0 );
+    } else {
+        panel->layout->ops->get_preferred_size( widget, size );
+    }
+
+    return 0;
+}
+
 static int panel_do_validate( widget_t* widget ) {
     panel_t* panel;
 
@@ -61,7 +75,7 @@ static widget_operations_t panel_ops = {
     .mouse_pressed = NULL,
     .mouse_released = NULL,
     .get_minimum_size = NULL,
-    .get_preferred_size = NULL,
+    .get_preferred_size = panel_get_preferred_size,
     .get_maximum_size = NULL,
     .do_validate = panel_do_validate,
     .size_changed = NULL

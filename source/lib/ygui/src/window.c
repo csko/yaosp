@@ -374,7 +374,8 @@ static void* window_thread( void* arg ) {
         error = recv_ipc_message( window->client_port, &code, buffer, MAX_WINDOW_BUFSIZE, sleep_time );
 
         if ( ( error < 0 ) &&
-             ( error != -ETIME ) ) {
+             ( error != -ETIME ) &&
+             ( error != -ENOENT ) ) {
             dbprintf( "window_thread(): Failed to receive message: %d\n", error );
             break;
         }

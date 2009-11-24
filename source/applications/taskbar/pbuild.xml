@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>taskbar.c</item>
         <item>window_list.c</item>
         <item>plugin/datetime/datetime.c</item>
+        <item>plugin/cpuload/cpuload.c</item>
     </array>
 
     <array name="images">

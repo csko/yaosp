@@ -33,6 +33,7 @@
 #include <ygui/menuitem.h>
 #include <ygui/protocol.h>
 #include <ygui/layout/borderlayout.h>
+#include <ygui/layout/flowlayout.h>
 
 #include "window_list.h"
 #include "plugin.h"
@@ -45,6 +46,13 @@ static menu_t* menu;
 
 extern ipc_port_id guiserver_port;
 extern taskbar_plugin_t datetime_plugin;
+extern taskbar_plugin_t cpuload_plugin;
+
+static taskbar_plugin_t* plugins[] = {
+    &cpuload_plugin,
+    &datetime_plugin,
+    NULL
+};
 
 static int taskbar_msg_handler( uint32_t code, void* data ) {
     switch ( code ) {
@@ -114,6 +122,7 @@ static int send_guiserver_notification( void ) {
 }
 
 int main( int argc, char** argv ) {
+    int i;
     point_t size;
 
     if ( application_init() != 0 ) {
@@ -150,9 +159,22 @@ int main( int argc, char** argv ) {
     widget_add( container, win_list_widget, BRD_CENTER );
     widget_dec_ref( win_list_widget );
 
-    widget_t* plugin = datetime_plugin.create();
-    widget_add( container, plugin, BRD_LINE_END );
-    widget_dec_ref( plugin );
+    widget_t* plugin_panel = create_panel();
+    widget_add( container, plugin_panel, BRD_LINE_END );
+
+    layout = create_flow_layout();
+    panel_set_layout( plugin_panel, layout );
+    layout_dec_ref( layout );
+
+    for ( i = 0; plugins[ i ] != NULL; i++ ) {
+        taskbar_plugin_t* plugin = plugins[ i ];
+        widget_t* plugin_widget = plugin->create();
+
+        widget_add( plugin_panel, plugin_widget, 0 );
+        widget_dec_ref( plugin_widget );
+    }
+
+    widget_dec_ref( plugin_panel );
 
     /* Create the menu */
 

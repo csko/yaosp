@@ -261,7 +261,8 @@ static int borderlayout_do_layout( widget_t* widget ) {
 }
 
 static layout_operations_t borderlayout_ops = {
-    .do_layout = borderlayout_do_layout
+    .do_layout = borderlayout_do_layout,
+    .get_preferred_size = NULL
 };
 
 layout_t* create_border_layout( void ) {

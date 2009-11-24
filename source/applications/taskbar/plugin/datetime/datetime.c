@@ -77,7 +77,13 @@ static int datetime_get_preferred_size( widget_t* widget, point_t* size ) {
 }
 
 static int datetime_added_to_window( widget_t* widget ) {
-    window_insert_timer( widget->window, 1 * 1000 * 1000, 1, datetime_update_callback, ( void* )widget );
+    window_insert_timer(
+        widget->window,
+        1 * 1000 * 1000,
+        1,
+        datetime_update_callback,
+        ( void* )widget
+    );
 
     return 0;
 }
