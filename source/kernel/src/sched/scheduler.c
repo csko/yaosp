@@ -83,6 +83,7 @@ static void swap_expired_and_ready_lists( void ) {
 }
 
 static void update_prev_thread( thread_t* thread, uint64_t now ) {
+    cpu_t* cpu;
     uint64_t runtime;
     uint64_t time_used;
 
@@ -102,8 +103,11 @@ static void update_prev_thread( thread_t* thread, uint64_t now ) {
 
     /* Handle the idle thread separately */
 
-    if ( thread == idle_thread() ) {
+    cpu = get_processor();
+
+    if ( thread == cpu->idle_thread ) {
         thread->state = THREAD_WAITING;
+        cpu->idle_time += runtime;
 
         return;
     }

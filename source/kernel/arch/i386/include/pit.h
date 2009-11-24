@@ -30,17 +30,8 @@
 int pit_read_timer( void );
 void pit_wait_wrap( void );
 
-/**
- * Returns the time in microseconds not counting the leap ones since the Epoch
- *
- * @return The system time in microseconds
- */
-uint64_t get_system_time( void );
-int set_system_time( time_t* newtime );
-uint64_t get_boot_time( void );
-
 int init_system_time( void );
 
 int init_pit( void );
 
-#endif // _ARCH_PIT_H_
+#endif /* _ARCH_PIT_H_ */

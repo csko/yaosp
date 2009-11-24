@@ -21,18 +21,6 @@
 #include <time.h>
 #include <errno.h>
 
-#include <arch/pit.h> /* get_system_time() */
-
-int sys_get_system_time( time_t* _time ) {
-    *_time = get_system_time();
-    return 0;
-}
-
-int sys_get_boot_time( time_t* _time ) {
-    *_time = get_boot_time();
-    return 0;
-}
-
 int sys_stime( int* tptr ) {
     if ( tptr == NULL ) {
         return -EINVAL;
@@ -65,4 +53,19 @@ time_t mktime( tm_t* _time ) {
         _time->tm_mon,
         _time->tm_mday
     ) * SECONDS_PER_DAY + _time->tm_hour * SECONDS_PER_HOUR + _time->tm_min * SECONDS_PER_MINUTE + _time->tm_sec;
+}
+
+int sys_get_boot_time( time_t* _time ) {
+    *_time = get_boot_time();
+    return 0;
+}
+
+int sys_get_system_time( time_t* _time ) {
+    *_time = get_system_time();
+    return 0;
+}
+
+int sys_get_idle_time( time_t* _time ) {
+    *_time = get_idle_time();
+    return 0;
 }

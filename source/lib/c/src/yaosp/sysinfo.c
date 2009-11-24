@@ -67,6 +67,20 @@ int get_memory_info( memory_info_t* info ) {
     return syscall1( SYS_get_memory_info, ( int )info );
 }
 
+time_t get_boot_time( void ) {
+    int error;
+    time_t tmp;
+
+    error = syscall1( SYS_get_boot_time, ( int )&tmp );
+
+    if ( error < 0 ) {
+        errno = -error;
+        return 0;
+    }
+
+    return tmp;
+}
+
 time_t get_system_time( void ) {
     int error;
     time_t tmp;
@@ -81,11 +95,11 @@ time_t get_system_time( void ) {
     return tmp;
 }
 
-time_t get_boot_time( void ) {
+time_t get_idle_time( void ) {
     int error;
     time_t tmp;
 
-    error = syscall1( SYS_get_boot_time, ( int )&tmp );
+    error = syscall1( SYS_get_idle_time, ( int )&tmp );
 
     if ( error < 0 ) {
         errno = -error;

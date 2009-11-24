@@ -35,6 +35,7 @@ typedef struct cpu {
 
     thread_t* current_thread;
     thread_t* idle_thread;
+    uint64_t idle_time;
 
     void* arch_data;
     uint32_t features;
@@ -52,6 +53,8 @@ extern int processor_count;
 extern atomic_t active_processor_count;
 extern cpu_t processor_table[ MAX_CPU_COUNT ];
 
+cpu_t* get_processor( void );
+
 process_t* current_process( void );
 thread_t* current_thread( void );
 thread_t* idle_thread( void );
@@ -64,4 +67,4 @@ uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_coun
 int init_smp( void );
 int init_smp_late( void );
 
-#endif // _SMP_H_
+#endif /* _SMP_H_ */

@@ -100,7 +100,6 @@ void invlpg( uint32_t address );
 void halt_loop( void );
 
 int get_processor_index( void );
-cpu_t* get_processor( void );
 
 /**
  * Returns the current eflags value from the processor.

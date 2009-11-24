@@ -70,6 +70,12 @@ uint32_t sys_get_processor_count( void ) {
     return MAX_CPU_COUNT;
 }
 
+uint64_t get_idle_time( void ) {
+    /* todo: this won't work properly on SMP systems! */
+
+    return get_processor()->idle_time;
+}
+
 uint32_t sys_get_processor_info( processor_info_t* info_table, uint32_t max_count ) {
     uint32_t i;
     uint32_t max;

@@ -21,7 +21,8 @@
 
 #include <time.h>
 
-time_t get_system_time( void );
 time_t get_boot_time( void );
+time_t get_system_time( void );
+time_t get_idle_time( void );
 
 #endif /* _YAOSP_TIME_H_ */

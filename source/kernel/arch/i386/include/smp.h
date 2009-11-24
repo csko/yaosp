@@ -38,4 +38,4 @@ int arch_boot_processors( void );
 #define flush_tlb_global flush_tlb
 #endif /* ENABLE_SMP */
 
-#endif // _ARCH_SMP_H_
+#endif /* _ARCH_SMP_H_ */

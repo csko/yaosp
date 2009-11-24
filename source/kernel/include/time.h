@@ -75,10 +75,6 @@ struct rusage {
     long   ru_nivcsw;        /* involuntary context switches */
 };
 
-int sys_stime(int* tptr);
-int sys_get_system_time( time_t* time );
-int sys_get_boot_time( time_t* _time );
-
 time_t time(time_t* tloc);
 
 /* int sys_adjtimex(timex_t* txc_p); */
@@ -94,5 +90,16 @@ size_t strftime(char* s, size_t max, const char* format,
 
 /* Converts a broken-down time to UNIX timestamp */
 time_t mktime(tm_t* tm);
+
+uint64_t get_system_time( void );
+uint64_t get_boot_time( void );
+uint64_t get_idle_time( void );
+
+int set_system_time( time_t* newtime );
+
+int sys_stime( int* tptr );
+int sys_get_boot_time( time_t* _time );
+int sys_get_system_time( time_t* time );
+int sys_get_idle_time( time_t* _time );
 
 #endif /* _TIME_H_ */
