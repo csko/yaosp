@@ -46,6 +46,8 @@ int master_pty;
 pid_t shell_pid;
 terminal_t* terminal;
 
+pthread_t pty_read_thread;
+
 static int terminal_update_widget( void* data ) {
     /* The preferred size of the widget may changed. Signal the
        event listeners ... */
@@ -173,7 +175,6 @@ static int initialize_pty( void ) {
         return shell_pid;
     }
 
-    pthread_t pty_read_thread;
     pthread_attr_t attrib;
 
     pthread_attr_init( &attrib );

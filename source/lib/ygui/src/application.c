@@ -117,6 +117,7 @@ int application_run( void ) {
     int error;
     uint32_t code;
     void* buffer;
+    int running;
 
     if ( ( guiserver_port == -1 ) ||
          ( app_client_port == -1 ) ||
@@ -131,7 +132,9 @@ int application_run( void ) {
         return -ENOMEM;
     }
 
-    while ( 1 ) {
+    running = 1;
+
+    while ( running ) {
         error = recv_ipc_message( app_client_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
 
         if ( error < 0 ) {
@@ -140,6 +143,11 @@ int application_run( void ) {
         }
 
         switch ( code ) {
+            case MSG_APPLICATION_DESTROY :
+                send_ipc_message( app_server_port, MSG_APPLICATION_DESTROY, NULL, 0 );
+                running = 0;
+                break;
+
             default : {
                 int handled;
 

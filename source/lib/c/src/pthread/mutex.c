@@ -41,7 +41,14 @@ int pthread_mutex_init( pthread_mutex_t* mutex, pthread_mutexattr_t* attr ) {
 }
 
 int pthread_mutex_destroy( pthread_mutex_t* mutex ) {
-    dbprintf( "%s(): TODO\n", __FUNCTION__ );
+    if ( mutex->init_magic != PTHREAD_MUTEX_MAGIC ) {
+        return -1;
+    }
+
+    syscall1( SYS_mutex_destroy, mutex->mutex_id );
+
+    mutex->mutex_id = -1;
+    mutex->init_magic = 0;
 
     return 0;
 }

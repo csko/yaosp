@@ -262,13 +262,15 @@ static void* window_thread( void* arg ) {
         }
     }
 
+    application_remove_window( window->application, window );
+
     window_destroy( window );
     free( buffer );
 
     return NULL;
 }
 
-int handle_create_window( msg_create_win_t* request ) {
+int handle_create_window( application_t* application, msg_create_win_t* request ) {
     int error;
     int width;
     int height;
@@ -288,6 +290,7 @@ int handle_create_window( msg_create_win_t* request ) {
     window->is_moving = 0;
     window->mouse_on_decorator = 0;
     window->drawing_mode = DM_COPY;
+    window->application = application;
 
     /* Initialize rendering stuffs */
 
@@ -361,6 +364,10 @@ int handle_create_window( msg_create_win_t* request ) {
     }
 
     reply.server_port = window->server_port;
+
+    /* Insert the new window into the application's window list */
+
+    application_insert_window( application, window );
 
     goto out;
 

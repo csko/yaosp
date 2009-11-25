@@ -32,6 +32,55 @@
 
 #define MAX_APPLICATION_BUFSIZE 512
 
+static application_t* application_create( ipc_port_id client_port ) {
+    application_t* app;
+
+    app = ( application_t* )malloc( sizeof( application_t ) );
+
+    if ( app == NULL ) {
+        goto error1;
+    }
+
+    app->server_port = create_ipc_port();
+
+    if ( app->server_port < 0 ) {
+        goto error2;
+    }
+
+    if ( init_array( &app->window_list ) != 0 ) {
+        goto error3;
+    }
+
+    if ( pthread_mutex_init( &app->lock, NULL ) != 0 ) {
+        goto error4;
+    }
+
+    app->client_port = client_port;
+
+    return app;
+
+ error4:
+    destroy_array( &app->window_list );
+
+ error3:
+    destroy_ipc_port( app->server_port );
+
+ error2:
+    free( app );
+
+ error1:
+    return NULL;
+}
+
+static int application_destroy( application_t* app ) {
+    pthread_mutex_destroy( &app->lock );
+    destroy_array( &app->window_list );
+    destroy_ipc_port( app->server_port );
+    free( app );
+
+    return 0;
+}
+
 static int handle_create_font( msg_create_font_t* request ) {
     char* family;
     char* style;
@@ -164,6 +213,7 @@ static int handle_reg_window_listener( application_t* app, int get_window_list )
 
 static void* application_thread( void* arg ) {
     int error;
+    int running;
     void* buffer;
     uint32_t code;
     application_t* app;
@@ -176,7 +226,9 @@ static void* application_thread( void* arg ) {
         return NULL;
     }
 
-    while ( 1 ) {
+    running = 1;
+
+    while ( running ) {
         error = recv_ipc_message( app->server_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
 
         if ( error < 0 ) {
@@ -185,8 +237,12 @@ static void* application_thread( void* arg ) {
         }
 
         switch ( code ) {
+            case MSG_APPLICATION_DESTROY :
+                running = 0;
+                break;
+
             case MSG_WINDOW_CREATE :
-                handle_create_window( ( msg_create_win_t* )buffer );
+                handle_create_window( app, ( msg_create_win_t* )buffer );
                 break;
 
             case MSG_FONT_CREATE :
@@ -227,7 +283,31 @@ static void* application_thread( void* arg ) {
         }
     }
 
+    application_destroy( app );
+
     return NULL;
+}
+
+int application_insert_window( application_t* application, window_t* window ) {
+    pthread_mutex_lock( &application->lock );
+    array_add_item( &application->window_list, ( void* )window );
+    pthread_mutex_unlock( &application->lock );
+
+    return 0;
+}
+
+int application_remove_window( application_t* application, window_t* window ) {
+    pthread_mutex_lock( &application->lock );
+
+    array_remove_item( &application->window_list, ( void* )window );
+
+    if ( array_get_size( &application->window_list ) == 0 ) {
+        send_ipc_message( application->client_port, MSG_APPLICATION_DESTROY, NULL, 0 );
+    }
+
+    pthread_mutex_unlock( &application->lock );
+
+    return 0;
 }
 
 int handle_create_application( msg_create_app_t* request ) {
@@ -237,19 +317,11 @@ int handle_create_application( msg_create_app_t* request ) {
     pthread_attr_t attrib;
     msg_create_app_reply_t reply;
 
-    app = ( application_t* )malloc( sizeof( application_t ) );
+    app = application_create( request->client_port );
 
     if ( app == NULL ) {
         goto error1;
     }
-
-    app->server_port = create_ipc_port();
-
-    if ( app->server_port < 0 ) {
-        goto error2;
-    }
-
-    app->client_port = request->client_port;
 
     pthread_attr_init( &attrib );
     pthread_attr_setname( &attrib, "app_event" );
@@ -264,23 +336,20 @@ int handle_create_application( msg_create_app_t* request ) {
     pthread_attr_destroy( &attrib );
 
     if ( error != 0 ) {
-        goto error3;
+        goto error2;
     }
 
     reply.server_port = app->server_port;
 
     goto out;
 
-error3:
-    destroy_ipc_port( app->server_port );
+ error2:
+    application_destroy( app );
 
-error2:
-    free( app );
-
-error1:
+ error1:
     reply.server_port = -1;
 
-out:
+ out:
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_app_reply_t ) );
 
     return 0;

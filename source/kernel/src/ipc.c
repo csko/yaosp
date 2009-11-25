@@ -33,7 +33,7 @@ static hashtable_t ipc_port_table;
 static lock_id named_ipc_port_mutex;
 static hashtable_t named_ipc_port_table;
 
-static int insert_ipc_port( ipc_port_t* port ) {
+static int ipc_port_insert( ipc_port_t* port ) {
     int error;
 
     do {
@@ -51,6 +51,20 @@ static int insert_ipc_port( ipc_port_t* port ) {
     }
 
     return 0;
+}
+
+static ipc_port_t* ipc_port_remove( ipc_port_id id ) {
+    ipc_port_t* port;
+
+    port = ( ipc_port_t* )hashtable_get( &ipc_port_table, ( const void* )&id );
+
+    if ( port == NULL ) {
+        return NULL;
+    }
+
+    hashtable_remove( &ipc_port_table, ( const void* )&id );
+
+    return port;
 }
 
 ipc_port_id sys_create_ipc_port( void ) {
@@ -75,9 +89,7 @@ ipc_port_id sys_create_ipc_port( void ) {
     port->message_queue_tail = NULL;
 
     mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
-
-    error = insert_ipc_port( port );
-
+    error = ipc_port_insert( port );
     mutex_unlock( ipc_port_mutex );
 
     if ( error < 0 ) {
@@ -97,9 +109,26 @@ error1:
 }
 
 int sys_destroy_ipc_port( ipc_port_id port_id ) {
-    /* todo */
+    ipc_port_t* port;
 
-    return -ENOSYS;
+    mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
+    port = ipc_port_remove( port_id );
+    mutex_unlock( ipc_port_mutex );
+
+    if ( port != NULL ) {
+        semaphore_destroy( port->queue_semaphore );
+
+        while ( port->message_queue != NULL ) {
+            ipc_message_t* msg = port->message_queue;
+            port->message_queue = msg->next;
+
+            kfree( msg );
+        }
+
+        kfree( port );
+    }
+
+    return 0;
 }
 
 int sys_send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size ) {

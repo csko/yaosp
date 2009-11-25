@@ -19,12 +19,24 @@
 #ifndef _APPLICATION_H_
 #define _APPLICATION_H_
 
+#include <pthread.h>
+
 #include <ygui/protocol.h>
+#include <yutil/array.h>
 
 typedef struct application {
     ipc_port_id server_port;
     ipc_port_id client_port;
+
+    array_t window_list;
+
+    pthread_mutex_t lock;
 } application_t;
+
+struct window;
+
+int application_insert_window( application_t* application, struct window* window );
+int application_remove_window( application_t* application, struct window* window );
 
 int handle_create_application( msg_create_app_t* request );
 

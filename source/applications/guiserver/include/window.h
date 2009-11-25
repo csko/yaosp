@@ -26,6 +26,7 @@
 #include <region.h>
 #include <bitmap.h>
 #include <fontmanager.h>
+#include <application.h>
 
 typedef struct window {
     hashitem_t hash;
@@ -55,6 +56,8 @@ typedef struct window {
     color_t pen_color;
     font_node_t* font;
     drawing_mode_t drawing_mode;
+
+    application_t* application;
 } window_t;
 
 enum {
@@ -63,7 +66,7 @@ enum {
 
 int window_do_render( window_t* window, uint8_t* buffer, int size );
 
-int handle_create_window( msg_create_win_t* request );
+int handle_create_window( application_t* application, msg_create_win_t* request );
 
 int window_activated( window_t* window );
 int window_deactivated( window_t* window );

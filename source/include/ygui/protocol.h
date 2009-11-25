@@ -35,6 +35,7 @@ enum {
     /* Application related messages */
 
     MSG_APPLICATION_CREATE = 1,
+    MSG_APPLICATION_DESTROY,
     MSG_FONT_CREATE,
     MSG_FONT_GET_STR_WIDTH,
     MSG_DESK_GET_SIZE,
