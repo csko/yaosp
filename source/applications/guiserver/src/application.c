@@ -51,13 +51,27 @@ static application_t* application_create( ipc_port_id client_port ) {
         goto error3;
     }
 
-    if ( pthread_mutex_init( &app->lock, NULL ) != 0 ) {
+    if ( init_array( &app->bitmap_list ) != 0 ) {
         goto error4;
+    }
+
+    if ( init_array( &app->font_list ) != 0 ) {
+        goto error5;
+    }
+
+    if ( pthread_mutex_init( &app->lock, NULL ) != 0 ) {
+        goto error6;
     }
 
     app->client_port = client_port;
 
     return app;
+
+ error6:
+    destroy_array( &app->font_list );
+
+ error5:
+    destroy_array( &app->bitmap_list );
 
  error4:
     destroy_array( &app->window_list );
@@ -73,7 +87,25 @@ static application_t* application_create( ipc_port_id client_port ) {
 }
 
 static int application_destroy( application_t* app ) {
+    int size;
+
+    size = array_get_size( &app->bitmap_list );
+
+    if ( size > 0 ) {
+        int i;
+
+        dbprintf( "Application forgot to delete %d bitmaps.\n", size );
+
+        for ( i = 0; i < size; i++ ) {
+            bitmap_t* bitmap = ( bitmap_t* )array_get_item( &app->bitmap_list, i );
+
+            bitmap_put( bitmap );
+        }
+    }
+
     pthread_mutex_destroy( &app->lock );
+    destroy_array( &app->font_list );
+    destroy_array( &app->bitmap_list );
     destroy_array( &app->window_list );
     destroy_ipc_port( app->server_port );
     free( app );
@@ -254,15 +286,15 @@ static void* application_thread( void* arg ) {
                 break;
 
             case MSG_BITMAP_CREATE :
-                handle_create_bitmap( ( msg_create_bitmap_t* )buffer );
+                handle_create_bitmap( app, ( msg_create_bitmap_t* )buffer );
                 break;
 
             case MSG_BITMAP_CLONE :
-                handle_clone_bitmap( ( msg_clone_bitmap_t* )buffer );
+                handle_clone_bitmap( app, ( msg_clone_bitmap_t* )buffer );
                 break;
 
             case MSG_BITMAP_DELETE :
-                handle_delete_bitmap( ( msg_delete_bitmap_t* )buffer );
+                handle_delete_bitmap( app, ( msg_delete_bitmap_t* )buffer );
                 break;
 
             case MSG_DESK_GET_SIZE :
@@ -286,6 +318,32 @@ static void* application_thread( void* arg ) {
     application_destroy( app );
 
     return NULL;
+}
+
+int application_insert_bitmap( application_t* application, bitmap_t* bitmap ) {
+    dbprintf( "%s(): app = %x, bitmap = %x\n", __FUNCTION__, application, bitmap );
+
+    pthread_mutex_lock( &application->lock );
+    array_add_item( &application->bitmap_list, ( void* )bitmap );
+    pthread_mutex_unlock( &application->lock );
+
+    return 0;
+}
+
+int application_remove_bitmap( application_t* application, bitmap_t* bitmap ) {
+    int error;
+
+    dbprintf( "%s(): app = %x, bitmap = %x\n", __FUNCTION__, application, bitmap );
+
+    pthread_mutex_lock( &application->lock );
+    error = array_remove_item( &application->bitmap_list, ( void* )bitmap );
+    pthread_mutex_unlock( &application->lock );
+
+    if ( error < 0 ) {
+        dbprintf( "application_remove_bitmap(): Tried to remove invalid bitmap!\n" );
+    }
+
+    return 0;
 }
 
 int application_insert_window( application_t* application, window_t* window ) {

@@ -25,6 +25,8 @@
 #include <ygui/protocol.h>
 #include <yutil/hashtable.h>
 
+#include <application.h>
+
 typedef int bitmap_id;
 
 enum bitmap_flags {
@@ -51,9 +53,9 @@ bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_spac
 bitmap_t* bitmap_get( bitmap_id id );
 int bitmap_put( bitmap_t* bitmap );
 
-int handle_create_bitmap( msg_create_bitmap_t* request );
-int handle_clone_bitmap( msg_clone_bitmap_t* request );
-int handle_delete_bitmap( msg_delete_bitmap_t* request );
+int handle_create_bitmap( application_t* app, msg_create_bitmap_t* request );
+int handle_clone_bitmap( application_t* app, msg_clone_bitmap_t* request );
+int handle_delete_bitmap( application_t* app, msg_delete_bitmap_t* request );
 
 int init_bitmap( void );
 

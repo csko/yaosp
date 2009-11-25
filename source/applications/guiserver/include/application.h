@@ -29,11 +29,17 @@ typedef struct application {
     ipc_port_id client_port;
 
     array_t window_list;
+    array_t bitmap_list;
+    array_t font_list;
 
     pthread_mutex_t lock;
 } application_t;
 
 struct window;
+struct bitmap;
+
+int application_insert_bitmap( application_t* application, struct bitmap* bitmap );
+int application_remove_bitmap( application_t* application, struct bitmap* bitmap );
 
 int application_insert_window( application_t* application, struct window* window );
 int application_remove_window( application_t* application, struct window* window );

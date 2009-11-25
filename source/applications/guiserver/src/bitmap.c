@@ -192,7 +192,7 @@ int bitmap_put( bitmap_t* bitmap ) {
     return do_bitmap_put_times( bitmap, 1 );
 }
 
-int handle_create_bitmap( msg_create_bitmap_t* request ) {
+int handle_create_bitmap( application_t* app, msg_create_bitmap_t* request ) {
     int size;
     void* buffer;
     bitmap_t* bitmap;
@@ -207,7 +207,9 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
         goto error1;
     }
 
-    memory_region_alloc_pages( bitmap_region ); /* todo: error checking */
+    if ( memory_region_alloc_pages( bitmap_region ) != 0 ) {
+        goto error2;
+    }
 
     bitmap = create_bitmap_from_buffer( request->width, request->height, request->color_space, buffer );
 
@@ -219,6 +221,8 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
 
     reply.id = bitmap->id;
     reply.bitmap_region = bitmap_region;
+
+    application_insert_bitmap( app, bitmap );
 
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_bmp_reply_t ) );
 
@@ -235,7 +239,7 @@ int handle_create_bitmap( msg_create_bitmap_t* request ) {
     return 0;
 }
 
-int handle_clone_bitmap( msg_clone_bitmap_t* request ) {
+int handle_clone_bitmap( application_t* app, msg_clone_bitmap_t* request ) {
     bitmap_t* bitmap;
     msg_clone_bmp_reply_t reply;
 
@@ -251,6 +255,8 @@ int handle_clone_bitmap( msg_clone_bitmap_t* request ) {
     reply.color_space = bitmap->color_space;
     reply.bitmap_region = bitmap->region;
 
+    application_insert_bitmap( app, bitmap );
+
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_clone_bmp_reply_t ) );
 
     return 0;
@@ -263,7 +269,7 @@ int handle_clone_bitmap( msg_clone_bitmap_t* request ) {
     return 0;
 }
 
-int handle_delete_bitmap( msg_delete_bitmap_t* request ) {
+int handle_delete_bitmap( application_t* app, msg_delete_bitmap_t* request ) {
     bitmap_t* bitmap;
 
     bitmap = bitmap_get( request->bitmap_id );
@@ -273,6 +279,8 @@ int handle_delete_bitmap( msg_delete_bitmap_t* request ) {
     }
 
     do_bitmap_put_times( bitmap, 2 );
+
+    application_remove_bitmap( app, bitmap );
 
     return 0;
 }
