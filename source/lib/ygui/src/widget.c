@@ -122,6 +122,12 @@ int widget_get_maximum_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+int widget_get_scroll_offset( widget_t* widget, point_t* offset ) {
+    point_copy( offset, &widget->scroll_offset );
+
+    return 0;
+}
+
 int widget_set_window( widget_t* widget, struct window* window ) {
     int i;
     int size;

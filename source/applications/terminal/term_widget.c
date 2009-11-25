@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <sys/param.h>
 
 #include <yaosp/input.h>
 
@@ -141,6 +142,7 @@ static int terminal_paint_line( terminal_widget_t* terminal_widget, gc_t* gc, te
 static int terminal_paint( widget_t* widget, gc_t* gc ) {
     int i;
     rect_t bounds;
+    int line_height;
     int history_size;
     terminal_line_t* term_line;
     terminal_widget_t* terminal_widget;
@@ -159,17 +161,37 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     /* Set the terminal font */
 
     gc_set_font( gc, terminal_widget->font );
+    line_height = font_get_height( terminal_widget->font );
 
     point_t pos = {
         .x = 0,
         .y = font_get_ascender( terminal_widget->font )
     };
 
+    /* Draw the visible lines to the terminal */
+
     pthread_mutex_lock( &terminal->lock );
 
+    int line_count = terminal_buffer_get_line_count( &terminal->buffer );
+
+    if ( line_count == 0 ) {
+        goto paint_done;
+    }
+
+    point_t offset;
+    widget_get_scroll_offset( widget, &offset );
+
+    int first_line = -offset.y / line_height;
+    int last_line = first_line + ( rect_height( &bounds ) + line_height - 1 ) / line_height;
+
+    assert( first_line < line_count );
+    last_line = MIN( last_line, line_count - 1 );
+    assert( first_line <= last_line );
+
+    pos.y += first_line * line_height;
     history_size = terminal_buffer_get_history_size( &terminal->buffer );
 
-    for ( i = 0; i < terminal_buffer_get_line_count( &terminal->buffer ); i++ ) {
+    for ( i = first_line; i <= last_line; i++ ) {
         term_line = terminal_buffer_get_line_at( &terminal->buffer, i );
 
         terminal_paint_line(
@@ -180,9 +202,10 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
             ( i == history_size + terminal->buffer.cursor_y ) ? terminal->buffer.cursor_x : -1
         );
 
-        pos.y += font_get_height( terminal_widget->font );
+        pos.y += line_height;
     }
 
+ paint_done:
     pthread_mutex_unlock( &terminal->lock );
 
     return 0;
