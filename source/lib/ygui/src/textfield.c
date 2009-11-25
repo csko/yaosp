@@ -181,7 +181,7 @@ static int textfield_get_preferred_size( widget_t* widget, point_t* size ) {
     point_init(
         size,
         -1,
-        font_get_ascender( textfield->font ) - font_get_descender( textfield->font ) + font_get_line_gap( textfield->font ) + 6
+        font_get_height( textfield->font ) + 6
     );
 
     return 0;
@@ -235,22 +235,17 @@ int textfield_set_text( widget_t* widget, char* text ) {
 }
 
 widget_t* create_textfield( void ) {
-    int error;
     widget_t* widget;
     textfield_t* textfield;
     font_properties_t properties;
 
-    textfield = ( textfield_t* )malloc( sizeof( textfield_t ) );
+    textfield = ( textfield_t* )calloc( 1, sizeof( textfield_t ) );
 
     if ( textfield == NULL ) {
         goto error1;
     }
 
-    memset( textfield, 0, sizeof( textfield_t ) );
-
-    error = init_string( &textfield->buffer );
-
-    if ( error < 0 ) {
+    if ( init_string( &textfield->buffer ) != 0 ) {
         goto error2;
     }
 
@@ -269,9 +264,7 @@ widget_t* create_textfield( void ) {
         goto error4;
     }
 
-    error = widget_add_events( widget, textfield_event_types, textfield_events, E_COUNT );
-
-    if ( error < 0 ) {
+    if ( widget_add_events( widget, textfield_event_types, textfield_events, E_COUNT ) != 0 ) {
         goto error5;
     }
 

@@ -35,6 +35,7 @@ enum {
     W_LABEL,
     W_BUTTON,
     W_TEXTFIELD,
+    W_TEXTAREA,
     W_SCROLLPANEL,
     W_IMAGE,
     W_MENUITEM,
