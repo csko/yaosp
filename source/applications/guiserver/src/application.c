@@ -321,8 +321,6 @@ static void* application_thread( void* arg ) {
 }
 
 int application_insert_bitmap( application_t* application, bitmap_t* bitmap ) {
-    dbprintf( "%s(): app = %x, bitmap = %x\n", __FUNCTION__, application, bitmap );
-
     pthread_mutex_lock( &application->lock );
     array_add_item( &application->bitmap_list, ( void* )bitmap );
     pthread_mutex_unlock( &application->lock );
@@ -332,8 +330,6 @@ int application_insert_bitmap( application_t* application, bitmap_t* bitmap ) {
 
 int application_remove_bitmap( application_t* application, bitmap_t* bitmap ) {
     int error;
-
-    dbprintf( "%s(): app = %x, bitmap = %x\n", __FUNCTION__, application, bitmap );
 
     pthread_mutex_lock( &application->lock );
     error = array_remove_item( &application->bitmap_list, ( void* )bitmap );
