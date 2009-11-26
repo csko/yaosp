@@ -434,26 +434,19 @@ int widget_signal_event_handler( widget_t* widget, int event_handler ) {
 }
 
 widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
-    int error;
     widget_t* widget;
 
-    widget = ( widget_t* )malloc( sizeof( widget_t ) );
+    widget = ( widget_t* )calloc( 1, sizeof( widget_t ) );
 
     if ( widget == NULL ) {
         goto error1;
     }
 
-    memset( widget, 0, sizeof( widget_t ) );
-
-    error = init_array( &widget->children );
-
-    if ( error < 0 ) {
+    if ( init_array( &widget->children ) != 0 ) {
         goto error2;
     }
 
-    error = init_array( &widget->event_handlers );
-
-    if ( error < 0 ) {
+    if ( init_array( &widget->event_handlers ) != 0 ) {
         goto error3;
     }
 
@@ -466,9 +459,7 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
         { "mouse-down", &widget->event_ids[ E_MOUSE_DOWN ] }
     };
 
-    error = widget_add_events( widget, widget_events, widget->event_ids, E_WIDGET_COUNT );
-
-    if ( error < 0 ) {
+    if ( widget_add_events( widget, widget_events, widget->event_ids, E_WIDGET_COUNT ) != 0 ) {
         goto error4;
     }
 

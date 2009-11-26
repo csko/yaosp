@@ -96,6 +96,7 @@ typedef struct window_callback_item {
 } window_callback_item_t;
 
 enum {
+    WINDOW_NONE = 0,
     WINDOW_NO_BORDER = ( 1 << 0 )
 };
 

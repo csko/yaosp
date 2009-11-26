@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <assert.h>
 #include <yaosp/input.h>
 
 #include <ygui/textfield.h>
@@ -31,9 +32,48 @@ typedef struct textarea {
     font_t* font;
 
     array_t lines;
+
+    int cursor_x;
+    int cursor_y;
 } textarea_t;
 
+static inline int textarea_paint_line_with_cursor( textarea_t* textarea, gc_t* gc, string_t* line,
+                                                   point_t* position, int cursor_x ) {
+    int width;
+    rect_t tmp;
+    const char* data;
+
+    data = string_c_str( line );
+    width = font_get_string_width( textarea->font, data, cursor_x );
+
+    gc_draw_text( gc, position, data, cursor_x );
+
+    rect_init(
+        &tmp,
+        width,
+        position->y - font_get_ascender( textarea->font ) + 1,
+        width,
+        position->y - font_get_descender( textarea->font ) + font_get_line_gap( textarea->font ) - 1
+    );
+
+    gc_fill_rect( gc, &tmp );
+
+    position->x += width;
+    gc_draw_text( gc, position, data + cursor_x, -1 );
+    position->x -= width;
+
+    return 0;
+}
+
+static inline int textarea_paint_line_without_cursor( gc_t* gc, string_t* line, point_t* position ) {
+    gc_draw_text( gc, position, string_c_str( line ), -1 );
+
+    return 0;
+}
+
 static int textarea_paint( widget_t* widget, gc_t* gc ) {
+    int i;
+    int lines;
     rect_t bounds;
     textarea_t* textarea;
 
@@ -55,6 +95,147 @@ static int textarea_paint( widget_t* widget, gc_t* gc ) {
     gc_set_pen_color( gc, &bg_color );
     gc_fill_rect( gc, &bounds );
 
+    /* Draw the lines */
+
+    rect_resize( &bounds, 1, 1, -1, -1 );
+    gc_set_clip_rect( gc, &bounds );
+    gc_translate_xy( gc, 2, 2 );
+
+    gc_set_font( gc, textarea->font );
+    gc_set_pen_color( gc, &fg_color );
+
+    lines = array_get_size( &textarea->lines );
+
+    point_t position = {
+        .x = 0,
+        .y = font_get_ascender( textarea->font )
+    };
+    int line_height = font_get_height( textarea->font );
+
+    for ( i = 0; i < lines; i++ ) {
+        string_t* line = ( string_t* )array_get_item( &textarea->lines, i );
+
+        if ( i == textarea->cursor_y ) {
+            textarea_paint_line_with_cursor( textarea, gc, line, &position, textarea->cursor_x );
+        } else {
+            textarea_paint_line_without_cursor( gc, line, &position );
+        }
+
+        position.y += line_height;
+    }
+
+    return 0;
+}
+
+static string_t* textarea_current_line( textarea_t* textarea ) {
+    int lines;
+    string_t* line;
+
+    lines = array_get_size( &textarea->lines );
+
+    assert( ( textarea->cursor_y >= 0 ) && ( textarea->cursor_y <= lines ) );
+
+    if ( textarea->cursor_y == lines ) {
+        line = ( string_t* )malloc( sizeof( string_t ) );
+
+        if ( line == NULL ) {
+            goto out;
+        }
+
+        if ( init_string( line ) != 0 ) {
+            free( line );
+            line = NULL;
+
+            goto out;
+        }
+
+        array_add_item( &textarea->lines, ( void* )line );
+    } else {
+        line = ( string_t* )array_get_item( &textarea->lines, textarea->cursor_y );
+    }
+
+ out:
+    return line;
+}
+
+static int textarea_key_pressed( widget_t* widget, int key ) {
+    textarea_t* textarea;
+
+    textarea = ( textarea_t* )widget_get_data( widget );
+
+    switch ( key ) {
+        case KEY_BACKSPACE :
+            break;
+
+        case KEY_DELETE :
+            break;
+
+        case KEY_TAB :
+            break;
+
+        case KEY_ESCAPE :
+            break;
+
+        case KEY_ENTER :
+            textarea->cursor_y++;
+            textarea->cursor_x = 0;
+
+            textarea_current_line( textarea );
+
+            break;
+
+        case KEY_LEFT :
+            if ( textarea->cursor_x > 0 ) {
+                textarea->cursor_x--;
+            }
+
+            break;
+
+        case KEY_RIGHT : {
+            string_t* line = textarea_current_line( textarea );
+
+            if ( textarea->cursor_x < string_length( line ) ) {
+                textarea->cursor_x++;
+            }
+
+            break;
+        }
+
+        case KEY_UP :
+            if ( textarea->cursor_y > 0 ) {
+                textarea->cursor_y--;
+            }
+
+            break;
+
+        case KEY_DOWN :
+            assert( textarea->cursor_y < array_get_size( &textarea->lines ) );
+
+            if ( textarea->cursor_y == array_get_size( &textarea->lines ) - 1 ) {
+                string_t* line = textarea_current_line( textarea );
+
+                if ( string_length( line ) > 0 ) {
+                    textarea->cursor_y++;
+                    textarea->cursor_x = 0;
+
+                    textarea_current_line( textarea );
+                }
+            } else {
+                textarea->cursor_y++;
+                textarea->cursor_x = 0;
+            }
+
+            break;
+
+        default : {
+            string_t* line = textarea_current_line( textarea );
+            string_insert( line, textarea->cursor_x++, ( char* )&key, 1 );
+            break;
+        }
+    }
+
+    widget_invalidate( widget, 1 );
+
     return 0;
 }
 
@@ -66,7 +247,7 @@ static int textarea_get_preferred_size( widget_t* widget, point_t* size ) {
     point_init(
         size,
         -1,
-        font_get_height( textarea->font ) + 6
+        array_get_size( &textarea->lines ) * font_get_height( textarea->font ) + 6
     );
 
     return 0;
@@ -74,7 +255,7 @@ static int textarea_get_preferred_size( widget_t* widget, point_t* size ) {
 
 static widget_operations_t textarea_ops = {
     .paint = textarea_paint,
-    .key_pressed = NULL,
+    .key_pressed = textarea_key_pressed,
     .key_released = NULL,
     .mouse_entered = NULL,
     .mouse_exited = NULL,
@@ -85,7 +266,9 @@ static widget_operations_t textarea_ops = {
     .get_preferred_size = textarea_get_preferred_size,
     .get_maximum_size = NULL,
     .do_validate = NULL,
-    .size_changed = NULL
+    .size_changed = NULL,
+    .added_to_window = NULL,
+    .child_added = NULL
 };
 
 widget_t* create_textarea( void ) {
@@ -117,6 +300,8 @@ widget_t* create_textarea( void ) {
     if ( widget == NULL ) {
         goto error4;
     }
+
+    textarea_current_line( textarea );
 
     return widget;
 

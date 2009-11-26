@@ -108,4 +108,4 @@ typedef struct input_cmd_create_node {
     uint32_t node_number;
 } input_cmd_create_node_t;
 
-#endif /* _INPUT_H_ */
+#endif /* _YAOSP_INPUT_H_ */

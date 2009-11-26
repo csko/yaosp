@@ -19,6 +19,8 @@
 #ifndef _YGUI_APPLICATION_H_
 #define _YGUI_APPLICATION_H_
 
+#include <inttypes.h>
+
 typedef int msg_handler_t( uint32_t code, void* buffer );
 
 int application_set_message_handler( msg_handler_t* handler );
