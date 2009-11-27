@@ -31,7 +31,6 @@ static int menu_window_deactivated( window_t* window, void* data ) {
 }
 
 menu_t* create_menu( void ) {
-    int error;
     menu_t* menu;
 
     menu = ( menu_t* )malloc( sizeof( menu_t ) );
@@ -40,9 +39,7 @@ menu_t* create_menu( void ) {
         goto error1;
     }
 
-    error = init_array( &menu->items );
-
-    if ( error < 0 ) {
+    if ( init_array( &menu->items ) != 0 ) {
         goto error2;
     }
 
@@ -88,6 +85,7 @@ int menu_add_item( menu_t* menu, widget_t* item ) {
     widget_add( container, item, NULL );
 
     menu_item->parent_menu = menu;
+    menu_item->parent_type = M_PARENT_WINDOW;
 
     return 0;
 }

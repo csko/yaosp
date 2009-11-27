@@ -39,6 +39,7 @@ enum {
     W_SCROLLPANEL,
     W_IMAGE,
     W_MENUITEM,
+    W_MENUBAR,
     W_TYPE_COUNT
 };
 
@@ -107,6 +108,7 @@ int widget_get_bounds( widget_t* widget, rect_t* bounds );
 int widget_get_minimum_size( widget_t* widget, point_t* size );
 int widget_get_preferred_size( widget_t* widget, point_t* size );
 int widget_get_maximum_size( widget_t* widget, point_t* size );
+int widget_get_position( widget_t* widget, point_t* position );
 int widget_get_scroll_offset( widget_t* widget, point_t* offset );
 
 int widget_set_window( widget_t* widget, struct window* window );

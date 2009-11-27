@@ -151,6 +151,12 @@ widget_t* window_get_container( window_t* window ) {
     return window->container;
 }
 
+int window_get_position( window_t* window, point_t* position ) {
+    point_copy( position, &window->position );
+
+    return 0;
+}
+
 static widget_t* window_find_widget_at_helper( widget_t* widget, point_t* position,
                                                point_t* lefttop, rect_t* visible_rect ) {
     int i;
@@ -509,6 +515,18 @@ static void* window_thread( void* arg ) {
                     dbprintf( "window_thread(): Failed to get resize reply!\n" );
                 }
 
+                point_copy( &window->position, &reply.position );
+
+                break;
+            }
+
+            case MSG_WINDOW_MOVED : {
+                msg_win_moved_t* cmd;
+
+                cmd = ( msg_win_moved_t* )buffer;
+
+                point_copy( &window->position, &cmd->position );
+
                 break;
             }
 
@@ -778,6 +796,7 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     } else {
         point_copy( &request->position, position );
     }
+    point_copy( &window->position, &request->position );
 
     if ( size == NULL ) {
         point_init( &request->size, 0, 0 );

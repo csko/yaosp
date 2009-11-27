@@ -395,6 +395,16 @@ int window_deactivated( window_t* window ) {
     return 0;
 }
 
+int window_moved( window_t* window ) {
+    msg_win_moved_t msg;
+
+    rect_lefttop( &window->screen_rect, &msg.position );
+
+    send_ipc_message( window->client_port, MSG_WINDOW_MOVED, &msg, sizeof( msg_win_moved_t ) );
+
+    return 0;
+}
+
 int window_key_pressed( window_t* window, int key ) {
     msg_key_pressed_t cmd;
 

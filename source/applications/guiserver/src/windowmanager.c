@@ -852,6 +852,10 @@ int wm_set_moving_window( window_t* window ) {
         /* Update the moved window on the screen */
 
         wm_update_window_region( moving_window, &moving_window->screen_rect );
+
+        /* Tell the window that it has been moved */
+
+        window_moved( moving_window );
 done:
         ;
     }

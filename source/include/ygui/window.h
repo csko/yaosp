@@ -67,6 +67,7 @@ typedef struct window {
 
     /* Widget management */
 
+    point_t position;
     widget_t* container;
     widget_t* focused_widget;
     widget_t* mouse_widget;
@@ -101,6 +102,7 @@ enum {
 };
 
 widget_t* window_get_container( window_t* window );
+int window_get_position( window_t* window, point_t* position );
 
 /* Window callback handling */
 

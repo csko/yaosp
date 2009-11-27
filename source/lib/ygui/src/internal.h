@@ -28,12 +28,22 @@ typedef struct widget_wrapper {
     void* data;
 } widget_wrapper_t;
 
+typedef enum {
+    M_PARENT_NONE,
+    M_PARENT_BAR,
+    M_PARENT_WINDOW
+} menu_parent_t;
+
 typedef struct menu_item {
     char* text;
     font_t* font;
     bitmap_t* image;
     int active;
+
+    menu_t* submenu;
+
     menu_t* parent_menu;
+    menu_parent_t parent_type;
 } menu_item_t;
 
 int initialize_render_buffer( window_t* window );

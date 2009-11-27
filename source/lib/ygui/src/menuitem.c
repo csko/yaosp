@@ -18,6 +18,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+#include <errno.h>
 
 #include <ygui/menuitem.h>
 #include <ygui/menu.h>
@@ -115,6 +117,29 @@ static int menu_item_mouse_exited( widget_t* widget ) {
     return 0;
 }
 
+static int menu_item_show_submenu( widget_t* widget, menu_item_t* item ) {
+    point_t tmp;
+    point_t position;
+
+    if ( item->submenu == NULL ) {
+        return 0;
+    }
+
+    window_get_position( widget->window, &position );
+    widget_get_position( widget, &tmp );
+
+    point_add( &position, &tmp );
+    point_add_xy( &position, 1, 21 ); /* todo: this is a quick hack to add the decorator's size */
+
+    widget_get_preferred_size( widget, &tmp );
+    tmp.x = 0;
+    point_add( &position, &tmp );
+
+    menu_popup_at( item->submenu, &position );
+
+    return 0;
+}
+
 static int menu_item_mouse_released( widget_t* widget, int mount_button ) {
     menu_item_t* item;
 
@@ -122,7 +147,19 @@ static int menu_item_mouse_released( widget_t* widget, int mount_button ) {
 
     /* Hide the window menu */
 
-    window_hide( item->parent_menu->window );
+    switch ( item->parent_type ) {
+        case M_PARENT_WINDOW :
+            window_hide( item->parent_menu->window );
+            break;
+
+        case M_PARENT_BAR :
+            menu_item_show_submenu( widget, item );
+            break;
+
+        case M_PARENT_NONE :
+            assert( 0 );
+            break;
+    }
 
     /* Fire event listeners */
 
@@ -171,7 +208,9 @@ static widget_operations_t menu_item_ops = {
     .get_preferred_size = menu_item_get_preferred_size,
     .get_maximum_size = NULL,
     .do_validate = NULL,
-    .size_changed = NULL
+    .size_changed = NULL,
+    .added_to_window = NULL,
+    .child_added = NULL
 };
 
 widget_t* create_menuitem_with_label( const char* text ) {
@@ -179,7 +218,6 @@ widget_t* create_menuitem_with_label( const char* text ) {
 }
 
 widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* image ) {
-    int error;
     widget_t* widget;
     menu_item_t* item;
     font_properties_t properties;
@@ -211,15 +249,15 @@ widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* imag
         goto error4;
     }
 
-    error = widget_add_events( widget, menu_item_event_types, menu_item_events, E_COUNT );
-
-    if ( error < 0 ) {
+    if ( widget_add_events( widget, menu_item_event_types, menu_item_events, E_COUNT ) != 0 ) {
         goto error5;
     }
 
     item->active = 0;
     item->image = image;
+    item->submenu = NULL;
     item->parent_menu = NULL;
+    item->parent_type = M_PARENT_NONE;
 
     if ( image != NULL ) {
         bitmap_inc_ref( image );
@@ -253,4 +291,17 @@ int menuitem_has_image( widget_t* widget ) {
     item = ( menu_item_t* )widget_get_data( widget );
 
     return ( item->image != NULL );
+}
+
+int menuitem_set_submenu( widget_t* widget, menu_t* menu ) {
+    menu_item_t* item;
+
+    if ( widget_get_id( widget ) != W_MENUITEM ) {
+        return -EINVAL;
+    }
+
+    item = ( menu_item_t* )widget_get_data( widget );
+    item->submenu = menu;
+
+    return 0;
 }

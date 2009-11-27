@@ -16,18 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_MENUITEM_H_
-#define _YGUI_MENUITEM_H_
+#ifndef _YGUI_MENUBAR_H_
+#define _YGUI_MENUBAR_H_
 
 #include <ygui/widget.h>
-#include <ygui/bitmap.h>
-#include <ygui/menu.h>
+#include <yutil/array.h>
 
-widget_t* create_menuitem_with_label( const char* text );
-widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* image );
+typedef struct menu_bar_t {
+    array_t items;
+} menu_bar_t;
 
-int menuitem_has_image( widget_t* widget );
+widget_t* create_menubar( void );
 
-int menuitem_set_submenu( widget_t* widget, menu_t* menu );
+int menubar_add_item( widget_t* bar, widget_t* item );
 
-#endif /* _YGUI_MENUITEM_H_ */
+#endif /* _YGUI_MENUBAR_H_ */
