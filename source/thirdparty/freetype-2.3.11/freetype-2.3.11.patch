@@ -1,6 +1,6 @@
-diff -Nru freetype-2.3.9-orig/include/freetype/config/ftmodule.h freetype-2.3.9/include/freetype/config/ftmodule.h
---- freetype-2.3.9-orig/include/freetype/config/ftmodule.h	2008-12-21 11:10:21.000000000 +0100
-+++ freetype-2.3.9/include/freetype/config/ftmodule.h	2009-03-19 08:46:50.000000000 +0100
+diff -Nru freetype-2.3.11-orig/include/freetype/config/ftmodule.h freetype-2.3.11/include/freetype/config/ftmodule.h
+--- freetype-2.3.11-orig/include/freetype/config/ftmodule.h	2009-03-14 14:45:26.000000000 +0100
++++ freetype-2.3.11/include/freetype/config/ftmodule.h	2009-11-30 16:13:36.000000000 +0100
 @@ -12,21 +12,21 @@
  
  FT_USE_MODULE( FT_Module_Class, autofit_module_class )
@@ -35,9 +35,15 @@ diff -Nru freetype-2.3.9-orig/include/freetype/config/ftmodule.h freetype-2.3.9/
 +//FT_USE_MODULE( FT_Driver_ClassRec, bdf_driver_class )
  
  /* EOF */
-diff -Nru freetype-2.3.9-orig/pbuild.xml freetype-2.3.9/pbuild.xml
---- freetype-2.3.9-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ freetype-2.3.9/pbuild.xml	2009-03-19 08:45:59.000000000 +0100
+diff -Nru freetype-2.3.11-orig/objs/README freetype-2.3.11/objs/README
+--- freetype-2.3.11-orig/objs/README	2009-03-14 14:45:26.000000000 +0100
++++ freetype-2.3.11/objs/README	1970-01-01 01:00:00.000000000 +0100
+@@ -1,2 +0,0 @@
+-This directory contains all the object files created when building the
+-library.
+diff -Nru freetype-2.3.11-orig/pbuild.xml freetype-2.3.11/pbuild.xml
+--- freetype-2.3.11-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ freetype-2.3.11/pbuild.xml	2009-11-30 16:14:29.000000000 +0100
 @@ -0,0 +1,96 @@
 +<!--
 +
@@ -86,7 +92,7 @@ diff -Nru freetype-2.3.9-orig/pbuild.xml freetype-2.3.9/pbuild.xml
 +    <target name="compile">
 +        <call target="prepare"/>
 +
-+        <echo>Compiling freetype 2.3.9</echo>
++        <echo>Compiling freetype 2.3.11</echo>
 +
 +        <for var="i" array="${files}">
 +            <echo>-> ${i}</echo>
@@ -119,7 +125,7 @@ diff -Nru freetype-2.3.9-orig/pbuild.xml freetype-2.3.9/pbuild.xml
 +    </target>
 +
 +    <target name="install">
-+        <echo>Installing freetype 2.3.9 headers</echo>
++        <echo>Installing freetype 2.3.11 headers</echo>
 +
 +        <mkdir>../../../include/freetype</mkdir>
 +        <mkdir>../../../include/freetype/config</mkdir>

@@ -21,20 +21,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <target name="clean">
-        <cleandir>freetype-2.3.9</cleandir>
-        <rmdir>freetype-2.3.9</rmdir>
+        <cleandir>freetype-2.3.11</cleandir>
+        <rmdir>freetype-2.3.11</rmdir>
     </target>
 
     <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/freetype/freetype-2.3.9.tar.bz2"
-                 to="freetype-2.3.9.tar.bz2"
-                 md5="d76233108aca9c9606cdbd341562ad9a"/>
+        <httpget address="http://files.yaosp.org/source/freetype/freetype-2.3.11.tar.bz2"
+                 to="freetype-2.3.11.tar.bz2"
+                 md5="519c7cbf5cbd72ffa822c66844d3114c"/>
 
         <echo>Extracting freetype source</echo>
 
         <exec executable="tar">
             <arg>-jxf</arg>
-            <arg>freetype-2.3.9.tar.bz2</arg>
+            <arg>freetype-2.3.11.tar.bz2</arg>
         </exec>
 
         <echo>Patching freetype source</echo>
@@ -43,13 +43,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <arg>-t</arg>
             <arg>-p0</arg>
             <arg>-i</arg>
-            <arg>freetype-2.3.9.patch</arg>
+            <arg>freetype-2.3.11.patch</arg>
         </exec>
     </target>
 
     <target name="all">
         <call target="clean"/>
         <call target="get_source"/>
-        <call target="all" directory="freetype-2.3.9"/>
+        <call target="all" directory="freetype-2.3.11"/>
     </target>
 </build>
