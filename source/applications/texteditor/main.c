@@ -48,7 +48,6 @@ int main( int argc, char** argv ) {
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
-#if 0
     widget_t* menubar = create_menubar();
     widget_add( container, menubar, BRD_PAGE_START );
     widget_dec_ref( menubar );
@@ -61,6 +60,14 @@ int main( int argc, char** argv ) {
 
     menu_t* menu = create_menu();
     menuitem_set_submenu( item, menu );
+
+    item = create_menuitem_with_label( "Open" );
+    menu_add_item( menu, item );
+    widget_dec_ref( item );
+
+    item = create_separator_menuitem();
+    menu_add_item( menu, item );
+    widget_dec_ref( item );
 
     item = create_menuitem_with_label( "Exit" );
     menu_add_item( menu, item );
@@ -78,7 +85,6 @@ int main( int argc, char** argv ) {
     item = create_menuitem_with_label( "About" );
     menu_add_item( menu, item );
     widget_dec_ref( item );
-#endif
 
     /* Textarea ... */
 

@@ -71,26 +71,36 @@ menu_t* create_menu( void ) {
 }
 
 int menu_add_item( menu_t* menu, widget_t* item ) {
+    int item_id;
     widget_t* container;
-    menu_item_t* menu_item;
 
-    if ( widget_get_id( item ) != W_MENUITEM ) {
-        return -EINVAL;
-    }
+    item_id = widget_get_id( item );
 
-    menu_item = ( menu_item_t* )widget_get_data( item );
+    switch ( item_id ) {
+        case W_MENUITEM : {
+            menu_item_t* menu_item = ( menu_item_t* )widget_get_data( item );
 
-    if ( menu_item->parent.menu != NULL ) {
-        return -EINVAL;
+            if ( menu_item->parent.menu != NULL ) {
+                return -EINVAL;
+            }
+
+            menu_item->parent.menu = menu;
+            menu_item->parent_type = M_PARENT_MENU;
+
+            break;
+        }
+
+        case W_SEPARATOR_MENUITEM :
+            break;
+
+        default :
+            return -EINVAL;
     }
 
     array_add_item( &menu->items, ( void* )item );
 
     container = window_get_container( menu->window );
     widget_add( container, item, NULL );
-
-    menu_item->parent.menu = menu;
-    menu_item->parent_type = M_PARENT_MENU;
 
     return 0;
 }

@@ -26,6 +26,8 @@
 widget_t* create_menuitem_with_label( const char* text );
 widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* image );
 
+widget_t* create_separator_menuitem( void );
+
 int menuitem_has_image( widget_t* widget );
 
 int menuitem_set_submenu( widget_t* widget, menu_t* menu );

@@ -70,6 +70,7 @@ int gc_push_translate_checkpoint( gc_t* gc );
 int gc_rollback_translate( gc_t* gc );
 
 int menu_close( menu_t* menu );
+
 int menuitem_menu_closed( widget_t* widget );
 
 #endif /* _YGUI_INTERNAL_H_ */

@@ -39,6 +39,7 @@ enum {
     W_SCROLLPANEL,
     W_IMAGE,
     W_MENUITEM,
+    W_SEPARATOR_MENUITEM,
     W_MENUBAR,
     W_TYPE_COUNT
 };

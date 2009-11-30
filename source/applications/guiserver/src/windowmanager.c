@@ -420,13 +420,20 @@ int wm_unregister_window( window_t* window ) {
 
     pthread_mutex_lock( &wm_lock );
 
+    /* Make sure that the window is visible */
+
+    index = array_index_of( &window_stack, window );
+
+    if ( index == -1 ) {
+        goto out;
+    }
+
     /* Hide regions from the unregistered window */
 
     wm_hide_window_region( window, &window->screen_rect );
 
     /* Remove the window from the stack and the table */
 
-    index = array_index_of( &window_stack, window );
     array_remove_item_from( &window_stack, index );
     size = array_get_size( &window_stack );
 
@@ -448,6 +455,7 @@ int wm_unregister_window( window_t* window ) {
         window_closed( window );
     }
 
+ out:
     pthread_mutex_unlock( &wm_lock );
 
     return 0;
