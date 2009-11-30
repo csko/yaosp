@@ -88,12 +88,18 @@ static widget_operations_t image_ops = {
     .get_preferred_size = image_get_preferred_size,
     .get_maximum_size = NULL,
     .do_validate = NULL,
-    .size_changed = NULL
+    .size_changed = NULL,
+    .added_to_window = NULL,
+    .child_added = NULL
 };
 
 widget_t* create_image( bitmap_t* bitmap ) {
     image_t* image;
     widget_t* widget;
+
+    if ( bitmap == NULL ) {
+        return NULL;
+    }
 
     image = ( image_t* )malloc( sizeof( image_t ) );
 
@@ -112,9 +118,9 @@ widget_t* create_image( bitmap_t* bitmap ) {
 
     return widget;
 
-error2:
+ error2:
     free( image );
 
-error1:
+ error1:
     return NULL;
 }

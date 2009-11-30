@@ -37,6 +37,11 @@ int string_length( string_t* string );
 const char* string_c_str( string_t* string );
 char* string_dup_buffer( string_t* string );
 
+/* UTF8 handling functions */
+
+int string_prev_utf8_char( string_t* string, int pos );
+int string_erase_utf8_char( string_t* string, int pos );
+
 int init_string( string_t* string );
 int destroy_string( string_t* string );
 

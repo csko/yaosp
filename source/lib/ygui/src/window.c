@@ -148,10 +148,19 @@ static int window_destroy( window_t* window ) {
 }
 
 widget_t* window_get_container( window_t* window ) {
+    if ( window == NULL ) {
+        return NULL;
+    }
+
     return window->container;
 }
 
 int window_get_position( window_t* window, point_t* position ) {
+    if ( ( window == NULL ) ||
+         ( position == NULL ) ) {
+        return -EINVAL;
+    }
+
     point_copy( position, &window->position );
 
     return 0;
@@ -907,6 +916,11 @@ int window_move( window_t* window, point_t* position ) {
 
 int window_set_icon( window_t* window, bitmap_t* bitmap ) {
     msg_win_set_icon_t request;
+
+    if ( ( window == NULL ) ||
+         ( bitmap == NULL ) ) {
+        return -EINVAL;
+    }
 
     request.reply_port = window->reply_port;
     request.icon_bitmap = bitmap->id;

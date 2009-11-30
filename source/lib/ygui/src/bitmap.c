@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <errno.h>
 #include <yaosp/ipc.h>
 
 #include <ygui/bitmap.h>
@@ -160,20 +161,36 @@ bitmap_t* bitmap_clone( int id ) {
 }
 
 int bitmap_get_width( bitmap_t* bitmap ) {
+    if ( bitmap == NULL ) {
+        return 0;
+    }
+
     return bitmap->width;
 }
 
 int bitmap_get_height( bitmap_t* bitmap ) {
+    if ( bitmap == NULL ) {
+        return 0;
+    }
+
     return bitmap->height;
 }
 
 int bitmap_inc_ref( bitmap_t* bitmap ) {
+    if ( bitmap == NULL ) {
+        return -EINVAL;
+    }
+
     bitmap->ref_count++;
 
     return 0;
 }
 
 int bitmap_dec_ref( bitmap_t* bitmap ) {
+    if ( bitmap == NULL ) {
+        return -EINVAL;
+    }
+
     if ( --bitmap->ref_count == 0 ) {
         msg_delete_bitmap_t request;
         request.bitmap_id = bitmap->id;
@@ -199,6 +216,10 @@ bitmap_t* bitmap_load_from_file( const char* file ) {
     int bitmap_size = 0;
     uint8_t* bitmap_data = NULL;
     image_loader_t* loader;
+
+    if ( file == NULL ) {
+        return NULL;
+    }
 
     /* Open the file. */
 

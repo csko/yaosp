@@ -87,6 +87,16 @@ static int event_open_terminal( widget_t* widget, void* data ) {
     return 0;
 }
 
+static int event_open_texteditor( widget_t* widget, void* data ) {
+    if ( fork() == 0 ) {
+        char* argv[] = { "texteditor", NULL };
+        execv( "/application/texteditor/texteditor", argv );
+        _exit( 1 );
+    }
+
+    return 0;
+}
+
 static int event_open_taskbar( widget_t* widget, void* data ) {
     point_t size;
     point_t position;
@@ -103,16 +113,27 @@ static int event_open_taskbar( widget_t* widget, void* data ) {
 
 static int taskbar_create_menu( void ) {
     widget_t* item;
+    bitmap_t* image;
 
     menu = create_menu();
 
-    item = create_menuitem_with_label_and_image(
-        "Terminal",
-        bitmap_load_from_file( "/application/taskbar/images/terminal.png" )
-    );
+    /* Terminal */
+
+    image = bitmap_load_from_file( "/application/taskbar/images/terminal.png" );
+    item = create_menuitem_with_label_and_image( "Terminal", image );
+    menu_add_item( menu, item );
+    bitmap_dec_ref( image );
+
     widget_connect_event_handler( item, "clicked", event_open_terminal, NULL );
 
+    /* Text editor */
+
+    image = bitmap_load_from_file( "/application/taskbar/images/texteditor.png" );
+    item = create_menuitem_with_label_and_image( "Text editor", image );
     menu_add_item( menu, item );
+    bitmap_dec_ref( image );
+
+    widget_connect_event_handler( item, "clicked", event_open_texteditor, NULL );
 
     return 0;
 }

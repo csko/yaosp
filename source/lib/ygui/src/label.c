@@ -174,15 +174,15 @@ widget_t* create_label( const char* text ) {
 
     return widget;
 
-error4:
+ error4:
     /* TODO: free the font */
 
-error3:
+ error3:
     free( label->text );
 
-error2:
+ error2:
     free( label );
 
-error1:
+ error1:
     return NULL;
 }

@@ -164,11 +164,25 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
     textarea = ( textarea_t* )widget_get_data( widget );
 
     switch ( key ) {
-        case KEY_BACKSPACE :
-            break;
+        case KEY_BACKSPACE : {
+            if ( textarea->cursor_x == 0 ) {
+                break;
+            }
 
-        case KEY_DELETE :
+            string_t* line = textarea_current_line( textarea );
+            textarea->cursor_x = string_prev_utf8_char( line, textarea->cursor_x );
+
+            string_erase_utf8_char( line, textarea->cursor_x );
+
             break;
+        }
+
+        case KEY_DELETE : {
+            string_t* line = textarea_current_line( textarea );
+            string_erase_utf8_char( line, textarea->cursor_x );
+
+            break;
+        }
 
         case KEY_TAB :
             break;
@@ -176,6 +190,7 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
         case KEY_ESCAPE :
             break;
 
+        case 10 :
         case KEY_ENTER :
             textarea->cursor_y++;
             textarea->cursor_x = 0;

@@ -22,14 +22,14 @@
 #include <ygui/panel.h>
 #include <ygui/layout/layout.h>
 
-static color_t panel_bg = { 216, 216, 216, 0xFF };
-
 typedef struct panel {
     layout_t* layout;
 } panel_t;
 
 static int panel_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
+
+    static color_t panel_bg = { 216, 216, 216, 255 };
 
     widget_get_bounds( widget, &bounds );
 
@@ -78,11 +78,18 @@ static widget_operations_t panel_ops = {
     .get_preferred_size = panel_get_preferred_size,
     .get_maximum_size = NULL,
     .do_validate = panel_do_validate,
-    .size_changed = NULL
+    .size_changed = NULL,
+    .added_to_window = NULL,
+    .child_added = NULL
 };
 
 int panel_set_layout( widget_t* widget, layout_t* layout ) {
     panel_t* panel;
+
+    if ( ( widget == NULL ) ||
+         ( layout == NULL ) ) {
+        return -EINVAL;
+    }
 
     if ( widget_get_id( widget ) != W_PANEL ) {
         return -EINVAL;
@@ -95,7 +102,6 @@ int panel_set_layout( widget_t* widget, layout_t* layout ) {
     }
 
     panel->layout = layout;
-
     layout_inc_ref( panel->layout );
 
     return 0;
@@ -121,9 +127,9 @@ widget_t* create_panel( void ) {
 
     return widget;
 
-error2:
+ error2:
     free( panel );
 
-error1:
+ error1:
     return NULL;
 }

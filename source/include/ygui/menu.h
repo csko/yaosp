@@ -25,6 +25,7 @@
 typedef struct menu {
     window_t* window;
     array_t items;
+    widget_t* parent;
 } menu_t;
 
 menu_t* create_menu( void );

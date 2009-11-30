@@ -31,8 +31,16 @@ typedef struct widget_wrapper {
 typedef enum {
     M_PARENT_NONE,
     M_PARENT_BAR,
-    M_PARENT_WINDOW
+    M_PARENT_MENU
 } menu_parent_t;
+
+struct menu_item;
+
+typedef struct menu_bar_t {
+    array_t items;
+
+    struct menu_item* active_item;
+} menu_bar_t;
 
 typedef struct menu_item {
     char* text;
@@ -42,7 +50,11 @@ typedef struct menu_item {
 
     menu_t* submenu;
 
-    menu_t* parent_menu;
+    union {
+        menu_t* menu;
+        menu_bar_t* bar;
+    } parent;
+
     menu_parent_t parent_type;
 } menu_item_t;
 
@@ -56,5 +68,8 @@ rect_t* gc_current_restricted_area( gc_t* gc );
 
 int gc_push_translate_checkpoint( gc_t* gc );
 int gc_rollback_translate( gc_t* gc );
+
+int menu_close( menu_t* menu );
+int menuitem_menu_closed( widget_t* widget );
 
 #endif /* _YGUI_INTERNAL_H_ */

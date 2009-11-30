@@ -35,6 +35,11 @@ int main( int argc, char** argv ) {
     point_t size = { 300, 300 };
 
     window_t* window = create_window( "Texteditor", &pos, &size, WINDOW_NONE );
+
+    bitmap_t* icon = bitmap_load_from_file( "/application/texteditor/images/texteditor.png" );
+    window_set_icon( window, icon );
+    bitmap_dec_ref( icon );
+
     widget_t* container = window_get_container( window );
 
     /* Set the layout of the window */
@@ -43,6 +48,7 @@ int main( int argc, char** argv ) {
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
+#if 0
     widget_t* menubar = create_menubar();
     widget_add( container, menubar, BRD_PAGE_START );
     widget_dec_ref( menubar );
@@ -72,6 +78,7 @@ int main( int argc, char** argv ) {
     item = create_menuitem_with_label( "About" );
     menu_add_item( menu, item );
     widget_dec_ref( item );
+#endif
 
     /* Textarea ... */
 

@@ -95,28 +95,6 @@ static int menu_item_paint( widget_t* widget, gc_t* gc ) {
     return 0;
 }
 
-static int menu_item_mouse_entered( widget_t* widget, point_t* position ) {
-    menu_item_t* item;
-
-    item = ( menu_item_t* )widget_get_data( widget );
-    item->active = 1;
-
-    widget_invalidate( widget, 1 );
-
-    return 0;
-}
-
-static int menu_item_mouse_exited( widget_t* widget ) {
-    menu_item_t* item;
-
-    item = ( menu_item_t* )widget_get_data( widget );
-    item->active = 0;
-
-    widget_invalidate( widget, 1 );
-
-    return 0;
-}
-
 static int menu_item_show_submenu( widget_t* widget, menu_item_t* item ) {
     point_t tmp;
     point_t position;
@@ -140,6 +118,50 @@ static int menu_item_show_submenu( widget_t* widget, menu_item_t* item ) {
     return 0;
 }
 
+static int menu_item_mouse_entered( widget_t* widget, point_t* position ) {
+    menu_item_t* item;
+
+    item = ( menu_item_t* )widget_get_data( widget );
+    item->active = 1;
+
+    switch ( item->parent_type ) {
+        case M_PARENT_BAR : {
+            menu_bar_t* bar = item->parent.bar;
+
+            if ( bar->active_item != NULL ) {
+                if ( bar->active_item->submenu != NULL ) {
+                    menu_close( bar->active_item->submenu );
+                }
+
+                menu_item_show_submenu( widget, item );
+            }
+
+            break;
+        }
+
+        case M_PARENT_MENU :
+            break;
+
+        case M_PARENT_NONE :
+            break;
+    }
+
+    widget_invalidate( widget, 1 );
+
+    return 0;
+}
+
+static int menu_item_mouse_exited( widget_t* widget ) {
+    menu_item_t* item;
+
+    item = ( menu_item_t* )widget_get_data( widget );
+    item->active = 0;
+
+    widget_invalidate( widget, 1 );
+
+    return 0;
+}
+
 static int menu_item_mouse_released( widget_t* widget, int mount_button ) {
     menu_item_t* item;
 
@@ -148,13 +170,20 @@ static int menu_item_mouse_released( widget_t* widget, int mount_button ) {
     /* Hide the window menu */
 
     switch ( item->parent_type ) {
-        case M_PARENT_WINDOW :
-            window_hide( item->parent_menu->window );
+        case M_PARENT_MENU :
+            menu_close( item->parent.menu );
             break;
 
-        case M_PARENT_BAR :
-            menu_item_show_submenu( widget, item );
+        case M_PARENT_BAR : {
+            menu_bar_t* bar = item->parent.bar;
+
+            if ( bar->active_item == NULL ) {
+                menu_item_show_submenu( widget, item );
+                bar->active_item = item;
+            }
+
             break;
+        }
 
         case M_PARENT_NONE :
             assert( 0 );
@@ -256,7 +285,7 @@ widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* imag
     item->active = 0;
     item->image = image;
     item->submenu = NULL;
-    item->parent_menu = NULL;
+    item->parent.menu = NULL;
     item->parent_type = M_PARENT_NONE;
 
     if ( image != NULL ) {
@@ -302,6 +331,32 @@ int menuitem_set_submenu( widget_t* widget, menu_t* menu ) {
 
     item = ( menu_item_t* )widget_get_data( widget );
     item->submenu = menu;
+
+    menu->parent = widget;
+
+    return 0;
+}
+
+int menuitem_menu_closed( widget_t* widget ) {
+    menu_item_t* item;
+
+    if ( widget_get_id( widget ) != W_MENUITEM ) {
+        return -EINVAL;
+    }
+
+    item = ( menu_item_t* )widget_get_data( widget );
+
+    switch ( item->parent_type ) {
+        case M_PARENT_BAR :
+            item->parent.bar->active_item = NULL;
+            break;
+
+        case M_PARENT_MENU :
+            break;
+
+        case M_PARENT_NONE :
+            break;
+    }
 
     return 0;
 }

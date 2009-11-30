@@ -22,10 +22,6 @@
 #include <ygui/widget.h>
 #include <yutil/array.h>
 
-typedef struct menu_bar_t {
-    array_t items;
-} menu_bar_t;
-
 widget_t* create_menubar( void );
 
 int menubar_add_item( widget_t* bar, widget_t* item );

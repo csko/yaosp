@@ -113,6 +113,8 @@ widget_t* create_menubar( void ) {
         goto error2;
     }
 
+    menu_bar->active_item = NULL;
+
     return create_widget( W_MENUBAR, &menu_bar_ops, ( void* )menu_bar );
 
  error2:
@@ -139,6 +141,7 @@ int menubar_add_item( widget_t* bar, widget_t* item ) {
 
     widget_add( bar, item, NULL );
 
+    menuitem->parent.bar = menubar;
     menuitem->parent_type = M_PARENT_BAR;
 
     return 0;

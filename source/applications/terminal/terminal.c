@@ -514,7 +514,7 @@ void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
                     break;
 
                 default :
-                    dbprintf( "%s(): h with param: %d\n", __FUNCTION__, terminal->parameters[ 0 ] );
+                    //dbprintf( "%s(): h with param: %d\n", __FUNCTION__, terminal->parameters[ 0 ] );
                     break;
             }
 
@@ -531,7 +531,7 @@ void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
                     break;
 
                 default :
-                    dbprintf( "%s(): l with param: %d\n", __FUNCTION__, terminal->parameters[ 0 ] );
+                    //dbprintf( "%s(): l with param: %d\n", __FUNCTION__, terminal->parameters[ 0 ] );
                     break;
             }
 

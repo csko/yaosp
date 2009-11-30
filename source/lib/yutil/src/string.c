@@ -19,6 +19,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include <sys/param.h>
 
 #include <yutil/string.h>
@@ -117,6 +118,47 @@ char* string_dup_buffer( string_t* string ) {
     memcpy( new_buffer, string->buffer, string->length + 1 );
 
     return new_buffer;
+}
+
+static inline int utf8_is_first_byte( uint8_t byte ) {
+    return ( ( ( byte & 0x80 ) == 0x00 ) ||
+             ( ( byte & 0xC0 ) == 0xC0 ) );
+}
+
+static inline int utf8_char_length( uint8_t byte ) {
+    return ( ( ( 0xE5000000 >> ( ( byte >> 3 ) & 0x1E ) ) & 3 ) + 1 );
+}
+
+int string_prev_utf8_char( string_t* string, int pos ) {
+    if ( ( string == NULL ) ||
+         ( pos < 0 ) ||
+         ( pos > string->length ) ) {
+        return -EINVAL;
+    }
+
+    if ( pos == 0 ) {
+        return 0;
+    }
+
+    pos--;
+
+    while ( ( pos > 0 ) &&
+            ( !utf8_is_first_byte( string->buffer[ pos ] ) ) ) {
+        pos--;
+    }
+
+    return pos;
+}
+
+int string_erase_utf8_char( string_t* string, int pos ) {
+    if ( ( string == NULL ) ||
+         ( pos < 0 ) ||
+         ( pos >= string->length ) ||
+         ( !utf8_is_first_byte( string->buffer[ pos ] ) ) ) {
+        return -EINVAL;
+    }
+
+    return string_remove( string, pos, utf8_char_length( string->buffer[ pos ] ) );
 }
 
 int init_string( string_t* string ) {

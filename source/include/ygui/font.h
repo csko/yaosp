@@ -22,7 +22,7 @@
 #include <sys/types.h>
 
 static inline int utf8_is_first_byte( uint8_t byte ) {
-    return ( ( ( byte & 0x80 ) == 0x80 ) ||
+    return ( ( ( byte & 0x80 ) == 0x00 ) ||
              ( ( byte & 0xC0 ) == 0xC0 ) );
 }
 

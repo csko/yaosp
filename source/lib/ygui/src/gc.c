@@ -101,7 +101,6 @@ rect_t* gc_current_restricted_area( gc_t* gc ) {
     assert( stack_size( &gc->res_area_stack ) > 0 );
 
     error = stack_peek( &gc->res_area_stack, ( void** )&area );
-
     assert( error == 0 );
 
     return area;

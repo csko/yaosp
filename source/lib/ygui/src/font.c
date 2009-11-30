@@ -118,7 +118,7 @@ int font_get_string_width( font_t* font, const char* text, int length ) {
 
     return reply.width;
 
-error1:
+ error1:
     return error;
 }
 
@@ -186,9 +186,9 @@ font_t* create_font( const char* family, const char* style, font_properties_t* p
 
     return font;
 
-error2:
+ error2:
     free( font );
 
-error1:
+ error1:
     return NULL;
 }

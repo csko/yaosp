@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <pthread.h>
+#include <errno.h>
 #include <yaosp/ipc.h>
 
 #include <ygui/desktop.h>
@@ -33,8 +34,12 @@ int desktop_get_size( point_t* size ) {
     msg_desk_get_size_t request;
     msg_desk_get_size_reply_t reply;
 
+    if ( size == NULL ) {
+        return -EINVAL;
+    }
+
     request.reply_port = app_reply_port;
-    request.desktop = -1; /* TODO */
+    request.desktop = -1; /* todo */
 
     pthread_mutex_lock( &app_lock );
 
@@ -60,6 +65,4 @@ int desktop_get_size( point_t* size ) {
 
  error1:
     return error;
-
-    return 0;
 }

@@ -25,7 +25,10 @@
 #include "internal.h"
 
 static int menu_window_deactivated( window_t* window, void* data ) {
-    window_hide( window );
+    menu_t* menu;
+
+    menu = ( menu_t* )data;
+    menu_close( menu );
 
     return 0;
 }
@@ -53,6 +56,8 @@ menu_t* create_menu( void ) {
 
     window_set_event_handler( menu->window, WE_DEACTIVATED, menu_window_deactivated, menu );
 
+    menu->parent = NULL;
+
     return menu;
 
  error3:
@@ -75,7 +80,7 @@ int menu_add_item( menu_t* menu, widget_t* item ) {
 
     menu_item = ( menu_item_t* )widget_get_data( item );
 
-    if ( menu_item->parent_menu != NULL ) {
+    if ( menu_item->parent.menu != NULL ) {
         return -EINVAL;
     }
 
@@ -84,8 +89,8 @@ int menu_add_item( menu_t* menu, widget_t* item ) {
     container = window_get_container( menu->window );
     widget_add( container, item, NULL );
 
-    menu_item->parent_menu = menu;
-    menu_item->parent_type = M_PARENT_WINDOW;
+    menu_item->parent.menu = menu;
+    menu_item->parent_type = M_PARENT_MENU;
 
     return 0;
 }
@@ -174,4 +179,14 @@ int menu_popup_at_xy( menu_t* menu, int x, int y ) {
     };
 
     return menu_popup_at( menu, &tmp );
+}
+
+int menu_close( menu_t* menu ) {
+    if ( menu->parent != NULL ) {
+        menuitem_menu_closed( menu->parent );
+    }
+
+    window_hide( menu->window );
+
+    return 0;
 }
