@@ -41,6 +41,7 @@ enum {
     W_MENUITEM,
     W_SEPARATOR_MENUITEM,
     W_MENUBAR,
+    W_DIRVIEW,
     W_TYPE_COUNT
 };
 
@@ -71,6 +72,7 @@ typedef struct widget_operations {
     int ( *size_changed )( struct widget* widget );
     int ( *added_to_window )( struct widget* widget );
     int ( *child_added )( struct widget* widget, struct widget* child );
+    int ( *destroy )( struct widget* widget );
 } widget_operations_t;
 
 typedef struct widget {

@@ -697,6 +697,8 @@ static void* window_thread( void* arg ) {
                         break;
                 }
 
+                window_signal_event_handler( window, WE_CLOSED );
+
                 break;
 
             default :
@@ -955,6 +957,22 @@ int window_hide( window_t* window ) {
     }
 
     error = send_ipc_message( window->client_port, MSG_WINDOW_DO_HIDE, NULL, 0 );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+int window_close( window_t* window ) {
+    int error;
+
+    if ( window == NULL ) {
+        return -EINVAL;
+    }
+
+    error = send_ipc_message( window->client_port, MSG_WINDOW_CLOSE_REQUEST, NULL, 0 );
 
     if ( error < 0 ) {
         return error;

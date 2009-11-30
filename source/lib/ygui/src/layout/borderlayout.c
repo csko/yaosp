@@ -167,18 +167,9 @@ static void borderlayout_do_center( widget_t* widget, point_t* panel_size, point
     );
 }
 
-static int borderlayout_do_layout( widget_t* widget ) {
+static int borderlayout_fill_widget_table( widget_t* widget, widget_t** table ) {
     int i;
     int count;
-    point_t center_size;
-    point_t center_position;
-    point_t panel_size;
-    widget_t* widget_table[ W_COUNT ] = { NULL, NULL, NULL, NULL, NULL };
-
-    rect_t tmp;
-    widget_get_bounds( widget, &tmp );
-    panel_size.x = rect_width( &tmp );
-    panel_size.y = rect_height( &tmp );
 
     count = array_get_size( &widget->children );
 
@@ -189,26 +180,42 @@ static int borderlayout_do_layout( widget_t* widget ) {
 
         switch ( ( int )wrapper->data ) {
             case ( int )BRD_PAGE_START :
-                widget_table[ W_PAGE_START ] = wrapper->widget;
+                table[ W_PAGE_START ] = wrapper->widget;
                 break;
 
             case ( int )BRD_PAGE_END :
-                widget_table[ W_PAGE_END ] = wrapper->widget;
+                table[ W_PAGE_END ] = wrapper->widget;
                 break;
 
             case ( int )BRD_LINE_START :
-                widget_table[ W_LINE_START ] = wrapper->widget;
+                table[ W_LINE_START ] = wrapper->widget;
                 break;
 
             case ( int )BRD_LINE_END :
-                widget_table[ W_LINE_END ] = wrapper->widget;
+                table[ W_LINE_END ] = wrapper->widget;
                 break;
 
             case ( int )BRD_CENTER :
-                widget_table[ W_CENTER ] = wrapper->widget;
+                table[ W_CENTER ] = wrapper->widget;
                 break;
         }
     }
+
+    return 0;
+}
+
+static int borderlayout_do_layout( widget_t* widget ) {
+    rect_t tmp;
+    point_t center_size;
+    point_t center_position;
+    point_t panel_size;
+    widget_t* widget_table[ W_COUNT ] = { NULL, NULL, NULL, NULL, NULL };
+
+    widget_get_bounds( widget, &tmp );
+    panel_size.x = rect_width( &tmp );
+    panel_size.y = rect_height( &tmp );
+
+    borderlayout_fill_widget_table( widget, widget_table );
 
     point_init( &center_position, 0, 0 );
     point_copy( &center_size, &panel_size );
@@ -260,9 +267,41 @@ static int borderlayout_do_layout( widget_t* widget ) {
     return 0;
 }
 
+static int borderlayout_get_preferred_size( widget_t* widget, point_t* size ) {
+    int i;
+    point_t pref_size[ W_COUNT ];
+    widget_t* widget_table[ W_COUNT ] = { NULL, NULL, NULL, NULL, NULL };
+
+    borderlayout_fill_widget_table( widget, widget_table );
+
+    for ( i = 0; i < W_COUNT; i++ ) {
+        if ( widget_table[ i ] == NULL ) {
+            point_init( &pref_size[ i ], 0, 0 );
+        } else {
+            widget_get_preferred_size( widget_table[ i ], &pref_size[ i ] );
+        }
+    }
+
+    size->x = pref_size[ W_LINE_START ].x +
+              pref_size[ W_CENTER ].x +
+              pref_size[ W_LINE_END ].x;
+
+    size->y = pref_size[ W_PAGE_START ].y +
+              pref_size[ W_CENTER ].y +
+              pref_size[ W_PAGE_END ].y;
+    size->y = MAX( size->y, pref_size[ W_PAGE_START ].y +
+                            pref_size[ W_LINE_START ].y +
+                            pref_size[ W_PAGE_END ].y );
+    size->y = MAX( size->y, pref_size[ W_PAGE_START ].y +
+                            pref_size[ W_LINE_END ].y +
+                            pref_size[ W_PAGE_END ].y );
+
+    return 0;
+}
+
 static layout_operations_t borderlayout_ops = {
     .do_layout = borderlayout_do_layout,
-    .get_preferred_size = NULL
+    .get_preferred_size = borderlayout_get_preferred_size
 };
 
 layout_t* create_border_layout( void ) {
@@ -271,11 +310,8 @@ layout_t* create_border_layout( void ) {
     layout = create_layout( &borderlayout_ops );
 
     if ( layout == NULL ) {
-        goto error1;
+        return NULL;
     }
 
     return layout;
-
- error1:
-    return NULL;
 }

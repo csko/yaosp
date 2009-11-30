@@ -74,5 +74,6 @@ int font_get_line_gap( font_t* font );
 int font_get_string_width( font_t* font, const char* text, int length );
 
 font_t* create_font( const char* family, const char* style, font_properties_t* properties );
+int destroy_font( font_t* font );
 
 #endif /* _YGUI_FONT_H_ */

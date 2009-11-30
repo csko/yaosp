@@ -16,14 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_LABEL_H_
-#define _YAOSP_LABEL_H_
+#ifndef _YGUI_DIRVIEW_H_
+#define _YGUI_DIRVIEW_H_
 
 #include <ygui/widget.h>
 
-widget_t* create_label( const char* text );
+widget_t* create_directory_view( const char* path );
 
-int label_set_vertical_alignment( widget_t* widget, v_alignment_t alignment );
-int label_set_horizontal_alignment( widget_t* widget, h_alignment_t alignment );
-
-#endif /* _YAOSP_LABEL_H_ */
+#endif /* _YGUI_DIRVIEW_H_ */

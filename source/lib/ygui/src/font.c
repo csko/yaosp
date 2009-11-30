@@ -192,3 +192,10 @@ font_t* create_font( const char* family, const char* style, font_properties_t* p
  error1:
     return NULL;
 }
+
+int destroy_font( font_t* font ) {
+    /* todo: unregister in guiserver */
+    free( font );
+
+    return 0;
+}

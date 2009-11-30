@@ -40,7 +40,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo></echo>
-        <echo>Compiling PS/2 keyboard driver</echo>
+        <echo>Compiling PS/2 keyboard and mouse driver</echo>
         <echo></echo>
 
         <for var="i" array="${files}">
@@ -62,13 +62,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo></echo>
-        <echo>Linking PS/2 keyboard driver</echo>
+        <echo>Linking PS/2 keyboard and mouse driver</echo>
         <echo></echo>
-        <echo>[GCC    ] source/drivers/input/ps2/objs/ps2kbd</echo>
+        <echo>[LD     ] source/drivers/input/ps2/objs/ps2</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <output>objs/ps2kbd</output>
+            <output>objs/ps2</output>
             <flag>-m32</flag>
             <flag>-shared</flag>
             <flag>-nostartfiles</flag>
@@ -77,7 +77,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ps2kbd" to="../../../../build/image/system/module/input/ps2kbd"/>
+        <copy from="objs/ps2" to="../../../../build/image/system/module/input/ps2"/>
     </target>
 
     <target name="all">

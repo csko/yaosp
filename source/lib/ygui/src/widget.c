@@ -199,7 +199,11 @@ int widget_dec_ref( widget_t* widget ) {
     assert( widget->ref_count > 0 );
 
     if ( --widget->ref_count == 0 ) {
-        /* TODO: free the widget! */
+        if ( widget->ops->destroy != NULL ) {
+            widget->ops->destroy( widget );
+        }
+
+        free( widget );
     }
 
     return 0;

@@ -236,10 +236,10 @@ static int window_list_paint( widget_t* widget, gc_t* gc ) {
         gc_set_drawing_mode( gc, DM_BLEND );
 
         if ( win_item->icon != NULL ) {
-            gc_draw_bitmap( gc, win_item->icon, &position );
+            gc_draw_bitmap( gc, &position, win_item->icon );
             position.x += bitmap_get_width( win_item->icon ) + 1;
         } else {
-            gc_draw_bitmap( gc, unknown_app, &position );
+            gc_draw_bitmap( gc, &position, unknown_app );
             position.x += bitmap_get_width( unknown_app ) + 1;
         }
 

@@ -25,6 +25,14 @@
 #include <ygui/menubar.h>
 #include <ygui/menuitem.h>
 #include <ygui/layout/borderlayout.h>
+#include <ygui/dialog/filechooser.h>
+
+static int event_open_file( widget_t* widget, void* data ) {
+    file_chooser_t* chooser = create_file_chooser( T_OPEN_DIALOG );
+    file_chooser_show( chooser );
+
+    return 0;
+}
 
 int main( int argc, char** argv ) {
     if ( application_init() != 0 ) {
@@ -62,6 +70,12 @@ int main( int argc, char** argv ) {
     menuitem_set_submenu( item, menu );
 
     item = create_menuitem_with_label( "Open" );
+    menu_add_item( menu, item );
+    widget_dec_ref( item );
+
+    widget_connect_event_handler( item, "mouse-down", event_open_file, NULL );
+
+    item = create_menuitem_with_label( "Save" );
     menu_add_item( menu, item );
     widget_dec_ref( item );
 

@@ -172,6 +172,18 @@ static int button_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+static int button_destroy( widget_t* widget ) {
+    button_t* button;
+
+    button = ( button_t* )widget_get_data( widget );
+
+    destroy_font( button->font );
+    free( button->text );
+    free( button );
+
+    return 0;
+}
+
 static widget_operations_t button_ops = {
     .paint = button_paint,
     .key_pressed = NULL,
@@ -187,7 +199,8 @@ static widget_operations_t button_ops = {
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = button_destroy
 };
 
 widget_t* create_button( const char* text ) {
@@ -235,20 +248,18 @@ widget_t* create_button( const char* text ) {
 
     return widget;
 
-error5:
+ error5:
     /* TODO: destroy the widget */
 
-error4:
+ error4:
     /* TODO: free the font */
 
-error3:
+ error3:
     free( button->text );
 
-error2:
+ error2:
     free( button );
 
-error1:
+ error1:
     return NULL;
 }
-
-

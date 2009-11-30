@@ -16,14 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_LABEL_H_
-#define _YAOSP_LABEL_H_
+#ifndef _YGUI_DIALOG_FILECHOOSER_H_
+#define _YGUI_DIALOG_FILECHOOSER_H_
 
-#include <ygui/widget.h>
+#include <ygui/window.h>
 
-widget_t* create_label( const char* text );
+typedef struct file_chooser {
+    window_t* window;
 
-int label_set_vertical_alignment( widget_t* widget, v_alignment_t alignment );
-int label_set_horizontal_alignment( widget_t* widget, h_alignment_t alignment );
+    widget_t* path;
+    widget_t* dirview;
+    widget_t* filename;
+} file_chooser_t;
 
-#endif /* _YAOSP_LABEL_H_ */
+typedef enum chooser_type {
+    T_OPEN_DIALOG,
+    T_SAVE_DIALOG
+} chooser_type_t;
+
+file_chooser_t* create_file_chooser( chooser_type_t type );
+
+int file_chooser_show( file_chooser_t* chooser );
+
+#endif /* _YGUI_DIALOG_FILECHOOSER_H_ */

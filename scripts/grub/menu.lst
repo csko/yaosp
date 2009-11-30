@@ -5,7 +5,7 @@ module /system/module/disk/pata
 module /system/module/disk/partition
 module /system/module/filesystem/iso9660
 module /system/module/filesystem/ext2
-module /system/module/input/ps2kbd
+module /system/module/input/ps2
 module /system/module/network/pcnet32
 module /system/module/input/input
 module /system/module/char/terminal
@@ -17,7 +17,7 @@ module /system/module/disk/pata
 module /system/module/disk/partition
 module /system/module/filesystem/iso9660
 module /system/module/filesystem/ext2
-module /system/module/input/ps2kbd
+module /system/module/input/ps2
 module /system/module/network/pcnet32
 module /system/module/input/input
 module /system/module/char/terminal

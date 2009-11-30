@@ -50,7 +50,7 @@ int gc_set_drawing_mode( gc_t* gc, drawing_mode_t mode );
 int gc_draw_rect( gc_t* gc, rect_t* rect );
 int gc_fill_rect( gc_t* gc, rect_t* rect );
 int gc_draw_text( gc_t* gc, point_t* position, const char* text, int length );
-int gc_draw_bitmap( gc_t* gc, bitmap_t* bitmap, point_t* position );
+int gc_draw_bitmap( gc_t* gc, point_t* position, bitmap_t* bitmap );
 
 int gc_clean_up( gc_t* gc );
 

@@ -44,7 +44,8 @@ static int panel_get_preferred_size( widget_t* widget, point_t* size ) {
 
     panel = ( panel_t* )widget_get_data( widget );
 
-    if ( panel->layout == NULL ) {
+    if ( ( panel->layout == NULL ) ||
+         ( panel->layout->ops->get_preferred_size == NULL ) ) {
         point_init( size, 0, 0 );
     } else {
         panel->layout->ops->get_preferred_size( widget, size );
@@ -65,6 +66,20 @@ static int panel_do_validate( widget_t* widget ) {
     return 0;
 }
 
+static int panel_destroy( widget_t* widget ) {
+    panel_t* panel;
+
+    panel = ( panel_t* )widget_get_data( widget );
+
+    if ( panel->layout != NULL ) {
+        layout_dec_ref( panel->layout );
+    }
+
+    free( panel );
+
+    return 0;
+}
+
 static widget_operations_t panel_ops = {
     .paint = panel_paint,
     .key_pressed = NULL,
@@ -80,7 +95,8 @@ static widget_operations_t panel_ops = {
     .do_validate = panel_do_validate,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = panel_destroy
 };
 
 int panel_set_layout( widget_t* widget, layout_t* layout ) {

@@ -38,12 +38,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/menuitem.c</item>
         <item>src/menubar.c</item>
         <item>src/textarea.c</item>
+        <item>src/dirview.c</item>
         <item>src/layout/layout.c</item>
         <item>src/layout/borderlayout.c</item>
         <item>src/layout/flowlayout.c</item>
         <item>src/render/render.c</item>
         <item>src/image/imageloader.c</item>
         <item>src/image/png.c</item>
+        <item>src/dialog/filechooser.c</item>
+    </array>
+
+    <array name="images">
+        <item>folder.png</item>
+        <item>file.png</item>
     </array>
 
     <target name="clean">
@@ -92,6 +99,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
+        <mkdir>../../../build/image/system/images</mkdir>
+
+        <for var="i" array="${images}">
+            <copy from="images/${i}" to="../../../build/image/system/images/${i}"/>
+        </for>
     </target>
 
     <target name="all">

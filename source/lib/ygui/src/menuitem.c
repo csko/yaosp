@@ -70,7 +70,7 @@ static int menu_item_paint( widget_t* widget, gc_t* gc ) {
         position.y = ( rect_height( &bounds ) - bitmap_get_height( item->image ) ) / 2;
 
         gc_set_drawing_mode( gc, DM_BLEND );
-        gc_draw_bitmap( gc, item->image, &position );
+        gc_draw_bitmap( gc, &position, item->image );
         gc_set_drawing_mode( gc, DM_COPY );
 
         position.x += bitmap_get_width( item->image );

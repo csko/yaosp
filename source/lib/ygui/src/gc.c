@@ -411,7 +411,7 @@ int gc_draw_text( gc_t* gc, point_t* position, const char* text, int length ) {
     return 0;
 }
 
-int gc_draw_bitmap( gc_t* gc, bitmap_t* bitmap, point_t* position ) {
+int gc_draw_bitmap( gc_t* gc, point_t* position, bitmap_t* bitmap ) {
     int error;
     r_draw_bitmap_t* packet;
 

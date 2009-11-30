@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <ygui/label.h>
 #include <ygui/font.h>
@@ -119,6 +120,18 @@ static int label_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+static int label_destroy( widget_t* widget ) {
+    label_t* label;
+
+    label = ( label_t* )widget_get_data( widget );
+
+    destroy_font( label->font );
+    free( label->text );
+    free( label );
+
+    return 0;
+}
+
 static widget_operations_t label_ops = {
     .paint = label_paint,
     .key_pressed = NULL,
@@ -134,7 +147,8 @@ static widget_operations_t label_ops = {
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = label_destroy
 };
 
 widget_t* create_label( const char* text ) {
@@ -185,4 +199,36 @@ widget_t* create_label( const char* text ) {
 
  error1:
     return NULL;
+}
+
+int label_set_vertical_alignment( widget_t* widget, v_alignment_t alignment ) {
+    label_t* label;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_LABEL ) ) {
+        return -EINVAL;
+    }
+
+    label = ( label_t* )widget_get_data( widget );
+    label->v_align = alignment;
+
+    widget_invalidate( widget, 1 );
+
+    return 0;
+}
+
+int label_set_horizontal_alignment( widget_t* widget, h_alignment_t alignment ) {
+    label_t* label;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_LABEL ) ) {
+        return -EINVAL;
+    }
+
+    label = ( label_t* )widget_get_data( widget );
+    label->h_align = alignment;
+
+    widget_invalidate( widget, 1 );
+
+    return 0;
 }

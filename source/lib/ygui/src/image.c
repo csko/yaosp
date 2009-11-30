@@ -51,7 +51,7 @@ static int image_paint( widget_t* widget, gc_t* gc ) {
         position.y = 0;
     }
 
-    gc_draw_bitmap( gc, image->bitmap, &position );
+    gc_draw_bitmap( gc, &position, image->bitmap );
     gc_set_drawing_mode( gc, DM_COPY );
 
     return 0;
@@ -75,6 +75,17 @@ static int image_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+static int image_destroy( widget_t* widget ) {
+    image_t* image;
+
+    image = ( image_t* )widget_get_data( widget );
+
+    bitmap_dec_ref( image->bitmap );
+    free( image );
+
+    return 0;
+}
+
 static widget_operations_t image_ops = {
     .paint = image_paint,
     .key_pressed = NULL,
@@ -90,7 +101,8 @@ static widget_operations_t image_ops = {
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = image_destroy
 };
 
 widget_t* create_image( bitmap_t* bitmap ) {

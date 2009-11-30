@@ -32,6 +32,7 @@
 enum {
     WE_ACTIVATED = 0,
     WE_DEACTIVATED,
+    WE_CLOSED,
     WE_COUNT
 };
 
@@ -120,6 +121,8 @@ int window_set_icon( window_t* window, bitmap_t* bitmap );
 
 int window_show( window_t* window );
 int window_hide( window_t* window );
+int window_close( window_t* window );
+
 int window_bring_to_front( int window_id );
 
 #endif /* _YGUI_WINDOW_H_ */
