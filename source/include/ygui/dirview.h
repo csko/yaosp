@@ -21,6 +21,16 @@
 
 #include <ygui/widget.h>
 
+typedef enum directory_item_type {
+    T_DIRECTORY,
+    T_FILE
+} directory_item_type_t;
+
 widget_t* create_directory_view( const char* path );
+
+char* directory_view_get_selected_item_name( widget_t* widget );
+int directory_view_get_selected_item_type_and_name( widget_t* widget, directory_item_type_t* type, char** name );
+
+int directory_view_set_path( widget_t* widget, const char* path );
 
 #endif /* _YGUI_DIRVIEW_H_ */

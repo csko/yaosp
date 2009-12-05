@@ -204,7 +204,6 @@ static widget_operations_t button_ops = {
 };
 
 widget_t* create_button( const char* text ) {
-    int error;
     button_t* button;
     widget_t* widget;
     font_properties_t properties;
@@ -236,9 +235,7 @@ widget_t* create_button( const char* text ) {
         goto error4;
     }
 
-    error = widget_add_events( widget, button_event_types, button_events, E_COUNT );
-
-    if ( error < 0 ) {
+    if ( widget_add_events( widget, button_event_types, button_events, E_COUNT ) != 0 ) {
         goto error5;
     }
 

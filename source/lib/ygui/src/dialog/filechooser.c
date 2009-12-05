@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include <ygui/panel.h>
 #include <ygui/button.h>
@@ -40,7 +41,61 @@ static int file_chooser_open_pressed( widget_t* widget, void* data ) {
     return 0;
 }
 
-file_chooser_t* create_file_chooser( chooser_type_t type ) {
+static int file_chooser_item_selected( widget_t* widget, void* data ) {
+    char* name;
+    file_chooser_t* chooser;
+
+    chooser = ( file_chooser_t* )data;
+    name = directory_view_get_selected_item_name( widget );
+
+    if ( name != NULL ) {
+        textfield_set_text( chooser->filename_field, name );
+        free( name );
+    }
+
+    return 0;
+}
+
+static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
+    char* name;
+    file_chooser_t* chooser;
+    directory_item_type_t type;
+
+    if ( directory_view_get_selected_item_type_and_name( widget, &type, &name ) != 0 ) {
+        return 0;
+    }
+
+    chooser = ( file_chooser_t* )data;
+
+    if ( type == T_DIRECTORY ) {
+        char path[ 256 ];
+        char* new_path;
+
+        if ( strcmp( chooser->current_path, "/" ) == 0 ) {
+            snprintf( path, sizeof( path ), "/%s", name );
+        } else {
+            snprintf( path, sizeof( path ), "%s/%s", chooser->current_path, name );
+        }
+
+        new_path = strdup( path );
+
+        //dbprintf( "new_path: '%s'\n", new_path );
+
+        if ( new_path != NULL ) {
+            free( chooser->current_path );
+            chooser->current_path = new_path;
+
+            label_set_text( chooser->path_label, new_path );
+            directory_view_set_path( chooser->directory_view, new_path );
+        }
+    }
+
+    free( name );
+
+    return 0;
+}
+
+file_chooser_t* create_file_chooser( chooser_type_t type, const char* path ) {
     file_chooser_t* chooser;
 
     chooser = ( file_chooser_t* )malloc( sizeof( file_chooser_t ) );
@@ -48,6 +103,8 @@ file_chooser_t* create_file_chooser( chooser_type_t type ) {
     if ( chooser == NULL ) {
         goto error1;
     }
+
+    chooser->current_path = strdup( path ); /* todo: check return value! */
 
     point_t position = { 50, 50 };
     point_t size = { 250, 150 };
@@ -66,14 +123,17 @@ file_chooser_t* create_file_chooser( chooser_type_t type ) {
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
-    chooser->path = create_label( "/" );
-    label_set_horizontal_alignment( chooser->path, H_ALIGN_LEFT );
-    widget_add( container, chooser->path, BRD_PAGE_START );
-    widget_dec_ref( chooser->path );
+    chooser->path_label = create_label( path );
+    label_set_horizontal_alignment( chooser->path_label, H_ALIGN_LEFT );
+    widget_add( container, chooser->path_label, BRD_PAGE_START );
+    widget_dec_ref( chooser->path_label );
 
-    chooser->dirview = create_directory_view( "/" );
-    widget_add( container, chooser->dirview, BRD_CENTER );
-    widget_dec_ref( chooser->dirview );
+    chooser->directory_view = create_directory_view( path );
+    widget_add( container, chooser->directory_view, BRD_CENTER );
+    widget_dec_ref( chooser->directory_view );
+
+    widget_connect_event_handler( chooser->directory_view, "item-selected", file_chooser_item_selected, ( void* )chooser );
+    widget_connect_event_handler( chooser->directory_view, "item-double-clicked", file_chooser_item_double_clicked, ( void* )chooser );
 
     widget_t* panel = create_panel();
     widget_add( container, panel, BRD_PAGE_END );
@@ -83,9 +143,9 @@ file_chooser_t* create_file_chooser( chooser_type_t type ) {
     panel_set_layout( panel, layout );
     layout_dec_ref( layout );
 
-    chooser->filename = create_textfield();
-    widget_add( panel, chooser->filename, BRD_CENTER );
-    widget_dec_ref( chooser->filename );
+    chooser->filename_field = create_textfield();
+    widget_add( panel, chooser->filename_field, BRD_CENTER );
+    widget_dec_ref( chooser->filename_field );
 
     widget_t* button = create_button( type == T_OPEN_DIALOG ? "Open" : "Save" );
     widget_add( panel, button, BRD_LINE_END );

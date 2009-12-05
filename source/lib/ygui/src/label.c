@@ -201,6 +201,11 @@ widget_t* create_label( const char* text ) {
     return NULL;
 }
 
+int label_set_text( widget_t* widget, const char* text ) {
+    /* todo */
+    return 0;
+}
+
 int label_set_vertical_alignment( widget_t* widget, v_alignment_t alignment ) {
     label_t* label;
 

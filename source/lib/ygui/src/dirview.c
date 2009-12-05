@@ -21,7 +21,9 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include <sys/stat.h>
+#include <yaosp/time.h>
 
 #include <ygui/dirview.h>
 #include <ygui/bitmap.h>
@@ -29,14 +31,15 @@
 
 #define LINE_HEIGHT 18
 
-typedef enum dir_item_type {
-    T_DIRECTORY,
-    T_FILE
-} dir_item_type_t;
+enum {
+    E_ITEM_SELECTED,
+    E_ITEM_DOUBLE_CLICKED,
+    E_COUNT
+};
 
 typedef struct dir_item {
     char* name;
-    dir_item_type_t type;
+    directory_item_type_t type;
 } dir_item_t;
 
 typedef struct dir_view {
@@ -47,6 +50,7 @@ typedef struct dir_view {
     pthread_t worker_thread;
 
     int selected;
+    uint64_t click_time;
 
     font_t* font;
     bitmap_t* img_folder;
@@ -58,7 +62,17 @@ static color_t border_color = { 0, 0, 0, 255 };
 static color_t black = { 0, 0, 0, 255 };
 static color_t sel_color = { 51, 102, 152, 255 };
 
-static dir_item_t* create_dir_item( char* name, dir_item_type_t type ) {
+static int dirview_events[ E_COUNT ] = {
+    -1,
+    -1
+};
+
+static event_type_t dirview_event_types[ E_COUNT ] = {
+    { "item-selected", &dirview_events[ E_ITEM_SELECTED ] },
+    { "item-double-clicked", &dirview_events[ E_ITEM_DOUBLE_CLICKED ] }
+};
+
+static dir_item_t* create_dir_item( char* name, directory_item_type_t type ) {
     size_t name_len;
     dir_item_t* item;
 
@@ -210,6 +224,7 @@ static int dirview_paint( widget_t* widget, gc_t* gc ) {
 }
 
 static int dirview_mouse_pressed( widget_t* widget, point_t* position, int button ) {
+    uint64_t now;
     int new_selected;
     dir_view_t* dir_view;
 
@@ -224,10 +239,36 @@ static int dirview_mouse_pressed( widget_t* widget, point_t* position, int butto
 
     pthread_mutex_unlock( &dir_view->lock );
 
+    /* Notify ITEM_SELECTED listeners */
+
+    widget_signal_event_handler( widget, dirview_events[ E_ITEM_SELECTED ] );
+
+    now = get_system_time();
+
     if ( new_selected != dir_view->selected ) {
-        dir_view->selected = new_selected;
+        /* Invalidate the widget if the selected item is changed */
+
+        dir_view->click_time = now;
         widget_invalidate( widget, 1 );
+    } else {
+        /* Notify ITEM_DOUBLE_CLICKED listeners if needed */
+
+        #define DBL_CLICK_TIME ( 150 * 1000 )
+
+        if ( ( now - dir_view->click_time ) <= DBL_CLICK_TIME ) {
+            dir_view->click_time = 0;
+
+            widget_signal_event_handler( widget, dirview_events[ E_ITEM_DOUBLE_CLICKED ] );
+        } else {
+            dir_view->click_time = now;
+        }
+
+        #undef DBL_CLICK_TIME
     }
+
+    /* Update the selected item */
+
+    dir_view->selected = new_selected;
 
     return 0;
 }
@@ -293,6 +334,7 @@ widget_t* create_directory_view( const char* path ) {
     }
 
     dir_view->selected = -1;
+    dir_view->click_time = 0;
     dir_view->img_folder = bitmap_load_from_file( "/system/images/folder.png" );
     dir_view->img_file = bitmap_load_from_file( "/system/images/file.png" );
 
@@ -300,6 +342,10 @@ widget_t* create_directory_view( const char* path ) {
 
     if ( widget == NULL ) {
         goto error6;
+    }
+
+    if ( widget_add_events( widget, dirview_event_types, dirview_events, E_COUNT ) != 0 ) {
+        goto error7;
     }
 
     pthread_attr_t attrib;
@@ -318,6 +364,9 @@ widget_t* create_directory_view( const char* path ) {
 
     return widget;
 
+ error7:
+    /* todo: destroy the widget! */
+
  error6:
     /* todo: destroy the font! */
 
@@ -335,4 +384,60 @@ widget_t* create_directory_view( const char* path ) {
 
  error1:
     return NULL;
+}
+
+char* directory_view_get_selected_item_name( widget_t* widget ) {
+    char* name;
+    dir_view_t* dir_view;
+    dir_item_t* dir_item;
+
+    if ( widget_get_id( widget ) != W_DIRVIEW ) {
+        return NULL;
+    }
+
+    dir_view = ( dir_view_t* )widget_get_data( widget );
+
+    if ( dir_view->selected == -1 ) {
+        return NULL;
+    }
+
+    pthread_mutex_lock( &dir_view->lock );
+
+    dir_item = array_get_item( &dir_view->items, dir_view->selected );
+    name = strdup( dir_item->name );
+
+    pthread_mutex_unlock( &dir_view->lock );
+
+    return name;
+}
+
+int directory_view_get_selected_item_type_and_name( widget_t* widget, directory_item_type_t* type, char** name ) {
+    dir_view_t* dir_view;
+    dir_item_t* dir_item;
+
+    if ( widget_get_id( widget ) != W_DIRVIEW ) {
+        return -EINVAL;
+    }
+
+    dir_view = ( dir_view_t* )widget_get_data( widget );
+
+    if ( dir_view->selected == -1 ) {
+        return -ENOENT;
+    }
+
+    pthread_mutex_lock( &dir_view->lock );
+
+    dir_item = array_get_item( &dir_view->items, dir_view->selected );
+
+    *type = dir_item->type;
+    *name = strdup( dir_item->name );
+
+    pthread_mutex_unlock( &dir_view->lock );
+
+    return 0;
+}
+
+int directory_view_set_path( widget_t* widget, const char* path ) {
+    /* todo */
+    return 0;
 }

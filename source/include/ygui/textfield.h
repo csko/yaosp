@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_TEXTFIELD_H_
-#define _YAOSP_TEXTFIELD_H_
+#ifndef _YGUI_TEXTFIELD_H_
+#define _YGUI_TEXTFIELD_H_
 
 #include <ygui/widget.h>
 
@@ -30,4 +30,4 @@ int textfield_set_text( widget_t* widget, char* text );
 
 widget_t* create_textfield( void );
 
-#endif /* _YAOSP_TEXTFIELD_H_ */
+#endif /* _YGUI_TEXTFIELD_H_ */

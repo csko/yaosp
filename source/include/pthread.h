@@ -49,6 +49,20 @@ typedef struct pthread_mutex {
     int mutex_id;
 } pthread_mutex_t;
 
+typedef struct pthread_condattr {
+    int flags;
+} pthread_condattr_t;
+
+typedef struct pthread_cond {
+    uint32_t init_magic;
+    int cond_id;
+} pthread_cond_t;
+
+int pthread_attr_init( pthread_attr_t* attr );
+int pthread_attr_destroy( pthread_attr_t* attr );
+int pthread_attr_getname( pthread_attr_t* attr, char** name );
+int pthread_attr_setname( pthread_attr_t* attr, char* name );
+
 int pthread_create( pthread_t* thread, const pthread_attr_t* attr,
                     void *( *start_routine )( void* ), void* arg );
 
@@ -63,15 +77,16 @@ int pthread_mutexattr_setprotocol( pthread_mutexattr_t* attr, int protocol );
 int pthread_mutexattr_setpshared( pthread_mutexattr_t* attr, int shared );
 int pthread_mutexattr_settype( pthread_mutexattr_t* attr, int type );
 
-int pthread_attr_init( pthread_attr_t* attr );
-int pthread_attr_destroy( pthread_attr_t* attr );
-int pthread_attr_getname( pthread_attr_t* attr, char** name );
-int pthread_attr_setname( pthread_attr_t* attr, char* name );
-
 int pthread_mutex_init( pthread_mutex_t* mutex, pthread_mutexattr_t* attr );
 int pthread_mutex_destroy( pthread_mutex_t* mutex );
 int pthread_mutex_lock( pthread_mutex_t* mutex );
 int pthread_mutex_trylock( pthread_mutex_t* mutex );
 int pthread_mutex_unlock( pthread_mutex_t* mutex );
+
+int pthread_cond_init( pthread_cond_t* cond, const pthread_condattr_t* attr );
+int pthread_cond_destroy( pthread_cond_t* cond );
+int pthread_cond_wait( pthread_cond_t* cond, pthread_mutex_t* mutex );
+int pthread_cond_signal( pthread_cond_t* cond );
+int pthread_cond_broadcast( pthread_cond_t* cond );
 
 #endif /* _PTHREAD_H_ */

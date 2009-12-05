@@ -28,7 +28,7 @@
 #include <ygui/dialog/filechooser.h>
 
 static int event_open_file( widget_t* widget, void* data ) {
-    file_chooser_t* chooser = create_file_chooser( T_OPEN_DIALOG );
+    file_chooser_t* chooser = create_file_chooser( T_OPEN_DIALOG, "/" );
     file_chooser_show( chooser );
 
     return 0;

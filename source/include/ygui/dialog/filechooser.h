@@ -24,9 +24,11 @@
 typedef struct file_chooser {
     window_t* window;
 
-    widget_t* path;
-    widget_t* dirview;
-    widget_t* filename;
+    char* current_path;
+
+    widget_t* path_label;
+    widget_t* directory_view;
+    widget_t* filename_field;
 } file_chooser_t;
 
 typedef enum chooser_type {
@@ -34,7 +36,7 @@ typedef enum chooser_type {
     T_SAVE_DIALOG
 } chooser_type_t;
 
-file_chooser_t* create_file_chooser( chooser_type_t type );
+file_chooser_t* create_file_chooser( chooser_type_t type, const char* path );
 
 int file_chooser_show( file_chooser_t* chooser );
 
