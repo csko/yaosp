@@ -46,7 +46,9 @@ typedef struct dir_view {
     char* path;
 
     array_t items;
+    int pending_request;
     pthread_mutex_t lock;
+    pthread_cond_t condition;
     pthread_t worker_thread;
 
     int selected;
@@ -98,11 +100,32 @@ static void* dirview_worker( void* data ) {
     widget = ( widget_t* )data;
     dir_view = ( dir_view_t* )widget_get_data( widget );
 
-    int i = 1;
-    while ( i-- > 0 ) {
+    pthread_mutex_lock( &dir_view->lock );
+
+    while ( 1 ) {
+        int i;
+        int size;
         DIR* dir;
         char path[ 256 ];
         struct dirent* entry;
+
+        while ( !dir_view->pending_request ) {
+            pthread_cond_wait( &dir_view->condition, &dir_view->lock );
+        }
+
+        dir_view->pending_request = 0;
+
+        /* Empty the item array */
+
+        size = array_get_size( &dir_view->items );
+
+        for ( i = 0; i < size; i++ ) {
+            free( array_get_item( &dir_view->items, i ) );
+        }
+
+        array_make_empty( &dir_view->items );
+
+        /* Populate directory entries ... */
 
         dir = opendir( dir_view->path );
 
@@ -110,11 +133,18 @@ static void* dirview_worker( void* data ) {
             continue;
         }
 
-        while ( ( entry = readdir( dir ) ) != NULL ) {
-            dir_item_t* dir_item = NULL;
+        int found_d = 0;
+        int found_dd = 0;
+        dir_item_t* dir_item;
 
-            if ( ( strcmp( entry->d_name, "." ) == 0 ) ||
-                 ( strcmp( entry->d_name, ".." ) == 0 ) ) {
+        while ( ( entry = readdir( dir ) ) != NULL ) {
+            dir_item = NULL;
+
+            if ( strcmp( entry->d_name, "." ) == 0 ) {
+                found_d = 1;
+                dir_item = create_dir_item( entry->d_name, T_DIRECTORY );
+            } else if ( strcmp( entry->d_name, ".." ) == 0 ) {
+                found_dd = 1;
                 dir_item = create_dir_item( entry->d_name, T_DIRECTORY );
             } else {
                 struct stat st;
@@ -127,18 +157,29 @@ static void* dirview_worker( void* data ) {
             }
 
             if ( dir_item != NULL ) {
-                pthread_mutex_lock( &dir_view->lock );
                 array_add_item( &dir_view->items, ( void* )dir_item );
-                pthread_mutex_unlock( &dir_view->lock );
             }
         }
 
         closedir( dir );
 
+        if ( strcmp( dir_view->path, "/" ) != 0 ) {
+            if ( !found_d ) {
+                dir_item = create_dir_item( ".", T_DIRECTORY );
+                array_add_item( &dir_view->items, ( void* )dir_item );
+            }
+            if ( !found_dd ) {
+                dir_item = create_dir_item( "..", T_DIRECTORY );
+                array_add_item( &dir_view->items, ( void* )dir_item );
+            }
+        }
+
         /* Invalidate the widget ... */
 
         widget_invalidate( widget, 1 );
     }
+
+    pthread_mutex_unlock( &dir_view->lock );
 
     return NULL;
 }
@@ -199,7 +240,7 @@ static int dirview_paint( widget_t* widget, gc_t* gc ) {
             gc_set_pen_color( gc, &black );
         }
 
-        position.y += 1;
+        point_add_xy( &position, 1, 1 );
 
         gc_set_drawing_mode( gc, DM_BLEND );
         switch ( item->type ) {
@@ -213,6 +254,7 @@ static int dirview_paint( widget_t* widget, gc_t* gc ) {
         gc_draw_text( gc, &position, item->name, -1 );
         position.x -= 18;
 
+        position.x -= 1;
         position.y -= text_offset;
         position.y += 16;
         position.y += 1;
@@ -245,7 +287,7 @@ static int dirview_mouse_pressed( widget_t* widget, point_t* position, int butto
 
     now = get_system_time();
 
-    if ( new_selected != dir_view->selected ) {
+    if ( dir_view->selected != new_selected ) {
         /* Invalidate the widget if the selected item is changed */
 
         dir_view->click_time = now;
@@ -253,7 +295,7 @@ static int dirview_mouse_pressed( widget_t* widget, point_t* position, int butto
     } else {
         /* Notify ITEM_DOUBLE_CLICKED listeners if needed */
 
-        #define DBL_CLICK_TIME ( 150 * 1000 )
+        #define DBL_CLICK_TIME ( 250 * 1000 )
 
         if ( ( now - dir_view->click_time ) <= DBL_CLICK_TIME ) {
             dir_view->click_time = 0;
@@ -318,6 +360,8 @@ widget_t* create_directory_view( const char* path ) {
         goto error3;
     }
 
+    pthread_cond_init( &dir_view->condition, NULL ); /* todo: error checking */
+
     dir_view->path = strdup( path );
 
     if ( dir_view->path == NULL ) {
@@ -333,6 +377,7 @@ widget_t* create_directory_view( const char* path ) {
         goto error5;
     }
 
+    dir_view->pending_request = 1;
     dir_view->selected = -1;
     dir_view->click_time = 0;
     dir_view->img_folder = bitmap_load_from_file( "/system/images/folder.png" );
@@ -389,7 +434,6 @@ widget_t* create_directory_view( const char* path ) {
 char* directory_view_get_selected_item_name( widget_t* widget ) {
     char* name;
     dir_view_t* dir_view;
-    dir_item_t* dir_item;
 
     if ( widget_get_id( widget ) != W_DIRVIEW ) {
         return NULL;
@@ -397,14 +441,18 @@ char* directory_view_get_selected_item_name( widget_t* widget ) {
 
     dir_view = ( dir_view_t* )widget_get_data( widget );
 
-    if ( dir_view->selected == -1 ) {
+    if ( dir_view->selected < 0 ) {
         return NULL;
     }
 
     pthread_mutex_lock( &dir_view->lock );
 
-    dir_item = array_get_item( &dir_view->items, dir_view->selected );
-    name = strdup( dir_item->name );
+    if ( dir_view->selected >= array_get_size( &dir_view->items ) ) {
+        name = NULL;
+    } else {
+        dir_item_t* dir_item = array_get_item( &dir_view->items, dir_view->selected );
+        name = strdup( dir_item->name );
+    }
 
     pthread_mutex_unlock( &dir_view->lock );
 
@@ -415,7 +463,8 @@ int directory_view_get_selected_item_type_and_name( widget_t* widget, directory_
     dir_view_t* dir_view;
     dir_item_t* dir_item;
 
-    if ( widget_get_id( widget ) != W_DIRVIEW ) {
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_DIRVIEW ) ) {
         return -EINVAL;
     }
 
@@ -438,6 +487,23 @@ int directory_view_get_selected_item_type_and_name( widget_t* widget, directory_
 }
 
 int directory_view_set_path( widget_t* widget, const char* path ) {
-    /* todo */
+    dir_view_t* dir_view;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_DIRVIEW ) ) {
+        return -EINVAL;
+    }
+
+    dir_view = ( dir_view_t* )widget_get_data( widget );
+
+    pthread_mutex_lock( &dir_view->lock );
+
+    free( dir_view->path );
+    dir_view->path = strdup( path ); /* todo: error checking */
+    dir_view->pending_request = 1;
+
+    pthread_mutex_unlock( &dir_view->lock );
+    pthread_cond_signal( &dir_view->condition );
+
     return 0;
 }

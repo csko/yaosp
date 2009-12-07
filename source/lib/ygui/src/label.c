@@ -202,7 +202,20 @@ widget_t* create_label( const char* text ) {
 }
 
 int label_set_text( widget_t* widget, const char* text ) {
-    /* todo */
+    label_t* label;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_LABEL ) ) {
+        return -EINVAL;
+    }
+
+    label = ( label_t* )widget_get_data( widget );
+
+    free( label->text );
+    label->text = strdup( text ); /* todo: error checking */
+
+    widget_invalidate( widget, 1 );
+
     return 0;
 }
 

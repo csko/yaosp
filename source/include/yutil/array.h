@@ -33,6 +33,7 @@ int array_remove_item_from( array_t* array, int index );
 int array_get_size( array_t* array );
 void* array_get_item( array_t* array, int index );
 int array_index_of( array_t* array, void* item );
+int array_make_empty( array_t* array );
 
 int array_set_realloc_size( array_t* array, int realloc_size );
 

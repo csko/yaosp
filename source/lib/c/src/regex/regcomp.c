@@ -102,8 +102,8 @@ static void freeset(struct parse *p, cset *cs);
 static int freezeset(struct parse *p, cset *cs);
 static int firstch(struct parse *p, cset *cs);
 static int nch(struct parse *p, cset *cs);
-static void mcadd(struct parse *p, cset *cs, char *cp);
 #if used
+static void mcadd(struct parse *p, cset *cs, char *cp);
 static void mcsub(cset *cs, char *cp);
 static int mcin(cset *cs, char *cp);
 static char *mcfind(cset *cs, char *cp);
@@ -307,8 +307,8 @@ struct parse *p;
 int stop;			/* character this ERE should end at */
 {
 	char c;
-	sopno prevback;
-	sopno prevfwd;
+	sopno prevback = 0;
+	sopno prevfwd = 0;
 	sopno conc;
 	int first = 1;		/* is this the first alternative? */
 
@@ -1332,6 +1332,7 @@ cset *cs;
 	return(n);
 }
 
+#if used
 /*
  - mcadd - add a collating element to a cset
  == static void mcadd(struct parse *p, cset *cs, \
@@ -1359,7 +1360,6 @@ char *cp;
 	cs->multis[cs->smultis - 1] = '\0';
 }
 
-#if used
 /*
  - mcsub - subtract a collating element from a cset
  == static void mcsub(cset *cs, char *cp);

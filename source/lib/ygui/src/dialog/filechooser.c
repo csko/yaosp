@@ -71,15 +71,30 @@ static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
         char path[ 256 ];
         char* new_path;
 
-        if ( strcmp( chooser->current_path, "/" ) == 0 ) {
-            snprintf( path, sizeof( path ), "/%s", name );
+        if ( strcmp( name, "." ) == 0 ) {
+            /* do nothing */
+            goto out;
+        } else if ( strcmp( name, ".." ) == 0 ) {
+            char* pos;
+
+            snprintf( path, sizeof( path ), "%s", chooser->current_path );
+
+            pos = strrchr( path, '/' );
+
+            if ( pos == path ) {
+                pos++;
+            }
+
+            *pos = 0;
         } else {
-            snprintf( path, sizeof( path ), "%s/%s", chooser->current_path, name );
+            if ( strcmp( chooser->current_path, "/" ) == 0 ) {
+                snprintf( path, sizeof( path ), "/%s", name );
+            } else {
+                snprintf( path, sizeof( path ), "%s/%s", chooser->current_path, name );
+            }
         }
 
         new_path = strdup( path );
-
-        //dbprintf( "new_path: '%s'\n", new_path );
 
         if ( new_path != NULL ) {
             free( chooser->current_path );
@@ -90,6 +105,7 @@ static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
         }
     }
 
+ out:
     free( name );
 
     return 0;
@@ -107,7 +123,7 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path ) {
     chooser->current_path = strdup( path ); /* todo: check return value! */
 
     point_t position = { 50, 50 };
-    point_t size = { 250, 150 };
+    point_t size = { 250, 350 };
 
     chooser->window = create_window( type == T_OPEN_DIALOG ? "Open file" : "Save file", &position, &size, WINDOW_NONE );
 

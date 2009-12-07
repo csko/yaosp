@@ -160,6 +160,18 @@ int array_index_of( array_t* array, void* item ) {
     return -1;
 }
 
+int array_make_empty( array_t* array ) {
+    int i;
+
+    array->item_count = 0;
+
+    for ( i = 0; i < array->max_item_count; i++ ) {
+        array->items[ i ] = NULL;
+    }
+
+    return 0;
+}
+
 int array_set_realloc_size( array_t* array, int realloc_size ) {
     if ( realloc_size <= 0 ) {
         return -EINVAL;

@@ -31,8 +31,7 @@ int pthread_mutex_init( pthread_mutex_t* mutex, pthread_mutexattr_t* attr ) {
     mutex->mutex_id = syscall2( SYS_mutex_create, ( int )"pthread mutex", 0 );
 
     if ( mutex->mutex_id < 0 ) {
-        errno = mutex->mutex_id;
-        return -1;
+        return -mutex->mutex_id;
     }
 
     mutex->init_magic = PTHREAD_MUTEX_MAGIC;

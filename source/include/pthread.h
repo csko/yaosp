@@ -22,6 +22,7 @@
 #include <inttypes.h>
 
 #define PTHREAD_MUTEX_MAGIC 0xC001C0DE
+#define PTHREAD_COND_MAGIC  0xDEADBEEF
 
 #define PTHREAD_MUTEX_INITIALIZER { 0, -1 }
 

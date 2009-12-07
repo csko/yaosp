@@ -20,6 +20,7 @@
 #include <console.h>
 #include <smp.h>
 #include <macros.h>
+#include <debug.h>
 #include <mm/kmalloc.h>
 #include <lock/mutex.h>
 #include <lock/common.h>
@@ -125,11 +126,12 @@ static int do_lock_mutex( lock_context_t* context, lock_id mutex_id, bool try_lo
          ( ( mutex->flags & MUTEX_RECURSIVE ) == 0 ) ) {
         kprintf(
             WARNING,
-            "Detected a deadlock while %s:%s tried to lock %s!\n",
+            "Detected a deadlock while %s:%s tried to lock '%s'!\n",
             thread->process->name,
             thread->name,
             header->name
         );
+        debug_print_stack_trace();
 
         spinunlock_enable( &context->lock );
 
