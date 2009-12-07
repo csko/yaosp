@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_LAYOUT_H_
-#define _YAOSP_LAYOUT_H_
+#ifndef _YGUI_LAYOUT_H_
+#define _YGUI_LAYOUT_H_
 
 #include <ygui/widget.h>
 

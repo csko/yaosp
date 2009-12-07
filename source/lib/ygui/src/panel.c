@@ -20,7 +20,6 @@
 #include <errno.h>
 
 #include <ygui/panel.h>
-#include <ygui/layout/layout.h>
 
 typedef struct panel {
     layout_t* layout;

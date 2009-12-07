@@ -87,6 +87,11 @@ int widget_get_bounds( widget_t* widget, rect_t* bounds ) {
         widget->full_size.x - 1, widget->full_size.y - 1
     );
 
+    if ( widget->border != NULL ) {
+        bounds->right -= widget->border->size.x;
+        bounds->bottom -= widget->border->size.y;
+    }
+
     return 0;
 }
 
@@ -107,6 +112,12 @@ int widget_get_preferred_size( widget_t* widget, point_t* size ) {
         widget->ops->get_preferred_size( widget, size );
     } else {
         point_init( size, 0, 0 );
+    }
+
+    /* The border size is included in the preferred size of the widget */
+
+    if ( widget->border != NULL ) {
+        point_add( size, &widget->border->size );
     }
 
     return 0;
@@ -130,6 +141,12 @@ int widget_get_position( widget_t* widget, point_t* position ) {
 
 int widget_get_scroll_offset( widget_t* widget, point_t* offset ) {
     point_copy( offset, &widget->scroll_offset );
+
+    return 0;
+}
+
+int widget_get_size( widget_t* widget, point_t* size ) {
+    point_copy( size, &widget->full_size );
 
     return 0;
 }
@@ -187,6 +204,22 @@ int widget_set_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+int widget_set_border( widget_t* widget, border_t* border ) {
+    if ( ( widget == NULL ) ||
+         ( border == NULL ) ) {
+        return -EINVAL;
+    }
+
+    if ( widget->border != NULL ) {
+        border_dec_ref( widget->border );
+    }
+
+    widget->border = border;
+    border_inc_ref( widget->border );
+
+    return 0;
+}
+
 int widget_inc_ref( widget_t* widget ) {
     assert( widget->ref_count > 0 );
 
@@ -238,6 +271,20 @@ int widget_paint( widget_t* widget, gc_t* gc ) {
 
     gc_push_restricted_area( gc, &res_area );
 
+    /* Paint the border and transfer the left-top
+       position according to the border */
+
+    if ( widget->border != NULL ) {
+        gc_push_translate_checkpoint( gc );
+        gc_translate( gc, &widget->scroll_offset );
+
+        widget->border->ops->paint( widget, gc );
+
+        gc_rollback_translate( gc );
+
+        point_add( &gc->lefttop, &widget->border->lefttop_offset );
+    }
+
     /* Repaint the widget if it has a valid
        paint method and the widget is invalid */
 
@@ -281,6 +328,12 @@ int widget_paint( widget_t* widget, gc_t* gc ) {
         widget_paint( child, gc );
 
         gc_rollback_translate( gc );
+    }
+
+    /* Bring the left-top position back to the original */
+
+    if ( widget->border != NULL ) {
+        point_sub( &gc->lefttop, &widget->border->lefttop_offset );
     }
 
     /* Pop the restricted area */
@@ -476,6 +529,7 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
     widget->id = id;
     widget->data = data;
     widget->ref_count = 1;
+    widget->border = NULL;
 
     widget->ops = ops;
     widget->window = NULL;

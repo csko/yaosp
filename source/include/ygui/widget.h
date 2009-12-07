@@ -27,6 +27,7 @@
 #include <ygui/font.h>
 #include <ygui/event.h>
 #include <ygui/gc.h>
+#include <ygui/border/border.h>
 
 /* Global widget types */
 
@@ -94,6 +95,7 @@ typedef struct widget {
     point_t preferred_size;
 
     array_t children;
+    border_t* border;
 
     /* Event handling */
 
@@ -113,11 +115,13 @@ int widget_get_preferred_size( widget_t* widget, point_t* size );
 int widget_get_maximum_size( widget_t* widget, point_t* size );
 int widget_get_position( widget_t* widget, point_t* position );
 int widget_get_scroll_offset( widget_t* widget, point_t* offset );
+int widget_get_size( widget_t* widget, point_t* size );
 
 int widget_set_window( widget_t* widget, struct window* window );
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size );
 int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t* visible_size, point_t* full_size );
 int widget_set_preferred_size( widget_t* widget, point_t* size );
+int widget_set_border( widget_t* widget, border_t* border );
 
 int widget_inc_ref( widget_t* widget );
 int widget_dec_ref( widget_t* widget );

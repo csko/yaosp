@@ -21,6 +21,7 @@
 #include <sys/param.h>
 
 #include <ygui/menu.h>
+#include <ygui/border/lineborder.h>
 
 #include "internal.h"
 
@@ -35,6 +36,8 @@ static int menu_window_deactivated( window_t* window, void* data ) {
 
 menu_t* create_menu( void ) {
     menu_t* menu;
+    border_t* border;
+    widget_t* container;
 
     menu = ( menu_t* )malloc( sizeof( menu_t ) );
 
@@ -53,6 +56,12 @@ menu_t* create_menu( void ) {
     if ( menu->window == NULL ) {
         goto error3;
     }
+
+    container = window_get_container( menu->window );
+
+    border = create_line_border();
+    widget_set_border( container, border );
+    border_dec_ref( border );
 
     window_set_event_handler( menu->window, WE_DEACTIVATED, menu_window_deactivated, menu );
 
@@ -125,6 +134,10 @@ int menu_get_size( menu_t* menu, point_t* size ) {
         size->y += preferred_size.y;
     }
 
+    /* line border ... */
+
+    point_add_xy( size, 6, 6 );
+
     return 0;
 }
 
@@ -174,7 +187,9 @@ int menu_popup_at( menu_t* menu, point_t* position ) {
         item_pos.y += pref_size.y;
     }
 
+    point_add_xy( &win_size, 6, 6 ); /* line border */
     window_resize( menu->window, &win_size );
+
     window_move( menu->window, position );
 
     window_show( menu->window );

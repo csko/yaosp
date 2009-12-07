@@ -27,9 +27,17 @@
 #include <ygui/layout/borderlayout.h>
 #include <ygui/dialog/filechooser.h>
 
+static window_t* window;
+
 static int event_open_file( widget_t* widget, void* data ) {
     file_chooser_t* chooser = create_file_chooser( T_OPEN_DIALOG, "/" );
     file_chooser_show( chooser );
+
+    return 0;
+}
+
+static int event_application_exit( widget_t* widget, void* data ) {
+    window_close( window );
 
     return 0;
 }
@@ -42,7 +50,7 @@ int main( int argc, char** argv ) {
     point_t pos = { 75, 75 };
     point_t size = { 300, 300 };
 
-    window_t* window = create_window( "Text editor", &pos, &size, WINDOW_NONE );
+    window = create_window( "Text editor", &pos, &size, WINDOW_NONE );
 
     bitmap_t* icon = bitmap_load_from_file( "/application/texteditor/images/texteditor.png" );
     window_set_icon( window, icon );
@@ -86,6 +94,8 @@ int main( int argc, char** argv ) {
     item = create_menuitem_with_label( "Exit" );
     menu_add_item( menu, item );
     widget_dec_ref( item );
+
+    widget_connect_event_handler( item, "mouse-down", event_application_exit, NULL );
 
     /* Help menu */
 

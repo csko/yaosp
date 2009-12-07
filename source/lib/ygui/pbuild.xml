@@ -46,6 +46,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/image/imageloader.c</item>
         <item>src/image/png.c</item>
         <item>src/dialog/filechooser.c</item>
+        <item>src/border/border.c</item>
+        <item>src/border/lineborder.c</item>
     </array>
 
     <array name="images">

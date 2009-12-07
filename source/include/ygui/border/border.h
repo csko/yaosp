@@ -16,14 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_PANEL_H_
-#define _YGUI_PANEL_H_
+#ifndef _YGUI_BORDER_H_
+#define _YGUI_BORDER_H_
 
-#include <ygui/widget.h>
-#include <ygui/layout/layout.h>
+#include <ygui/gc.h>
 
-int panel_set_layout( widget_t* widget, layout_t* layout );
+struct widget;
 
-widget_t* create_panel( void );
+typedef struct border_operations {
+    int ( *paint )( struct widget* widget, gc_t* gc );
+} border_operations_t;
 
-#endif /* _YGUI_PANEL_H_ */
+typedef struct border {
+    int ref_count;
+    point_t size;
+    point_t lefttop_offset;
+    border_operations_t* ops;
+} border_t;
+
+int border_inc_ref( border_t* border );
+int border_dec_ref( border_t* border );
+
+border_t* create_border( border_operations_t* ops );
+
+#endif /* _YGUI_BORDER_H_ */
