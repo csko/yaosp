@@ -41,7 +41,7 @@ static event_type_t menu_item_event_types[ E_COUNT ] = {
 
 static color_t fg_color = { 0, 0, 0, 255 };
 static color_t bg_color = { 216, 216, 216, 255 };
-static color_t active_bg_color = { 116, 116, 166, 255 };
+static color_t active_bg_color = { 101, 152, 202, 255 };
 
 static int menu_item_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;

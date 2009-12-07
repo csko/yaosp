@@ -43,14 +43,14 @@ static event_type_t button_event_types[ E_COUNT ] = {
     { "clicked", &button_events[ E_CLICKED ] }
 };
 
+static color_t fg_color = { 0, 0, 0, 255 };
+static color_t bg_color = { 216, 216, 216, 255 };
+static color_t pressed_bg_color = { 51, 102, 152, 255 };
+
 static int button_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
     button_t* button;
     point_t text_position;
-
-    static color_t fg_color = { 0, 0, 0, 0xFF };
-    static color_t bg_color = { 216, 216, 216, 0xFF };
-    static color_t pressed_bg_color = { 116, 116, 166, 0xFF };
 
     button = ( button_t* )widget_get_data( widget );
 
