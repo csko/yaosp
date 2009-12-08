@@ -34,8 +34,6 @@ int schedule( registers_t* regs ) {
     i386_thread_t* arch_thread;
     i386_memory_context_t* arch_mem_context;
 
-    ( ( volatile char* )0xB8000 )[ get_processor_index() * 2 ]++;
-
     /* Lock the scheduler */
 
     scheduler_lock();

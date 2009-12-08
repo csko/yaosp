@@ -95,8 +95,9 @@ int handle_signals( thread_t* thread ) {
 }
 
 int do_send_signal( thread_t* thread, int signal ) {
-    ASSERT( signal > 0 );
+    ASSERT( ( signal > 0 ) && ( signal < _NSIG ) );
 
+#if 0
     dprintf_unlocked(
         "do_send_signal(): Sending signal %d to %s:%s from %s:%s\n",
         signal,
@@ -105,6 +106,7 @@ int do_send_signal( thread_t* thread, int signal ) {
         current_process()->name,
         current_thread()->name
     );
+#endif
 
     signal--;
 

@@ -22,6 +22,7 @@
 #include <ygui/widget.h>
 
 typedef enum directory_item_type {
+    T_NONE,
     T_DIRECTORY,
     T_FILE
 } directory_item_type_t;
