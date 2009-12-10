@@ -1027,7 +1027,7 @@ static int scrollpanel_size_changed( widget_t* widget ) {
             break;
 
         case SCROLLBAR_AUTO :
-            /* TODO */
+            /* todo */
             break;
 
         case SCROLLBAR_ALWAYS :
@@ -1044,7 +1044,7 @@ static int scrollpanel_size_changed( widget_t* widget ) {
             break;
 
         case SCROLLBAR_AUTO :
-            /* TODO */
+            /* todo */
             break;
 
         case SCROLLBAR_ALWAYS :
@@ -1060,8 +1060,11 @@ static int scrollpanel_size_changed( widget_t* widget ) {
         0,
         0
     );
+    point_max( &preferred_size, &visible_size );
 
-    widget_set_position_and_sizes( child, &position, &visible_size, &preferred_size );
+    widget_set_position_and_sizes(
+        child, &position, &visible_size, &preferred_size
+    );
 
     /* Calculate scrollbar values */
 
@@ -1079,13 +1082,16 @@ static int scrollpanel_size_changed( widget_t* widget ) {
 static int child_preferred_size_changed( widget_t* widget, void* data ) {
     widget_t* parent;
     scrollpanel_t* scrollpanel;
+    point_t visible_size;
+    point_t pref_size;
 
     parent = ( widget_t* )data;
     scrollpanel = widget_get_data( parent );
 
     /* Update the full size of the child widget */
 
-    widget_get_preferred_size( widget, &widget->full_size );
+    widget_get_preferred_size( widget, &pref_size );
+    point_max_n( &widget->full_size, &pref_size, &widget->visible_size );
 
     /* Update the scrollbars */
 

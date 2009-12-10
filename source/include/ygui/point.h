@@ -21,6 +21,7 @@
 
 #include <string.h>
 #include <sys/types.h>
+#include <sys/param.h>
 
 typedef struct point {
     int x;
@@ -69,6 +70,16 @@ static inline void point_sub_xy( point_t* point1, int x, int y ) {
 static inline void point_sub_xy_n( point_t* dest, point_t* point, int x, int y ) {
     dest->x = point->x - x;
     dest->y = point->y - y;
+}
+
+static inline void point_max( point_t* point1, point_t* point2 ) {
+    point1->x = MAX( point1->x, point2->x );
+    point1->y = MAX( point1->y, point2->y );
+}
+
+static inline void point_max_n( point_t* dest, point_t* point1, point_t* point2 ) {
+    dest->x = MAX( point1->x, point2->x );
+    dest->y = MAX( point1->y, point2->y );
 }
 
 #endif /* _YGUI_POINT_H_ */
