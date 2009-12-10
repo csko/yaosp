@@ -77,29 +77,19 @@ static int textarea_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
     textarea_t* textarea;
 
-    static color_t fg_color = { 0, 0, 0, 0xFF };
-    static color_t bg_color = { 255, 255, 255, 0xFF };
+    static color_t fg_color = { 0, 0, 0, 255 };
+    static color_t bg_color = { 255, 255, 255, 255 };
 
     textarea = ( textarea_t* )widget_get_data( widget );
 
     widget_get_bounds( widget, &bounds );
 
-    /* Draw the border of the textarea */
-
-    gc_set_pen_color( gc, &fg_color );
-    gc_draw_rect( gc, &bounds );
-
     /* Fill the background of the textarea */
 
-    rect_resize( &bounds, 1, 1, -1, -1 );
     gc_set_pen_color( gc, &bg_color );
     gc_fill_rect( gc, &bounds );
 
     /* Draw the lines */
-
-    rect_resize( &bounds, 1, 1, -1, -1 );
-    gc_set_clip_rect( gc, &bounds );
-    gc_translate_xy( gc, 2, 2 );
 
     gc_set_font( gc, textarea->font );
     gc_set_pen_color( gc, &fg_color );
@@ -207,6 +197,11 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
         case KEY_LEFT :
             if ( textarea->cursor_x > 0 ) {
                 textarea->cursor_x--;
+
+                widget_signal_event_handler(
+                    widget,
+                    widget->event_ids[ E_VIEWPORT_CHANGED ]
+                );
             }
 
             break;
@@ -216,6 +211,11 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
             if ( textarea->cursor_x < string_length( line ) ) {
                 textarea->cursor_x++;
+
+                widget_signal_event_handler(
+                    widget,
+                    widget->event_ids[ E_VIEWPORT_CHANGED ]
+                );
             }
 
             break;
@@ -224,6 +224,11 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
         case KEY_UP :
             if ( textarea->cursor_y > 0 ) {
                 textarea->cursor_y--;
+
+                widget_signal_event_handler(
+                    widget,
+                    widget->event_ids[ E_VIEWPORT_CHANGED ]
+                );
             }
 
             break;
@@ -239,11 +244,21 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
                     textarea->cursor_x = 0;
 
                     textarea_current_line( textarea );
+
+                    widget_signal_event_handler(
+                        widget,
+                        widget->event_ids[ E_PREF_SIZE_CHANGED ]
+                    );
                 }
             } else {
                 textarea->cursor_y++;
                 textarea->cursor_x = 0;
             }
+
+            widget_signal_event_handler(
+                widget,
+                widget->event_ids[ E_VIEWPORT_CHANGED ]
+            );
 
             break;
 
@@ -267,7 +282,21 @@ static int textarea_get_preferred_size( widget_t* widget, point_t* size ) {
     point_init(
         size,
         450 /* todo */,
-        array_get_size( &textarea->lines ) * font_get_height( textarea->font ) + 6
+        array_get_size( &textarea->lines ) * font_get_height( textarea->font )
+    );
+
+    return 0;
+}
+
+static int textarea_get_viewport( widget_t* widget, rect_t* viewport ) {
+    textarea_t* textarea;
+
+    textarea = ( textarea_t* )widget_get_data( widget );
+
+    rect_init(
+        viewport,
+        0, textarea->cursor_y * font_get_height( textarea->font ),
+        0, ( textarea->cursor_y + 1 ) * font_get_height( textarea->font ) - 1
     );
 
     return 0;
@@ -285,6 +314,7 @@ static widget_operations_t textarea_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = textarea_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = textarea_get_viewport,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,

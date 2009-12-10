@@ -1082,7 +1082,6 @@ static int scrollpanel_size_changed( widget_t* widget ) {
 static int child_preferred_size_changed( widget_t* widget, void* data ) {
     widget_t* parent;
     scrollpanel_t* scrollpanel;
-    point_t visible_size;
     point_t pref_size;
 
     parent = ( widget_t* )data;
@@ -1110,11 +1109,57 @@ static int child_preferred_size_changed( widget_t* widget, void* data ) {
     return 0;
 }
 
+static int child_viewport_changed( widget_t* widget, void* data ) {
+    widget_t* parent;
+    scrollpanel_t* scrollpanel;
+    rect_t viewport;
+    rect_t visible_rect;
+
+    parent = ( widget_t* )data;
+    scrollpanel = widget_get_data( parent );
+
+    widget_get_viewport( widget, &viewport );
+
+    visible_rect.left = -widget->scroll_offset.x;
+    visible_rect.top = -widget->scroll_offset.y;
+    visible_rect.right = visible_rect.left + widget->visible_size.x - 1;
+    visible_rect.bottom = visible_rect.top + widget->visible_size.y - 1;
+
+    /* Check if we have to change any of the scrollbars */
+
+    if ( rect_has_rect( &visible_rect, &viewport ) ) {
+        return 0;
+    }
+
+    if ( viewport.top < visible_rect.top ) {
+        widget->scroll_offset.y = -viewport.top;
+    } else if ( viewport.bottom > visible_rect.bottom ) {
+        widget->scroll_offset.y -= viewport.bottom - visible_rect.bottom;
+    }
+
+    if ( scrollpanel->vertical.visible ) {
+        scrollpanel_calc_vertical_bar( parent, &scrollpanel->vertical, widget, scrollpanel->horizontal.visible );
+    }
+
+    /* Request a repaint on the scrollpanel widget */
+
+    widget_invalidate( parent, 1 );
+
+    return 0;
+}
+
 static int scrollpanel_child_added( widget_t* widget, widget_t* child ) {
     widget_connect_event_handler(
         child,
         "preferred-size-changed",
         child_preferred_size_changed,
+        ( void* )widget
+    );
+
+    widget_connect_event_handler(
+        child,
+        "viewport-changed",
+        child_viewport_changed,
         ( void* )widget
     );
 

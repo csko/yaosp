@@ -133,6 +133,16 @@ int widget_get_maximum_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+int widget_get_viewport( widget_t* widget, rect_t* viewport ) {
+    if ( widget->ops->get_viewport == NULL ) {
+        rect_init( viewport, 0, 0, 0, 0 );
+    } else {
+        widget->ops->get_viewport( widget, viewport );
+    }
+
+    return 0;
+}
+
 int widget_get_position( widget_t* widget, point_t* position ) {
     point_copy( position, &widget->position );
 
@@ -519,6 +529,7 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
 
     event_type_t widget_events[] = {
         { "preferred-size-changed", &widget->event_ids[ E_PREF_SIZE_CHANGED ] },
+        { "viewport-changed", &widget->event_ids[ E_VIEWPORT_CHANGED ] },
         { "mouse-down", &widget->event_ids[ E_MOUSE_DOWN ] }
     };
 

@@ -127,6 +127,16 @@ static inline int rect_has_point( rect_t* rect, point_t* point ) {
              ( rect->top <= point->y ) && ( point->y <= rect->bottom ) );
 }
 
+static inline int rect_has_point_xy( rect_t* rect, int x, int y ) {
+    return ( ( rect->left <= x ) && ( x <= rect->right ) &&
+             ( rect->top <= y ) && ( y <= rect->bottom ) );
+}
+
+static inline int rect_has_rect( rect_t* rect1, rect_t* rect2 ) {
+    return ( rect_has_point_xy( rect1, rect2->left, rect2->top ) &&
+             rect_has_point_xy( rect1, rect2->right, rect2->bottom ) );
+}
+
 static inline int rect_is_equal( rect_t* rect1, rect_t* rect2 ) {
     return ( memcmp( rect1, rect2, sizeof( rect_t ) ) == 0 );
 }

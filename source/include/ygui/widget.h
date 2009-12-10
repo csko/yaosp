@@ -50,6 +50,7 @@ enum {
 
 enum {
     E_PREF_SIZE_CHANGED,
+    E_VIEWPORT_CHANGED,
     E_MOUSE_DOWN,
     E_WIDGET_COUNT
 };
@@ -69,6 +70,7 @@ typedef struct widget_operations {
     int ( *get_minimum_size )( struct widget* widget, point_t* size );
     int ( *get_preferred_size )( struct widget* widget, point_t* size );
     int ( *get_maximum_size )( struct widget* widget, point_t* size );
+    int ( *get_viewport )( struct widget* widget, rect_t* viewport );
     int ( *do_validate )( struct widget* widget );
     int ( *size_changed )( struct widget* widget );
     int ( *added_to_window )( struct widget* widget );
@@ -113,6 +115,7 @@ int widget_get_bounds( widget_t* widget, rect_t* bounds );
 int widget_get_minimum_size( widget_t* widget, point_t* size );
 int widget_get_preferred_size( widget_t* widget, point_t* size );
 int widget_get_maximum_size( widget_t* widget, point_t* size );
+int widget_get_viewport( widget_t* widget, rect_t* viewport );
 int widget_get_position( widget_t* widget, point_t* position );
 int widget_get_scroll_offset( widget_t* widget, point_t* offset );
 int widget_get_size( widget_t* widget, point_t* size );
