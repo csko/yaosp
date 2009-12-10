@@ -321,7 +321,7 @@ widget_t* create_textarea( void ) {
     return widget;
 
  error4:
-    /* TODO: destroy the font */
+    /* todo: destroy the font */
 
  error3:
     destroy_array( &textarea->lines );
@@ -331,4 +331,21 @@ widget_t* create_textarea( void ) {
 
  error1:
     return NULL;
+}
+
+int textarea_add_lines( widget_t* widget, array_t* lines ) {
+    textarea_t* textarea;
+
+    if ( ( widget == NULL ) ||
+         ( lines == NULL ) ||
+         ( widget_get_id( widget ) != W_TEXTAREA ) ) {
+        return -EINVAL;
+    }
+
+    textarea = ( textarea_t* )widget_get_data( widget );
+
+    array_add_items( &textarea->lines, lines );
+    widget_invalidate( widget, 1 );
+
+    return 0;
 }

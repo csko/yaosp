@@ -23,10 +23,12 @@ typedef struct array {
     int item_count;
     int max_item_count;
     int realloc_size;
+    int realloc_mask;
     void** items;
 } array_t;
 
 int array_add_item( array_t* array, void* item );
+int array_add_items( array_t* array, array_t* other );
 int array_insert_item( array_t* array, int index, void* item );
 int array_remove_item( array_t* array, void* item );
 int array_remove_item_from( array_t* array, int index );

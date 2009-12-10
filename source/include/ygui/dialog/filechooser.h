@@ -21,6 +21,20 @@
 
 #include <ygui/window.h>
 
+typedef enum chooser_type {
+    T_OPEN_DIALOG,
+    T_SAVE_DIALOG
+} chooser_type_t;
+
+typedef enum chooser_event {
+    E_CHOOSER_OK,
+    E_CHOOSER_CANCEL
+} chooser_event_t;
+
+struct file_chooser;
+
+typedef int file_chooser_callback_t( struct file_chooser* chooser, chooser_event_t event, void* data );
+
 typedef struct file_chooser {
     window_t* window;
 
@@ -29,14 +43,15 @@ typedef struct file_chooser {
     widget_t* path_label;
     widget_t* directory_view;
     widget_t* filename_field;
+
+    file_chooser_callback_t* callback;
+    void* data;
 } file_chooser_t;
 
-typedef enum chooser_type {
-    T_OPEN_DIALOG,
-    T_SAVE_DIALOG
-} chooser_type_t;
+file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
+                                     file_chooser_callback_t* callback, void* data );
 
-file_chooser_t* create_file_chooser( chooser_type_t type, const char* path );
+char* file_chooser_get_selected_file( file_chooser_t* chooser );
 
 int file_chooser_show( file_chooser_t* chooser );
 

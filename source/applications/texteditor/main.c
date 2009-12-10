@@ -17,6 +17,8 @@
  */
 
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <ygui/application.h>
 #include <ygui/window.h>
@@ -27,10 +29,132 @@
 #include <ygui/layout/borderlayout.h>
 #include <ygui/dialog/filechooser.h>
 
+#include <yutil/string.h>
+#include <yutil/array.h>
+
 static window_t* window;
+static widget_t* textarea;
+
+static int file_loader_insert_lines( void* data ) {
+    array_t* lines;
+
+    lines = ( array_t* )data;
+    textarea_add_lines( textarea, lines );
+
+    destroy_array( lines );
+    free( lines );
+
+    return 0;
+}
+
+static void* file_loader_thread( void* arg ) {
+    int f;
+    int ret;
+    char* file;
+    char tmp[ 8192 ];
+
+    char* input = NULL;
+    size_t input_size = 0;
+
+    array_t* lines = ( array_t* )malloc( sizeof( array_t ) );
+    /* todo: error checking */
+    init_array( lines );
+    array_set_realloc_size( lines, 256 );
+
+    file = ( char* )arg;
+    f = open( file, O_RDONLY );
+
+    if ( f < 0 ) {
+        goto out;
+    }
+
+    do {
+        ret = read( f, tmp, sizeof( tmp ) );
+
+        if ( ret > 0 ) {
+            size_t new_input_size = input_size + ret;
+
+            input = ( char* )realloc( input, new_input_size + 1 );
+            /* todo: error checking */
+
+            memcpy( input + input_size, tmp, ret );
+            input[ new_input_size ] = 0;
+
+            input_size = new_input_size;
+
+            char* end;
+            char* start = input;
+
+            while ( ( end = strchr( start, '\n' ) ) != NULL ) {
+                *end = 0;
+
+                string_t* line = ( string_t* )malloc( sizeof( string_t ) );
+                /* todo: error checking */
+                init_string_from_buffer( line, start, end - start );
+
+                array_add_item( lines, ( void* )line );
+
+                start = end + 1;
+            }
+
+            if ( start > input ) {
+                size_t remaining_input = input_size - ( start - input );
+
+                if ( remaining_input == 0 ) {
+                    free( input );
+                    input = NULL;
+                } else {
+                    input = ( char* )realloc( input, remaining_input + 1 );
+                    /* todo: error checking */
+
+                    input[ remaining_input ] = 0;
+                }
+
+                input_size = remaining_input;
+            }
+        }
+    } while ( ret == sizeof( tmp ) );
+
+    close( f );
+
+ out:
+    free( file );
+
+    if ( array_get_size( lines ) > 0 ) {
+        window_insert_callback( window, file_loader_insert_lines, ( void* )lines );
+    } else {
+        destroy_array( lines );
+        free( lines );
+    }
+
+    return NULL;
+}
+
+static int event_file_chooser_done( file_chooser_t* chooser, chooser_event_t event, void* data ) {
+    if ( event == E_CHOOSER_OK ) {
+        char* file = file_chooser_get_selected_file( chooser );
+
+        pthread_t thread;
+        pthread_attr_t attr;
+
+        pthread_attr_init( &attr );
+        pthread_attr_setname( &attr, "file loader" );
+
+        pthread_create(
+            &thread, &attr,
+            file_loader_thread, ( void* )file
+        );
+
+        pthread_attr_destroy( &attr );
+    }
+
+    return 0;
+}
 
 static int event_open_file( widget_t* widget, void* data ) {
-    file_chooser_t* chooser = create_file_chooser( T_OPEN_DIALOG, "/" );
+    file_chooser_t* chooser;
+
+    chooser = create_file_chooser( T_OPEN_DIALOG, "/", event_file_chooser_done, NULL );
     file_chooser_show( chooser );
 
     return 0;
@@ -112,7 +236,7 @@ int main( int argc, char** argv ) {
 
     /* Textarea ... */
 
-    widget_t* textarea = create_textarea();
+    textarea = create_textarea();
     widget_add( container, textarea, BRD_CENTER );
     widget_dec_ref( textarea );
 

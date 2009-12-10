@@ -43,6 +43,7 @@ int string_prev_utf8_char( string_t* string, int pos );
 int string_erase_utf8_char( string_t* string, int pos );
 
 int init_string( string_t* string );
+int init_string_from_buffer( string_t* string, const char* data, size_t size );
 int destroy_string( string_t* string );
 
 #endif /* _YUTIL_STRING_H_ */

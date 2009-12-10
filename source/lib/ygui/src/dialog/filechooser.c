@@ -29,6 +29,8 @@
 #include <ygui/layout/borderlayout.h>
 
 static int file_chooser_window_closed( window_t* window, void* data ) {
+    /* todo: destroy the file chooser stuffs */
+
     return 0;
 }
 
@@ -37,6 +39,12 @@ static int file_chooser_open_pressed( widget_t* widget, void* data ) {
 
     chooser = ( file_chooser_t* )data;
     window_close( chooser->window );
+
+    if ( chooser->callback != NULL ) {
+        chooser->callback( chooser, E_CHOOSER_OK, chooser->data );
+    }
+
+    /* todo: destroy the file chooser stuffs */
 
     return 0;
 }
@@ -111,7 +119,8 @@ static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
     return 0;
 }
 
-file_chooser_t* create_file_chooser( chooser_type_t type, const char* path ) {
+file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
+                                     file_chooser_callback_t* callback, void* data ) {
     file_chooser_t* chooser;
 
     chooser = ( file_chooser_t* )malloc( sizeof( file_chooser_t ) );
@@ -121,11 +130,16 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path ) {
     }
 
     chooser->current_path = strdup( path ); /* todo: check return value! */
+    chooser->callback = callback;
+    chooser->data = data;
 
     point_t position = { 50, 50 };
     point_t size = { 250, 350 };
 
-    chooser->window = create_window( type == T_OPEN_DIALOG ? "Open file" : "Save file", &position, &size, WINDOW_NONE );
+    chooser->window = create_window(
+        type == T_OPEN_DIALOG ? "Open file" : "Save file",
+        &position, &size, WINDOW_NONE
+    );
 
     if ( chooser->window == NULL ) {
         goto error2;
@@ -148,8 +162,14 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path ) {
     widget_add( container, chooser->directory_view, BRD_CENTER );
     widget_dec_ref( chooser->directory_view );
 
-    widget_connect_event_handler( chooser->directory_view, "item-selected", file_chooser_item_selected, ( void* )chooser );
-    widget_connect_event_handler( chooser->directory_view, "item-double-clicked", file_chooser_item_double_clicked, ( void* )chooser );
+    widget_connect_event_handler(
+        chooser->directory_view, "item-selected",
+        file_chooser_item_selected, ( void* )chooser
+    );
+    widget_connect_event_handler(
+        chooser->directory_view, "item-double-clicked",
+        file_chooser_item_double_clicked, ( void* )chooser
+    );
 
     widget_t* panel = create_panel();
     widget_add( container, panel, BRD_PAGE_END );
@@ -176,6 +196,23 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path ) {
 
  error1:
     return NULL;
+}
+
+char* file_chooser_get_selected_file( file_chooser_t* chooser ) {
+    char path[ 256 ];
+    char* filename;
+
+    filename = textfield_get_text( chooser->filename_field );
+
+    if ( strcmp( chooser->current_path, "/" ) == 0 ) {
+        snprintf( path, sizeof( path ), "/%s", filename );
+    } else {
+        snprintf( path, sizeof( path ), "%s/%s", chooser->current_path, filename );
+    }
+
+    free( filename );
+
+    return strdup( path );
 }
 
 int file_chooser_show( file_chooser_t* chooser ) {

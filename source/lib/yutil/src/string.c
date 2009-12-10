@@ -178,6 +178,24 @@ int init_string( string_t* string ) {
     return 0;
 }
 
+int init_string_from_buffer( string_t* string, const char* data, size_t size ) {
+    string->realloc_size = 8;
+    string->realloc_mask = string->realloc_size - 1;
+
+    string->max_length = ( size + string->realloc_size - 1 ) & ~string->realloc_mask;
+
+    string->buffer = ( char* )malloc( string->max_length + 1 );
+
+    if ( string->buffer == NULL ) {
+        return -ENOMEM;
+    }
+
+    memcpy( string->buffer, data, size );
+    string->buffer[ size ] = 0;
+
+    return 0;
+}
+
 int destroy_string( string_t* string ) {
     if ( string->buffer != NULL ) {
         free( string->buffer );

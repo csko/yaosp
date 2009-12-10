@@ -16,11 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_TEXTAREA_H_
-#define _YAOSP_TEXTAREA_H_
+#ifndef _YGUI_TEXTAREA_H_
+#define _YGUI_TEXTAREA_H_
 
 #include <ygui/widget.h>
 
+#include <yutil/array.h>
+
 widget_t* create_textarea( void );
 
-#endif /* _YAOSP_TEXTAREA_H_ */
+int textarea_add_lines( widget_t* widget, array_t* lines );
+
+#endif /* _YGUI_TEXTAREA_H_ */

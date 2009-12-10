@@ -24,12 +24,15 @@
 
 static int check_array_buffer( array_t* array, int new_item_count ) {
     void** new_items;
+    int new_size;
 
     if ( ( array->item_count + new_item_count ) <= array->max_item_count ) {
         return 0;
     }
 
-    new_items = ( void** )malloc( sizeof( void* ) * ( array->max_item_count + array->realloc_size ) );
+    new_size = ( array->item_count + new_item_count + array->realloc_size - 1 ) & ~array->realloc_mask;
+
+    new_items = ( void** )malloc( sizeof( void* ) * new_size );
 
     if ( new_items == NULL ) {
         return -ENOMEM;
@@ -42,7 +45,7 @@ static int check_array_buffer( array_t* array, int new_item_count ) {
     }
 
     array->items = new_items;
-    array->max_item_count += array->realloc_size;
+    array->max_item_count = new_size;
 
     return 0;
 }
@@ -57,6 +60,23 @@ int array_add_item( array_t* array, void* item ) {
     }
 
     array->items[ array->item_count++ ] = item;
+
+    return 0;
+}
+
+int array_add_items( array_t* array, array_t* other ) {
+    int i;
+    int error;
+
+    error = check_array_buffer( array, other->item_count );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    for ( i = 0; i < other->item_count; i++ ) {
+        array->items[ array->item_count++ ] = other->items[ i ];
+    }
 
     return 0;
 }
@@ -178,6 +198,7 @@ int array_set_realloc_size( array_t* array, int realloc_size ) {
     }
 
     array->realloc_size = realloc_size;
+    array->realloc_mask = realloc_size - 1;
 
     return 0;
 }
@@ -185,7 +206,8 @@ int array_set_realloc_size( array_t* array, int realloc_size ) {
 int init_array( array_t* array ) {
     array->item_count = 0;
     array->max_item_count = 0;
-    array->realloc_size = 1;
+    array->realloc_size = 8;
+    array->realloc_mask = array->realloc_size - 1;
     array->items = NULL;
 
     return 0;
