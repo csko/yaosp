@@ -26,5 +26,6 @@
 widget_t* create_textarea( void );
 
 int textarea_add_lines( widget_t* widget, array_t* lines );
+int textarea_set_lines( widget_t* widget, array_t* lines );
 
 #endif /* _YGUI_TEXTAREA_H_ */

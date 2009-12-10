@@ -182,6 +182,7 @@ int init_string_from_buffer( string_t* string, const char* data, size_t size ) {
     string->realloc_size = 8;
     string->realloc_mask = string->realloc_size - 1;
 
+    string->length = size;
     string->max_length = ( size + string->realloc_size - 1 ) & ~string->realloc_mask;
 
     string->buffer = ( char* )malloc( string->max_length + 1 );

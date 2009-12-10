@@ -1129,7 +1129,9 @@ static widget_operations_t scrollpanel_ops = {
     .get_maximum_size = NULL,
     .do_validate = NULL,
     .size_changed = scrollpanel_size_changed,
-    .child_added = scrollpanel_child_added
+    .added_to_window = NULL,
+    .child_added = scrollpanel_child_added,
+    .destroy = NULL
 };
 
 int scroll_panel_get_v_size( widget_t* widget ) {

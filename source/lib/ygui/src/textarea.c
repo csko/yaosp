@@ -197,6 +197,11 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
             textarea_current_line( textarea );
 
+            widget_signal_event_handler(
+                widget,
+                widget->event_ids[ E_PREF_SIZE_CHANGED ]
+            );
+
             break;
 
         case KEY_LEFT :
@@ -261,7 +266,7 @@ static int textarea_get_preferred_size( widget_t* widget, point_t* size ) {
 
     point_init(
         size,
-        -1,
+        450 /* todo */,
         array_get_size( &textarea->lines ) * font_get_height( textarea->font ) + 6
     );
 
@@ -345,7 +350,50 @@ int textarea_add_lines( widget_t* widget, array_t* lines ) {
     textarea = ( textarea_t* )widget_get_data( widget );
 
     array_add_items( &textarea->lines, lines );
-    widget_invalidate( widget, 1 );
+
+    /* The preferred size of the widget is just changed ... */
+
+    widget_signal_event_handler(
+        widget,
+        widget->event_ids[ E_PREF_SIZE_CHANGED ]
+    );
+
+    return 0;
+}
+
+int textarea_set_lines( widget_t* widget, array_t* lines ) {
+    int i;
+    int size;
+    textarea_t* textarea;
+
+    if ( ( widget == NULL ) ||
+         ( lines == NULL ) ||
+         ( widget_get_id( widget ) != W_TEXTAREA ) ) {
+        return -EINVAL;
+    }
+
+    textarea = ( textarea_t* )widget_get_data( widget );
+
+    size = array_get_size( &textarea->lines );
+
+    for ( i = 0; i < size; i++ ) {
+        string_t* line;
+
+        line = ( string_t* )array_get_item( &textarea->lines, i );
+
+        destroy_string( line );
+        free( line );
+    }
+
+    array_make_empty( &textarea->lines );
+    array_add_items( &textarea->lines, lines );
+
+    /* The preferred size of the widget is just changed ... */
+
+    widget_signal_event_handler(
+        widget,
+        widget->event_ids[ E_PREF_SIZE_CHANGED ]
+    );
 
     return 0;
 }

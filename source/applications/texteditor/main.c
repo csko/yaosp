@@ -26,6 +26,7 @@
 #include <ygui/textarea.h>
 #include <ygui/menubar.h>
 #include <ygui/menuitem.h>
+#include <ygui/scrollpanel.h>
 #include <ygui/layout/borderlayout.h>
 #include <ygui/dialog/filechooser.h>
 
@@ -39,7 +40,7 @@ static int file_loader_insert_lines( void* data ) {
     array_t* lines;
 
     lines = ( array_t* )data;
-    textarea_add_lines( textarea, lines );
+    textarea_set_lines( textarea, lines );
 
     destroy_array( lines );
     free( lines );
@@ -236,9 +237,13 @@ int main( int argc, char** argv ) {
 
     /* Textarea ... */
 
+    widget_t* scrollpanel = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_ALWAYS );
+    widget_add( container, scrollpanel, BRD_CENTER );
+
     textarea = create_textarea();
-    widget_add( container, textarea, BRD_CENTER );
+    widget_add( scrollpanel, textarea, NULL );
     widget_dec_ref( textarea );
+    widget_dec_ref( scrollpanel );
 
     window_show( window );
 
