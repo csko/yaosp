@@ -192,6 +192,16 @@ int array_make_empty( array_t* array ) {
     return 0;
 }
 
+int array_sort( array_t* array, array_item_comparator_t* comparator ) {
+    if ( array->item_count < 2 ) {
+        return 0;
+    }
+
+    qsort( array->items, array->item_count, sizeof( void* ), comparator );
+
+    return 0;
+}
+
 int array_set_realloc_size( array_t* array, int realloc_size ) {
     if ( realloc_size <= 0 ) {
         return -EINVAL;

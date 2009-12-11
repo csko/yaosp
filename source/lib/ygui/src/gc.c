@@ -185,6 +185,12 @@ int gc_set_font( gc_t* gc, font_t* font ) {
     int error;
     r_set_font_t* packet;
 
+    /* If this font is already active, we don't have to set it again. */
+
+    if ( gc->active_font == font->handle ) {
+        return 0;
+    }
+
     error = allocate_render_packet( gc->window, sizeof( r_set_font_t ), ( void** )&packet );
 
     if ( error < 0 ) {
@@ -193,6 +199,8 @@ int gc_set_font( gc_t* gc, font_t* font ) {
 
     packet->header.command = R_SET_FONT;
     packet->font_handle = font->handle;
+
+    gc->active_font = font->handle;
 
     return 0;
 }
@@ -464,6 +472,12 @@ int gc_clean_up( gc_t* gc ) {
     return 0;
 }
 
+int gc_clean_cache( gc_t* gc ) {
+    gc->active_font = -1;
+
+    return 0;
+}
+
 int init_gc( window_t* window, gc_t* gc ) {
     int error;
 
@@ -487,6 +501,8 @@ int init_gc( window_t* window, gc_t* gc ) {
         0,
         0
     );
+
+    gc_clean_cache( gc );
 
     return 0;
 

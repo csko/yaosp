@@ -192,6 +192,11 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
                 widget->event_ids[ E_PREF_SIZE_CHANGED ]
             );
 
+            widget_signal_event_handler(
+                widget,
+                widget->event_ids[ E_VIEWPORT_CHANGED ]
+            );
+
             break;
 
         case KEY_LEFT :

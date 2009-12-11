@@ -25,6 +25,7 @@
 #include <ygui/textfield.h>
 #include <ygui/dirview.h>
 #include <ygui/label.h>
+#include <ygui/scrollpanel.h>
 #include <ygui/dialog/filechooser.h>
 #include <ygui/layout/borderlayout.h>
 
@@ -109,6 +110,8 @@ static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
             chooser->current_path = new_path;
 
             label_set_text( chooser->path_label, new_path );
+            widget_set_scroll_offset( chooser->directory_view, NULL );
+
             directory_view_set_path( chooser->directory_view, new_path );
         }
     }
@@ -134,7 +137,7 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
     chooser->data = data;
 
     point_t position = { 50, 50 };
-    point_t size = { 250, 350 };
+    point_t size = { 275, 325 };
 
     chooser->window = create_window(
         type == T_OPEN_DIALOG ? "Open file" : "Save file",
@@ -158,9 +161,13 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
     widget_add( container, chooser->path_label, BRD_PAGE_START );
     widget_dec_ref( chooser->path_label );
 
+    widget_t* scrollpanel = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_ALWAYS );
+    widget_add( container, scrollpanel, BRD_CENTER );
+
     chooser->directory_view = create_directory_view( path );
-    widget_add( container, chooser->directory_view, BRD_CENTER );
+    widget_add( scrollpanel, chooser->directory_view, NULL );
     widget_dec_ref( chooser->directory_view );
+    widget_dec_ref( scrollpanel );
 
     widget_connect_event_handler(
         chooser->directory_view, "item-selected",

@@ -419,6 +419,7 @@ static void* window_thread( void* arg ) {
                 );
 
                 gc_push_restricted_area( &window->gc, &res_area );
+                gc_clean_cache( &window->gc );
 
                 /* Re-paint the widgets */
 
@@ -652,7 +653,13 @@ static void* window_thread( void* arg ) {
 
                 window->mouse_down_widget = window->mouse_widget;
 
-                point_sub_n( &widget_position, &cmd->mouse_position, &window->mouse_down_widget->position );
+                widget_t* tmp = window->mouse_down_widget;
+                point_copy( &widget_position, &cmd->mouse_position );
+                while ( tmp != NULL ) {
+                    point_sub( &widget_position, &tmp->position );
+                    tmp = tmp->parent;
+                }
+                point_sub( &widget_position, &window->mouse_down_widget->scroll_offset );
 
                 widget_mouse_pressed( window->mouse_down_widget, &widget_position, cmd->button );
 

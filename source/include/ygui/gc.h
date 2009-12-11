@@ -36,6 +36,10 @@ typedef struct gc {
     struct window* window;
     stack_t tr_stack;
     stack_t res_area_stack;
+
+    /* Cache */
+
+    int active_font;
 } gc_t;
 
 int gc_get_pen_color( gc_t* gc, color_t* color );

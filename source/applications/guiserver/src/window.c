@@ -28,7 +28,7 @@
 #include <graphicsdriver.h>
 #include <mouse.h>
 
-#define MAX_WINDOW_BUFSIZE 8192
+#define MAX_WINDOW_BUFSIZE 33000
 
 extern window_decorator_t* window_decorator;
 

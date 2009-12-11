@@ -69,6 +69,8 @@ rect_t* gc_current_restricted_area( gc_t* gc );
 int gc_push_translate_checkpoint( gc_t* gc );
 int gc_rollback_translate( gc_t* gc );
 
+int gc_clean_cache( gc_t* gc );
+
 int menu_close( menu_t* menu );
 
 int menuitem_menu_closed( widget_t* widget );

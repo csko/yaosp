@@ -29,16 +29,16 @@
 static int do_invalidate_widget( widget_t* widget, int notify_window ) {
     int i;
     int size;
-    widget_t* tmp;
 
     widget->is_valid = 0;
 
     size = array_get_size( &widget->children );
 
     for ( i = 0; i < size; i++ ) {
-        tmp = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
+        widget_wrapper_t* wrapper;
 
-        do_invalidate_widget( tmp, 0 );
+        wrapper = ( widget_wrapper_t* )array_get_item( &widget->children, i );
+        do_invalidate_widget( wrapper->widget, 0 );
     }
 
     if ( ( notify_window ) &&
@@ -68,6 +68,8 @@ int widget_add( widget_t* parent, widget_t* child, void* data ) {
     if ( parent->window != NULL ) {
         widget_set_window( child, parent->window );
     }
+
+    child->parent = parent;
 
     /* Notify the parent widget about the new child */
 
@@ -187,7 +189,6 @@ int widget_get_size( widget_t* widget, point_t* size ) {
 int widget_set_window( widget_t* widget, struct window* window ) {
     int i;
     int size;
-    widget_t* child;
 
     widget->window = window;
 
@@ -198,9 +199,11 @@ int widget_set_window( widget_t* widget, struct window* window ) {
     size = array_get_size( &widget->children );
 
     for ( i = 0; i < size; i++ ) {
-        child = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
+        widget_wrapper_t* wrapper;
 
-        widget_set_window( child, window );
+        wrapper = ( widget_wrapper_t* )array_get_item( &widget->children, i );
+
+        widget_set_window( wrapper->widget, window );
     }
 
     return 0;
@@ -233,6 +236,16 @@ int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t*
 int widget_set_preferred_size( widget_t* widget, point_t* size ) {
     point_copy( &widget->preferred_size, size );
     widget->is_pref_size_set = 1;
+
+    return 0;
+}
+
+int widget_set_scroll_offset( widget_t* widget, point_t* scroll_offset ) {
+    if ( scroll_offset != NULL ) {
+        point_copy( &widget->scroll_offset, scroll_offset );
+    } else {
+        point_init( &widget->scroll_offset, 0, 0 );
+    }
 
     return 0;
 }
@@ -546,6 +559,7 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
     widget->data = data;
     widget->ref_count = 1;
     widget->border = NULL;
+    widget->parent = NULL;
 
     widget->ops = ops;
     widget->window = NULL;

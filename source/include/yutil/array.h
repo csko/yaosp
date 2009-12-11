@@ -27,6 +27,8 @@ typedef struct array {
     void** items;
 } array_t;
 
+typedef int array_item_comparator_t( const void* item1, const void* item2 );
+
 int array_add_item( array_t* array, void* item );
 int array_add_items( array_t* array, array_t* other );
 int array_insert_item( array_t* array, int index, void* item );
@@ -36,6 +38,7 @@ int array_get_size( array_t* array );
 void* array_get_item( array_t* array, int index );
 int array_index_of( array_t* array, void* item );
 int array_make_empty( array_t* array );
+int array_sort( array_t* array, array_item_comparator_t* comparator );
 
 int array_set_realloc_size( array_t* array, int realloc_size );
 

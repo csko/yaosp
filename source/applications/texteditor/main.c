@@ -172,8 +172,8 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    point_t pos = { 75, 75 };
-    point_t size = { 300, 300 };
+    point_t pos = { 25, 25 };
+    point_t size = { 450, 350 };
 
     window = create_window( "Text editor", &pos, &size, WINDOW_NONE );
 

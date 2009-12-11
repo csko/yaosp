@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_RENDER_H_
-#define _YAOSP_RENDER_H_
+#ifndef _YGUI_RENDER_H_
+#define _YGUI_RENDER_H_
 
 #include <sys/types.h>
 
@@ -25,7 +25,7 @@
 #include <ygui/color.h>
 #include <ygui/yconstants.h>
 
-#define DEFAULT_RENDER_BUFFER_SIZE 8192
+#define DEFAULT_RENDER_BUFFER_SIZE 32768
 
 enum {
     R_SET_PEN_COLOR = 1,
@@ -85,4 +85,4 @@ typedef struct r_draw_bitmap {
     point_t position;
 } __attribute__(( packed )) r_draw_bitmap_t;
 
-#endif /* _YAOSP_RENDER_H_ */
+#endif /* _YGUI_RENDER_H_ */

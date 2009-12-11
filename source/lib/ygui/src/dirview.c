@@ -93,6 +93,21 @@ static dir_item_t* create_dir_item( char* name, directory_item_type_t type ) {
     return item;
 }
 
+static int dir_item_comparator( const void* data1, const void* data2 ) {
+    dir_item_t* item1 = *( dir_item_t** )data1;
+    dir_item_t* item2 = *( dir_item_t** )data2;
+
+    if ( ( item1->type == T_DIRECTORY ) &&
+        ( item2->type == T_FILE ) ) {
+        return -1;
+    } else if ( ( item1->type == T_FILE ) &&
+                ( item2->type == T_DIRECTORY ) ) {
+        return 1;
+    }
+
+    return strcmp( item1->name, item2->name );
+}
+
 static void* dirview_worker( void* data ) {
     widget_t* widget;
     dir_view_t* dir_view;
@@ -174,9 +189,18 @@ static void* dirview_worker( void* data ) {
             }
         }
 
+        array_sort( &dir_view->items, dir_item_comparator );
+
         /* Invalidate the widget ... */
 
-        widget_invalidate( widget );
+        pthread_mutex_unlock( &dir_view->lock );
+
+        widget_signal_event_handler(
+            widget,
+            widget->event_ids[ E_PREF_SIZE_CHANGED ]
+        );
+
+        pthread_mutex_lock( &dir_view->lock );
     }
 
     pthread_mutex_unlock( &dir_view->lock );
@@ -318,7 +342,17 @@ static int dirview_mouse_pressed( widget_t* widget, point_t* position, int butto
 }
 
 static int dirview_get_preferred_size( widget_t* widget, point_t* size ) {
-    point_init( size, 0, 0 );
+    dir_view_t* dir_view;
+
+    dir_view = ( dir_view_t* )widget_get_data( widget );
+
+    pthread_mutex_lock( &dir_view->lock );
+    point_init(
+        size,
+        0,
+        LINE_HEIGHT * array_get_size( &dir_view->items ) + 8
+    );
+    pthread_mutex_unlock( &dir_view->lock );
 
     return 0;
 }
