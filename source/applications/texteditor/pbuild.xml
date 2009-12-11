@@ -69,7 +69,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../lib/start/objs/libstart.a</input>
             <input>../../lib/ygui/objs/libygui.a</input>
-            <input>../../thirdparty/libpng-1.2.40/libpng-1.2.40/objs/libpng.a</input>
+            <input>../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
             <input>../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
             <input>../../lib/yutil/objs/libyutil.a</input>
             <input>../../lib/c/objs/libc.a</input>
