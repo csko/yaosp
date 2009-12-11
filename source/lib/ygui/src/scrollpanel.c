@@ -44,12 +44,13 @@ typedef struct scrollpanel {
 static void scrollbar_calc_vertical_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible );
 static void scrollbar_calc_horizontal_slider( widget_t* widget, scrollbar_t* scrollbar, widget_t* child, int other_visible );
 
+static color_t fg_color = { 0, 0, 0, 255 };
+static color_t bg_color = { 216, 216, 216, 255 };
+static color_t darker_bg_color = { 176, 176, 176, 255 };
+
 static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* gc ) {
     rect_t tmp;
     rect_t bounds;
-
-    static color_t fg_color = { 0, 0, 0, 0xFF };
-    static color_t darker_bg_color = { 176, 176, 176, 0xFF };
 
     widget_get_bounds( widget, &bounds );
 
@@ -58,6 +59,10 @@ static void paint_v_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         bounds.right - SCROLL_BAR_SIZE + 1,
         0
     );
+
+    rect_init( &tmp, 0, 0, SCROLL_BAR_SIZE - 1, bounds.bottom );
+    gc_set_pen_color( gc, &bg_color );
+    gc_fill_rect( gc, &tmp );
 
     gc_set_pen_color( gc, &fg_color );
 
@@ -229,9 +234,6 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
     rect_t tmp;
     rect_t bounds;
 
-    static color_t fg_color = { 0, 0, 0, 0xFF };
-    static color_t darker_bg_color = { 176, 176, 176, 0xFF };
-
     widget_get_bounds( widget, &bounds );
 
     gc_translate_xy(
@@ -239,6 +241,10 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         0,
         bounds.bottom - SCROLL_BAR_SIZE + 1
     );
+
+    rect_init( &tmp, 0, 0, bounds.right, SCROLL_BAR_SIZE - 1 );
+    gc_set_pen_color( gc, &bg_color );
+    gc_fill_rect( gc, &tmp );
 
     gc_set_pen_color( gc, &fg_color );
 
@@ -407,17 +413,7 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
 }
 
 static int scrollpanel_paint( widget_t* widget, gc_t* gc ) {
-    rect_t bounds;
     scrollpanel_t* scrollpanel;
-
-    static color_t bg_color = { 216, 216, 216, 0xFF };
-
-    widget_get_bounds( widget, &bounds );
-
-    /* Fill the widget with the background color */
-
-    gc_set_pen_color( gc, &bg_color );
-    gc_fill_rect( gc, &bounds );
 
     scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
 
