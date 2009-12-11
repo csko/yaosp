@@ -40,6 +40,7 @@ typedef struct gc {
     /* Cache */
 
     int active_font;
+    int need_to_flush;
 } gc_t;
 
 int gc_get_pen_color( gc_t* gc, color_t* color );

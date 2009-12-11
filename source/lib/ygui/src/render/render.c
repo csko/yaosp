@@ -17,18 +17,20 @@
  */
 
 #include <errno.h>
-#include <yaosp/debug.h>
 
 #include <ygui/protocol.h>
 #include <ygui/render/render.h>
 
 #include "../internal.h"
 
+//#define DEBUG_RENDER_BUFFER
+
 typedef struct r_buf_header {
     ipc_port_id reply_port;
 } __attribute__(( packed )) r_buf_header_t;
 
-#if 0
+#ifdef DEBUG_RENDER_BUFFER
+#include <yaosp/debug.h>
 static int dump_render_buffer( window_t* window ) {
     int remaining;
     uint8_t* data;
@@ -172,7 +174,9 @@ int flush_render_buffer( window_t* window ) {
         return 0;
     }
 
-    //dump_render_buffer( window );
+#ifdef DEBUG_RENDER_BUFFER
+    dump_render_buffer( window );
+#endif /* DEBUG_RENDER_BUFFER */
 
     error = send_ipc_message( window->server_port, MSG_RENDER_COMMANDS, window->render_buffer, window->render_buffer_size );
 

@@ -353,6 +353,8 @@ int gc_draw_rect( gc_t* gc, rect_t* rect ) {
     packet->header.command = R_DRAW_RECT;
     rect_copy( &packet->rect, &tmp );
 
+    gc->need_to_flush = 1;
+
     return 0;
 }
 
@@ -380,6 +382,8 @@ int gc_fill_rect( gc_t* gc, rect_t* rect ) {
 
     packet->header.command = R_FILL_RECT;
     rect_copy( &packet->rect, &tmp );
+
+    gc->need_to_flush = 1;
 
     return 0;
 }
@@ -416,6 +420,8 @@ int gc_draw_text( gc_t* gc, point_t* position, const char* text, int length ) {
     point_add_n( &packet->position, position, &gc->lefttop );
     memcpy( ( void* )( packet + 1 ), text, length );
 
+    gc->need_to_flush = 1;
+
     return 0;
 }
 
@@ -436,6 +442,8 @@ int gc_draw_bitmap( gc_t* gc, point_t* position, bitmap_t* bitmap ) {
     packet->header.command = R_DRAW_BITMAP;
     packet->bitmap_id = bitmap->id;
     point_add_n( &packet->position, position, &gc->lefttop );
+
+    gc->need_to_flush = 1;
 
     return 0;
 }
@@ -474,6 +482,7 @@ int gc_clean_up( gc_t* gc ) {
 
 int gc_clean_cache( gc_t* gc ) {
     gc->active_font = -1;
+    gc->need_to_flush = 0;
 
     return 0;
 }

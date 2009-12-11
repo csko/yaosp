@@ -429,20 +429,24 @@ static void* window_thread( void* arg ) {
 
                 gc_clean_up( &window->gc );
 
-                /* Add the terminator item to the render command list */
+                if ( window->gc.need_to_flush ) {
+                    /* Add the terminator item to the render command list */
 
-                error = allocate_render_packet( window, sizeof( render_header_t ), ( void** )&header );
+                    if ( allocate_render_packet( window, sizeof( render_header_t ), ( void** )&header ) >= 0 ) {
+                        header->command = R_DONE;
+                    }
 
-                if ( error >= 0 ) {
-                    header->command = R_DONE;
-                }
+                    /* Send the rendering commands to the guiserver */
 
-                /* Send the rendering commands to the guiserver */
+                    error = flush_render_buffer( window );
 
-                error = flush_render_buffer( window );
+                    if ( error < 0 ) {
+                        dbprintf( "window_thread(): Failed to flush render buffer: %d.\n", error );
+                    }
+                } else {
+                    /* Simply clean the render buffer */
 
-                if ( error < 0 ) {
-                    dbprintf( "window_thread(): Failed to flush render buffer: %d.\n", error );
+                    initialize_render_buffer( window );
                 }
 
                 /* Show the window (if needed) */
