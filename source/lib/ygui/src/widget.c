@@ -26,6 +26,29 @@
 
 #include "internal.h"
 
+static int do_invalidate_widget( widget_t* widget, int notify_window ) {
+    int i;
+    int size;
+    widget_t* tmp;
+
+    widget->is_valid = 0;
+
+    size = array_get_size( &widget->children );
+
+    for ( i = 0; i < size; i++ ) {
+        tmp = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
+
+        do_invalidate_widget( tmp, 0 );
+    }
+
+    if ( ( notify_window ) &&
+         ( widget->window != NULL ) ) {
+        send_ipc_message( widget->window->client_port, MSG_WIDGET_INVALIDATED, NULL, 0 );
+    }
+
+    return 0;
+}
+
 int widget_add( widget_t* parent, widget_t* child, void* data ) {
     widget_wrapper_t* wrapper;
 
@@ -202,7 +225,7 @@ int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t*
 
     /* As the size of the widget is changed, we should repaint it ... */
 
-    widget_invalidate( widget, 0 );
+    do_invalidate_widget( widget, 0 );
 
     return 0;
 }
@@ -353,26 +376,8 @@ int widget_paint( widget_t* widget, gc_t* gc ) {
     return 0;
 }
 
-int widget_invalidate( widget_t* widget, int notify_window ) {
-    int i;
-    int size;
-    widget_t* tmp;
-
-    widget->is_valid = 0;
-
-    size = array_get_size( &widget->children );
-
-    for ( i = 0; i < size; i++ ) {
-        tmp = ( ( widget_wrapper_t* )array_get_item( &widget->children, i ) )->widget;
-
-        widget_invalidate( tmp, 0 );
-    }
-
-    if ( ( notify_window ) &&
-         ( widget->window != NULL ) ) {
-        send_ipc_message( widget->window->client_port, MSG_WIDGET_INVALIDATED, NULL, 0 );
-    }
-
+int widget_invalidate( widget_t* widget ) {
+    do_invalidate_widget( widget, 1 );
     return 0;
 }
 

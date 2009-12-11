@@ -46,7 +46,7 @@ static int cpuload_update_callback( window_t* window, void* data ) {
     prev_time = cur_time;
 
     widget = ( widget_t* )data;
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }

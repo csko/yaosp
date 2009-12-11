@@ -470,7 +470,7 @@ static void do_v_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
 
     /* Invalidate the scrollpanel */
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 }
 
 static void do_v_scroll_set( widget_t* widget, scrollbar_t* scrollbar, int value ) {
@@ -507,7 +507,7 @@ static void do_v_scroll_set( widget_t* widget, scrollbar_t* scrollbar, int value
 
     /* Invalidate the scrollpanel */
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 }
 
 static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
@@ -537,7 +537,7 @@ static void do_v_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
 
     child->scroll_offset.y = new_offset;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 }
 
 static void do_h_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) {
@@ -574,7 +574,7 @@ static void do_h_scroll( widget_t* widget, scrollbar_t* scrollbar, int amount ) 
 
     /* Invalidate the scrollpanel */
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 }
 
 static void do_h_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
@@ -604,7 +604,7 @@ static void do_h_scroll_to( widget_t* widget, scrollbar_t* scrollbar ) {
 
     child->scroll_offset.x = new_offset;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 }
 
 static void scrollpanel_vertical_drag( widget_t* widget, scrollbar_t* scrollbar, point_t* point ) {
@@ -1104,7 +1104,7 @@ static int child_preferred_size_changed( widget_t* widget, void* data ) {
 
     /* Request a repaint on the scrollpanel widget */
 
-    widget_invalidate( parent, 1 );
+    widget_invalidate( parent );
 
     return 0;
 }
@@ -1143,7 +1143,7 @@ static int child_viewport_changed( widget_t* widget, void* data ) {
 
     /* Request a repaint on the scrollpanel widget */
 
-    widget_invalidate( parent, 1 );
+    widget_invalidate( parent );
 
     return 0;
 }

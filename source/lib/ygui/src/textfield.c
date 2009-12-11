@@ -168,7 +168,7 @@ static int textfield_key_pressed( widget_t* widget, int key ) {
             break;
     }
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -199,6 +199,7 @@ static widget_operations_t textfield_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = textfield_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
@@ -231,7 +232,7 @@ int textfield_set_text( widget_t* widget, char* text ) {
         string_append( &textfield->buffer, text, strlen( text ) );
     }
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -278,7 +279,7 @@ widget_t* create_textfield( void ) {
     /* TODO: destroy the widget */
 
  error4:
-    /* TODO: destroy the font */
+    destroy_font( textfield->font );
 
  error3:
     destroy_string( &textfield->buffer );

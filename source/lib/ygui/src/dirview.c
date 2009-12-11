@@ -176,7 +176,7 @@ static void* dirview_worker( void* data ) {
 
         /* Invalidate the widget ... */
 
-        widget_invalidate( widget, 1 );
+        widget_invalidate( widget );
     }
 
     pthread_mutex_unlock( &dir_view->lock );
@@ -297,7 +297,7 @@ static int dirview_mouse_pressed( widget_t* widget, point_t* position, int butto
         /* Invalidate the widget if the selected item is changed */
 
         dir_view->click_time = now;
-        widget_invalidate( widget, 1 );
+        widget_invalidate( widget );
     } else {
         /* Notify ITEM_DOUBLE_CLICKED listeners if needed */
 
@@ -519,7 +519,7 @@ int directory_view_set_path( widget_t* widget, const char* path ) {
     pthread_mutex_unlock( &dir_view->lock );
     pthread_cond_signal( &dir_view->condition );
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }

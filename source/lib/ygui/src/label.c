@@ -144,6 +144,7 @@ static widget_operations_t label_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = label_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
@@ -189,7 +190,7 @@ widget_t* create_label( const char* text ) {
     return widget;
 
  error4:
-    /* TODO: free the font */
+    destroy_font( label->font );
 
  error3:
     free( label->text );
@@ -203,18 +204,25 @@ widget_t* create_label( const char* text ) {
 
 int label_set_text( widget_t* widget, const char* text ) {
     label_t* label;
+    char* new_text;
 
     if ( ( widget == NULL ) ||
          ( widget_get_id( widget ) != W_LABEL ) ) {
         return -EINVAL;
     }
 
+    new_text = strdup( text );
+
+    if ( new_text == NULL ) {
+        return -ENOMEM;
+    }
+
     label = ( label_t* )widget_get_data( widget );
 
     free( label->text );
-    label->text = strdup( text ); /* todo: error checking */
+    label->text = new_text;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -230,7 +238,7 @@ int label_set_vertical_alignment( widget_t* widget, v_alignment_t alignment ) {
     label = ( label_t* )widget_get_data( widget );
     label->v_align = alignment;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -246,7 +254,7 @@ int label_set_horizontal_alignment( widget_t* widget, h_alignment_t alignment ) 
     label = ( label_t* )widget_get_data( widget );
     label->h_align = alignment;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }

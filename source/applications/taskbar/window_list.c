@@ -86,7 +86,7 @@ static int window_item_free( window_item_t* item ) {
 
 static int window_list_add( void* data ) {
     array_add_item( &window_table, data );
-    widget_invalidate( win_list_widget, 1 );
+    widget_invalidate( win_list_widget );
 
     return 0;
 }
@@ -110,7 +110,7 @@ static int window_list_remove( void* data ) {
             array_remove_item_from( &window_table, i );
             window_item_free( item );
 
-            widget_invalidate( win_list_widget, 1 );
+            widget_invalidate( win_list_widget );
 
             return 0;
         }
@@ -348,7 +348,7 @@ widget_t* window_list_create( void ) {
     return create_widget( W_WINDOW_LIST, &win_list_ops, NULL );
 
  error3:
-    /* TODO: destroy the font */
+    destroy_font( list_font );
 
  error2:
     destroy_array( &window_table );

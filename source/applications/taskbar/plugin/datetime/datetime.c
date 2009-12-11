@@ -32,7 +32,7 @@ static int datetime_update_callback( window_t* window, void* data ) {
     widget_t* widget;
 
     widget = ( widget_t* )data;
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }

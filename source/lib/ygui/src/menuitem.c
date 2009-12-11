@@ -149,7 +149,7 @@ static int menu_item_mouse_entered( widget_t* widget, point_t* position ) {
             break;
     }
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -160,7 +160,7 @@ static int menu_item_mouse_exited( widget_t* widget ) {
     item = ( menu_item_t* )widget_get_data( widget );
     item->active = 0;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -301,7 +301,7 @@ widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* imag
     /* TODO: free the widget */
 
  error4:
-    /* TODO: free the font */
+    destroy_font( item->font );
 
  error3:
     free( item->text );

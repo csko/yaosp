@@ -269,7 +269,7 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
         }
     }
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -356,7 +356,7 @@ widget_t* create_textarea( void ) {
     return widget;
 
  error4:
-    /* todo: destroy the font */
+    destroy_font( textarea->font );
 
  error3:
     destroy_array( &textarea->lines );

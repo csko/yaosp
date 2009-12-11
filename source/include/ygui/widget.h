@@ -129,7 +129,7 @@ int widget_set_border( widget_t* widget, border_t* border );
 int widget_inc_ref( widget_t* widget );
 int widget_dec_ref( widget_t* widget );
 int widget_paint( widget_t* widget, gc_t* gc );
-int widget_invalidate( widget_t* widget, int notify_window );
+int widget_invalidate( widget_t* widget );
 
 int widget_key_pressed( widget_t* widget, int key );
 int widget_key_released( widget_t* widget, int key );

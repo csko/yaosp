@@ -140,7 +140,7 @@ static int button_pressed( widget_t* widget, point_t* pos, int mouse_button ) {
     button = ( button_t* )widget_get_data( widget );
     button->pressed = 1;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     return 0;
 }
@@ -151,7 +151,7 @@ static int button_released( widget_t* widget, int mouse_button ) {
     button = ( button_t* )widget_get_data( widget );
     button->pressed = 0;
 
-    widget_invalidate( widget, 1 );
+    widget_invalidate( widget );
 
     widget_signal_event_handler( widget, button_events[ E_CLICKED ] );
 
@@ -196,6 +196,7 @@ static widget_operations_t button_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = button_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
@@ -246,10 +247,10 @@ widget_t* create_button( const char* text ) {
     return widget;
 
  error5:
-    /* TODO: destroy the widget */
+    /* todo: destroy the widget */
 
  error4:
-    /* TODO: free the font */
+    destroy_font( button->font );
 
  error3:
     free( button->text );
