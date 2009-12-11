@@ -410,16 +410,15 @@ static void* window_thread( void* arg ) {
 
                 /* Setup the initial restricted area */
 
+                gc_clean_cache( &window->gc );
+
                 rect_init(
                     &res_area,
-                    0,
-                    0,
+                    0, 0,
                     window->container->visible_size.x - 1,
                     window->container->visible_size.y - 1
                 );
-
                 gc_push_restricted_area( &window->gc, &res_area );
-                gc_clean_cache( &window->gc );
 
                 /* Re-paint the widgets */
 

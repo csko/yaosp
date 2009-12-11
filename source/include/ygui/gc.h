@@ -31,8 +31,10 @@ struct window;
 typedef struct gc {
     point_t lefttop;
     rect_t clip_rect;
-    color_t pen_color;
     int is_clip_valid;
+    color_t pen_color;
+    int is_pen_valid;
+
     struct window* window;
     stack_t tr_stack;
     stack_t res_area_stack;
@@ -41,6 +43,7 @@ typedef struct gc {
 
     int active_font;
     int need_to_flush;
+    int last_command;
 } gc_t;
 
 int gc_get_pen_color( gc_t* gc, color_t* color );

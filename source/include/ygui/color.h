@@ -50,6 +50,13 @@ static inline void color_invert( color_t* color ) {
     color->blue = 255 - color->blue;
 }
 
+static inline int color_equals( color_t* color1, color_t* color2 ) {
+    return ( ( color1->red == color2->red ) &&
+             ( color1->green == color2->green ) &&
+             ( color1->blue == color2->blue ) &&
+             ( color1->alpha == color2->alpha ) );
+}
+
 static inline void color_init( color_t* color, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha ) {
     color->red = red;
     color->green = green;

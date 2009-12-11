@@ -132,7 +132,7 @@ static int dump_render_buffer( window_t* window ) {
 
     return 0;
 }
-#endif
+#endif /* DEBUG_RENDER_BUFFER */
 
 int initialize_render_buffer( window_t* window ) {
     r_buf_header_t* header;

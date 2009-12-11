@@ -61,13 +61,20 @@ int gc_push_restricted_area( gc_t* gc, rect_t* area ) {
 
     /* Tell the clip rect to the render engine */
 
-    error = allocate_render_packet( gc->window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
+    if ( gc->last_command != R_SET_CLIP_RECT )  {
+        error = allocate_render_packet( gc->window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
 
-    if ( error < 0 ) {
-        return error;
+        if ( error < 0 ) {
+            return error;
+        }
+
+        packet->header.command = R_SET_CLIP_RECT;
+        gc->last_command = R_SET_CLIP_RECT;
+    } else {
+        packet = ( r_set_clip_rect_t* )( gc->window->render_buffer + ( gc->window->render_buffer_size - sizeof( r_set_clip_rect_t ) ) );
+        assert( packet->header.command == R_SET_CLIP_RECT );
     }
 
-    packet->header.command = R_SET_CLIP_RECT;
     rect_copy( &packet->clip_rect, tmp );
 
     return 0;
@@ -167,16 +174,29 @@ int gc_set_pen_color( gc_t* gc, color_t* color ) {
     int error;
     r_set_pen_color_t* packet;
 
-    error = allocate_render_packet( gc->window, sizeof( r_set_pen_color_t ), ( void** )&packet );
-
-    if ( error < 0 ) {
-        return error;
+    if ( ( gc->is_pen_valid ) &&
+         ( color_equals( &gc->pen_color, color ) ) ) {
+        return 0;
     }
 
-    packet->header.command = R_SET_PEN_COLOR;
-    color_copy( &packet->color, color );
-
     color_copy( &gc->pen_color, color );
+    gc->is_pen_valid = 1;
+
+    if ( gc->last_command != R_SET_PEN_COLOR ) {
+        error = allocate_render_packet( gc->window, sizeof( r_set_pen_color_t ), ( void** )&packet );
+
+        if ( error < 0 ) {
+            return error;
+        }
+
+        packet->header.command = R_SET_PEN_COLOR;
+        gc->last_command = R_SET_PEN_COLOR;
+    } else {
+        packet = ( r_set_pen_color_t* )( gc->window->render_buffer + ( gc->window->render_buffer_size - sizeof( r_set_pen_color_t ) ) );
+        assert( packet->header.command == R_SET_PEN_COLOR );
+    }
+
+    color_copy( &packet->color, color );
 
     return 0;
 }
@@ -201,6 +221,7 @@ int gc_set_font( gc_t* gc, font_t* font ) {
     packet->font_handle = font->handle;
 
     gc->active_font = font->handle;
+    gc->last_command = R_SET_FONT;
 
     return 0;
 }
@@ -232,13 +253,20 @@ int gc_set_clip_rect( gc_t* gc, rect_t* rect ) {
 
     rect_copy( &gc->clip_rect, &tmp );
 
-    error = allocate_render_packet( gc->window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
+    if ( gc->last_command != R_SET_CLIP_RECT )  {
+        error = allocate_render_packet( gc->window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
 
-    if ( error < 0 ) {
-        return error;
+        if ( error < 0 ) {
+            return error;
+        }
+
+        packet->header.command = R_SET_CLIP_RECT;
+        gc->last_command = R_SET_CLIP_RECT;
+    } else {
+        packet = ( r_set_clip_rect_t* )( ( gc->window->render_buffer + ( gc->window->render_buffer_size - sizeof( r_set_clip_rect_t ) ) ) );
+        assert( packet->header.command == R_SET_CLIP_RECT );
     }
 
-    packet->header.command = R_SET_CLIP_RECT;
     rect_copy( &packet->clip_rect, &tmp );
 
     return 0;
@@ -260,13 +288,20 @@ int gc_reset_clip_rect( gc_t* gc ) {
     gc->is_clip_valid = 1;
     rect_copy( &gc->clip_rect, res_area );
 
-    error = allocate_render_packet( gc->window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
+    if ( gc->last_command != R_SET_CLIP_RECT ) {
+        error = allocate_render_packet( gc->window, sizeof( r_set_clip_rect_t ), ( void** )&packet );
 
-    if ( error < 0 ) {
-        return error;
+        if ( error < 0 ) {
+            return error;
+        }
+
+        packet->header.command = R_SET_CLIP_RECT;
+        gc->last_command = R_SET_CLIP_RECT;
+    } else {
+        packet = ( r_set_clip_rect_t* )( ( gc->window->render_buffer + ( gc->window->render_buffer_size - sizeof( r_set_clip_rect_t ) ) ) );
+        assert( packet->header.command == R_SET_CLIP_RECT );
     }
 
-    packet->header.command = R_SET_CLIP_RECT;
     rect_copy( &packet->clip_rect, res_area );
 
     return 0;
@@ -325,6 +360,8 @@ int gc_set_drawing_mode( gc_t* gc, drawing_mode_t mode ) {
     packet->header.command = R_SET_DRAWING_MODE;
     packet->mode = mode;
 
+    gc->last_command = R_SET_DRAWING_MODE;
+
     return 0;
 }
 
@@ -354,6 +391,7 @@ int gc_draw_rect( gc_t* gc, rect_t* rect ) {
     rect_copy( &packet->rect, &tmp );
 
     gc->need_to_flush = 1;
+    gc->last_command = R_DRAW_RECT;
 
     return 0;
 }
@@ -384,6 +422,7 @@ int gc_fill_rect( gc_t* gc, rect_t* rect ) {
     rect_copy( &packet->rect, &tmp );
 
     gc->need_to_flush = 1;
+    gc->last_command = R_FILL_RECT;
 
     return 0;
 }
@@ -421,6 +460,7 @@ int gc_draw_text( gc_t* gc, point_t* position, const char* text, int length ) {
     memcpy( ( void* )( packet + 1 ), text, length );
 
     gc->need_to_flush = 1;
+    gc->last_command = R_DRAW_TEXT;
 
     return 0;
 }
@@ -444,6 +484,7 @@ int gc_draw_bitmap( gc_t* gc, point_t* position, bitmap_t* bitmap ) {
     point_add_n( &packet->position, position, &gc->lefttop );
 
     gc->need_to_flush = 1;
+    gc->last_command = R_DRAW_BITMAP;
 
     return 0;
 }
@@ -481,8 +522,10 @@ int gc_clean_up( gc_t* gc ) {
 }
 
 int gc_clean_cache( gc_t* gc ) {
+    gc->is_pen_valid = 0;
     gc->active_font = -1;
     gc->need_to_flush = 0;
+    gc->last_command = -1;
 
     return 0;
 }
