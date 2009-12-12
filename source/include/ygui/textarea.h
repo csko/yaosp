@@ -25,6 +25,9 @@
 
 widget_t* create_textarea( void );
 
+int textarea_get_line_count( widget_t* widget );
+char* textarea_get_line( widget_t* widget, int index );
+
 int textarea_add_lines( widget_t* widget, array_t* lines );
 int textarea_set_lines( widget_t* widget, array_t* lines );
 

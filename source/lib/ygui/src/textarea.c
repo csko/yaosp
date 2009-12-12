@@ -323,7 +323,8 @@ static widget_operations_t textarea_ops = {
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = NULL
 };
 
 widget_t* create_textarea( void ) {
@@ -371,6 +372,39 @@ widget_t* create_textarea( void ) {
 
  error1:
     return NULL;
+}
+
+int textarea_get_line_count( widget_t* widget ) {
+    textarea_t* textarea;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_TEXTAREA ) ) {
+        return 0;
+    }
+
+    textarea = ( textarea_t* )widget_get_data( widget );
+
+    return array_get_size( &textarea->lines );
+}
+
+char* textarea_get_line( widget_t* widget, int index ) {
+    textarea_t* textarea;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_TEXTAREA )||
+         ( index < 0 ) ) {
+        return NULL;
+    }
+
+    textarea = ( textarea_t* )widget_get_data( widget );
+
+    if ( index >= array_get_size( &textarea->lines ) ) {
+        return NULL;
+    }
+
+    string_t* line = ( string_t* )array_get_item( &textarea->lines, index );
+
+    return string_dup_buffer( line );
 }
 
 int textarea_add_lines( widget_t* widget, array_t* lines ) {

@@ -36,6 +36,8 @@
 static window_t* window;
 static widget_t* textarea;
 
+static char* opened_file = NULL;
+
 static int file_loader_insert_lines( void* data ) {
     array_t* lines;
 
@@ -51,7 +53,6 @@ static int file_loader_insert_lines( void* data ) {
 static void* file_loader_thread( void* arg ) {
     int f;
     int ret;
-    char* file;
     char tmp[ 8192 ];
 
     char* input = NULL;
@@ -62,8 +63,7 @@ static void* file_loader_thread( void* arg ) {
     init_array( lines );
     array_set_realloc_size( lines, 256 );
 
-    file = ( char* )arg;
-    f = open( file, O_RDONLY );
+    f = open( opened_file, O_RDONLY );
 
     if ( f < 0 ) {
         goto out;
@@ -119,8 +119,6 @@ static void* file_loader_thread( void* arg ) {
     close( f );
 
  out:
-    free( file );
-
     if ( array_get_size( lines ) > 0 ) {
         window_insert_callback( window, file_loader_insert_lines, ( void* )lines );
     } else {
@@ -131,9 +129,9 @@ static void* file_loader_thread( void* arg ) {
     return NULL;
 }
 
-static int event_file_chooser_done( file_chooser_t* chooser, chooser_event_t event, void* data ) {
+static int event_open_file_chooser_done( file_chooser_t* chooser, chooser_event_t event, void* data ) {
     if ( event == E_CHOOSER_OK ) {
-        char* file = file_chooser_get_selected_file( chooser );
+        opened_file = file_chooser_get_selected_file( chooser );
 
         pthread_t thread;
         pthread_attr_t attr;
@@ -143,7 +141,7 @@ static int event_file_chooser_done( file_chooser_t* chooser, chooser_event_t eve
 
         pthread_create(
             &thread, &attr,
-            file_loader_thread, ( void* )file
+            file_loader_thread, NULL
         );
 
         pthread_attr_destroy( &attr );
@@ -152,11 +150,72 @@ static int event_file_chooser_done( file_chooser_t* chooser, chooser_event_t eve
     return 0;
 }
 
+static int file_save_callback( void* data ) {
+    int f;
+    char* file;
+
+    file = ( char* )data;
+
+    f = open( file, O_WRONLY | O_CREAT | O_TRUNC );
+
+    if ( f < 0 ) {
+        goto out;
+    }
+
+    int i;
+    int line_count = textarea_get_line_count( textarea );
+
+    for ( i = 0; i < line_count; i++ ) {
+        char* line = textarea_get_line( textarea, i );
+
+        write( f, line, strlen( line ) );
+        write( f, "\n", 1 );
+
+        free( line );
+    }
+
+    close( f );
+
+ out:
+    free( file );
+
+    return 0;
+}
+
+static int do_save_file( const char* file ) {
+    window_insert_callback( window, file_save_callback, ( void* )file );
+
+    return 0;
+}
+
+static int event_save_file_chooser_done( file_chooser_t* chooser, chooser_event_t event, void* data ) {
+    if ( event == E_CHOOSER_OK ) {
+        char* file = file_chooser_get_selected_file( chooser );
+
+        do_save_file( file );
+    }
+
+    return 0;
+}
+
 static int event_open_file( widget_t* widget, void* data ) {
     file_chooser_t* chooser;
 
-    chooser = create_file_chooser( T_OPEN_DIALOG, "/", event_file_chooser_done, NULL );
+    chooser = create_file_chooser( T_OPEN_DIALOG, "/", event_open_file_chooser_done, NULL );
     file_chooser_show( chooser );
+
+    return 0;
+}
+
+static int event_save_file( widget_t* widget, void* data ) {
+    if ( opened_file == NULL ) {
+        file_chooser_t* chooser;
+
+        chooser = create_file_chooser( T_SAVE_DIALOG, "/", event_save_file_chooser_done, NULL );
+        file_chooser_show( chooser );
+    } else {
+        do_save_file( strdup( opened_file ) );
+    }
 
     return 0;
 }
@@ -211,6 +270,8 @@ int main( int argc, char** argv ) {
     item = create_menuitem_with_label( "Save" );
     menu_add_item( menu, item );
     widget_dec_ref( item );
+
+    widget_connect_event_handler( item, "mouse-down", event_save_file, NULL );
 
     item = create_separator_menuitem();
     menu_add_item( menu, item );
