@@ -84,10 +84,18 @@ static int textarea_paint( widget_t* widget, gc_t* gc ) {
 
     widget_get_bounds( widget, &bounds );
 
+    gc_set_pen_color( gc, &fg_color );
+    gc_draw_rect( gc, &bounds );
+
+    rect_resize( &bounds, 1, 1, -1, -1 );
+
     /* Fill the background of the textarea */
 
     gc_set_pen_color( gc, &bg_color );
     gc_fill_rect( gc, &bounds );
+
+    rect_resize( &bounds, 2, 2, -2, -2 );
+    gc_translate_xy( gc, 3, 3 );
 
     /* Draw the lines */
 
@@ -287,7 +295,7 @@ static int textarea_get_preferred_size( widget_t* widget, point_t* size ) {
     point_init(
         size,
         450 /* todo */,
-        array_get_size( &textarea->lines ) * font_get_height( textarea->font )
+        array_get_size( &textarea->lines ) * font_get_height( textarea->font ) + 6
     );
 
     return 0;
@@ -300,8 +308,8 @@ static int textarea_get_viewport( widget_t* widget, rect_t* viewport ) {
 
     rect_init(
         viewport,
-        0, textarea->cursor_y * font_get_height( textarea->font ),
-        0, ( textarea->cursor_y + 1 ) * font_get_height( textarea->font ) - 1
+        3, textarea->cursor_y * font_get_height( textarea->font ) + 3,
+        0, ( textarea->cursor_y + 1 ) * font_get_height( textarea->font ) - 1 + 3
     );
 
     return 0;
