@@ -115,7 +115,7 @@ static int start_gui( void ) {
     if ( fork() == 0 ) {
         char* const argv[] = { "guiserver", NULL };
 
-        execv( "/application/guiserver", argv );
+        execv( "/system/server/guiserver", argv );
         _exit( 0 );
     }
 

@@ -54,7 +54,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo></echo>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/guiserver/${i}</echo>
+            <echo>[GCC    ] source/servers/guiserver/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -75,7 +75,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo></echo>
         <echo>Linking guiserver application</echo>
         <echo></echo>
-        <echo>[GCC    ] source/applications/guiserver/objs/guiserver</echo>
+        <echo>[GCC    ] source/servers/guiserver/objs/guiserver</echo>
 
         <gcc>
             <input>objs/*.o</input>
@@ -94,7 +94,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <echo>Installing guiserver</echo>
-        <copy from="objs/guiserver" to="../../../build/image/application/guiserver"/>
+        <copy from="objs/guiserver" to="../../../build/image/system/server/guiserver"/>
 
         <echo>Downloading DejaVu fonts</echo>
         <httpget address="http://files.yaosp.org/source/dejavu-fonts/dejavu-fonts-ttf-2.30.tar.bz2"
