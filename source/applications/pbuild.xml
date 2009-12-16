@@ -25,7 +25,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>shelltools</item>
         <item>listpci</item>
         <item>systeminfo</item>
-        <item>guiserver</item>
         <item>irc_client</item>
         <item>startgui</item>
         <item>taskbar</item>

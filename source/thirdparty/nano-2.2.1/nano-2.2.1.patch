@@ -1,7 +1,7 @@
-diff -Nru nano-2.0.9-orig/config.h nano-2.0.9/config.h
---- nano-2.0.9-orig/config.h	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.0.9/config.h	2009-09-28 10:08:11.000000000 +0200
-@@ -0,0 +1,232 @@
+diff -Nru nano-2.2.1-orig/config.h nano-2.2.1/config.h
+--- nano-2.2.1-orig/config.h	1970-01-01 01:00:00.000000000 +0100
++++ nano-2.2.1/config.h	2009-12-16 14:58:08.000000000 +0100
+@@ -0,0 +1,241 @@
 +/* config.h.  Generated from configure.ac by autoheader.  */
 +
 +/* Define this to enable debug messages and assert warnings. */
@@ -54,6 +54,9 @@ diff -Nru nano-2.0.9-orig/config.h nano-2.0.9/config.h
 +   library, iswalnum(), iswpunct(), iswblank() or iswspace(), mblen(),
 +   mbstowcs(), mbtowc(), wctomb(), and wcwidth()). */
 +#undef ENABLE_UTF8
++
++/* Define if the system supports GNU-style word boundaries in regexes. */
++#undef GNU_WORDBOUNDS
 +
 +/* Define to 1 if you have the <curses.h> header file. */
 +#define HAVE_CURSES_H 1
@@ -122,8 +125,14 @@ diff -Nru nano-2.0.9-orig/config.h nano-2.0.9/config.h
 +/* Define to 1 if you have the <ncurses.h> header file. */
 +#define HAVE_NCURSES_H 1
 +
++/* Define to 1 if you have the `nl_langinfo' function. */
++#undef HAVE_NL_LANGINFO
++
 +/* Define to 1 if you have the <regex.h> header file. */
 +#define HAVE_REGEX_H 1
++
++/* Define to 1 if you have the <stdarg.h> header file. */
++#define HAVE_STDARG_H 1
 +
 +/* Define to 1 if you have the <stdint.h> header file. */
 +#define HAVE_STDINT_H 1
@@ -234,9 +243,9 @@ diff -Nru nano-2.0.9-orig/config.h nano-2.0.9/config.h
 +
 +/* Define for large files, on AIX-style hosts. */
 +#undef _LARGE_FILES
-diff -Nru nano-2.0.9-orig/pbuild.xml nano-2.0.9/pbuild.xml
---- nano-2.0.9-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.0.9/pbuild.xml	2009-09-28 10:11:51.000000000 +0200
+diff -Nru nano-2.2.1-orig/pbuild.xml nano-2.2.1/pbuild.xml
+--- nano-2.2.1-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ nano-2.2.1/pbuild.xml	2009-12-16 14:56:45.000000000 +0100
 @@ -0,0 +1,103 @@
 +<!--
 +
@@ -290,7 +299,7 @@ diff -Nru nano-2.0.9-orig/pbuild.xml nano-2.0.9/pbuild.xml
 +    <target name="compile">
 +        <call target="prepare"/>
 +
-+        <echo>Compiling nano 2.0.9</echo>
++        <echo>Compiling nano 2.2.1</echo>
 +
 +        <for var="i" array="${files}">
 +            <echo>-> ${i}</echo>
@@ -312,7 +321,7 @@ diff -Nru nano-2.0.9-orig/pbuild.xml nano-2.0.9/pbuild.xml
 +            </gcc>
 +        </for>
 +
-+        <echo>Linking nano 2.0.9</echo>
++        <echo>Linking nano 2.2.1</echo>
 +        <echo>-> objs/nano</echo>
 +
 +        <gcc>

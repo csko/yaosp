@@ -30,12 +30,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>readline-6.0</item>
         <item>freetype-2.3.11</item>
         <item>bzip2-1.0.5</item>
+    </array>
+
+    <array name="applications">
         <item>python-2.5.4</item>
         <item>bash-4.0</item>
+        <item>nano-2.2.1</item>
     </array>
 
     <target name="all">
         <for var="i" array="${libraries}">
+            <call target="all" directory="${i}"/>
+        </for>
+        <for var="i" array="${applications}">
             <call target="all" directory="${i}"/>
         </for>
     </target>

@@ -2,8 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2008, 2009 Zoltan Kovacs
-Copyright (c) 2009 Kornel Csernai
+Copyright (c) 2009 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,36 +20,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
-    <array name="subdirs_before">
-        <item>kernel</item>
-        <item>drivers</item>
-    </array>
-
-    <array name="subdirs_after">
-        <item>lib</item>
-        <item>thirdparty</item>
-        <item>servers</item>
-        <item>applications</item>
+    <array name="subdirs">
+        <item>guiserver</item>
     </array>
 
     <target name="all">
-        <for var="i" array="${subdirs_before}">
-            <call target="all" directory="${i}"/>
-        </for>
-
-        <call target="all-libs-only" directory="thirdparty"/>
-
-        <for var="i" array="${subdirs_after}">
+        <for var="i" array="${subdirs}">
             <call target="all" directory="${i}"/>
         </for>
     </target>
 
     <target name="clean">
-        <for var="i" array="${subdirs_before}">
-            <call target="clean" directory="${i}"/>
-        </for>
-
-        <for var="i" array="${subdirs_after}">
+        <for var="i" array="${subdirs}">
             <call target="clean" directory="${i}"/>
         </for>
     </target>
