@@ -210,7 +210,6 @@ bitmap_t* bitmap_load_from_file( const char* file ) {
     int finalize;
     uint8_t* buf;
 
-    int error;
     void* private;
     bitmap_t* bitmap = NULL;
     int bitmap_size = 0;
@@ -248,9 +247,7 @@ bitmap_t* bitmap_load_from_file( const char* file ) {
 
     /* Find the appropriate image loader */
 
-    error = image_loader_find( buf, data, &loader, &private );
-
-    if ( error < 0 ) {
+    if ( image_loader_find( buf, data, &loader, &private ) != 0 ) {
         goto error3;
     }
 

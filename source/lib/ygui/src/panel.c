@@ -91,6 +91,7 @@ static widget_operations_t panel_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = panel_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = panel_do_validate,
     .size_changed = NULL,
     .added_to_window = NULL,

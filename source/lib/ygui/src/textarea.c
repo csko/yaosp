@@ -315,6 +315,31 @@ static int textarea_get_viewport( widget_t* widget, rect_t* viewport ) {
     return 0;
 }
 
+static int textarea_destroy( widget_t* widget ) {
+    int i;
+    int size;
+    textarea_t* textarea;
+
+    textarea = ( textarea_t* )widget_get_data( widget );
+
+    size = array_get_size( &textarea->lines );
+
+    for ( i = 0; i < size; i++ ) {
+        string_t* line;
+
+        line = ( string_t* )array_get_item( &textarea->lines, i );
+
+        destroy_string( line );
+        free( line );
+    }
+
+    destroy_array( &textarea->lines );
+    destroy_font( textarea->font );
+    free( textarea );
+
+    return 0;
+}
+
 static widget_operations_t textarea_ops = {
     .paint = textarea_paint,
     .key_pressed = textarea_key_pressed,
@@ -332,7 +357,7 @@ static widget_operations_t textarea_ops = {
     .size_changed = NULL,
     .added_to_window = NULL,
     .child_added = NULL,
-    .destroy = NULL
+    .destroy = textarea_destroy
 };
 
 widget_t* create_textarea( void ) {

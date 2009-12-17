@@ -1162,6 +1162,15 @@ static int scrollpanel_child_added( widget_t* widget, widget_t* child ) {
     return 0;
 }
 
+static int scrollpanel_destroy( widget_t* widget ) {
+    scrollpanel_t* scrollpanel;
+
+    scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
+    free( scrollpanel );
+
+    return 0;
+}
+
 static widget_operations_t scrollpanel_ops = {
     .paint = scrollpanel_paint,
     .key_pressed = NULL,
@@ -1174,11 +1183,12 @@ static widget_operations_t scrollpanel_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = scrollpanel_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = NULL,
     .size_changed = scrollpanel_size_changed,
     .added_to_window = NULL,
     .child_added = scrollpanel_child_added,
-    .destroy = NULL
+    .destroy = scrollpanel_destroy
 };
 
 int scroll_panel_get_v_size( widget_t* widget ) {

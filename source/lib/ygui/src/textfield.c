@@ -187,6 +187,18 @@ static int textfield_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+static int textfield_destroy( widget_t* widget ) {
+    textfield_t* textfield;
+
+    textfield = ( textfield_t* )widget_get_data( widget );
+
+    destroy_string( &textfield->buffer );
+    destroy_font( textfield->font );
+    free( textfield );
+
+    return 0;
+}
+
 static widget_operations_t textfield_ops = {
     .paint = textfield_paint,
     .key_pressed = textfield_key_pressed,
@@ -203,7 +215,8 @@ static widget_operations_t textfield_ops = {
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = textfield_destroy
 };
 
 char* textfield_get_text( widget_t* widget ) {

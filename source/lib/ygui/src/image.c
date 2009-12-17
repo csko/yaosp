@@ -98,6 +98,7 @@ static widget_operations_t image_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = image_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
