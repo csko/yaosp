@@ -38,9 +38,10 @@ static void generic_fill_rect_rgb32_copy( bitmap_t* bitmap, rect_t* rect, uint32
     uint32_t* data;
     uint32_t padding;
 
-    rect_bounds( rect, &width, &height );
+    rect_bounds_xy( rect, &width, &height );
 
-    if ( ( width == 0 ) || ( height == 0 ) ) {
+    if ( ( width == 0 ) ||
+         ( height == 0 ) ) {
         return;
     }
 
@@ -68,9 +69,10 @@ static void generic_fill_rect_rgb32_invert( bitmap_t* bitmap, rect_t* rect ) {
     uint32_t padding;
     color_t color;
 
-    rect_bounds( rect, &width, &height );
+    rect_bounds_xy( rect, &width, &height );
 
-    if ( ( width == 0 ) || ( height == 0 ) ) {
+    if ( ( width == 0 ) ||
+         ( height == 0 ) ) {
         return;
     }
 
@@ -142,7 +144,7 @@ static inline void render_glyph( bitmap_t* bitmap, font_glyph_t* glyph, point_t*
     src_x = visible_glyph_rect.left - glyph_bounds.left;
     src_y = visible_glyph_rect.top - glyph_bounds.top;
 
-    rect_bounds( &visible_glyph_rect, &width, &height );
+    rect_bounds_xy( &visible_glyph_rect, &width, &height );
     glyph_modulo = glyph->bytes_per_line - width;
     glyph_raster = glyph->raster + src_y * glyph->bytes_per_line + src_x;
 
@@ -245,9 +247,10 @@ static int blit_bitmap_copy( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t*
     int width;
     int height;
 
-    rect_bounds( src_rect, &width, &height );
+    rect_bounds_xy( src_rect, &width, &height );
 
-    if ( ( width == 0 ) || ( height == 0 ) ) {
+    if ( ( width == 0 ) ||
+         ( height == 0 ) ) {
         return 0;
     }
 
@@ -322,9 +325,10 @@ static int blit_bitmap_blend( bitmap_t* dst_bitmap, point_t* dst_point, bitmap_t
     int width;
     int height;
 
-    rect_bounds( src_rect, &width, &height );
+    rect_bounds_xy( src_rect, &width, &height );
 
-    if ( ( width == 0 ) || ( height == 0 ) ) {
+    if ( ( width == 0 ) ||
+         ( height == 0 ) ) {
         return 0;
     }
 

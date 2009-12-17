@@ -49,6 +49,7 @@ int wm_mouse_pressed( int button );
 int wm_mouse_released( int button );
 
 int wm_set_moving_window( window_t* window );
+int wm_set_resizing_window( window_t* window );
 
 int wm_add_window_listener( application_t* app );
 int wm_remove_window_listener( application_t* app );

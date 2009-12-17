@@ -77,7 +77,7 @@ int init_splash( void ) {
 
     /* Draw the progress bar border */
 
-    rect_bounds( &screen_rect, &scr_width, &scr_height );
+    rect_bounds_xy( &screen_rect, &scr_width, &scr_height );
 
     point_init(
         &progress_lefttop,

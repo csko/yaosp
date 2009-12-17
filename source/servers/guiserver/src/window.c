@@ -137,7 +137,7 @@ static void window_do_resize( window_t* window, msg_win_do_resize_t* request ) {
         dbprintf( "window_do_resize(): Resizing a window with border not yet implemented ...\n" );
     }
 
-    rect_bounds( &window->screen_rect, &width, &height );
+    rect_bounds_xy( &window->screen_rect, &width, &height );
 
     window->bitmap = create_bitmap( width, height, CS_RGB32 );
 
@@ -326,7 +326,7 @@ int handle_create_window( application_t* application, msg_create_win_t* request 
     }
 
     if ( rect_is_valid( &window->screen_rect ) ) {
-        rect_bounds( &window->screen_rect, &width, &height );
+        rect_bounds_xy( &window->screen_rect, &width, &height );
 
         window->bitmap = create_bitmap( width, height, CS_RGB32 );
 
@@ -399,8 +399,16 @@ int window_moved( window_t* window ) {
     msg_win_moved_t msg;
 
     rect_lefttop( &window->screen_rect, &msg.position );
-
     send_ipc_message( window->client_port, MSG_WINDOW_MOVED, &msg, sizeof( msg_win_moved_t ) );
+
+    return 0;
+}
+
+int window_resized( window_t* window ) {
+    msg_win_resized_t msg;
+
+    rect_bounds( &window->client_rect, &msg.size );
+    send_ipc_message( window->client_port, MSG_WINDOW_RESIZED, &msg, sizeof( msg_win_resized_t ) );
 
     return 0;
 }

@@ -46,6 +46,7 @@ typedef struct window {
 
     int is_visible;
     int is_moving;
+    int is_resizing;
     int mouse_on_decorator;
     int mouse_pressed_on_decorator;
     void* decorator_data;
@@ -71,6 +72,7 @@ int handle_create_window( application_t* application, msg_create_win_t* request 
 int window_activated( window_t* window );
 int window_deactivated( window_t* window );
 int window_moved( window_t* window );
+int window_resized( window_t* window );
 int window_key_pressed( window_t* window, int key );
 int window_key_released( window_t* window, int key );
 int window_mouse_entered( window_t* window, point_t* mouse_position );

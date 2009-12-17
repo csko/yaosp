@@ -276,7 +276,7 @@ font_glyph_t* font_node_get_glyph( font_node_t* node, unsigned int character ) {
 
         font_glyph->bytes_per_line = glyph->bitmap.width;
 
-        rect_bounds( &font_glyph->bounds, &w, &h );
+        rect_bounds_xy( &font_glyph->bounds, &w, &h );
 
         for ( y = 0; y < h; ++y ) {
             for ( x = 0; x < w; ++x ) {

@@ -51,7 +51,12 @@ static inline int rect_height( rect_t* rect ) {
     return ( rect->bottom - rect->top + 1 );
 }
 
-static inline void rect_bounds( rect_t* rect, int* w, int* h ) {
+static inline void rect_bounds( rect_t* rect, point_t* bounds ) {
+    bounds->x = rect->right - rect->left + 1;
+    bounds->y = rect->bottom - rect->top + 1;
+}
+
+static inline void rect_bounds_xy( rect_t* rect, int* w, int* h ) {
     *w = rect->right - rect->left + 1;
     *h = rect->bottom - rect->top + 1;
 }

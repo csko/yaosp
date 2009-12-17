@@ -402,6 +402,13 @@ static void* window_thread( void* arg ) {
         }
 
         switch ( code ) {
+            case MSG_WINDOW_RESIZED : {
+                msg_win_resized_t* cmd = ( msg_win_resized_t* )buffer;
+
+                point_t lefttop = { 0, 0 };
+                widget_set_position_and_size( window->container, &lefttop, &cmd->size );
+            }
+
             case MSG_WINDOW_DO_SHOW :
             case MSG_WIDGET_INVALIDATED : {
                 int error;

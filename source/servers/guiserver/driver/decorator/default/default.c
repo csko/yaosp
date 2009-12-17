@@ -26,7 +26,12 @@
 #include <windowmanager.h>
 #include <bitmap.h>
 
-static color_t top_border_colors[ 21 ] = {
+#define BORDER_LEFT    3
+#define BORDER_TOP    21
+#define BORDER_RIGHT   3
+#define BORDER_BOTTOM  3
+
+static color_t top_border_colors[ BORDER_TOP ] = {
     { 0x6D, 0x6D, 0x6D, 0xFF },
     { 0x5D, 0x5D, 0x5D, 0xFF },
     { 0x50, 0x50, 0x50, 0xFF },
@@ -61,6 +66,7 @@ typedef struct decorator_data {
     rect_t bottom_border;
 
     rect_t close_button;
+    rect_t drag_region;
 } decorator_data_t;
 
 static font_node_t* title_font;
@@ -96,7 +102,6 @@ static int decorator_calculate_regions( window_t* window ) {
     decorator_data_t* data;
 
     assert( window->decorator_data != NULL );
-
     data = window->decorator_data;
 
     screen_rect = &window->screen_rect;
@@ -117,7 +122,7 @@ static int decorator_calculate_regions( window_t* window ) {
         &data->left_border,
         screen_rect->left,
         screen_rect->top,
-        screen_rect->left,
+        screen_rect->left + BORDER_LEFT - 1,
         screen_rect->bottom
     );
 
@@ -125,7 +130,7 @@ static int decorator_calculate_regions( window_t* window ) {
 
     rect_init(
         &data->right_border,
-        screen_rect->right,
+        screen_rect->right - BORDER_RIGHT + 1,
         screen_rect->top,
         screen_rect->right,
         screen_rect->bottom
@@ -136,7 +141,7 @@ static int decorator_calculate_regions( window_t* window ) {
     rect_init(
         &data->bottom_border,
         screen_rect->left,
-        screen_rect->bottom,
+        screen_rect->bottom - BORDER_BOTTOM + 1,
         screen_rect->right,
         screen_rect->bottom
     );
@@ -149,6 +154,16 @@ static int decorator_calculate_regions( window_t* window ) {
         screen_rect->top,
         screen_rect->right,
         screen_rect->top + 21 - 1
+    );
+
+    /* Drag region */
+
+    rect_init(
+        &data->drag_region,
+        screen_rect->right - 15 + 1,
+        screen_rect->bottom - BORDER_BOTTOM + 1,
+        screen_rect->right,
+        screen_rect->bottom
     );
 
     return 0;
@@ -165,23 +180,27 @@ static int decorator_update_border( window_t* window ) {
     bitmap_t* bitmap;
 
     bitmap = window->bitmap;
-    rect_bounds( &window->screen_rect, &width, &height );
+    rect_bounds_xy( &window->screen_rect, &width, &height );
 
-    color = &top_border_colors[ 20 ];
+    color = &top_border_colors[ BORDER_TOP - 1 ];
 
-    for ( i = 0; i < 1; i++, color++ ) {
-        /* Left | */
+    /* Left | */
 
+    for ( i = 0; i < BORDER_LEFT; i++ ) {
         rect_init( &rect, i, i, i, height - ( i + 1 ) );
         graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
+    }
 
-        /* Right | */
+    /* Right | */
 
+    for ( i = 0; i < BORDER_RIGHT; i++ ) {
         rect_init( &rect, width - ( i + 1 ), i, width - ( i + 1 ), height - ( i + 1 ) );
         graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
+    }
 
-        /* Bottom - */
+    /* Bottom - */
 
+    for ( i = 0; i < BORDER_BOTTOM; i++ ) {
         rect_init( &rect, i, height - ( i + 1 ), width - ( i + 1 ), height - ( i + 1 ) );
         graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
     }
@@ -190,7 +209,7 @@ static int decorator_update_border( window_t* window ) {
 
     color = &top_border_colors[ 0 ];
 
-    for ( i = 0; i < 21; i++, color++ ) {
+    for ( i = 0; i < BORDER_TOP; i++, color++ ) {
         rect_init( &rect, 0, i, width - 1, i );
         graphics_driver->fill_rect( bitmap, &rect, color, DM_COPY );
     }
@@ -211,7 +230,7 @@ static int decorator_update_border( window_t* window ) {
     point_init(
         &point,
         ( bitmap->width - font_node_get_string_width( title_font, window->title, strlen( window->title ) ) ) / 2,
-        ( 21 /* title height */ - ( title_font->ascender - title_font->descender ) ) / 2 + title_font->ascender
+        ( BORDER_TOP - ( title_font->ascender - title_font->descender ) ) / 2 + title_font->ascender
     );
     rect_init(
         &rect,
@@ -236,7 +255,7 @@ static int decorator_update_border( window_t* window ) {
     if ( window->icon != NULL ) {
         point_init(
             &point,
-            3, ( 21 - window->icon->height ) / 2
+            3, ( BORDER_TOP - window->icon->height ) / 2
         );
         rect_init(
             &rect,
@@ -260,7 +279,6 @@ static int decorator_border_has_position( window_t* window, point_t* position ) 
     decorator_data_t* data;
 
     assert( window->decorator_data != NULL );
-
     data = ( decorator_data_t* )window->decorator_data;
 
     if ( ( rect_has_point( &data->header, position ) ) ||
@@ -290,7 +308,6 @@ static int decorator_mouse_pressed( window_t* window, int button ) {
     point_t mouse_position;
 
     assert( window->decorator_data != NULL );
-
     data = ( decorator_data_t* )window->decorator_data;
 
     mouse_get_position( &mouse_position );
@@ -299,6 +316,8 @@ static int decorator_mouse_pressed( window_t* window, int button ) {
         window_close_request( window );
     } else if ( rect_has_point( &data->header, &mouse_position ) ) {
         wm_set_moving_window( window );
+    } else if ( rect_has_point( &data->drag_region, &mouse_position ) ) {
+        wm_set_resizing_window( window );
     }
 
     return 0;
@@ -307,6 +326,8 @@ static int decorator_mouse_pressed( window_t* window, int button ) {
 static int decorator_mouse_released( window_t* window, int button ) {
     if ( window->is_moving ) {
         wm_set_moving_window( NULL );
+    } else if ( window->is_resizing ) {
+        wm_set_resizing_window( NULL );
     }
 
     return 0;
@@ -316,9 +337,7 @@ int init_default_decorator( void ) {
     font_properties_t properties;
 
     bmp_close_focused = create_bitmap_from_buffer(
-        21,
-        21,
-        CS_RGB32,
+        21, 21, CS_RGB32,
         close_focused
     );
 
@@ -346,12 +365,12 @@ int init_default_decorator( void ) {
 
 window_decorator_t default_decorator = {
     .border_size = {
-        .x = 2,
-        .y = 22
+        .x = BORDER_LEFT + BORDER_RIGHT,
+        .y = BORDER_TOP + BORDER_BOTTOM
     },
     .lefttop_offset = {
-        .x = 1,
-        .y = 21
+        .x = BORDER_LEFT,
+        .y = BORDER_TOP
     },
     .initialize = decorator_initialize,
     .destroy = decorator_destroy,

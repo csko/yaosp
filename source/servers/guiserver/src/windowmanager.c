@@ -40,6 +40,7 @@ static window_t* mouse_down_window = NULL;
 
 static rect_t moving_rect;
 static window_t* moving_window = NULL;
+static window_t* resizing_window = NULL;
 
 static array_t window_listeners;
 
@@ -702,6 +703,9 @@ int wm_key_released( int key ) {
     return 0;
 }
 
+#define MIN_WIN_WIDTH  100
+#define MIN_WIN_HEIGHT 100
+
 int wm_mouse_moved( point_t* delta ) {
     window_t* window;
     point_t mouse_diff;
@@ -720,8 +724,23 @@ int wm_mouse_moved( point_t* delta ) {
 
     if ( moving_window != NULL ) {
         invert_moving_rect();
-
         rect_add_point( &moving_rect, &mouse_diff );
+        invert_moving_rect();
+
+        goto done;
+    } else if ( resizing_window != NULL ) {
+        invert_moving_rect();
+
+        moving_rect.right += delta->x;
+        moving_rect.bottom += delta->y;
+
+        if ( moving_rect.right < moving_rect.left + MIN_WIN_WIDTH ) {
+            moving_rect.right = moving_rect.left + MIN_WIN_WIDTH - 1;
+        }
+
+        if ( moving_rect.bottom < moving_rect.top + MIN_WIN_HEIGHT ) {
+            moving_rect.bottom = moving_rect.top + MIN_WIN_HEIGHT - 1;
+        }
 
         invert_moving_rect();
 
@@ -801,8 +820,8 @@ int wm_mouse_released( int button ) {
 
 int wm_set_moving_window( window_t* window ) {
     if ( window != NULL ) {
-        assert( moving_window == NULL );
-        assert( window->is_moving == 0 );
+        assert( moving_window == NULL && resizing_window == NULL);
+        assert( !window->is_moving && !window->is_resizing );
 
         window->is_moving = 1;
 
@@ -810,12 +829,11 @@ int wm_set_moving_window( window_t* window ) {
 
         invert_moving_rect();
     } else {
-        int i;
         int size;
         int index;
 
-        assert( moving_window != NULL );
-        assert( moving_window->is_moving );
+        assert( moving_window != NULL && resizing_window == NULL );
+        assert( moving_window->is_moving && !moving_window->is_resizing );
 
         moving_window->is_moving = 0;
 
@@ -846,15 +864,14 @@ int wm_set_moving_window( window_t* window ) {
             window_decorator->calculate_regions( moving_window );
         }
 
-        /* Regenerate the visible rects of the moved window and the other below */
+        /* Regenerate the visible rects of the moved window and the others below */
 
         size = array_get_size( &window_stack );
         index = array_index_of( &window_stack, moving_window );
-
         assert( index != -1 );
 
-        for ( i = index; i < size; i++ ) {
-            generate_visible_regions_by_index( i );
+        for ( ; index < size; index++ ) {
+            generate_visible_regions_by_index( index );
         }
 
         /* Update the moved window on the screen */
@@ -869,6 +886,96 @@ done:
     }
 
     moving_window = window;
+
+    return 0;
+}
+
+int wm_set_resizing_window( window_t* window ) {
+    if ( window != NULL ) {
+        assert( moving_window == NULL && resizing_window == NULL );
+        assert( !window->is_moving && !window->is_resizing );
+
+        window->is_resizing = 1;
+
+        rect_copy( &moving_rect, &window->screen_rect );
+
+        invert_moving_rect();
+    } else {
+        int size;
+        int index;
+
+        assert( moving_window == NULL && resizing_window != NULL );
+        assert( resizing_window->is_resizing );
+
+        resizing_window->is_resizing = 0;
+
+        invert_moving_rect();
+
+        if ( rect_is_equal( &resizing_window->screen_rect, &moving_rect ) ) {
+            goto done;
+        }
+
+        wm_hide_window_region( resizing_window, &resizing_window->screen_rect );
+
+        /* Update the window rects */
+
+        rect_copy( &resizing_window->screen_rect, &moving_rect );
+        rect_copy( &resizing_window->client_rect, &moving_rect );
+
+        if ( ( resizing_window->flags & WINDOW_NO_BORDER ) == 0 ) {
+            rect_resize(
+                &resizing_window->client_rect,
+                window_decorator->lefttop_offset.x,
+                window_decorator->lefttop_offset.y,
+                -( window_decorator->border_size.x - window_decorator->lefttop_offset.x ),
+                -( window_decorator->border_size.y - window_decorator->lefttop_offset.y )
+            );
+
+            /* Update the window decorator informations */
+
+            window_decorator->calculate_regions( resizing_window );
+        }
+
+        /* Reallocate the window bitmap */
+
+        assert( resizing_window->bitmap != NULL );
+        bitmap_put( resizing_window->bitmap );
+
+        resizing_window->bitmap = create_bitmap(
+            rect_width( &resizing_window->screen_rect ),
+            rect_height( &resizing_window->screen_rect ),
+            CS_RGB32
+        );
+        assert( resizing_window->bitmap != NULL );
+
+        /* Repaint the window decorator */
+
+        if ( ( resizing_window->flags & WINDOW_NO_BORDER ) == 0 ) {
+            window_decorator->update_border( resizing_window );
+        }
+
+        /* Regenerate the visible rects of the resized window and the others below */
+
+        size = array_get_size( &window_stack );
+        index = array_index_of( &window_stack, resizing_window );
+        assert( index != -1 );
+
+        for ( ; index < size; index++ ) {
+            generate_visible_regions_by_index( index );
+        }
+
+        /* Update the moved window on the screen */
+
+        wm_update_window_region( resizing_window, &resizing_window->screen_rect );
+
+        /* Tell the window that it has been resized */
+
+        window_resized( resizing_window );
+done:
+        ;
+    }
+
+    resizing_window = window;
 
     return 0;
 }
