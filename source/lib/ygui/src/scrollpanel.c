@@ -386,8 +386,8 @@ static void paint_h_scrollbar( widget_t* widget, scrollbar_t* scrollbar, gc_t* g
         &tmp,
         scrollbar->prev.right + 1,
         1,
-        SCROLL_BAR_SIZE - 2,
-        scrollbar->slider.left - 1
+        scrollbar->slider.left - 1,
+        SCROLL_BAR_SIZE - 2
     );
 
     gc_set_pen_color( gc, &darker_bg_color );
