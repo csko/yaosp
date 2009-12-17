@@ -39,7 +39,7 @@ struct menu_item;
 typedef struct menu_bar_t {
     array_t items;
 
-    struct menu_item* active_item;
+    widget_t* active_item;
 } menu_bar_t;
 
 typedef struct menu_item {

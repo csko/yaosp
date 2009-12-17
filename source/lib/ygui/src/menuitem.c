@@ -130,19 +130,28 @@ static int menu_item_mouse_entered( widget_t* widget, point_t* position ) {
             menu_bar_t* bar = item->parent.bar;
 
             if ( bar->active_item != NULL ) {
-                if ( bar->active_item->submenu != NULL ) {
-                    menu_close( bar->active_item->submenu );
+                menu_item_t* prev_active;
+
+                prev_active = ( menu_item_t* )widget_get_data( bar->active_item );
+                assert( prev_active->active );
+                prev_active->active = 0;
+
+                widget_invalidate( bar->active_item );
+
+                if ( prev_active->submenu != NULL ) {
+                    menu_close( prev_active->submenu );
                 }
 
                 menu_item_show_submenu( widget, item );
 
-                bar->active_item = item;
+                bar->active_item = widget;
             }
 
             break;
         }
 
         case M_PARENT_MENU :
+            item->active = 1;
             break;
 
         case M_PARENT_NONE :
@@ -158,7 +167,22 @@ static int menu_item_mouse_exited( widget_t* widget ) {
     menu_item_t* item;
 
     item = ( menu_item_t* )widget_get_data( widget );
-    item->active = 0;
+
+    switch ( item->parent_type ) {
+        case M_PARENT_BAR :
+            if ( item->parent.bar->active_item == NULL ) {
+                item->active = 0;
+            }
+
+            break;
+
+        case M_PARENT_MENU :
+            item->active = 0;
+            break;
+
+        case M_PARENT_NONE :
+            break;
+    }
 
     widget_invalidate( widget );
 
@@ -182,7 +206,7 @@ static int menu_item_mouse_released( widget_t* widget, int mount_button ) {
 
             if ( bar->active_item == NULL ) {
                 menu_item_show_submenu( widget, item );
-                bar->active_item = item;
+                bar->active_item = widget;
             }
 
             break;
@@ -429,6 +453,10 @@ int menuitem_menu_closed( widget_t* widget ) {
     switch ( item->parent_type ) {
         case M_PARENT_BAR :
             item->parent.bar->active_item = NULL;
+            item->active = 0;
+
+            widget_invalidate( widget );
+
             break;
 
         case M_PARENT_MENU :
