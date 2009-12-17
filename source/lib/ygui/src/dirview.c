@@ -435,12 +435,14 @@ widget_t* create_directory_view( const char* path ) {
         goto error3;
     }
 
-    pthread_cond_init( &dir_view->condition, NULL ); /* todo: error checking */
+    if ( pthread_cond_init( &dir_view->condition, NULL ) != 0 ) {
+        goto error4;
+    }
 
     dir_view->path = strdup( path );
 
     if ( dir_view->path == NULL ) {
-        goto error4;
+        goto error5;
     }
 
     properties.point_size = 8 * 64;
@@ -449,7 +451,7 @@ widget_t* create_directory_view( const char* path ) {
     dir_view->font = create_font( "DejaVu Sans", "Book", &properties );
 
     if ( dir_view->font == NULL ) {
-        goto error5;
+        goto error6;
     }
 
     dir_view->running = 1;
@@ -462,11 +464,11 @@ widget_t* create_directory_view( const char* path ) {
     widget = create_widget( W_DIRVIEW, &dirview_ops, ( void* )dir_view );
 
     if ( widget == NULL ) {
-        goto error6;
+        goto error7;
     }
 
     if ( widget_add_events( widget, dirview_event_types, dirview_events, E_COUNT ) != 0 ) {
-        goto error7;
+        goto error8;
     }
 
     pthread_attr_t attrib;
@@ -485,14 +487,17 @@ widget_t* create_directory_view( const char* path ) {
 
     return widget;
 
- error7:
+ error8:
     /* todo: destroy the widget! */
 
+ error7:
+    destroy_font( dir_view->font );
+
  error6:
-    /* todo: destroy the font! */
+    free( dir_view->path );
 
  error5:
-    free( dir_view->path );
+    pthread_cond_destroy( &dir_view->condition );
 
  error4:
     pthread_mutex_destroy( &dir_view->lock );
@@ -573,6 +578,7 @@ int directory_view_get_selected_item_type_and_name( widget_t* widget, directory_
 }
 
 int directory_view_set_path( widget_t* widget, const char* path ) {
+    char* new_path;
     dir_view_t* dir_view;
 
     if ( ( widget == NULL ) ||
@@ -582,10 +588,16 @@ int directory_view_set_path( widget_t* widget, const char* path ) {
 
     dir_view = ( dir_view_t* )widget_get_data( widget );
 
+    new_path = strdup( path );
+
+    if ( new_path == NULL ) {
+        return -ENOMEM;
+    }
+
     pthread_mutex_lock( &dir_view->lock );
 
     free( dir_view->path );
-    dir_view->path = strdup( path ); /* todo: error checking */
+    dir_view->path = new_path;
 
     dir_view->selected = -1;
     dir_view->pending_request = 1;

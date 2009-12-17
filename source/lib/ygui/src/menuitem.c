@@ -108,7 +108,7 @@ static int menu_item_show_submenu( widget_t* widget, menu_item_t* item ) {
     widget_get_position( widget, &tmp );
 
     point_add( &position, &tmp );
-    point_add_xy( &position, 1, 21 ); /* todo: this is a quick hack to add the decorator's size */
+    point_add_xy( &position, 3, 21 ); /* todo: this is a quick hack to add the decorator's size */
 
     widget_get_preferred_size( widget, &tmp );
     tmp.x = 0;

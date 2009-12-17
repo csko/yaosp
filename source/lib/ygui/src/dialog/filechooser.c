@@ -132,7 +132,12 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
         goto error1;
     }
 
-    chooser->current_path = strdup( path ); /* todo: check return value! */
+    chooser->current_path = strdup( path );
+
+    if ( chooser->current_path == NULL ) {
+        goto error2;
+    }
+
     chooser->callback = callback;
     chooser->data = data;
 
@@ -145,7 +150,7 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
     );
 
     if ( chooser->window == NULL ) {
-        goto error2;
+        goto error3;
     }
 
     window_set_event_handler( chooser->window, WE_CLOSED, file_chooser_window_closed, ( void* )chooser );
@@ -197,6 +202,9 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
     widget_connect_event_handler( button, "clicked", file_chooser_open_pressed, ( void* )chooser );
 
     return chooser;
+
+ error3:
+    free( chooser->current_path );
 
  error2:
     free( chooser );
