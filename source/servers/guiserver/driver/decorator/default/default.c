@@ -316,7 +316,8 @@ static int decorator_mouse_pressed( window_t* window, int button ) {
         window_close_request( window );
     } else if ( rect_has_point( &data->header, &mouse_position ) ) {
         wm_set_moving_window( window );
-    } else if ( rect_has_point( &data->drag_region, &mouse_position ) ) {
+    } else if ( ( ( window->flags & WINDOW_FIXED_SIZE ) == 0 ) &&
+                ( rect_has_point( &data->drag_region, &mouse_position ) ) ) {
         wm_set_resizing_window( window );
     }
 

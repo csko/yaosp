@@ -99,7 +99,8 @@ typedef struct window_callback_item {
 
 enum {
     WINDOW_NONE = 0,
-    WINDOW_NO_BORDER = ( 1 << 0 )
+    WINDOW_NO_BORDER = ( 1 << 0 ),
+    WINDOW_FIXED_SIZE = ( 1 << 1 )
 };
 
 widget_t* window_get_container( window_t* window );

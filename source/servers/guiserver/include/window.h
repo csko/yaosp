@@ -62,7 +62,8 @@ typedef struct window {
 } window_t;
 
 enum {
-    WINDOW_NO_BORDER = ( 1 << 0 )
+    WINDOW_NO_BORDER = ( 1 << 0 ),
+    WINDOW_FIXED_SIZE = ( 1 << 1 )
 };
 
 int window_do_render( window_t* window, uint8_t* buffer, int size );

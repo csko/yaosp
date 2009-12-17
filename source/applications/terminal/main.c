@@ -216,7 +216,7 @@ static int initialize_gui( void ) {
 
     point_add( &size, &tmp );
 
-    window = create_window( "Terminal", &point, &size, WINDOW_NONE );
+    window = create_window( "Terminal", &point, &size, WINDOW_FIXED_SIZE );
 
     bitmap_t* icon = bitmap_load_from_file( "/application/terminal/images/terminal.png" );
     window_set_icon( window, icon );
