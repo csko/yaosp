@@ -227,6 +227,26 @@ static int menu_item_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+static int menu_item_destroy( widget_t* widget ) {
+    menu_item_t* item;
+
+    item = ( menu_item_t* )widget_get_data( widget );
+
+    if ( item->submenu != NULL ) {
+        destroy_menu( item->submenu );
+    }
+
+    if ( item->image != NULL ) {
+        bitmap_dec_ref( item->image );
+    }
+
+    destroy_font( item->font );
+    free( item->text );
+    free( item );
+
+    return 0;
+}
+
 static widget_operations_t menu_item_ops = {
     .paint = menu_item_paint,
     .key_pressed = NULL,
@@ -239,10 +259,12 @@ static widget_operations_t menu_item_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = menu_item_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = menu_item_destroy
 };
 
 widget_t* create_menuitem_with_label( const char* text ) {

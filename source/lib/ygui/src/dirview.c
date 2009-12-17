@@ -44,6 +44,7 @@ typedef struct dir_item {
 
 typedef struct dir_view {
     char* path;
+    int running;
 
     array_t items;
     int pending_request;
@@ -109,6 +110,8 @@ static int dir_item_comparator( const void* data1, const void* data2 ) {
 }
 
 static void* dirview_worker( void* data ) {
+    int i;
+    int size;
     widget_t* widget;
     dir_view_t* dir_view;
 
@@ -117,15 +120,18 @@ static void* dirview_worker( void* data ) {
 
     pthread_mutex_lock( &dir_view->lock );
 
-    while ( 1 ) {
-        int i;
-        int size;
+    while ( dir_view->running ) {
         DIR* dir;
         char path[ 256 ];
         struct dirent* entry;
 
-        while ( !dir_view->pending_request ) {
+        while ( dir_view->running &&
+                !dir_view->pending_request ) {
             pthread_cond_wait( &dir_view->condition, &dir_view->lock );
+        }
+
+        if ( !dir_view->running ) {
+            break;
         }
 
         dir_view->pending_request = 0;
@@ -204,6 +210,23 @@ static void* dirview_worker( void* data ) {
     }
 
     pthread_mutex_unlock( &dir_view->lock );
+
+    /* Destroy the dir_view_t structure */
+
+    size = array_get_size( &dir_view->items );
+
+    for ( i = 0; i < size; i++ ) {
+        dir_item_t* item;
+
+        item = ( dir_item_t* )array_get_item( &dir_view->items, i );
+        free( item );
+    }
+
+    pthread_cond_destroy( &dir_view->condition );
+    pthread_mutex_destroy( &dir_view->lock );
+    destroy_array( &dir_view->items );
+    free( dir_view->path );
+    free( dir_view );
 
     return NULL;
 }
@@ -357,6 +380,20 @@ static int dirview_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+static int dirview_destroy( widget_t* widget ) {
+    dir_view_t* dir_view;
+
+    dir_view = ( dir_view_t* )widget_get_data( widget );
+
+    dir_view->running = 0;
+    pthread_cond_signal( &dir_view->condition );
+
+    /* note: the dir_view_t structure and all the members will be
+             destroyed by the dirview worker thread. */
+
+    return 0;
+}
+
 static widget_operations_t dirview_ops = {
     .paint = dirview_paint,
     .key_pressed = NULL,
@@ -369,10 +406,12 @@ static widget_operations_t dirview_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = dirview_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = dirview_destroy
 };
 
 widget_t* create_directory_view( const char* path ) {
@@ -413,6 +452,7 @@ widget_t* create_directory_view( const char* path ) {
         goto error5;
     }
 
+    dir_view->running = 1;
     dir_view->pending_request = 1;
     dir_view->selected = -1;
     dir_view->click_time = 0;

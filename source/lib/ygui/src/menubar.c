@@ -82,6 +82,17 @@ static int menu_bar_validate( widget_t* widget ) {
     return 0;
 }
 
+static int menu_bar_destroy( widget_t* widget ) {
+    menu_bar_t* menu_bar;
+
+    menu_bar = ( menu_bar_t* )widget_get_data( widget );
+
+    destroy_array( &menu_bar->items );
+    free( menu_bar );
+
+    return 0;
+}
+
 static widget_operations_t menu_bar_ops = {
     .paint = menu_bar_paint,
     .key_pressed = NULL,
@@ -94,10 +105,12 @@ static widget_operations_t menu_bar_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = menu_bar_get_preferred_size,
     .get_maximum_size = NULL,
+    .get_viewport = NULL,
     .do_validate = menu_bar_validate,
     .size_changed = NULL,
     .added_to_window = NULL,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = menu_bar_destroy
 };
 
 widget_t* create_menubar( void ) {
@@ -136,10 +149,8 @@ int menubar_add_item( widget_t* bar, widget_t* item ) {
     menubar = ( menu_bar_t* )widget_get_data( bar );
     menuitem = ( menu_item_t* )widget_get_data( item );
 
-    array_add_item( &menubar->items, ( void* )item );
-    widget_inc_ref( item );
-
     widget_add( bar, item, NULL );
+    array_add_item( &menubar->items, ( void* )item );
 
     menuitem->parent.bar = menubar;
     menuitem->parent_type = M_PARENT_BAR;

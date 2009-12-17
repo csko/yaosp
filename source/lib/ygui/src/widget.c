@@ -278,6 +278,18 @@ int widget_dec_ref( widget_t* widget ) {
     assert( widget->ref_count > 0 );
 
     if ( --widget->ref_count == 0 ) {
+        int i;
+        int size;
+
+        size = array_get_size( &widget->children );
+
+        for ( i = 0; i < size; i++ ) {
+            widget_wrapper_t* wrapper;
+
+            wrapper = ( widget_wrapper_t* )array_get_item( &widget->children, i );
+            widget_dec_ref( wrapper->widget );
+        }
+
         if ( widget->ops->destroy != NULL ) {
             widget->ops->destroy( widget );
         }

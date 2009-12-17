@@ -125,7 +125,7 @@ static window_t* window_create( point_t* size ) {
     return NULL;
 }
 
-static int window_destroy( window_t* window ) {
+static int do_destroy_window( window_t* window ) {
     int i;
     int size;
 
@@ -718,13 +718,18 @@ static void* window_thread( void* arg ) {
 
                 break;
 
+            case MSG_WINDOW_DESTROY_REQUEST :
+                send_ipc_message( window->server_port, MSG_WINDOW_DESTROY, NULL, 0 );
+                running = 0;
+                break;
+
             default :
                 dbprintf( "window_thread(): Received unknown message: %x\n", code );
                 break;
         }
     }
 
-    window_destroy( window );
+    do_destroy_window( window );
     free( buffer );
 
     return NULL;
@@ -875,7 +880,7 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
     /* TODO: unregister the window from the guiserver */
 
  error2:
-    window_destroy( window );
+    do_destroy_window( window );
 
  error1:
     return NULL;
@@ -990,6 +995,22 @@ int window_close( window_t* window ) {
     }
 
     error = send_ipc_message( window->client_port, MSG_WINDOW_CLOSE_REQUEST, NULL, 0 );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+int window_destroy( window_t* window ) {
+    int error;
+
+    if ( window == NULL ) {
+        return -EINVAL;
+    }
+
+    error = send_ipc_message( window->client_port, MSG_WINDOW_DESTROY_REQUEST, NULL, 0 );
 
     if ( error < 0 ) {
         return error;

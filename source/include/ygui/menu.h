@@ -29,6 +29,7 @@ typedef struct menu {
 } menu_t;
 
 menu_t* create_menu( void );
+int destroy_menu( menu_t* menu );
 
 int menu_add_item( menu_t* menu, widget_t* item );
 

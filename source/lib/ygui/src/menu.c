@@ -79,6 +79,17 @@ menu_t* create_menu( void ) {
     return NULL;
 }
 
+int destroy_menu( menu_t* menu ) {
+    /* note: window_destroy() will dec the reference of the
+             added menu items. */
+
+    window_destroy( menu->window );
+    destroy_array( &menu->items );
+    free( menu );
+
+    return 0;
+}
+
 int menu_add_item( menu_t* menu, widget_t* item ) {
     int item_id;
     widget_t* container;
