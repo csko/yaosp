@@ -446,11 +446,26 @@ int wm_unregister_window( window_t* window ) {
         generate_visible_regions_by_index( i );
     }
 
-    /* Update active window */
+    /* Update the active window */
 
     if ( active_window == window ) {
-        active_window = ( window_t* )array_get_item( &window_stack, 0 );
+        if ( array_get_size( &window_stack ) > 0 ) {
+            active_window = ( window_t* )array_get_item( &window_stack, 0 );
+        } else {
+            active_window = NULL;
+        }
     }
+
+    /* Update the mouse window */
+
+    if ( mouse_window == window ) {
+        point_t mouse_position;
+
+        mouse_get_position( &mouse_position );
+        mouse_window = get_window_at( &mouse_position );
+    }
+
+    /* Notify the window */
 
     if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
         window_closed( window );
