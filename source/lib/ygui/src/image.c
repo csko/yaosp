@@ -120,7 +120,7 @@ widget_t* create_image( bitmap_t* bitmap ) {
         goto error1;
     }
 
-    widget = create_widget( W_IMAGE, &image_ops, image );
+    widget = create_widget( W_IMAGE, WIDGET_NONE, &image_ops, image );
 
     if ( widget == NULL ) {
         goto error2;

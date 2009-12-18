@@ -345,7 +345,7 @@ widget_t* window_list_create( void ) {
         goto error3;
     }
 
-    return create_widget( W_WINDOW_LIST, &win_list_ops, NULL );
+    return create_widget( W_WINDOW_LIST, WIDGET_FOCUSABLE, &win_list_ops, NULL );
 
  error3:
     destroy_font( list_font );

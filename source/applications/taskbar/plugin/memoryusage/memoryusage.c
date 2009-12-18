@@ -117,7 +117,7 @@ static widget_operations_t memoryusage_ops = {
 static widget_t* memoryusage_create( void ) {
     do_update_current_usage();
 
-    return create_widget( W_MEMORYUSAGE, &memoryusage_ops, NULL );
+    return create_widget( W_MEMORYUSAGE, WIDGET_NONE, &memoryusage_ops, NULL );
 }
 
 taskbar_plugin_t memoryusage_plugin = {

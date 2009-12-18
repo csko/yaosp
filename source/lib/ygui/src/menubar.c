@@ -128,7 +128,7 @@ widget_t* create_menubar( void ) {
 
     menu_bar->active_item = NULL;
 
-    return create_widget( W_MENUBAR, &menu_bar_ops, ( void* )menu_bar );
+    return create_widget( W_MENUBAR, WIDGET_NONE, &menu_bar_ops, ( void* )menu_bar );
 
  error2:
     free( menu_bar );

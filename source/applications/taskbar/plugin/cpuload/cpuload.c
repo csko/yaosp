@@ -122,7 +122,7 @@ static widget_t* cpuload_create( void ) {
 
     current_load = 0.0f;
 
-    return create_widget( W_CPULOAD, &cpuload_ops, NULL );
+    return create_widget( W_CPULOAD, WIDGET_NONE, &cpuload_ops, NULL );
 }
 
 taskbar_plugin_t cpuload_plugin = {

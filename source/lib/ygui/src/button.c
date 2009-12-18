@@ -230,7 +230,7 @@ widget_t* create_button( const char* text ) {
         goto error3;
     }
 
-    widget = create_widget( W_BUTTON, &button_ops, button );
+    widget = create_widget( W_BUTTON, WIDGET_FOCUSABLE, &button_ops, button );
 
     if ( widget == NULL ) {
         goto error4;

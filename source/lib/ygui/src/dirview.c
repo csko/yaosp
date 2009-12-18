@@ -461,7 +461,7 @@ widget_t* create_directory_view( const char* path ) {
     dir_view->img_folder = bitmap_load_from_file( "/system/images/folder.png" );
     dir_view->img_file = bitmap_load_from_file( "/system/images/file.png" );
 
-    widget = create_widget( W_DIRVIEW, &dirview_ops, ( void* )dir_view );
+    widget = create_widget( W_DIRVIEW, WIDGET_FOCUSABLE, &dirview_ops, ( void* )dir_view );
 
     if ( widget == NULL ) {
         goto error7;

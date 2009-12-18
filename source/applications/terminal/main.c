@@ -205,7 +205,6 @@ static int initialize_gui( void ) {
 
     terminal_widget = create_terminal_widget( terminal );
     widget_add( scrollpanel, terminal_widget, NULL );
-    widget_dec_ref( terminal_widget );
 
     /* Calculate the size of the terminal window */
 
@@ -232,6 +231,9 @@ static int initialize_gui( void ) {
 
     widget_add( container, scrollpanel, BRD_CENTER );
     widget_dec_ref( scrollpanel );
+
+    widget_request_focus( terminal_widget );
+    widget_dec_ref( terminal_widget );
 
     return 0;
 }

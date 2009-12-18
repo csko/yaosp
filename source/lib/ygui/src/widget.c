@@ -67,6 +67,10 @@ int widget_add( widget_t* parent, widget_t* child, void* data ) {
 
     if ( parent->window != NULL ) {
         widget_set_window( child, parent->window );
+
+        if ( child->flags & WIDGET_FOCUSABLE ) {
+            parent->window->focused_widget = child;
+        }
     }
 
     child->parent = parent;
@@ -76,6 +80,8 @@ int widget_add( widget_t* parent, widget_t* child, void* data ) {
     if ( parent->ops->child_added != NULL ) {
         parent->ops->child_added( parent, child );
     }
+
+    /* Update the focused widget */
 
     return 0;
 }
@@ -415,6 +421,18 @@ int widget_invalidate( widget_t* widget ) {
     return 0;
 }
 
+int widget_request_focus( widget_t* widget ) {
+    if ( ( widget == NULL ) ||
+         ( ( widget->flags & WIDGET_FOCUSABLE ) == 0 ) ||
+         ( widget->window == NULL ) ) {
+        return -EINVAL;
+    }
+
+    widget->window->focused_widget = widget;
+
+    return 0;
+}
+
 int widget_key_pressed( widget_t* widget, int key ) {
     if ( widget->ops->key_pressed == NULL ) {
         return 0;
@@ -545,7 +563,7 @@ int widget_signal_event_handler( widget_t* widget, int event_handler ) {
     return 0;
 }
 
-widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
+widget_t* create_widget( int id, int flags, widget_operations_t* ops, void* data ) {
     widget_t* widget;
 
     widget = ( widget_t* )calloc( 1, sizeof( widget_t ) );
@@ -578,6 +596,7 @@ widget_t* create_widget( int id, widget_operations_t* ops, void* data ) {
 
     widget->id = id;
     widget->data = data;
+    widget->flags = flags;
     widget->ref_count = 1;
     widget->border = NULL;
     widget->parent = NULL;

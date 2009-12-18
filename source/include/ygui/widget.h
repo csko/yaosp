@@ -55,6 +55,13 @@ enum {
     E_WIDGET_COUNT
 };
 
+/* Widget flags */
+
+enum {
+    WIDGET_NONE = 0,
+    WIDGET_FOCUSABLE = ( 1 << 0 )
+};
+
 struct window;
 struct widget;
 
@@ -81,6 +88,7 @@ typedef struct widget_operations {
 typedef struct widget {
     int id;
     void* data;
+    int flags;
     int ref_count;
 
     struct window* window;
@@ -135,6 +143,7 @@ int widget_inc_ref( widget_t* widget );
 int widget_dec_ref( widget_t* widget );
 int widget_paint( widget_t* widget, gc_t* gc );
 int widget_invalidate( widget_t* widget );
+int widget_request_focus( widget_t* widget );
 
 int widget_key_pressed( widget_t* widget, int key );
 int widget_key_released( widget_t* widget, int key );
@@ -149,7 +158,7 @@ int widget_mouse_released( widget_t* widget, int mouse_button );
 int widget_connect_event_handler( widget_t* widget, const char* event_name, event_callback_t* callback, void* data );
 int widget_signal_event_handler( widget_t* widget, int event_handler );
 
-widget_t* create_widget( int id, widget_operations_t* ops, void* data );
+widget_t* create_widget( int id, int flags, widget_operations_t* ops, void* data );
 
 int widget_add_events( widget_t* widget, event_type_t* event_types, int* event_indexes, int event_count );
 

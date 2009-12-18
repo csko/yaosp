@@ -118,7 +118,7 @@ static widget_t* datetime_create( void ) {
         return NULL;
     }
 
-    return create_widget( W_DATETIME, &datetime_ops, NULL );
+    return create_widget( W_DATETIME, WIDGET_NONE, &datetime_ops, NULL );
 }
 
 taskbar_plugin_t datetime_plugin = {

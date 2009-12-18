@@ -322,7 +322,7 @@ widget_t* create_menuitem_with_label_and_image( const char* text, bitmap_t* imag
         goto error3;
     }
 
-    widget = create_widget( W_MENUITEM, &menu_item_ops, item );
+    widget = create_widget( W_MENUITEM, WIDGET_FOCUSABLE, &menu_item_ops, item );
 
     if ( widget == NULL ) {
         goto error4;
@@ -412,7 +412,7 @@ static widget_operations_t separator_menu_item_ops = {
 };
 
 widget_t* create_separator_menuitem( void ) {
-    return create_widget( W_SEPARATOR_MENUITEM, &separator_menu_item_ops, NULL );
+    return create_widget( W_SEPARATOR_MENUITEM, WIDGET_NONE, &separator_menu_item_ops, NULL );
 }
 
 int menuitem_has_image( widget_t* widget ) {

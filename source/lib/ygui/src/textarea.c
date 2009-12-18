@@ -384,7 +384,7 @@ widget_t* create_textarea( void ) {
         goto error3;
     }
 
-    widget = create_widget( W_TEXTAREA, &textarea_ops, textarea );
+    widget = create_widget( W_TEXTAREA, WIDGET_FOCUSABLE, &textarea_ops, textarea );
 
     if ( widget == NULL ) {
         goto error4;

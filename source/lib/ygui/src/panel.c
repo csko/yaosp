@@ -133,7 +133,7 @@ widget_t* create_panel( void ) {
         goto error1;
     }
 
-    widget = create_widget( W_PANEL, &panel_ops, ( void* )panel );
+    widget = create_widget( W_PANEL, WIDGET_NONE, &panel_ops, ( void* )panel );
 
     if ( widget == NULL ) {
         goto error2;

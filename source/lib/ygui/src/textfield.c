@@ -274,7 +274,7 @@ widget_t* create_textfield( void ) {
         goto error3;
     }
 
-    widget = create_widget( W_TEXTFIELD, &textfield_ops, textfield );
+    widget = create_widget( W_TEXTFIELD, WIDGET_FOCUSABLE, &textfield_ops, textfield );
 
     if ( widget == NULL ) {
         goto error4;

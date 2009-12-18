@@ -178,7 +178,7 @@ widget_t* create_label( const char* text ) {
         goto error3;
     }
 
-    widget = create_widget( W_LABEL, &label_ops, label );
+    widget = create_widget( W_LABEL, WIDGET_NONE, &label_ops, label );
 
     if ( widget == NULL ) {
         goto error4;

@@ -339,7 +339,7 @@ widget_t* create_terminal_widget( terminal_t* terminal ) {
         goto error2;
     }
 
-    widget = create_widget( W_TERMINAL, &terminal_ops, terminal_widget );
+    widget = create_widget( W_TERMINAL, WIDGET_FOCUSABLE, &terminal_ops, terminal_widget );
 
     if ( widget == NULL ) {
         goto error3;
