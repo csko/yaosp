@@ -16,11 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SCHEDULER_H_
-#define _SCHEDULER_H_
+#ifndef _SCHED_SCHEDULER_H_
+#define _SCHED_SCHEDULER_H_
 
 #include <types.h>
 #include <thread.h>
+#include <config.h>
 #include <sched/waitqueue.h>
 
 #include <arch/spinlock.h>
@@ -42,6 +43,10 @@ int schedule( registers_t* regs );
 
 void sched_preempt( void );
 
+#ifdef ENABLE_DEBUGGER
+int dbg_dump_ready_list( const char* params );
+#endif /* ENABLE_DEBUGGER */
+
 int init_scheduler( void );
 
-#endif /* _SCHEDULER_H_ */
+#endif /* _SCHED_SCHEDULER_H_ */

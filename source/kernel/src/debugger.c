@@ -20,6 +20,7 @@
 #include <debug.h>
 #include <thread.h>
 #include <config.h>
+#include <sched/scheduler.h>
 #include <lib/stdarg.h>
 #include <lib/printf.h>
 #include <lib/string.h>
@@ -41,6 +42,7 @@ static dbg_command_t debugger_commands[] = {
     { "list-threads",      dbg_list_threads,           "List threads" },
     { "show-thread-info",  dbg_show_thread_info,       "Show the informations of the specified thread" },
     { "trace-thread",      dbg_trace_thread,           "Prints the backtrace of the selected thread" },
+    { "dump-ready-list",   dbg_dump_ready_list,        "Dumps the list of ready threads" },
     { "help",              dbg_show_help,              "Displays this message :)" },
     { "exit",              dbg_exit,                   "Exit from the kernel debugger" },
     { NULL, NULL }

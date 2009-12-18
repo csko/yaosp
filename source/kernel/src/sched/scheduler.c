@@ -21,6 +21,7 @@
 #include <smp.h>
 #include <kernel.h>
 #include <macros.h>
+#include <debug.h>
 #include <sched/scheduler.h>
 
 #include <arch/pit.h> /* get_system_time() */
@@ -36,6 +37,10 @@ spinlock_t scheduler_lock = INIT_SPINLOCK( "scheduler" );
 
 int add_thread_to_ready( thread_t* thread ) {
     ASSERT( scheduler_is_locked() );
+
+    if ( __unlikely( thread->queue_next != NULL ) ) {
+        return 0;
+    }
 
     thread->state = THREAD_READY;
     thread->queue_next = NULL;
@@ -53,6 +58,10 @@ int add_thread_to_ready( thread_t* thread ) {
 
 int add_thread_to_expired( thread_t* thread ) {
     ASSERT( scheduler_is_locked() );
+
+    if ( __unlikely( thread->queue_next != NULL ) ) {
+        return 0;
+    }
 
     thread->state = THREAD_READY;
     thread->queue_next = NULL;
@@ -184,6 +193,7 @@ thread_t* do_schedule( thread_t* current ) {
 
     if ( first_ready != NULL ) {
         first_ready = first_ready->queue_next;
+        next->queue_next = NULL;
     }
 
     /* If the ready list is empty then execute the idle thread */
@@ -198,6 +208,27 @@ thread_t* do_schedule( thread_t* current ) {
 
     return next;
 }
+
+#ifdef ENABLE_DEBUGGER
+int dbg_dump_ready_list( const char* params ) {
+    thread_t* thread;
+
+    thread = first_ready;
+
+    if ( thread == NULL ) {
+        dbg_printf( "There is no ready thread!\n" );
+    } else {
+        dbg_printf( "Ready threads:\n" );
+
+        while ( thread != NULL ) {
+            dbg_printf( "  %s\n", thread->name );
+            thread = thread->queue_next;
+        }
+    }
+
+    return 0;
+}
+#endif /* ENABLE_DEBUGGER */
 
 __init int init_scheduler( void ) {
     int error;

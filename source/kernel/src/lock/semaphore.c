@@ -116,7 +116,7 @@ static int do_unlock_semaphore( lock_context_t* context, lock_id semaphore_id, i
     semaphore->count += count;
 
     spinlock( &scheduler_lock );
-    waitqueue_wake_up_all( &semaphore->waiters );
+    waitqueue_wake_up_head( &semaphore->waiters, count );
     spinunlock( &scheduler_lock );
 
     spinunlock_enable( &context->lock );

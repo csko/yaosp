@@ -190,6 +190,8 @@ int waitqueue_wake_up_head( waitqueue_t* queue, int count ) {
     waitnode_t* node;
     waitnode_t* next;
 
+    ASSERT( count > 0 );
+
     node = queue->first_node;
 
     while ( ( node != NULL ) && ( count > 0 ) ) {

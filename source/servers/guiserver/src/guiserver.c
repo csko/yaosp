@@ -159,10 +159,15 @@ static int guiserver_mainloop( void ) {
     splash_inc_progress();
 
     while ( 1 ) {
-        error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, INFINITE_TIMEOUT );
+        error = recv_ipc_message( guiserver_port, &code, buffer, MAX_GUISERVER_BUFSIZE, 1000000 );
+
+        if ( error == -ETIME ) {
+            continue;
+        }
 
         if ( error < 0 ) {
-            continue;
+            dbprintf( "guiserver_mainloop(): Failed to receive message!\n" );
+            break;
         }
 
         switch ( code ) {
@@ -186,19 +191,17 @@ static int guiserver_mainloop( void ) {
 
     return 0;
 
-error3:
+ error3:
     /* TOOD: delete the guiserver port! */
 
-error2:
+ error2:
     free( buffer );
 
-error1:
+ error1:
     return error;
 }
 
 int main( int argc, char** argv ) {
-    int error;
-
     if ( init_bitmap() != 0 ) {
         printf( "Failed to initialize bitmaps\n" );
         return EXIT_FAILURE;
@@ -228,7 +231,7 @@ int main( int argc, char** argv ) {
 
     if (  init_font_manager() != 0 ) {
         dbprintf( "Failed to initialize font manager\n" );
-        return error;
+        return EXIT_FAILURE;
     }
 
     font_manager_load_fonts();
@@ -242,21 +245,21 @@ int main( int argc, char** argv ) {
 
     if ( init_mouse_manager() != 0 ) {
         printf( "Failed to initialize mouse manager\n" );
-        return error;
+        return EXIT_FAILURE;
     }
 
     splash_inc_progress();
 
     if ( init_windowmanager() != 0 ) {
         printf( "Failed to initialize window manager\n" );
-        return error;
+        return EXIT_FAILURE;
     }
 
     splash_inc_progress();
 
     if ( init_input_system() != 0 ) {
         dbprintf( "Failed to initialize input system!\n" );
-        return error;
+        return EXIT_FAILURE;
     }
 
     splash_inc_progress();

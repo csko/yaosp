@@ -645,8 +645,9 @@ static int dbg_list_thread_iterator( hashitem_t* item, void* data ) {
     thread = ( thread_t* )item;
 
     dbg_printf(
-        "%4d %-25s %-25s %s\n",
+        "%4d %4d %-25s %-25s %s\n",
         thread->id,
+        thread->parent_id,
         thread->process->name,
         thread->name,
         thread_states[ thread->state ]
@@ -658,8 +659,8 @@ static int dbg_list_thread_iterator( hashitem_t* item, void* data ) {
 int dbg_list_threads( const char* params ) {
     dbg_set_scroll_mode( true );
 
-    dbg_printf( "  Id Process                   Thread                   State\n" );
-    dbg_printf( "-----------------------------------------------------------------\n" );
+    dbg_printf( "  Id Prnt Process                   Thread                   State\n" );
+    dbg_printf( "------------------------------------------------------------------\n" );
 
     hashtable_iterate( &thread_table, dbg_list_thread_iterator, NULL );
 
@@ -697,6 +698,9 @@ int dbg_show_thread_info( const char* params ) {
     dbg_printf( "  name: %s\n", thread->name );
     dbg_printf( "  state: %s\n", thread_states[ thread->state ] );
     dbg_printf( "  priority: %d\n", thread->priority );
+    dbg_printf( "  in system: %d\n", thread->in_system );
+    dbg_printf( "  system time: %llu, user time: %llu\n", thread->sys_time, thread->user_time );
+    dbg_printf( "  pending signals: %llx\n", thread->pending_signals );
 
     if ( thread->blocking_semaphore != -1 ) {
         dbg_printf( "  blocking semaphore: %d\n", thread->blocking_semaphore );

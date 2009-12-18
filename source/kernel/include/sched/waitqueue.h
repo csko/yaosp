@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _WAITQUEUE_H_
-#define _WAITQUEUE_H_
+#ifndef _SCHED_WAITQUEUE_H_
+#define _SCHED_WAITQUEUE_H_
 
 #include <types.h>
 #include <thread.h>
@@ -104,4 +104,4 @@ bool waitqueue_is_empty( waitqueue_t* queue );
  */
 int init_waitqueue( waitqueue_t* queue );
 
-#endif /* _WAITQUEUE_H_ */
+#endif /* _SCHED_WAITQUEUE_H_ */
