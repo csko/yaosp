@@ -33,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/region.c</item>
         <item>src/render.c</item>
         <item>src/splash.c</item>
+        <item>src/imgloader/png.c</item>
         <item>src/arch/i386/graphicsdriver_i386.c</item>
         <item>driver/video/vesa/vesa.c</item>
         <item>driver/decorator/default/default.c</item>
@@ -81,8 +82,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../lib/start/objs/libstart.a</input>
             <input>../../thirdparty/freetype-2.3.11/freetype-2.3.11/objs/libfreetype.a</input>
-            <input>../../lib/c/objs/libc.a</input>
+            <input>../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
+            <input>../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
             <input>../../lib/yutil/objs/libyutil.a</input>
+            <input>../../lib/c/objs/libc.a</input>
             <output>objs/guiserver</output>
             <flag>-m32</flag>
             <flag>-Xlinker</flag>
@@ -95,6 +98,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="install">
         <echo>Installing guiserver</echo>
         <copy from="objs/guiserver" to="../../../build/image/system/server/guiserver"/>
+
+        <copy from="images/yaosp.png" to="../../../build/image/system/images/yaosp.png"/>
 
         <echo>Downloading DejaVu fonts</echo>
         <httpget address="http://files.yaosp.org/source/dejavu-fonts/dejavu-fonts-ttf-2.30.tar.bz2"

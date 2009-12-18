@@ -20,12 +20,20 @@
 #include <assert.h>
 #include <string.h>
 #include <pthread.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <bitmap.h>
+#include <imgloader.h>
 
 static int bitmap_id_counter;
 static hashtable_t bitmap_table;
 static pthread_mutex_t bitmap_lock;
+
+static image_loader_t* image_loaders[] = {
+    &png_loader,
+    NULL
+};
 
 static int insert_bitmap( bitmap_t* bitmap ) {
     int error;
@@ -135,6 +143,44 @@ error2:
     free( bitmap );
 
 error1:
+    return NULL;
+}
+
+bitmap_t* create_bitmap_from_file( const char* filename ) {
+    int i;
+    int fd;
+    bitmap_t* bitmap;
+    image_loader_t* loader;
+
+    fd = open( filename, O_RDONLY );
+
+    if ( fd < 0 ) {
+        goto error1;
+    }
+
+    for ( i = 0; ; i++ ) {
+        loader = image_loaders[ i];
+
+        if ( ( loader == NULL ) ||
+             ( loader->identify( fd ) == 0 ) ) {
+            break;
+        }
+    }
+
+    if ( loader == NULL ) {
+        goto error2;
+    }
+
+    bitmap = loader->load( fd );
+
+    close( fd );
+
+    return bitmap;
+
+ error2:
+    close( fd );
+
+ error1:
     return NULL;
 }
 

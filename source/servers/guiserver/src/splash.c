@@ -35,6 +35,8 @@ static color_t splash_pg_color = { 51, 102, 152, 255 };
 
 static point_t progress_lefttop;
 
+static bitmap_t* logo_image;
+
 static int splash_paint_progress( void ) {
     rect_t tmp;
     int cur_width;
@@ -65,6 +67,7 @@ int init_splash( void ) {
     rect_t tmp;
     int scr_width;
     int scr_height;
+    point_t position;
 
     /* Fill the background with black */
 
@@ -74,6 +77,27 @@ int init_splash( void ) {
         &splash_bg_color,
         DM_COPY
     );
+
+    /* Load the logo */
+
+    logo_image = create_bitmap_from_file( "/system/images/yaosp.png" );
+
+    if ( logo_image != NULL ) {
+        point_init(
+            &position,
+            ( screen_bitmap->width - logo_image->width ) / 2,
+            ( screen_bitmap->height * 2 / 3 - logo_image->height ) / 2
+        );
+        rect_init( &tmp, 0, 0, logo_image->width - 1, logo_image->height - 1 );
+
+        graphics_driver->blit_bitmap(
+            screen_bitmap,
+            &position,
+            logo_image,
+            &tmp,
+            DM_COPY
+        );
+    }
 
     /* Draw the progress bar border */
 

@@ -107,7 +107,7 @@ static int png_destroy( void* _private ) {
 
     private = ( png_private_t* )_private;
 
-    /* TODO: destroy PNG related stuffs */
+    png_destroy_read_struct( &private->png_struct, &private->png_info, NULL );
     destroy_block_buffer( &private->output_buffer );
     free( private );
 

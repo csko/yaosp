@@ -89,12 +89,19 @@ static void* input_thread_entry( void* arg ) {
 }
 
 int input_system_start( void ) {
+    pthread_attr_t attr;
+
+    pthread_attr_init( &attr );
+    pthread_attr_setname( &attr, "input" );
+
     pthread_create(
         &input_thread,
-        NULL,
+        &attr,
         input_thread_entry,
         NULL
     );
+
+    pthread_attr_destroy( &attr );
 
     return 0;
 }
