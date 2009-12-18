@@ -63,12 +63,12 @@ static int pata_disk_do_transfer( pata_port_t* port, void* buffer, uint64_t offs
     need_lba48 = ( ( sector + sector_count ) > 0xFFFFFFF ) || ( sector_count >= 0x100 );
 
     if ( ( need_lba48 ) && ( !port->use_lba48 ) ) {
-        kprintf( WARNING, "PATA: Transfer requires LBA48, but it's not supported by the controller!\n" );
+        kprintf( WARNING, "pata: Transfer requires LBA48, but it's not supported by the controller!\n" );
         return -EIO;
     }
 
     if ( need_lba48 ) {
-        kprintf( WARNING, "PATA: LBA48 not yet supported!\n" );
+        kprintf( WARNING, "pata: LBA48 not yet supported!\n" );
         return -EIO;
     } else if ( port->use_lba ) {
         command = do_read ? PATA_CMD_READ_SECTORS : PATA_CMD_WRITE_SECTORS;
@@ -293,7 +293,7 @@ int pata_create_ata_device_node( pata_port_t* port ) {
         '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 
-    kprintf( INFO, "PATA: Creating device node: /device/%s\n", device );
+    kprintf( INFO, "pata: Creating device node: /device/%s\n", device );
 
     error = create_device_node( device, &pata_disk_calls, ( void* )port );
 

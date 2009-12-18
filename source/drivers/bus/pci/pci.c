@@ -417,7 +417,7 @@ static int pci_scan_device( int bus, int dev, int func ) {
         if ( __likely( pci_device_count < MAX_PCI_DEVICES ) ) {
             kprintf(
                 INFO,
-                "PCI: %d:%d:%d 0x%04x:0x%04x:0x%x 0x%04x:0x%04x\n",
+                "pci: %d:%d:%d 0x%04x:0x%04x:0x%x 0x%04x:0x%04x\n",
                 bus, dev, func, vendor_id, device_id, revision_id,
                 subsystem_vendor_id, subsystem_device_id
             );
@@ -426,7 +426,7 @@ static int pci_scan_device( int bus, int dev, int func ) {
 
             create_device_node_for_pci_device( device );
         } else {
-            kprintf( WARNING, "PCI: Too many devices!\n" );
+            kprintf( WARNING, "pci: Too many devices!\n" );
         }
     }
 
@@ -490,7 +490,7 @@ static int pci_bus_enable_device( pci_device_t* device, uint32_t flags ) {
         }
 
         if ( ( tmp & flags ) != flags ) {
-            kprintf( ERROR, "PCI: Failed to enable device at %d:%d:%d!\n", device->bus, device->dev, device->func );
+            kprintf( ERROR, "pci: Failed to enable device at %d:%d:%d!\n", device->bus, device->dev, device->func );
 
             return -1;
         }
@@ -536,7 +536,7 @@ static int pci_scan_bus( int bus ) {
     int error;
     uint32_t header_type;
 
-    kprintf( INFO, "PCI: Scanning bus: %d\n", bus );
+    kprintf( INFO, "pci: Scanning bus: %d\n", bus );
 
     for ( dev = 0; dev < pci_access->devs_per_bus; dev++ ) {
         /* Is this a multifunctional device? */
@@ -567,29 +567,29 @@ int init_module( void ) {
     /* Detect PCI */
 
     if ( !pci_detect() ) {
-        kprintf( INFO, "PCI: Bus not detected\n" );
+        kprintf( INFO, "pci: Bus not detected\n" );
         return -EINVAL;
     }
 
-    kprintf( INFO, "PCI: Using %s\n", pci_access->name );
+    kprintf( INFO, "pci: Using %s\n", pci_access->name );
 
     /* Scan the first PCI bus */
 
     error = pci_scan_bus( 0 );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "PCI: Failed to scan first bus! (error=%d)\n", error );
+        kprintf( ERROR, "pci: Failed to scan first bus! (error=%d)\n", error );
         return error;
     }
 
-    kprintf( INFO, "PCI: Detected %d devices.\n", pci_device_count );
+    kprintf( INFO, "pci: Detected %d devices.\n", pci_device_count );
 
     /* Register the PCI bus driver */
 
     error = register_bus_driver( "PCI", ( void* )&pci_bus );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "PCI: Failed to register the bus! (error=%d)\n", error );
+        kprintf( ERROR, "pci: Failed to register the bus! (error=%d)\n", error );
         return error;
     }
 

@@ -221,7 +221,7 @@ int pata_create_atapi_device_node( pata_port_t* port ) {
         '0' + 2 * port->channel + ( port->is_slave ? 1 : 0 )
     );
 
-    kprintf( INFO, "PATA: Creating device node: /device/%s\n", device );
+    kprintf( INFO, "pata: Creating device node: /device/%s\n", device );
 
     error = create_device_node( device, &pata_cdrom_calls, ( void* )port );
 

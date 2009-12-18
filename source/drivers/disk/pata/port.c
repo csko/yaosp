@@ -40,7 +40,7 @@ int pata_port_wait( pata_port_t* port, uint8_t set, uint8_t clear, bool check_er
         status = inb( port->ctrl_base );
 
         if ( ( check_error ) && ( ( status & PATA_STATUS_ERROR ) != 0 ) ) {
-            kprintf( ERROR, "PATA: pata_port_wait(): Error! (status=%x)\n", status );
+            kprintf( ERROR, "pata: pata_port_wait(): Error! (status=%x)\n", status );
             return -1;
         }
 
@@ -120,7 +120,7 @@ int pata_port_identify( pata_port_t* port ) {
         uint8_t err;
 
         err = inb( port->cmd_base + PATA_REG_ERROR );
-        kprintf( ERROR, "PATA: Identify command timed out (error=%x)\n", err );
+        kprintf( ERROR, "pata: Identify command timed out (error=%x)\n", err );
 
         return error;
     }

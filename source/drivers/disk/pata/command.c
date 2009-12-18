@@ -39,7 +39,7 @@ int pata_port_send_command( pata_port_t* port, uint8_t cmd, bool check_drdy, uin
     error = pata_port_wait( port, 0, PATA_STATUS_BUSY | PATA_STATUS_DRQ, 0, 100000 );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "PATA: Timed out while waiting for port to become idle\n" );
+        kprintf( ERROR, "pata: Timed out while waiting for port to become idle\n" );
         return error;
     }
 
@@ -70,7 +70,7 @@ int pata_port_send_command( pata_port_t* port, uint8_t cmd, bool check_drdy, uin
     status = inb( port->ctrl_base );
 
     if ( status & PATA_STATUS_ERROR ) {
-        kprintf( ERROR, "PATA: Error after sending command!\n" );
+        kprintf( ERROR, "pata: Error after sending command!\n" );
         return -1;
     }
 
@@ -95,7 +95,7 @@ int pata_port_finish_command( pata_port_t* port, bool busy_wait, bool check_drdy
     status = inb( port->cmd_base + PATA_REG_STATUS );
 
     if ( status & PATA_STATUS_BUSY ) {
-        kprintf( ERROR, "PATA: Port is still busy when finishing the command!\n" );
+        kprintf( ERROR, "pata: Port is still busy when finishing the command!\n" );
         return -1;
     }
 
@@ -119,7 +119,7 @@ int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read,
     uint8_t cmd_data[ 7 ];
 
     if ( __unlikely( !port->is_atapi ) ) {
-        kprintf( ERROR, "PATA: ATAPI operation not allowed on non-ATAPI drive!\n" );
+        kprintf( ERROR, "pata: ATAPI operation not allowed on non-ATAPI drive!\n" );
         return -EINVAL;
     }
 
@@ -191,7 +191,7 @@ int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read,
             data += count;
         }
     } else {
-        kprintf( WARNING, "PATA: ATAPI write not supported!\n" );
+        kprintf( WARNING, "pata: ATAPI write not supported!\n" );
         return -EINVAL;
     }
 

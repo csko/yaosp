@@ -41,7 +41,7 @@ int pata_detect_controllers( void ) {
     pci_bus = get_bus_driver( "PCI" );
 
     if ( pci_bus == NULL ) {
-        kprintf( WARNING, "PATA: PCI bus not found!\n" );
+        kprintf( WARNING, "pata: PCI bus not found!\n" );
         return -1;
     }
 
@@ -54,7 +54,7 @@ int pata_detect_controllers( void ) {
              ( pci_device->class_sub == PCI_IDE ) ) {
             kprintf(
                 INFO,
-                "PATA: Detected controller at %d:%d:%d\n",
+                "pata: Detected controller at %d:%d:%d\n",
                 pci_device->bus,
                 pci_device->dev,
                 pci_device->func
@@ -86,7 +86,7 @@ static int pata_enable_controller( pata_controller_t* controller ) {
     pci_bus = get_bus_driver( "PCI" );
 
     if ( __unlikely( pci_bus == NULL ) ) {
-        kprintf( WARNING, "PATA: PCI bus not found!\n" );
+        kprintf( WARNING, "pata: PCI bus not found!\n" );
 
         return -1;
     }
@@ -94,7 +94,7 @@ static int pata_enable_controller( pata_controller_t* controller ) {
     error = pci_bus->enable_device( &controller->pci_device, PCI_COMMAND_MASTER | PCI_COMMAND_IO );
 
     if ( __unlikely( error < 0 ) ) {
-        kprintf( ERROR, "PATA: Failed to enable controller!\n" );
+        kprintf( ERROR, "pata: Failed to enable controller!\n" );
 
         return error;
     }
@@ -148,7 +148,7 @@ static int pata_reset_channel( pata_controller_t* controller, int channel, uint3
         /* Wait until the busy flag is cleared */
 
         if ( pata_port_wait( master, 0, PATA_STATUS_BUSY, false, 31000000 ) < 0 ) {
-            kprintf( WARNING, "PATA: Reset timed out!\n" );
+            kprintf( WARNING, "pata: Reset timed out!\n" );
             return -ETIME;
         }
 
@@ -159,11 +159,11 @@ static int pata_reset_channel( pata_controller_t* controller, int channel, uint3
         error = inb( master->cmd_base + PATA_REG_ERROR );
 
         if ( ( error != 0x01 ) && ( error != 0x81 ) ) {
-            kprintf( WARNING, "PATA: Master failed (error=%x)\n", error );
+            kprintf( WARNING, "pata: Master failed (error=%x)\n", error );
         }
 
         if ( error >= 0x80 ) {
-            kprintf( WARNING, "PATA: Slave failed as master said! (error=%x)\n", error );
+            kprintf( WARNING, "pata: Slave failed as master said! (error=%x)\n", error );
         }
 
         signatures[ 0 ] =
@@ -185,7 +185,7 @@ static int pata_reset_channel( pata_controller_t* controller, int channel, uint3
         /* Wait until the busy flag is cleared */
 
         if ( pata_port_wait( master, 0, PATA_STATUS_BUSY, false, 31000000 ) < 0 ) {
-            kprintf( WARNING, "PATA: Reset timed out!\n" );
+            kprintf( WARNING, "pata: Reset timed out!\n" );
             return -ETIME;
         }
 
@@ -196,7 +196,7 @@ static int pata_reset_channel( pata_controller_t* controller, int channel, uint3
         error = inb( master->cmd_base + PATA_REG_ERROR );
 
         if ( error != 0x01 ) {
-            kprintf( WARNING, "PATA: Slave failed (error=%x)\n", error );
+            kprintf( WARNING, "pata: Slave failed (error=%x)\n", error );
         }
 
         signatures[ 1 ] =
@@ -233,7 +233,7 @@ int pata_initialize_controller( pata_controller_t* controller ) {
             port = ( pata_port_t* )kmalloc( sizeof( pata_port_t ) );
 
             if ( port == NULL ) {
-                kprintf( ERROR, "PATA: No memory for port!\n" );
+                kprintf( ERROR, "pata: No memory for port!\n" );
                 return -ENOMEM;
             }
 
@@ -262,7 +262,7 @@ int pata_initialize_controller( pata_controller_t* controller ) {
         error = pata_reset_channel( controller, chan, signatures );
 
         if ( error < 0 ) {
-            kprintf( WARNING, "PATA: Failed to reset channel %d\n", chan );
+            kprintf( WARNING, "pata: Failed to reset channel %d\n", chan );
             return error;
         }
 
@@ -335,23 +335,23 @@ int pata_initialize_controller( pata_controller_t* controller ) {
             port = controller->ports[ chan * controller->ports_per_channel + port_num ];
 
             if ( port == NULL ) {
-                kprintf( INFO, "PATA: Device %d:%d not present\n", chan, port_num );
+                kprintf( INFO, "pata: Device %d:%d not present\n", chan, port_num );
             } else {
                 port->mutex = mutex;
                 used++;
 
                 if ( port->is_atapi ) {
-                    kprintf( INFO, "PATA: Device %d:%d is ATAPI\n", chan, port_num );
+                    kprintf( INFO, "pata: Device %d:%d is ATAPI\n", chan, port_num );
                 } else {
-                    kprintf( INFO, "PATA: Device %d:%d is ATA\n", chan, port_num );
+                    kprintf( INFO, "pata: Device %d:%d is ATA\n", chan, port_num );
                 }
 
-                kprintf( INFO, "PATA: Model: %s\n", port->model_name );
+                kprintf( INFO, "pata: Model: %s\n", port->model_name );
 
                 if ( port->is_atapi ) {
                     error = pata_create_atapi_device_node( port );
                 } else {
-                    kprintf( INFO, "PATA: Capacity: %d Mb\n", ( uint32_t )( port->capacity / 1000000 ) );
+                    kprintf( INFO, "pata: Capacity: %u Mb\n", ( uint32_t )( port->capacity / 1000000 ) );
 
                     error = pata_create_ata_device_node( port );
                 }
