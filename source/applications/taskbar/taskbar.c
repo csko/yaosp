@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <yaosp/debug.h>
 #include <yaosp/ipc.h>
+#include <yaosp/yaosp.h>
 
 #include <ygui/application.h>
 #include <ygui/window.h>
@@ -97,6 +98,63 @@ static int event_open_texteditor( widget_t* widget, void* data ) {
     return 0;
 }
 
+static int event_halt_clicked( widget_t* widget, void* data ) {
+    halt();
+    return 0;
+}
+
+static int event_reboot_clicked( widget_t* widget, void* data ) {
+    reboot();
+    return 0;
+}
+
+static int event_open_shutdown_window( widget_t* widget, void* data ) {
+    window_t* window;
+    widget_t* button;
+    layout_t* layout;
+    widget_t* panel;
+    widget_t* container;
+
+    point_t position = { 270, 210 };
+    point_t size = { 120, 40 };
+
+    window = create_window( "Shut down", &position, &size, WINDOW_FIXED_SIZE );
+
+    container = window_get_container( window );
+
+    layout = create_border_layout();
+    panel_set_layout( container, layout );
+    layout_dec_ref( layout );
+
+    panel = create_panel();
+
+    layout = create_flow_layout();
+    panel_set_layout( panel, layout );
+    layout_dec_ref( layout );
+
+    widget_add( container, panel, BRD_CENTER );
+
+    button = create_button( "  Halt  " );
+    widget_add( panel, button, NULL );
+    widget_dec_ref( button );
+
+    widget_connect_event_handler( button, "clicked", event_halt_clicked, NULL );
+
+    button = create_button( "  Reboot  " );
+    widget_add( panel, button, NULL );
+    widget_dec_ref( button );
+
+    widget_connect_event_handler( button, "clicked", event_reboot_clicked, NULL );
+
+    widget_get_preferred_size( panel, &size );
+    widget_set_maximum_size( panel, &size );
+    widget_dec_ref( panel );
+
+    window_show( window );
+
+    return 0;
+}
+
 static int event_open_taskbar( widget_t* widget, void* data ) {
     point_t size;
     point_t position;
@@ -134,6 +192,18 @@ static int taskbar_create_menu( void ) {
     bitmap_dec_ref( image );
 
     widget_connect_event_handler( item, "clicked", event_open_texteditor, NULL );
+
+    item = create_separator_menuitem();
+    menu_add_item( menu, item );
+
+    /* Shutdown */
+
+    image = bitmap_load_from_file( "/application/taskbar/images/shutdown.png" );
+    item = create_menuitem_with_label_and_image( "Shut down", image );
+    menu_add_item( menu, item );
+    bitmap_dec_ref( image );
+
+    widget_connect_event_handler( item, "clicked", event_open_shutdown_window, NULL );
 
     return 0;
 }

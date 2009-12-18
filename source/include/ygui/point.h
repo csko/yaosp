@@ -72,6 +72,16 @@ static inline void point_sub_xy_n( point_t* dest, point_t* point, int x, int y )
     dest->y = point->y - y;
 }
 
+static inline void point_div( point_t* point, int i ) {
+    point->x /= i;
+    point->y /= i;
+}
+
+static inline void point_min( point_t* point1, point_t* point2 ) {
+    point1->x = MIN( point1->x, point2->x );
+    point1->y = MIN( point1->y, point2->y );
+}
+
 static inline void point_max( point_t* point1, point_t* point2 ) {
     point1->x = MAX( point1->x, point2->x );
     point1->y = MAX( point1->y, point2->y );

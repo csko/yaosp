@@ -149,7 +149,9 @@ int widget_get_preferred_size( widget_t* widget, point_t* size ) {
 }
 
 int widget_get_maximum_size( widget_t* widget, point_t* size ) {
-    if ( widget->ops->get_maximum_size == NULL ) {
+    if ( widget->is_max_size_set ) {
+        point_copy( size, &widget->maximum_size );
+    } else if ( widget->ops->get_maximum_size == NULL ) {
         point_init( size, INT_MAX, INT_MAX );
     } else {
         widget->ops->get_maximum_size( widget, size );
@@ -236,6 +238,13 @@ int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t*
 int widget_set_preferred_size( widget_t* widget, point_t* size ) {
     point_copy( &widget->preferred_size, size );
     widget->is_pref_size_set = 1;
+
+    return 0;
+}
+
+int widget_set_maximum_size( widget_t* widget, point_t* size ) {
+    point_copy( &widget->maximum_size, size );
+    widget->is_max_size_set = 1;
 
     return 0;
 }

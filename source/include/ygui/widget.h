@@ -94,7 +94,9 @@ typedef struct widget {
     point_t visible_size;
 
     int is_pref_size_set;
+    int is_max_size_set;
     point_t preferred_size;
+    point_t maximum_size;
 
     array_t children;
     border_t* border;
@@ -125,6 +127,7 @@ int widget_set_window( widget_t* widget, struct window* window );
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size );
 int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t* visible_size, point_t* full_size );
 int widget_set_preferred_size( widget_t* widget, point_t* size );
+int widget_set_maximum_size( widget_t* widget, point_t* size );
 int widget_set_scroll_offset( widget_t* widget, point_t* scroll_offset );
 int widget_set_border( widget_t* widget, border_t* border );
 

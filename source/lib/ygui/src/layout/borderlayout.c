@@ -155,15 +155,26 @@ static void borderlayout_do_line_end( widget_t* widget, point_t* panel_size, poi
     center_size->x -= widget_size.x;
 }
 
-static void borderlayout_do_center( widget_t* widget, point_t* panel_size, point_t* center_position, point_t* center_size ) {
+static void borderlayout_do_center( widget_t* widget, point_t* panel_size,
+                                    point_t* center_position, point_t* center_size ) {
+    point_t tmp;
+    point_t max_size;
+
     if ( center_size->y <= 0 ) {
         return;
     }
 
+    widget_get_maximum_size( widget, &max_size );
+    point_min( &max_size, center_size );
+
+    point_sub_n( &tmp, center_size, &max_size );
+    point_div( &tmp, 2 );
+    point_add( center_position, &tmp );
+
     widget_set_position_and_size(
         widget,
         center_position,
-        center_size
+        &max_size
     );
 }
 
