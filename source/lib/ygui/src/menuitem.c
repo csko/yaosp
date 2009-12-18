@@ -199,6 +199,7 @@ static int menu_item_mouse_released( widget_t* widget, int mount_button ) {
     switch ( item->parent_type ) {
         case M_PARENT_MENU :
             menu_close( item->parent.menu );
+            item->active = 0;
             break;
 
         case M_PARENT_BAR : {

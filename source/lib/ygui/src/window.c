@@ -389,9 +389,8 @@ static void* window_thread( void* arg ) {
         error = recv_ipc_message( window->client_port, &code, buffer, MAX_WINDOW_BUFSIZE, sleep_time );
 
         if ( ( error < 0 ) &&
-             ( error != -ETIME ) &&
-             ( error != -ENOENT ) ) {
-            dbprintf( "window_thread(): Failed to receive message: %d\n", error );
+             ( error != -ETIME ) ) {
+            dbprintf( "window_thread(): Failed to receive message: %d %d\n", error, window->client_port );
             break;
         }
 
@@ -414,6 +413,11 @@ static void* window_thread( void* arg ) {
                 int error;
                 rect_t res_area;
                 render_header_t* header;
+
+                if ( code == MSG_WINDOW_DO_SHOW ) {
+                    window->mouse_widget = NULL;
+                    window->mouse_down_widget = NULL;
+                }
 
                 /* Setup the initial restricted area */
 
@@ -589,9 +593,7 @@ static void* window_thread( void* arg ) {
                 cmd = ( msg_mouse_entered_t* )buffer;
 
                 assert( window->mouse_widget == NULL );
-
                 window->mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
-
                 assert( window->mouse_widget != NULL );
 
                 /* Notify the widget */
@@ -605,7 +607,6 @@ static void* window_thread( void* arg ) {
 
             case MSG_MOUSE_EXITED :
                 assert( window->mouse_widget != NULL );
-
                 widget_mouse_exited( window->mouse_widget );
                 window->mouse_widget = NULL;
 
@@ -619,9 +620,7 @@ static void* window_thread( void* arg ) {
                 cmd = ( msg_mouse_moved_t* )buffer;
 
                 assert( window->mouse_widget != NULL );
-
                 new_mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
-
                 assert( new_mouse_widget != NULL );
 
                 point_sub_n( &widget_position, &cmd->mouse_position, &new_mouse_widget->position );

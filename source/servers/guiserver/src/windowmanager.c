@@ -463,6 +463,10 @@ int wm_unregister_window( window_t* window ) {
 
         mouse_get_position( &mouse_position );
         mouse_window = get_window_at( &mouse_position );
+
+        if ( mouse_window != NULL ) {
+            window_mouse_entered( mouse_window, &mouse_position );
+        }
     }
 
     /* Notify the window */

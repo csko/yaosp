@@ -201,7 +201,7 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         goto error2;
     }
 
-    if ( timeout != 0 ) {
+    if ( port->message_queue == NULL ) {
         mutex_unlock( ipc_port_mutex );
 
         error = semaphore_timedlock( port->queue_semaphore, 1, LOCK_IGNORE_SIGNAL, timeout );
@@ -217,6 +217,12 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         if ( port == NULL ) {
             error = -EINVAL;
             goto error2;
+        }
+    } else {
+        error = semaphore_timedlock( port->queue_semaphore, 1, LOCK_IGNORE_SIGNAL, 0 );
+
+        if ( error != 0 ) {
+            kprintf( ERROR, "sys_recv_ipc_message(): Failed to lock queue semaphore while the message queue was not empty!\n" );
         }
     }
 
