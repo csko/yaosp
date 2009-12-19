@@ -156,6 +156,55 @@ static string_t* textarea_current_line( textarea_t* textarea ) {
     return line;
 }
 
+static string_t* _textarea_get_line( textarea_t* textarea, int index ) {
+    if ( ( index < 0 ) ||
+         ( index >= array_get_size( &textarea->lines ) ) ) {
+        return NULL;
+    }
+
+    return ( string_t* )array_get_item( &textarea->lines, index );
+}
+
+static string_t* textarea_insert_line( textarea_t* textarea, int index ) {
+    string_t* line;
+
+    if ( ( index < 0 ) ||
+         ( index > array_get_size( &textarea->lines ) ) ) {
+        goto error1;
+    }
+
+    line = ( string_t* )malloc( sizeof( string_t ) );
+
+    if ( line == NULL ) {
+        goto error1;
+    }
+
+    if ( init_string( line ) != 0 ) {
+        goto error2;
+    }
+
+    array_insert_item( &textarea->lines, index, ( void* )line );
+
+    return line;
+
+ error2:
+    free( line );
+
+ error1:
+    return NULL;
+}
+
+static int textarea_remove_line( textarea_t* textarea, int index ) {
+    if ( ( index < 0 ) ||
+         ( index >= array_get_size( &textarea->lines ) ) ) {
+        return -EINVAL;
+    }
+
+    array_remove_item_from( &textarea->lines, index );
+
+    return 0;
+}
+
 static int textarea_key_pressed( widget_t* widget, int key ) {
     textarea_t* textarea;
 
@@ -163,14 +212,33 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
     switch ( key ) {
         case KEY_BACKSPACE : {
+            string_t* current;
+
+            current = textarea_current_line( textarea );
+
             if ( textarea->cursor_x == 0 ) {
+                if ( textarea->cursor_y > 0 ) {
+                    string_t* prev;
+                    int prev_size;
+
+                    prev = _textarea_get_line( textarea, textarea->cursor_y - 1 );
+                    prev_size = string_length( prev );
+
+                    string_append_string( prev, current );
+
+                    textarea_remove_line( textarea, textarea->cursor_y );
+                    destroy_string( current );
+                    free( current );
+
+                    textarea->cursor_y--;
+                    textarea->cursor_x = prev_size;
+                }
+
                 break;
             }
 
-            string_t* line = textarea_current_line( textarea );
-            textarea->cursor_x = string_prev_utf8_char( line, textarea->cursor_x );
-
-            string_erase_utf8_char( line, textarea->cursor_x );
+            textarea->cursor_x = string_prev_utf8_char( current, textarea->cursor_x );
+            string_erase_utf8_char( current, textarea->cursor_x );
 
             break;
         }
@@ -189,11 +257,24 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
             break;
 
         case 10 :
-        case KEY_ENTER :
-            textarea->cursor_y++;
-            textarea->cursor_x = 0;
+        case KEY_ENTER : {
+            string_t* current;
+            string_t* next;
+            int remaining;
 
-            textarea_current_line( textarea );
+            current = textarea_current_line( textarea );
+            remaining = string_length( current ) - textarea->cursor_x;
+
+            textarea->cursor_y++;
+
+            next = textarea_insert_line( textarea, textarea->cursor_y );
+
+            if ( remaining > 0 ) {
+                string_append_from_string( next, current, textarea->cursor_x, remaining );
+                string_remove( current, textarea->cursor_x, remaining );
+            }
+
+            textarea->cursor_x = 0;
 
             widget_signal_event_handler(
                 widget,
@@ -206,6 +287,7 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
             );
 
             break;
+        }
 
         case KEY_LEFT :
             if ( textarea->cursor_x > 0 ) {

@@ -29,6 +29,8 @@ typedef struct string {
 
 int string_clear( string_t* string );
 int string_append( string_t* string, char* data, int size );
+int string_append_string( string_t* dest, string_t* src );
+int string_append_from_string( string_t* dest, string_t* src, int pos, int size );
 int string_insert( string_t* string, int pos, char* data, int size );
 int string_remove( string_t* string, int pos, int count );
 

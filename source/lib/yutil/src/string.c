@@ -35,6 +35,14 @@ int string_append( string_t* string, char* data, int size ) {
     return string_insert( string, string->length, data, size );
 }
 
+int string_append_string( string_t* dest, string_t* src ) {
+    return string_insert( dest, dest->length, src->buffer, src->length );
+}
+
+int string_append_from_string( string_t* dest, string_t* src, int pos, int size ) {
+    return string_insert( dest, dest->length, src->buffer + pos, size );
+}
+
 int string_insert( string_t* string, int pos, char* data, int size ) {
     if ( ( pos < 0 ) ||
          ( pos > string->length ) ) {
