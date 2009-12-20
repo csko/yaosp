@@ -648,7 +648,8 @@ static void* window_thread( void* arg ) {
 
                 /* Handle possible focus change */
 
-                if ( window->focused_widget != window->mouse_widget ) {
+                if ( ( window->mouse_widget->flags & WIDGET_FOCUSABLE ) &&
+                     ( window->focused_widget != window->mouse_widget ) ) {
                     if ( window->focused_widget != NULL ) {
                         /* TODO: this widget lost the focus */
                     }

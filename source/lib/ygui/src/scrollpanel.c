@@ -1228,7 +1228,7 @@ widget_t* create_scroll_panel( scrollbar_policy_t v_scroll_policy, scrollbar_pol
         goto error1;
     }
 
-    widget = create_widget( W_SCROLLPANEL, WIDGET_FOCUSABLE, &scrollpanel_ops, scrollpanel );
+    widget = create_widget( W_SCROLLPANEL, WIDGET_NONE, &scrollpanel_ops, scrollpanel );
 
     if ( widget == NULL ) {
         goto error2;
