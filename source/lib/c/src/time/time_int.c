@@ -69,14 +69,14 @@ int _gmtime( time_t timeval, tm_t* ret ) {
     ret->tm_yday = ( int )timeval;
 
     if ( ret->tm_year % 4 == 0 ) {
-        for ( ret->tm_mon = 0; ret->tm_mon < 12; ret->tm_mon++ ) {
+        for ( ret->tm_mon = 0; ret->tm_mon <= 12; ret->tm_mon++ ) {
             if ( monthdays2[ ret->tm_mon ] > timeval ) {
                 timeval -= monthdays2[ --ret->tm_mon ];
                 break;
             }
         }
     } else {
-        for ( ret->tm_mon = 0; ret->tm_mon < 12; ret->tm_mon++ ) {
+        for ( ret->tm_mon = 0; ret->tm_mon <= 12; ret->tm_mon++ ) {
             if ( monthdays[ ret->tm_mon ] > timeval ) {
                 timeval -= monthdays[ --ret->tm_mon ];
                 break;
