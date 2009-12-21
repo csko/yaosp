@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build default="all">
     <array name="files">
         <item>main.c</item>
+        <item>about.c</item>
     </array>
 
     <array name="images">

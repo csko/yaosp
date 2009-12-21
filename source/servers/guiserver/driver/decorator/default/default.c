@@ -234,9 +234,9 @@ static int decorator_update_border( window_t* window ) {
     );
     rect_init(
         &rect,
-        0, 0,
-        bitmap->width - 1,
-        bitmap->height - 1
+        20, 0,
+        bitmap->width - ( 22 + 1 ),
+        BORDER_TOP - 1
     );
     color_init(
         &tmp_color,

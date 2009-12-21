@@ -33,6 +33,8 @@
 #include <yutil/string.h>
 #include <yutil/array.h>
 
+#include "about.h"
+
 static window_t* window;
 static widget_t* textarea;
 
@@ -220,6 +222,12 @@ static int event_save_file( widget_t* widget, void* data ) {
     return 0;
 }
 
+static int event_about_open( widget_t* widget, void* data ) {
+    about_open();
+
+    return 0;
+}
+
 static int event_application_exit( widget_t* widget, void* data ) {
     window_close( window );
 
@@ -295,6 +303,8 @@ int main( int argc, char** argv ) {
     item = create_menuitem_with_label( "About" );
     menu_add_item( menu, item );
     widget_dec_ref( item );
+
+    widget_connect_event_handler( item, "mouse-down", event_about_open, NULL );
 
     /* Textarea ... */
 
