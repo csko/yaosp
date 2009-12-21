@@ -98,6 +98,9 @@ mouse_pointer_t* create_mouse_pointer( uint32_t width, uint32_t height, color_sp
         goto error3;
     }
 
+    mouse_position.x = screen_bitmap->width / 2;
+    mouse_position.y = screen_bitmap->height / 2;
+
     error = insert_mouse_pointer( pointer );
 
     if ( error < 0 ) {
