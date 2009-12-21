@@ -360,12 +360,22 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
         case KEY_HOME :
             textarea->cursor_x = 0;
 
-          break;
+            widget_signal_event_handler(
+                widget,
+                widget->event_ids[ E_VIEWPORT_CHANGED ]
+            );
+
+            break;
 
         case KEY_END :
             textarea->cursor_x = string_length( textarea_current_line( textarea ) );
 
-          break;
+            widget_signal_event_handler(
+                widget,
+                widget->event_ids[ E_VIEWPORT_CHANGED ]
+            );
+
+            break;
 
         default : {
             string_t* line = textarea_current_line( textarea );
