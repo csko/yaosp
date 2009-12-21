@@ -61,9 +61,11 @@ static uint8_t basic_init[] = {
     PS2_AUX_ENABLE_DEV, PS2_AUX_SET_SAMPLE, 100
 };
 
+#if 0
 static uint8_t imps2_init[] = {
     PS2_AUX_SET_SAMPLE, 200, PS2_AUX_SET_SAMPLE, 100, PS2_AUX_SET_SAMPLE, 80
 };
+#endif
 
 static uint8_t ps2_init[] = {
     PS2_AUX_SET_SCALE11, PS2_AUX_ENABLE_DEV, PS2_AUX_SET_SAMPLE, 100, PS2_AUX_SET_RES, 3
@@ -88,6 +90,7 @@ static int ps2_mouse_write( uint8_t* data, size_t size ) {
     return error;
 }
 
+#if 0
 static int ps2_mouse_read_id( void ) {
     int error;
     uint8_t data;
@@ -111,9 +114,10 @@ static int ps2_mouse_read_id( void ) {
 
     return data;
 }
+#endif
 
 static int ps2_mouse_init( void ) {
-    int id;
+    //int id;
     int error;
 
     mouse_device = open( "/device/input/ps2mouse", O_RDONLY );
@@ -130,6 +134,7 @@ static int ps2_mouse_init( void ) {
         return error;
     }
 
+#if 0
     error = ps2_mouse_write( imps2_init, sizeof( imps2_init ) );
 
     if ( error < 0 ) {
@@ -142,6 +147,7 @@ static int ps2_mouse_init( void ) {
         kprintf( ERROR, "PS/2 mouse: Invalid mouse ID: %x\n", id );
         return -EINVAL;
     }
+#endif
 
     error = ps2_mouse_write( ps2_init, sizeof( ps2_init ) );
 
