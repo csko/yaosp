@@ -292,12 +292,21 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
         case KEY_LEFT :
             if ( textarea->cursor_x > 0 ) {
                 textarea->cursor_x--;
+            } else {
+                if ( textarea->cursor_y > 0 ) {
+                    string_t* current;
 
-                widget_signal_event_handler(
-                    widget,
-                    widget->event_ids[ E_VIEWPORT_CHANGED ]
-                );
+                    textarea->cursor_y--;
+
+                    current = textarea_current_line( textarea );
+                    textarea->cursor_x = string_length( current );
+                }
             }
+
+            widget_signal_event_handler(
+                widget,
+                widget->event_ids[ E_VIEWPORT_CHANGED ]
+            );
 
             break;
 
@@ -306,12 +315,22 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
             if ( textarea->cursor_x < string_length( line ) ) {
                 textarea->cursor_x++;
+            } else {
+                line = _textarea_get_line( textarea, array_get_size( &textarea->lines ) - 1 );
+                int last_line = string_length( line ) == 0 ? array_get_size( &textarea->lines ) - 1 : array_get_size( &textarea->lines );
 
-                widget_signal_event_handler(
-                    widget,
-                    widget->event_ids[ E_VIEWPORT_CHANGED ]
-                );
+                if ( textarea->cursor_y < last_line ) {
+                    textarea->cursor_y++;
+                    textarea->cursor_x = 0;
+                }
+
+                textarea_current_line( textarea );
             }
+
+            widget_signal_event_handler(
+                widget,
+                widget->event_ids[ E_VIEWPORT_CHANGED ]
+            );
 
             break;
         }
