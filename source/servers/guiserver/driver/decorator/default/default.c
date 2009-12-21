@@ -72,6 +72,8 @@ typedef struct decorator_data {
 static font_node_t* title_font;
 static bitmap_t* bmp_close_focused;
 
+static bitmap_t* default_win_icon;
+
 static int decorator_initialize( window_t* window ) {
     decorator_data_t* data;
 
@@ -178,6 +180,7 @@ static int decorator_update_border( window_t* window ) {
     color_t* color;
     color_t tmp_color;
     bitmap_t* bitmap;
+    bitmap_t* icon;
 
     bitmap = window->bitmap;
     rect_bounds_xy( &window->screen_rect, &width, &height );
@@ -253,24 +256,26 @@ static int decorator_update_border( window_t* window ) {
     /* Window icon */
 
     if ( window->icon != NULL ) {
-        point_init(
-            &point,
-            3, ( BORDER_TOP - window->icon->height ) / 2
-        );
-        rect_init(
-            &rect,
-            0, 0,
-            window->icon->width - 1, window->icon->height - 1
-        );
-
-        graphics_driver->blit_bitmap(
-            bitmap,
-            &point,
-            window->icon,
-            &rect,
-            DM_BLEND
-        );
+        icon = window->icon;
+    } else {
+        icon = default_win_icon;
     }
+
+    point_init(
+        &point,
+        3, ( BORDER_TOP - icon->height ) / 2
+    );
+    rect_init(
+        &rect,
+        0, 0,
+        icon->width - 1, icon->height - 1
+    );
+
+    graphics_driver->blit_bitmap(
+        bitmap, &point,
+        icon, &rect,
+        DM_BLEND
+    );
 
     return 0;
 }
@@ -355,10 +360,19 @@ int init_default_decorator( void ) {
         goto error2;
     }
 
+    default_win_icon = create_bitmap_from_file( "/system/images/unknown.png" );
+
+    if ( default_win_icon == NULL ) {
+        goto error3;
+    }
+
     return 0;
 
+ error3:
+    /* todo */
+
  error2:
-    /* TODO: free close button bitmap */
+    /* todo: free close button bitmap */
 
  error1:
     return -ENOMEM;

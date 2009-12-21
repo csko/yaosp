@@ -100,6 +100,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="objs/guiserver" to="../../../build/image/system/server/guiserver"/>
 
         <copy from="images/yaosp.png" to="../../../build/image/system/images/yaosp.png"/>
+        <copy from="images/unknown.png" to="../../../build/image/system/images/unknown.png"/>
 
         <echo>Downloading DejaVu fonts</echo>
         <httpget address="http://files.yaosp.org/source/dejavu-fonts/dejavu-fonts-ttf-2.30.tar.bz2"
