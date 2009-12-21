@@ -357,6 +357,16 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
             break;
 
+        case KEY_HOME :
+            textarea->cursor_x = 0;
+
+          break;
+
+        case KEY_END :
+            textarea->cursor_x = string_length( textarea_current_line( textarea ) );
+
+          break;
+
         default : {
             string_t* line = textarea_current_line( textarea );
             string_insert( line, textarea->cursor_x++, ( char* )&key, 1 );
