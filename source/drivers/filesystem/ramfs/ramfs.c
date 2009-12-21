@@ -337,31 +337,48 @@ static int ramfs_open_directory( ramfs_inode_t* inode, void** _cookie ) {
 }
 
 static int ramfs_open_file( ramfs_inode_t* inode, void** _cookie, int flags ) {
-    ramfs_file_cookie_t* cookie;
+    ramfs_file_cookie_t* file_cookie;
 
-    cookie = ( ramfs_file_cookie_t* )kmalloc( sizeof( ramfs_file_cookie_t ) );
+    file_cookie = ( ramfs_file_cookie_t* )kmalloc( sizeof( ramfs_file_cookie_t ) );
 
-    if ( cookie == NULL ) {
+    if ( file_cookie == NULL ) {
         return -ENOMEM;
     }
 
-    cookie->open_flags = flags;
+    file_cookie->open_flags = flags;
 
-    *_cookie = ( void* )cookie;
+    if ( ( flags & ( O_RDWR | O_WRONLY ) ) &&
+         ( flags & O_TRUNC ) ) {
+        if ( inode->data ) {
+            kfree( inode->data );
+            inode->data = NULL;
+        }
+
+        inode->size = 0;
+    }
+
+    *_cookie = ( void* )file_cookie;
 
     return 0;
 }
 
 static int ramfs_open( void* fs_cookie, void* node, int mode, void** file_cookie ) {
+    int ret;
     ramfs_inode_t* inode;
+    ramfs_cookie_t* cookie;
 
     inode = ( ramfs_inode_t* )node;
+    cookie = ( ramfs_cookie_t* )fs_cookie;
 
     if ( inode->is_directory ) {
-        return ramfs_open_directory( inode, file_cookie );
+        ret = ramfs_open_directory( inode, file_cookie );
     } else {
-        return ramfs_open_file( inode, file_cookie, mode );
+        mutex_lock( cookie->lock, LOCK_IGNORE_SIGNAL );
+        ret = ramfs_open_file( inode, file_cookie, mode );
+        mutex_unlock( cookie->lock );
     }
+
+    return ret;
 }
 
 static int ramfs_close( void* fs_cookie, void* node, void* file_cookie ) {
