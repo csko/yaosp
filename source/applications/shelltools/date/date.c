@@ -103,7 +103,7 @@ static struct option long_options[] = {
 
 int main( int argc, char* argv[] ) {
     time_t now;
-    struct tm* tmval;
+    struct tm tmval;
     struct stat refstats;
     const char* datestr = NULL;
     char tmpstr[ 128 ];
@@ -335,18 +335,9 @@ int main( int argc, char* argv[] ) {
         return EXIT_FAILURE;
     }
 
-    tmval = ( struct tm* )malloc( sizeof( struct tm ) );
-    gmtime_r( &now, tmval );
+    gmtime_r( &now, &tmval );
+    strftime( ( char* )tmpstr, sizeof( tmpstr ), format, &tmval );
 
-    if ( tmval == NULL ) {
-        fprintf( stderr, "%s: gmtime_r() failed: %s\n", argv[0], strerror( errno ) );
-        free( tmval );
-
-        return EXIT_FAILURE;
-    }
-
-    strftime( ( char* )tmpstr, 128, format, tmval );
-    free( tmval );
     printf( "%s\n", tmpstr );
 
     return EXIT_SUCCESS;
