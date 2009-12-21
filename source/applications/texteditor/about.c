@@ -40,7 +40,7 @@ int about_open( void ) {
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
-    label = create_label( "yaOSp text editor v0.1" );
+    label = create_label_with_text( "yaOSp text editor v0.1" );
     widget_add( container, label, BRD_CENTER );
     widget_dec_ref( label );
 

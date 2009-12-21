@@ -161,7 +161,7 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
-    chooser->path_label = create_label( path );
+    chooser->path_label = create_label_with_text( path );
     label_set_horizontal_alignment( chooser->path_label, H_ALIGN_LEFT );
     widget_add( container, chooser->path_label, BRD_PAGE_START );
     widget_dec_ref( chooser->path_label );

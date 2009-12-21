@@ -21,7 +21,8 @@
 
 #include <ygui/widget.h>
 
-widget_t* create_label( const char* text );
+widget_t* create_label( void );
+widget_t* create_label_with_text( const char* text );
 
 int label_set_text( widget_t* widget, const char* text );
 int label_set_vertical_alignment( widget_t* widget, v_alignment_t alignment );

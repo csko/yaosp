@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <ygui/application.h>
 #include <ygui/window.h>
@@ -27,6 +28,7 @@
 #include <ygui/menubar.h>
 #include <ygui/menuitem.h>
 #include <ygui/scrollpanel.h>
+#include <ygui/label.h>
 #include <ygui/layout/borderlayout.h>
 #include <ygui/dialog/filechooser.h>
 
@@ -37,8 +39,11 @@
 
 static window_t* window;
 static widget_t* textarea;
+static widget_t* statusbar;
 
 static char* opened_file = NULL;
+
+int set_statusbar_text( const char* _text );
 
 static int file_loader_insert_lines( void* data ) {
     array_t* lines;
@@ -128,6 +133,9 @@ static void* file_loader_thread( void* arg ) {
         free( lines );
     }
 
+    snprintf( tmp, sizeof( tmp ), "File '%s' opened.", opened_file );
+    set_statusbar_text( tmp );
+
     return NULL;
 }
 
@@ -155,6 +163,7 @@ static int event_open_file_chooser_done( file_chooser_t* chooser, chooser_event_
 static int file_save_callback( void* data ) {
     int f;
     char* file;
+    char text[ 256 ];
 
     file = ( char* )data;
 
@@ -179,6 +188,9 @@ static int file_save_callback( void* data ) {
     close( f );
 
  out:
+    snprintf( text, sizeof( text ), "File '%s' saved.", file );
+    set_statusbar_text( text );
+
     free( file );
 
     return 0;
@@ -230,6 +242,26 @@ static int event_about_open( widget_t* widget, void* data ) {
 
 static int event_application_exit( widget_t* widget, void* data ) {
     window_close( window );
+
+    return 0;
+}
+
+static int statusbar_updater( void* data ) {
+    label_set_text( statusbar, ( char* )data );
+    free( data );
+
+    return 0;
+}
+
+int set_statusbar_text( const char* _text ) {
+    char* text;
+    text = strdup( _text );
+
+    if ( text == NULL ) {
+        return 0;
+    }
+
+    window_insert_callback( window, statusbar_updater, ( void* )text );
 
     return 0;
 }
@@ -315,6 +347,11 @@ int main( int argc, char** argv ) {
     widget_add( scrollpanel, textarea, NULL );
     widget_dec_ref( textarea );
     widget_dec_ref( scrollpanel );
+
+    statusbar = create_label();
+    label_set_horizontal_alignment( statusbar, H_ALIGN_LEFT );
+    widget_add( container, statusbar, BRD_PAGE_END );
+    widget_dec_ref( statusbar );
 
     window_show( window );
 

@@ -46,62 +46,64 @@ static int label_paint( widget_t* widget, gc_t* gc ) {
     gc_set_pen_color( gc, &bg_color );
     gc_fill_rect( gc, &bounds );
 
-    switch ( label->h_align ) {
-        case H_ALIGN_LEFT :
-            text_position.x = 0;
-            break;
-
-        case H_ALIGN_CENTER : {
-            int text_width;
-
-            text_width = font_get_string_width( label->font, label->text, -1 );
-
-            text_position.x = ( rect_width( &bounds ) - text_width ) / 2;
-
-            if ( text_position.x < 0 ) {
+    if ( label->text != NULL ) {
+        switch ( label->h_align ) {
+            case H_ALIGN_LEFT :
                 text_position.x = 0;
+                break;
+
+            case H_ALIGN_CENTER : {
+                int text_width;
+
+                text_width = font_get_string_width( label->font, label->text, -1 );
+
+                text_position.x = ( rect_width( &bounds ) - text_width ) / 2;
+
+                if ( text_position.x < 0 ) {
+                    text_position.x = 0;
+                }
+
+                break;
             }
 
-            break;
+            case H_ALIGN_RIGHT : {
+                int text_width;
+
+                text_width = font_get_string_width( label->font, label->text, -1 );
+
+                text_position.x = bounds.right - text_width + 1;
+
+                if ( text_position.x < 0 ) {
+                    text_position.x = 0;
+                }
+
+                break;
+            }
         }
 
-        case H_ALIGN_RIGHT : {
-            int text_width;
+        switch ( label->v_align ) {
+            case V_ALIGN_TOP :
+                text_position.y = font_get_ascender( label->font );
+                break;
 
-            text_width = font_get_string_width( label->font, label->text, -1 );
+            case V_ALIGN_CENTER : {
+                int asc = font_get_ascender( label->font );
+                int desc = font_get_descender( label->font );
 
-            text_position.x = bounds.right - text_width + 1;
+                text_position.y = bounds.top + ( rect_height( &bounds ) - ( asc - desc ) ) / 2 + asc;
 
-            if ( text_position.x < 0 ) {
-                text_position.x = 0;
+                break;
             }
 
-            break;
-        }
-    }
-
-    switch ( label->v_align ) {
-        case V_ALIGN_TOP :
-            text_position.y = font_get_ascender( label->font );
-            break;
-
-        case V_ALIGN_CENTER : {
-            int asc = font_get_ascender( label->font );
-            int desc = font_get_descender( label->font );
-
-            text_position.y = bounds.top + ( rect_height( &bounds ) - ( asc - desc ) ) / 2 + asc;
-
-            break;
+            case V_ALIGN_BOTTOM :
+                text_position.y = bounds.bottom - ( font_get_line_gap( label->font ) - font_get_descender( label->font ) );
+                break;
         }
 
-        case V_ALIGN_BOTTOM :
-            text_position.y = bounds.bottom - ( font_get_line_gap( label->font ) - font_get_descender( label->font ) );
-            break;
+        gc_set_pen_color( gc, &fg_color );
+        gc_set_font( gc, label->font );
+        gc_draw_text( gc, &text_position, label->text, -1 );
     }
-
-    gc_set_pen_color( gc, &fg_color );
-    gc_set_font( gc, label->font );
-    gc_draw_text( gc, &text_position, label->text, -1 );
 
     return 0;
 }
@@ -113,9 +115,11 @@ static int label_get_preferred_size( widget_t* widget, point_t* size ) {
 
     point_init(
         size,
-        font_get_string_width( label->font, label->text, -1 ) + 4,
-        font_get_ascender( label->font ) - font_get_descender( label->font ) + font_get_line_gap( label->font ) + 4
+        label->text == NULL ? 0 : font_get_string_width( label->font, label->text, -1 ),
+        font_get_height( label->font ) + 4
     );
+
+    size->x += 4;
 
     return 0;
 }
@@ -152,7 +156,11 @@ static widget_operations_t label_ops = {
     .destroy = label_destroy
 };
 
-widget_t* create_label( const char* text ) {
+widget_t* create_label( void ) {
+    return create_label_with_text( NULL );
+}
+
+widget_t* create_label_with_text( const char* text ) {
     label_t* label;
     widget_t* widget;
     font_properties_t properties;
@@ -163,10 +171,14 @@ widget_t* create_label( const char* text ) {
         goto error1;
     }
 
-    label->text = strdup( text );
+    if ( text == NULL ) {
+        label->text = NULL;
+    } else {
+        label->text = strdup( text );
 
-    if ( label->text == NULL ) {
-        goto error2;
+        if ( label->text == NULL ) {
+            goto error2;
+        }
     }
 
     properties.point_size = 8 * 64;
@@ -193,7 +205,9 @@ widget_t* create_label( const char* text ) {
     destroy_font( label->font );
 
  error3:
-    free( label->text );
+    if ( label->text != NULL ) {
+        free( label->text );
+    }
 
  error2:
     free( label );
