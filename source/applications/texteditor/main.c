@@ -81,7 +81,7 @@ static int file_save_callback( void* data ) {
     close( f );
 
  out:
-    statusbar_set_text( "File '%s' saved.'", file );
+    statusbar_set_text( "File '%s' saved.", file );
     free( file );
 
     return 0;

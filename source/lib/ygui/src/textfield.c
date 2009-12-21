@@ -53,6 +53,7 @@ static event_type_t textfield_event_types[ E_COUNT ] = {
 };
 
 static int textfield_paint( widget_t* widget, gc_t* gc ) {
+    rect_t tmp;
     rect_t bounds;
     point_t text_position;
     textfield_t* textfield;
@@ -111,6 +112,15 @@ static int textfield_paint( widget_t* widget, gc_t* gc ) {
         -1
     );
 
+    int w = font_get_string_width(
+        textfield->font,
+        string_c_str( &textfield->buffer ),
+        textfield->cursor_start
+    );
+
+    rect_init( &tmp, w, 2, w, bounds.bottom - 2 );
+    gc_fill_rect( gc, &tmp );
+
     return 0;
 }
 
@@ -130,13 +140,13 @@ static int textfield_key_pressed( widget_t* widget, int key ) {
             break;
 
         case KEY_DELETE :
+            string_erase_utf8_char( &textfield->buffer, textfield->cursor_start );
             break;
 
         case KEY_BACKSPACE :
             if ( textfield->cursor_start > 0 ) {
-                textfield->cursor_start -= 1;
-
-                string_remove( &textfield->buffer, textfield->cursor_start, 1 );
+                textfield->cursor_start = string_prev_utf8_char( &textfield->buffer, textfield->cursor_start );
+                string_erase_utf8_char( &textfield->buffer, textfield->cursor_start );
             }
 
             break;
