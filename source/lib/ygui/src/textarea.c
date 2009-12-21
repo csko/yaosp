@@ -319,6 +319,7 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
         case KEY_UP :
             if ( textarea->cursor_y > 0 ) {
                 textarea->cursor_y--;
+                textarea->cursor_x = 0;
 
                 widget_signal_event_handler(
                     widget,
