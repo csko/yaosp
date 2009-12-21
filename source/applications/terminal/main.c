@@ -26,6 +26,7 @@
 #include <termios.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
 #include <yaosp/debug.h>
 
 #include <ygui/application.h>
@@ -47,6 +48,7 @@ pid_t shell_pid;
 terminal_t* terminal;
 
 pthread_t pty_read_thread;
+volatile int pty_reader_running = 1;
 
 static int terminal_update_widget( void* data ) {
     /* The preferred size of the widget may changed. Signal the
@@ -69,30 +71,42 @@ static int terminal_update_widget( void* data ) {
     return 0;
 }
 
-static void* pty_read_thread_entry( void* arg ) {
-    int size;
+static void* pty_reader_thread( void* arg ) {
+    int ret;
+    fd_set set;
     uint8_t buffer[ 512 ];
+    struct timeval timeout;
 
-    while ( 1 ) {
-        size = read( master_pty, buffer, sizeof( buffer ) );
+    while ( pty_reader_running ) {
+        FD_ZERO( &set );
+        FD_SET( master_pty, &set );
 
-        if ( size < 0 ) {
-            dbprintf( "Failed to read from the master PTY!\n" );
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 250 * 1000;
 
+        ret = select( master_pty + 1, &set, NULL, NULL, &timeout );
+
+        if ( ret < 0 ) {
+            dbprintf( "pty_reader_thread(): failed to select.\n" );
             break;
+        } else if ( ret > 0 ) {
+            ret = read( master_pty, buffer, sizeof( buffer ) );
+
+            if ( ret < 0 ) {
+                dbprintf( "pty_reader_thread(): failed to read from the master PTY!\n" );
+                break;
+            } else if ( ret == 0 ) {
+                continue;
+            }
+
+            /* Add the new data to the terminal engine */
+
+            terminal_handle_data( terminal, buffer, ret );
+
+            /* Invalidate the terminal widget to repaint it */
+
+            window_insert_callback( window, terminal_update_widget, NULL );
         }
-
-        if ( size == 0 ) {
-            continue;
-        }
-
-        /* Add the new data to the terminal engine */
-
-        terminal_handle_data( terminal, buffer, size );
-
-        /* Invalidate the terminal widget to repaint it */
-
-        window_insert_callback( window, terminal_update_widget, NULL );
     }
 
     return NULL;
@@ -183,7 +197,7 @@ static int initialize_pty( void ) {
     pthread_create(
         &pty_read_thread,
         &attrib,
-        pty_read_thread_entry,
+        pty_reader_thread,
         NULL
     );
 
@@ -253,6 +267,10 @@ int main( int argc, char** argv ) {
     window_show( window );
 
     application_run();
+
+    /* Stop the pty reader thread */
+
+    pty_reader_running = 0;
 
     return EXIT_SUCCESS;
 }
