@@ -35,6 +35,7 @@
 #include <ygui/protocol.h>
 #include <ygui/layout/borderlayout.h>
 #include <ygui/layout/flowlayout.h>
+#include <yutil/process.h>
 
 #include "window_list.h"
 #include "plugin.h"
@@ -217,6 +218,11 @@ static int send_guiserver_notification( void ) {
 int main( int argc, char** argv ) {
     int i;
     point_t size;
+
+    if ( process_count_of( "taskbar" ) != 1 ) {
+        fprintf( stderr, "Taskbar is already running!\n" );
+        return EXIT_FAILURE;
+    }
 
     if ( application_init() != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );

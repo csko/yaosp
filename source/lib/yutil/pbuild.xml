@@ -27,6 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stack.c</item>
         <item>src/list.c</item>
         <item>src/blockbuffer.c</item>
+        <item>src/process.c</item>
     </array>
 
     <target name="clean">

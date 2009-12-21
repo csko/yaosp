@@ -24,6 +24,7 @@
 #include <yaosp/ipc.h>
 
 #include <ygui/protocol.h>
+#include <yutil/process.h>
 
 #include <graphicsdriver.h>
 #include <bitmap.h>
@@ -202,6 +203,11 @@ static int guiserver_mainloop( void ) {
 }
 
 int main( int argc, char** argv ) {
+    if ( process_count_of( "guiserver" ) != 1 ) {
+        fprintf( stderr, "GUI server is already running!\n" );
+        return EXIT_FAILURE;
+    }
+
     if ( init_bitmap() != 0 ) {
         printf( "Failed to initialize bitmaps\n" );
         return EXIT_FAILURE;
