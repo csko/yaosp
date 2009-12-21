@@ -34,7 +34,54 @@ static int entry_compare( const void* p1, const void* p2 ) {
     return strcmp( entry1->d_name, entry2->d_name );
 }
 
-static int do_list( char* dirname ) {
+static int do_print_entry( char* path, struct stat* st ) {
+    char* name;
+
+    name = strrchr( path, '/' );
+
+    if ( name == NULL ) {
+        name = path;
+    } else {
+        name++;
+    }
+
+    if ( S_ISDIR( st->st_mode ) ) {
+        printf( "directory %s\n", name );
+    } else if ( S_ISLNK( st->st_mode ) ) {
+        char link[ 256 ];
+
+        readlink( path, link, sizeof( link ) );
+
+        printf( "  symlink %s -> %s\n", name, link );
+    } else {
+        int unit = 0;
+        char size[ 16 ];
+
+        while ( ( st->st_size >= 1024 ) && ( unit < sizeof( units ) ) ) {
+            st->st_size /= 1024;
+            unit++;
+        }
+
+        snprintf( size, sizeof( size ), "%llu %2s", st->st_size, units[ unit ] );
+        printf( "%9s %s\n", size, name );
+    }
+
+    return 0;
+}
+
+static int do_list_file( char* filename ) {
+    struct stat st;
+
+    if ( lstat( filename, &st ) != 0 ) {
+        return -1;
+    }
+
+    do_print_entry( filename, &st );
+
+    return 0;
+}
+
+static int do_list_directory( char* dirname ) {
     int i;
     int fd;
     int tmp;
@@ -46,9 +93,6 @@ static int do_list( char* dirname ) {
 
     struct stat entry_stat;
     char full_path[ 256 ];
-
-    int unit;
-    char size[ 10 ];
 
     fd = open( dirname, O_RDONLY );
 
@@ -95,25 +139,7 @@ static int do_list( char* dirname ) {
                 continue;
             }
 
-            if ( S_ISDIR( entry_stat.st_mode ) ) {
-                printf( "directory %s\n", entry->d_name );
-            } else if ( S_ISLNK( entry_stat.st_mode ) ) {
-                char link[ 256 ];
-
-                readlink( full_path, link, sizeof( link ) );
-
-                printf( "  symlink %s -> %s\n", entry->d_name, link );
-            } else {
-                unit = 0;
-
-                while ( ( entry_stat.st_size >= 1024 ) && ( unit < sizeof( units ) ) ) {
-                    entry_stat.st_size /= 1024;
-                    unit++;
-                }
-
-                snprintf( size, sizeof( size ), "%llu %2s", entry_stat.st_size, units[ unit ] );
-                printf( "%9s %s\n", size, entry->d_name );
-            }
+            do_print_entry( full_path, &entry_stat );
         }
     }
 
@@ -132,12 +158,24 @@ int main( int argc, char** argv ) {
 
     if ( argc > 1 ) {
         for ( i = 1; i < argc; i++ ) {
-            if ( do_list( argv[ i ] ) < 0 ) {
-                ret = EXIT_FAILURE;
+            struct stat st;
+
+            if ( lstat( argv[ i ], &st ) != 0 ) {
+                continue;
+            }
+
+            if ( S_ISDIR( st.st_mode ) ) {
+                if ( do_list_directory( argv[ i ] ) < 0 ) {
+                    ret = EXIT_FAILURE;
+                }
+            } else {
+                if ( do_list_file( argv[ i ] ) < 0 ) {
+                    ret = EXIT_FAILURE;
+                }
             }
         }
     } else {
-        if ( do_list( "." ) < 0 ) {
+        if ( do_list_directory( "." ) < 0 ) {
             ret = EXIT_FAILURE;
         }
     }
