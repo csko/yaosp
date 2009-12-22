@@ -91,6 +91,7 @@ __init static int scan_and_mount_root_filesystem( void ) {
         error = mount( path, "/yaosp", "iso9660", MOUNT_RO );
 
         if ( error >= 0 ) {
+            kprintf( INFO, "Root filesystem mounted from %s.\n", path );
             break;
         }
     }
@@ -118,6 +119,10 @@ __init static void mount_root_filesystem( void ) {
 
     if ( error == 0 ) {
         error = mount( root, "/yaosp", "ext2", MOUNT_NONE );
+
+        if ( error >= 0 ) {
+            kprintf( INFO, "Root filesystem mounted from %s.\n", root );
+        }
     } else {
         error = scan_and_mount_root_filesystem();
     }
@@ -125,14 +130,12 @@ __init static void mount_root_filesystem( void ) {
     if ( error < 0 ) {
         panic( "Failed to mount root filesystem!\n" );
     }
-
-    kprintf( INFO, "Root filesystem mounted!\n" );
 }
 
 int init_thread( void* arg ) {
     uint32_t init_page_count;
 
-    DEBUG_LOG( "Init thread started!\n" );
+    DEBUG_LOG( "Init thread started.\n" );
 
 #ifdef ENABLE_SMP
     arch_boot_processors();

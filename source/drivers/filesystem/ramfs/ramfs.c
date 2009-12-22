@@ -867,7 +867,7 @@ static filesystem_calls_t ramfs_calls = {
 int init_module( void ) {
     int error;
 
-    kprintf( INFO, "ramfs: Registering filesystem driver\n" );
+    kprintf( INFO, "ramfs: Registering filesystem driver.\n" );
 
     error = register_filesystem( "ramfs", &ramfs_calls );
 

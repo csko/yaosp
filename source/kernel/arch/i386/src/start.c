@@ -245,7 +245,7 @@ __init void arch_start( multiboot_header_t* header ) {
     init_bootmodules( header );
 
     if ( get_bootmodule_count() > 0 ) {
-        kprintf( INFO, "Loaded %d module(s)\n", get_bootmodule_count() );
+        kprintf( INFO, "Loaded %d module(s) with GRUB.\n", get_bootmodule_count() );
     }
 
     /* Initialize page allocator */

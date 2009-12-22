@@ -769,12 +769,12 @@ static filesystem_calls_t iso9660_calls = {
 int init_module( void ) {
     int error;
 
-    kprintf( INFO, "iso9660: Registering filesystem driver!\n" );
+    kprintf( INFO, "iso9660: Registering filesystem driver.\n" );
 
     error = register_filesystem( "iso9660", &iso9660_calls );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "iso9660: Failed to register filesystem driver\n" );
+        kprintf( ERROR, "iso9660: Failed to register filesystem driver.\n" );
         return error;
     }
 

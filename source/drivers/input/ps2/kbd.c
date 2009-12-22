@@ -150,7 +150,7 @@ int ps2_init_keyboard( void ) {
     error = ps2_read_command( PS2_CMD_RCTR, &control );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "ps2: I/O error!\n" );
+        kprintf( ERROR, "ps2: I/O error.\n" );
         return -EIO;
     }
 
@@ -169,14 +169,14 @@ int ps2_init_keyboard( void ) {
     error = ps2_write_command( PS2_CMD_WCTR, control );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "ps2: I/O error!\n" );
+        kprintf( ERROR, "ps2: I/O error.\n" );
         return -EIO;
     }
 
     error = ps2_buffer_init( &kbd_buffer );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "ps2: Failed to initialize keyboard buffer!\n" );
+        kprintf( ERROR, "ps2: Failed to initialize keyboard buffer.\n" );
         return error;
     }
 
@@ -186,7 +186,7 @@ int ps2_init_keyboard( void ) {
         return error;
     }
 
-    kprintf( INFO, "ps2: Keyboard initialized!\n" );
+    kprintf( INFO, "ps2: Keyboard initialized.\n" );
 
     return 0;
 }

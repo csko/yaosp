@@ -224,7 +224,7 @@ __init int init_mp( void ) {
     }
 
     if ( !fp_found ) {
-        kprintf( INFO, "MP floating pointer not found!\n" );
+        kprintf( INFO, "MP floating pointer not found.\n" );
         return -ENOENT;
     }
 
@@ -234,7 +234,7 @@ __init int init_mp( void ) {
         error = mp_handle_cfg_table( ( void* )fp->physical_address );
 
         if ( error < 0 ) {
-            kprintf( ERROR, "Failed to parse MP configuration table!\n" );
+            kprintf( ERROR, "Failed to parse MP configuration table.\n" );
             return error;
         }
     } else {
