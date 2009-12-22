@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <yaosp/time.h>
+#include <yaosp/input.h>
 
 #include <ygui/dirview.h>
 #include <ygui/bitmap.h>
@@ -313,6 +314,61 @@ static int dirview_paint( widget_t* widget, gc_t* gc ) {
     return 0;
 }
 
+static int dirview_key_pressed( widget_t* widget, int key ) {
+    int prev_selected;
+    int viewport_changed;
+    dir_view_t* dirview;
+
+    dirview = ( dir_view_t* )widget_get_data( widget );
+
+    pthread_mutex_lock( &dirview->lock );
+
+    prev_selected = dirview->selected;
+
+    switch ( key ) {
+        case KEY_UP :
+            if ( dirview->selected > 0 ) {
+                dirview->selected--;
+            }
+
+            break;
+
+        case KEY_DOWN :
+            if ( dirview->selected < ( array_get_size( &dirview->items ) - 1 ) ) {
+                dirview->selected++;
+            }
+
+            break;
+
+        case 10 :
+        case KEY_ENTER :
+            pthread_mutex_unlock( &dirview->lock );
+            widget_signal_event_handler( widget, dirview_events[ E_ITEM_DOUBLE_CLICKED ] );
+
+            return 0;
+
+        default :
+            break;
+    }
+
+    viewport_changed = ( prev_selected != dirview->selected );
+
+    pthread_mutex_unlock( &dirview->lock );
+
+    /* Check if viewport is changed ... */
+
+    if ( viewport_changed ) {
+        widget_signal_event_handler(
+            widget,
+            widget->event_ids[ E_VIEWPORT_CHANGED ]
+        );
+    }
+
+    widget_invalidate( widget );
+
+    return 0;
+}
+
 static int dirview_mouse_pressed( widget_t* widget, point_t* position, int button ) {
     uint64_t now;
     int old_selected;
@@ -380,6 +436,24 @@ static int dirview_get_preferred_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+static int dirview_get_viewport( widget_t* widget, rect_t* viewport ) {
+    dir_view_t* dir_view;
+
+    dir_view = ( dir_view_t* )widget_get_data( widget );
+
+    pthread_mutex_lock( &dir_view->lock );
+    rect_init(
+        viewport,
+        0,
+        dir_view->selected * LINE_HEIGHT + 4,
+        1 /* todo */,
+        ( dir_view->selected + 1 ) * LINE_HEIGHT - 1 + 4
+    );
+    pthread_mutex_unlock( &dir_view->lock );
+
+    return 0;
+}
+
 static int dirview_destroy( widget_t* widget ) {
     dir_view_t* dir_view;
 
@@ -396,7 +470,7 @@ static int dirview_destroy( widget_t* widget ) {
 
 static widget_operations_t dirview_ops = {
     .paint = dirview_paint,
-    .key_pressed = NULL,
+    .key_pressed = dirview_key_pressed,
     .key_released = NULL,
     .mouse_entered = NULL,
     .mouse_exited = NULL,
@@ -406,7 +480,7 @@ static widget_operations_t dirview_ops = {
     .get_minimum_size = NULL,
     .get_preferred_size = dirview_get_preferred_size,
     .get_maximum_size = NULL,
-    .get_viewport = NULL,
+    .get_viewport = dirview_get_viewport,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = NULL,
