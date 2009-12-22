@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <console.h>
 #include <errno.h>
 #include <macros.h>
@@ -125,3 +129,5 @@ int icmp_input( packet_t* packet ) {
 
     return 0;
 }
+
+#endif /* ENABLE_NETWORK */

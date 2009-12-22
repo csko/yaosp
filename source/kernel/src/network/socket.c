@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <errno.h>
 #include <smp.h>
 #include <console.h>
@@ -291,18 +295,18 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
 
     return error;
 
-error4:
+ error4:
     mutex_lock( socket_mutex, LOCK_IGNORE_SIGNAL );
     hashtable_remove( &socket_inode_table, ( const void* )&socket->inode_number );
     mutex_unlock( socket_mutex );
 
-error3:
+ error3:
     delete_file( file );
 
-error2:
+ error2:
     kfree( socket );
 
-error1:
+ error1:
     return -ENOMEM;
 }
 
@@ -352,10 +356,10 @@ int do_connect( bool kernel, int fd, struct sockaddr* address, socklen_t addrlen
         );
     }
 
-error2:
+ error2:
     io_context_put_file( io_context, file );
 
-error1:
+ error1:
     return error;
 }
 
@@ -414,15 +418,17 @@ __init int init_socket( void ) {
 
     return 0;
 
-error4:
+ error4:
     delete_mount_point( socket_mount_point );
 
-error3:
+ error3:
     destroy_hashtable( &socket_inode_table );
 
-error2:
+ error2:
     mutex_destroy( socket_mutex );
 
-error1:
+ error1:
     return error;
 }
+
+#endif /* ENABLE_NETWORK */

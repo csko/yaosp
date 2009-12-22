@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <macros.h>
 #include <mm/kmalloc.h>
 #include <network/packet.h>
@@ -67,10 +71,10 @@ packet_queue_t* create_packet_queue( void ) {
 
     return queue;
 
-error2:
+ error2:
     kfree( queue );
 
-error1:
+ error1:
     return NULL;
 }
 
@@ -136,3 +140,4 @@ packet_t* packet_queue_pop_head( packet_queue_t* queue, uint64_t timeout ) {
     return packet;
 }
 
+#endif /* ENABLE_NETWORK */

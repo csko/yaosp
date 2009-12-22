@@ -346,24 +346,24 @@ static int do_load_module( const char* name ) {
 
     return 0;
 
-error4:
+ error4:
     /* TODO: unload the module */
 
-error3:
+ error3:
     mutex_lock( module_mutex, LOCK_IGNORE_SIGNAL );
     hashtable_remove( &module_table, ( const void* )name );
     mutex_unlock( module_mutex );
 
     destroy_module( module );
 
-error2:
+ error2:
     if ( is_bootmodule ) {
         put_bootmodule_loader( loader );
     } else {
         put_file_module_loader( loader );
     }
 
-error1:
+ error1:
     return error;
 }
 
@@ -502,9 +502,9 @@ __init int init_module_loader( void ) {
 
     return 0;
 
-error2:
+ error2:
     destroy_hashtable( &module_table );
 
-error1:
+ error1:
     return error;
 }

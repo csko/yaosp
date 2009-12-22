@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <console.h>
 #include <errno.h>
 #include <kernel.h>
@@ -47,10 +51,10 @@ static arp_pending_request_t* arp_create_request( uint8_t* ip_address ) {
 
     return request;
 
-error2:
+ error2:
     kfree( request );
 
-error1:
+ error1:
     return NULL;
 }
 
@@ -262,3 +266,5 @@ __init int init_arp( void ) {
 
     return 0;
 }
+
+#endif /* ENABLE_NETWORK */

@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <kernel.h>
 #include <errno.h>
 #include <console.h>
@@ -57,10 +61,10 @@ static net_interface_t* alloc_network_interface( void ) {
 
     return interface;
 
-error2:
+ error2:
     kfree( interface );
 
-error1:
+ error1:
     return NULL;
 }
 
@@ -144,9 +148,7 @@ static int get_interface_count( void ) {
     int count;
 
     mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
-
     count = hashtable_get_item_count( &interface_table );
-
     mutex_unlock( interface_mutex );
 
     return count;
@@ -312,9 +314,11 @@ __init int init_network_interfaces( void ) {
 
     return 0;
 
-error2:
+ error2:
     destroy_hashtable( &interface_table );
 
-error1:
+ error1:
     return error;
 }
+
+#endif /* ENABLE_NETWORK */

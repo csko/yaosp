@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <errno.h>
 #include <console.h>
 #include <kernel.h>
@@ -74,7 +78,7 @@ int insert_route( route_t* route ) {
 
     error = 0;
 
-out:
+ out:
     mutex_unlock( route_mutex );
 
     return error;
@@ -182,3 +186,5 @@ __init int init_routes( void ) {
 
     return 0;
 }
+
+#endif /* ENABLE_NETWORK */

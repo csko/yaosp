@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <types.h>
 #include <console.h>
 #include <errno.h>
@@ -146,3 +150,5 @@ int ipv4_input( packet_t* packet ) {
 
     return ipv4_handle_packet( packet );
 }
+
+#endif /* ENABLE_NETWORK */

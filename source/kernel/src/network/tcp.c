@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <errno.h>
 #include <console.h>
 #include <macros.h>
@@ -81,7 +85,8 @@ static uint16_t tcp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8
     return ~checksum;
 }
 
-static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t flags, uint8_t* payload, size_t payload_size, size_t option_size, uint32_t seq_number, uint32_t ack_number ) {
+static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t flags, uint8_t* payload,
+                            size_t payload_size, size_t option_size, uint32_t seq_number, uint32_t ack_number ) {
     uint8_t* data;
     packet_t* packet;
     size_t window_size;
@@ -316,7 +321,11 @@ static int tcp_read( socket_t* socket, void* data, size_t length ) {
     while ( rx_data_size == 0 ) {
         condition_wait( tcp_socket->rx_queue, tcp_socket->mutex );
 
-        rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
+        rx_data_size = circular_pointer_diff(
+            &tcp_socket->rx_buffer,
+            &tcp_socket->rx_user_data,
+            &tcp_socket->rx_free_data
+        );
     }
 
     to_copy = MIN( rx_data_size, length );
@@ -401,7 +410,10 @@ static int tcp_add_select_request( socket_t* socket, struct select_request* requ
             request->next = tcp_socket->first_read_select;
             tcp_socket->first_read_select = request;
 
-            if ( circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data ) > 0 ) {
+            if ( circular_pointer_diff(
+                    &tcp_socket->rx_buffer,
+                    &tcp_socket->rx_user_data,
+                    &tcp_socket->rx_free_data ) > 0 ) {
                 request->ready = true;
                 semaphore_unlock( request->sync, 1 );
             }
@@ -634,25 +646,25 @@ int tcp_create_socket( socket_t* socket ) {
 
     return 0;
 
-error7:
+ error7:
     condition_destroy( tcp_socket->tx_queue );
 
-error6:
+ error6:
     condition_destroy( tcp_socket->rx_queue );
 
-error5:
+ error5:
     mutex_destroy( tcp_socket->mutex );
 
-error4:
+ error4:
     destroy_circular_buffer( &tcp_socket->tx_buffer );
 
-error3:
+ error3:
     destroy_circular_buffer( &tcp_socket->rx_buffer );
 
-error2:
+ error2:
     kfree( tcp_socket );
 
-error1:
+ error1:
     return -ENOMEM;
 }
 
@@ -934,7 +946,7 @@ int tcp_input( packet_t* packet ) {
 
     put_tcp_endpoint( tcp_socket );
 
-out:
+ out:
     delete_packet( packet );
 
     return 0;
@@ -1057,3 +1069,5 @@ __init int init_tcp( void ) {
 
     return 0;
 }
+
+#endif /* ENABLE_NETWORK */

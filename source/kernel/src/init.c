@@ -27,11 +27,7 @@
 #include <process.h>
 #include <mm/pages.h>
 #include <vfs/vfs.h>
-#include <network/interface.h>
-#include <network/route.h>
-#include <network/arp.h>
-#include <network/socket.h>
-#include <network/tcp.h>
+#include <network/network.h>
 #include <lib/string.h>
 
 #include <arch/fork.h>
@@ -133,17 +129,6 @@ __init static void mount_root_filesystem( void ) {
     kprintf( INFO, "Root filesystem mounted!\n" );
 }
 
-__init static void init_network( void ) {
-#if 0
-    init_network_interfaces();
-    init_routes();
-    init_arp();
-    init_socket();
-    init_tcp();
-    create_network_interfaces();
-#endif
-}
-
 int init_thread( void* arg ) {
     uint32_t init_page_count;
 
@@ -156,7 +141,10 @@ int init_thread( void* arg ) {
     init_vfs();
     load_bootmodules();
     mount_root_filesystem();
+
+#ifdef ENABLE_NETWORK
     init_network();
+#endif /* ENABLE_NETWORK */
 
     /* Free init code */
 

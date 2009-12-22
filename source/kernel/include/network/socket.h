@@ -80,6 +80,8 @@ typedef struct socket {
     struct socket_calls* operations;
 } __attribute__(( packed )) socket_t;
 
+struct select_request;
+
 typedef struct socket_calls {
     int ( *close )( socket_t* socket );
     int ( *connect )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
