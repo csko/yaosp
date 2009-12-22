@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <ygui/application.h>
 #include <ygui/window.h>
@@ -64,6 +65,7 @@ static int file_save_callback( void* data ) {
     f = open( file, O_WRONLY | O_CREAT | O_TRUNC );
 
     if ( f < 0 ) {
+        statusbar_set_text( "Failed to save '%s': %s.", file, strerror( errno ) );
         goto out;
     }
 
@@ -81,8 +83,9 @@ static int file_save_callback( void* data ) {
 
     close( f );
 
- out:
     statusbar_set_text( "File '%s' saved.", file );
+
+ out:
     free( file );
 
     return 0;
