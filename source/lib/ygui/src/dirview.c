@@ -404,7 +404,7 @@ static int dirview_mouse_pressed( widget_t* widget, point_t* position, int butto
     } else {
         /* Notify ITEM_DOUBLE_CLICKED listeners if needed */
 
-        #define DBL_CLICK_TIME ( 250 * 1000 )
+        #define DBL_CLICK_TIME ( 300 * 1000 )
 
         if ( ( now - dir_view->click_time ) <= DBL_CLICK_TIME ) {
             dir_view->click_time = 0;
