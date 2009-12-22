@@ -206,9 +206,16 @@ static int textarea_remove_line( textarea_t* textarea, int index ) {
 }
 
 static int textarea_key_pressed( widget_t* widget, int key ) {
+    int prev_x;
+    int prev_y;
+    int prev_line_count;
     textarea_t* textarea;
 
     textarea = ( textarea_t* )widget_get_data( widget );
+
+    prev_x = textarea->cursor_x;
+    prev_y = textarea->cursor_y;
+    prev_line_count = array_get_size( &textarea->lines );
 
     switch ( key ) {
         case KEY_BACKSPACE : {
@@ -235,10 +242,10 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
                 }
 
                 break;
+            } else {
+                textarea->cursor_x = string_prev_utf8_char( current, textarea->cursor_x );
+                string_erase_utf8_char( current, textarea->cursor_x );
             }
-
-            textarea->cursor_x = string_prev_utf8_char( current, textarea->cursor_x );
-            string_erase_utf8_char( current, textarea->cursor_x );
 
             break;
         }
@@ -249,12 +256,6 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
             break;
         }
-
-        case KEY_TAB :
-            break;
-
-        case KEY_ESCAPE :
-            break;
 
         case 10 :
         case KEY_ENTER : {
@@ -276,16 +277,6 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
             textarea->cursor_x = 0;
 
-            widget_signal_event_handler(
-                widget,
-                widget->event_ids[ E_PREF_SIZE_CHANGED ]
-            );
-
-            widget_signal_event_handler(
-                widget,
-                widget->event_ids[ E_VIEWPORT_CHANGED ]
-            );
-
             break;
         }
 
@@ -302,11 +293,6 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
                     textarea->cursor_x = string_length( current );
                 }
             }
-
-            widget_signal_event_handler(
-                widget,
-                widget->event_ids[ E_VIEWPORT_CHANGED ]
-            );
 
             break;
 
@@ -327,11 +313,6 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
                 textarea_current_line( textarea );
             }
 
-            widget_signal_event_handler(
-                widget,
-                widget->event_ids[ E_VIEWPORT_CHANGED ]
-            );
-
             break;
         }
 
@@ -339,11 +320,6 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
             if ( textarea->cursor_y > 0 ) {
                 textarea->cursor_y--;
                 textarea->cursor_x = 0;
-
-                widget_signal_event_handler(
-                    widget,
-                    widget->event_ids[ E_VIEWPORT_CHANGED ]
-                );
             }
 
             break;
@@ -359,49 +335,88 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
                     textarea->cursor_x = 0;
 
                     textarea_current_line( textarea );
-
-                    widget_signal_event_handler(
-                        widget,
-                        widget->event_ids[ E_PREF_SIZE_CHANGED ]
-                    );
                 }
             } else {
                 textarea->cursor_y++;
                 textarea->cursor_x = 0;
             }
 
-            widget_signal_event_handler(
-                widget,
-                widget->event_ids[ E_VIEWPORT_CHANGED ]
-            );
-
             break;
 
         case KEY_HOME :
             textarea->cursor_x = 0;
-
-            widget_signal_event_handler(
-                widget,
-                widget->event_ids[ E_VIEWPORT_CHANGED ]
-            );
 
             break;
 
         case KEY_END :
             textarea->cursor_x = string_length( textarea_current_line( textarea ) );
 
-            widget_signal_event_handler(
-                widget,
-                widget->event_ids[ E_VIEWPORT_CHANGED ]
-            );
+            break;
+
+        case KEY_PAGE_UP : {
+            point_t size;
+            int visible_lines;
+
+            widget_get_visible_size( widget, &size );
+            visible_lines = ( size.y - 6 ) / font_get_height( textarea->font );
+
+            textarea->cursor_y = MAX( 0, textarea->cursor_y - visible_lines );
+            textarea->cursor_x = 0;
 
             break;
+        }
+
+        case KEY_PAGE_DOWN : {
+            point_t size;
+            int last_line;
+            int visible_lines;
+            string_t* line;
+
+            widget_get_visible_size( widget, &size );
+            visible_lines = ( size.y - 6 ) / font_get_height( textarea->font );
+            line = _textarea_get_line( textarea, array_get_size( &textarea->lines ) - 1 );
+
+            last_line = string_length( line ) == 0 ?
+                        array_get_size( &textarea->lines ) - 1 :
+                        array_get_size( &textarea->lines );
+
+            textarea->cursor_y = MIN( last_line, textarea->cursor_y + visible_lines );
+            textarea->cursor_x = 0;
+
+            textarea_current_line( textarea );
+
+            break;
+        }
+
+        case KEY_TAB :
+        case KEY_ESCAPE :
+            /* these keys are not handled here ... */
+            return 0;
 
         default : {
             string_t* line = textarea_current_line( textarea );
             string_insert( line, textarea->cursor_x++, ( char* )&key, 1 );
             break;
         }
+    }
+
+    /* Check if the viewport size is changed */
+
+    if ( ( prev_x != textarea->cursor_x ) ||
+         ( prev_y != textarea->cursor_y ) ) {
+        widget_signal_event_handler(
+            widget,
+            widget->event_ids[ E_VIEWPORT_CHANGED ]
+        );
+    }
+
+    /* Check if the preferred size is changed */
+
+    if ( prev_line_count != array_get_size( &textarea->lines ) ) {
+        widget_signal_event_handler(
+            widget,
+            widget->event_ids[ E_PREF_SIZE_CHANGED ]
+        );
     }
 
     widget_invalidate( widget );

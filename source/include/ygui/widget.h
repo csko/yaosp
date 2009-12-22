@@ -129,7 +129,8 @@ int widget_get_maximum_size( widget_t* widget, point_t* size );
 int widget_get_viewport( widget_t* widget, rect_t* viewport );
 int widget_get_position( widget_t* widget, point_t* position );
 int widget_get_scroll_offset( widget_t* widget, point_t* offset );
-int widget_get_size( widget_t* widget, point_t* size );
+int widget_get_full_size( widget_t* widget, point_t* size );
+int widget_get_visible_size( widget_t* widget, point_t* size );
 
 int widget_set_window( widget_t* widget, struct window* window );
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size );

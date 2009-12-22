@@ -188,8 +188,14 @@ int widget_get_scroll_offset( widget_t* widget, point_t* offset ) {
     return 0;
 }
 
-int widget_get_size( widget_t* widget, point_t* size ) {
+int widget_get_full_size( widget_t* widget, point_t* size ) {
     point_copy( size, &widget->full_size );
+
+    return 0;
+}
+
+int widget_get_visible_size( widget_t* widget, point_t* size ) {
+    point_copy( size, &widget->visible_size );
 
     return 0;
 }

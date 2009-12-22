@@ -26,7 +26,7 @@ static int line_border_paint( widget_t* widget, gc_t* gc ) {
     rect_t tmp;
     point_t size;
 
-    widget_get_size( widget, &size );
+    widget_get_full_size( widget, &size );
 
     /* Paint the black border */
 

@@ -37,7 +37,7 @@ typedef struct textfield {
     string_t buffer;
 
     int text_start;
-    int cursor_start;
+    int cursor_x;
 
     int left_offset;
 
@@ -115,7 +115,7 @@ static int textfield_paint( widget_t* widget, gc_t* gc ) {
     int w = font_get_string_width(
         textfield->font,
         string_c_str( &textfield->buffer ),
-        textfield->cursor_start
+        textfield->cursor_x
     );
 
     rect_init( &tmp, w, 2, w, bounds.bottom - 2 );
@@ -136,44 +136,51 @@ static int textfield_key_pressed( widget_t* widget, int key ) {
 
             break;
 
-        case KEY_TAB :
-            break;
-
         case KEY_DELETE :
-            string_erase_utf8_char( &textfield->buffer, textfield->cursor_start );
+            string_erase_utf8_char( &textfield->buffer, textfield->cursor_x );
             break;
 
         case KEY_BACKSPACE :
-            if ( textfield->cursor_start > 0 ) {
-                textfield->cursor_start = string_prev_utf8_char( &textfield->buffer, textfield->cursor_start );
-                string_erase_utf8_char( &textfield->buffer, textfield->cursor_start );
+            if ( textfield->cursor_x > 0 ) {
+                textfield->cursor_x = string_prev_utf8_char( &textfield->buffer, textfield->cursor_x );
+                string_erase_utf8_char( &textfield->buffer, textfield->cursor_x );
             }
 
             break;
 
         case KEY_LEFT :
-            if ( textfield->cursor_start > 0 ) {
-                textfield->cursor_start -= 1;
+            if ( textfield->cursor_x > 0 ) {
+                textfield->cursor_x -= 1;
             }
 
             break;
 
         case KEY_RIGHT :
-            if ( textfield->cursor_start < string_length( &textfield->buffer ) ) {
-                textfield->cursor_start += 1;
+            if ( textfield->cursor_x < string_length( &textfield->buffer ) ) {
+                textfield->cursor_x += 1;
             }
 
             break;
 
-        case KEY_UP :
+        case KEY_HOME :
+            textfield->cursor_x = 0;
             break;
 
-        case KEY_DOWN :
+        case KEY_END :
+            textfield->cursor_x = string_length( &textfield->buffer );
             break;
+
+        case KEY_UP :
+        case KEY_DOWN :
+        case KEY_PAGE_UP :
+        case KEY_PAGE_DOWN :
+        case KEY_TAB :
+            /* these keys are not handled here ... */
+            return 0;
 
         default :
-            string_insert( &textfield->buffer, textfield->cursor_start, ( char* )&key, 1 );
-            textfield->cursor_start += 1;
+            string_insert( &textfield->buffer, textfield->cursor_x, ( char* )&key, 1 );
+            textfield->cursor_x += 1;
 
             break;
     }
@@ -249,7 +256,7 @@ int textfield_set_text( widget_t* widget, char* text ) {
     string_clear( &textfield->buffer );
 
     textfield->text_start = 0;
-    textfield->cursor_start = 0;
+    textfield->cursor_x = 0;
 
     if ( text != NULL ) {
         string_append( &textfield->buffer, text, strlen( text ) );
