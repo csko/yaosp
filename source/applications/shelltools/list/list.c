@@ -163,6 +163,7 @@ int main( int argc, char** argv ) {
 
             if ( lstat( argv[ i ], &st ) != 0 ) {
                 fprintf( stderr, "%s: cannot access %s: %s\n", argv0, argv[ i ], strerror( errno ) );
+                ret = EXIT_FAILURE;
                 continue;
             }
 
