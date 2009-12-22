@@ -53,12 +53,19 @@ static int file_chooser_open_pressed( widget_t* widget, void* data ) {
 static int file_chooser_item_selected( widget_t* widget, void* data ) {
     char* name;
     file_chooser_t* chooser;
+    directory_item_type_t type;
 
     chooser = ( file_chooser_t* )data;
-    name = directory_view_get_selected_item_name( widget );
+
+    if ( directory_view_get_selected_item_type_and_name( widget, &type, &name ) != 0 ) {
+        return 0;
+    }
 
     if ( name != NULL ) {
-        textfield_set_text( chooser->filename_field, name );
+        if ( type == T_FILE ) {
+            textfield_set_text( chooser->filename_field, name );
+        }
+
         free( name );
     }
 
