@@ -252,7 +252,22 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
         case KEY_DELETE : {
             string_t* line = textarea_current_line( textarea );
-            string_erase_utf8_char( line, textarea->cursor_x );
+
+            if ( textarea->cursor_x == string_length( line ) ) {
+                if ( textarea->cursor_y < array_get_size( &textarea->lines ) - 1 ) {
+                    string_t* next_line;
+
+                    next_line = _textarea_get_line( textarea, textarea->cursor_y + 1 );
+
+                    string_append_string( line, next_line );
+                    destroy_string( next_line );
+                    free( next_line );
+
+                    array_remove_item_from( &textarea->lines, textarea->cursor_y + 1 );
+                }
+            } else {
+                string_erase_utf8_char( line, textarea->cursor_x );
+            }
 
             break;
         }
@@ -303,14 +318,17 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
                 textarea->cursor_x++;
             } else {
                 line = _textarea_get_line( textarea, array_get_size( &textarea->lines ) - 1 );
-                int last_line = string_length( line ) == 0 ? array_get_size( &textarea->lines ) - 1 : array_get_size( &textarea->lines );
+
+                int last_line = string_length( line ) == 0 ?
+                                array_get_size( &textarea->lines ) - 1 :
+                                array_get_size( &textarea->lines );
 
                 if ( textarea->cursor_y < last_line ) {
                     textarea->cursor_y++;
                     textarea->cursor_x = 0;
-                }
 
-                textarea_current_line( textarea );
+                    textarea_current_line( textarea );
+                }
             }
 
             break;
@@ -345,12 +363,10 @@ static int textarea_key_pressed( widget_t* widget, int key ) {
 
         case KEY_HOME :
             textarea->cursor_x = 0;
-
             break;
 
         case KEY_END :
             textarea->cursor_x = string_length( textarea_current_line( textarea ) );
-
             break;
 
         case KEY_PAGE_UP : {
