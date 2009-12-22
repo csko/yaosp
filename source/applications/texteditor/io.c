@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <ygui/window.h>
 #include <ygui/textarea.h>
@@ -29,6 +30,8 @@
 
 extern window_t* window;
 extern widget_t* textarea;
+
+extern char* opened_file;
 
 static int io_file_loader_insert_lines( void* data ) {
     array_t* lines;
@@ -45,20 +48,35 @@ static int io_file_loader_insert_lines( void* data ) {
 static void* io_file_loader_thread( void* arg ) {
     int f;
     int ret;
+    char* file;
+    struct stat st;
     char tmp[ 8192 ];
 
     char* input = NULL;
     size_t input_size = 0;
+
+    file = ( char* )arg;
 
     array_t* lines = ( array_t* )malloc( sizeof( array_t ) );
     /* todo: error checking */
     init_array( lines );
     array_set_realloc_size( lines, 256 );
 
-    f = open( ( char* )arg, O_RDONLY );
+    f = open( file, O_RDONLY );
 
     if ( f < 0 ) {
+        statusbar_set_text( "Failed to open '%s'.", file );
         goto out;
+    }
+
+    if ( fstat( f, &st ) != 0 ) {
+        statusbar_set_text( "Failed to stat '%s'.", file );
+        goto out2;
+    }
+
+    if ( S_ISDIR( st.st_mode ) ) {
+        statusbar_set_text( "'%s' is a directory.", file );
+        goto out2;
     }
 
     do {
@@ -108,6 +126,11 @@ static void* io_file_loader_thread( void* arg ) {
         }
     } while ( ret == sizeof( tmp ) );
 
+    opened_file = file;
+
+    statusbar_set_text( "File '%s' opened.", file );
+
+ out2:
     close( f );
 
  out:
@@ -117,8 +140,6 @@ static void* io_file_loader_thread( void* arg ) {
         destroy_array( lines );
         free( lines );
     }
-
-    statusbar_set_text( "File '%s' opened.", ( char* )arg );
 
     return NULL;
 }

@@ -42,13 +42,14 @@ window_t* window;
 widget_t* textarea;
 widget_t* statusbar;
 
-static char* opened_file = NULL;
+char* opened_file = NULL;
 
 static int event_open_file_chooser_done( file_chooser_t* chooser, chooser_event_t event, void* data ) {
     if ( event == E_CHOOSER_OK ) {
-        opened_file = file_chooser_get_selected_file( chooser );
+        char* file;
 
-        io_load_file( opened_file );
+        file = file_chooser_get_selected_file( chooser );
+        io_load_file( file );
     }
 
     return 0;
