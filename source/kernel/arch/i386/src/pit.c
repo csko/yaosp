@@ -34,21 +34,20 @@ static uint64_t system_time = 0;
 static uint64_t boot_time = 0;
 static spinlock_t time_lock = INIT_SPINLOCK( "PIT" );
 
+static int pit_freq = 1000; /* PIT frequency in Hz */
+static int pit_time_inc = 1000;
+
 static int pit_irq( int irq, void* data, registers_t* regs ) {
     /* Increment the system time */
 
     spinlock( &time_lock );
-
-    system_time += 1000;
-
+    system_time += pit_time_inc;
     spinunlock( &time_lock );
 
     /* Wake up sleeper threads */
 
     spinlock( &scheduler_lock );
-
     waitqueue_wake_up( &sleep_queue, system_time );
-
     spinunlock( &scheduler_lock );
 
     if ( !apic_present ) {
@@ -136,9 +135,27 @@ __init int init_pit( void ) {
     int error;
     uint32_t base;
 
-    /* Set frequency (1000Hz) */
+    if ( get_kernel_param_as_int( "pit_freq", &pit_freq ) == 0 ) {
+        switch ( pit_freq ) {
+            case 250 :
+            case 500 :
+            case 1000 :
+                break;
 
-    base = PIT_TICKS_PER_SEC / 1000;
+            default :
+                kprintf( WARNING, "pit: Invalid frequency from parameter. Using the default 1000 Hz.\n" );
+                pit_freq = 1000;
+                break;
+        }
+    }
+
+    kprintf( INFO, "pit: Using frequency: %d Hz.\n", pit_freq );
+
+    pit_time_inc = 1000 * ( 1000 / pit_freq );
+
+    /* Set PIT frequency */
+
+    base = PIT_TICKS_PER_SEC / pit_freq;
     outb( 0x36, PIT_MODE );
     outb( base & 0xFF, PIT_CH0 );
     outb( base >> 8, PIT_CH0 );

@@ -121,6 +121,33 @@ int get_kernel_param_as_bool( const char* key, bool* value ) {
     return 0;
 }
 
+int get_kernel_param_as_int( const char* key, int* _value ) {
+    int error;
+    int value = 0;
+    const char* tmp;
+
+    error = get_kernel_param_as_string( key, &tmp );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    while ( *tmp != 0 ) {
+        char c = *tmp++;
+
+        if ( ( c < '0' ) ||
+             ( c > '9' ) ) {
+            return -EINVAL;
+        }
+
+        value = ( value * 10 ) + ( c - '0' );
+    }
+
+    *_value = value;
+
+    return 0;
+}
+
 int sys_get_kernel_info( kernel_info_t* kernel_info ) {
     kernel_info->major_version = KERNEL_MAJOR_VERSION;
     kernel_info->minor_version = KERNEL_MINOR_VERSION;
