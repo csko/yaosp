@@ -1,23 +1,32 @@
+title yaOSp 0.0.4
+kernel /system/kernel
+module /system/module/bus/pci
+module /system/module/disk/pata
+module /system/module/disk/partition
+module /system/module/filesystem/iso9660
+module /system/module/input/ps2
+module /system/module/input/input
+module /system/module/char/terminal
+
+title --------------------------
+root
+
+title yaOSp 0.0.4 for VirtualBox
+kernel /system/kernel pit_freq=500
+module /system/module/bus/pci
+module /system/module/disk/pata
+module /system/module/disk/partition
+module /system/module/filesystem/iso9660
+module /system/module/input/ps2
+module /system/module/input/input
+module /system/module/char/terminal
+
 title yaOSp (debug)
 kernel /system/kernel enable_debug=true
 module /system/module/bus/pci
 module /system/module/disk/pata
 module /system/module/disk/partition
 module /system/module/filesystem/iso9660
-module /system/module/filesystem/ext2
 module /system/module/input/ps2
-module /system/module/network/pcnet32
-module /system/module/input/input
-module /system/module/char/terminal
-
-title yaOSp
-kernel /system/kernel
-module /system/module/bus/pci
-module /system/module/disk/pata
-module /system/module/disk/partition
-module /system/module/filesystem/iso9660
-module /system/module/filesystem/ext2
-module /system/module/input/ps2
-module /system/module/network/pcnet32
 module /system/module/input/input
 module /system/module/char/terminal
