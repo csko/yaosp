@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/stat.h>
 
 static char* argv0 = NULL;
@@ -161,6 +162,7 @@ int main( int argc, char** argv ) {
             struct stat st;
 
             if ( lstat( argv[ i ], &st ) != 0 ) {
+                fprintf( stderr, "%s: cannot access %s: %s\n", argv0, argv[ i ], strerror( errno ) );
                 continue;
             }
 
