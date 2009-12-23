@@ -115,4 +115,6 @@ struct sockaddr_in {
     ];
 };
 
+#define INADDR_ANY      ((unsigned long int) 0x00000000)
+
 #endif /* _NETINET_IN_H_ */
