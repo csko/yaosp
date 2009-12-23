@@ -57,7 +57,7 @@ hashitem_t* hashtable_get( hashtable_t* table, const void* key );
 int hashtable_remove( hashtable_t* table, const void* key );
 
 int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data );
-int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data, size_t n );
+int hashtable_iterate_n( hashtable_t* table, hashtable_iter_callback_t* callback, void* data, size_t n );
 int hashtable_filtered_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data, hashtable_filter_callback_t* filter, void* filter_data );
 
 uint32_t hashtable_get_item_count( hashtable_t* table );
