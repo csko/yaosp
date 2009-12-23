@@ -1,6 +1,7 @@
 /* Hashtable implementation
  *
  * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -197,7 +198,7 @@ int hashtable_iterate_n( hashtable_t* table, hashtable_iter_callback_t* callback
     for ( i = 0; i < table->size && n > 0; i++ ) {
         item = table->items[ i ];
 
-        while ( item != NULL && n > 0) {
+        while ( item != NULL) {
             next = item->next;
             result = callback( item, data );
 
