@@ -42,6 +42,7 @@ typedef struct net_interface {
     uint8_t hw_address[ ETH_ADDR_LEN ];
     uint8_t ip_address[ IPV4_ADDR_LEN ];
     uint8_t netmask[ IPV4_ADDR_LEN ];
+    uint8_t broadcast[ IPV4_ADDR_LEN ];
 
     int device;
     uint32_t flags;

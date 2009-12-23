@@ -26,9 +26,76 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 
-static int sock = -1;
+#define CMD_NEED_PARAM ( 1 << 0 )
 
+static int sock = -1;
 static char* argv0 = NULL;
+
+typedef int if_cmd_callback_t( struct ifreq* req, char* param );
+
+typedef struct if_command {
+    const char* name;
+    int flags;
+    if_cmd_callback_t* callback;
+} if_command_t;
+
+static int if_set_ip_address( struct ifreq* req, char* param ) {
+    struct sockaddr_in* addr;
+
+    addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_addr;
+
+    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 0 ) {
+        fprintf( stderr, "%s: invalid IP address: %s.\n", argv0, param );
+        return 0;
+    }
+
+    if ( ioctl( sock, SIOCSIFADDR, req ) != 0 ) {
+        fprintf( stderr, "%s: failed to set IP address.\n", argv0 );
+    }
+
+    return 0;
+}
+
+static int if_set_netmask( struct ifreq* req, char* param ) {
+    struct sockaddr_in* addr;
+
+    addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
+
+    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 0 ) {
+        fprintf( stderr, "%s: invalid network mask: %s.\n", argv0, param );
+        return 0;
+    }
+
+    if ( ioctl( sock, SIOCSIFNETMASK, req ) != 0 ) {
+        fprintf( stderr, "%s: failed to set network mask.\n", argv0 );
+    }
+
+    return 0;
+}
+
+static int if_set_broadcast( struct ifreq* req, char* param ) {
+    struct sockaddr_in* addr;
+
+    addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
+
+    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 0 ) {
+        fprintf( stderr, "%s: invalid broadcast address: %s.\n", argv0, param );
+        return 0;
+    }
+
+    if ( ioctl( sock, SIOCSIFBRDADDR, req ) != 0 ) {
+        fprintf( stderr, "%s: failed to set broadcast address.\n", argv0 );
+    }
+
+    return 0;
+}
+
+static if_command_t if_commands[] = {
+    { "ip",        CMD_NEED_PARAM, if_set_ip_address },
+    { "netmask",   CMD_NEED_PARAM, if_set_netmask },
+    { "broadcast", CMD_NEED_PARAM, if_set_broadcast },
+    { NULL,        0,              NULL }
+};
 
 static int show_network_interface( struct ifreq* req ) {
     char ip[ 32 ];
@@ -53,7 +120,13 @@ static int show_network_interface( struct ifreq* req ) {
     addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
     inet_ntop( AF_INET, &addr->sin_addr, ip, sizeof( ip ) );
 
-    printf( " Mask: %s\n", ip );
+    printf( " Mask: %s ", ip );
+
+    ioctl( sock, SIOCGIFBRDADDR, req );
+    addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
+    inet_ntop( AF_INET, &addr->sin_addr, ip, sizeof( ip ) );
+
+    printf( " Broadcast: %s\n", ip );
 
     ioctl( sock, SIOCGIFMTU, req );
     printf( "      MTU: %d", req->ifr_ifru.ifru_mtu );
@@ -120,6 +193,49 @@ int main( int argc, char** argv ) {
 
     if ( argc == 1 ) {
         list_network_interfaces();
+    } else {
+        struct ifreq req;
+        char* ifname = argv[ 1 ];
+
+        strncpy( req.ifr_ifrn.ifrn_name, ifname, IFNAMSIZ - 1 );
+        req.ifr_ifrn.ifrn_name[ IFNAMSIZ - 1 ] = 0;
+
+        if ( ioctl( sock, SIOCGIFFLAGS, &req ) != 0 ) {
+            fprintf( stderr, "%s: invalid interface: %s.\n", argv0, req.ifr_ifrn.ifrn_name );
+            return EXIT_FAILURE;
+        }
+
+        if ( argc == 2 ) {
+            show_network_interface( &req );
+        } else {
+            int i = 2;
+
+            while ( i < argc ) {
+                int j;
+                char* cmd = argv[ i ];
+
+                for ( j = 0; if_commands[ j ].name != NULL; j++ ) {
+                    if_command_t* if_cmd = &if_commands[ j ];
+
+                    if ( strcmp( if_cmd->name, cmd ) == 0 ) {
+                        if ( if_cmd->flags & CMD_NEED_PARAM ) {
+                            if ( i == argc - 1 )  {
+                                fprintf( stderr, "%s: missing parameter.\n", argv0 );
+                                return EXIT_FAILURE;
+                            }
+
+                            if_cmd->callback( &req, argv[ ++i ] );
+                        } else {
+                            if_cmd->callback( &req, NULL );
+                        }
+
+                        break;
+                    }
+                }
+
+                i++;
+            }
+        }
     }
 
     close( sock );

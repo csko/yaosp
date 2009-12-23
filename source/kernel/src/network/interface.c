@@ -215,6 +215,11 @@ static int get_interface_parameter( int param, struct ifreq* req ) {
             memcpy( &addr->sin_addr, interface->netmask, IPV4_ADDR_LEN );
             break;
 
+        case SIOCGIFBRDADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
+            memcpy( &addr->sin_addr, interface->broadcast, IPV4_ADDR_LEN );
+            break;
+
         case SIOCGIFHWADDR :
             memcpy( req->ifr_ifru.ifru_hwaddr.sa_data, interface->hw_address, ETH_ADDR_LEN );
             break;
@@ -229,6 +234,49 @@ static int get_interface_parameter( int param, struct ifreq* req ) {
 
         default :
             kprintf( ERROR, "get_interface_parameter(): invalid request: %d\n", param );
+            break;
+    }
+
+    ret = 0;
+
+ out:
+    mutex_unlock( interface_mutex );
+
+    return ret;
+}
+
+static int set_interface_parameter( int param, struct ifreq* req ) {
+    int ret;
+    net_interface_t* interface;
+    struct sockaddr_in* addr;
+
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+
+    interface = ( net_interface_t* )hashtable_get( &interface_table, ( const void* )req->ifr_ifrn.ifrn_name );
+
+    if ( interface == NULL ) {
+        ret = -EINVAL;
+        goto out;
+    }
+
+    switch ( param ) {
+        case SIOCSIFADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_addr;
+            memcpy( interface->ip_address, &addr->sin_addr, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCSIFNETMASK :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
+            memcpy( interface->netmask, &addr->sin_addr, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCSIFBRDADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
+            memcpy( interface->broadcast, &addr->sin_addr, IPV4_ADDR_LEN );
+            break;
+
+        default :
+            kprintf( ERROR, "set_interface_parameter(): invalid request: %d\n", param );
             break;
     }
 
@@ -256,26 +304,6 @@ static int start_network_interface( net_interface_t* interface ) {
     }
 
     thread_wake_up( interface->rx_thread );
-
-#if 0
-    /* TODO */
-    uint8_t netmask[4]={255,255,255,0};
-    uint8_t dummy[4]={0,0,0,0};
-    route_t* route;
-    interface->ip_address[ 0 ] = 192;
-    interface->ip_address[ 1 ] = 168;
-    interface->ip_address[ 2 ] = 1;
-    interface->ip_address[ 3 ] = 192;
-    uint8_t gateway[4]={192,168,1,1};
-    route = create_route( interface->ip_address, netmask, dummy, 0 );
-    route->interface = interface;
-    insert_route( route );
-    dummy[1]=1;
-    route = create_route( interface->ip_address, netmask, gateway, ROUTE_GATEWAY );
-    route->interface = interface;
-    insert_route( route );
-    /* End of TODO */
-#endif
 
     error = ioctl( interface->device, IOCTL_NET_GET_HW_ADDRESS, ( void* )interface->hw_address );
 
@@ -335,7 +363,14 @@ int network_interface_ioctl( int command, void* buffer, bool from_kernel ) {
         case SIOCGIFHWADDR :
         case SIOCGIFMTU :
         case SIOCGIFFLAGS :
+        case SIOCGIFBRDADDR :
             error = get_interface_parameter( command, ( struct ifreq* )buffer );
+            break;
+
+        case SIOCSIFADDR :
+        case SIOCSIFNETMASK :
+        case SIOCSIFBRDADDR :
+            error = set_interface_parameter( command, ( struct ifreq* )buffer );
             break;
 
         default :
