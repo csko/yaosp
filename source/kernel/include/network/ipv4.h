@@ -37,6 +37,8 @@
 #define IP_PROTO_TCP  6
 #define IP_PROTO_UDP  17
 
+#define IP_EQUALS_MASKED(a,b,m) (( *(uint32_t*)(a) & *(uint32_t*)(m) ) == ( *(uint32_t*)(b) & *(uint32_t*)(m)))
+
 typedef struct ipv4_header {
     uint8_t version_and_size;
     uint8_t type_of_service;

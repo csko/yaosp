@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <console.h>
 #include <ioctl.h>
-#include <lock/mutex.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/interface.h>
@@ -35,9 +34,10 @@
 #include <network/route.h>
 #include <lib/string.h>
 
-static lock_id interface_mutex;
+lock_id interface_mutex;
+hashtable_t interface_table;
+
 static uint32_t interface_counter = 0;
-static hashtable_t interface_table;
 
 static net_interface_t* alloc_network_interface( void ) {
     net_interface_t* interface;
@@ -117,9 +117,20 @@ static int network_rx_thread( void* data ) {
     interface = ( net_interface_t* )data;
 
     while ( 1 ) {
+        int if_up;
+
         packet = packet_queue_pop_head( interface->input_queue, INFINITE_TIMEOUT );
 
         if ( packet == NULL ) {
+            continue;
+        }
+
+        mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+        if_up = ( interface->flags & IFF_UP );
+        mutex_unlock( interface_mutex );
+
+        if ( !if_up ) {
+            delete_packet( packet );
             continue;
         }
 
@@ -136,7 +147,7 @@ static int network_rx_thread( void* data ) {
                 break;
 
             default :
-                kprintf( WARNING, "NET: Unknown protocol: %x\n", ntohw( eth_header->proto ) );
+                kprintf( WARNING, "net: unknown protocol: %x\n", ntohw( eth_header->proto ) );
                 break;
         }
     }
@@ -275,6 +286,10 @@ static int set_interface_parameter( int param, struct ifreq* req ) {
             memcpy( interface->broadcast, &addr->sin_addr, IPV4_ADDR_LEN );
             break;
 
+        case SIOCSIFFLAGS :
+            interface->flags = req->ifr_ifru.ifru_flags;
+            break;
+
         default :
             kprintf( ERROR, "set_interface_parameter(): invalid request: %d\n", param );
             break;
@@ -370,6 +385,7 @@ int network_interface_ioctl( int command, void* buffer, bool from_kernel ) {
         case SIOCSIFADDR :
         case SIOCSIFNETMASK :
         case SIOCSIFBRDADDR :
+        case SIOCSIFFLAGS :
             error = set_interface_parameter( command, ( struct ifreq* )buffer );
             break;
 

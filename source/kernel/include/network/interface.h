@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <thread.h>
+#include <lock/mutex.h>
 #include <network/packet.h>
 #include <network/ipv4.h>
 #include <network/ethernet.h>
@@ -31,6 +32,8 @@
 
 #define IFHWADDRLEN 6
 #define IFNAMSIZ    16
+
+#define IFF_UP      ( 1 << 0 )
 
 typedef struct net_interface {
     hashitem_t hash;
@@ -78,6 +81,9 @@ struct ifconf {
         struct ifreq* ifcu_req;
     } ifc_ifcu;
 };
+
+extern lock_id interface_mutex;
+extern hashtable_t interface_table;
 
 int create_network_interfaces( void );
 

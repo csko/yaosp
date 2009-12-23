@@ -90,10 +90,50 @@ static int if_set_broadcast( struct ifreq* req, char* param ) {
     return 0;
 }
 
+static int if_up( struct ifreq* req, char* param ) {
+    if ( ioctl( sock, SIOCGIFFLAGS, req ) != 0 ) {
+        fprintf( stderr, "%s: failed to get interface flags.\n", argv0 );
+        return 0;
+    }
+
+    if ( req->ifr_ifru.ifru_flags & IFF_UP ) {
+        return 0;
+    }
+
+    req->ifr_ifru.ifru_flags |= IFF_UP;
+
+    if ( ioctl( sock, SIOCSIFFLAGS, req ) != 0 ) {
+        fprintf( stderr, "%s: failed to set interface flags.\n", argv0 );
+    }
+
+    return 0;
+}
+
+static int if_down( struct ifreq* req, char* param ) {
+    if ( ioctl( sock, SIOCGIFFLAGS, req ) != 0 ) {
+        fprintf( stderr, "%s: failed to get interface flags.\n", argv0 );
+        return 0;
+    }
+
+    if ( ( req->ifr_ifru.ifru_flags & IFF_UP ) == 0 ) {
+        return 0;
+    }
+
+    req->ifr_ifru.ifru_flags &= ~IFF_UP;
+
+    if ( ioctl( sock, SIOCSIFFLAGS, req ) != 0 ) {
+        fprintf( stderr, "%s: failed to set interface flags.\n", argv0 );
+    }
+
+    return 0;
+}
+
 static if_command_t if_commands[] = {
     { "ip",        CMD_NEED_PARAM, if_set_ip_address },
     { "netmask",   CMD_NEED_PARAM, if_set_netmask },
     { "broadcast", CMD_NEED_PARAM, if_set_broadcast },
+    { "up",        0,              if_up },
+    { "down",      0,              if_down },
     { NULL,        0,              NULL }
 };
 

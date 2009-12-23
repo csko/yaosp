@@ -36,10 +36,11 @@ typedef struct route {
     uint8_t network_mask[ IPV4_ADDR_LEN ];
     uint8_t gateway_addr[ IPV4_ADDR_LEN ];
     uint32_t flags;
+
     net_interface_t* interface;
 } route_t;
 
-route_t* create_route( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags );
+route_t* create_route( net_interface_t* interface, uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags );
 int insert_route( route_t* route );
 
 route_t* find_route( uint8_t* ipv4_address );

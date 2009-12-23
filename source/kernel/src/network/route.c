@@ -23,20 +23,17 @@
 #include <errno.h>
 #include <console.h>
 #include <kernel.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <lock/mutex.h>
 #include <network/route.h>
+#include <network/interface.h>
 #include <lib/string.h>
-
-typedef struct route_iterator_data {
-    uint8_t* ipv4_address;
-    route_t* route;
-} route_iterator_data_t;
 
 static lock_id route_mutex;
 static hashtable_t route_table;
 
-route_t* create_route( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
+route_t* create_route( net_interface_t* interface, uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
     route_t* route;
 
     route = ( route_t* )kmalloc( sizeof( route_t ) );
@@ -56,6 +53,7 @@ route_t* create_route( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_ad
     }
 
     route->flags = flags;
+    route->interface = interface;
 
     return route;
 }
@@ -84,21 +82,41 @@ int insert_route( route_t* route ) {
     return error;
 }
 
+typedef struct route_iterator_data {
+    uint8_t* ipv4_address;
+    route_t* route;
+} route_iterator_data_t;
+
+static int interface_iterator( hashitem_t* item, void* _data ) {
+    net_interface_t* interface;
+    route_iterator_data_t* data;
+
+    interface = ( net_interface_t* )item;
+    data = ( route_iterator_data_t* )_data;
+
+    if ( IP_EQUALS_MASKED( interface->ip_address, data->ipv4_address, interface->netmask ) ) {
+        route_t* route;
+
+        route = create_route( interface, interface->ip_address, interface->netmask, NULL, 0 );
+
+        if ( route != NULL ) {
+            data->route = route;
+
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 static int route_iterator( hashitem_t* item, void* _data ) {
     route_t* route;
-    uint32_t route_ip;
-    uint32_t dest_ip;
-    uint32_t net_mask;
     route_iterator_data_t* data;
 
     route = ( route_t* )item;
     data = ( route_iterator_data_t* )_data;
 
-    route_ip = *( ( uint32_t* )route->network_addr );
-    dest_ip = *( ( uint32_t* )data->ipv4_address );
-    net_mask = *( ( uint32_t* )route->network_mask );
-
-    if ( ( ( route_ip & net_mask ) == ( dest_ip & net_mask ) ) ||
+    if ( ( IP_EQUALS_MASKED( route->network_addr, data->ipv4_address, route->network_mask ) ) &&
          ( route->flags & ROUTE_GATEWAY ) ) {
         data->route = route;
         return -1;
@@ -108,9 +126,25 @@ static int route_iterator( hashitem_t* item, void* _data ) {
 }
 
 route_t* find_route( uint8_t* ipv4_address ) {
+    int ret;
     route_iterator_data_t data;
 
     data.ipv4_address = ipv4_address;
+    data.route = NULL;
+
+    /* Check the interfaces */
+
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+    ret = hashtable_iterate( &interface_table, interface_iterator, &data );
+    mutex_unlock( interface_mutex );
+
+    if ( ret != 0 ) {
+        ASSERT( data.route != NULL );
+        return data.route;
+    }
+
+    /* Check the route table */
+
     data.route = NULL;
 
     mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
