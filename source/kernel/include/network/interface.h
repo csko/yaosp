@@ -51,6 +51,10 @@ typedef struct net_interface {
     uint32_t flags;
     thread_id rx_thread;
     packet_queue_t* input_queue;
+
+    lock_id arp_lock;
+    hashtable_t arp_cache;
+    hashtable_t arp_requests;
 } net_interface_t;
 
 struct ifreq {

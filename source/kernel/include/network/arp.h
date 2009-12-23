@@ -56,6 +56,18 @@ typedef struct arp_pending_request {
     packet_queue_t* packet_queue;
 } arp_pending_request_t;
 
+typedef struct arp_cache_item {
+    hashitem_t hash;
+
+    uint8_t hw_address[ ETH_ADDR_LEN ];
+    uint8_t ip_address[ IPV4_ADDR_LEN ];
+    uint64_t expire_time;
+} arp_cache_item_t;
+
+int arp_interface_init( net_interface_t* interface );
+
+int arp_cache_insert( net_interface_t* interface, uint8_t* hw_address, uint8_t* ip_address );
+
 int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* packet );
 int arp_input( net_interface_t* interface, packet_t* packet );
 

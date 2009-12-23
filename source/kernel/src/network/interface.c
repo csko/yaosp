@@ -350,8 +350,10 @@ static int create_network_interface( int device ) {
         return -ENOMEM;
     }
 
-    interface->mtu = 1500;
+    interface->mtu = 1500; /* todo */
     interface->device = device;
+
+    arp_interface_init( interface ); /* todo: error check */
 
     insert_network_interface( interface );
     start_network_interface( interface );

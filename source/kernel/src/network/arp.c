@@ -23,6 +23,7 @@
 #include <console.h>
 #include <errno.h>
 #include <kernel.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <network/arp.h>
@@ -30,7 +31,8 @@
 #include <network/device.h>
 #include <lib/string.h>
 
-static hashtable_t pending_requests;
+/* 1 sec expire time for ARP cache items */
+#define ARP_CACHE_EXPIRE_TIME ( 1 * 1000 * 1000 )
 
 static arp_pending_request_t* arp_create_request( uint8_t* ip_address ) {
     arp_pending_request_t* request;
@@ -58,11 +60,136 @@ static arp_pending_request_t* arp_create_request( uint8_t* ip_address ) {
     return NULL;
 }
 
+static void* arp_pending_key( hashitem_t* item ) {
+    arp_pending_request_t* pending_req;
+
+    pending_req = ( arp_pending_request_t* )item;
+
+    return pending_req->ip_address;
+}
+
+static void* arp_cache_key( hashitem_t* item ) {
+    arp_cache_item_t* cache_item;
+
+    cache_item = ( arp_cache_item_t* )item;
+
+    return ( void* )cache_item->ip_address;
+}
+
+int arp_interface_init( net_interface_t* interface ) {
+    int error;
+
+    error = init_hashtable(
+        &interface->arp_requests, 32,
+        arp_pending_key, hash_int, compare_int
+    );
+
+    if ( error < 0 ) {
+        goto error1;
+    }
+
+    error = init_hashtable(
+        &interface->arp_cache, 256,
+        arp_cache_key, hash_int, compare_int
+    );
+
+    if ( error < 0 ) {
+        goto error2;
+    }
+
+    return 0;
+
+ error2:
+    destroy_hashtable( &interface->arp_requests );
+
+ error1:
+    return error;
+}
+
+int arp_cache_insert( net_interface_t* interface, uint8_t* hw_address, uint8_t* ip_address ) {
+    arp_cache_item_t* item;
+    arp_pending_request_t* pending_req = NULL;
+
+    mutex_lock( interface->arp_lock, LOCK_IGNORE_SIGNAL );
+
+    /* Check if we already have this in the cache */
+
+    item = ( arp_cache_item_t* )hashtable_get( &interface->arp_cache, ( const void* )ip_address );
+
+    if ( item != NULL ) {
+        ASSERT( hashtable_get( &interface->arp_requests, ( const void* )ip_address ) == NULL );
+        goto out;
+    }
+
+    /* Not in the cache, add now */
+
+    item = ( arp_cache_item_t* )kmalloc( sizeof( arp_cache_item_t ) );
+
+    if ( item == NULL ) {
+        goto flush;
+    }
+
+    memcpy( item->hw_address, hw_address, ETH_ADDR_LEN );
+    memcpy( item->ip_address, ip_address, IPV4_ADDR_LEN );
+    item->expire_time = get_system_time() + ARP_CACHE_EXPIRE_TIME;
+
+    if ( hashtable_add( &interface->arp_cache, ( hashitem_t* )item ) != 0 ) {
+        kfree( item );
+    }
+
+    /* Flush any pending packets */
+
+ flush:
+    pending_req = ( arp_pending_request_t* )hashtable_get( &interface->arp_requests, ( const void* )ip_address );
+
+    if ( pending_req != NULL ) {
+        hashtable_remove( &interface->arp_requests, ( const void* )ip_address );
+    }
+
+ out:
+    mutex_unlock( interface->arp_lock );
+
+    if ( pending_req != NULL ) {
+        packet_t* packet;
+
+        while ( ( packet = packet_queue_pop_head( pending_req->packet_queue, 0 ) ) != NULL ) {
+            ethernet_send_packet( interface, hw_address, ETH_P_IP, packet );
+            delete_packet( packet );
+        }
+
+        delete_packet_queue( pending_req->packet_queue );
+        kfree( pending_req );
+    }
+
+    return 0;
+}
+
 int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* packet ) {
     bool send_request;
+    arp_cache_item_t* item;
     arp_pending_request_t* request;
 
-    request = ( arp_pending_request_t* )hashtable_get( &pending_requests, ( const void* )dest_ip );
+    mutex_lock( interface->arp_lock, LOCK_IGNORE_SIGNAL );
+
+    /* First check the ARP cache for the HW address */
+
+    item = ( arp_cache_item_t* )hashtable_get( &interface->arp_cache, ( const void* )dest_ip );
+
+    if ( item != NULL ) {
+        uint8_t hw_address[ ETH_ADDR_LEN ];
+        memcpy( hw_address, item->hw_address, ETH_ADDR_LEN );
+
+        mutex_unlock( interface->arp_lock );
+
+        ethernet_send_packet( interface, hw_address, ETH_P_IP, packet );
+        delete_packet( packet );
+
+        return 0;
+    }
+
+    /* Not found in the cache, add to the pending table and send out an ARP request if needed */
+
+    request = ( arp_pending_request_t* )hashtable_get( &interface->arp_requests, ( const void* )dest_ip );
 
     if ( request == NULL ) {
         send_request = true;
@@ -73,12 +200,14 @@ int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* pac
             return -ENOMEM;
         }
 
-        hashtable_add( &pending_requests, ( hashitem_t* )request );
+        hashtable_add( &interface->arp_requests, ( hashitem_t* )request );
     } else {
         send_request = false;
     }
 
     packet_queue_insert( request->packet_queue, packet );
+
+    mutex_unlock( interface->arp_lock );
 
     if ( send_request ) {
         int error;
@@ -133,6 +262,8 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
     arp_header_t* arp_reply_header;
     arp_data_t* arp_reply_data;
 
+    /* Check if the ARP request is for us */
+
     arp_request = ( arp_data_t* )( arp_header + 1 );
 
     if ( memcmp( arp_request->ip_target, interface->ip_address, IPV4_ADDR_LEN ) != 0 ) {
@@ -144,7 +275,7 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
     reply = create_packet( ETH_HEADER_LEN + ARP_HEADER_LEN + ARP_DATA_LEN );
 
     if ( reply == NULL ) {
-        kprintf( ERROR, "NET: No memory for ARP reply packet!\n" );
+        kprintf( ERROR, "net: no memory for ARP reply packet!\n" );
         return -ENOMEM;
     }
 
@@ -180,90 +311,42 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
     delete_packet( reply );
 
     if ( error < 0 ) {
-        kprintf( ERROR, "NET: Failed to send ARP reply packet: %d\n", error );
+        kprintf( ERROR, "net: failed to send ARP reply packet: %d\n", error );
     }
 
     return error;
 }
 
-static int arp_handle_reply( net_interface_t* interface, arp_header_t* arp_header ) {
-    packet_t* packet;
-    arp_data_t* arp_reply;
-    arp_pending_request_t* request;
-
-    arp_reply = ( arp_data_t* )( arp_header + 1 );
-
-    request = ( arp_pending_request_t* )hashtable_get( &pending_requests, ( const void* )&arp_reply->ip_sender[ 0 ] );
-
-    if ( request == NULL ) {
-        return 0;
-    }
-
-    hashtable_remove( &pending_requests, ( const void* )&request->ip_address[ 0 ] );
-
-    while ( 1 ) {
-        packet = packet_queue_pop_head( request->packet_queue, 0 );
-
-        if ( packet == NULL ) {
-            break;
-        }
-
-        ethernet_send_packet( interface, arp_reply->hw_sender, ETH_P_IP, packet );
-
-        delete_packet( packet );
-    }
-
-    delete_packet_queue( request->packet_queue );
-    kfree( request );
-
-    return 0;
-}
-
 int arp_input( net_interface_t* interface, packet_t* packet ) {
+    arp_data_t* arp_data;
     arp_header_t* arp_header;
 
     arp_header = ( arp_header_t* )( packet->data + ETH_HEADER_LEN );
 
     switch ( ntohw( arp_header->command ) ) {
         case ARP_CMD_REQUEST :
+            arp_data = ( arp_data_t* )( arp_header + 1 );
+            arp_cache_insert( interface, arp_data->hw_sender, arp_data->ip_sender );
+
             arp_handle_request( interface, arp_header );
+
             break;
 
         case ARP_CMD_REPLY :
-            arp_handle_reply( interface, arp_header );
+            arp_data = ( arp_data_t* )( arp_header + 1 );
+            arp_cache_insert( interface, arp_data->hw_sender, arp_data->ip_sender );
+
             break;
 
         default :
-            kprintf( WARNING, "Unknown ARP command: 0x%x\n", ntohw( arp_header->command ) );
+            kprintf( WARNING, "net: unknown ARP command: 0x%x\n", ntohw( arp_header->command ) );
             break;
     }
 
     return 0;
 }
 
-static void* pending_ip_key( hashitem_t* item ) {
-    arp_pending_request_t* request;
-
-    request = ( arp_pending_request_t* )item;
-
-    return &request->ip_address[ 0 ];
-}
-
 __init int init_arp( void ) {
-    int error;
-
-    error = init_hashtable(
-        &pending_requests,
-        32,
-        pending_ip_key,
-        hash_int,
-        compare_int
-    );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
     return 0;
 }
 
