@@ -126,7 +126,8 @@ static system_call_entry_t system_call_table[] = {
     { "condition_broadcast", sys_condition_broadcast, 0 },
     { "condition_create", sys_condition_create, 0 },
     { "condition_destroy", sys_condition_destroy, 0 },
-    { "getrusage", sys_getrusage, 0 }
+    { "getrusage", sys_getrusage, 0 },
+    { "socket", sys_socket, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* params, void* stack ) {

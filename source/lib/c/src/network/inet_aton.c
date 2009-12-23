@@ -23,7 +23,7 @@
 int inet_aton( const char* cp, struct in_addr* inp ) {
     int i;
     unsigned int ip = 0;
-    char* tmp= ( char* )cp;
+    char* tmp = ( char* )cp;
 
     for ( i = 24; ; ) {
         long j;

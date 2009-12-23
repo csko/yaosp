@@ -154,6 +154,92 @@ static int get_interface_count( void ) {
     return count;
 }
 
+typedef struct if_list_data {
+    int cur_index;
+    struct ifreq* conf_table;
+} if_list_data_t;
+
+static int get_if_list_helper( hashitem_t* item, void* _data ) {
+    if_list_data_t* data;
+    net_interface_t* interface;
+    struct ifreq* req;
+
+    data = ( if_list_data_t* )_data;
+    interface = ( net_interface_t* )item;
+
+    req = &data->conf_table[ data->cur_index++ ];
+
+    /* Interface name */
+
+    strncpy( req->ifr_ifrn.ifrn_name, interface->name, IFNAMSIZ );
+    req->ifr_ifrn.ifrn_name[ IFNAMSIZ - 1 ] = 0;
+
+    return 0;
+}
+
+static int get_interface_list( struct ifconf* list ) {
+    if_list_data_t data;
+
+    data.cur_index = 0;
+    data.conf_table = list->ifc_ifcu.ifcu_req;
+
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+    hashtable_iterate( &interface_table, get_if_list_helper, &data );
+    mutex_unlock( interface_mutex );
+
+    return 0;
+}
+
+static int get_interface_parameter( int param, struct ifreq* req ) {
+    int ret;
+    net_interface_t* interface;
+    struct sockaddr_in* addr;
+
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+
+    interface = ( net_interface_t* )hashtable_get( &interface_table, ( const void* )req->ifr_ifrn.ifrn_name );
+
+    if ( interface == NULL ) {
+        ret = -EINVAL;
+        goto out;
+    }
+
+    switch ( param ) {
+        case SIOCGIFADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_addr;
+            memcpy( &addr->sin_addr, interface->ip_address, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCGIFNETMASK :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
+            memcpy( &addr->sin_addr, interface->netmask, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCGIFHWADDR :
+            memcpy( req->ifr_ifru.ifru_hwaddr.sa_data, interface->hw_address, ETH_ADDR_LEN );
+            break;
+
+        case SIOCGIFFLAGS :
+            req->ifr_ifru.ifru_flags = interface->flags;
+            break;
+
+        case SIOCGIFMTU :
+            req->ifr_ifru.ifru_mtu = interface->mtu;
+            break;
+
+        default :
+            kprintf( ERROR, "get_interface_parameter(): invalid request: %d\n", param );
+            break;
+    }
+
+    ret = 0;
+
+ out:
+    mutex_unlock( interface_mutex );
+
+    return ret;
+}
+
 static int start_network_interface( net_interface_t* interface ) {
     int error;
 
@@ -171,6 +257,7 @@ static int start_network_interface( net_interface_t* interface ) {
 
     thread_wake_up( interface->rx_thread );
 
+#if 0
     /* TODO */
     uint8_t netmask[4]={255,255,255,0};
     uint8_t dummy[4]={0,0,0,0};
@@ -188,6 +275,7 @@ static int start_network_interface( net_interface_t* interface ) {
     route->interface = interface;
     insert_route( route );
     /* End of TODO */
+#endif
 
     error = ioctl( interface->device, IOCTL_NET_GET_HW_ADDRESS, ( void* )interface->hw_address );
 
@@ -236,6 +324,18 @@ int network_interface_ioctl( int command, void* buffer, bool from_kernel ) {
     switch ( command ) {
         case SIOCGIFCOUNT :
             error = get_interface_count();
+            break;
+
+        case SIOCGIFCONF :
+            error = get_interface_list( ( struct ifconf* )buffer );
+            break;
+
+        case SIOCGIFADDR :
+        case SIOCGIFNETMASK :
+        case SIOCGIFHWADDR :
+        case SIOCGIFMTU :
+        case SIOCGIFFLAGS :
+            error = get_interface_parameter( command, ( struct ifreq* )buffer );
             break;
 
         default :

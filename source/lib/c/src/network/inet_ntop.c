@@ -1,4 +1,4 @@
-/* Commong networking functions
+/* inet_ntop function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,24 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <config.h>
+#include <stdio.h>
+#include <arpa/inet.h>
 
-#ifdef ENABLE_NETWORK
+const char* inet_ntop( int af, const void* src, char* dst, socklen_t size ) {
+    const uint8_t* data;
 
-#include <network/interface.h>
-#include <network/arp.h>
-#include <network/socket.h>
-#include <network/tcp.h>
-#include <network/route.h>
+    data = ( uint8_t* )src;
 
-__init void init_network( void ) {
-    init_network_interfaces();
-    init_routes();
-    init_arp();
-    init_socket();
-    init_tcp();
+    switch ( af ) {
+        case AF_INET :
+            snprintf( dst, size, "%d.%d.%d.%d", data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ] );
+            break;
 
-    create_network_interfaces();
+        default :
+            return NULL;
+    }
+
+    return dst;
 }
-
-#endif /* ENABLE_NETWORK */

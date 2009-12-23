@@ -279,6 +279,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/pwd/setpwent.c</item>
         <item>src/network/inet_aton.c</item>
         <item>src/network/inet_ntoa.c</item>
+        <item>src/network/inet_ntop.c</item>
         <item>src/pthread/mutex.c</item>
         <item>src/pthread/mutexattr.c</item>
         <item>src/pthread/thread.c</item>

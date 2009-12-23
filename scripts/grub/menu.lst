@@ -7,6 +7,7 @@ module /system/module/filesystem/iso9660
 module /system/module/input/ps2
 module /system/module/input/input
 module /system/module/char/terminal
+module /system/module/network/pcnet32
 
 title --------------------------
 root
@@ -20,6 +21,7 @@ module /system/module/filesystem/iso9660
 module /system/module/input/ps2
 module /system/module/input/input
 module /system/module/char/terminal
+module /system/module/network/pcnet32
 
 title yaOSp (debug)
 kernel /system/kernel enable_debug=true
@@ -30,3 +32,4 @@ module /system/module/filesystem/iso9660
 module /system/module/input/ps2
 module /system/module/input/input
 module /system/module/char/terminal
+module /system/module/network/pcnet32

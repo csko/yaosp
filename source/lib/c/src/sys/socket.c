@@ -23,7 +23,6 @@
 #include <yaosp/syscall_table.h>
 
 int socket( int domain, int type, int protocol ) {
-#if 0
     int error;
 
     error = syscall3( SYS_socket, domain, type, protocol );
@@ -34,7 +33,4 @@ int socket( int domain, int type, int protocol ) {
     }
 
     return error;
-#endif
-
-    return -1;
 }
