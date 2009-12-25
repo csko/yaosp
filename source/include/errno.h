@@ -52,6 +52,8 @@
 #define ENAMETOOLONG 31
 #define ESPIPE       32
 #define EACCES       33
+#define EDEADLK      34
+#define EADDRINUSE   35
 
 extern int errno;
 

@@ -1,4 +1,4 @@
-/* Commong networking functions
+/* recvmsg function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <config.h>
+#include <sys/socket.h>
 
-#ifdef ENABLE_NETWORK
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#include <network/interface.h>
-#include <network/arp.h>
-#include <network/socket.h>
-#include <network/tcp.h>
-#include <network/udp.h>
-#include <network/route.h>
-
-__init void init_network( void ) {
-    init_network_interfaces();
-    init_routes();
-    init_arp();
-    init_socket();
-    init_tcp();
-    init_udp();
-
-    create_network_interfaces();
+ssize_t recvmsg( int sockfd, struct msghdr* msg, int flags ) {
+    return syscall3( SYS_recvmsg, sockfd, ( int )msg, flags );
 }
-
-#endif /* ENABLE_NETWORK */

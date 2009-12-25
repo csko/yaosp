@@ -352,6 +352,7 @@ static int create_network_interface( int device ) {
 
     interface->mtu = 1500; /* todo */
     interface->device = device;
+    memset( interface->netmask, 255, IPV4_ADDR_LEN );
 
     arp_interface_init( interface ); /* todo: error check */
 

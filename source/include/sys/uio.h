@@ -1,6 +1,6 @@
-/* Commong networking functions
+/* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,26 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <config.h>
+#ifndef _SYS_UIO_H_
+#define _SYS_UIO_H_
 
-#ifdef ENABLE_NETWORK
+#include <sys/types.h>
 
-#include <network/interface.h>
-#include <network/arp.h>
-#include <network/socket.h>
-#include <network/tcp.h>
-#include <network/udp.h>
-#include <network/route.h>
+struct iovec {
+    void* iov_base;
+    size_t iov_len;
+};
 
-__init void init_network( void ) {
-    init_network_interfaces();
-    init_routes();
-    init_arp();
-    init_socket();
-    init_tcp();
-    init_udp();
-
-    create_network_interfaces();
-}
-
-#endif /* ENABLE_NETWORK */
+#endif /* _SYS_UIO_H_ */

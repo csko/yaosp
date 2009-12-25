@@ -94,6 +94,10 @@ static int interface_iterator( hashitem_t* item, void* _data ) {
     interface = ( net_interface_t* )item;
     data = ( route_iterator_data_t* )_data;
 
+    if ( ( interface->flags & IFF_UP ) == 0 ) {
+        return 0;
+    }
+
     if ( IP_EQUALS_MASKED( interface->ip_address, data->ipv4_address, interface->netmask ) ) {
         route_t* route;
 

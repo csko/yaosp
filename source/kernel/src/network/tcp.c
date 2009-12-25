@@ -104,7 +104,6 @@ static int tcp_send_packet( socket_t* socket, tcp_socket_t* tcp_socket, uint8_t 
     }
 
     data = packet->data + packet->size;
-
     data -= ( sizeof( tcp_header_t ) + payload_size );
     packet->transport_data = data;
 
@@ -226,9 +225,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     if ( route == NULL ) {
         mutex_unlock( tcp_socket->mutex );
-
-        kprintf( WARNING, "net: No route for TCP endpoint!\n" );
-
+        kprintf( WARNING, "net: no route for TCP endpoint.\n" );
         return -EINVAL;
     }
 
@@ -307,16 +304,20 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     return error;
 }
 
-static int tcp_read( socket_t* socket, void* data, size_t length ) {
-    size_t to_copy;
+static int tcp_recvmsg( socket_t* socket, struct msghdr* msg, int flags ) {
+    int i = 0;
+    size_t data_read;
     size_t rx_data_size;
     tcp_socket_t* tcp_socket;
 
+    data_read = 0;
     tcp_socket = ( tcp_socket_t* )socket->data;
 
     mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
     rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
+
+    /* If there is no available data on the socket, then wait for someting to come ... */
 
     while ( rx_data_size == 0 ) {
         condition_wait( tcp_socket->rx_queue, tcp_socket->mutex );
@@ -328,63 +329,87 @@ static int tcp_read( socket_t* socket, void* data, size_t length ) {
         );
     }
 
-    to_copy = MIN( rx_data_size, length );
+    /* Read the available data from the socket */
 
-    circular_buffer_read( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, data, to_copy );
-    circular_pointer_move( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, to_copy );
+    while ( rx_data_size > 0 ) {
+        size_t to_copy;
+        struct iovec* iov = &msg->msg_iov[ i ];
+
+        /* Copy the data */
+
+        to_copy = MIN( rx_data_size, iov->iov_len );
+
+        circular_buffer_read( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, iov->iov_base, to_copy );
+        circular_pointer_move( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, to_copy );
+
+        i++;
+        data_read += to_copy;
+
+        /* Recalculate the available RX data size */
+
+        rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
+    }
 
     mutex_unlock( tcp_socket->mutex );
 
-    return to_copy;
+    return data_read;
 }
 
-static int tcp_write( socket_t* socket, const void* _data, size_t length ) {
-    uint8_t* data;
+static int tcp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
+    int i;
     size_t data_written;
     tcp_socket_t* tcp_socket;
 
     data_written = 0;
-    data = ( uint8_t* )_data;
     tcp_socket = ( tcp_socket_t* )socket->data;
 
     mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
-    while ( length > 0 ) {
-        size_t to_copy;
-        size_t free_size;
+    for ( i = 0; i < msg->msg_iovlen; i++ ) {
+        size_t length;
+        uint8_t* data;
+        struct iovec* iov = &msg->msg_iov[ i ];
 
-        /* Wait until there is free space in the send buffer */
+        data = ( uint8_t* )iov->iov_base;
+        length = iov->iov_len;
 
-        free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
-            &tcp_socket->tx_buffer,
-            &tcp_socket->tx_first_unacked,
-            &tcp_socket->tx_free_data
-        );
+        while ( length > 0 ) {
+            size_t to_copy;
+            size_t free_size;
 
-        while ( free_size == 0 ) {
-            condition_wait( tcp_socket->tx_queue, tcp_socket->mutex );
+            /* Wait until there is free space in the send buffer */
 
             free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
                 &tcp_socket->tx_buffer,
                 &tcp_socket->tx_first_unacked,
                 &tcp_socket->tx_free_data
             );
+
+            while ( free_size == 0 ) {
+                condition_wait( tcp_socket->tx_queue, tcp_socket->mutex );
+
+                free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
+                    &tcp_socket->tx_buffer,
+                    &tcp_socket->tx_first_unacked,
+                    &tcp_socket->tx_free_data
+                );
+            }
+
+            /* Copy the data to the send buffer */
+
+            to_copy = MIN( length, free_size );
+
+            circular_buffer_write( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, data, to_copy );
+            circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, to_copy );
+
+            data += to_copy;
+            length -= to_copy;
+            data_written += to_copy;
+
+            /* Wake up the TCP timer thread to transmit the data */
+
+            thread_wake_up( tcp_timer_thread );
         }
-
-        /* Copy the data to the send buffer */
-
-        to_copy = MIN( length, free_size );
-
-        circular_buffer_write( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, data, to_copy );
-        circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_free_data, to_copy );
-
-        data += to_copy;
-        length -= to_copy;
-        data_written += to_copy;
-
-        /* Wake up the TCP timer thread to transmit the data */
-
-        thread_wake_up( tcp_timer_thread );
     }
 
     mutex_unlock( tcp_socket->mutex );
@@ -513,8 +538,8 @@ static int tcp_remove_select_request( socket_t* socket, struct select_request* r
 static socket_calls_t tcp_socket_calls = {
     .close = tcp_close,
     .connect = tcp_connect,
-    .read = tcp_read,
-    .write = tcp_write,
+    .recvmsg = tcp_recvmsg,
+    .sendmsg = tcp_sendmsg,
     .set_flags = tcp_set_flags,
     .add_select_request = tcp_add_select_request,
     .remove_select_request = tcp_remove_select_request

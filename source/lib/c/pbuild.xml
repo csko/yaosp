@@ -223,6 +223,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/waitpid.c</item>
         <item>src/sys/socket.c</item>
         <item>src/sys/connect.c</item>
+        <item>src/sys/recvmsg.c</item>
+        <item>src/sys/sendmsg.c</item>
         <item>src/sys/getrusage.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>

@@ -117,6 +117,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/route.c</item>
         <item>src/network/socket.c</item>
         <item>src/network/tcp.c</item>
+        <item>src/network/udp.c</item>
         <item>src/network/network.c</item>
     </array>
 
@@ -139,6 +140,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/lib/circular.c</item>
         <item>src/lib/stack.c</item>
         <item>src/lib/array.c</item>
+        <item>src/lib/bitmap.c</item>
     </array>
 
     <target name="clean">

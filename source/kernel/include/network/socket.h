@@ -20,6 +20,7 @@
 #define _NETWORK_SOCKET_H_
 
 #include <vfs/inode.h>
+#include <vfs/vfs.h>
 #include <network/ipv4.h>
 #include <lib/hashtable.h>
 
@@ -61,6 +62,16 @@ struct sockaddr_in {
     ];
 };
 
+struct msghdr {
+    void* msg_name;
+    socklen_t msg_namelen;
+    struct iovec* msg_iov;
+    size_t msg_iovlen;
+    void* msg_control;
+    socklen_t msg_controllen;
+    int msg_flags;
+};
+
 struct socket_calls;
 
 typedef struct socket {
@@ -85,8 +96,8 @@ struct select_request;
 typedef struct socket_calls {
     int ( *close )( socket_t* socket );
     int ( *connect )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
-    int ( *read )( socket_t* socket, void* data, size_t length );
-    int ( *write )( socket_t* socket, const void* data, size_t length );
+    int ( *recvmsg )( socket_t* socket, struct msghdr* msg, int flags );
+    int ( *sendmsg )( socket_t* socket, struct msghdr* msg, int flags );
     int ( *set_flags )( socket_t* socket, int flags );
     int ( *add_select_request )( socket_t* socket, struct select_request* request );
     int ( *remove_select_request )( socket_t* socket, struct select_request* request );
@@ -94,6 +105,8 @@ typedef struct socket_calls {
 
 int sys_socket( int family, int type, int protocol );
 int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen );
+int sys_recvmsg( int fd, struct msghdr* msg, int flags );
+int sys_sendmsg( int fd, struct msghdr* msg, int flags );
 
 int init_socket( void );
 

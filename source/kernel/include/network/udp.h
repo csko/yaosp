@@ -1,4 +1,4 @@
-/* Commong networking functions
+/* UDP packet handling
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,41 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <config.h>
+#ifndef _NETWORK_UDP_H_
+#define _NETWORK_UDP_H_
 
-#ifdef ENABLE_NETWORK
-
-#include <network/interface.h>
-#include <network/arp.h>
+#include <types.h>
+#include <network/packet.h>
 #include <network/socket.h>
-#include <network/tcp.h>
-#include <network/udp.h>
-#include <network/route.h>
+#include <lib/hashtable.h>
 
-__init void init_network( void ) {
-    init_network_interfaces();
-    init_routes();
-    init_arp();
-    init_socket();
-    init_tcp();
-    init_udp();
+#define UDP_HEADER_LEN 8
 
-    create_network_interfaces();
-}
+struct udp_socket;
 
-#endif /* ENABLE_NETWORK */
+typedef struct udp_header {
+    uint16_t src_port;
+    uint16_t dst_port;
+    uint16_t size;
+    uint16_t checksum;
+} __attribute__(( packed )) udp_header_t;
+
+typedef struct udp_port {
+    hashitem_t hash;
+
+    int local_port;
+    struct udp_socket* udp_socket;
+} udp_port_t;
+
+typedef struct udp_socket {
+    int ref_count;
+    udp_port_t* port;
+} udp_socket_t;
+
+int udp_create_socket( socket_t* socket );
+
+int udp_input( packet_t* packet );
+
+int init_udp( void );
+
+#endif /* _NETWORK_UDP_H_ */

@@ -19,6 +19,8 @@
 #ifndef _SYS_SOCKET_H_
 #define _SYS_SOCKET_H_
 
+#include <sys/uio.h>
+
 /* Protocol families.  */
 
 #define PF_UNSPEC       0       /* Unspecified.  */
@@ -112,8 +114,21 @@ struct sockaddr {
     char sa_data[ 14 ];
 };
 
+struct msghdr {
+    void* msg_name;
+    socklen_t msg_namelen;
+    struct iovec* msg_iov;
+    size_t msg_iovlen;
+    void* msg_control;
+    socklen_t msg_controllen;
+    int msg_flags;
+};
+
 int socket( int domain, int type, int protocol );
 int connect( int fd, const struct sockaddr* address, socklen_t addrlen );
+
+ssize_t recvmsg( int s, struct msghdr* msg, int flags );
+ssize_t sendmsg( int s, const struct msghdr* msg, int flags );
 
 /* Not implemented functions
 int socketpair( int d, int type, int protocol, int sv[2] );
@@ -130,14 +145,12 @@ ssize_t send( int s, const void *buf, size_t len, int flags );
 ssize_t sendto( int s, const void *buf, size_t len, int flags,
                 const struct sockaddr *to, socklen_t tolen );
 
-ssize_t sendmsg( int s, const struct msghdr *msg, int flags );
 
 ssize_t recv( int s, void *buf, size_t len, int flags );
 
 ssize_t recvfrom( int s, void *buf, size_t len, int flags,
                   struct sockaddr *from, socklen_t *fromlen );
 
-ssize_t recvmsg( int s, struct msghdr *msg, int flags );
 
 int getsockopt( int s, int level, int optname,
                 void *optval, socklen_t *optlen );

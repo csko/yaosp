@@ -31,6 +31,7 @@
 #include <network/interface.h>
 #include <network/device.h>
 #include <network/tcp.h>
+#include <network/udp.h>
 
 static lock_id socket_mutex;
 static ino_t socket_inode_counter = 0;
@@ -62,9 +63,7 @@ static int socket_write_inode( void* fs_cookie, void* node ) {
     socket = ( socket_t* )node;
 
     mutex_lock( socket_mutex, LOCK_IGNORE_SIGNAL );
-
     hashtable_remove( &socket_inode_table, ( const void* )&socket->inode_number );
-
     mutex_unlock( socket_mutex );
 
     switch ( socket->type ) {
@@ -89,38 +88,50 @@ static int socket_free_cookie( void* fs_cookie, void* node, void* file_cookie ) 
 static int socket_read( void* fs_cookie, void* node, void* file_cookie, void* buffer, off_t pos, size_t size ) {
     int error;
     socket_t* socket;
+    struct msghdr msg;
+    struct iovec iov;
 
     socket = ( socket_t* )node;
 
-    if ( socket->operations->read != NULL ) {
-        error = socket->operations->read(
-            socket,
-            buffer,
-            size
-        );
-    } else {
+    if ( socket->operations->recvmsg == NULL ) {
         error = -ENOSYS;
+        goto out;
     }
 
+    iov.iov_base = buffer;
+    iov.iov_len = size;
+
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+
+    error = socket->operations->recvmsg( socket, &msg, 0 );
+
+ out:
     return error;
 }
 
 static int socket_write( void* fs_cookie, void* node, void* file_cookie, const void* buffer, off_t pos, size_t size ) {
     int error;
     socket_t* socket;
+    struct msghdr msg;
+    struct iovec iov;
 
     socket = ( socket_t* )node;
 
-    if ( socket->operations->write != NULL ) {
-        error = socket->operations->write(
-            socket,
-            buffer,
-            size
-        );
-    } else {
+    if ( socket->operations->sendmsg == NULL ) {
         error = -ENOSYS;
+        goto out;
     }
 
+    iov.iov_base = ( void* )buffer;
+    iov.iov_len = size;
+
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+
+    error = socket->operations->sendmsg( socket, &msg, 0 );
+
+ out:
     return error;
 }
 
@@ -249,6 +260,10 @@ static int do_socket( bool kernel, int family, int type, int protocol ) {
             error = tcp_create_socket( socket );
             break;
 
+        case SOCK_DGRAM :
+            error = udp_create_socket( socket );
+            break;
+
         default :
             error = -EINVAL;
             break;
@@ -365,6 +380,57 @@ int do_connect( bool kernel, int fd, struct sockaddr* address, socklen_t addrlen
 
 int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen ) {
     return do_connect( false, fd, address, addrlen );
+}
+
+int sys_recvmsg( int fd, struct msghdr* msg, int flags ) {
+    return 0;
+}
+
+static int do_sendmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {
+    int error;
+    file_t* file;
+    socket_t* socket;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto error1;
+    }
+
+    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
+
+    if ( socket == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    if ( socket->operations->sendmsg == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = socket->operations->sendmsg(
+            socket,
+            msg,
+            flags
+        );
+    }
+
+ error2:
+    io_context_put_file( io_context, file );
+
+ error1:
+    return error;
+}
+
+int sys_sendmsg( int fd, struct msghdr* msg, int flags ) {
+    return do_sendmsg( false, fd, msg, flags );
 }
 
 static void* socket_key( hashitem_t* item ) {

@@ -1,4 +1,4 @@
-/* Commong networking functions
+/* Bitmap implementation
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,26 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <config.h>
+#ifndef _LIB_BITMAP_H_
+#define _LIB_BITMAP_H_
 
-#ifdef ENABLE_NETWORK
+#include <types.h>
 
-#include <network/interface.h>
-#include <network/arp.h>
-#include <network/socket.h>
-#include <network/tcp.h>
-#include <network/udp.h>
-#include <network/route.h>
+typedef struct bitmap {
+    uint32_t* table;
+    int max_bit_count;
+} bitmap_t;
 
-__init void init_network( void ) {
-    init_network_interfaces();
-    init_routes();
-    init_arp();
-    init_socket();
-    init_tcp();
-    init_udp();
+int bitmap_get( bitmap_t* bitmap, int bit_index );
+int bitmap_set( bitmap_t* bitmap, int bit_index );
+int bitmap_unset( bitmap_t* bitmap, int bit_index );
 
-    create_network_interfaces();
-}
+int bitmap_first_not_set( bitmap_t* bitmap );
+int bitmap_first_not_set_in_range( bitmap_t* bitmap, int start, int end );
 
-#endif /* ENABLE_NETWORK */
+int init_bitmap( bitmap_t* bitmap, int max_bits );
+int destroy_bitmap( bitmap_t* bitmap );
+
+#endif /* _LIB_BITMAP_H_ */

@@ -150,6 +150,11 @@ struct utimbuf {
     time_t modtime; /* modification time */
 };
 
+struct iovec {
+    void* iov_base;
+    size_t iov_len;
+};
+
 extern io_context_t kernel_io_context;
 
 mount_point_t* create_mount_point(

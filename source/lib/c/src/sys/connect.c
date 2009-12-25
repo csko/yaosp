@@ -23,7 +23,6 @@
 #include <yaosp/syscall_table.h>
 
 int connect( int fd, const struct sockaddr* address, socklen_t addrlen ) {
-#if 0
     int error;
 
     error = syscall3( SYS_connect, fd, ( int )address, addrlen );
@@ -34,7 +33,4 @@ int connect( int fd, const struct sockaddr* address, socklen_t addrlen ) {
     }
 
     return 0;
-#endif
-
-    return -1;
 }

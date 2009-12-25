@@ -54,5 +54,6 @@
 #define ESPIPE       32
 #define EACCES       33
 #define EDEADLK      34
+#define EADDRINUSE   35
 
 #endif /* _ERRNO_H_ */
