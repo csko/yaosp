@@ -44,7 +44,7 @@ static int if_set_ip_address( struct ifreq* req, char* param ) {
 
     addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_addr;
 
-    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 0 ) {
+    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 1 ) {
         fprintf( stderr, "%s: invalid IP address: %s.\n", argv0, param );
         return 0;
     }
@@ -61,7 +61,7 @@ static int if_set_netmask( struct ifreq* req, char* param ) {
 
     addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
 
-    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 0 ) {
+    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 1 ) {
         fprintf( stderr, "%s: invalid network mask: %s.\n", argv0, param );
         return 0;
     }
@@ -78,7 +78,7 @@ static int if_set_broadcast( struct ifreq* req, char* param ) {
 
     addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
 
-    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 0 ) {
+    if ( inet_pton( AF_INET, param, &addr->sin_addr ) != 1 ) {
         fprintf( stderr, "%s: invalid broadcast address: %s.\n", argv0, param );
         return 0;
     }
