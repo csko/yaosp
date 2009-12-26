@@ -105,6 +105,8 @@ typedef struct socket_calls {
 
 int sys_socket( int family, int type, int protocol );
 int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen );
+int sys_getsockopt( int s, int level, int optname, void* optval, socklen_t* optlen );
+int sys_setsockopt( int s, int level, int optname, void* optval, socklen_t optlen );
 int sys_recvmsg( int fd, struct msghdr* msg, int flags );
 int sys_sendmsg( int fd, struct msghdr* msg, int flags );
 

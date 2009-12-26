@@ -93,6 +93,32 @@
 #define AF_ISDN      PF_ISDN
 #define AF_MAX       PF_MAX
 
+#define SOL_SOCKET 1
+
+#define SO_DEBUG        1
+#define SO_REUSEADDR    2
+#define SO_TYPE         3
+#define SO_ERROR        4
+#define SO_DONTROUTE    5
+#define SO_BROADCAST    6
+#define SO_SNDBUF       7
+#define SO_RCVBUF       8
+#define SO_SNDBUFFORCE  32
+#define SO_RCVBUFFORCE  33
+#define SO_KEEPALIVE    9
+#define SO_OOBINLINE    10
+#define SO_NO_CHECK     11
+#define SO_PRIORITY     12
+#define SO_LINGER       13
+#define SO_BSDCOMPAT    14
+#define SO_REUSEPORT    15
+#define SO_PASSCRED     16
+#define SO_PEERCRED     17
+#define SO_RCVLOWAT     18
+#define SO_SNDLOWAT     19
+#define SO_RCVTIMEO     20
+#define SO_SNDTIMEO     21
+
 /* Types of sockets. */
 
 enum socket_type {
@@ -127,6 +153,11 @@ struct msghdr {
 int socket( int domain, int type, int protocol );
 int connect( int fd, const struct sockaddr* address, socklen_t addrlen );
 
+int getsockopt( int s, int level, int optname,
+                void* optval, socklen_t* optlen );
+int setsockopt( int s, int level, int optname,
+                const void* optval, socklen_t optlen );
+
 ssize_t recvmsg( int s, struct msghdr* msg, int flags );
 ssize_t sendmsg( int s, const struct msghdr* msg, int flags );
 
@@ -151,12 +182,6 @@ ssize_t recv( int s, void *buf, size_t len, int flags );
 ssize_t recvfrom( int s, void *buf, size_t len, int flags,
                   struct sockaddr *from, socklen_t *fromlen );
 
-
-int getsockopt( int s, int level, int optname,
-                void *optval, socklen_t *optlen );
-
-int setsockopt( int s, int level, int optname,
-                const void *optval, socklen_t optlen );
 
 int listen( int sockfd, int backlog );
 

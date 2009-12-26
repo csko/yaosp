@@ -130,7 +130,9 @@ static system_call_entry_t system_call_table[] = {
     { "socket", sys_socket, 0 },
     { "connect", sys_connect, 0 },
     { "recvmsg", sys_recvmsg, 0 },
-    { "sendmsg", sys_sendmsg, 0 }
+    { "sendmsg", sys_sendmsg, 0 },
+    { "getsockopt", sys_getsockopt, 0 },
+    { "setsockopt", sys_setsockopt, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* params, void* stack ) {

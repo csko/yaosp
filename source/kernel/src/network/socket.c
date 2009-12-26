@@ -382,8 +382,61 @@ int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen ) {
     return do_connect( false, fd, address, addrlen );
 }
 
-int sys_recvmsg( int fd, struct msghdr* msg, int flags ) {
+int sys_getsockopt( int s, int level, int optname, void* optval, socklen_t* optlen ) {
+    DEBUG_LOG( "%s()\n", __FUNCTION__ );
     return 0;
+}
+
+int sys_setsockopt( int s, int level, int optname, void* optval, socklen_t optlen ) {
+    DEBUG_LOG( "%s()\n", __FUNCTION__ );
+    return 0;
+}
+
+static int do_recvmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {
+    int error;
+    file_t* file;
+    socket_t* socket;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, fd );
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto error1;
+    }
+
+    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
+
+    if ( socket == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    if ( socket->operations->recvmsg == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = socket->operations->recvmsg(
+            socket,
+            msg,
+            flags
+        );
+    }
+
+ error2:
+    io_context_put_file( io_context, file );
+
+ error1:
+    return error;
+}
+
+int sys_recvmsg( int fd, struct msghdr* msg, int flags ) {
+    return do_recvmsg( false, fd, msg, flags );
 }
 
 static int do_sendmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {
