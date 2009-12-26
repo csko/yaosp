@@ -382,14 +382,39 @@ int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen ) {
     return do_connect( false, fd, address, addrlen );
 }
 
-int sys_getsockopt( int s, int level, int optname, void* optval, socklen_t* optlen ) {
+int sys_bind( int sockfd, struct sockaddr* addr, socklen_t addrlen ) {
     DEBUG_LOG( "%s()\n", __FUNCTION__ );
+    return -ENOSYS;
+}
+
+int sys_listen( int sockfd, int backlog ) {
+    DEBUG_LOG( "%s()\n", __FUNCTION__ );
+    return -ENOSYS;
+}
+
+int sys_accept( int sockfd, struct sockaddr* addr, socklen_t* addrlen ) {
+    DEBUG_LOG( "%s()\n", __FUNCTION__ );
+    return -ENOSYS;
+}
+
+int sys_getsockopt( int s, int level, int optname, void* optval, socklen_t* optlen ) {
+    DEBUG_LOG( "%s() level=%d, optname=%d\n", __FUNCTION__, level, optname );
     return 0;
 }
 
 int sys_setsockopt( int s, int level, int optname, void* optval, socklen_t optlen ) {
-    DEBUG_LOG( "%s()\n", __FUNCTION__ );
+    DEBUG_LOG( "%s() level=%d, optname=%d\n", __FUNCTION__, level, optname );
     return 0;
+}
+
+int sys_getsockname( int s, struct sockaddr* name, socklen_t* namelen ) {
+    DEBUG_LOG( "%s()\n", __FUNCTION__ );
+    return -ENOSYS;
+}
+
+int sys_getpeername( int s, struct sockaddr* name, socklen_t* namelen ) {
+    DEBUG_LOG( "%s()\n", __FUNCTION__ );
+    return -ENOSYS;
 }
 
 static int do_recvmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {

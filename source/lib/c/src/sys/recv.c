@@ -1,4 +1,4 @@
-/* yaosp C library
+/* recv function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,30 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_SELECT_H_
-#define _SYS_SELECT_H_
+#include <errno.h>
+#include <sys/socket.h>
 
-#include <sys/time.h>
-#include <sys/types.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define FD_ZERO(set) \
-    memset( (set)->fds, 0, 1024 / 32 );
+ssize_t recv( int s, void* buf, size_t len, int flags ) {
+    int error;
+    struct msghdr msg;
+    struct iovec iov;
 
-#define FD_CLR(fd,set) \
-    (set)->fds[fd/32] &= ~(1<<(fd%32));
+    iov.iov_base = buf;
+    iov.iov_len = len;
 
-#define FD_SET(fd,set) \
-    (set)->fds[fd/32] |= (1<<(fd%32));
+    msg.msg_name = NULL;
+    msg.msg_namelen = 0;
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = NULL;
+    msg.msg_controllen = 0;
+    msg.msg_flags = 0;
 
-#define FD_ISSET(fd,set) \
-    ((set)->fds[fd/32] & (1<<(fd%32)))
+    error = recvmsg( s, &msg, flags );
 
-#define FD_SETSIZE 1024
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
 
-typedef struct {
-    uint32_t fds[ FD_SETSIZE / 32 ];
-} fd_set;
-
-int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout );
-
-#endif /* _SYS_SELECT_H_ */
+    return error;
+}

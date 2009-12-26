@@ -1,4 +1,4 @@
-/* yaosp C library
+/* accept function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,30 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_SELECT_H_
-#define _SYS_SELECT_H_
+#include <netdb.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
-#include <sys/time.h>
-#include <sys/types.h>
+#include <yaosp/debug.h>
 
-#define FD_ZERO(set) \
-    memset( (set)->fds, 0, 1024 / 32 );
+static char addr[ 4 ];
+static char* addrs[ 2 ];
 
-#define FD_CLR(fd,set) \
-    (set)->fds[fd/32] &= ~(1<<(fd%32));
+static struct hostent hent;
 
-#define FD_SET(fd,set) \
-    (set)->fds[fd/32] |= (1<<(fd%32));
+struct hostent* gethostbyname( const char* name ) {
+    dbprintf( "gethostbyname(): name = %s\n", name );
 
-#define FD_ISSET(fd,set) \
-    ((set)->fds[fd/32] & (1<<(fd%32)))
+    hent.h_name = name;
+    hent.h_aliases = NULL;
+    hent.h_addrtype = AF_INET;
+    hent.h_length = 4;
+    hent.h_addr_list = addrs;
 
-#define FD_SETSIZE 1024
+    addrs[ 0 ] = addr;
+    addrs[ 1 ] = NULL;
 
-typedef struct {
-    uint32_t fds[ FD_SETSIZE / 32 ];
-} fd_set;
+    if ( inet_pton( AF_INET, name, &addr ) != 1 ) {
+        return NULL;
+    }
 
-int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout );
-
-#endif /* _SYS_SELECT_H_ */
+    return &hent;
+}

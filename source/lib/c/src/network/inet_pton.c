@@ -22,7 +22,7 @@ int inet_pton( int af, const char* src, void* dst ) {
     switch ( af ) {
         case AF_INET :
             inet_aton( src, dst );
-            break;
+            return 1;
 
         default :
             return -1;

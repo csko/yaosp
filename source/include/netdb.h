@@ -16,30 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_SELECT_H_
-#define _SYS_SELECT_H_
+#ifndef _NETDB_H_
+#define _NETDB_H_
 
-#include <sys/time.h>
-#include <sys/types.h>
+struct hostent {
+    char* h_name;
+    char** h_aliases;
+    int h_addrtype;
+    int h_length;
+    char** h_addr_list;
+#define h_addr h_addr_list[0]
+};
 
-#define FD_ZERO(set) \
-    memset( (set)->fds, 0, 1024 / 32 );
+struct hostent* gethostbyname( const char* name );
 
-#define FD_CLR(fd,set) \
-    (set)->fds[fd/32] &= ~(1<<(fd%32));
-
-#define FD_SET(fd,set) \
-    (set)->fds[fd/32] |= (1<<(fd%32));
-
-#define FD_ISSET(fd,set) \
-    ((set)->fds[fd/32] & (1<<(fd%32)))
-
-#define FD_SETSIZE 1024
-
-typedef struct {
-    uint32_t fds[ FD_SETSIZE / 32 ];
-} fd_set;
-
-int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout );
-
-#endif /* _SYS_SELECT_H_ */
+#endif /* _NETDB_H_ */

@@ -129,10 +129,15 @@ static system_call_entry_t system_call_table[] = {
     { "getrusage", sys_getrusage, 0 },
     { "socket", sys_socket, 0 },
     { "connect", sys_connect, 0 },
+    { "bind", sys_bind, 0 },
+    { "listen", sys_listen, 0 },
+    { "accept", sys_accept, 0 },
     { "recvmsg", sys_recvmsg, 0 },
     { "sendmsg", sys_sendmsg, 0 },
     { "getsockopt", sys_getsockopt, 0 },
-    { "setsockopt", sys_setsockopt, 0 }
+    { "setsockopt", sys_setsockopt, 0 },
+    { "getpeername", sys_getpeername, 0 },
+    { "getsockname", sys_getsockname, 0 }
 };
 
 int handle_system_call( uint32_t number, uint32_t* params, void* stack ) {

@@ -200,6 +200,7 @@ static int tcp_close( socket_t* socket ) {
 
 static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t addrlen ) {
     int error;
+    uint8_t* ip;
     route_t* route;
     tcp_socket_t* tcp_socket;
     struct sockaddr_in* in_address;
@@ -221,11 +222,12 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     /* Find out the MSS value to the destination */
 
-    route = find_route( ( uint8_t* )&in_address->sin_addr.s_addr );
+    ip = ( uint8_t* )&in_address->sin_addr.s_addr;
+    route = find_route( ip );
 
     if ( route == NULL ) {
         mutex_unlock( tcp_socket->mutex );
-        kprintf( WARNING, "net: no route for TCP endpoint.\n" );
+        kprintf( WARNING, "net: no route for TCP endpoint: %d.%d.%d.%d.\n", ip[ 0 ], ip[ 1 ], ip[ 2 ], ip[ 3 ] );
         return -EINVAL;
     }
 

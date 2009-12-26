@@ -223,10 +223,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/waitpid.c</item>
         <item>src/sys/socket.c</item>
         <item>src/sys/connect.c</item>
+        <item>src/sys/bind.c</item>
+        <item>src/sys/listen.c</item>
+        <item>src/sys/accept.c</item>
+        <item>src/sys/recv.c</item>
+        <item>src/sys/recvfrom.c</item>
         <item>src/sys/recvmsg.c</item>
+        <item>src/sys/send.c</item>
+        <item>src/sys/sendto.c</item>
         <item>src/sys/sendmsg.c</item>
         <item>src/sys/getsockopt.c</item>
         <item>src/sys/setsockopt.c</item>
+        <item>src/sys/getsockname.c</item>
+        <item>src/sys/getpeername.c</item>
         <item>src/sys/getrusage.c</item>
         <item>src/ctype/isalpha.c</item>
         <item>src/ctype/isupper.c</item>
@@ -285,6 +294,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/inet_pton.c</item>
         <item>src/network/inet_ntoa.c</item>
         <item>src/network/inet_ntop.c</item>
+        <item>src/network/gethostbyname.c</item>
         <item>src/pthread/mutex.c</item>
         <item>src/pthread/mutexattr.c</item>
         <item>src/pthread/thread.c</item>

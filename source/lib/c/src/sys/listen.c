@@ -1,4 +1,4 @@
-/* yaosp C library
+/* listen function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,30 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_SELECT_H_
-#define _SYS_SELECT_H_
+#include <errno.h>
+#include <sys/socket.h>
 
-#include <sys/time.h>
-#include <sys/types.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define FD_ZERO(set) \
-    memset( (set)->fds, 0, 1024 / 32 );
+int listen( int sockfd, int backlog ) {
+    int error;
 
-#define FD_CLR(fd,set) \
-    (set)->fds[fd/32] &= ~(1<<(fd%32));
+    error = syscall2( SYS_listen, sockfd, backlog );
 
-#define FD_SET(fd,set) \
-    (set)->fds[fd/32] |= (1<<(fd%32));
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
 
-#define FD_ISSET(fd,set) \
-    ((set)->fds[fd/32] & (1<<(fd%32)))
-
-#define FD_SETSIZE 1024
-
-typedef struct {
-    uint32_t fds[ FD_SETSIZE / 32 ];
-} fd_set;
-
-int select( int fds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, struct timeval* timeout );
-
-#endif /* _SYS_SELECT_H_ */
+    return error;
+}
