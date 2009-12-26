@@ -228,7 +228,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     if ( route == NULL ) {
         mutex_unlock( tcp_socket->mutex );
         kprintf( WARNING, "net: no route for TCP endpoint: %d.%d.%d.%d.\n", ip[ 0 ], ip[ 1 ], ip[ 2 ], ip[ 3 ] );
-        return -EINVAL;
+        return -ENETUNREACH;
     }
 
     memcpy( socket->src_address, route->interface->ip_address, IPV4_ADDR_LEN );

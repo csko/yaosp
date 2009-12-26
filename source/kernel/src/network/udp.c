@@ -136,6 +136,7 @@ static int udp_bind( socket_t* socket, struct sockaddr* _addr, int size ) {
 static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags )  {
     int i;
     int error;
+    uint8_t* ip;
     uint8_t* data;
     packet_t* packet;
     route_t* route;
@@ -147,11 +148,12 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags )  {
     udp_socket = ( udp_socket_t* )socket->data;
     address = ( struct sockaddr_in* )msg->msg_name;
 
-    route = find_route( ( uint8_t* )&address->sin_addr.s_addr );
+    ip = ( uint8_t* )&address->sin_addr.s_addr;
+    route = find_route( ip );
 
     if ( route == NULL ) {
-        kprintf( WARNING, "net: no route for UDP endpoint.\n" );
-        error = -EINVAL;
+        kprintf( WARNING, "net: no route for UDP endpoint: %d.%d.%d.%d.\n", ip[ 0 ], ip[ 1 ], ip[ 2 ], ip[ 3 ] );
+        error = -ENETUNREACH;
         goto error1;
     }
 

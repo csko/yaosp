@@ -58,6 +58,7 @@
 #define EADDRNOTAVAIL 37
 #define EISCONN       38
 #define EINPROGRESS   39
+#define ENETUNREACH   40
 
 extern int errno;
 

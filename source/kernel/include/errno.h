@@ -59,5 +59,6 @@
 #define EADDRNOTAVAIL 37
 #define EISCONN       38
 #define EINPROGRESS   39
+#define ENETUNREACH   40
 
 #endif /* _ERRNO_H_ */

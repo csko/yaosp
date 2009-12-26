@@ -207,7 +207,7 @@ void handle_panic( const char* file, int line, const char* format, ... ) {
     }
 
     debug_print_stack_trace();
-    memory_context_dump( &kernel_memory_context );
+    //memory_context_dump( &kernel_memory_context );
 
     halt_loop();
 }
