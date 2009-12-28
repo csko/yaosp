@@ -109,6 +109,7 @@ typedef struct tcp_socket {
     tcp_socket_state_t state;
 
     int mss;
+    int nonblocking;
 
     lock_id rx_queue;
     circular_buffer_t rx_buffer;

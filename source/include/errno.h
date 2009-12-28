@@ -59,6 +59,7 @@
 #define EISCONN       38
 #define EINPROGRESS   39
 #define ENETUNREACH   40
+#define EALREADY      41
 
 extern int errno;
 

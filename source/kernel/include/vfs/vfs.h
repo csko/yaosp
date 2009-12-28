@@ -112,9 +112,9 @@ typedef struct mount_point {
 
 typedef enum select_type {
     SELECT_NONE = 0,
-    SELECT_READ = 1,
-    SELECT_WRITE = 2,
-    SELECT_EXCEPT = 4
+    SELECT_READ = ( 1 << 0 ),
+    SELECT_WRITE = ( 1 << 1 ),
+    SELECT_EXCEPT = ( 1 << 2 )
 } select_type_t;
 
 typedef struct select_request {

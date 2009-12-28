@@ -34,6 +34,34 @@
 #define IPPROTO_UDP 17
 #define IPPROTO_RAW 255
 
+/* getsockopt() and setsockopt() constants */
+
+#define SOL_SOCKET 1
+
+#define SO_DEBUG        1
+#define SO_REUSEADDR    2
+#define SO_TYPE         3
+#define SO_ERROR        4
+#define SO_DONTROUTE    5
+#define SO_BROADCAST    6
+#define SO_SNDBUF       7
+#define SO_RCVBUF       8
+#define SO_SNDBUFFORCE  32
+#define SO_RCVBUFFORCE  33
+#define SO_KEEPALIVE    9
+#define SO_OOBINLINE    10
+#define SO_NO_CHECK     11
+#define SO_PRIORITY     12
+#define SO_LINGER       13
+#define SO_BSDCOMPAT    14
+#define SO_REUSEPORT    15
+#define SO_PASSCRED     16
+#define SO_PEERCRED     17
+#define SO_RCVLOWAT     18
+#define SO_SNDLOWAT     19
+#define SO_RCVTIMEO     20
+#define SO_SNDTIMEO     21
+
 typedef uint16_t sa_family_t;
 typedef uint32_t socklen_t;
 typedef uint16_t in_port_t;
@@ -98,6 +126,8 @@ typedef struct socket_calls {
     int ( *connect )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
     int ( *recvmsg )( socket_t* socket, struct msghdr* msg, int flags );
     int ( *sendmsg )( socket_t* socket, struct msghdr* msg, int flags );
+    int ( *getsockopt )( socket_t* socket, int level, int optname, void* optval, socklen_t* optlen );
+    int ( *setsockopt )( socket_t* socket, int level, int optname, void* optval, socklen_t optlen );
     int ( *set_flags )( socket_t* socket, int flags );
     int ( *add_select_request )( socket_t* socket, struct select_request* request );
     int ( *remove_select_request )( socket_t* socket, struct select_request* request );

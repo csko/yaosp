@@ -31,7 +31,7 @@ static struct hostent hent;
 struct hostent* gethostbyname( const char* name ) {
     dbprintf( "gethostbyname(): name = %s\n", name );
 
-    hent.h_name = name;
+    hent.h_name = ( char* )name;
     hent.h_aliases = NULL;
     hent.h_addrtype = AF_INET;
     hent.h_length = 4;

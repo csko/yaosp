@@ -397,14 +397,102 @@ int sys_accept( int sockfd, struct sockaddr* addr, socklen_t* addrlen ) {
     return -ENOSYS;
 }
 
+static int do_getsockopt( bool kernel, int s, int level, int optname, void* optval, socklen_t* optlen ) {
+    int error;
+    file_t* file;
+    socket_t* socket;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, s );
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto error1;
+    }
+
+    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
+
+    if ( socket == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    switch ( level ) {
+        case SOL_SOCKET :
+            error = 0;
+            break;
+
+        default :
+            kprintf( WARNING, "do_getsockopt(): called on level = %d.\n", level );
+            error = -EINVAL;
+            break;
+    }
+
+ error2:
+    io_context_put_file( io_context, file );
+
+ error1:
+    return error;
+}
+
 int sys_getsockopt( int s, int level, int optname, void* optval, socklen_t* optlen ) {
     DEBUG_LOG( "%s() level=%d, optname=%d\n", __FUNCTION__, level, optname );
-    return 0;
+    return do_getsockopt( false, s, level, optname, optval, optlen );
+}
+
+static int do_setsockopt( bool kernel, int s, int level, int optname, void* optval, socklen_t optlen ) {
+    int error;
+    file_t* file;
+    socket_t* socket;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, s );
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto error1;
+    }
+
+    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
+
+    if ( socket == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    switch ( level ) {
+        case SOL_SOCKET :
+            error = 0;
+            break;
+
+        default :
+            kprintf( WARNING, "do_setsockopt(): called on level = %d.\n", level );
+            error = -EINVAL;
+            break;
+    }
+
+ error2:
+    io_context_put_file( io_context, file );
+
+ error1:
+    return error;
 }
 
 int sys_setsockopt( int s, int level, int optname, void* optval, socklen_t optlen ) {
     DEBUG_LOG( "%s() level=%d, optname=%d\n", __FUNCTION__, level, optname );
-    return 0;
+    return do_setsockopt( false, s, level, optname, optval, optlen );
 }
 
 int sys_getsockname( int s, struct sockaddr* name, socklen_t* namelen ) {
