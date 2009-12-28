@@ -71,7 +71,14 @@ typedef struct tcp_mss_option {
 typedef enum tcp_socket_state {
     TCP_STATE_CLOSED,
     TCP_STATE_SYN_SENT,
-    TCP_STATE_ESTABLISHED
+    TCP_STATE_SYN_RECEIVED,
+    TCP_STATE_ESTABLISHED,
+    TCP_STATE_FIN_WAIT_1,
+    TCP_STATE_FIN_WAIT_2,
+    TCP_STATE_CLOSE_WAIT,
+    TCP_STATE_CLOSING,
+    TCP_STATE_LAST_ACK,
+    TCP_STATE_TIME_WAIT
 } tcp_socket_state_t;
 
 typedef enum tcp_timer_type {

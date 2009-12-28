@@ -195,6 +195,8 @@ static int tcp_send_reset( packet_t* packet ) {
 }
 
 static int tcp_close( socket_t* socket ) {
+    DEBUG_LOG( "%s()\n", __FUNCTION__ );
+
     return 0;
 }
 

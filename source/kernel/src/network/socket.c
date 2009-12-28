@@ -78,7 +78,15 @@ static int socket_write_inode( void* fs_cookie, void* node ) {
 }
 
 static int socket_close( void* fs_cookie, void* node, void* file_cookie ) {
-    return -1;
+    socket_t* socket;
+
+    socket = ( socket_t* )node;
+
+    if ( socket->operations->close != NULL ) {
+        socket->operations->close( socket );
+    }
+
+    return 0;
 }
 
 static int socket_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
