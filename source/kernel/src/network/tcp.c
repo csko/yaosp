@@ -663,12 +663,12 @@ static int tcp_handle_transmit( tcp_socket_t* tcp_socket ) {
     tcp_send_packet(
         socket,
         tcp_socket,
-        TCP_PSH,
+        TCP_PSH | TCP_ACK,
         ( uint8_t* )circular_pointer_get( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent ),
         data_to_send,
         0,
         tcp_socket->tx_last_sent_seq,
-        0
+        tcp_socket->rx_last_received_seq + 1
     );
 
     circular_pointer_move( &tcp_socket->tx_buffer, &tcp_socket->tx_last_sent, data_to_send );
@@ -900,6 +900,8 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
     tcp_socket->tx_window_size = ntohw( tcp_header->window_size );
     tcp_socket->tx_last_unacked_seq = tcp_socket->tx_last_sent_seq;
 
+    tcp_socket->rx_last_received_seq = ntohl( tcp_header->seq_number );
+
     tcp_send_packet(
         socket,
         tcp_socket,
@@ -908,7 +910,7 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
         0,
         0,
         tcp_socket->tx_last_sent_seq,
-        ntohl( tcp_header->seq_number ) + 1
+        tcp_socket->rx_last_received_seq + 1
     );
 
     tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].running = false;
@@ -945,6 +947,8 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
 
     socket = ( socket_t* )tcp_socket->socket;
     tcp_header = ( tcp_header_t* )packet->transport_data;
+
+    tcp_socket->rx_last_received_seq = ntohl( tcp_header->seq_number );
 
     if ( tcp_header->ctrl_flags & TCP_PSH ) {
         uint8_t* data;

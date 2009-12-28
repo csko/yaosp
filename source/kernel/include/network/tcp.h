@@ -112,6 +112,7 @@ typedef struct tcp_socket {
     int nonblocking;
 
     lock_id rx_queue;
+    uint32_t rx_last_received_seq;
     circular_buffer_t rx_buffer;
     circular_pointer_t rx_user_data;
     circular_pointer_t rx_free_data;
