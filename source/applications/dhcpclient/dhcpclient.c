@@ -232,69 +232,61 @@ void parse_message(dhcp_msg_t *msg, dhcp_info_t *info){
     info->ip_addr = msg->yiaddr;
 
     for(options = msg->options; *options != DHCP_END; ){
-        if(*options == DHCP_PADDING){
-            options++;
-        }else{
-            switch(*options){
+        switch(*options){
 
-                case DHCP_MSG_TYPE:
-                    options += 2;
-                    msgtype = *options;
-                    options++;
-                    break;
+            case DHCP_PADDING:
+                options++;
+                break;
 
-                case DHCP_SUBNET_MASK:
-                    options += 2;
-                    info->netmask = *(uint32_t*) options;
-                    options += 4;
-                    break;
+            case DHCP_MSG_TYPE:
+                options += 2;
+                msgtype = *options;
+                options += DHCP_MSG_TYPE_LEN;
+                break;
 
-                case DHCP_SERVER_ADDR:
-                    options += 2;
-                    info->server_addr = *(uint32_t*) options;
-                    options += 4;
-                    break;
+            case DHCP_SUBNET_MASK:
+                options += 2;
+                info->netmask = *(uint32_t*) options;
+                options += DHCP_SUBNET_MASK_LEN;
+                break;
 
-                case DHCP_BROADCAST:
-                    broadcast_set = 1;
-                    options += 2;
-                    info->broadcast = *(uint32_t*) options;
-                    options += 4;
-                    break;
+            case DHCP_SERVER_ADDR:
+                options += 2;
+                info->server_addr = *(uint32_t*) options;
+                options += DHCP_SERVER_ADDR_LEN;
+                break;
 
-                case DHCP_ROUTERS: {
-                    uint8_t size = *(options+1);
-                    options += 2;
-                    memcpy(&(info->routers), options, size);
-                    options += size;
-                    break;
-                    }
+            case DHCP_BROADCAST:
+                broadcast_set = 1;
+                options += 2;
+                info->broadcast = *(uint32_t*) options;
+                options += DHCP_BROADCAST_LEN;
+                break;
 
-                // TODO
-                case DHCP_NAME_SERVERS:
-                case DHCP_HOSTNAME:
-                case DHCP_DOMAIN_NAME:
-                case DHCP_IP_TTL:
-                case DHCP_IF_MTU:
-                case DHCP_ARP_CACHE_TIMEOUT:
-                case DHCP_TCP_TTL:
-                case DHCP_TCP_KEEPALIVE:
-                default:
-                    options += 2 + *(options+1);
-                    break;
-            }
+            case DHCP_ROUTERS: {
+                uint8_t size = *(options+1);
+                options += 2;
+                memcpy(&(info->routers), options, size);
+                options += size;
+                break;
+                }
+
+            // TODO
+            case DHCP_NAME_SERVERS:
+            case DHCP_HOSTNAME:
+            case DHCP_DOMAIN_NAME:
+            case DHCP_IP_TTL:
+            case DHCP_IF_MTU:
+            case DHCP_ARP_CACHE_TIMEOUT:
+            case DHCP_TCP_TTL:
+            case DHCP_TCP_KEEPALIVE:
+            default:
+                options += 2 + *(options+1);
+                break;
         }
     }
 
-//    printf("message type: %hhu %hhu\n", msg->op, msgtype);
-
-    // TODO: see if the transaction ID matches
-
-/*
-    if( msgtype != msg->op ){
-        fprintf(stderr, "%s: Incorrectly formatted packet.\n", argv0);
-    }
-*/
+    // TODO: see if the transaction IDs match
 
      if(memcmp(msg->chaddr, my_hw_addr, 6) == 0 && msg->op == BOOTREPLY){ /* A packet for me, TODO: check UDP dest addr instead */
         if(msgtype == DHCPOFFER && status == DISCOVER){
