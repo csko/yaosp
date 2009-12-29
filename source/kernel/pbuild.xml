@@ -53,7 +53,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/bios.c</item>
         <item>arch/i386/src/signal.c</item>
         <item>arch/i386/src/scheduler.c</item>
-
         <item>arch/i386/src/mm/pagefault.c</item>
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
@@ -109,6 +108,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/vfs/io_context.c</item>
         <item>src/vfs/filesystem.c</item>
         <item>src/vfs/blockcache.c</item>
+        <item>src/vfs/kdebugfs.c</item>
         <item>src/network/interface.c</item>
         <item>src/network/packet.c</item>
         <item>src/network/arp.c</item>

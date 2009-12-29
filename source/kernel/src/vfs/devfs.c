@@ -98,25 +98,23 @@ error1:
     return NULL;
 }
 
-static int devfs_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_num ) {
+static int devfs_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {
     devfs_root_node = devfs_create_node( NULL, "", -1, true );
 
     if ( devfs_root_node == NULL ) {
         return -ENOMEM;
     }
 
-    *root_inode_num = devfs_root_node->inode_number;
+    *root_inode_number = devfs_root_node->inode_number;
 
     return 0;
 }
 
-static int devfs_read_inode( void* fs_cookie, ino_t inode_num, void** _node ) {
+static int devfs_read_inode( void* fs_cookie, ino_t inode_number, void** _node ) {
     devfs_node_t* node;
 
     mutex_lock( devfs_mutex, LOCK_IGNORE_SIGNAL );
-
-    node = ( devfs_node_t* )hashtable_get( &devfs_node_table, ( const void* )&inode_num );
-
+    node = ( devfs_node_t* )hashtable_get( &devfs_node_table, ( const void* )&inode_number );
     mutex_unlock( devfs_mutex );
 
     if ( node == NULL ) {
@@ -132,7 +130,7 @@ static int devfs_write_inode( void* fs_cookie, void* node ) {
     return 0;
 }
 
-static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_num ) {
+static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* name, int name_length, ino_t* inode_number ) {
     int error = 0;
     devfs_node_t* node;
     devfs_node_t* parent;
@@ -141,14 +139,15 @@ static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* na
 
     /* First check for ".." */
 
-    if ( ( name_length == 2 ) && ( strncmp( name, "..", 2 ) == 0 ) ) {
+    if ( ( name_length == 2 ) &&
+         ( strncmp( name, "..", 2 ) == 0 ) ) {
         if ( parent->parent == NULL ) {
             error = -EINVAL;
 
             goto out;
         }
 
-        *inode_num = parent->parent->inode_number;
+        *inode_number = parent->parent->inode_number;
 
         goto out;
     }
@@ -158,7 +157,7 @@ static int devfs_do_lookup_inode( void* fs_cookie, void* _parent, const char* na
     while ( node != NULL ) {
         if ( ( strlen( node->name ) == name_length ) &&
              ( strncmp( node->name, name, name_length ) == 0 ) ) {
-            *inode_num = node->inode_number;
+            *inode_number = node->inode_number;
 
             goto out;
         }
@@ -351,7 +350,7 @@ static int devfs_read_directory( void* fs_cookie, void* _node, void* file_cookie
     node = ( devfs_node_t* )_node;
 
     if ( !node->is_directory ) {
-        return -EINVAL;
+        return -ENOTDIR;
     }
 
     cookie = ( devfs_dir_cookie_t* )file_cookie;
@@ -389,7 +388,6 @@ static int devfs_rewind_directory( void* fs_cookie, void* _node, void* file_cook
     devfs_dir_cookie_t* cookie;
 
     cookie = ( devfs_dir_cookie_t* )file_cookie;
-
     cookie->position = 0;
 
     return 0;
@@ -473,7 +471,7 @@ int create_device_node( const char* path, device_calls_t* calls, void* cookie ) 
 
     error = 0;
 
-out:
+ out:
     mutex_unlock( devfs_mutex );
 
     return error;
@@ -620,10 +618,8 @@ __init int init_devfs( void ) {
     int error;
 
     error = init_hashtable(
-        &devfs_node_table,
-        64,
-        devfs_node_key,
-        hash_int64,
+        &devfs_node_table, 256,
+        devfs_node_key, hash_int64,
         compare_int64
     );
 
@@ -646,12 +642,12 @@ __init int init_devfs( void ) {
 
     return 0;
 
-error3:
+ error3:
     mutex_destroy( devfs_mutex );
 
-error2:
+ error2:
     destroy_hashtable( &devfs_node_table );
 
-error1:
+ error1:
     return error;
 }

@@ -545,7 +545,7 @@ static int iso9660_read( void* fs_cookie, void* _node, void* file_cookie, void* 
     /* Reading directories is not allowed, use read_directory() */
 
     if ( node->flags & ISO9660_FLAG_DIRECTORY ) {
-        return -EINVAL;
+        return -EISDIR;
     }
 
     /* Check the position */
@@ -659,12 +659,19 @@ static int iso9660_read_stat( void* fs_cookie, void* _node, struct stat* stat ) 
     return 0;
 }
 
-static int iso9660_read_directory( void* fs_cookie, void* node, void* file_cookie, struct dirent* entry ) {
+static int iso9660_read_directory( void* fs_cookie, void* _node, void* file_cookie, struct dirent* entry ) {
     int error;
     char* block;
+    iso9660_inode_t* node;
     iso9660_cookie_t* iso_cookie;
     iso9660_dir_cookie_t* dir_cookie;
     iso9660_directory_entry_t* dir_entry;
+
+    node = ( iso9660_inode_t* )_node;
+
+    if ( ( node->flags & ISO9660_FLAG_DIRECTORY ) == 0 ) {
+        return -ENOTDIR;
+    }
 
     iso_cookie = ( iso9660_cookie_t* )fs_cookie;
     dir_cookie = ( iso9660_dir_cookie_t* )file_cookie;

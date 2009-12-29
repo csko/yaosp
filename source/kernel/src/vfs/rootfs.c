@@ -325,7 +325,7 @@ static int rootfs_read_directory( void* fs_cookie, void* _node, void* file_cooki
     node = ( rootfs_node_t* )_node;
 
     if ( !node->is_directory ) {
-        return -EINVAL;
+        return -ENOTDIR;
     }
 
     cookie = ( rootfs_dir_cookie_t* )file_cookie;

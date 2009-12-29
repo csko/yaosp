@@ -28,6 +28,7 @@
 #include <vfs/rootfs.h>
 #include <vfs/inode.h>
 #include <vfs/devfs.h>
+#include <vfs/kdebugfs.h>
 #include <lib/string.h>
 
 io_context_t kernel_io_context;
@@ -1735,7 +1736,7 @@ __init int init_vfs( void ) {
         goto error1;
     }
 
-    error = mkdir( "/device", 0 );
+    error = mkdir( "/device", 0777 );
 
     if ( error < 0 ) {
         goto error1;
@@ -1744,11 +1745,31 @@ __init int init_vfs( void ) {
     error = do_mount( &kernel_io_context, "", "/device", "devfs", MOUNT_NONE );
 
     if ( error < 0 ) {
-        return error;
+        goto error1;
+    }
+
+    /* Initialize and mount the kernel debug filesystem */
+
+    error = init_kdebugfs();
+
+    if ( error < 0 ) {
+        goto error1;
+    }
+
+    error = mkdir( "/device/kernel", 0777 );
+
+    if ( error < 0 ) {
+        goto error1;
+    }
+
+    error = do_mount( &kernel_io_context, "", "/device/kernel", "kdebugfs", MOUNT_NONE );
+
+    if ( error < 0 ) {
+        goto error1;
     }
 
     return 0;
 
-error1:
+ error1:
     return error;
 }
