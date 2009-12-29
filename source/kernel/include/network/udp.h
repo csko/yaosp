@@ -44,7 +44,14 @@ typedef struct udp_port {
 } udp_port_t;
 
 typedef struct udp_socket {
+    lock_id lock;
     int ref_count;
+
+    int nonblocking;
+
+    lock_id rx_condition;
+    packet_queue_t* rx_queue;
+
     udp_port_t* port;
     char bind_to_device[ IFNAMSIZ ];
 } udp_socket_t;

@@ -140,4 +140,14 @@ packet_t* packet_queue_pop_head( packet_queue_t* queue, uint64_t timeout ) {
     return packet;
 }
 
+int packet_queue_is_empty( packet_queue_t* queue ) {
+    int ret;
+
+    spinlock_disable( &queue->lock );
+    ret = ( queue->first == NULL );
+    spinunlock_enable( &queue->lock );
+
+    return ret;
+}
+
 #endif /* ENABLE_NETWORK */

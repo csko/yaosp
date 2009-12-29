@@ -83,7 +83,7 @@ static void* arp_pending_key( hashitem_t* item ) {
 
     pending_req = ( arp_pending_request_t* )item;
 
-    return pending_req->ip_address;
+    return ( void* )pending_req->ip_address;
 }
 
 static void* arp_cache_key( hashitem_t* item ) {

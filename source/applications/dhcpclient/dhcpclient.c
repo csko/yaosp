@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
@@ -31,6 +32,7 @@ static char* argv0 = NULL;
 static char* device = NULL;
 
 static int sock = -1;
+static char in_buffer[ 8192 ];
 
 void init_packet( dhcp_msg_t* msg, uint8_t type ) {
     memset( msg, 0, sizeof( dhcp_msg_t ) );
@@ -154,6 +156,52 @@ void send_discover( void ) {
     );
 }
 
+int interface_up( void ) {
+    struct ifreq req;
+
+    strncpy( req.ifr_name, device, IFNAMSIZ );
+    req.ifr_name[ IFNAMSIZ - 1 ] = 0;
+
+    if ( ioctl( sock, SIOCGIFFLAGS, &req ) != 0 ) {
+        return -1;
+    }
+
+    if ( req.ifr_flags & IFF_UP ) {
+        return 0;
+    }
+
+    req.ifr_flags |= IFF_UP;
+
+    if ( ioctl( sock, SIOCSIFFLAGS, &req ) != 0 ) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int dhcp_mainloop( void ) {
+    int size;
+    socklen_t addr_len;
+    struct sockaddr addr;
+
+    while ( 1 ) {
+        addr_len = sizeof( struct sockaddr );
+
+        size = recvfrom( sock, in_buffer, sizeof( in_buffer ), MSG_NOSIGNAL, &addr, &addr_len );
+
+        if ( size < 0 ) {
+            fprintf( stderr, "%s: failed to recv incoming data.\n", argv0 );
+            break;
+        }
+
+        printf( "%s: received %d bytes.\n", argv0, size );
+
+        /* todo: handle the data */
+    }
+
+    return 0;
+}
+
 int main( int argc, char** argv ) {
     if ( argc != 2 ) {
         printf( "%s device\n", argv[ 0 ] );
@@ -170,7 +218,9 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
+    interface_up();
     send_discover();
+    dhcp_mainloop();
 
     return 0;
 }

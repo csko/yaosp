@@ -31,6 +31,8 @@
 #include <lib/bitmap.h>
 
 static bitmap_t udp_port_table;
+
+static lock_id udp_endpoint_lock;
 static hashtable_t udp_endpoint_table;
 
 static uint16_t udp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8_t* tcp_header, size_t tcp_size ) {
@@ -75,6 +77,42 @@ static uint16_t udp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8
     }
 
     return ~checksum;
+}
+
+static udp_socket_t* udp_get_endpoint( int port ) {
+    udp_port_t* udp_port;
+
+    mutex_lock( udp_endpoint_lock, LOCK_IGNORE_SIGNAL );
+
+    udp_port = ( udp_port_t* )hashtable_get( &udp_endpoint_table, ( const void* )&port );
+
+    if ( udp_port != NULL ) {
+        udp_port->udp_socket->ref_count++;
+    }
+
+    mutex_unlock( udp_endpoint_lock );
+
+    return udp_port->udp_socket;
+}
+
+static int udp_put_endpoint( udp_socket_t* socket ) {
+    int do_destroy;
+
+    mutex_lock( udp_endpoint_lock, LOCK_IGNORE_SIGNAL );
+
+    do_destroy = ( --socket->ref_count == 0 );
+
+    if ( do_destroy ) {
+        hashtable_remove( &udp_endpoint_table, ( const void* )&socket->port->local_port );
+    }
+
+    mutex_unlock( udp_endpoint_lock );
+
+    if ( do_destroy ) {
+        /* todo */
+    }
+
+    return 0;
 }
 
 static int udp_close( socket_t* socket ) {
@@ -133,7 +171,78 @@ static int udp_bind( socket_t* socket, struct sockaddr* _addr, socklen_t size ) 
     return 0;
 }
 
-static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags )  {
+static int udp_recvmsg( socket_t* socket, struct msghdr* msg, int flags ) {
+    int i;
+    int ret;
+    int data_size;
+    uint8_t* data;
+    packet_t* packet;
+    udp_socket_t* udp_socket;
+    udp_header_t* udp_header;
+
+    udp_socket = ( udp_socket_t* )socket->data;
+
+    mutex_lock( udp_socket->lock, LOCK_IGNORE_SIGNAL );
+
+    if ( udp_socket->port == NULL ) {
+        ret = -ENOTCONN;
+        goto out;
+    }
+
+    if ( udp_socket->nonblocking ) {
+        if ( packet_queue_is_empty( udp_socket->rx_queue ) ) {
+            ret = -EWOULDBLOCK;
+            goto out;
+        }
+    } else {
+        while ( packet_queue_is_empty( udp_socket->rx_queue ) ) {
+            condition_wait( udp_socket->rx_condition, udp_socket->lock );
+        }
+
+        if ( packet_queue_is_empty( udp_socket->rx_queue ) ) {
+            ret = -EINTR;
+            goto out;
+        }
+
+    }
+
+    /* Get the first packet from the RX queue of the socket */
+
+    packet = packet_queue_pop_head( udp_socket->rx_queue, 0 );
+    ASSERT( packet != NULL );
+
+    /* Copy the data from the packet */
+
+    udp_header = ( udp_header_t* )packet->transport_data;
+
+    data = ( uint8_t* )( udp_header + 1 );
+    data_size = htonw( udp_header->size );
+
+    ret = data_size;
+
+    for ( i = 0; i < msg->msg_iovlen; i++ ) {
+        int to_copy;
+        struct iovec* iov = &msg->msg_iov[ i ];
+
+        to_copy = MIN( iov->iov_len, data_size );
+
+        memcpy( iov->iov_base, data, to_copy );
+
+        data += to_copy;
+        data_size -= to_copy;
+    }
+
+    /* Delete the packet */
+
+    delete_packet( packet );
+
+ out:
+    mutex_unlock( udp_socket->lock );
+
+    return ret;
+}
+
+static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
     int i;
     int error;
     uint8_t* ip;
@@ -304,7 +413,7 @@ static socket_calls_t udp_socket_calls = {
     .close = udp_close,
     .connect = NULL,
     .bind = udp_bind,
-    .recvmsg = NULL,
+    .recvmsg = udp_recvmsg,
     .sendmsg = udp_sendmsg,
     .getsockopt = udp_getsockopt,
     .setsockopt = udp_setsockopt,
@@ -324,8 +433,30 @@ int udp_create_socket( socket_t* socket ) {
         goto error1;
     }
 
+    udp_socket->lock = mutex_create( "UDP socket lock", MUTEX_NONE );
+
+    if ( udp_socket->lock < 0 ) {
+        error = -ENOMEM;
+        goto error2;
+    }
+
+    udp_socket->rx_condition = condition_create( "UDP RX queue" );
+
+    if ( udp_socket->rx_condition < 0 ) {
+        error = -ENOMEM;
+        goto error3;
+    }
+
+    udp_socket->rx_queue = create_packet_queue();
+
+    if ( udp_socket->rx_queue == NULL ) {
+        error = -ENOMEM;
+        goto error4;
+    }
+
     udp_socket->ref_count = 1;
     udp_socket->port = NULL;
+    udp_socket->nonblocking = 0;
 
     memset( udp_socket->bind_to_device, 0, IFNAMSIZ );
 
@@ -334,21 +465,37 @@ int udp_create_socket( socket_t* socket ) {
 
     return 0;
 
+ error4:
+    condition_destroy( udp_socket->rx_condition );
+
+ error3:
+    mutex_destroy( udp_socket->lock );
+
+ error2:
+    kfree( udp_socket );
+
  error1:
     return error;
 }
 
 int udp_input( packet_t* packet ) {
     udp_header_t* udp_header;
+    udp_socket_t* udp_socket;
 
     udp_header = ( udp_header_t* )packet->transport_data;
+    udp_socket = udp_get_endpoint( htonw( udp_header->dst_port ) );
 
-    DEBUG_LOG(
-        "%s() src: %d dst: %d\n", __FUNCTION__,
-        htonw( udp_header->src_port ), htonw( udp_header->dst_port )
-    );
+    if ( udp_socket == NULL ) {
+        delete_packet( packet );
+        return 0;
+    }
 
-    delete_packet( packet );
+    mutex_lock( udp_socket->lock, LOCK_IGNORE_SIGNAL );
+    packet_queue_insert( udp_socket->rx_queue, packet );
+    mutex_unlock( udp_socket->lock );
+    condition_signal( udp_socket->rx_condition );
+
+    udp_put_endpoint( udp_socket );
 
     return 0;
 }

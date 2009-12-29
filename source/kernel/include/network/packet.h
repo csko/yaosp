@@ -48,5 +48,6 @@ packet_queue_t* create_packet_queue( void );
 void delete_packet_queue( packet_queue_t* packet_queue );
 int packet_queue_insert( packet_queue_t* queue, packet_t* packet );
 packet_t* packet_queue_pop_head( packet_queue_t* queue, uint64_t timeout );
+int packet_queue_is_empty( packet_queue_t* queue );
 
 #endif /* _NETWORK_PACKET_H_ */
