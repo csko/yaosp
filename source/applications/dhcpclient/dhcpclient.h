@@ -85,25 +85,79 @@ typedef struct dhcp_msg {
                        */
     uint32_t cookie;
     uint8_t options[308]; /* Optional parameters field not including the cookie. */
-} dhcp_msg_t;
+} __attribute__(( packed )) dhcp_msg_t;
+
+typedef struct dhcp_info {
+
+    uint32_t server_addr;
+    uint32_t ip_addr;
+    uint32_t broadcast;
+    uint32_t netmask;
+    uint32_t *routers;
+    uint32_t *name_servers;
+
+    uint32_t lease_time;
+    uint32_t arp_cache_timeout;
+
+} dhcp_info_t;
+
 
 /*
  * DHCP message options
  * RFC: http://tools.ietf.org/html/rfc2132
 */
 
-#define DHCP_MSG_TYPE 53
-#define DHCP_MSG_TYPE_LEN 1
+#define DHCP_MSG_TYPE       53
+#define DHCP_MSG_TYPE_LEN   1
 
-/* DHCP end of the option field */
-#define DHCP_END 255
+#define DHCP_SUBNET_MASK        1
+#define DHCP_SUBNET_MASK_LEN    4
+
+#define DHCP_ROUTERS        3
+
+#define DHCP_NAME_SERVERS   5
+
+#define DHCP_HOSTNAME       12
+
+#define DHCP_DOMAIN_NAME    15
+
+#define DHCP_IP_TTL         23
+#define DHCP_IP_LEN         1
+
+#define DHCP_IF_MTU         26
+#define DHCP_IF_MTU_LEN     2
+
+#define DHCP_BROADCAST      28
+#define DHCP_BROADCAST_LEN  4
+
+#define DHCP_ARP_CACHE_TIMEOUT      35
+#define DHCP_ARP_CACHE_TIMEOUT_LEN  4
+
+#define DHCP_TCP_TTL        37
+#define DHCP_TCP_TTL_LEN    1
+
+#define DHCP_TCP_KEEPALIVE      38
+#define DHCP_TCP_KEEPALIVE_LEN  4
+
+#define DHCP_REQUESTED_IP       50
+#define DHCP_REQUESTED_IP_LEN   4
+
+#define DHCP_SERVER_ADDR      54
+#define DHCP_SERVER_ADDR_LEN  4
+
+#define DHCP_REQUEST_PARAMS 55
+
+/* DHCP options special bytes */
+#define DHCP_END        255
+#define DHCP_PADDING    0
 
 #define MAC_BCAST_ADDR      ((uint8_t *) "\xff\xff\xff\xff\xff\xff")
 
 void create_packet(dhcp_msg_t *msg, int type);
-void create_discover();
+void send_discover( void );
 void set_chaddr(dhcp_msg_t *msg);
 int send_packet(dhcp_msg_t *msg, uint32_t source_ip, int source_port,
-        uint32_t dest_ip, int dest_port, uint8_t *dest_arp, int if_index);
+        uint32_t dest_ip, int dest_port, uint8_t *dest_arp);
+void send_request( dhcp_msg_t *msg, dhcp_info_t *info );
 
 #endif /* _DHCPCLIENT_H_ */
