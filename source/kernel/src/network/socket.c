@@ -43,9 +43,7 @@ static int socket_read_inode( void* fs_cookie, ino_t inode_number, void** node )
     socket_t* socket;
 
     mutex_lock( socket_mutex, LOCK_IGNORE_SIGNAL );
-
     socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&inode_number );
-
     mutex_unlock( socket_mutex );
 
     *node = ( void* )socket;
@@ -87,10 +85,6 @@ static int socket_close( void* fs_cookie, void* node, void* file_cookie ) {
     }
 
     return 0;
-}
-
-static int socket_free_cookie( void* fs_cookie, void* node, void* file_cookie ) {
-    return -1;
 }
 
 static int socket_read( void* fs_cookie, void* node, void* file_cookie, void* buffer, off_t pos, size_t size ) {
@@ -221,7 +215,7 @@ filesystem_calls_t socket_calls = {
     .lookup_inode = NULL,
     .open = NULL,
     .close = socket_close,
-    .free_cookie = socket_free_cookie,
+    .free_cookie = NULL,
     .read = socket_read,
     .write = socket_write,
     .ioctl = socket_ioctl,
@@ -240,6 +234,58 @@ filesystem_calls_t socket_calls = {
     .add_select_request = socket_add_select_request,
     .remove_select_request = socket_remove_select_request
 };
+
+static int socket_get( bool kernel, int sockfd, file_t** _file, socket_t** _socket ) {
+    int error;
+    file_t* file;
+    socket_t* socket;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, sockfd );
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto error1;
+    }
+
+    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
+
+    if ( socket == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    *_file = file;
+    *_socket = socket;
+
+    return 0;
+
+ error2:
+    io_context_put_file( io_context, file );
+
+ error1:
+    return error;
+}
+
+static int socket_put( bool kernel, file_t* file, socket_t* socket ) {
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    io_context_put_file( io_context, file );
+
+    return 0;
+}
 
 static int do_socket( bool kernel, int family, int type, int protocol ) {
     int error;
@@ -341,30 +387,15 @@ int do_connect( bool kernel, int fd, struct sockaddr* address, socklen_t addrlen
     int error;
     file_t* file;
     socket_t* socket;
-    io_context_t* io_context;
     struct sockaddr_in* in_address;
 
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
+    error = socket_get( kernel, fd, &file, &socket );
 
-    in_address = ( struct sockaddr_in* )address;
-
-    file = io_context_get_file( io_context, fd );
-
-    if ( file == NULL ) {
-        error = -EBADF;
+    if ( error < 0 ) {
         goto error1;
     }
 
-    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
-
-    if ( socket == NULL ) {
-        error = -EINVAL;
-        goto error2;
-    }
+    in_address = ( struct sockaddr_in* )address;
 
     memcpy( socket->dest_address, &in_address->sin_addr.s_addr, IPV4_ADDR_LEN );
     socket->dest_port = ntohw( in_address->sin_port );
@@ -379,8 +410,7 @@ int do_connect( bool kernel, int fd, struct sockaddr* address, socklen_t addrlen
         );
     }
 
- error2:
-    io_context_put_file( io_context, file );
+    socket_put( kernel, file, socket );
 
  error1:
     return error;
@@ -394,26 +424,11 @@ static int do_bind( bool kernel, int sockfd, struct sockaddr* addr, socklen_t ad
     int error;
     file_t* file;
     socket_t* socket;
-    io_context_t* io_context;
 
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
+    error = socket_get( kernel, sockfd, &file, &socket );
 
-    file = io_context_get_file( io_context, sockfd );
-
-    if ( file == NULL ) {
-        error = -EBADF;
+    if ( error < 0 ) {
         goto error1;
-    }
-
-    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
-
-    if ( socket == NULL ) {
-        error = -EINVAL;
-        goto error2;
     }
 
     if ( socket->operations->bind == NULL ) {
@@ -426,8 +441,7 @@ static int do_bind( bool kernel, int sockfd, struct sockaddr* addr, socklen_t ad
         );
     }
 
- error2:
-    io_context_put_file( io_context, file );
+    socket_put( kernel, file, socket );
 
  error1:
     return error;
@@ -447,30 +461,15 @@ int sys_accept( int sockfd, struct sockaddr* addr, socklen_t* addrlen ) {
     return -ENOSYS;
 }
 
-static int do_getsockopt( bool kernel, int s, int level, int optname, void* optval, socklen_t* optlen ) {
+static int do_getsockopt( bool kernel, int sockfd, int level, int optname, void* optval, socklen_t* optlen ) {
     int error;
     file_t* file;
     socket_t* socket;
-    io_context_t* io_context;
 
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
+    error = socket_get( kernel, sockfd, &file, &socket );
 
-    file = io_context_get_file( io_context, s );
-
-    if ( file == NULL ) {
-        error = -EBADF;
+    if ( error < 0 ) {
         goto error1;
-    }
-
-    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
-
-    if ( socket == NULL ) {
-        error = -EINVAL;
-        goto error2;
     }
 
     switch ( level ) {
@@ -494,8 +493,7 @@ static int do_getsockopt( bool kernel, int s, int level, int optname, void* optv
             break;
     }
 
- error2:
-    io_context_put_file( io_context, file );
+    socket_put( kernel, file, socket );
 
  error1:
     return error;
@@ -506,30 +504,15 @@ int sys_getsockopt( int s, int level, int optname, void* optval, socklen_t* optl
     return do_getsockopt( false, s, level, optname, optval, optlen );
 }
 
-static int do_setsockopt( bool kernel, int s, int level, int optname, void* optval, socklen_t optlen ) {
+static int do_setsockopt( bool kernel, int sockfd, int level, int optname, void* optval, socklen_t optlen ) {
     int error;
     file_t* file;
     socket_t* socket;
-    io_context_t* io_context;
 
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
+    error = socket_get( kernel, sockfd, &file, &socket );
 
-    file = io_context_get_file( io_context, s );
-
-    if ( file == NULL ) {
-        error = -EBADF;
+    if ( error < 0 ) {
         goto error1;
-    }
-
-    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
-
-    if ( socket == NULL ) {
-        error = -EINVAL;
-        goto error2;
     }
 
     switch ( level ) {
@@ -553,8 +536,7 @@ static int do_setsockopt( bool kernel, int s, int level, int optname, void* optv
             break;
     }
 
- error2:
-    io_context_put_file( io_context, file );
+    socket_put( kernel, file, socket );
 
  error1:
     return error;
@@ -575,30 +557,15 @@ int sys_getpeername( int s, struct sockaddr* name, socklen_t* namelen ) {
     return -ENOSYS;
 }
 
-static int do_recvmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {
+static int do_recvmsg( bool kernel, int sockfd, struct msghdr* msg, int flags ) {
     int error;
     file_t* file;
     socket_t* socket;
-    io_context_t* io_context;
 
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
+    error = socket_get( kernel, sockfd, &file, &socket );
 
-    file = io_context_get_file( io_context, fd );
-
-    if ( file == NULL ) {
-        error = -EBADF;
+    if ( error < 0 ) {
         goto error1;
-    }
-
-    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
-
-    if ( socket == NULL ) {
-        error = -EINVAL;
-        goto error2;
     }
 
     if ( socket->operations->recvmsg == NULL ) {
@@ -611,8 +578,7 @@ static int do_recvmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {
         );
     }
 
- error2:
-    io_context_put_file( io_context, file );
+    socket_put( kernel, file, socket );
 
  error1:
     return error;
@@ -622,30 +588,15 @@ int sys_recvmsg( int fd, struct msghdr* msg, int flags ) {
     return do_recvmsg( false, fd, msg, flags );
 }
 
-static int do_sendmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {
+static int do_sendmsg( bool kernel, int sockfd, struct msghdr* msg, int flags ) {
     int error;
     file_t* file;
     socket_t* socket;
-    io_context_t* io_context;
 
-    if ( kernel ) {
-        io_context = &kernel_io_context;
-    } else {
-        io_context = current_process()->io_context;
-    }
+    error = socket_get( kernel, sockfd, &file, &socket );
 
-    file = io_context_get_file( io_context, fd );
-
-    if ( file == NULL ) {
-        error = -EBADF;
+    if ( error < 0 ) {
         goto error1;
-    }
-
-    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
-
-    if ( socket == NULL ) {
-        error = -EINVAL;
-        goto error2;
     }
 
     if ( socket->operations->sendmsg == NULL ) {
@@ -658,8 +609,7 @@ static int do_sendmsg( bool kernel, int fd, struct msghdr* msg, int flags ) {
         );
     }
 
- error2:
-    io_context_put_file( io_context, file );
+    socket_put( kernel, file, socket );
 
  error1:
     return error;
@@ -688,10 +638,8 @@ __init int init_socket( void ) {
     }
 
     error = init_hashtable(
-        &socket_inode_table,
-        64,
-        socket_key,
-        hash_int64,
+        &socket_inode_table, 64,
+        socket_key, hash_int64,
         compare_int64
     );
 
@@ -701,10 +649,7 @@ __init int init_socket( void ) {
 
     socket_mount_point = create_mount_point(
         &socket_calls,
-        64,
-        16,
-        32,
-        0
+        64, 16, 32, 0
     );
 
     if ( socket_mount_point == NULL ) {
