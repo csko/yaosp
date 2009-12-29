@@ -61,6 +61,7 @@
 #define SO_SNDLOWAT     19
 #define SO_RCVTIMEO     20
 #define SO_SNDTIMEO     21
+#define SO_BINDTODEVICE 22
 
 typedef uint16_t sa_family_t;
 typedef uint32_t socklen_t;
@@ -124,6 +125,7 @@ struct select_request;
 typedef struct socket_calls {
     int ( *close )( socket_t* socket );
     int ( *connect )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
+    int ( *bind )( socket_t* socket, struct sockaddr* address, socklen_t addrlen );
     int ( *recvmsg )( socket_t* socket, struct msghdr* msg, int flags );
     int ( *sendmsg )( socket_t* socket, struct msghdr* msg, int flags );
     int ( *getsockopt )( socket_t* socket, int level, int optname, void* optval, socklen_t* optlen );

@@ -621,6 +621,7 @@ static int tcp_remove_select_request( socket_t* socket, select_request_t* reques
 static socket_calls_t tcp_socket_calls = {
     .close = tcp_close,
     .connect = tcp_connect,
+    .bind = NULL,
     .recvmsg = tcp_recvmsg,
     .sendmsg = tcp_sendmsg,
     .getsockopt = tcp_getsockopt,

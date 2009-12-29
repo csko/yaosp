@@ -73,14 +73,13 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     route = find_route( dest_ip );
 
     if ( route == NULL ) {
-        kprintf( WARNING, "net: no route to address: %d.%d.%d.%d\n", dest_ip[ 0 ], dest_ip[ 1 ], dest_ip[ 2 ], dest_ip[ 3 ] );
+        kprintf( WARNING, "net: no route to address: %d.%d.%d.%d.\n", dest_ip[ 0 ], dest_ip[ 1 ], dest_ip[ 2 ], dest_ip[ 3 ] );
         return -EINVAL;
     }
 
     /* TODO: check MTU */
 
     ip_header = ( ipv4_header_t* )( packet->transport_data - sizeof( ipv4_header_t ) );
-
     ASSERT( ( ptr_t )ip_header >= ( ptr_t )packet->data );
 
     packet->network_data = ( uint8_t* )ip_header;
@@ -108,6 +107,37 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     put_route( route );
 
     return error;
+}
+
+int ipv4_send_packet_via_route( route_t* route, uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
+    ipv4_header_t* ip_header;
+
+    /* TODO: check MTU */
+
+    ip_header = ( ipv4_header_t* )( packet->transport_data - sizeof( ipv4_header_t ) );
+    ASSERT( ( ptr_t )ip_header >= ( ptr_t )packet->data );
+
+    packet->network_data = ( uint8_t* )ip_header;
+
+    ip_header->version_and_size = IPV4_HDR_MK_VER_AND_SIZE( 4, 5 );
+    ip_header->type_of_service = 0;
+    ip_header->packet_size = htonw( packet->size - ( ( uint32_t )ip_header - ( uint32_t )packet->data ) );
+    ip_header->packet_id = 0; /* TODO ??? */
+    ip_header->fragment_offset = htonw( IPV4_DONT_FRAGMENT );
+    ip_header->time_to_live = 255;
+    ip_header->protocol = protocol;
+
+    memcpy( ip_header->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
+    memcpy( ip_header->dest_address, dest_ip, IPV4_ADDR_LEN );
+
+    ip_header->checksum = 0;
+    ip_header->checksum = ip_checksum( ( uint16_t*)ip_header, sizeof( ipv4_header_t ) );
+
+    if ( route->flags & ROUTE_GATEWAY ) {
+        return arp_send_packet( route->interface, route->gateway_addr, packet );
+    } else {
+        return arp_send_packet( route->interface, dest_ip, packet );
+    }
 }
 
 static int ipv4_handle_packet( packet_t* packet ) {
@@ -142,7 +172,7 @@ int ipv4_input( packet_t* packet ) {
 
     ip_header = ( ipv4_header_t* )( packet->data + ETH_HEADER_LEN );
 
-    /* Make sure the IP packet is valid */
+    /* Make sure that the IP packet is valid */
 
     if ( ip_checksum( ( uint16_t* )ip_header, IPV4_HDR_SIZE( ip_header->version_and_size ) * 4 ) != 0 ) {
         kprintf( WARNING, "net: invalid IP checksum!\n" );

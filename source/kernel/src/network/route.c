@@ -164,6 +164,25 @@ route_t* find_route( uint8_t* ipv4_address ) {
     return data.route;
 }
 
+route_t* find_device_route( const char* device ) {
+    route_t* route;
+    net_interface_t* interface;
+
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+
+    interface = ( net_interface_t* )hashtable_get( &interface_table, ( const void* )device );
+
+    if ( interface != NULL ) {
+        route = create_route( interface, interface->ip_address, interface->netmask, NULL, 0 );
+    } else {
+        route = NULL;
+    }
+
+    mutex_unlock( interface_mutex );
+
+    return route;
+}
+
 void put_route( route_t* route ) {
     bool do_delete;
 

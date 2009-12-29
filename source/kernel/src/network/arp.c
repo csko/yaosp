@@ -60,6 +60,24 @@ static arp_pending_request_t* arp_create_request( uint8_t* ip_address ) {
     return NULL;
 }
 
+static arp_cache_item_t* arp_cache_create_item( uint8_t* hw_address, uint8_t* ip_address, uint32_t flags ) {
+    arp_cache_item_t* item;
+
+    item = ( arp_cache_item_t* )kmalloc( sizeof( arp_cache_item_t ) );
+
+    if ( item == NULL ) {
+        return NULL;
+    }
+
+    item->flags = flags;
+    item->expire_time = get_system_time() + ARP_CACHE_EXPIRE_TIME;
+
+    memcpy( item->hw_address, hw_address, ETH_ADDR_LEN );
+    memcpy( item->ip_address, ip_address, IPV4_ADDR_LEN );
+
+    return item;
+}
+
 static void* arp_pending_key( hashitem_t* item ) {
     arp_pending_request_t* pending_req;
 
@@ -78,6 +96,10 @@ static void* arp_cache_key( hashitem_t* item ) {
 
 int arp_interface_init( net_interface_t* interface ) {
     int error;
+    arp_cache_item_t* item;
+
+    static uint8_t broadcast_hw[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+    static uint8_t broadcast_ip[] = { 0xff, 0xff, 0xff, 0xff };
 
     error = init_hashtable(
         &interface->arp_requests, 32,
@@ -97,7 +119,20 @@ int arp_interface_init( net_interface_t* interface ) {
         goto error2;
     }
 
+    /* Add an ARP entry for the broadcast address */
+
+    item = arp_cache_create_item( broadcast_hw, broadcast_ip, ARP_DONTCLEAN );
+
+    if ( item == NULL ) {
+        goto error3;
+    }
+
+    hashtable_add( &interface->arp_cache, ( hashitem_t* )item );
+
     return 0;
+
+ error3:
+    destroy_hashtable( &interface->arp_cache );
 
  error2:
     destroy_hashtable( &interface->arp_requests );
@@ -123,15 +158,11 @@ int arp_cache_insert( net_interface_t* interface, uint8_t* hw_address, uint8_t* 
 
     /* Not in the cache, add now */
 
-    item = ( arp_cache_item_t* )kmalloc( sizeof( arp_cache_item_t ) );
+    item = arp_cache_create_item( hw_address, ip_address, 0 );
 
     if ( item == NULL ) {
         goto flush;
     }
-
-    memcpy( item->hw_address, hw_address, ETH_ADDR_LEN );
-    memcpy( item->ip_address, ip_address, IPV4_ADDR_LEN );
-    item->expire_time = get_system_time() + ARP_CACHE_EXPIRE_TIME;
 
     if ( hashtable_add( &interface->arp_cache, ( hashitem_t* )item ) != 0 ) {
         kfree( item );
@@ -165,9 +196,20 @@ int arp_cache_insert( net_interface_t* interface, uint8_t* hw_address, uint8_t* 
 }
 
 int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* packet ) {
+    int is_if_down;
     bool send_request;
     arp_cache_item_t* item;
     arp_pending_request_t* request;
+
+    static uint8_t broadcast_ip[] = { 0xff, 0xff, 0xff, 0xff };
+
+    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+    is_if_down = ( ( interface->flags & IFF_UP ) == 0 );
+    mutex_unlock( interface_mutex );
+
+    if ( is_if_down ) {
+        return -ENETDOWN;
+    }
 
     mutex_lock( interface->arp_lock, LOCK_IGNORE_SIGNAL );
 
@@ -186,6 +228,8 @@ int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* pac
 
         return 0;
     }
+
+    ASSERT( !IP_EQUALS( dest_ip, broadcast_ip ) );
 
     /* Not found in the cache, add to the pending table and send out an ARP request if needed */
 

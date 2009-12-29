@@ -390,9 +390,51 @@ int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen ) {
     return do_connect( false, fd, address, addrlen );
 }
 
+static int do_bind( bool kernel, int sockfd, struct sockaddr* addr, socklen_t addrlen ) {
+    int error;
+    file_t* file;
+    socket_t* socket;
+    io_context_t* io_context;
+
+    if ( kernel ) {
+        io_context = &kernel_io_context;
+    } else {
+        io_context = current_process()->io_context;
+    }
+
+    file = io_context_get_file( io_context, sockfd );
+
+    if ( file == NULL ) {
+        error = -EBADF;
+        goto error1;
+    }
+
+    socket = ( socket_t* )hashtable_get( &socket_inode_table, ( const void* )&file->inode->inode_number );
+
+    if ( socket == NULL ) {
+        error = -EINVAL;
+        goto error2;
+    }
+
+    if ( socket->operations->bind == NULL ) {
+        error = -ENOSYS;
+    } else {
+        error = socket->operations->bind(
+            socket,
+            addr,
+            addrlen
+        );
+    }
+
+ error2:
+    io_context_put_file( io_context, file );
+
+ error1:
+    return error;
+}
+
 int sys_bind( int sockfd, struct sockaddr* addr, socklen_t addrlen ) {
-    DEBUG_LOG( "%s()\n", __FUNCTION__ );
-    return -ENOSYS;
+    return do_bind( false, sockfd, addr, addrlen );
 }
 
 int sys_listen( int sockfd, int backlog ) {
@@ -433,7 +475,17 @@ static int do_getsockopt( bool kernel, int s, int level, int optname, void* optv
 
     switch ( level ) {
         case SOL_SOCKET :
-            error = 0;
+            switch ( optname ) {
+                default :
+                    if ( socket->operations->getsockopt != NULL ) {
+                        error = socket->operations->getsockopt( socket, level, optname, optval, optlen );
+                    } else {
+                        error = -EINVAL;
+                    }
+
+                    break;
+            }
+
             break;
 
         default :
@@ -482,7 +534,17 @@ static int do_setsockopt( bool kernel, int s, int level, int optname, void* optv
 
     switch ( level ) {
         case SOL_SOCKET :
-            error = 0;
+            switch ( optname ) {
+                default :
+                    if ( socket->operations->setsockopt != NULL ) {
+                        error = socket->operations->setsockopt( socket, level, optname, optval, optlen );
+                    } else {
+                        error = -EINVAL;
+                    }
+
+                    break;
+            }
+
             break;
 
         default :

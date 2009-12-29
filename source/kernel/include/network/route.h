@@ -44,6 +44,8 @@ route_t* create_route( net_interface_t* interface, uint8_t* net_addr, uint8_t* n
 int insert_route( route_t* route );
 
 route_t* find_route( uint8_t* ipv4_address );
+route_t* find_device_route( const char* device );
+
 void put_route( route_t* route );
 
 int init_routes( void );

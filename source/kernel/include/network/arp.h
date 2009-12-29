@@ -34,6 +34,10 @@
 #define ARP_CMD_REQUEST 1
 #define ARP_CMD_REPLY   2
 
+/* possible values of arp_cache_item_t flags field */
+
+#define ARP_DONTCLEAN   ( 1 << 0 )
+
 typedef struct arp_header {
     uint16_t hardware_addr_format;
     uint16_t protocol_addr_format;
@@ -59,6 +63,7 @@ typedef struct arp_pending_request {
 typedef struct arp_cache_item {
     hashitem_t hash;
 
+    uint32_t flags;
     uint8_t hw_address[ ETH_ADDR_LEN ];
     uint8_t ip_address[ IPV4_ADDR_LEN ];
     uint64_t expire_time;

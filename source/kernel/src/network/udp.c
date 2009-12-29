@@ -81,7 +81,7 @@ static int udp_close( socket_t* socket ) {
     return 0;
 }
 
-static int udp_bind( socket_t* socket, struct sockaddr* _addr, int size ) {
+static int udp_bind( socket_t* socket, struct sockaddr* _addr, socklen_t size ) {
     int port;
     udp_port_t* udp_port;
     udp_socket_t* udp_socket;
@@ -140,21 +140,34 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags )  {
     uint8_t* data;
     packet_t* packet;
     route_t* route;
+    int bind_to_device;
     size_t payload_size;
     udp_socket_t* udp_socket;
     udp_header_t* udp_header;
     struct sockaddr_in* address;
 
     udp_socket = ( udp_socket_t* )socket->data;
+    bind_to_device = ( strlen( udp_socket->bind_to_device ) > 0 );
+
     address = ( struct sockaddr_in* )msg->msg_name;
-
     ip = ( uint8_t* )&address->sin_addr.s_addr;
-    route = find_route( ip );
 
-    if ( route == NULL ) {
-        kprintf( WARNING, "net: no route for UDP endpoint: %d.%d.%d.%d.\n", ip[ 0 ], ip[ 1 ], ip[ 2 ], ip[ 3 ] );
-        error = -ENETUNREACH;
-        goto error1;
+    if ( bind_to_device ) {
+        route = find_device_route( udp_socket->bind_to_device );
+
+        if ( route == NULL ) {
+            kprintf( WARNING, "net: no route for device: %s.\n", udp_socket->bind_to_device );
+            error = -ENETUNREACH;
+            goto error1;
+        }
+    } else {
+        route = find_route( ip );
+
+        if ( route == NULL ) {
+            kprintf( WARNING, "net: no route for UDP endpoint: %d.%d.%d.%d.\n", ip[ 0 ], ip[ 1 ], ip[ 2 ], ip[ 3 ] );
+            error = -ENETUNREACH;
+            goto error1;
+        }
     }
 
     /* Find a free local port for the socket if not yet found. */
@@ -229,9 +242,13 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags )  {
         sizeof( udp_header_t ) + payload_size
     );
 
-    put_route( route );
+    if ( bind_to_device ) {
+        error = ipv4_send_packet_via_route( route, ip, packet, IP_PROTO_UDP );
+    } else {
+        error = ipv4_send_packet( ip, packet, IP_PROTO_UDP );
+    }
 
-    error = ipv4_send_packet( ( uint8_t* )&address->sin_addr.s_addr, packet, IP_PROTO_UDP );
+    put_route( route );
 
     if ( error < 0 ) {
         goto error3;
@@ -249,13 +266,48 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags )  {
     return error;
 }
 
+static int udp_getsockopt( socket_t* socket, int level, int optname, void* optval, socklen_t* optlen ) {
+    return 0;
+}
+
+static int udp_setsockopt( socket_t* socket, int level, int optname, void* optval, socklen_t optlen ) {
+    int error;
+    udp_socket_t* udp_socket;
+
+    udp_socket = ( udp_socket_t* )socket->data;
+
+    switch ( optname ) {
+        case SO_BINDTODEVICE : {
+            if ( ( optval == NULL ) ||
+                 ( optlen > IFNAMSIZ ) ) {
+                error = -EINVAL;
+                break;
+            }
+
+            strncpy( udp_socket->bind_to_device, optval, IFNAMSIZ );
+            udp_socket->bind_to_device[ IFNAMSIZ - 1 ] = 0;
+
+            error = 0;
+
+            break;
+        }
+
+        default :
+            error = -EINVAL;
+            break;
+    }
+
+    return error;
+}
+
 static socket_calls_t udp_socket_calls = {
     .close = udp_close,
     .connect = NULL,
+    .bind = udp_bind,
     .recvmsg = NULL,
     .sendmsg = udp_sendmsg,
-    .getsockopt = NULL,
-    .setsockopt = NULL,
+    .getsockopt = udp_getsockopt,
+    .setsockopt = udp_setsockopt,
     .set_flags = NULL,
     .add_select_request = NULL,
     .remove_select_request = NULL
@@ -275,6 +327,8 @@ int udp_create_socket( socket_t* socket ) {
     udp_socket->ref_count = 1;
     udp_socket->port = NULL;
 
+    memset( udp_socket->bind_to_device, 0, IFNAMSIZ );
+
     socket->data = ( void* )udp_socket;
     socket->operations = &udp_socket_calls;
 
@@ -285,6 +339,17 @@ int udp_create_socket( socket_t* socket ) {
 }
 
 int udp_input( packet_t* packet ) {
+    udp_header_t* udp_header;
+
+    udp_header = ( udp_header_t* )packet->transport_data;
+
+    DEBUG_LOG(
+        "%s() src: %d dst: %d\n", __FUNCTION__,
+        htonw( udp_header->src_port ), htonw( udp_header->dst_port )
+    );
+
+    delete_packet( packet );
+
     return 0;
 }
 

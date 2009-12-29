@@ -61,5 +61,6 @@
 #define EINPROGRESS   39
 #define ENETUNREACH   40
 #define EALREADY      41
+#define ENETDOWN      42
 
 #endif /* _ERRNO_H_ */

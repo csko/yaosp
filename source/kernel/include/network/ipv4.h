@@ -37,6 +37,7 @@
 #define IP_PROTO_TCP  6
 #define IP_PROTO_UDP  17
 
+#define IP_EQUALS(a,b) ( *(uint32_t*)(a) == *(uint32_t*)(b) )
 #define IP_EQUALS_MASKED(a,b,m) (( *(uint32_t*)(a) & *(uint32_t*)(m) ) == ( *(uint32_t*)(b) & *(uint32_t*)(m)))
 
 typedef struct ipv4_header {
@@ -52,9 +53,12 @@ typedef struct ipv4_header {
     uint8_t dest_address[ IPV4_ADDR_LEN ];
 } __attribute__(( packed )) ipv4_header_t;
 
+struct route;
+
 uint16_t ip_checksum( uint16_t* data, uint16_t length );
 
 int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol );
+int ipv4_send_packet_via_route( struct route* route, uint8_t* dest_ip, packet_t* packet, uint8_t protocol );
 int ipv4_input( packet_t* packet );
 
 #endif /* _NETWORK_IP_H_ */

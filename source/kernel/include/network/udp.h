@@ -22,6 +22,7 @@
 #include <types.h>
 #include <network/packet.h>
 #include <network/socket.h>
+#include <network/interface.h>
 #include <lib/hashtable.h>
 
 #define UDP_HEADER_LEN 8
@@ -45,6 +46,7 @@ typedef struct udp_port {
 typedef struct udp_socket {
     int ref_count;
     udp_port_t* port;
+    char bind_to_device[ IFNAMSIZ ];
 } udp_socket_t;
 
 int udp_create_socket( socket_t* socket );
