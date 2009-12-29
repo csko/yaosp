@@ -73,6 +73,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdlib/rand.c</item>
         <item>src/stdlib/srand.c</item>
         <item>src/stdlib/mktemp.c</item>
+        <item>src/stdlib/system.c</item>
         <item>src/string/memset.c</item>
         <item>src/string/memcpy.c</item>
         <item>src/string/memcmp.c</item>
@@ -172,6 +173,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/fdopen.c</item>
         <item>src/stdio/freopen.c</item>
         <item>src/stdio/fclose.c</item>
+        <item>src/stdio/popen.c</item>
+        <item>src/stdio/pclose.c</item>
         <item>src/stdio/putc.c</item>
         <item>src/stdio/setvbuf.c</item>
         <item>src/stdio/fseek.c</item>

@@ -37,6 +37,8 @@ typedef enum terminal_state {
 typedef struct terminal {
     pthread_mutex_t lock;
 
+    int alternate_cursor_keys;
+
     int first_number;
     int parameter_count;
     int parameters[ TERMINAL_MAX_PARAMS ];

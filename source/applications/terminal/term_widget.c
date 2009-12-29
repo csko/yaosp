@@ -212,21 +212,47 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
 }
 
 static int terminal_key_pressed( widget_t* widget, int key ) {
+    terminal_t* terminal;
+    terminal_widget_t* term_widget;
+
+    term_widget = ( terminal_widget_t* )widget_get_data( widget );
+    terminal = term_widget->terminal;
+
     switch ( key ) {
         case KEY_UP :
-            write( master_pty, "\x1b[A", 3 );
+            if ( terminal->alternate_cursor_keys ) {
+                write( master_pty, "\x1bOA", 3 );
+            } else {
+                write( master_pty, "\x1b[A", 3 );
+            }
+
             break;
 
         case KEY_DOWN :
-            write( master_pty, "\x1b[B", 3 );
+            if ( terminal->alternate_cursor_keys ) {
+                write( master_pty, "\x1bOB", 3 );
+            } else {
+                write( master_pty, "\x1b[B", 3 );
+            }
+
             break;
 
         case KEY_LEFT :
-            write( master_pty, "\x1b[D", 3 );
+            if ( terminal->alternate_cursor_keys ) {
+                write( master_pty, "\x1bOD", 3 );
+            } else {
+                write( master_pty, "\x1b[D", 3 );
+            }
+
             break;
 
         case KEY_RIGHT :
-            write( master_pty, "\x1b[C", 3 );
+            if ( terminal->alternate_cursor_keys ) {
+                write( master_pty, "\x1bOC", 3 );
+            } else {
+                write( master_pty, "\x1b[C", 3 );
+            }
+
             break;
 
         case KEY_HOME :

@@ -71,6 +71,9 @@ FILE* fopen( const char* path, const char* mode );
 FILE* fdopen( int fd, const char* mode );
 FILE* freopen( const char* path, const char* mode, FILE* stream );
 
+FILE* popen( const char* command, const char* type );
+int pclose( FILE* stream );
+
 int fclose( FILE* stream );
 int feof( FILE* stream );
 int ferror( FILE* stream );

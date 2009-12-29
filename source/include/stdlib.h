@@ -48,6 +48,8 @@ int abs( int j );
 long labs( long j );
 long long llabs( long long j );
 
+int system( const char* command );
+
 void exit( int status ) __THROW __attribute__ ((__noreturn__));
 int atexit( void ( *function )( void ) );
 

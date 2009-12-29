@@ -57,6 +57,12 @@ void terminal_update_mode( terminal_t* terminal ) {
                 terminal_buffer_swap_bgfg( &terminal->buffer );
                 break;
 
+            case 27 :
+                /* todo: is this stuff ok? */
+                terminal_buffer_set_bg( &terminal->buffer, T_COLOR_BLACK );
+                terminal_buffer_set_fg( &terminal->buffer, T_COLOR_WHITE );
+                break;
+
             case 30 ... 37 :
                 terminal_buffer_set_fg( &terminal->buffer, terminal->parameters[ i ] - 30 );
                 break;
@@ -510,7 +516,7 @@ void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
 
             switch ( terminal->parameters[ 0 ] ) {
                 case 1 :
-                    /* TODO: set alternate cursor keys */
+                    terminal->alternate_cursor_keys = 1;
                     break;
 
                 default :
@@ -527,7 +533,7 @@ void terminal_data_state_question( terminal_t* terminal, uint8_t data ) {
 
             switch ( terminal->parameters[ 0 ] ) {
                 case 1 :
-                    /* TODO: unset alternate cursor keys */
+                    terminal->alternate_cursor_keys = 0;
                     break;
 
                 default :
@@ -601,6 +607,7 @@ terminal_t* create_terminal( int width, int height ) {
     }
 
     terminal->state = STATE_NONE;
+    terminal->alternate_cursor_keys = 0;
 
     return terminal;
 
