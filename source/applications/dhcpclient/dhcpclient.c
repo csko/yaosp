@@ -34,9 +34,13 @@ static char* device = NULL;
 
 static int sock = -1;
 static char in_buffer[ 8192 ];
-static uint8_t my_hw_addr[16];
+static uint8_t my_hw_addr[ 6 ];
 
-enum {DISCOVER, REQUEST, DONE} status;
+enum {
+    DISCOVER,
+    REQUEST,
+    DONE
+} status;
 
 /* These functions are from ifconfig.c
  * TODO: We should use a common library instead.
@@ -44,7 +48,7 @@ enum {DISCOVER, REQUEST, DONE} status;
 static int if_set_ip_address( struct ifreq* req, uint32_t ip ) {
     struct sockaddr_in* addr;
 
-    addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_addr;
+    addr = ( struct sockaddr_in* )&req->ifr_addr;
     addr->sin_addr.s_addr = ip;
 
     if ( ioctl( sock, SIOCSIFADDR, req ) != 0 ) {
@@ -57,7 +61,7 @@ static int if_set_ip_address( struct ifreq* req, uint32_t ip ) {
 static int if_set_netmask( struct ifreq* req, uint32_t netmask ) {
     struct sockaddr_in* addr;
 
-    addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
+    addr = ( struct sockaddr_in* )&req->ifr_netmask;
     addr->sin_addr.s_addr = netmask;
 
     if ( ioctl( sock, SIOCSIFNETMASK, req ) != 0 ) {
@@ -70,7 +74,7 @@ static int if_set_netmask( struct ifreq* req, uint32_t netmask ) {
 static int if_set_broadcast( struct ifreq* req, uint32_t broadcast ) {
     struct sockaddr_in* addr;
 
-    addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
+    addr = ( struct sockaddr_in* )&req->ifr_broadaddr;
     addr->sin_addr.s_addr = broadcast;
 
     if ( ioctl( sock, SIOCSIFBRDADDR, req ) != 0 ) {
@@ -95,7 +99,7 @@ void init_packet( dhcp_msg_t* msg, uint8_t type ) {
 
     msg->htype = ETH_10MB;
     msg->hlen = ETH_10MB_LEN;
-    msg->cookie = htonl(DHCP_MAGIC);
+    msg->cookie = htonl( DHCP_MAGIC );
 
     /* Set the chaddr field */
     memcpy( msg->chaddr, my_hw_addr, 6 );
@@ -174,7 +178,6 @@ void send_discover( void ) {
     // TODO: register packet
 
     /* Set the random transaction ID */
-    srand(time(0));
     msg.xid = rand();
 
     printf( "%s: sending DISCOVER.\n", argv0 );
@@ -188,7 +191,7 @@ void send_discover( void ) {
 void send_request( dhcp_msg_t *msg, dhcp_info_t *info) {
     dhcp_msg_t reply;
 
-    init_packet(&reply, DHCPREQUEST);
+    init_packet( &reply, DHCPREQUEST );
 
     reply.xid = msg->xid;
 
@@ -196,12 +199,12 @@ void send_request( dhcp_msg_t *msg, dhcp_info_t *info) {
 
     reply.options[ i++ ] = DHCP_REQUESTED_IP;
     reply.options[ i++ ] = DHCP_REQUESTED_IP_LEN;
-    memcpy(&(reply.options[ i ]), &(msg->yiaddr), DHCP_REQUESTED_IP_LEN);
+    memcpy( &reply.options[ i ], &msg->yiaddr, DHCP_REQUESTED_IP_LEN );
     i += DHCP_REQUESTED_IP_LEN;
 
     reply.options[ i++ ] = DHCP_SERVER_ADDR;
     reply.options[ i++ ] = DHCP_SERVER_ADDR_LEN;
-    memcpy(&(reply.options[ i ]), &(info->server_addr), DHCP_SERVER_ADDR_LEN);
+    memcpy( &reply.options[ i ], &info->server_addr, DHCP_SERVER_ADDR_LEN );
     i += DHCP_SERVER_ADDR_LEN;
 
     /* Request the broadcast, router, name server addresses */
@@ -224,63 +227,62 @@ void send_request( dhcp_msg_t *msg, dhcp_info_t *info) {
     );
 }
 
-void parse_message(dhcp_msg_t *msg, dhcp_info_t *info){
-    uint8_t *options;
+void parse_message( dhcp_msg_t* msg, dhcp_info_t* info ) {
+    uint8_t* options;
     uint8_t msgtype = 255;
     int broadcast_set = 0;
 
     info->ip_addr = msg->yiaddr;
 
-    for(options = msg->options; *options != DHCP_END; ){
-        switch(*options){
-
-            case DHCP_PADDING:
+    for ( options = msg->options; *options != DHCP_END; ) {
+        switch ( *options ) {
+            case DHCP_PADDING :
                 options++;
                 break;
 
-            case DHCP_MSG_TYPE:
+            case DHCP_MSG_TYPE :
                 options += 2;
                 msgtype = *options;
                 options += DHCP_MSG_TYPE_LEN;
                 break;
 
-            case DHCP_SUBNET_MASK:
+            case DHCP_SUBNET_MASK :
                 options += 2;
                 info->netmask = *(uint32_t*) options;
                 options += DHCP_SUBNET_MASK_LEN;
                 break;
 
-            case DHCP_SERVER_ADDR:
+            case DHCP_SERVER_ADDR :
                 options += 2;
                 info->server_addr = *(uint32_t*) options;
                 options += DHCP_SERVER_ADDR_LEN;
                 break;
 
-            case DHCP_BROADCAST:
+            case DHCP_BROADCAST :
                 broadcast_set = 1;
                 options += 2;
                 info->broadcast = *(uint32_t*) options;
                 options += DHCP_BROADCAST_LEN;
                 break;
 
-            case DHCP_ROUTERS: {
+            case DHCP_ROUTERS : {
                 uint8_t size = *(options+1);
                 options += 2;
                 memcpy(&(info->routers), options, size);
                 options += size;
                 break;
-                }
+            }
 
             // TODO
-            case DHCP_NAME_SERVERS:
-            case DHCP_HOSTNAME:
-            case DHCP_DOMAIN_NAME:
-            case DHCP_IP_TTL:
-            case DHCP_IF_MTU:
-            case DHCP_ARP_CACHE_TIMEOUT:
-            case DHCP_TCP_TTL:
-            case DHCP_TCP_KEEPALIVE:
-            default:
+            case DHCP_NAME_SERVERS :
+            case DHCP_HOSTNAME :
+            case DHCP_DOMAIN_NAME :
+            case DHCP_IP_TTL :
+            case DHCP_IF_MTU :
+            case DHCP_ARP_CACHE_TIMEOUT :
+            case DHCP_TCP_TTL :
+            case DHCP_TCP_KEEPALIVE :
+            default :
                 options += 2 + *(options+1);
                 break;
         }
@@ -288,21 +290,32 @@ void parse_message(dhcp_msg_t *msg, dhcp_info_t *info){
 
     // TODO: see if the transaction IDs match
 
-     if(memcmp(msg->chaddr, my_hw_addr, 6) == 0 && msg->op == BOOTREPLY){ /* A packet for me, TODO: check UDP dest addr instead */
-        if(msgtype == DHCPOFFER && status == DISCOVER){
+    if ( memcmp( msg->chaddr, my_hw_addr, 6 ) == 0 &&
+         msg->op == BOOTREPLY ) {
+        /* A packet for me, TODO: check UDP dest addr instead */
+
+        if ( msgtype == DHCPOFFER &&
+             status == DISCOVER ) {
             uint8_t *ip = (uint8_t*) &(info->ip_addr);
             uint8_t *nm = (uint8_t*) &(info->netmask);
             uint8_t *sip = (uint8_t*) &(info->server_addr);
-            printf("%s: accepting DHCPOFFER, server: %d.%d.%d.%d, ", argv0, sip[0], sip[1], sip[2], sip[3]);
-            printf("ip: %d.%d.%d.%d, netmask: %d.%d.%d.%d\n",
-            ip[0], ip[1], ip[2], ip[3], nm[0], nm[1], nm[2], nm[3]);
+
+            printf(
+                "%s: accepting DHCPOFFER, server: %d.%d.%d.%d, ",
+                argv0, sip[0], sip[1], sip[2], sip[3]
+            );
+            printf(
+                "ip: %d.%d.%d.%d, netmask: %d.%d.%d.%d\n",
+                ip[0], ip[1], ip[2], ip[3], nm[0], nm[1], nm[2], nm[3]
+            );
 
             /* Policy: accept the first offer */
 
             status = REQUEST;
             send_request(msg, info);
-        }else if(msgtype == DHCPACK && status == REQUEST){
-            status = DONE;
+        } else if ( msgtype == DHCPACK &&
+                    status == REQUEST ) {
+            struct ifreq req;
 
             uint8_t *ip = (uint8_t*) &(info->ip_addr);
             uint8_t *nm = (uint8_t*) &(info->netmask);
@@ -311,9 +324,20 @@ void parse_message(dhcp_msg_t *msg, dhcp_info_t *info){
             uint8_t *bc = (uint8_t*) &(info->broadcast);
             uint8_t *ns = (uint8_t*) &(info->name_servers);
 
-            printf("%s: got ACK from %d.%d.%d.%d, now using\n", argv0, sip[0], sip[1], sip[2], sip[3]);
-            printf("  ip: %d.%d.%d.%d,\n", ip[0], ip[1], ip[2], ip[3]);
-            printf("  netmask: %d.%d.%d.%d,\n", nm[0], nm[1], nm[2], nm[3]);
+            status = DONE;
+
+            printf(
+                "%s: got ACK from %d.%d.%d.%d, now using\n",
+                argv0, sip[0], sip[1], sip[2], sip[3]
+            );
+            printf(
+                "  ip: %d.%d.%d.%d,\n",
+                ip[0], ip[1], ip[2], ip[3]
+            );
+            printf(
+                "  netmask: %d.%d.%d.%d,\n",
+                nm[0], nm[1], nm[2], nm[3]
+            );
 
             // TODO: use more than one routers
             if(info->routers != NULL){
@@ -329,20 +353,18 @@ void parse_message(dhcp_msg_t *msg, dhcp_info_t *info){
                 printf("  nameserver: %d.%d.%d.%d\n", ns[0], ns[1], ns[2], ns[3]);
             }
 
-            struct ifreq req;
-
             strncpy( req.ifr_name, device, IFNAMSIZ );
             req.ifr_name[ IFNAMSIZ - 1 ] = 0;
 
             if_set_ip_address(&req, info->ip_addr);
             if_set_netmask(&req, info->netmask);
             if_set_broadcast(&req, info->broadcast);
-
-        }else if(msgtype == DHCPNAK && status == REQUEST){
+        } else if ( msgtype == DHCPNAK &&
+                    status == REQUEST ) {
             status = DISCOVER;
             send_discover(); // TODO: be careful not to get in an infinite loop
         }
-    }    
+    }
 }
 
 int interface_up( void ) {
@@ -393,7 +415,7 @@ int dhcp_mainloop( void ) {
 
     while ( 1 ) {
 
-        if( status == DONE ){
+        if( status == DONE ) {
             // TODO: fork, wait for the lease time to expire
             break;
         }
@@ -410,12 +432,12 @@ int dhcp_mainloop( void ) {
 //        printf( "%s: received %d bytes.\n", argv0, size );
 
         // TODO: use proper reading, packets may come in multiple pieces
-        if( size >= sizeof(dhcp_msg_t)){
+        if ( size >= sizeof( dhcp_msg_t ) ) {
             dhcp_info_t info;
-            dhcp_msg_t* msg = (dhcp_msg_t*) in_buffer;
-            parse_message(msg, &info);
-        }
+            dhcp_msg_t* msg = ( dhcp_msg_t* )in_buffer;
 
+            parse_message( msg, &info );
+        }
     }
 
     return 0;
@@ -430,6 +452,8 @@ int main( int argc, char** argv ) {
     argv0 = argv[ 0 ];
     device = argv[ 1 ];
 
+    srand( time( NULL ) );
+
     printf( "%s: started.\n", argv0 );
 
     if ( create_socket() != 0 ) {
@@ -437,7 +461,8 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    if(interface_up() < 0){
+    if ( interface_up() != 0 ) {
+        fprintf( stderr, "%s: failed to bring the interface up.\n", argv0 );
         return EXIT_FAILURE;
     }
 
