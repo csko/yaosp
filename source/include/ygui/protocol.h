@@ -101,6 +101,7 @@ typedef struct msg_create_win {
     ipc_port_id client_port;
     point_t position;
     point_t size;
+    window_order_t order;
     int flags;
 } msg_create_win_t;
 

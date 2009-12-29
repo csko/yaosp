@@ -32,7 +32,7 @@
 
 extern window_decorator_t* window_decorator;
 
-static window_t* window_create( const char* title, uint32_t flags ) {
+static window_t* window_create( const char* title, window_order_t order, uint32_t flags ) {
     window_t* window;
 
     window = ( window_t* )calloc( 1, sizeof( window_t ) );
@@ -59,6 +59,7 @@ static window_t* window_create( const char* title, uint32_t flags ) {
 
     window->id = -1;
     window->flags = flags;
+    window->order = order;
 
     return window;
 
@@ -279,7 +280,7 @@ int handle_create_window( application_t* application, msg_create_win_t* request 
     pthread_attr_t attrib;
     msg_create_win_reply_t reply;
 
-    window = window_create( ( const char* )( request + 1 ), request->flags );
+    window = window_create( ( const char* )( request + 1 ), request->order, request->flags );
 
     if ( window == NULL ) {
         goto error1;

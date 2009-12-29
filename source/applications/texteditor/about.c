@@ -32,7 +32,7 @@ int about_open( void ) {
     point_t size = { 175, 30 };
     point_t pos = { ( 640 - size.x ) / 2, ( 480 - size.y ) / 2 };
 
-    about_win = create_window( "Text editor - About", &pos, &size, WINDOW_FIXED_SIZE );
+    about_win = create_window( "Text editor - About", &pos, &size, W_ORDER_NORMAL, WINDOW_FIXED_SIZE );
 
     container = window_get_container( about_win );
 

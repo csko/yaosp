@@ -34,6 +34,8 @@ typedef struct window {
     int id;
     char* title;
     int flags;
+    window_order_t order;
+
     rect_t screen_rect;
     rect_t client_rect;
 

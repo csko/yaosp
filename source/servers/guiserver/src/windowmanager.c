@@ -302,18 +302,27 @@ int wm_register_window( window_t* window ) {
     int i;
     int size;
     int error;
-    rect_t winrect;
-    point_t lefttop;
-
-    int mouse_hidden;
-    rect_t mouse_rect;
+    int index;
+    window_t* tmp;
     point_t mouse_position;
 
     pthread_mutex_lock( &wm_lock );
 
     /* Insert the new window to the window stack and table */
 
-    error = array_insert_item( &window_stack, 0, window );
+    size = array_get_size( &window_stack );
+
+    for ( i = 0; i < size; i++ ) {
+        tmp = ( window_t* )array_get_item( &window_stack, i );
+
+        if ( window->order >= tmp->order ) {
+            break;
+        }
+    }
+
+    index = i;
+
+    error = array_insert_item( &window_stack, index, window );
 
     if ( error < 0 ) {
         goto error1;
@@ -333,7 +342,7 @@ int wm_register_window( window_t* window ) {
 
     size = array_get_size( &window_stack );
 
-    for ( i = 1; i < size; i++ ) {
+    for ( i = index + 1; i < size; i++ ) {
         generate_visible_regions_by_index( i );
     }
 
@@ -343,48 +352,25 @@ int wm_register_window( window_t* window ) {
         window_decorator->update_border( window );
     }
 
-    /* Check mouse position */
-
-    mouse_get_rect( &mouse_rect );
-    rect_and( &mouse_rect, &window->screen_rect );
-
-    mouse_hidden = rect_is_valid( &mouse_rect );
-
-    if ( mouse_hidden ) {
-        hide_mouse_pointer();
-    }
-
     /* Draw the window */
 
     if ( wm_running ) {
-        rect_lefttop( &window->screen_rect, &lefttop );
-        rect_sub_point_n( &winrect, &window->screen_rect, &lefttop );
-
-        graphics_driver->blit_bitmap(
-            screen_bitmap,
-            &lefttop,
-            window->bitmap,
-            &winrect,
-            DM_COPY
-        );
+        wm_update_window_region( window, &window->screen_rect );
     }
 
     /* Update the mouse window if required */
 
     mouse_get_position( &mouse_position );
+    tmp = get_window_at( &mouse_position );
 
-    if ( rect_has_point( &window->screen_rect, &mouse_position ) ) {
+    if ( mouse_window != tmp ) {
         if ( mouse_window != NULL ) {
             window_mouse_exited( mouse_window );
         }
 
-        mouse_window = window;
+        mouse_window = tmp;
 
         window_mouse_entered( mouse_window, &mouse_position );
-    }
-
-    if ( mouse_hidden ) {
-        show_mouse_pointer();
     }
 
     /* Update the active window */
@@ -396,6 +382,8 @@ int wm_register_window( window_t* window ) {
     active_window = window;
 
     window_activated( window );
+
+    /* Notify window listeners */
 
     if ( ( window->flags & WINDOW_NO_BORDER ) == 0 ) {
         window_opened( window );
@@ -495,12 +483,31 @@ int wm_bring_to_front( window_t* window ) {
         return 0;
     }
 
+    /* Find out the new position of the window */
+
+    for ( i = current - 1; i >= 0; i-- ) {
+        window_t* tmp;
+
+        tmp = ( window_t* )array_get_item( &window_stack, i );
+
+        if ( tmp->order > window->order ) {
+            i++;
+            break;
+        }
+    }
+
+    if ( i == current ) {
+        return 0;
+    }
+
+    assert( i < current );
+
     array_remove_item_from( &window_stack, current );
-    array_insert_item( &window_stack, 0, window );
+    array_insert_item( &window_stack, i, window );
 
     /* Generate the visible regions of the windows */
 
-    for ( i = 0; i <= current; i++ ) {
+    for ( ; i <= current; i++ ) {
         generate_visible_regions_by_index( i );
     }
 

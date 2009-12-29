@@ -149,7 +149,7 @@ int main( int argc, char** argv ) {
     point_t pos = { 25, 25 };
     point_t size = { 450, 350 };
 
-    window = create_window( "Text editor", &pos, &size, WINDOW_NONE );
+    window = create_window( "Text editor", &pos, &size, W_ORDER_NORMAL, WINDOW_NONE );
 
     bitmap_t* icon = bitmap_load_from_file( "/application/texteditor/images/texteditor.png" );
     window_set_icon( window, icon );

@@ -153,7 +153,7 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
 
     chooser->window = create_window(
         type == T_OPEN_DIALOG ? "Open file" : "Save file",
-        &position, &size, WINDOW_NONE
+        &position, &size, W_ORDER_NORMAL, WINDOW_NONE
     );
 
     if ( chooser->window == NULL ) {

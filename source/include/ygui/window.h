@@ -113,7 +113,7 @@ int window_set_event_handler( window_t* window, int event, window_event_callback
 int window_insert_callback( window_t* window, window_callback_t* callback, void* data );
 int window_insert_timer( window_t* window, uint64_t timeout, int periodic, window_event_callback_t* callback, void* data );
 
-window_t* create_window( const char* title, point_t* position, point_t* size, int flags );
+window_t* create_window( const char* title, point_t* position, point_t* size, window_order_t order, int flags );
 
 int window_resize( window_t* window, point_t* size );
 int window_move( window_t* window, point_t* position );

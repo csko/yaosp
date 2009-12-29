@@ -51,7 +51,7 @@ menu_t* create_menu( void ) {
 
     array_set_realloc_size( &menu->items, 16 );
 
-    menu->window = create_window( "menu", NULL, NULL, WINDOW_NO_BORDER );
+    menu->window = create_window( "menu", NULL, NULL, W_ORDER_NORMAL, WINDOW_NO_BORDER );
 
     if ( menu->window == NULL ) {
         goto error3;

@@ -789,7 +789,7 @@ int window_insert_timer( window_t* window, uint64_t timeout, int periodic, windo
     return 0;
 }
 
-window_t* create_window( const char* title, point_t* position, point_t* size, int flags ) {
+window_t* create_window( const char* title, point_t* position, point_t* size, window_order_t order, int flags ) {
     int error;
     window_t* window;
     size_t title_size;
@@ -837,8 +837,9 @@ window_t* create_window( const char* title, point_t* position, point_t* size, in
         point_copy( &request->size, size );
     }
 
-    memcpy( ( void* )( request + 1 ), title, title_size + 1 );
     request->flags = flags;
+    request->order = order;
+    memcpy( ( void* )( request + 1 ), title, title_size + 1 );
 
     error = send_ipc_message( app_server_port, MSG_WINDOW_CREATE, request, sizeof( msg_create_win_t ) + title_size + 1 );
 

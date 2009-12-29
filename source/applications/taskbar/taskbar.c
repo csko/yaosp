@@ -119,7 +119,7 @@ static int event_open_shutdown_window( widget_t* widget, void* data ) {
     point_t position = { 270, 210 };
     point_t size = { 120, 40 };
 
-    window = create_window( "Shut down", &position, &size, WINDOW_FIXED_SIZE );
+    window = create_window( "Shut down", &position, &size, W_ORDER_NORMAL, WINDOW_FIXED_SIZE );
 
     container = window_get_container( window );
 
@@ -238,7 +238,7 @@ int main( int argc, char** argv ) {
 
     /* Create a window */
 
-    window = create_window( "Taskbar", &win_lefttop, &size, WINDOW_NO_BORDER );
+    window = create_window( "Taskbar", &win_lefttop, &size, W_ORDER_TOP, WINDOW_NO_BORDER );
 
     widget_t* container = window_get_container( window );
 
