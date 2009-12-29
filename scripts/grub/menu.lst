@@ -1,4 +1,4 @@
-title yaOSp 0.0.4
+title yaOSp 0.0.5
 kernel /system/kernel
 module /system/module/bus/pci
 module /system/module/disk/pata
@@ -9,10 +9,7 @@ module /system/module/input/input
 module /system/module/char/terminal
 module /system/module/network/pcnet32
 
-title --------------------------
-root
-
-title yaOSp 0.0.4 for VirtualBox
+title yaOSp 0.0.5 for VirtualBox
 kernel /system/kernel pit_freq=500
 module /system/module/bus/pci
 module /system/module/disk/pata
