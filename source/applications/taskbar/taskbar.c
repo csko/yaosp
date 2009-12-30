@@ -211,7 +211,6 @@ static int taskbar_create_menu( void ) {
 
 static int send_guiserver_notification( void ) {
     send_ipc_message( guiserver_port, MSG_TASKBAR_STARTED, NULL, 0 );
-
     return 0;
 }
 

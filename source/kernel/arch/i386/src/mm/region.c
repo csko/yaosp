@@ -352,7 +352,7 @@ static int do_clone_region_pages( memory_region_t* old_region, memory_region_t* 
 
     for ( ;
           old_address < old_region->address + old_region->size;
-          old_region += PAGE_SIZE, new_region += PAGE_SIZE ) {
+          old_address += PAGE_SIZE, new_address += PAGE_SIZE ) {
         uint32_t* old_pt = ( uint32_t* )( old_page_directory[ PGD_INDEX( old_address ) ] & PAGE_MASK );
         uint32_t* new_pt = ( uint32_t* )( new_page_directory[ PGD_INDEX( new_address ) ] & PAGE_MASK );
 

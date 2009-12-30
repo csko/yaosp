@@ -134,6 +134,9 @@ static int guiserver_mainloop( void ) {
     int error;
     ipc_port_id guiserver_port;
 
+    int taskbar_running = 0;
+    int desktop_running = 0;
+
     uint32_t code;
     void* buffer;
 
@@ -177,9 +180,27 @@ static int guiserver_mainloop( void ) {
                 break;
 
             case MSG_TASKBAR_STARTED :
-                wm_enable();
-                input_system_start();
-                show_mouse_pointer();
+                taskbar_running = 1;
+
+                if ( ( taskbar_running ) &&
+                     ( desktop_running ) ) {
+                    wm_enable();
+                    input_system_start();
+                    show_mouse_pointer();
+                }
+
+                break;
+
+            case MSG_DESKTOP_STARTED :
+                desktop_running = 1;
+
+                if ( ( taskbar_running ) &&
+                     ( desktop_running ) ) {
+                    wm_enable();
+                    input_system_start();
+                    show_mouse_pointer();
+                }
+
                 break;
 
             default :

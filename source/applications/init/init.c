@@ -133,6 +133,20 @@ static int start_gui( void ) {
         _exit( 0 );
     }
 
+    if ( fork() == 0 ) {
+        char* const argv[] = { "desktop", NULL };
+        char* const envv[] = {
+            "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
+            "HOME=/",
+            "TERM=xterm",
+            "TEMP=/temp",
+            NULL
+        };
+
+        execve( "/application/desktop/desktop", argv, envv );
+        _exit( 0 );
+    }
+
     return 0;
 }
 

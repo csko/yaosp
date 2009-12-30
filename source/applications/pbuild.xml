@@ -29,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <!--<item>irc_client</item>-->
         <!--<item>startgui</item>-->
         <item>taskbar</item>
+        <item>desktop</item>
         <item>terminal</item>
         <item>texteditor</item>
         <item>dhcpclient</item>
