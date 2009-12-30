@@ -35,7 +35,7 @@ static bitmap_t udp_port_table;
 static lock_id udp_endpoint_lock;
 static hashtable_t udp_endpoint_table;
 
-static uint16_t udp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8_t* tcp_header, size_t tcp_size ) {
+static uint16_t udp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8_t* udp_header, size_t udp_size ) {
     int i;
     uint16_t* data;
     uint32_t checksum;
@@ -54,19 +54,19 @@ static uint16_t udp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8
     }
 
     checksum += htonw( IP_PROTO_UDP );
-    checksum += htonw( tcp_size );
+    checksum += htonw( udp_size );
 
-    data = ( uint16_t* )tcp_header;
+    data = ( uint16_t* )udp_header;
 
-    for ( i = 0; i < tcp_size / 2; i++ ) {
+    for ( i = 0; i < udp_size / 2; i++ ) {
         checksum += data[ i ];
     }
 
-    if ( ( tcp_size % 2 ) != 0 ) {
+    if ( ( udp_size % 2 ) != 0 ) {
         uint8_t* tmp;
         uint16_t tmp_data;
 
-        tmp = ( uint8_t* )( &data[ tcp_size / 2 ] );
+        tmp = ( uint8_t* )( &data[ udp_size / 2 ] );
         tmp_data = ( uint16_t )*tmp;
 
         checksum += tmp_data;
@@ -479,10 +479,24 @@ int udp_create_socket( socket_t* socket ) {
 }
 
 int udp_input( packet_t* packet ) {
+    uint32_t transport_size;
     udp_header_t* udp_header;
     udp_socket_t* udp_socket;
+    ipv4_header_t* ip_header;
 
+
+    ip_header = ( ipv4_header_t* )packet->network_data;
     udp_header = ( udp_header_t* )packet->transport_data;
+
+    transport_size = packet->size - ( ( uint32_t )packet->transport_data - ( uint32_t )packet->data );
+
+    if ( udp_checksum( ip_header->src_address, ip_header->dest_address,
+                       ( uint8_t* )udp_header, transport_size ) != 0 ) {
+        kprintf( WARNING, "udp_input(): invalid UDP checksum, dropping packet.\n" );
+        delete_packet( packet );
+        return 0;
+    }
+
     udp_socket = udp_get_endpoint( htonw( udp_header->dst_port ) );
 
     if ( udp_socket == NULL ) {

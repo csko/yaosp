@@ -1054,9 +1054,21 @@ static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) 
 }
 
 int tcp_input( packet_t* packet ) {
+    uint32_t transport_size;
     tcp_socket_t* tcp_socket;
+    tcp_header_t* tcp_header;
+    ipv4_header_t* ip_header;
 
-    /* TODO: Check the TCP checksum */
+    ip_header = ( ipv4_header_t* )packet->network_data;
+    tcp_header = ( tcp_header_t* )packet->transport_data;
+    transport_size = packet->size - ( ( uint32_t )packet->transport_data - ( uint32_t )packet->data );
+
+    if ( tcp_checksum( ip_header->src_address, ip_header->dest_address,
+                       ( uint8_t* )tcp_header, transport_size ) != 0 ) {
+        kprintf( WARNING, "tcp_input(): invalid TCP checksum, dropping packet.\n" );
+        delete_packet( packet );
+        return 0;
+    }
 
     tcp_socket = get_tcp_endpoint( packet );
 
