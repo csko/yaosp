@@ -547,7 +547,8 @@ int wm_bring_to_front_by_id( int id ) {
     return 0;
 }
 
-int wm_update_window_region( window_t* window, rect_t* region ) {
+int wm_update_window_region( window_t* window, rect_t* _region ) {
+    rect_t region;
     point_t lefttop;
     int mouse_hidden;
     rect_t mouse_rect;
@@ -555,11 +556,12 @@ int wm_update_window_region( window_t* window, rect_t* region ) {
     clip_rect_t* clip_rect;
 
     mouse_hidden = 0;
-
     mouse_get_rect( &mouse_rect );
 
+    rect_and_n( &region, _region, &screen_rect );
+
     for ( clip_rect = window->visible_regions.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
-        rect_and_n( &visible_rect, region, &clip_rect->rect );
+        rect_and_n( &visible_rect, &region, &clip_rect->rect );
 
         if ( !rect_is_valid( &visible_rect ) ) {
             continue;
@@ -596,11 +598,12 @@ int wm_update_window_region( window_t* window, rect_t* region ) {
     return 0;
 }
 
-int wm_hide_window_region( window_t* window, rect_t* region ) {
+int wm_hide_window_region( window_t* window, rect_t* _region ) {
     int i;
     int size;
     int error;
     int win_pos;
+    rect_t region;
     int mouse_damaged;
     point_t lefttop;
     rect_t mouse_rect;
@@ -608,11 +611,12 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
     clip_rect_t* clip_rect;
 
     win_pos = array_index_of( &window_stack, ( void* )window );
-
     assert( win_pos != -1 );
 
+    rect_and_n( &region, _region, &screen_rect );
+
     mouse_get_rect( &mouse_rect );
-    rect_and( &mouse_rect, region );
+    rect_and( &mouse_rect, &region );
 
     mouse_damaged = rect_is_valid( &mouse_rect );
 
@@ -635,7 +639,7 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
         }
 
         for ( clip_rect = tmp_region.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
-            rect_and_n( &visible_rect, &clip_rect->rect, region );
+            rect_and_n( &visible_rect, &clip_rect->rect, &region );
 
             if ( !rect_is_valid( &visible_rect ) ) {
                 continue;
@@ -665,9 +669,15 @@ int wm_hide_window_region( window_t* window, rect_t* region ) {
     }
 
     for ( clip_rect = window->visible_regions.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
+        rect_and_n( &visible_rect, &clip_rect->rect, &screen_rect );
+
+        if ( !rect_is_valid( &visible_rect ) ) {
+            continue;
+        }
+
         graphics_driver->fill_rect(
             screen_bitmap,
-            &clip_rect->rect,
+            &visible_rect,
             &wm_bg_color,
             DM_COPY
         );
