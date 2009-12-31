@@ -1,0 +1,55 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2009 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <target name="clean">
+        <cleandir>curl-7.19.7</cleandir>
+        <rmdir>curl-7.19.7</rmdir>
+    </target>
+
+    <target name="get_source">
+        <httpget address="http://files.yaosp.org/source/curl/curl-7.19.7.tar.bz2"
+                 to="curl-7.19.7.tar.bz2"
+                 md5="79a8fbb2eed5464b97bdf94bee109380"/>
+
+        <echo>Extracting curl source</echo>
+
+        <exec executable="tar">
+            <arg>-jxf</arg>
+            <arg>curl-7.19.7.tar.bz2</arg>
+        </exec>
+
+        <echo>Patching curl source</echo>
+
+        <exec executable="patch">
+            <arg>-t</arg>
+            <arg>-p0</arg>
+            <arg>-i</arg>
+            <arg>curl-7.19.7.patch</arg>
+        </exec>
+    </target>
+
+    <target name="all">
+        <call target="clean"/>
+        <call target="get_source"/>
+        <call target="all" directory="curl-7.19.7"/>
+    </target>
+</build>
