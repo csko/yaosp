@@ -75,9 +75,9 @@ static console_t kterm_console = {
 };
 
 static int kterm_flusher_thread( void* arg ) {
-    bool more_data = false;
     int cnt;
     char tmp[ 256 ];
+    bool more_data = false;
 
     while ( 1 ) {
         if ( !more_data ) {
@@ -147,7 +147,7 @@ int init_kernel_terminal( void ) {
 
     /* Start kterm buffer flushed */
 
-    kterm_flusher = create_kernel_thread( "kterm flusher", PRIORITY_NORMAL, kterm_flusher_thread, NULL, 0 );
+    kterm_flusher = create_kernel_thread( "kterm_flusher", PRIORITY_NORMAL, kterm_flusher_thread, NULL, 0 );
 
     if ( kterm_flusher < 0 ) {
         close( kterm_tty );

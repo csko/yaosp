@@ -23,16 +23,17 @@
 
 typedef struct panel {
     layout_t* layout;
+    color_t background;
 } panel_t;
 
 static int panel_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
+    panel_t* panel;
 
-    static color_t panel_bg = { 216, 216, 216, 255 };
-
+    panel = widget_get_data( widget );
     widget_get_bounds( widget, &bounds );
 
-    gc_set_pen_color( gc, &panel_bg );
+    gc_set_pen_color( gc, &panel->background );
     gc_fill_rect( gc, &bounds );
 
     return 0;
@@ -123,6 +124,25 @@ int panel_set_layout( widget_t* widget, layout_t* layout ) {
     return 0;
 }
 
+int panel_set_background_color( widget_t* widget, color_t* color ) {
+    panel_t* panel;
+
+    if ( ( widget == NULL ) ||
+         ( color == NULL ) ) {
+        return -EINVAL;
+    }
+
+    if ( widget_get_id( widget ) != W_PANEL ) {
+        return -EINVAL;
+    }
+
+    panel = ( panel_t* )widget_get_data( widget );
+
+    color_copy( &panel->background, color );
+
+    return 0;
+}
+
 widget_t* create_panel( void ) {
     panel_t* panel;
     widget_t* widget;
@@ -140,6 +160,7 @@ widget_t* create_panel( void ) {
     }
 
     panel->layout = NULL;
+    color_init( &panel->background, 216, 216, 216, 255 );
 
     return widget;
 

@@ -28,6 +28,8 @@
 #include <assert.h>
 
 static int wm_running = 0;
+static pthread_mutex_t wm_mutex;
+
 static array_t window_stack;
 static color_t wm_bg_color = { 51, 102, 152, 255 };
 
@@ -44,7 +46,6 @@ static window_t* resizing_window = NULL;
 
 static array_t window_listeners;
 
-pthread_mutex_t wm_lock;
 window_decorator_t* window_decorator = &default_decorator;
 
 static inline int window_table_insert( window_t* window ) {
@@ -262,15 +263,34 @@ static int generate_visible_regions_by_index( int index ) {
     return 0;
 }
 
-int wm_enable( void ) {
-    int i;
-    int size;
+int wm_lock( void ) {
+    pthread_mutex_lock( &wm_mutex );
+    return 0;
+}
 
+int wm_unlock( void ) {
+    pthread_mutex_unlock( &wm_mutex );
+    return 0;
+}
+
+int wm_enable( void ) {
     if ( wm_running ) {
         return 0;
     }
 
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
+
+    wm_full_repaint();
+    wm_running = 1;
+
+    pthread_mutex_unlock( &wm_mutex );
+
+    return 0;
+}
+
+int wm_full_repaint( void ) {
+    int i;
+    int size;
 
     /* Fill the background */
 
@@ -287,13 +307,8 @@ int wm_enable( void ) {
         window_t* window;
 
         window = ( window_t* )array_get_item( &window_stack, i );
-
         wm_update_window_region( window, &window->screen_rect );
     }
-
-    wm_running = 1;
-
-    pthread_mutex_unlock( &wm_lock );
 
     return 0;
 }
@@ -306,7 +321,7 @@ int wm_register_window( window_t* window ) {
     window_t* tmp;
     point_t mouse_position;
 
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     /* Insert the new window to the window stack and table */
 
@@ -389,7 +404,7 @@ int wm_register_window( window_t* window ) {
         window_opened( window );
     }
 
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 
@@ -397,7 +412,7 @@ int wm_register_window( window_t* window ) {
     array_remove_item( &window_stack, ( void* )window );
 
  error1:
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return error;
 }
@@ -407,7 +422,7 @@ int wm_unregister_window( window_t* window ) {
     int size;
     int index;
 
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     /* Make sure that the window is visible */
 
@@ -464,7 +479,7 @@ int wm_unregister_window( window_t* window ) {
     }
 
  out:
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 }
@@ -519,7 +534,7 @@ int wm_bring_to_front( window_t* window ) {
 int wm_bring_to_front_by_id( int id ) {
     window_t* window;
 
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     window = ( window_t* )hashtable_get( &window_table, ( const void* )&id );
 
@@ -527,7 +542,7 @@ int wm_bring_to_front_by_id( int id ) {
         wm_bring_to_front( window );
     }
 
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 }
@@ -706,25 +721,25 @@ int wm_window_moved( window_t* window ) {
 }
 
 int wm_key_pressed( int key ) {
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     if ( active_window != NULL ) {
         window_key_pressed( active_window, key );
     }
 
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 }
 
 int wm_key_released( int key ) {
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     if ( active_window != NULL ) {
         window_key_released( active_window, key );
     }
 
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 }
@@ -738,7 +753,7 @@ int wm_mouse_moved( point_t* delta ) {
     point_t mouse_position;
     point_t old_mouse_position;
 
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     hide_mouse_pointer();
 
@@ -794,13 +809,13 @@ int wm_mouse_moved( point_t* delta ) {
 done:
     show_mouse_pointer();
 
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 }
 
 int wm_mouse_pressed( int button ) {
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     if ( mouse_window != NULL ) {
         /* The window under the mouse is the new active window */
@@ -826,20 +841,20 @@ int wm_mouse_pressed( int button ) {
 
     mouse_down_window = mouse_window;
 
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 }
 
 int wm_mouse_released( int button ) {
-    pthread_mutex_lock( &wm_lock );
+    pthread_mutex_lock( &wm_mutex );
 
     if ( mouse_down_window != NULL ) {
         window_mouse_released( mouse_down_window, button );
         mouse_down_window = NULL;
     }
 
-    pthread_mutex_unlock( &wm_lock );
+    pthread_mutex_unlock( &wm_mutex );
 
     return 0;
 }
@@ -1067,7 +1082,7 @@ int init_windowmanager( void ) {
         goto error2;
     }
 
-    error = pthread_mutex_init( &wm_lock, NULL );
+    error = pthread_mutex_init( &wm_mutex, NULL );
 
     if ( error < 0 ) {
         goto error3;
@@ -1082,7 +1097,7 @@ int init_windowmanager( void ) {
     return 0;
 
  error4:
-    pthread_mutex_destroy( &wm_lock );
+    pthread_mutex_destroy( &wm_mutex );
 
  error3:
     destroy_hashtable( &window_table );

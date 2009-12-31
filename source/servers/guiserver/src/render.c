@@ -269,9 +269,9 @@ static int draw_bitmap( window_t* window, uint8_t* buffer ) {
 
 static int render_done( window_t* window ) {
     if ( window->is_visible ) {
-        pthread_mutex_lock( &wm_lock );
+        wm_lock();
         wm_update_window_region( window, &window->client_rect );
-        pthread_mutex_unlock( &wm_lock );
+        wm_unlock();
     }
 
     return sizeof( render_header_t );

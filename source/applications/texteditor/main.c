@@ -142,7 +142,7 @@ static int event_application_exit( widget_t* widget, void* data ) {
 }
 
 int main( int argc, char** argv ) {
-    if ( application_init() != 0 ) {
+    if ( application_init( APP_NONE ) != 0 ) {
         return EXIT_FAILURE;
     }
 

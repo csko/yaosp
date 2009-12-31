@@ -24,7 +24,13 @@
 #include <ygui/protocol.h>
 #include <yutil/array.h>
 
+enum {
+    APP_NOTIFY_RESOLUTION_CHANGE = ( 1 << 0 )
+};
+
 typedef struct application {
+    uint32_t flags;
+
     ipc_port_id server_port;
     ipc_port_id client_port;
 
@@ -45,5 +51,7 @@ int application_insert_window( application_t* application, struct window* window
 int application_remove_window( application_t* application, struct window* window );
 
 int handle_create_application( msg_create_app_t* request );
+
+int init_applications( void );
 
 #endif /* _APPLICATION_H_ */

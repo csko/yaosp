@@ -23,6 +23,7 @@
 #include <ygui/layout/layout.h>
 
 int panel_set_layout( widget_t* widget, layout_t* layout );
+int panel_set_background_color( widget_t* widget, color_t* color );
 
 widget_t* create_panel( void );
 

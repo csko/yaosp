@@ -38,9 +38,9 @@
 #include "../driver/video/vesa/vesa.h"
 
 rect_t screen_rect;
-bitmap_t* screen_bitmap;
+bitmap_t* screen_bitmap = NULL;
 screen_mode_t active_screen_mode;
-graphics_driver_t* graphics_driver;
+graphics_driver_t* graphics_driver = NULL;
 
 int init_default_decorator( void );
 
@@ -92,7 +92,7 @@ static int choose_graphics_mode( void ) {
     return -1;
 }
 
-static int setup_graphics_mode( void ) {
+int setup_graphics_mode( void ) {
     int error;
     void* fb_address;
 
@@ -106,6 +106,10 @@ static int setup_graphics_mode( void ) {
 
     if ( error < 0 ) {
         return error;
+    }
+
+    if ( screen_bitmap != NULL ) {
+        bitmap_put( screen_bitmap );
     }
 
     screen_bitmap = create_bitmap_from_buffer(
@@ -256,7 +260,9 @@ int main( int argc, char** argv ) {
 
     splash_count_total = 5 /* + font_count */;
 
-    if (  init_font_manager() != 0 ) {
+    init_applications();
+
+    if ( init_font_manager() != 0 ) {
         dbprintf( "Failed to initialize font manager\n" );
         return EXIT_FAILURE;
     }

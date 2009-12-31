@@ -1,4 +1,4 @@
-/* yaosp GUI library
+/* yaOSp GUI control application
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,19 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_DESKTOP_H_
-#define _YGUI_DESKTOP_H_
+#ifndef _YGUICTRL_H_
+#define _YGUICTRL_H_
 
-#include <ygui/point.h>
-#include <ygui/yconstants.h>
+typedef int command_handler_t( int argc, char** argv );
 
-#include <yutil/array.h>
+typedef struct ctrl_command {
+    const char* name;
+    command_handler_t* handler;
+} ctrl_command_t;
 
-int desktop_get_size( point_t* size );
+typedef struct ctrl_subsystem {
+    const char* name;
+    ctrl_command_t* commands;
+} ctrl_subsystem_t;
 
-array_t* desktop_get_screen_modes( void );
-int desktop_put_screen_modes( array_t* mode_list );
+extern char* argv0;
+extern ctrl_subsystem_t screen;
 
-int desktop_set_screen_mode( screen_mode_info_t* mode_info );
-
-#endif /* _YGUI_DESKTOP_H_ */
+#endif /* _YGUICTRL_H_ */

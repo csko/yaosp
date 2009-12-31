@@ -49,7 +49,7 @@ int application_register_window_listener( int get_window_list ) {
     return 0;
 }
 
-int application_init( void ) {
+int application_init( uint32_t flags ) {
     int error;
     struct timespec slp_time;
 
@@ -89,6 +89,7 @@ int application_init( void ) {
 
     request.reply_port = app_reply_port;
     request.client_port = app_client_port;
+    request.flags = flags;
 
     error = send_ipc_message( guiserver_port, MSG_APPLICATION_CREATE, &request, sizeof( msg_create_app_t ) );
 

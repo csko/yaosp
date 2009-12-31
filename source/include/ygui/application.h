@@ -23,10 +23,15 @@
 
 typedef int msg_handler_t( uint32_t code, void* buffer );
 
+enum {
+    APP_NONE = 0,
+    APP_NOTIFY_RESOLUTION_CHANGE = ( 1 << 0 )
+};
+
 int application_set_message_handler( msg_handler_t* handler );
 int application_register_window_listener( int get_window_list );
 
-int application_init( void );
+int application_init( uint32_t flags );
 int application_run( void );
 
 #endif /* _YGUI_APPLICATION_H_ */

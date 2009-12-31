@@ -37,6 +37,28 @@ window_t* window;
 
 extern ipc_port_id guiserver_port;
 
+static int desktop_handle_resolution_change( msg_scr_res_changed_t* msg ) {
+    point_t size;
+
+    point_init( &size, msg->mode_info.width, msg->mode_info.height );
+    window_resize( window, &size );
+
+    return 0;
+}
+
+static int desktop_msg_handler( uint32_t code, void* data ) {
+    switch ( code ) {
+        case MSG_SCREEN_RESOLUTION_CHANGED :
+            desktop_handle_resolution_change( ( msg_scr_res_changed_t* )data );
+            break;
+
+        default :
+            return -1;
+    }
+
+    return 0;
+}
+
 static int send_guiserver_notification( void ) {
     send_ipc_message( guiserver_port, MSG_DESKTOP_STARTED, NULL, 0 );
     return 0;
@@ -51,7 +73,7 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    if ( application_init() != 0 ) {
+    if ( application_init( APP_NOTIFY_RESOLUTION_CHANGE ) != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
         return EXIT_FAILURE;
     }
@@ -64,6 +86,9 @@ int main( int argc, char** argv ) {
     window = create_window( "Desktop", &pos, &size, W_ORDER_ALWAYS_ON_BOTTOM, WINDOW_NO_BORDER );
 
     widget_t* container = window_get_container( window );
+
+    static color_t black = { 0, 0, 0, 255 };
+    panel_set_background_color( container, &black );
 
     /* Set the layout of the window */
 
@@ -82,6 +107,7 @@ int main( int argc, char** argv ) {
     window_show( window );
 
     send_guiserver_notification();
+    application_set_message_handler( desktop_msg_handler );
 
     /* Start the mainloop of the application ... */
 

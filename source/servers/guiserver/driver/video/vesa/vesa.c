@@ -88,7 +88,9 @@ static int vesa_detect( void ) {
 
         if ( ( mode_info->phys_base_ptr == 0 ) ||
              ( mode_info->num_planes != 1 ) ||
-             ( ( mode_info->bits_per_pixel != 16 ) && ( mode_info->bits_per_pixel != 24 ) && ( mode_info->bits_per_pixel != 32 ) ) ) {
+             ( ( mode_info->bits_per_pixel != 16 ) && ( mode_info->bits_per_pixel != 24 ) && ( mode_info->bits_per_pixel != 32 ) ) ||
+             ( mode_info->width < 640 ) ||
+             ( mode_info->height < 480 ) ) {
             continue;
         }
 
@@ -148,11 +150,15 @@ static int vesa_set_mode( screen_mode_t* screen_mode ) {
         return error;
     }
 
+    if ( fb_region != -1 ) {
+        memory_region_delete( fb_region );
+    }
+
     current_mode = vesa_mode;
 
     fb_region = memory_region_create(
         "vesa_fb",
-        current_mode->screen_mode.width * current_mode->screen_mode.height * colorspace_to_bpp( current_mode->screen_mode.color_space ),
+        PAGE_ALIGN( current_mode->screen_mode.width * current_mode->screen_mode.height * colorspace_to_bpp( current_mode->screen_mode.color_space ) ),
         REGION_READ | REGION_WRITE,
         &fb_address
     );

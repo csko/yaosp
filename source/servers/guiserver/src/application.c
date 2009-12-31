@@ -29,10 +29,14 @@
 #include <graphicsdriver.h>
 #include <bitmap.h>
 #include <windowmanager.h>
+#include <guiserver.h>
 
 #define MAX_APPLICATION_BUFSIZE 512
 
-static application_t* application_create( ipc_port_id client_port ) {
+static array_t application_list;
+static pthread_mutex_t application_lock;
+
+static application_t* application_create( ipc_port_id client_port, uint32_t flags ) {
     application_t* app;
 
     app = ( application_t* )malloc( sizeof( application_t ) );
@@ -64,6 +68,7 @@ static application_t* application_create( ipc_port_id client_port ) {
     }
 
     app->client_port = client_port;
+    app->flags = flags;
 
     return app;
 
@@ -97,8 +102,9 @@ static int application_destroy( application_t* app ) {
         dbprintf( "Application forgot to delete %d bitmaps.\n", size );
 
         for ( i = 0; i < size; i++ ) {
-            bitmap_t* bitmap = ( bitmap_t* )array_get_item( &app->bitmap_list, i );
+            bitmap_t* bitmap;
 
+            bitmap = ( bitmap_t* )array_get_item( &app->bitmap_list, i );
             bitmap_put( bitmap );
         }
     }
@@ -224,7 +230,7 @@ static int handle_reg_window_listener( application_t* app, int get_window_list )
         *( int* )list.data = 0;
     }
 
-    pthread_mutex_lock( &wm_lock );
+    wm_lock();
 
     /* Send the current window list to the application */
 
@@ -238,7 +244,105 @@ static int handle_reg_window_listener( application_t* app, int get_window_list )
 
     wm_add_window_listener( app );
 
-    pthread_mutex_unlock( &wm_lock );
+    wm_unlock();
+
+    return 0;
+}
+
+static int handle_get_screen_modes( application_t* app, msg_scr_get_modes_t* request ) {
+    uint32_t i;
+    size_t reply_size;
+    uint32_t mode_count;
+    msg_scr_mode_list_t* reply;
+    screen_mode_info_t* mode_info;
+
+    mode_count = graphics_driver->get_screen_mode_count();
+
+    reply_size = sizeof( msg_scr_mode_list_t ) + mode_count * sizeof( screen_mode_info_t );
+    reply = ( msg_scr_mode_list_t* )malloc( reply_size );
+
+    if ( reply == NULL ) {
+        return -ENOMEM; /* todo! */
+    }
+
+    reply->mode_count = mode_count;
+    mode_info = ( screen_mode_info_t* )( reply + 1 );
+
+    for ( i = 0; i < mode_count; i++, mode_info++ ) {
+        screen_mode_t mode;
+
+        graphics_driver->get_screen_mode_info( i, &mode );
+
+        mode_info->width = mode.width;
+        mode_info->height = mode.height;
+        mode_info->color_space = mode.color_space;
+    }
+
+    send_ipc_message( request->reply_port, 0, reply, reply_size );
+
+    free( reply );
+
+    return 0;
+}
+
+static int handle_set_screen_mode( application_t* app, msg_scr_set_mode_t* request ) {
+    int j;
+    int size;
+    int found;
+    uint32_t i;
+    uint32_t count;
+    screen_mode_t mode;
+    msg_scr_res_changed_t msg;
+
+    wm_lock();
+
+    found = 0;
+    count = graphics_driver->get_screen_mode_count();
+
+    for ( i = 0; i < count; i++ ) {
+        graphics_driver->get_screen_mode_info( i, &mode );
+
+        if ( ( mode.width == request->mode_info.width ) &&
+             ( mode.height == request->mode_info.height ) &&
+             ( mode.color_space == request->mode_info.color_space ) ) {
+            found = 1;
+            break;
+        }
+    }
+
+    if ( !found ) {
+        wm_unlock();
+        goto out;
+    }
+
+    memcpy( &active_screen_mode, &mode, sizeof( screen_mode_t ) );
+    setup_graphics_mode();
+    wm_full_repaint();
+
+    wm_unlock();
+
+    /* Notify applications about screen resolution change */
+
+    memcpy( &msg.mode_info, &request->mode_info, sizeof( screen_mode_info_t ) );
+
+    pthread_mutex_lock( &application_lock );
+
+    size = array_get_size( &application_list );
+
+    for ( j = 0; j < size; j++ ) {
+        application_t* tmp;
+
+        tmp = ( application_t* )array_get_item( &application_list, j );
+
+        if ( tmp->flags & APP_NOTIFY_RESOLUTION_CHANGE ) {
+            send_ipc_message( tmp->client_port, MSG_SCREEN_RESOLUTION_CHANGED, &msg, sizeof( msg_scr_res_changed_t ) );
+        }
+    }
+
+    pthread_mutex_unlock( &application_lock );
+
+ out:
+    send_ipc_message( request->reply_port, 0, NULL, 0 );
 
     return 0;
 }
@@ -309,11 +413,27 @@ static void* application_thread( void* arg ) {
                 wm_bring_to_front_by_id( *( int* )buffer );
                 break;
 
+            case MSG_SCREEN_GET_MODES :
+                handle_get_screen_modes( app, ( msg_scr_get_modes_t* )buffer );
+                break;
+
+            case MSG_SCREEN_SET_MODE :
+                handle_set_screen_mode( app, ( msg_scr_set_mode_t* )buffer );
+                break;
+
             default :
                 dbprintf( "application_thread(): Received unknown message: %x\n", code );
                 break;
         }
     }
+
+    /* Remove the application from the global list */
+
+    pthread_mutex_lock( &application_lock );
+    array_remove_item( &application_list, app );
+    pthread_mutex_unlock( &application_lock );
+
+    /* Destroy the application */
 
     application_destroy( app );
 
@@ -371,7 +491,7 @@ int handle_create_application( msg_create_app_t* request ) {
     pthread_attr_t attrib;
     msg_create_app_reply_t reply;
 
-    app = application_create( request->client_port );
+    app = application_create( request->client_port, request->flags );
 
     if ( app == NULL ) {
         goto error1;
@@ -395,6 +515,12 @@ int handle_create_application( msg_create_app_t* request ) {
 
     reply.server_port = app->server_port;
 
+    /* Add it to the application list */
+
+    pthread_mutex_lock( &application_lock );
+    array_add_item( &application_list, app );
+    pthread_mutex_unlock( &application_lock );
+
     goto out;
 
  error2:
@@ -407,4 +533,22 @@ int handle_create_application( msg_create_app_t* request ) {
     send_ipc_message( request->reply_port, 0, &reply, sizeof( msg_create_app_reply_t ) );
 
     return 0;
+}
+
+int init_applications( void ) {
+    if ( init_array( &application_list ) != 0 ) {
+        goto error1;
+    }
+
+    if ( pthread_mutex_init( &application_lock, NULL ) != 0 ) {
+        goto error2;
+    }
+
+    return 0;
+
+ error2:
+    destroy_array( &application_list );
+
+ error1:
+    return -1;
 }

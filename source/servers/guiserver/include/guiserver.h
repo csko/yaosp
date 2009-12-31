@@ -1,4 +1,4 @@
-/* yaosp GUI library
+/* GUI server
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -16,19 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_DESKTOP_H_
-#define _YGUI_DESKTOP_H_
+#ifndef _GUISERVER_H_
+#define _GUISERVER_H_
 
-#include <ygui/point.h>
-#include <ygui/yconstants.h>
+int setup_graphics_mode( void );
 
-#include <yutil/array.h>
-
-int desktop_get_size( point_t* size );
-
-array_t* desktop_get_screen_modes( void );
-int desktop_put_screen_modes( array_t* mode_list );
-
-int desktop_set_screen_mode( screen_mode_info_t* mode_info );
-
-#endif /* _YGUI_DESKTOP_H_ */
+#endif /* _GUISERVER_H_ */

@@ -58,6 +58,12 @@ typedef enum window_order {
     W_ORDER_ALWAYS_ON_TOP
 } window_order_t;
 
+typedef struct screen_mode_info {
+    int width;
+    int height;
+    color_space_t color_space;
+} screen_mode_info_t;
+
 static inline int colorspace_to_bpp( color_space_t color_space ) {
     switch ( color_space ) {
         case CS_RGB16 : return 2;

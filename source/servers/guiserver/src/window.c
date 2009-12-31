@@ -115,7 +115,8 @@ static void window_do_resize( window_t* window, msg_win_do_resize_t* request ) {
     /* Lock the window manager if the window is visible */
 
     if ( window->is_visible ) {
-        pthread_mutex_lock( &wm_lock );
+        wm_lock();
+        wm_hide_window_region( window, &window->screen_rect );
     }
 
     /* Put the current bitmap of the window */
@@ -149,8 +150,8 @@ static void window_do_resize( window_t* window, msg_win_do_resize_t* request ) {
 
     if ( window->is_visible ) {
         wm_window_resized( window );
-
-        pthread_mutex_unlock( &wm_lock );
+        wm_update_window_region( window, &window->screen_rect );
+        wm_unlock();
     }
 
     point_copy( &reply.size, &request->size );
@@ -164,7 +165,8 @@ static void window_do_move( window_t* window, msg_win_do_move_t* request ) {
     /* Lock the window manager if the window is visible */
 
     if ( window->is_visible ) {
-        pthread_mutex_lock( &wm_lock );
+        wm_lock();
+        wm_hide_window_region( window, &window->screen_rect );
     }
 
     if ( window->flags & WINDOW_NO_BORDER ) {
@@ -183,8 +185,8 @@ static void window_do_move( window_t* window, msg_win_do_move_t* request ) {
 
     if ( window->is_visible ) {
         wm_window_moved( window );
-
-        pthread_mutex_unlock( &wm_lock );
+        wm_update_window_region( window, &window->screen_rect );
+        wm_unlock();
     }
 
     point_copy( &reply.position, &request->position );

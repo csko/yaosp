@@ -58,6 +58,18 @@ static taskbar_plugin_t* plugins[] = {
     NULL
 };
 
+static int taskbar_handle_resolution_change( msg_scr_res_changed_t* msg ) {
+    point_t size;
+
+    point_init( &size, msg->mode_info.width, 22 );
+    point_init( &win_lefttop, 0, msg->mode_info.height - 22 + 1 );
+
+    window_move( window, &win_lefttop );
+    window_resize( window, &size );
+
+    return 0;
+}
+
 static int taskbar_msg_handler( uint32_t code, void* data ) {
     switch ( code ) {
         case MSG_WINDOW_LIST :
@@ -70,6 +82,10 @@ static int taskbar_msg_handler( uint32_t code, void* data ) {
 
         case MSG_WINDOW_CLOSED :
             taskbar_handle_window_closed( ( msg_win_info_t* )data );
+            break;
+
+        case MSG_SCREEN_RESOLUTION_CHANGED :
+            taskbar_handle_resolution_change( ( msg_scr_res_changed_t* )data );
             break;
 
         default :
@@ -223,7 +239,7 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    if ( application_init() != 0 ) {
+    if ( application_init( APP_NOTIFY_RESOLUTION_CHANGE ) != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
         return EXIT_FAILURE;
     }

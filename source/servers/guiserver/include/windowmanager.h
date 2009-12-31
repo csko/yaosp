@@ -24,11 +24,12 @@
 #include <window.h>
 #include <application.h>
 
-extern pthread_mutex_t wm_lock;
-
 typedef int win_iter_callback_t( window_t* window, void* data );
 
+int wm_lock( void );
+int wm_unlock( void );
 int wm_enable( void );
+int wm_full_repaint( void );
 
 int wm_register_window( window_t* window );
 int wm_unregister_window( window_t* window );

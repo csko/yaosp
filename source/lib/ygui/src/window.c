@@ -419,6 +419,7 @@ static void* window_thread( void* arg ) {
                     window->mouse_down_widget = NULL;
                 }
 
+            this_is_hack:
                 /* Setup the initial restricted area */
 
                 gc_clean_cache( &window->gc );
@@ -508,7 +509,7 @@ static void* window_thread( void* arg ) {
                     &reply.size
                 );
 
-                break;
+                goto this_is_hack;
             }
 
             case MSG_WINDOW_DO_MOVE : {

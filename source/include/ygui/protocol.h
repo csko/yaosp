@@ -79,6 +79,9 @@ enum {
     MSG_WINDOW_OPENED,
     MSG_WINDOW_CLOSED,
     MSG_WINDOW_BRING_TO_FRONT,
+    MSG_SCREEN_GET_MODES,
+    MSG_SCREEN_SET_MODE,
+    MSG_SCREEN_RESOLUTION_CHANGED,
     MSG_TASKBAR_STARTED,
     MSG_DESKTOP_STARTED
 };
@@ -88,6 +91,7 @@ enum {
 typedef struct msg_create_app {
     ipc_port_id reply_port;
     ipc_port_id client_port;
+    uint32_t flags;
 } msg_create_app_t;
 
 typedef struct msg_create_app_reply {
@@ -243,5 +247,22 @@ typedef struct msg_win_set_icon {
     ipc_port_id reply_port;
     int icon_bitmap;
 } msg_win_set_icon_t;
+
+typedef struct msg_scr_get_modes {
+    ipc_port_id reply_port;
+} msg_scr_get_modes_t;
+
+typedef struct msg_scr_mode_list {
+    uint32_t mode_count;
+} msg_scr_mode_list_t;
+
+typedef struct msg_scr_set_mode {
+    ipc_port_id reply_port;
+    screen_mode_info_t mode_info;
+} msg_scr_set_mode_t;
+
+typedef struct msg_scr_res_changed {
+    screen_mode_info_t mode_info;
+} msg_scr_res_changed_t;
 
 #endif /* _YGUI_PROTOCOL_H_ */
