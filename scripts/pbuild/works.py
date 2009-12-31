@@ -296,7 +296,13 @@ class CallTarget( Work ) :
 
             xml_parser = xml.sax.make_parser()
             xml_parser.setContentHandler( handler )
-            xml_parser.parse( "pbuild.xml" )
+
+            try :
+                xml_parser.parse( "pbuild.xml" )
+            except :
+                print "pbuild.xml is not valid at %s" % ( os.getcwd() )
+                print "Build stopped."
+                sys.exit( 1 )
 
         target = context.get_target( self.target, True )
 
