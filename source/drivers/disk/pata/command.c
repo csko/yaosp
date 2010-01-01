@@ -151,7 +151,7 @@ int pata_port_atapi_do_packet( pata_port_t* port, uint8_t* packet, bool do_read,
 
     /* TODO: check if the device really asks for command packet */
 
-    thread_sleep( 10 );
+    udelay( 10 );
 
     /* Write the packet to the device */
 

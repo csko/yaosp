@@ -32,19 +32,21 @@ int pata_port_wait( pata_port_t* port, uint8_t set, uint8_t clear, bool check_er
     end_time = get_system_time() + timeout;
 
     inb( port->ctrl_base );
-    thread_sleep( 1 );
+    udelay( 5 );
 
     while ( get_system_time() < end_time ) {
         uint8_t status;
 
         status = inb( port->ctrl_base );
 
-        if ( ( check_error ) && ( ( status & PATA_STATUS_ERROR ) != 0 ) ) {
+        if ( ( check_error ) &&
+             ( ( status & PATA_STATUS_ERROR ) != 0 ) ) {
             kprintf( ERROR, "pata: pata_port_wait(): Error! (status=%x)\n", status );
             return -1;
         }
 
-        if ( ( ( status & set ) == set ) && ( ( status & clear ) == 0 ) ) {
+        if ( ( ( status & set ) == set ) &&
+             ( ( status & clear ) == 0 ) ) {
             return 0;
         }
     }
@@ -60,7 +62,7 @@ void pata_port_select( pata_port_t* port ) {
     }
 
     inb( port->ctrl_base );
-    thread_sleep( 1 );
+    udelay( 5 );
 }
 
 bool pata_is_port_present( pata_port_t* port ) {
@@ -73,7 +75,7 @@ bool pata_is_port_present( pata_port_t* port ) {
     outb( 0x55, port->cmd_base + PATA_REG_LBA_LOW );
 
     inb( port->ctrl_base );
-    thread_sleep( 1 );
+    udelay( 5 );
 
     count = inb( port->cmd_base + PATA_REG_COUNT );
     lba_low = inb( port->cmd_base + PATA_REG_LBA_LOW );
