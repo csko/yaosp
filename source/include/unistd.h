@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -135,6 +135,7 @@ int getdtablesize( void );
 
 int gethostname( char* name, size_t len );
 
+int usleep( useconds_t usec );
 unsigned int sleep( unsigned int seconds );
 unsigned int alarm( unsigned int seconds );
 

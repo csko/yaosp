@@ -1,6 +1,6 @@
-/* yaosp C library
+/* usleep function
  *
- * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,37 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SYS_TYPES_H_
-#define _SYS_TYPES_H_
+#include <unistd.h>
+#include <errno.h>
 
-#include <stdint.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define __need_size_t
-#include <stddef.h>
+int usleep( useconds_t _usec ) {
+    int error;
+    uint64_t usec = _usec;
 
-#ifndef NULL
-#ifdef __cplusplus
-#define NULL 0
-#else
-#define NULL ((void*)0)
-#endif /* __cplusplus */
-#endif /* NULL */
+    error = syscall2( SYS_sleep_thread, &usec, NULL );
 
-#define INFINITE_TIMEOUT 18446744073709551615ULL
+    if ( error < 0 ) {
+        errno = -error;
+        return -1;
+    }
 
-typedef unsigned char u_char;
-typedef unsigned int useconds_t;
-
-typedef int ssize_t;
-typedef int pid_t;
-typedef int64_t ino_t;
-typedef int64_t off_t;
-typedef int dev_t;
-typedef int mode_t;
-typedef int nlink_t;
-typedef int uid_t;
-typedef int gid_t;
-typedef int blksize_t;
-typedef int64_t blkcnt_t;
-
-#endif /* _SYS_TYPES_H_ */
+    return 0;
+}
