@@ -232,10 +232,9 @@ int sys_exit( int exit_code ) {
     process_t* process;
 
     process = current_process();
-
     /* TODO: Send KILL signal to all thread of this process */
 
-    thread_exit( exit_code );
+    thread_exit( ( exit_code & 0x7F ) << 8 );
 
     return 0;
 }
@@ -350,8 +349,7 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
             error = tmp->id;
 
             if ( status != NULL ) {
-                /* TODO: this makes bash unhappy on non-existing commands ... *status = tmp->exit_code; */
-                *status = 0;
+                *status = tmp->exit_code;
             }
 
             if ( rusage != NULL ) {
@@ -362,15 +360,10 @@ process_id sys_wait4( process_id pid, int* status, int options, struct rusage* r
                 tv->tv_sec = tmp->user_time / 1000000;
                 tv->tv_usec = tmp->user_time % 1000000;
 
-                DEBUG_LOG( "Thread: %s:%s\n", tmp->process->name, tmp->name );
-                DEBUG_LOG( "System time: %llu.%llu\n", tv->tv_sec, tv->tv_usec );
-
                 tv = &rusage->ru_stime;
 
                 tv->tv_sec = tmp->sys_time / 1000000;
                 tv->tv_usec = tmp->user_time % 1000000;
-
-                DEBUG_LOG( "User time: %llu.%llu\n", tv->tv_sec, tv->tv_usec );
             }
 
             destroy_thread( tmp );
