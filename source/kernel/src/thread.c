@@ -425,6 +425,18 @@ int sys_exit_thread( int exit_code ) {
     return 0;
 }
 
+int udelay( uint64_t microsecs ) {
+    uint64_t end;
+
+    end = get_system_time() + microsecs;
+
+    while ( get_system_time() < end ) {
+        __asm__ __volatile__( "pause" ); /* todo: we shouldn't use this one here! */
+    }
+
+    return 0;
+}
+
 static int do_sleep_thread( uint64_t microsecs, uint64_t* remaining ) {
     int error;
     thread_t* thread;

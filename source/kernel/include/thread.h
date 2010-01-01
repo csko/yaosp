@@ -133,6 +133,8 @@ void kernel_thread_exit( void );
  */
 thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* entry, void* arg, uint32_t stack_size );
 
+int udelay( uint64_t microsecs );
+
 /**
  * This method can be used to delay the execution of
  * the current thread for the specified number of microseconds

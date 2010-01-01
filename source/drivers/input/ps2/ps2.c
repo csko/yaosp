@@ -31,7 +31,7 @@ static int ps2_wait_read( void ) {
     int i = PS2_WAIT_TIMEOUT;
 
     while( ( ~inb( PS2_PORT_STATUS ) & PS2_STATUS_OBF ) && ( i > 0 ) ) {
-        //udelay( 50 );
+        udelay( 50 );
         i--;
     }
 
@@ -47,7 +47,7 @@ static int ps2_wait_write( void ) {
     int i = PS2_WAIT_TIMEOUT;
 
     while ( ( inb( PS2_PORT_STATUS ) & PS2_STATUS_IBF ) && ( i > 0 ) ) {
-        //udelay( 50 );
+        udelay( 50 );
         i--;
     }
 
@@ -65,7 +65,7 @@ int ps2_flush_buffer( void ) {
     spinlock_disable( &ps2_spinlock );
 
     while ( ( inb( PS2_PORT_STATUS ) & PS2_STATUS_OBF ) && ( i < PS2_BUFSIZE ) ) {
-        //udelay( 50 );
+        udelay( 50 );
         inb( PS2_PORT_DATA );
         i++;
     }

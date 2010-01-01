@@ -57,7 +57,6 @@ static void ps2_keyboard_handle( uint8_t scancode ) {
     bool up;
     uint16_t key;
 
-
     if ( ( scancode == 0xE0 ) ||
          ( current_state == NULL ) ) {
         goto done;
