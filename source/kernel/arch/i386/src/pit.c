@@ -1,6 +1,6 @@
 /* Programmable Interval Timer
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,25 +29,16 @@
 #include <arch/spinlock.h>
 #include <arch/hwtime.h>
 #include <arch/apic.h>
-
-static uint64_t system_time = 0;
-static uint64_t boot_time = 0;
-static spinlock_t time_lock = INIT_SPINLOCK( "PIT" );
+#include <arch/cpu.h>
 
 static int pit_freq = 1000; /* PIT frequency in Hz */
-static int pit_time_inc = 1000;
+static uint64_t boot_time = 0;
 
 static int pit_irq( int irq, void* data, registers_t* regs ) {
-    /* Increment the system time */
-
-    spinlock( &time_lock );
-    system_time += pit_time_inc;
-    spinunlock( &time_lock );
-
     /* Wake up sleeper threads */
 
     spinlock( &scheduler_lock );
-    waitqueue_wake_up( &sleep_queue, system_time );
+    waitqueue_wake_up( &sleep_queue, get_system_time() );
     spinunlock( &scheduler_lock );
 
     if ( !apic_present ) {
@@ -89,24 +80,11 @@ void pit_wait_wrap( void ) {
 }
 
 uint64_t get_system_time( void ) {
-    uint64_t now;
-
-    spinlock_disable( &time_lock );
-
-    now = system_time;
-
-    spinunlock_enable( &time_lock );
-
-    return now;
+    return ( rdtsc() / tsc_to_us ) + boot_time;
 }
 
 int set_system_time( time_t* newtime ) {
-    spinlock_disable( &time_lock );
-
-    system_time = *newtime;
-
-    spinunlock_enable( &time_lock );
-
+    /* todo */
     return 0;
 }
 
@@ -116,17 +94,11 @@ uint64_t get_boot_time( void ) {
 
 __init int init_system_time( void ) {
     tm_t now;
-    uint64_t i;
 
     gethwclock( &now );
-    i = 1000000 * mktime( &now );
+    boot_time = 1000000 * mktime( &now );
 
-    spinlock_disable( &time_lock );
-
-    system_time = i;
-    boot_time = i;
-
-    spinunlock_enable( &time_lock );
+    write_msr( X86_MSR_TSC, 0 );
 
     return 0;
 }
@@ -150,8 +122,6 @@ __init int init_pit( void ) {
     }
 
     kprintf( INFO, "pit: Using frequency: %d Hz.\n", pit_freq );
-
-    pit_time_inc = 1000 * ( 1000 / pit_freq );
 
     /* Set PIT frequency */
 

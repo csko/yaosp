@@ -1,6 +1,6 @@
 /* i386 processor specific functions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -36,6 +36,8 @@
 .global set_task_switched
 .global flush_tlb
 .global invlpg
+.global read_msr
+.global write_msr
 .global halt_loop
 
 /* register_t get_eflags( void ) */
@@ -161,6 +163,24 @@ invlpg:
     invlpg 4(%esp)
     ret
 .size invlpg,.-invlpg
+
+/* uint64_t read_msr( uint32_t msr ) */
+.type read_msr, @function
+read_msr:
+    movl 4(%esp), %ecx
+    rdmsr
+    ret
+.size read_msr,.-read_msr
+
+/* void write_msr( uint32_t msr, uint64_t value ) */
+.type write_msr, @function
+write_msr:
+    movl 4(%esp), %ecx
+    movl 8(%esp), %eax
+    movl 12(%esp), %edx
+    wrmsr
+    ret
+.size write_msr,.-write_msr
 
 /* void halt_loop( void ) */
 

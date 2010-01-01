@@ -141,6 +141,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/lib/stack.c</item>
         <item>src/lib/array.c</item>
         <item>src/lib/bitmap.c</item>
+        <item>src/lib/uint128.c</item>
     </array>
 
     <target name="clean">

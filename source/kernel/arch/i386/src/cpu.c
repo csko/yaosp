@@ -1,6 +1,6 @@
 /* Processor detection code
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,13 +24,12 @@
 #include <kernel.h>
 #include <lib/string.h>
 #include <lib/ctype.h>
+#include <lib/uint128.h>
 
 #include <arch/cpu.h>
 #include <arch/gdt.h>
 #include <arch/pit.h>
 #include <arch/io.h>
-
-i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 
 i386_feature_t i386_features[] = {
     { CPU_FEATURE_MMX, "mmx" },
@@ -47,6 +46,9 @@ i386_feature_t i386_features[] = {
     { CPU_FEATURE_EST, "est" },
     { 0, "" }
 };
+
+uint64_t tsc_to_us;
+i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 
 extern uint32_t _kernel_stack_top;
 
@@ -187,9 +189,7 @@ __init int detect_cpu( void ) {
             size_t length;
 
             length = strlen( &name[ j ] );
-
             memmove( &name[ 0 ], &name[ j ], length );
-
             name[ length ] = 0;
         }
     }
@@ -250,29 +250,97 @@ __init int detect_cpu( void ) {
     return 0;
 }
 
+static inline uint32_t pit_wait_start( void ) {
+    uint8_t low;
+    uint8_t high;
+
+    do {
+        outb( 0x00, PIT_MODE );
+        low = inb( PIT_CH0 );
+        high = inb( PIT_CH0 );
+    } while ( high != 255 );
+
+    return ( ( ( uint32_t )high << 8 ) | low );
+}
+
+static inline uint32_t pit_wait_until( uint8_t wait_high ) {
+    uint8_t low;
+    uint8_t high;
+
+    do {
+        outb( 0x00, PIT_MODE );
+        low = inb( PIT_CH0 );
+        high = inb( PIT_CH0 );
+    } while ( high > wait_high );
+
+    return ( ( ( uint32_t )high << 8 ) | low );
+}
+
 __init int cpu_calibrate_speed( void ) {
-    uint64_t start;
-    uint64_t end;
-    cpu_t* processor;
+    uint128_t i;
+    uint128_t d;
+    uint32_t expired;
+    uint64_t tsc_before;
+    uint64_t tsc_after;
+    uint32_t pit_before;
+    uint32_t pit_after;
+    uint64_t cpu_speed;
+    double r1, r2, r3;
 
-    processor = get_processor();
+    kprintf( INFO, "Calibrating CPU speed ... " );
 
     outb( 0x34, PIT_MODE );
     outb( 0xFF, PIT_CH0 );
     outb( 0xFF, PIT_CH0 );
 
-    pit_wait_wrap();
-    start = rdtsc();
-    pit_wait_wrap();
-    end = rdtsc();
+ calibrate1:
+    pit_before = pit_wait_start();
+    tsc_before = rdtsc();
 
-    processor->core_speed = ( uint64_t )PIT_TICKS_PER_SEC * ( end - start ) / 0xFFFF;
+    pit_after = pit_wait_until( 224 );
+    tsc_after = rdtsc();
 
-    kprintf( INFO, "CPU %d runs at %u MHz.\n", get_processor_index(), ( uint32_t )( processor->core_speed / 1000000 ) );
+    r1 = ( double )( tsc_after - tsc_before ) / ( double )( pit_before - pit_after );
 
-    outb( 0x34, PIT_MODE );
-    outb( 0x00, PIT_CH0 );
-    outb( 0x00, PIT_CH0 );
+ calibrate2:
+    pit_before = pit_wait_start();
+    tsc_before = rdtsc();
+
+    pit_after = pit_wait_until( 192 );
+    tsc_after = rdtsc();
+
+    r2 = ( double )( tsc_after - tsc_before ) / ( double )( pit_before - pit_after );
+
+    if ( ( ( r1 / r2 ) < 0.99 ) ||
+         ( ( r1 / r2 ) > 1.01 ) ) {
+        goto calibrate1;
+    }
+
+    pit_before = pit_wait_start();
+    tsc_before = rdtsc();
+
+    pit_after = pit_wait_until( 128 );
+    tsc_after = rdtsc();
+
+    r3 = ( double )( tsc_after - tsc_before ) / ( double )( pit_before - pit_after );
+
+    if ( ( ( r2 / r3 ) < 0.99 ) ||
+         ( ( r2 / r3 ) > 1.01 ) ) {
+        goto calibrate2;
+    }
+
+    expired = ( pit_before - pit_after );
+    cpu_speed = ( tsc_after - tsc_before ) * PIT_TICKS_PER_SEC / expired;
+
+    kprintf( INFO, "%llu MHz.\n", cpu_speed / 1000000ULL );
+
+    uint128_init( &i, expired );
+    uint128_multiply( &i, 1000000 );
+    uint128_shl( &i, 32 );
+    uint128_init( &d, ( tsc_after - tsc_before ) * PIT_TICKS_PER_SEC );
+    uint128_divide( &i, &d );
+
+    tsc_to_us = i.low / 1000;
 
     return 0;
 }

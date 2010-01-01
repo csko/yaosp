@@ -1,6 +1,6 @@
 /* i386 architecture specific processor definitions
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,6 +24,8 @@
 #define EFLAG_SF ( 1 << 7 )  /* Sign flag */
 #define EFLAG_IF ( 1 << 9 )  /* Interrupt flag */
 #define EFLAG_ID ( 1 << 21 ) /* ID flag */
+
+#define X86_MSR_TSC 0x10
 
 #ifndef __ASSEMBLER__
 
@@ -60,8 +62,9 @@ enum {
     CPU_FEATURE_EST = ( 1 << 11 )
 };
 
-extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 extern i386_feature_t i386_features[];
+extern uint64_t tsc_to_us;
+extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 
 static inline uint64_t rdtsc( void ) {
     uint64_t value;
@@ -73,6 +76,9 @@ static inline uint64_t rdtsc( void ) {
 
     return value;
 }
+
+uint64_t read_msr( uint32_t msr );
+void write_msr( uint32_t msr, uint64_t value );
 
 register_t get_cr2( void );
 void set_cr2( register_t cr2 );
