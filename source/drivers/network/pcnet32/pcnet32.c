@@ -1151,7 +1151,7 @@ int init_module( void ) {
     pci_bus = get_bus_driver( "PCI" );
 
     if ( pci_bus == NULL ) {
-        kprintf( WARNING, "PATA: PCI bus not found!\n" );
+        kprintf( WARNING, "PCnet32: PCI bus not found!\n" );
         return -1;
     }
 
