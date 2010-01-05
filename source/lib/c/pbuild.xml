@@ -42,6 +42,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/math/s_finite.S</item>
         <item>arch/i386/math/s_scalbn.S</item>
         <item>arch/i386/math/e_log10.S</item>
+        <item>arch/i386/math/s_tan.S</item>
+        <item>arch/i386/math/s_atan.S</item>
+        <item>arch/i386/math/e_sqrt.S</item>
     </array>
 
     <array name="files">

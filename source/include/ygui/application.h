@@ -28,10 +28,22 @@ enum {
     APP_NOTIFY_RESOLUTION_CHANGE = ( 1 << 0 )
 };
 
+typedef struct ymsg {
+    uint32_t code;
+    uint8_t* buffer;
+    size_t size;
+} ymsg_t;
+
+int ymsg_init( ymsg_t* msg, size_t max_size );
+
 int application_set_message_handler( msg_handler_t* handler );
 int application_register_window_listener( int get_window_list );
 
 int application_init( uint32_t flags );
+
+int application_receive_msg( ymsg_t* msg, uint64_t timeout );
+int application_process_msg( ymsg_t* msg );
+
 int application_run( void );
 
 #endif /* _YGUI_APPLICATION_H_ */

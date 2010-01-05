@@ -37,6 +37,18 @@ pthread_mutex_t app_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static msg_handler_t* unknown_msg_handler = NULL;
 
+int ymsg_init( ymsg_t* msg, size_t max_size ) {
+    msg->buffer = ( uint8_t* )malloc( max_size );
+
+    if ( msg->buffer == NULL ) {
+        return -1;
+    }
+
+    msg->size = max_size;
+
+    return 0;
+}
+
 int application_set_message_handler( msg_handler_t* handler ) {
     unknown_msg_handler = handler;
 
@@ -114,11 +126,48 @@ int application_init( uint32_t flags ) {
 
 #define MAX_APPLICATION_BUFSIZE 512
 
+int application_receive_msg( ymsg_t* msg, uint64_t timeout ) {
+    int error;
+
+    error = recv_ipc_message( app_client_port, &msg->code, msg->buffer, msg->size, timeout );
+
+    if ( error < 0 ) {
+        return error;
+    }
+
+    return 0;
+}
+
+int application_process_msg( ymsg_t* msg ) {
+    switch ( msg->code ) {
+        case MSG_APPLICATION_DESTROY :
+            send_ipc_message( app_server_port, MSG_APPLICATION_DESTROY, NULL, 0 );
+            return 1;
+
+        default : {
+            int handled;
+
+            if ( unknown_msg_handler != NULL ) {
+                handled = unknown_msg_handler( msg->code, msg->buffer );
+            } else {
+                handled = -1;
+            }
+
+            if ( handled != 0 ) {
+                dbprintf( "run_application(): Received unknown message: %x\n", msg->code );
+            }
+
+            break;
+        }
+    }
+
+    return 0;
+}
+
 int application_run( void ) {
     int error;
-    uint32_t code;
-    void* buffer;
     int running;
+    ymsg_t msg;
 
     if ( ( guiserver_port == -1 ) ||
          ( app_client_port == -1 ) ||
@@ -127,43 +176,25 @@ int application_run( void ) {
         return -EINVAL;
     }
 
-    buffer = malloc( MAX_APPLICATION_BUFSIZE );
-
-    if ( buffer == NULL ) {
+    if ( ymsg_init( &msg, MAX_APPLICATION_BUFSIZE ) != 0 ) {
         return -ENOMEM;
     }
-
     running = 1;
 
     while ( running ) {
-        error = recv_ipc_message( app_client_port, &code, buffer, MAX_APPLICATION_BUFSIZE, INFINITE_TIMEOUT );
+        error = application_receive_msg( &msg, INFINITE_TIMEOUT );
 
         if ( error < 0 ) {
-            dbprintf( "run_application(): Failed to receive message: %d\n", error );
+            dbprintf( "application_run(): failed to receive message: %d\n", error );
             continue;
         }
 
-        switch ( code ) {
-            case MSG_APPLICATION_DESTROY :
-                send_ipc_message( app_server_port, MSG_APPLICATION_DESTROY, NULL, 0 );
-                running = 0;
-                break;
+        error = application_process_msg( &msg );
 
-            default : {
-                int handled;
-
-                if ( unknown_msg_handler != NULL ) {
-                    handled = unknown_msg_handler( code, buffer );
-                } else {
-                    handled = -1;
-                }
-
-                if ( handled != 0 ) {
-                    dbprintf( "run_application(): Received unknown message: %x\n", code );
-                }
-
-                break;
-            }
+        if ( error > 0 ) {
+            running = 0;
+        } else if ( error < 0 ) {
+            dbprintf( "application_run(): failed to process message.\n" );
         }
     }
 

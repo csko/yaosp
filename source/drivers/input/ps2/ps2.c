@@ -202,7 +202,7 @@ static int ps2_controller_test( void ) {
     }
 
     if ( data != PS2_RET_CTL_TEST ) {
-        kprintf( ERROR, "PS2: Contorller selftest failed!\n" );
+        kprintf( ERROR, "ps2: Contorller selftest failed!\n" );
         return -EINVAL;
     }
 

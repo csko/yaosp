@@ -42,5 +42,8 @@ double pow( double x, double y );
 double ldexp( double x, int exp );
 double scalbn( double x, int exp );
 double modf( double x, double* iptr );
+double tan( double x );
+double atan( double x );
+double sqrt( double x );
 
-#endif // _MATH_H_
+#endif /* _MATH_H_ */
