@@ -33,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>terminal</item>
         <item>texteditor</item>
         <item>dhcpclient</item>
+        <item>yguictrl</item>
     </array>
 
     <target name="all">
