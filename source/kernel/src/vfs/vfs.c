@@ -326,9 +326,11 @@ static int do_open( io_context_t* io_context, const char* path, int flags, int p
 
     /* Check if the filesystem if writable and we want to create a file*/
 
-    /* TODO: check the values of O_RDWR, O_WRONLY */
-    if ( flags & O_CREAT && parent->mount_point->flags & MOUNT_RO ) {
-        put_inode ( parent);
+    if ( ( parent->mount_point->flags & MOUNT_RO ) &&
+         ( ( flags & O_RDWR ) ||
+           ( flags & O_WRONLY ) ||
+           ( flags & O_CREAT ) ) ) {
+        put_inode( parent );
         return -EROFS;
     }
 
@@ -345,7 +347,8 @@ static int do_open( io_context_t* io_context, const char* path, int flags, int p
 
     error = do_open_helper1( io_context, file, &parent, name, length, flags );
 
-    if ( ( error == -ENOENT ) && ( ( flags & O_CREAT ) != 0 ) ) {
+    if ( ( error == -ENOENT ) &&
+         ( ( flags & O_CREAT ) != 0 ) ) {
         error = do_open_helper2( file, parent, name, length, flags, perms );
     }
 
@@ -828,7 +831,9 @@ static int do_rmdir( io_context_t* io_context, const char* path ) {
         return -EINVAL;
     }
 
-    if ( parent->mount_point->fs_calls->rmdir == NULL ) {
+    if ( parent->mount_point->flags & MOUNT_RO ) {
+        error = -EROFS;
+    } else if ( parent->mount_point->fs_calls->rmdir == NULL ) {
         error = -ENOSYS;
     } else {
         error = parent->mount_point->fs_calls->rmdir(
@@ -884,7 +889,9 @@ static int do_unlink( io_context_t* io_context, const char* path ) {
         return -EINVAL;
     }
 
-    if ( parent->mount_point->fs_calls->unlink == NULL ) {
+    if ( parent->mount_point->flags & MOUNT_RO ) {
+        error = -EROFS;
+    } else if ( parent->mount_point->fs_calls->unlink == NULL ) {
         error = -ENOSYS;
     } else {
         error = parent->mount_point->fs_calls->unlink(
@@ -1679,7 +1686,9 @@ static int do_utime( io_context_t* io_context, const char* path, const struct ut
         return error;
     }
 
-    if ( inode->mount_point->fs_calls->write_stat == NULL ) {
+    if ( inode->mount_point->flags & MOUNT_RO ) {
+        error = -EROFS;
+    } else if ( inode->mount_point->fs_calls->write_stat == NULL ) {
         error = -ENOSYS;
     } else {
         error = inode->mount_point->fs_calls->write_stat(

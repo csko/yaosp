@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <vfs/inode.h>
+#include <lock/mutex.h>
 
 #define EXT2_MIN_BLOCK_SIZE 1024                    // minimum block size
 #define EXT2_NAME_LEN       255                     // maximum file name
@@ -223,6 +224,7 @@ typedef struct ext2_dir_entry {
 
 typedef struct ext2_cookie {
     int fd;
+    lock_id lock;
     uint32_t ngroups; /* Number of block groups */
     uint32_t blocksize; /* Size of one block */
     uint32_t sectors_per_block;

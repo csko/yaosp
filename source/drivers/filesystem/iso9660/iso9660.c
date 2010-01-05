@@ -499,10 +499,6 @@ static int iso9660_open( void* fs_cookie, void* _node, int mode, void** file_coo
     int error;
     iso9660_inode_t* node;
 
-    if ( mode & O_WRONLY ) {
-        return -EROFS;
-    }
-
     node = ( iso9660_inode_t* )_node;
 
     if ( node->flags & ISO9660_FLAG_DIRECTORY ) {
