@@ -29,6 +29,9 @@
 #define RUSAGE_CHILDREN 2
 #define RUSAGE_THREAD 3
 
+#define NSEC_PER_MSEC       1000000L
+#define CYC2NS_SCALE_FACTOR 10 /* 2^10, carefully chosen */
+
 typedef struct timeval {
     time_t      tv_sec;    /* Seconds */
     suseconds_t tv_usec;   /* Microseconds */

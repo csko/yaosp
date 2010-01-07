@@ -52,4 +52,6 @@
     }
 #endif /* MK_RELEASE_BUILD */
 
+#define __PACKED __attribute__(( packed ))
+
 #endif /* _MACROS_H_ */

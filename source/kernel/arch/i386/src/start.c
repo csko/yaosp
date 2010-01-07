@@ -1,6 +1,6 @@
 /* C entry point of the i386 architecture
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,7 @@
 #include <arch/io.h>
 #include <arch/mp.h>
 #include <arch/apic.h>
+#include <arch/acpi.h>
 #include <arch/bios.h>
 #include <arch/mm/config.h>
 #include <arch/mm/paging.h>
@@ -236,10 +237,6 @@ __init void arch_start( multiboot_header_t* header ) {
 
     init_interrupts();
 
-    /* Calibrate the boot CPU speed */
-
-    cpu_calibrate_speed();
-
     /* Initializing bootmodules */
 
     init_bootmodules( header );
@@ -289,6 +286,8 @@ __init void arch_start( multiboot_header_t* header ) {
 
 __init int arch_late_init( void ) {
     init_mp();
+    acpi_init();
+    cpu_calibrate_speed();
     init_apic();
     init_pit();
     init_apic_timer();

@@ -62,8 +62,9 @@ enum {
     CPU_FEATURE_EST = ( 1 << 11 )
 };
 
+extern uint64_t tsc_to_ns_scale;
+
 extern i386_feature_t i386_features[];
-extern uint64_t tsc_to_us;
 extern i386_cpu_t arch_processor_table[ MAX_CPU_COUNT ];
 
 static inline uint64_t rdtsc( void ) {
@@ -134,6 +135,7 @@ int detect_cpu( void );
  * @return On success 0 is returned
  */
 int cpu_calibrate_speed( void );
+int cpu_calibrate_speed_with_acpi( void );
 
 #endif /* __ASSELBLER__ */
 

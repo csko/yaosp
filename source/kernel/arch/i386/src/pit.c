@@ -80,7 +80,7 @@ void pit_wait_wrap( void ) {
 }
 
 uint64_t get_system_time( void ) {
-    return ( rdtsc() / tsc_to_us ) + boot_time;
+    return ( ( rdtsc() * tsc_to_ns_scale ) >> CYC2NS_SCALE_FACTOR ) / 1000 + boot_time;
 }
 
 int set_system_time( time_t* newtime ) {

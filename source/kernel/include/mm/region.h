@@ -1,6 +1,6 @@
 /* Memory region handling
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -67,7 +67,8 @@ typedef struct region_info {
     ptr_t size;
 } region_info_t;
 
-memory_region_t* memory_region_allocate( struct memory_context* context, const char* name, ptr_t address, uint64_t size, uint32_t flags );
+memory_region_t* memory_region_allocate( struct memory_context* context, const char* name,
+                                         ptr_t address, uint64_t size, uint32_t flags );
 void memory_region_destroy( memory_region_t* region );
 
 memory_region_t* memory_region_get( region_id id );
@@ -82,6 +83,7 @@ memory_region_t* do_create_memory_region_at( struct memory_context* context, con
 
 int do_memory_region_remap_pages( memory_region_t* region, ptr_t physical_address );
 int do_memory_region_alloc_pages( memory_region_t* region );
+int do_memory_region_put( memory_region_t* region );
 
 /* Memory region handling */
 

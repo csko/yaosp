@@ -49,6 +49,7 @@ void dump_registers( registers_t* regs ) {
 void handle_division_by_zero( registers_t* regs ) {
     kprintf( WARNING, "Division by zero!\n" );
     dump_registers( regs );
+    kprintf( WARNING, "Caller: %x\n", ((uint32_t*)regs->ebp)[1] );
     disable_interrupts();
     halt_loop();
 }
