@@ -22,6 +22,8 @@
 #include <types.h>
 #include <macros.h>
 
+#define ACPI_SPACE_MEMORY 0
+
 #define PMTMR_TICKS_PER_SEC 3579545
 #define ACPI_PM_OVRRUN      ( 1 << 24 )
 

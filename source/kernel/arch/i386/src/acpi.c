@@ -109,6 +109,11 @@ static int acpi_parse_fadt( acpi_fadt_t* fadt ) {
 }
 
 static int acpi_parse_hpet( acpi_hpet_t* hpet ) {
+    if ( hpet->address.space_id != ACPI_SPACE_MEMORY ) {
+        kprintf( WARNING, "HPET timers must be located in memory.\n" );
+        return 0;
+    }
+
     hpet_address = hpet->address.address;
     hpet_present = ( hpet_address != 0 );
 
@@ -143,13 +148,6 @@ static int acpi_parse_table_at( uint32_t table_address ) {
         kprintf( WARNING, "ACPI: invalid table checksum.\n" );
         goto out;
     }
-
-    DEBUG_LOG( "%c%c%c%c\n",
-        header->signature[ 0 ],
-        header->signature[ 1 ],
-        header->signature[ 2 ],
-        header->signature[ 3 ]
-    );
 
     if ( memcmp( header->signature, ACPI_FADT_SIGNATURE, 4 ) == 0 ) {
         acpi_parse_fadt( ( acpi_fadt_t* )header );

@@ -96,15 +96,22 @@ int hpet_init( void ) {
     }
 
     do_memory_region_remap_pages( hpet_register_region, hpet_address );
+    memory_context_insert_region( &kernel_memory_context, hpet_register_region );
+
     hpet_virt_address = hpet_register_region->address;
 
     /* Configure HPET */
+
+    if ( hpet_readl( HPET_ID ) == 0 ) {
+        kprintf( WARNING, "HPET: found invalid ID: 0.\n" );
+        goto no_hpet;
+    }
 
     hpet_period = hpet_readl( HPET_PERIOD );
 
     for ( i = 0; hpet_readl( HPET_CONFIG ) == 0xFFFFFFFF; i++ ) {
         if ( i == 1000 ) {
-            kprintf( WARNING, "HPET: config register value is 0xFFFFFFFF. Disabling HPET.\n" );
+            kprintf( WARNING, "HPET: config register value is 0xFFFFFFFF.\n" );
             hpet_present = 0;
             goto no_hpet;
         }
@@ -127,21 +134,25 @@ int hpet_init( void ) {
     } while ( ( now - start ) < 200000 );
 
     if ( counter == hpet_readl( HPET_COUNTER ) ) {
-        kprintf( WARNING, "HPET: counter is not counting. Disabling HPET.\n" );
+        kprintf( WARNING, "HPET: counter is not counting.\n" );
         goto no_hpet;
     }
 
     /* HPET seems to be okey.
        Insert its memory region to the kernel memory context. */
 
-    memory_context_insert_region( &kernel_memory_context, hpet_register_region );
-
     return 0;
 
  no_hpet:
+    hpet_present = 0;
+
+    /* Release allocated resources. */
+
     do_memory_region_put( hpet_register_region );
     hpet_register_region = NULL;
     hpet_virt_address = 0;
+
+    kprintf( INFO, "Disabling HPET.\n" );
 
     return -ENOENT;
 }

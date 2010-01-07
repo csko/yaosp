@@ -282,10 +282,84 @@ static inline int pit_expect_msb( uint8_t val, uint64_t* tscp, unsigned long* de
     return ( count > 5 );
 }
 
+static inline uint32_t pit_wait_start( void ) {
+    uint8_t low;
+    uint8_t high;
+
+    do {
+        outb( 0x00, PIT_MODE );
+        low = inb( PIT_CH0 );
+        high = inb( PIT_CH0 );
+    } while ( high != 255 );
+
+    return ( ( ( uint32_t )high << 8 ) | low );
+}
+
+static inline uint32_t pit_wait_until( uint8_t wait_high ) {
+    uint8_t low;
+    uint8_t high;
+
+    do {
+        outb( 0x00, PIT_MODE );
+        low = inb( PIT_CH0 );
+        high = inb( PIT_CH0 );
+    } while ( high > wait_high );
+
+    return ( ( ( uint32_t )high << 8 ) | low );
+}
+
+static uint32_t slow_pit_calibrate( void ) {
+    double r1, r2, r3;
+    uint32_t pit_before, pit_after;
+    uint64_t tsc_before, tsc_after;
+
+    outb( 0x34, PIT_MODE );
+    outb( 0xFF, PIT_CH0 );
+    outb( 0xFF, PIT_CH0 );
+
+ calibrate1:
+    pit_before = pit_wait_start();
+    tsc_before = rdtsc();
+
+    pit_after = pit_wait_until( 224 );
+    tsc_after = rdtsc();
+
+    r1 = ( double )( tsc_after - tsc_before ) / ( double )( pit_before - pit_after );
+
+ calibrate2:
+    pit_before = pit_wait_start();
+    tsc_before = rdtsc();
+
+    pit_after = pit_wait_until( 192 );
+    tsc_after = rdtsc();
+
+    r2 = ( double )( tsc_after - tsc_before ) / ( double )( pit_before - pit_after );
+
+    if ( ( ( r1 / r2 ) < 0.99 ) ||
+         ( ( r1 / r2 ) > 1.01 ) ) {
+        goto calibrate1;
+    }
+
+    pit_before = pit_wait_start();
+    tsc_before = rdtsc();
+
+    pit_after = pit_wait_until( 128 );
+    tsc_after = rdtsc();
+
+    r3 = ( double )( tsc_after - tsc_before ) / ( double )( pit_before - pit_after );
+
+    if ( ( ( r2 / r3 ) < 0.99 ) ||
+         ( ( r2 / r3 ) > 1.01 ) ) {
+        goto calibrate2;
+    }
+
+    return ( tsc_after - tsc_before ) * PIT_TICKS_PER_SEC / ( pit_before - pit_after ) / 1000;
+}
+
 #define MAX_QUICK_PIT_MS 25
 #define MAX_QUICK_PIT_ITERATIONS (MAX_QUICK_PIT_MS * PIT_TICKS_PER_SEC / 1000 / 256)
 
-static unsigned long quick_pit_calibrate( void ) {
+static uint32_t quick_pit_calibrate( void ) {
     int i;
     uint64_t tsc, delta;
     unsigned long d1, d2;
@@ -610,13 +684,13 @@ static uint32_t tsc_calibrate( void ) {
         /* We don't have an alternative source, disable TSC */
         if ( !hpet_present && !ref1 && !ref2 ) {
             kprintf( INFO, "TSC: No reference (HPET/PMTIMER) available.\n" );
-            return 0;
+            return slow_pit_calibrate();
         }
 
         /* The alternative source failed as well, disable TSC */
         if ( tsc_ref_min == ULONG_MAX ) {
             kprintf( INFO, "TSC: HPET/PMTIMER calibration failed.\n" );
-            return 0;
+            return slow_pit_calibrate();
         }
 
         /* Use the alternative source */
@@ -655,6 +729,10 @@ static uint32_t tsc_calibrate( void ) {
 }
 
 __init int cpu_calibrate_speed( void ) {
+    int i;
+
+    /* Calibrate the TSC and CPU frequency. */
+
     tsc_khz = tsc_calibrate();
     cpu_khz = tsc_khz;
 
@@ -664,6 +742,12 @@ __init int cpu_calibrate_speed( void ) {
     );
 
     tsc_to_ns_scale = ( NSEC_PER_MSEC << CYC2NS_SCALE_FACTOR ) / cpu_khz;
+
+    /* Update the CPU table according to the detected speed. */
+
+    for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
+        processor_table[ i ].core_speed = cpu_khz * 1000;
+    }
 
     return 0;
 }
