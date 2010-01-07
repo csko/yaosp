@@ -37,6 +37,14 @@ typedef struct acpi_header {
     uint32_t creator_revision;
 } __PACKED acpi_header_t;
 
+typedef struct acpi_generic_address {
+    uint8_t space_id;
+    uint8_t bit_width;
+    uint8_t bit_offset;
+    uint8_t access_width;
+    uint64_t address;
+} __PACKED acpi_generic_address_t;
+
 typedef struct acpi_rsdp {
     uint8_t signature[ 8 ];
     uint8_t checksum;
@@ -64,6 +72,15 @@ typedef struct acpi_fadt {
     uint32_t pm2_cnt_blk;
     uint32_t pm_tmr_blk;
 } __PACKED acpi_fadt_t;
+
+typedef struct acpi_hpet {
+    acpi_header_t header;
+    uint32_t hardware_id;
+    acpi_generic_address_t address;
+    uint8_t sequence;
+    uint16_t minimum_tick;
+    uint8_t flags;
+} __PACKED acpi_hpet_t;
 
 uint32_t acpi_pmtimer_read( void );
 

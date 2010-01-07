@@ -25,6 +25,7 @@
 
 #include <arch/acpi.h>
 #include <arch/io.h>
+#include <arch/hpet.h>
 
 int acpi_pmtmr_found = 0;
 uint32_t acpi_pmtmr_ioport;
@@ -39,6 +40,7 @@ static uint32_t acpi_rsdp_places[] = {
 static uint8_t ACPI_RSDP_SIGNATURE[] = { 'R', 'S', 'D', ' ', 'P', 'T', 'R', ' ' };
 static uint8_t ACPI_RSDT_SIGNATURE[] = { 'R', 'S', 'D', 'T' };
 static uint8_t ACPI_FADT_SIGNATURE[] = { 'F', 'A', 'C', 'P' };
+static uint8_t ACPI_HPET_SIGNATURE[] = { 'H', 'P', 'E', 'T' };
 
 static inline int acpi_checksum( uint8_t* data, size_t size ) {
     int sum = 0;
@@ -106,6 +108,13 @@ static int acpi_parse_fadt( acpi_fadt_t* fadt ) {
     return 0;
 }
 
+static int acpi_parse_hpet( acpi_hpet_t* hpet ) {
+    hpet_address = hpet->address.address;
+    hpet_present = ( hpet_address != 0 );
+
+    return 0;
+}
+
 static int acpi_parse_table_at( uint32_t table_address ) {
     uint32_t length;
     acpi_header_t* header;
@@ -135,8 +144,17 @@ static int acpi_parse_table_at( uint32_t table_address ) {
         goto out;
     }
 
+    DEBUG_LOG( "%c%c%c%c\n",
+        header->signature[ 0 ],
+        header->signature[ 1 ],
+        header->signature[ 2 ],
+        header->signature[ 3 ]
+    );
+
     if ( memcmp( header->signature, ACPI_FADT_SIGNATURE, 4 ) == 0 ) {
         acpi_parse_fadt( ( acpi_fadt_t* )header );
+    } else if ( memcmp( header->signature, ACPI_HPET_SIGNATURE, 4 ) == 0 ) {
+        acpi_parse_hpet( ( acpi_hpet_t* )header );
     }
 
  out:

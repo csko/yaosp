@@ -38,6 +38,7 @@
 #include <arch/mp.h>
 #include <arch/apic.h>
 #include <arch/acpi.h>
+#include <arch/hpet.h>
 #include <arch/bios.h>
 #include <arch/mm/config.h>
 #include <arch/mm/paging.h>
@@ -287,6 +288,7 @@ __init void arch_start( multiboot_header_t* header ) {
 __init int arch_late_init( void ) {
     init_mp();
     acpi_init();
+    hpet_init();
     cpu_calibrate_speed();
     init_apic();
     init_pit();

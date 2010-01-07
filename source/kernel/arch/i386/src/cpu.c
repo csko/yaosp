@@ -32,6 +32,7 @@
 #include <arch/pit.h>
 #include <arch/io.h>
 #include <arch/acpi.h>
+#include <arch/hpet.h>
 
 i386_feature_t i386_features[] = {
     { CPU_FEATURE_MMX, "mmx" },
@@ -447,13 +448,19 @@ static unsigned long pit_calibrate_tsc( uint32_t latch, unsigned long ms, int lo
     return delta;
 }
 
-static uint64_t tsc_read_refs( uint64_t* p ) {
+static uint64_t tsc_read_refs( uint64_t* p, int hpet ) {
     int i;
     uint64_t t1, t2;
 
     for ( i = 0; i < MAX_RETRIES; i++ ) {
         t1 = rdtsc();
-        *p = acpi_pmtimer_read();
+
+        if ( hpet ) {
+            *p = hpet_readl( HPET_COUNTER ) & 0xFFFFFFFF;
+        } else {
+            *p = acpi_pmtimer_read();
+        }
+
         t2 = rdtsc();
 
         if ( ( t2 - t1 ) < SMI_TRESHOLD ) {
@@ -462,6 +469,22 @@ static uint64_t tsc_read_refs( uint64_t* p ) {
     }
 
     return ULLONG_MAX;
+}
+
+static uint32_t calc_hpet_ref( uint64_t deltatsc, uint64_t hpet1, uint64_t hpet2 ) {
+    uint64_t tmp;
+
+    if ( hpet2 < hpet1 ) {
+        hpet2 += 0x100000000ULL;
+    }
+
+    hpet2 -= hpet1;
+
+    tmp = ( ( uint64_t )hpet2 * hpet_readl( HPET_PERIOD ) );
+    tmp /= 1000000;
+    deltatsc /= tmp;
+
+    return ( uint32_t )deltatsc;
 }
 
 static uint32_t calc_pmtimer_ref( uint64_t deltatsc, uint64_t pm1, uint64_t pm2 ) {
@@ -510,19 +533,19 @@ static uint32_t tsc_calibrate( void ) {
 
         /*
          * Read the start value and the reference count of
-         * pmtimer when available. Then do the PIT
+         * hpet/pmtimer when available. Then do the PIT
          * calibration, which will take at least 50ms, and
          * read the end value.
          */
-        tsc1 = tsc_read_refs( &ref1 );
+        tsc1 = tsc_read_refs( &ref1, hpet_present );
         tsc_pit_khz = pit_calibrate_tsc( latch, ms, loopmin );
-        tsc2 = tsc_read_refs( &ref2 );
+        tsc2 = tsc_read_refs( &ref2, hpet_present );
 
         /* Pick the lowest PIT TSC calibration so far */
         tsc_pit_min = MIN( tsc_pit_min, tsc_pit_khz );
 
-        /* pmtimer available? */
-        if ( !ref1 && !ref2 ) {
+        /* hpet or pmtimer available? */
+        if ( !hpet_present && !ref1 && !ref2 ) {
             continue;
         }
 
@@ -533,7 +556,12 @@ static uint32_t tsc_calibrate( void ) {
         }
 
         tsc2 = ( tsc2 - tsc1 ) * 1000000LL;
-        tsc2 = calc_pmtimer_ref( tsc2, ref1, ref2 );
+
+        if ( hpet_present ) {
+            tsc2 = calc_hpet_ref( tsc2, ref1, ref2 );
+        } else {
+            tsc2 = calc_pmtimer_ref( tsc2, ref1, ref2 );
+        }
 
         tsc_ref_min = MIN( tsc_ref_min, ( uint32_t )tsc2 );
 
@@ -550,7 +578,11 @@ static uint32_t tsc_calibrate( void ) {
          */
         if ( ( delta >= 90 ) &&
              ( delta <= 110 ) ) {
-            kprintf( INFO, "TSC: PIT calibration matches PMTIMER (%d loops).\n", i + 1 );
+            kprintf(
+                INFO, "TSC: PIT calibration matches %s (%d loops).\n",
+                hpet_present ? "HPET" : "PMTIMER", i + 1
+            );
+
             return tsc_ref_min;
         }
 
@@ -558,7 +590,7 @@ static uint32_t tsc_calibrate( void ) {
          * Check whether PIT failed more than once. This
          * happens in virtualized environments. We need to
          * give the virtual PC a slightly longer timeframe for
-         * the PMTIMER to make the result precise.
+         * the HPET/PMTIMER to make the result precise.
          */
         if ( ( i == 1 ) &&
              ( tsc_pit_min == ULONG_MAX ) ) {
@@ -576,19 +608,22 @@ static uint32_t tsc_calibrate( void ) {
         kprintf( INFO, "TSC: Unable to calibrate against PIT.\n" );
 
         /* We don't have an alternative source, disable TSC */
-        if ( !ref1 && !ref2 ) {
-            kprintf( INFO, "TSC: No reference (PMTIMER) available.\n" );
+        if ( !hpet_present && !ref1 && !ref2 ) {
+            kprintf( INFO, "TSC: No reference (HPET/PMTIMER) available.\n" );
             return 0;
         }
 
         /* The alternative source failed as well, disable TSC */
         if ( tsc_ref_min == ULONG_MAX ) {
-            kprintf( INFO, "TSC: PMTIMER calibration failed.\n" );
+            kprintf( INFO, "TSC: HPET/PMTIMER calibration failed.\n" );
             return 0;
         }
 
         /* Use the alternative source */
-        kprintf( INFO, "TSC: using PMTIMER reference calibration.\n" );
+        kprintf(
+            INFO, "TSC: using %s reference calibration.\n",
+            hpet_present ? "HPET" : "PMTIMER"
+        );
 
         return tsc_ref_min;
     }
@@ -601,7 +636,7 @@ static uint32_t tsc_calibrate( void ) {
 
     /* The alternative source failed, use the PIT calibration value */
     if ( tsc_ref_min == ULONG_MAX ) {
-        kprintf( INFO, "TSC: PMTIMER calibration failed. Using PIT calibration.\n" );
+        kprintf( INFO, "TSC: HPET/PMTIMER calibration failed. Using PIT calibration.\n" );
         return tsc_pit_min;
     }
 
@@ -610,7 +645,10 @@ static uint32_t tsc_calibrate( void ) {
      * the PIT value as we know that there are PMTIMERs around
      * running at double speed. At least we let the user know:
      */
-    kprintf( INFO, "TSC: PIT calibration deviates from PMTIMER: %lu %lu.\n", tsc_pit_min, tsc_ref_min );
+    kprintf(
+        INFO, "TSC: PIT calibration deviates from %s: %lu %lu.\n",
+        hpet_present ? "HPET" : "PMTIMER", tsc_pit_min, tsc_ref_min
+    );
     kprintf( INFO, "TSC: Using PIT calibration value.\n" );
 
     return tsc_pit_min;
