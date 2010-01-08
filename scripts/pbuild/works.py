@@ -304,8 +304,6 @@ class CleanDirectory( Work ) :
         for entry in entries :
             path = dir + os.path.sep + entry
 
-            print path, os.path.islink( path )
-
             if os.path.islink( path ) :
                 try :
                     os.remove( path )
