@@ -137,6 +137,8 @@ int init_thread( void* arg ) {
 
     DEBUG_LOG( "Init thread started.\n" );
 
+    kernel_running = 1;
+
 #ifdef ENABLE_SMP
     arch_boot_processors();
 #endif /* ENABLE_SMP */

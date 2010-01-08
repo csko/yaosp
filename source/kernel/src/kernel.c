@@ -38,6 +38,8 @@
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
 
+int kernel_running = 0;
+
 static uint32_t kernel_param_count = 0;
 static char* kernel_params[ MAX_KERNEL_PARAMS ];
 static char kernel_param_buffer[ KERNEL_PARAM_BUF_SIZE ];

@@ -23,6 +23,7 @@
 #include <macros.h>
 #include <debug.h>
 #include <signal.h>
+#include <kernel.h>
 #include <sched/scheduler.h>
 #include <mm/region.h>
 #include <mm/context.h>
@@ -258,6 +259,11 @@ int handle_page_fault( registers_t* regs ) {
     memory_region_t* region;
 
     cr2 = get_cr2();
+
+    if ( __unlikely( !kernel_running ) ) {
+        invalid_page_fault( NULL, regs, cr2, "?" );
+    }
+
     thread = current_thread();
 
     region = memory_context_get_region_for( thread->process->memory_context, cr2 );
@@ -266,7 +272,6 @@ int handle_page_fault( registers_t* regs ) {
 
     if ( region == NULL ) {
         invalid_page_fault( thread, regs, cr2, "invalid access" );
-        return 0;
     }
 
     /* Handle copy-on-write pages */

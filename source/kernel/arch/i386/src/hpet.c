@@ -138,8 +138,7 @@ int hpet_init( void ) {
         goto no_hpet;
     }
 
-    /* HPET seems to be okey.
-       Insert its memory region to the kernel memory context. */
+    /* HPET seems to be okey. */
 
     return 0;
 
