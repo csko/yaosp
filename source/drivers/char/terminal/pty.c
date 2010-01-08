@@ -741,8 +741,8 @@ static int pty_create(
 
     win_size = ( struct winsize* )kmalloc( sizeof( struct winsize ) );
 
-    win_size->ws_row = 24;
     win_size->ws_col = 80;
+    win_size->ws_row = 25;
 
     master->window_size = win_size;
     slave->window_size = win_size;
