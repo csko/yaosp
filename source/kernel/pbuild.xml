@@ -191,7 +191,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <define key="__ASSEMBLER__"/>
                 <flag>-c</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Werror</flag>
                 <flag>-nostdinc</flag>
@@ -212,7 +211,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Werror</flag>
                 <flag>-Wshadow</flag>
@@ -231,7 +229,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Werror</flag>
                 <flag>-nostdinc</flag>
@@ -253,7 +250,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Werror</flag>
                 <flag>-Wshadow</flag>
@@ -272,7 +268,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Werror</flag>
                 <flag>-Wshadow</flag>
@@ -290,7 +285,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>./include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Werror</flag>
                 <flag>-Wshadow</flag>
@@ -300,9 +294,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo></echo>
+        <echo/>
         <echo>Linking kernel binary</echo>
-        <echo></echo>
+        <echo/>
         <echo>[LD    ] source/kernel/objs/kernel</echo>
 
         <ld>
