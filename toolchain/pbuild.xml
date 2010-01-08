@@ -57,7 +57,7 @@
 
         <mkdir>binutils-build</mkdir>
         <chdir directory="binutils-build"/>
-        
+
         <exec executable="../binutils-2.19/configure">
             <arg>--prefix=realpath(../../build/crosscompiler)</arg>
             <arg>--target=i686-pc-yaosp</arg>
@@ -80,7 +80,7 @@
 
         <mkdir>gcc-build</mkdir>
         <chdir directory="gcc-build"/>
-        
+
         <exec executable="../gcc-4.3.3/configure">
             <arg>--prefix=realpath(../../build/crosscompiler)</arg>
             <arg>--target=i686-pc-yaosp</arg>
@@ -113,6 +113,11 @@
 
     <target name="finalize">
         <copy from="libg.a" to="../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libg.a"/>
+
+        <cleandir>../build/crosscompiler/i686-pc-yaosp/sys-include</cleandir>
+        <rmdir>../build/crosscompiler/i686-pc-yaosp/sys-include</rmdir>
+
+        <symlink from="../../../source/include" to="../build/crosscompiler/i686-pc-yaosp/sys-include"/>
     </target>
 
     <target name="all">

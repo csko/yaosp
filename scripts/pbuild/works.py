@@ -290,10 +290,13 @@ class CleanDirectory( Work ) :
         self.directory = directory
 
     def execute( self, context ) :
-        if not os.path.isdir( self.directory ) :
-            return
-
-        self._clean_directory( self.directory )
+        if os.path.islink( self.directory ) :
+            try :
+                os.remove( self.directory )
+            except OSError, e :
+                pass
+        elif os.path.isdir( self.directory ) :
+            self._clean_directory( self.directory )
 
     def _clean_directory( self, dir ) :
         entries = os.listdir( dir )
@@ -301,7 +304,14 @@ class CleanDirectory( Work ) :
         for entry in entries :
             path = dir + os.path.sep + entry
 
-            if os.path.isdir( path ) :
+            print path, os.path.islink( path )
+
+            if os.path.islink( path ) :
+                try :
+                    os.remove( path )
+                except OSError, e :
+                    pass
+            elif os.path.isdir( path ) :
                 self._clean_directory( path )
 
                 try :
