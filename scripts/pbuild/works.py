@@ -155,7 +155,7 @@ class GccWork( Work ) :
 
         # Build the command
 
-        command = [ "gcc" ] + real_flags + real_inputs + real_includes
+        command = [ "i686-pc-yaosp-gcc" ] + real_flags + real_inputs + real_includes
         command += real_defines
         command += [ "-o", context.handle_everything( self.output ) ]
 
@@ -172,10 +172,14 @@ class LdWork( Work ) :
     def __init__( self ) :
         self.linker_script = None
         self.inputs = []
+        self.flags = []
         self.output = ""
 
     def add_input( self, input ) :
         self.inputs.append( input )
+
+    def add_flag( self, flag ) :
+        self.flags.append( flag )
 
     def set_output( self, output ) :
         self.output = output
@@ -194,7 +198,7 @@ class LdWork( Work ) :
 
         # Build the command
 
-        command = [ "ld" ]
+        command = [ "i686-pc-yaosp-ld" ] + self.flags
 
         if self.linker_script != None :
             command += [ "-T" + self.linker_script ]
@@ -203,6 +207,46 @@ class LdWork( Work ) :
         command += [ "-o", context.handle_everything( self.output ) ]
 
         # Execute a new LD process
+
+        # Get the return code of the process
+        retcode = subprocess.call( command )
+        # If the return code is not 0, the build process must stop
+        if retcode != 0 :
+            print "Process returned with return code %d" % retcode
+            print "Build stopped."
+            sys.exit( retcode )
+
+class ArWork( Work ) :
+    def __init__( self ) :
+        self.inputs = []
+        self.flags = []
+        self.output = ""
+
+    def add_input( self, input ) :
+        self.inputs.append( input )
+
+    def add_flag( self, flag ) :
+        self.flags.append( flag )
+
+    def set_output( self, output ) :
+        self.output = output
+
+    def execute( self, context ) :
+        real_inputs = []
+
+        # Parse the input files
+
+        for input in self.inputs :
+            input = context.replace_definitions( input )
+            real_inputs += context.replace_wildcards( input )
+
+        # Build the command
+
+        command = [ "i686-pc-yaosp-ar" ] + self.flags
+        command += [ context.handle_everything( self.output ) ]
+        command += real_inputs
+
+        # Execute a new AR process
 
         # Get the return code of the process
         retcode = subprocess.call( command )

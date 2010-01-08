@@ -1,6 +1,6 @@
 diff -Nru bash-4.0-orig/arrayfunc.c bash-4.0/arrayfunc.c
 --- bash-4.0-orig/arrayfunc.c	2009-01-04 20:32:21.000000000 +0100
-+++ bash-4.0/arrayfunc.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/arrayfunc.c	2010-01-08 15:58:09.000000000 +0100
 @@ -98,7 +98,7 @@
    oldval = value_cell (var);
    hash = assoc_create (0);
@@ -78,7 +78,7 @@ diff -Nru bash-4.0-orig/arrayfunc.c bash-4.0/arrayfunc.c
     `[' of an array subscript and removes the array element to which SUB
 diff -Nru bash-4.0-orig/bashline.c bash-4.0/bashline.c
 --- bash-4.0-orig/bashline.c	2009-01-08 15:29:24.000000000 +0100
-+++ bash-4.0/bashline.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/bashline.c	2010-01-08 15:58:09.000000000 +0100
 @@ -3388,7 +3388,6 @@
    Keymap xkmap;		/* unix command executing keymap */
    register int i;
@@ -106,7 +106,7 @@ diff -Nru bash-4.0-orig/bashline.c bash-4.0/bashline.c
  	  if (rl_point > rl_end)
 diff -Nru bash-4.0-orig/builtins/alias.c bash-4.0/builtins/alias.c
 --- bash-4.0-orig/builtins/alias.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/alias.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/alias.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,192 @@
 +/* alias.c, created from alias.def. */
 +#line 42 "./alias.def"
@@ -302,7 +302,7 @@ diff -Nru bash-4.0-orig/builtins/alias.c bash-4.0/builtins/alias.c
 +#endif /* ALIAS */
 diff -Nru bash-4.0-orig/builtins/bind.c bash-4.0/builtins/bind.c
 --- bash-4.0-orig/builtins/bind.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/bind.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/bind.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,278 @@
 +/* bind.c, created from bind.def. */
 +#line 22 "./bind.def"
@@ -584,7 +584,7 @@ diff -Nru bash-4.0-orig/builtins/bind.c bash-4.0/builtins/bind.c
 +#endif /* READLINE */
 diff -Nru bash-4.0-orig/builtins/break.c bash-4.0/builtins/break.c
 --- bash-4.0-orig/builtins/break.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/break.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/break.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,102 @@
 +/* break.c, created from break.def. */
 +#line 22 "./break.def"
@@ -690,7 +690,7 @@ diff -Nru bash-4.0-orig/builtins/break.c bash-4.0/builtins/break.c
 +}
 diff -Nru bash-4.0-orig/builtins/builtext.h bash-4.0/builtins/builtext.h
 --- bash-4.0-orig/builtins/builtext.h	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/builtext.h	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/builtext.h	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,188 @@
 +/* builtext.h - The list of builtins found in libbuiltins.a. */
 +#if defined (ALIAS)
@@ -882,7 +882,7 @@ diff -Nru bash-4.0-orig/builtins/builtext.h bash-4.0/builtins/builtext.h
 +extern char * const readarray_doc[];
 diff -Nru bash-4.0-orig/builtins/builtin.c bash-4.0/builtins/builtin.c
 --- bash-4.0-orig/builtins/builtin.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/builtin.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/builtin.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,54 @@
 +/* builtin.c, created from builtin.def. */
 +#line 22 "./builtin.def"
@@ -940,7 +940,7 @@ diff -Nru bash-4.0-orig/builtins/builtin.c bash-4.0/builtins/builtin.c
 +}
 diff -Nru bash-4.0-orig/builtins/builtins.c bash-4.0/builtins/builtins.c
 --- bash-4.0-orig/builtins/builtins.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/builtins.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/builtins.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,1995 @@
 +/* builtins.c -- the built in shell commands. */
 +
@@ -2939,7 +2939,7 @@ diff -Nru bash-4.0-orig/builtins/builtins.c bash-4.0/builtins/builtins.c
 +};
 diff -Nru bash-4.0-orig/builtins/caller.c bash-4.0/builtins/caller.c
 --- bash-4.0-orig/builtins/caller.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/caller.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/caller.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,118 @@
 +/* caller.c, created from caller.def. */
 +#line 22 "./caller.def"
@@ -3061,7 +3061,7 @@ diff -Nru bash-4.0-orig/builtins/caller.c bash-4.0/builtins/caller.c
 +#endif /* LOADABLE_BUILTIN */
 diff -Nru bash-4.0-orig/builtins/cd.c bash-4.0/builtins/cd.c
 --- bash-4.0-orig/builtins/cd.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/cd.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/cd.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,453 @@
 +/* cd.c, created from cd.def. */
 +#line 22 "./cd.def"
@@ -3518,7 +3518,7 @@ diff -Nru bash-4.0-orig/builtins/cd.c bash-4.0/builtins/cd.c
 +}
 diff -Nru bash-4.0-orig/builtins/colon.c bash-4.0/builtins/colon.c
 --- bash-4.0-orig/builtins/colon.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/colon.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/colon.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,24 @@
 +/* colon.c, created from colon.def. */
 +#line 22 "./colon.def"
@@ -3546,7 +3546,7 @@ diff -Nru bash-4.0-orig/builtins/colon.c bash-4.0/builtins/colon.c
 +}
 diff -Nru bash-4.0-orig/builtins/command.c bash-4.0/builtins/command.c
 --- bash-4.0-orig/builtins/command.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/command.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/command.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,178 @@
 +/* command.c, created from command.def. */
 +#line 22 "./command.def"
@@ -3728,7 +3728,7 @@ diff -Nru bash-4.0-orig/builtins/command.c bash-4.0/builtins/command.c
 +}
 diff -Nru bash-4.0-orig/builtins/complete.c bash-4.0/builtins/complete.c
 --- bash-4.0-orig/builtins/complete.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/complete.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/complete.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,752 @@
 +/* complete.c, created from complete.def. */
 +#line 22 "./complete.def"
@@ -4484,7 +4484,7 @@ diff -Nru bash-4.0-orig/builtins/complete.c bash-4.0/builtins/complete.c
 +}
 diff -Nru bash-4.0-orig/builtins/declare.c bash-4.0/builtins/declare.c
 --- bash-4.0-orig/builtins/declare.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/declare.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/declare.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,477 @@
 +/* declare.c, created from declare.def. */
 +#line 22 "./declare.def"
@@ -4965,7 +4965,7 @@ diff -Nru bash-4.0-orig/builtins/declare.c bash-4.0/builtins/declare.c
 +}
 diff -Nru bash-4.0-orig/builtins/declare.def bash-4.0/builtins/declare.def
 --- bash-4.0-orig/builtins/declare.def	2009-01-04 20:32:22.000000000 +0100
-+++ bash-4.0/builtins/declare.def	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/declare.def	2010-01-08 15:58:09.000000000 +0100
 @@ -295,6 +295,13 @@
        subscript_start = (char *)NULL;
        if (t = strchr (name, '['))	/* ] */
@@ -4991,7 +4991,7 @@ diff -Nru bash-4.0-orig/builtins/declare.def bash-4.0/builtins/declare.def
  
 diff -Nru bash-4.0-orig/builtins/echo.c bash-4.0/builtins/echo.c
 --- bash-4.0-orig/builtins/echo.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/echo.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/echo.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,135 @@
 +/* echo.c, created from echo.def. */
 +#line 22 "./echo.def"
@@ -5130,7 +5130,7 @@ diff -Nru bash-4.0-orig/builtins/echo.c bash-4.0/builtins/echo.c
 +}
 diff -Nru bash-4.0-orig/builtins/enable.c bash-4.0/builtins/enable.c
 --- bash-4.0-orig/builtins/enable.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/enable.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/enable.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,438 @@
 +/* enable.c, created from enable.def. */
 +#line 22 "./enable.def"
@@ -5572,7 +5572,7 @@ diff -Nru bash-4.0-orig/builtins/enable.c bash-4.0/builtins/enable.c
 +#endif
 diff -Nru bash-4.0-orig/builtins/eval.c bash-4.0/builtins/eval.c
 --- bash-4.0-orig/builtins/eval.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/eval.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/eval.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,29 @@
 +/* eval.c, created from eval.def. */
 +#line 22 "./eval.def"
@@ -5605,7 +5605,7 @@ diff -Nru bash-4.0-orig/builtins/eval.c bash-4.0/builtins/eval.c
 +}
 diff -Nru bash-4.0-orig/builtins/exec.c bash-4.0/builtins/exec.c
 --- bash-4.0-orig/builtins/exec.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/exec.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/exec.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,198 @@
 +/* exec.c, created from exec.def. */
 +#line 22 "./exec.def"
@@ -5807,7 +5807,7 @@ diff -Nru bash-4.0-orig/builtins/exec.c bash-4.0/builtins/exec.c
 +}
 diff -Nru bash-4.0-orig/builtins/exit.c bash-4.0/builtins/exit.c
 --- bash-4.0-orig/builtins/exit.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/exit.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/exit.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,135 @@
 +/* exit.c, created from exit.def. */
 +#line 22 "./exit.def"
@@ -5946,7 +5946,7 @@ diff -Nru bash-4.0-orig/builtins/exit.c bash-4.0/builtins/exit.c
 +}
 diff -Nru bash-4.0-orig/builtins/exit.def bash-4.0/builtins/exit.def
 --- bash-4.0-orig/builtins/exit.def	2009-01-04 20:32:22.000000000 +0100
-+++ bash-4.0/builtins/exit.def	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/exit.def	2010-01-08 15:58:09.000000000 +0100
 @@ -113,7 +113,7 @@
        for (i = stopmsg = 0; i < js.j_jobslots; i++)
  	if (jobs[i] && STOPPED (i))
@@ -5958,7 +5958,7 @@ diff -Nru bash-4.0-orig/builtins/exit.def bash-4.0/builtins/exit.def
        if (stopmsg == JSTOPPED)
 diff -Nru bash-4.0-orig/builtins/fc.c bash-4.0/builtins/fc.c
 --- bash-4.0-orig/builtins/fc.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/fc.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/fc.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,606 @@
 +/* fc.c, created from fc.def. */
 +#line 22 "./fc.def"
@@ -6568,7 +6568,7 @@ diff -Nru bash-4.0-orig/builtins/fc.c bash-4.0/builtins/fc.c
 +#endif /* HISTORY */
 diff -Nru bash-4.0-orig/builtins/fc.def bash-4.0/builtins/fc.def
 --- bash-4.0-orig/builtins/fc.def	2009-01-04 20:32:22.000000000 +0100
-+++ bash-4.0/builtins/fc.def	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/fc.def	2010-01-08 15:58:09.000000000 +0100
 @@ -88,6 +88,7 @@
  extern int current_command_line_count;
  extern int literal_history;
@@ -6634,7 +6634,7 @@ diff -Nru bash-4.0-orig/builtins/fc.def bash-4.0/builtins/fc.def
    if (command == NULL)
 diff -Nru bash-4.0-orig/builtins/fg_bg.c bash-4.0/builtins/fg_bg.c
 --- bash-4.0-orig/builtins/fg_bg.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/fg_bg.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/fg_bg.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,143 @@
 +/* fg_bg.c, created from fg_bg.def. */
 +#line 22 "./fg_bg.def"
@@ -6781,7 +6781,7 @@ diff -Nru bash-4.0-orig/builtins/fg_bg.c bash-4.0/builtins/fg_bg.c
 +#endif /* JOB_CONTROL */
 diff -Nru bash-4.0-orig/builtins/getopts.c bash-4.0/builtins/getopts.c
 --- bash-4.0-orig/builtins/getopts.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/getopts.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/getopts.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,270 @@
 +/* getopts.c, created from getopts.def. */
 +#line 22 "./getopts.def"
@@ -7055,7 +7055,7 @@ diff -Nru bash-4.0-orig/builtins/getopts.c bash-4.0/builtins/getopts.c
 +}
 diff -Nru bash-4.0-orig/builtins/hash.c bash-4.0/builtins/hash.c
 --- bash-4.0-orig/builtins/hash.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/hash.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/hash.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,240 @@
 +/* hash.c, created from hash.def. */
 +#line 22 "./hash.def"
@@ -7299,7 +7299,7 @@ diff -Nru bash-4.0-orig/builtins/hash.c bash-4.0/builtins/hash.c
 +}
 diff -Nru bash-4.0-orig/builtins/help.c bash-4.0/builtins/help.c
 --- bash-4.0-orig/builtins/help.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/help.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/help.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,343 @@
 +/* help.c, created from help.def. */
 +#line 22 "./help.def"
@@ -7646,7 +7646,7 @@ diff -Nru bash-4.0-orig/builtins/help.c bash-4.0/builtins/help.c
 +#endif /* HELP_BUILTIN */
 diff -Nru bash-4.0-orig/builtins/history.c bash-4.0/builtins/history.c
 --- bash-4.0-orig/builtins/history.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/history.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/history.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,328 @@
 +/* history.c, created from history.def. */
 +#line 22 "./history.def"
@@ -7978,7 +7978,7 @@ diff -Nru bash-4.0-orig/builtins/history.c bash-4.0/builtins/history.c
 +#endif /* HISTORY */
 diff -Nru bash-4.0-orig/builtins/jobs.c bash-4.0/builtins/jobs.c
 --- bash-4.0-orig/builtins/jobs.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/jobs.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/jobs.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,238 @@
 +/* jobs.c, created from jobs.def. */
 +#line 22 "./jobs.def"
@@ -8220,7 +8220,7 @@ diff -Nru bash-4.0-orig/builtins/jobs.c bash-4.0/builtins/jobs.c
 +#endif /* JOB_CONTROL */
 diff -Nru bash-4.0-orig/builtins/kill.c bash-4.0/builtins/kill.c
 --- bash-4.0-orig/builtins/kill.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/kill.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/kill.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,222 @@
 +/* kill.c, created from kill.def. */
 +#line 22 "./kill.def"
@@ -8446,7 +8446,7 @@ diff -Nru bash-4.0-orig/builtins/kill.c bash-4.0/builtins/kill.c
 +}
 diff -Nru bash-4.0-orig/builtins/let.c bash-4.0/builtins/let.c
 --- bash-4.0-orig/builtins/let.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/let.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/let.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,66 @@
 +/* let.c, created from let.def. */
 +#line 66 "./let.def"
@@ -8516,7 +8516,7 @@ diff -Nru bash-4.0-orig/builtins/let.c bash-4.0/builtins/let.c
 +#endif
 diff -Nru bash-4.0-orig/builtins/mapfile.c bash-4.0/builtins/mapfile.c
 --- bash-4.0-orig/builtins/mapfile.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/mapfile.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/mapfile.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,287 @@
 +/* mapfile.c, created from mapfile.def. */
 +#line 23 "./mapfile.def"
@@ -8807,7 +8807,7 @@ diff -Nru bash-4.0-orig/builtins/mapfile.c bash-4.0/builtins/mapfile.c
 +#endif  /* ARRAY_VARS */
 diff -Nru bash-4.0-orig/builtins/pipesize.h bash-4.0/builtins/pipesize.h
 --- bash-4.0-orig/builtins/pipesize.h	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/pipesize.h	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/pipesize.h	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,8 @@
 +/*
 + * pipesize.h
@@ -8819,7 +8819,7 @@ diff -Nru bash-4.0-orig/builtins/pipesize.h bash-4.0/builtins/pipesize.h
 +#define PIPESIZE 65536
 diff -Nru bash-4.0-orig/builtins/printf.c bash-4.0/builtins/printf.c
 --- bash-4.0-orig/builtins/printf.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/printf.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/printf.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,1050 @@
 +/* printf.c, created from printf.def. */
 +#line 22 "./printf.def"
@@ -9873,7 +9873,7 @@ diff -Nru bash-4.0-orig/builtins/printf.c bash-4.0/builtins/printf.c
 +}
 diff -Nru bash-4.0-orig/builtins/pushd.c bash-4.0/builtins/pushd.c
 --- bash-4.0-orig/builtins/pushd.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/pushd.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/pushd.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,674 @@
 +/* pushd.c, created from pushd.def. */
 +#line 22 "./pushd.def"
@@ -10551,7 +10551,7 @@ diff -Nru bash-4.0-orig/builtins/pushd.c bash-4.0/builtins/pushd.c
 +#endif /* PUSHD_AND_POPD */
 diff -Nru bash-4.0-orig/builtins/read.c bash-4.0/builtins/read.c
 --- bash-4.0-orig/builtins/read.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/read.c	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/read.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,910 @@
 +/* read.c, created from read.def. */
 +#line 22 "./read.def"
@@ -11465,7 +11465,7 @@ diff -Nru bash-4.0-orig/builtins/read.c bash-4.0/builtins/read.c
 +#endif
 diff -Nru bash-4.0-orig/builtins/read.def bash-4.0/builtins/read.def
 --- bash-4.0-orig/builtins/read.def	2009-01-16 05:11:21.000000000 +0100
-+++ bash-4.0/builtins/read.def	2009-12-08 18:04:02.000000000 +0100
++++ bash-4.0/builtins/read.def	2010-01-08 15:58:09.000000000 +0100
 @@ -369,14 +369,14 @@
        code = setjmp (alrmbuf);
        if (code)
@@ -11500,7 +11500,7 @@ diff -Nru bash-4.0-orig/builtins/read.def bash-4.0/builtins/read.def
  
 diff -Nru bash-4.0-orig/builtins/return.c bash-4.0/builtins/return.c
 --- bash-4.0-orig/builtins/return.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/return.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/return.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,45 @@
 +/* return.c, created from return.def. */
 +#line 22 "./return.def"
@@ -11549,7 +11549,7 @@ diff -Nru bash-4.0-orig/builtins/return.c bash-4.0/builtins/return.c
 +}
 diff -Nru bash-4.0-orig/builtins/set.c bash-4.0/builtins/set.c
 --- bash-4.0-orig/builtins/set.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/set.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/set.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,725 @@
 +/* set.c, created from set.def. */
 +#line 22 "./set.def"
@@ -12278,7 +12278,7 @@ diff -Nru bash-4.0-orig/builtins/set.c bash-4.0/builtins/set.c
 +}
 diff -Nru bash-4.0-orig/builtins/setattr.c bash-4.0/builtins/setattr.c
 --- bash-4.0-orig/builtins/setattr.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/setattr.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/setattr.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,459 @@
 +/* setattr.c, created from setattr.def. */
 +#line 22 "./setattr.def"
@@ -12741,7 +12741,7 @@ diff -Nru bash-4.0-orig/builtins/setattr.c bash-4.0/builtins/setattr.c
 +}
 diff -Nru bash-4.0-orig/builtins/shift.c bash-4.0/builtins/shift.c
 --- bash-4.0-orig/builtins/shift.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/shift.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/shift.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,72 @@
 +/* shift.c, created from shift.def. */
 +#line 22 "./shift.def"
@@ -12817,7 +12817,7 @@ diff -Nru bash-4.0-orig/builtins/shift.c bash-4.0/builtins/shift.c
 +}
 diff -Nru bash-4.0-orig/builtins/shopt.c bash-4.0/builtins/shopt.c
 --- bash-4.0-orig/builtins/shopt.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/shopt.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/shopt.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,543 @@
 +/* shopt.c, created from shopt.def. */
 +#line 22 "./shopt.def"
@@ -13364,7 +13364,7 @@ diff -Nru bash-4.0-orig/builtins/shopt.c bash-4.0/builtins/shopt.c
 +}
 diff -Nru bash-4.0-orig/builtins/source.c bash-4.0/builtins/source.c
 --- bash-4.0-orig/builtins/source.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/source.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/source.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,144 @@
 +/* source.c, created from source.def. */
 +#line 22 "./source.def"
@@ -13512,7 +13512,7 @@ diff -Nru bash-4.0-orig/builtins/source.c bash-4.0/builtins/source.c
 +}
 diff -Nru bash-4.0-orig/builtins/suspend.c bash-4.0/builtins/suspend.c
 --- bash-4.0-orig/builtins/suspend.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/suspend.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/suspend.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,94 @@
 +/* suspend.c, created from suspend.def. */
 +#line 22 "./suspend.def"
@@ -13610,7 +13610,7 @@ diff -Nru bash-4.0-orig/builtins/suspend.c bash-4.0/builtins/suspend.c
 +#endif /* JOB_CONTROL */
 diff -Nru bash-4.0-orig/builtins/test.c bash-4.0/builtins/test.c
 --- bash-4.0-orig/builtins/test.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/test.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/test.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,53 @@
 +/* test.c, created from test.def. */
 +#line 22 "./test.def"
@@ -13667,7 +13667,7 @@ diff -Nru bash-4.0-orig/builtins/test.c bash-4.0/builtins/test.c
 +}
 diff -Nru bash-4.0-orig/builtins/times.c bash-4.0/builtins/times.c
 --- bash-4.0-orig/builtins/times.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/times.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/times.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,90 @@
 +/* times.c, created from times.def. */
 +#line 22 "./times.def"
@@ -13761,7 +13761,7 @@ diff -Nru bash-4.0-orig/builtins/times.c bash-4.0/builtins/times.c
 +}
 diff -Nru bash-4.0-orig/builtins/trap.c bash-4.0/builtins/trap.c
 --- bash-4.0-orig/builtins/trap.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/trap.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/trap.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,231 @@
 +/* trap.c, created from trap.def. */
 +#line 22 "./trap.def"
@@ -13996,7 +13996,7 @@ diff -Nru bash-4.0-orig/builtins/trap.c bash-4.0/builtins/trap.c
 +}
 diff -Nru bash-4.0-orig/builtins/type.c bash-4.0/builtins/type.c
 --- bash-4.0-orig/builtins/type.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/type.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/type.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,356 @@
 +/* type.c, created from type.def. */
 +#line 22 "./type.def"
@@ -14356,7 +14356,7 @@ diff -Nru bash-4.0-orig/builtins/type.c bash-4.0/builtins/type.c
 +}
 diff -Nru bash-4.0-orig/builtins/ulimit.c bash-4.0/builtins/ulimit.c
 --- bash-4.0-orig/builtins/ulimit.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/ulimit.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/ulimit.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,710 @@
 +/* ulimit.c, created from ulimit.def. */
 +#line 22 "./ulimit.def"
@@ -15070,7 +15070,7 @@ diff -Nru bash-4.0-orig/builtins/ulimit.c bash-4.0/builtins/ulimit.c
 +#endif /* !_MINIX */
 diff -Nru bash-4.0-orig/builtins/umask.c bash-4.0/builtins/umask.c
 --- bash-4.0-orig/builtins/umask.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/umask.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/umask.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,280 @@
 +/* umask.c, created from umask.def. */
 +#line 22 "./umask.def"
@@ -15354,7 +15354,7 @@ diff -Nru bash-4.0-orig/builtins/umask.c bash-4.0/builtins/umask.c
 +}
 diff -Nru bash-4.0-orig/builtins/wait.c bash-4.0/builtins/wait.c
 --- bash-4.0-orig/builtins/wait.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/builtins/wait.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/builtins/wait.c	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,138 @@
 +/* wait.c, created from wait.def. */
 +#line 38 "./wait.def"
@@ -15496,7 +15496,7 @@ diff -Nru bash-4.0-orig/builtins/wait.c bash-4.0/builtins/wait.c
 +}
 diff -Nru bash-4.0-orig/config-bot.h bash-4.0/config-bot.h
 --- bash-4.0-orig/config-bot.h	2009-01-04 20:32:23.000000000 +0100
-+++ bash-4.0/config-bot.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/config-bot.h	2010-01-08 15:58:09.000000000 +0100
 @@ -3,7 +3,7 @@
  
  /* Copyright (C) 1989-2009 Free Software Foundation, Inc.
@@ -15508,7 +15508,7 @@ diff -Nru bash-4.0-orig/config-bot.h bash-4.0/config-bot.h
     it under the terms of the GNU General Public License as published by
 diff -Nru bash-4.0-orig/config.h bash-4.0/config.h
 --- bash-4.0-orig/config.h	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/config.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/config.h	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,1084 @@
 +/* config.h.  Generated from config.h.in by configure.  */
 +/* config.h -- Configuration file for bash. */
@@ -16596,7 +16596,7 @@ diff -Nru bash-4.0-orig/config.h bash-4.0/config.h
 +#endif /* _CONFIG_H_ */
 diff -Nru bash-4.0-orig/doc/bash.1 bash-4.0/doc/bash.1
 --- bash-4.0-orig/doc/bash.1	2009-02-18 21:13:56.000000000 +0100
-+++ bash-4.0/doc/bash.1	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/doc/bash.1	2010-01-08 15:58:09.000000000 +0100
 @@ -8257,9 +8257,10 @@
  Exit after reading and executing one command.
  .TP 8
@@ -16612,7 +16612,7 @@ diff -Nru bash-4.0-orig/doc/bash.1 bash-4.0/doc/bash.1
  .B \-v
 diff -Nru bash-4.0-orig/doc/bashref.texi bash-4.0/doc/bashref.texi
 --- bash-4.0-orig/doc/bashref.texi	2009-02-18 21:14:43.000000000 +0100
-+++ bash-4.0/doc/bashref.texi	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/doc/bashref.texi	2010-01-08 15:58:09.000000000 +0100
 @@ -4138,7 +4138,8 @@
  Exit after reading and executing one command.
  
@@ -16625,7 +16625,7 @@ diff -Nru bash-4.0-orig/doc/bashref.texi bash-4.0/doc/bashref.texi
  
 diff -Nru bash-4.0-orig/eval.c bash-4.0/eval.c
 --- bash-4.0-orig/eval.c	2009-01-04 20:32:26.000000000 +0100
-+++ bash-4.0/eval.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/eval.c	2010-01-08 15:58:09.000000000 +0100
 @@ -142,7 +142,7 @@
  	      dispose_command (global_command);
  	      global_command = (COMMAND *)NULL;
@@ -16637,7 +16637,7 @@ diff -Nru bash-4.0-orig/eval.c bash-4.0/eval.c
  	      current_command_number++;
 diff -Nru bash-4.0-orig/execute_cmd.c bash-4.0/execute_cmd.c
 --- bash-4.0-orig/execute_cmd.c	2009-02-13 22:41:41.000000000 +0100
-+++ bash-4.0/execute_cmd.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/execute_cmd.c	2010-01-08 15:58:09.000000000 +0100
 @@ -568,6 +568,7 @@
  
        /* Fork a subshell, turn off the subshell bit, turn off job
@@ -16703,7 +16703,7 @@ diff -Nru bash-4.0-orig/execute_cmd.c bash-4.0/execute_cmd.c
  		break;
 diff -Nru bash-4.0-orig/externs.h bash-4.0/externs.h
 --- bash-4.0-orig/externs.h	2009-01-19 00:29:29.000000000 +0100
-+++ bash-4.0/externs.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/externs.h	2010-01-08 15:58:09.000000000 +0100
 @@ -24,6 +24,8 @@
  #if !defined (_EXTERNS_H_)
  #  define _EXTERNS_H_
@@ -16733,7 +16733,7 @@ diff -Nru bash-4.0-orig/externs.h bash-4.0/externs.h
  #if !defined (HAVE_GETCWD)
 diff -Nru bash-4.0-orig/externs.h.orig bash-4.0/externs.h.orig
 --- bash-4.0-orig/externs.h.orig	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/externs.h.orig	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/externs.h.orig	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,452 @@
 +/* externs.h -- extern function declarations which do not appear in their
 +   own header file. */
@@ -17189,7 +17189,7 @@ diff -Nru bash-4.0-orig/externs.h.orig bash-4.0/externs.h.orig
 +#endif /* _EXTERNS_H_ */
 diff -Nru bash-4.0-orig/jobs.c bash-4.0/jobs.c
 --- bash-4.0-orig/jobs.c	2009-01-29 23:09:49.000000000 +0100
-+++ bash-4.0/jobs.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/jobs.c	2010-01-08 15:58:09.000000000 +0100
 @@ -442,7 +442,7 @@
    old_pipeline = the_pipeline;
    the_pipeline = saved_pipeline;
@@ -17225,7 +17225,7 @@ diff -Nru bash-4.0-orig/jobs.c bash-4.0/jobs.c
  #endif /* PGRP_PIPE */
 diff -Nru bash-4.0-orig/jobs.h bash-4.0/jobs.h
 --- bash-4.0-orig/jobs.h	2009-01-04 20:32:29.000000000 +0100
-+++ bash-4.0/jobs.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/jobs.h	2010-01-08 15:58:09.000000000 +0100
 @@ -235,6 +235,8 @@
  extern void init_job_stats __P((void));
  
@@ -17237,7 +17237,7 @@ diff -Nru bash-4.0-orig/jobs.h bash-4.0/jobs.h
  extern int job_control;
 diff -Nru bash-4.0-orig/lib/glob/glob.c bash-4.0/lib/glob/glob.c
 --- bash-4.0-orig/lib/glob/glob.c	2009-01-04 20:32:30.000000000 +0100
-+++ bash-4.0/lib/glob/glob.c	2009-12-08 18:06:14.000000000 +0100
++++ bash-4.0/lib/glob/glob.c	2010-01-08 15:58:09.000000000 +0100
 @@ -356,7 +356,7 @@
  	*np = 0;
        if (ep)
@@ -17326,7 +17326,7 @@ diff -Nru bash-4.0-orig/lib/glob/glob.c bash-4.0/lib/glob/glob.c
  				  dflags);
 diff -Nru bash-4.0-orig/lib/readline/display.c bash-4.0/lib/readline/display.c
 --- bash-4.0-orig/lib/readline/display.c	2009-01-04 20:32:32.000000000 +0100
-+++ bash-4.0/lib/readline/display.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/lib/readline/display.c	2010-01-08 15:58:09.000000000 +0100
 @@ -512,6 +512,7 @@
    /* Block keyboard interrupts because this function manipulates global
       data structures. */
@@ -17404,7 +17404,7 @@ diff -Nru bash-4.0-orig/lib/readline/display.c bash-4.0/lib/readline/display.c
  	{
 diff -Nru bash-4.0-orig/lib/readline/readline.h bash-4.0/lib/readline/readline.h
 --- bash-4.0-orig/lib/readline/readline.h	2009-01-04 20:32:33.000000000 +0100
-+++ bash-4.0/lib/readline/readline.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/lib/readline/readline.h	2010-01-08 15:58:09.000000000 +0100
 @@ -814,8 +814,9 @@
  #define RL_STATE_VIMOTION	0x100000	/* reading vi motion arg */
  #define RL_STATE_MULTIKEY	0x200000	/* reading multiple-key command */
@@ -17418,7 +17418,7 @@ diff -Nru bash-4.0-orig/lib/readline/readline.h bash-4.0/lib/readline/readline.h
  #define RL_UNSETSTATE(x)	(rl_readline_state &= ~(x))
 diff -Nru bash-4.0-orig/lib/readline/terminal.c bash-4.0/lib/readline/terminal.c
 --- bash-4.0-orig/lib/readline/terminal.c	2009-01-04 20:32:34.000000000 +0100
-+++ bash-4.0/lib/readline/terminal.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/lib/readline/terminal.c	2010-01-08 15:58:09.000000000 +0100
 @@ -355,7 +355,7 @@
        _rl_get_screen_size (fileno (rl_instream), 1);
        if (CUSTOM_REDISPLAY_FUNC ())
@@ -17430,7 +17430,7 @@ diff -Nru bash-4.0-orig/lib/readline/terminal.c bash-4.0/lib/readline/terminal.c
  }
 diff -Nru bash-4.0-orig/lib/readline/tilde.c bash-4.0/lib/readline/tilde.c
 --- bash-4.0-orig/lib/readline/tilde.c	2009-01-04 20:32:37.000000000 +0100
-+++ bash-4.0/lib/readline/tilde.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/lib/readline/tilde.c	2010-01-08 15:58:09.000000000 +0100
 @@ -19,6 +19,8 @@
     along with Readline.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -17451,7 +17451,7 @@ diff -Nru bash-4.0-orig/lib/readline/tilde.c bash-4.0/lib/readline/tilde.c
  #  include <stdlib.h>
 diff -Nru bash-4.0-orig/lib/sh/netopen.c bash-4.0/lib/sh/netopen.c
 --- bash-4.0-orig/lib/sh/netopen.c	2008-08-12 17:57:50.000000000 +0200
-+++ bash-4.0/lib/sh/netopen.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/lib/sh/netopen.c	2010-01-08 15:58:09.000000000 +0100
 @@ -165,14 +165,14 @@
  
    if (_getaddr(host, &ina) == 0)
@@ -17489,7 +17489,7 @@ diff -Nru bash-4.0-orig/lib/sh/netopen.c bash-4.0/lib/sh/netopen.c
  
 diff -Nru bash-4.0-orig/lib/sh/ufuncs.c bash-4.0/lib/sh/ufuncs.c
 --- bash-4.0-orig/lib/sh/ufuncs.c	2009-01-08 15:00:47.000000000 +0100
-+++ bash-4.0/lib/sh/ufuncs.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/lib/sh/ufuncs.c	2010-01-08 15:58:09.000000000 +0100
 @@ -37,6 +37,10 @@
  #include <unistd.h>
  #endif
@@ -17503,7 +17503,7 @@ diff -Nru bash-4.0-orig/lib/sh/ufuncs.c bash-4.0/lib/sh/ufuncs.c
  #if defined (HAVE_SETITIMER)
 diff -Nru bash-4.0-orig/lib/sh/winsize.c bash-4.0/lib/sh/winsize.c
 --- bash-4.0-orig/lib/sh/winsize.c	2008-08-12 19:53:51.000000000 +0200
-+++ bash-4.0/lib/sh/winsize.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/lib/sh/winsize.c	2010-01-08 15:58:09.000000000 +0100
 @@ -30,16 +30,29 @@
  
  #include <sys/ioctl.h>
@@ -17545,7 +17545,7 @@ diff -Nru bash-4.0-orig/lib/sh/winsize.c bash-4.0/lib/sh/winsize.c
  
 diff -Nru bash-4.0-orig/parse.y bash-4.0/parse.y
 --- bash-4.0-orig/parse.y	2009-01-08 14:29:12.000000000 +0100
-+++ bash-4.0/parse.y	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/parse.y	2010-01-08 15:58:09.000000000 +0100
 @@ -887,7 +887,7 @@
  
  cond_command:	COND_START COND_CMD COND_END
@@ -17928,7 +17928,7 @@ diff -Nru bash-4.0-orig/parse.y bash-4.0/parse.y
  
 diff -Nru bash-4.0-orig/parse.y.orig bash-4.0/parse.y.orig
 --- bash-4.0-orig/parse.y.orig	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/parse.y.orig	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/parse.y.orig	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,5700 @@
 +/* parse.y - Yacc grammar for bash. */
 +
@@ -23632,7 +23632,7 @@ diff -Nru bash-4.0-orig/parse.y.orig bash-4.0/parse.y.orig
 +#endif /* HANDLE_MULTIBYTE */
 diff -Nru bash-4.0-orig/patchlevel.h bash-4.0/patchlevel.h
 --- bash-4.0-orig/patchlevel.h	2009-01-04 20:32:40.000000000 +0100
-+++ bash-4.0/patchlevel.h	2009-12-08 18:06:16.000000000 +0100
++++ bash-4.0/patchlevel.h	2010-01-08 15:58:09.000000000 +0100
 @@ -25,6 +25,6 @@
     regexp `^#define[ 	]*PATCHLEVEL', since that's what support/mkversion.sh
     looks for to find the patch level (for the sccs version string). */
@@ -23643,7 +23643,7 @@ diff -Nru bash-4.0-orig/patchlevel.h bash-4.0/patchlevel.h
  #endif /* _PATCHLEVEL_H_ */
 diff -Nru bash-4.0-orig/pathnames.h bash-4.0/pathnames.h
 --- bash-4.0-orig/pathnames.h	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/pathnames.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/pathnames.h	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,33 @@
 +/* pathnames.h -- absolute filenames that bash wants for various defaults. */
 +
@@ -23680,8 +23680,8 @@ diff -Nru bash-4.0-orig/pathnames.h bash-4.0/pathnames.h
 +#endif /* _PATHNAMES_H */
 diff -Nru bash-4.0-orig/pbuild.xml bash-4.0/pbuild.xml
 --- bash-4.0-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/pbuild.xml	2009-12-08 18:04:03.000000000 +0100
-@@ -0,0 +1,337 @@
++++ bash-4.0/pbuild.xml	2010-01-08 15:59:52.000000000 +0100
+@@ -0,0 +1,312 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -23905,18 +23905,12 @@ diff -Nru bash-4.0-orig/pbuild.xml bash-4.0/pbuild.xml
 +            <gcc>
 +                <input>${i}</input>
 +                <output>objs/filename(${i}).o</output>
-+                <include>../../../include</include>
-+                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
 +                <include>./</include>
 +                <include>./include</include>
 +                <include>./lib</include>
 +                <flag>-c</flag>
 +                <flag>-O2</flag>
-+                <flag>-m32</flag>
 +                <flag>-Wall</flag>
-+                <flag>-nostdinc</flag>
-+                <flag>-nostdlib</flag>
-+                <flag>-fno-builtin</flag>
 +                <flag>-fno-strict-aliasing</flag>
 +                <define key="HAVE_CONFIG_H"/>
 +                <define key="SHELL"/>
@@ -23935,18 +23929,12 @@ diff -Nru bash-4.0-orig/pbuild.xml bash-4.0/pbuild.xml
 +            <gcc>
 +                <input>${i}</input>
 +                <output>objs/builtins/filename(${i}).o</output>
-+                <include>../../../include</include>
-+                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
 +                <include>./</include>
 +                <include>./include</include>
 +                <include>./lib</include>
 +                <flag>-c</flag>
 +                <flag>-O2</flag>
-+                <flag>-m32</flag>
 +                <flag>-Wall</flag>
-+                <flag>-nostdinc</flag>
-+                <flag>-nostdlib</flag>
-+                <flag>-fno-builtin</flag>
 +                <flag>-fno-strict-aliasing</flag>
 +                <define key="HAVE_CONFIG_H"/>
 +                <define key="SHELL"/>
@@ -23964,18 +23952,12 @@ diff -Nru bash-4.0-orig/pbuild.xml bash-4.0/pbuild.xml
 +            <gcc>
 +                <input>${i}</input>
 +                <output>objs/readline/filename(${i}).o</output>
-+                <include>../../../include</include>
-+                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
 +                <include>./</include>
 +                <include>./include</include>
 +                <include>./lib</include>
 +                <flag>-c</flag>
 +                <flag>-O2</flag>
-+                <flag>-m32</flag>
 +                <flag>-Wall</flag>
-+                <flag>-nostdinc</flag>
-+                <flag>-nostdlib</flag>
-+                <flag>-fno-builtin</flag>
 +                <flag>-fno-strict-aliasing</flag>
 +                <define key="HAVE_CONFIG_H"/>
 +                <define key="SHELL"/>
@@ -23995,15 +23977,8 @@ diff -Nru bash-4.0-orig/pbuild.xml bash-4.0/pbuild.xml
 +            <input>objs/*.o</input>
 +            <input>objs/builtins/*.o</input>
 +            <input>objs/readline/*.o</input>
-+            <input>../../../lib/start/objs/libstart.a</input>
 +            <input>../../../thirdparty/ncurses-5.7/ncurses-5.7/objs/libncurses.a</input>
-+            <input>../../../lib/c/objs/libc.a</input>
 +            <output>objs/bash</output>
-+            <flag>-m32</flag>
-+            <flag>-Xlinker</flag>
-+            <flag>--script=../../../../scripts/i386_app.lnk</flag>
-+            <flag>-nostartfiles</flag>
-+            <flag>-nodefaultlibs</flag>
 +        </gcc>
 +    </target>
 +
@@ -24021,7 +23996,7 @@ diff -Nru bash-4.0-orig/pbuild.xml bash-4.0/pbuild.xml
 +</build>
 diff -Nru bash-4.0-orig/pcomplete.c bash-4.0/pcomplete.c
 --- bash-4.0-orig/pcomplete.c	2009-02-01 23:12:31.000000000 +0100
-+++ bash-4.0/pcomplete.c	2009-12-08 18:06:16.000000000 +0100
++++ bash-4.0/pcomplete.c	2010-01-08 15:58:09.000000000 +0100
 @@ -1032,6 +1032,7 @@
    cmdlist = build_arg_list (funcname, text, lwords, cw);
  
@@ -24053,7 +24028,7 @@ diff -Nru bash-4.0-orig/pcomplete.c bash-4.0/pcomplete.c
  
 diff -Nru bash-4.0-orig/shell.c bash-4.0/shell.c
 --- bash-4.0-orig/shell.c	2009-01-04 20:32:41.000000000 +0100
-+++ bash-4.0/shell.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/shell.c	2010-01-08 15:58:09.000000000 +0100
 @@ -191,7 +191,7 @@
  #endif
  
@@ -24083,7 +24058,7 @@ diff -Nru bash-4.0-orig/shell.c bash-4.0/shell.c
  #  define PROGRAM "bash"
 diff -Nru bash-4.0-orig/sig.c bash-4.0/sig.c
 --- bash-4.0-orig/sig.c	2009-01-04 20:32:41.000000000 +0100
-+++ bash-4.0/sig.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/sig.c	2010-01-08 15:58:09.000000000 +0100
 @@ -448,6 +448,48 @@
  termsig_sighandler (sig)
       int sig;
@@ -24135,7 +24110,7 @@ diff -Nru bash-4.0-orig/sig.c bash-4.0/sig.c
    /* XXX - should this also trigger when interrupt_immediately is set? */
 diff -Nru bash-4.0-orig/signames.h bash-4.0/signames.h
 --- bash-4.0-orig/signames.h	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/signames.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/signames.h	2010-01-08 15:58:09.000000000 +0100
 @@ -0,0 +1,78 @@
 +/* This file was automatically created by ./mksignames.
 +   Do not edit.  Edit support/signames.c instead. */
@@ -24217,7 +24192,7 @@ diff -Nru bash-4.0-orig/signames.h bash-4.0/signames.h
 +
 diff -Nru bash-4.0-orig/subst.c bash-4.0/subst.c
 --- bash-4.0-orig/subst.c	2009-01-28 20:34:12.000000000 +0100
-+++ bash-4.0/subst.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/subst.c	2010-01-08 15:58:10.000000000 +0100
 @@ -85,6 +85,7 @@
  
  /* Flags for the `pflags' argument to param_expand() */
@@ -24482,7 +24457,7 @@ diff -Nru bash-4.0-orig/subst.c bash-4.0/subst.c
  	 off quoting entirely, because other characters in the
 diff -Nru bash-4.0-orig/syntax.c bash-4.0/syntax.c
 --- bash-4.0-orig/syntax.c	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/syntax.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/syntax.c	2010-01-08 15:58:10.000000000 +0100
 @@ -0,0 +1,269 @@
 +/*
 + * This file was generated by mksyntax.  DO NOT EDIT.
@@ -24755,7 +24730,7 @@ diff -Nru bash-4.0-orig/syntax.c bash-4.0/syntax.c
 +};
 diff -Nru bash-4.0-orig/trap.c bash-4.0/trap.c
 --- bash-4.0-orig/trap.c	2009-01-16 23:07:53.000000000 +0100
-+++ bash-4.0/trap.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/trap.c	2010-01-08 15:58:10.000000000 +0100
 @@ -755,7 +755,7 @@
  	}
  
@@ -24804,7 +24779,7 @@ diff -Nru bash-4.0-orig/trap.c bash-4.0/trap.c
        /* If we're in the debugger and the DEBUG trap returns 2 while we're in
 diff -Nru bash-4.0-orig/variables.c bash-4.0/variables.c
 --- bash-4.0-orig/variables.c	2009-01-04 20:32:46.000000000 +0100
-+++ bash-4.0/variables.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/variables.c	2010-01-08 15:58:10.000000000 +0100
 @@ -252,6 +252,7 @@
  
  static int visible_var __P((SHELL_VAR *));
@@ -24872,7 +24847,7 @@ diff -Nru bash-4.0-orig/variables.c bash-4.0/variables.c
      return (char **)NULL;
 diff -Nru bash-4.0-orig/version.h bash-4.0/version.h
 --- bash-4.0-orig/version.h	1970-01-01 01:00:00.000000000 +0100
-+++ bash-4.0/version.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/version.h	2010-01-08 15:58:10.000000000 +0100
 @@ -0,0 +1,17 @@
 +/* Version control for the shell.  This file gets changed when you say
 +   `make version.h' to the Makefile.  It is created by mkversion. */
@@ -24893,7 +24868,7 @@ diff -Nru bash-4.0-orig/version.h bash-4.0/version.h
 +#define SCCSVERSION "@(#)Bash version 4.0.0(1) release GNU"
 diff -Nru bash-4.0-orig/y.tab.c bash-4.0/y.tab.c
 --- bash-4.0-orig/y.tab.c	2009-01-08 15:30:24.000000000 +0100
-+++ bash-4.0/y.tab.c	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/y.tab.c	2010-01-08 15:58:10.000000000 +0100
 @@ -1,24 +1,23 @@
 -/* A Bison parser, made by GNU Bison 2.3.  */
  
@@ -27701,7 +27676,7 @@ diff -Nru bash-4.0-orig/y.tab.c bash-4.0/y.tab.c
      case ELIF:
 diff -Nru bash-4.0-orig/y.tab.h bash-4.0/y.tab.h
 --- bash-4.0-orig/y.tab.h	2009-01-08 15:30:24.000000000 +0100
-+++ bash-4.0/y.tab.h	2009-12-08 18:04:03.000000000 +0100
++++ bash-4.0/y.tab.h	2010-01-08 15:58:10.000000000 +0100
 @@ -1,24 +1,23 @@
 -/* A Bison parser, made by GNU Bison 2.3.  */
  

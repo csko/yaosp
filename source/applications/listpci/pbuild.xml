@@ -37,47 +37,34 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo></echo>
+        <echo/>
         <echo>Compiling listpci shell command</echo>
-        <echo></echo>
+        <echo/>
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/applications/listpci/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../include</include>
-                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-fno-builtin</flag>
             </gcc>
         </for>
 
-        <echo></echo>
+        <echo/>
         <echo>Linking listpci application</echo>
-        <echo></echo>
-        <echo>[GCC    ] source/applications/listpci/objs/listpci</echo>
+        <echo/>
+        <echo>[GCC    ] source/applications/listpci/objs/lspci</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../lib/start/objs/libstart.a</input>
-            <input>../../lib/c/objs/libc.a</input>
-            <output>objs/listpci</output>
-            <flag>-m32</flag>
-            <flag>-Xlinker</flag>
-            <flag>--script=../../../scripts/i386_app.lnk</flag>
-            <flag>-nostartfiles</flag>
-            <flag>-nodefaultlibs</flag>
+            <output>objs/lspci</output>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/listpci" to="../../../build/image/application/listpci"/>
+        <copy from="objs/lspci" to="../../../build/image/application/lspci"/>
     </target>
 
     <target name="all">

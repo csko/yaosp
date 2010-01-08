@@ -45,38 +45,26 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../../include</include>
-                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-m32</flag>
                 <flag>-Wall</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-fno-builtin</flag>
             </gcc>
         </for>
 
         <echo/>
         <echo>Linking remdir shell command</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/shelltools/remdir/objs/remdir</echo>
+        <echo>[GCC    ] source/applications/shelltools/remdir/objs/rmdir</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../lib/start/objs/libstart.a</input>
-            <input>../../../lib/c/objs/libc.a</input>
-            <output>objs/remdir</output>
-            <flag>-m32</flag>
-            <flag>-Xlinker</flag>
-            <flag>--script=../../../../scripts/i386_app.lnk</flag>
-            <flag>-nostartfiles</flag>
-            <flag>-nodefaultlibs</flag>
+            <output>objs/rmdir</output>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/remdir" to="../../../../build/image/application/remdir"/>
+        <copy from="objs/rmdir" to="../../../../build/image/application/rmdir"/>
     </target>
 
     <target name="all">

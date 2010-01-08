@@ -110,8 +110,40 @@ class LdHandler( handler.NodeHandler ) :
             self.work.add_input( self.data )
         elif name == "output" :
             self.work.set_output( self.data )
+        elif name == "flag" :
+            self.work.add_flag( self.data )
         elif name == "linkerscript" :
             self.work.set_linker_script( self.data )
+
+    def element_data( self, data ) :
+        self.data = data
+
+class ArHandler( handler.NodeHandler ) :
+    handled_node = "ar"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+        self.data = ""
+
+    def node_started( self, attrs ) :
+        self.work = works.ArWork()
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
+    def start_element( self, name, attrs ) :
+        self.data = ""
+
+    def end_element( self, name ) :
+        if name == "input" :
+            self.work.add_input( self.data )
+        elif name == "output" :
+            self.work.set_output( self.data )
+        elif name == "flag" :
+            self.work.add_flag( self.data )
 
     def element_data( self, data ) :
         self.data = data
@@ -366,6 +398,7 @@ handlers = [
     TargetHandler,
     GccHandler,
     LdHandler,
+    ArHandler,
     EchoHandler,
     ForHandler,
     MkDirHandler,

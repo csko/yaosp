@@ -67,37 +67,31 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo></echo>
+        <echo/>
         <echo>Compiling ygui library</echo>
-        <echo></echo>
+        <echo/>
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/lib/ygui/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../include</include>
-                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-fno-builtin</flag>
             </gcc>
         </for>
 
-        <echo></echo>
+        <echo/>
         <echo>Linking ygui library</echo>
-        <echo></echo>
+        <echo/>
         <echo>[AR     ] source/lib/ygui/objs/libygui.a</echo>
 
-        <exec executable="ar">
-            <arg>-rc</arg>
-            <arg>objs/libygui.a</arg>
-            <arg>objs/*.o</arg>
-        </exec>
+        <ar>
+            <input>objs/*.o</input>
+            <output>objs/libygui.a</output>
+            <flag>-rc</flag>
+        </ar>
     </target>
 
     <target name="install">

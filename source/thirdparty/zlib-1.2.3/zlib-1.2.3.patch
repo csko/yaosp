@@ -1,7 +1,7 @@
 diff -Nru zlib-1.2.3-orig/pbuild.xml zlib-1.2.3/pbuild.xml
 --- zlib-1.2.3-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ zlib-1.2.3/pbuild.xml	2009-10-05 09:18:57.000000000 +0200
-@@ -0,0 +1,100 @@
++++ zlib-1.2.3/pbuild.xml	2010-01-08 16:17:25.000000000 +0100
+@@ -0,0 +1,94 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -63,16 +63,10 @@ diff -Nru zlib-1.2.3-orig/pbuild.xml zlib-1.2.3/pbuild.xml
 +            <gcc>
 +                <input>${i}</input>
 +                <output>objs/filename(${i}).o</output>
-+                <include>../../../include</include>
-+                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
 +                <include>./</include>
 +                <flag>-c</flag>
 +                <flag>-O2</flag>
-+                <flag>-m32</flag>
 +                <flag>-Wall</flag>
-+                <flag>-nostdinc</flag>
-+                <flag>-nostdlib</flag>
-+                <flag>-fno-builtin</flag>
 +                <flag>-fno-strict-aliasing</flag>
 +            </gcc>
 +        </for>
@@ -80,11 +74,11 @@ diff -Nru zlib-1.2.3-orig/pbuild.xml zlib-1.2.3/pbuild.xml
 +        <echo>Linking zlib 1.2.3</echo>
 +        <echo>-> objs/libz.a</echo>
 +
-+        <exec executable="ar">
-+            <arg>-rc</arg>
-+            <arg>objs/libz.a</arg>
-+            <arg>objs/*.o</arg>
-+        </exec>
++        <ar>
++            <flag>-rc</flag>
++            <output>objs/libz.a</output>
++            <input>objs/*.o</input>
++        </ar>
 +    </target>
 +
 +    <target name="install">

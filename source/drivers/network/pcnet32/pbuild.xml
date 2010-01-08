@@ -36,9 +36,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo></echo>
+        <echo/>
         <echo>Compiling pcnet32 network driver</echo>
-        <echo></echo>
+        <echo/>
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/drivers/network/pcnet32/${i}</echo>
@@ -48,7 +48,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>../../../kernel/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Wshadow</flag>
                 <flag>-nostdinc</flag>
@@ -58,19 +57,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo></echo>
+        <echo/>
         <echo>Linking pcnet32 network driver</echo>
-        <echo></echo>
-        <echo>[GCC    ] source/drivers/network/pcnet32/objs/pcnet32</echo>
+        <echo/>
+        <echo>[LD     ] source/drivers/network/pcnet32/objs/pcnet32</echo>
 
-        <gcc>
+        <ld>
             <input>objs/*.o</input>
             <output>objs/pcnet32</output>
-            <flag>-m32</flag>
             <flag>-shared</flag>
-            <flag>-nostartfiles</flag>
-            <flag>-nodefaultlibs</flag>
-        </gcc>
+        </ld>
     </target>
 
     <target name="install">

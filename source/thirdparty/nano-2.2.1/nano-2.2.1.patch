@@ -1,6 +1,6 @@
 diff -Nru nano-2.2.1-orig/config.h nano-2.2.1/config.h
 --- nano-2.2.1-orig/config.h	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.2.1/config.h	2009-12-16 15:54:15.000000000 +0100
++++ nano-2.2.1/config.h	2010-01-08 16:12:11.000000000 +0100
 @@ -0,0 +1,243 @@
 +/* config.h.  Generated from configure.ac by autoheader.  */
 +
@@ -247,7 +247,7 @@ diff -Nru nano-2.2.1-orig/config.h nano-2.2.1/config.h
 +#define SYSCONFDIR "/system/config"
 diff -Nru nano-2.2.1-orig/doc/nanorc nano-2.2.1/doc/nanorc
 --- nano-2.2.1-orig/doc/nanorc	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.2.1/doc/nanorc	2009-12-16 15:54:15.000000000 +0100
++++ nano-2.2.1/doc/nanorc	2010-01-08 16:12:11.000000000 +0100
 @@ -0,0 +1,316 @@
 +## Sample initialization file for GNU nano.
 +##
@@ -567,8 +567,8 @@ diff -Nru nano-2.2.1-orig/doc/nanorc nano-2.2.1/doc/nanorc
 +include "/system/config/nano/xml.nanorc"
 diff -Nru nano-2.2.1-orig/pbuild.xml nano-2.2.1/pbuild.xml
 --- nano-2.2.1-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.2.1/pbuild.xml	2009-12-16 15:54:15.000000000 +0100
-@@ -0,0 +1,139 @@
++++ nano-2.2.1/pbuild.xml	2010-01-08 16:12:27.000000000 +0100
+@@ -0,0 +1,126 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -657,16 +657,10 @@ diff -Nru nano-2.2.1-orig/pbuild.xml nano-2.2.1/pbuild.xml
 +            <gcc>
 +                <input>${i}</input>
 +                <output>objs/filename(${i}).o</output>
-+                <include>../../../include</include>
-+                <include>../../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
 +                <include>./</include>
 +                <flag>-c</flag>
 +                <flag>-O2</flag>
-+                <flag>-m32</flag>
 +                <flag>-Wall</flag>
-+                <flag>-nostdinc</flag>
-+                <flag>-nostdlib</flag>
-+                <flag>-fno-builtin</flag>
 +                <flag>-fno-strict-aliasing</flag>
 +                <define key="HAVE_CONFIG_H"/>
 +            </gcc>
@@ -677,15 +671,8 @@ diff -Nru nano-2.2.1-orig/pbuild.xml nano-2.2.1/pbuild.xml
 +
 +        <gcc>
 +            <input>objs/*.o</input>
-+            <input>../../../lib/start/objs/libstart.a</input>
 +            <input>../../../thirdparty/ncurses-5.7/ncurses-5.7/objs/libncurses.a</input>
-+            <input>../../../lib/c/objs/libc.a</input>
 +            <output>objs/nano</output>
-+            <flag>-m32</flag>
-+            <flag>-Xlinker</flag>
-+            <flag>--script=../../../../scripts/i386_app.lnk</flag>
-+            <flag>-nostartfiles</flag>
-+            <flag>-nodefaultlibs</flag>
 +        </gcc>
 +    </target>
 +
@@ -710,7 +697,7 @@ diff -Nru nano-2.2.1-orig/pbuild.xml nano-2.2.1/pbuild.xml
 +</build>
 diff -Nru nano-2.2.1-orig/src/files.c nano-2.2.1/src/files.c
 --- nano-2.2.1-orig/src/files.c	2009-12-09 17:53:06.000000000 +0100
-+++ nano-2.2.1/src/files.c	2009-12-16 15:55:12.000000000 +0100
++++ nano-2.2.1/src/files.c	2010-01-08 16:12:11.000000000 +0100
 @@ -309,7 +309,7 @@
      if (ISSET(VIEW_MODE))
  	return TRUE;

@@ -53,7 +53,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/readdir.c</item>
         <item>src/closedir.c</item>
         <item>src/rewinddir.c</item>
-        <item>src/udivmoddi4.c</item>
         <item>src/stdlib/malloc.c</item>
         <item>src/stdlib/abort.c</item>
         <item>src/stdlib/getenv.c</item>
@@ -331,24 +330,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo></echo>
+        <echo/>
         <echo>Compiling C library</echo>
-        <echo></echo>
+        <echo/>
 
         <for var="i" array="${files_i386}">
             <echo>[GCC    ] source/lib/c/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/arch/filename(${i}).o</output>
-                <include>../../include</include>
-                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-fno-builtin</flag>
             </gcc>
         </for>
 
@@ -357,15 +350,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../include</include>
-                <include>../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-fno-builtin</flag>
                 <define key="HAVE_MMAP">0</define>
                 <define key="USE_LOCKS">1</define>
                 <define key="YAOSP"/>
@@ -373,17 +360,17 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo></echo>
+        <echo/>
         <echo>Linking C library</echo>
-        <echo></echo>
+        <echo/>
         <echo>[AR     ] source/lib/c/objs/libc.a</echo>
 
-        <exec executable="ar">
-            <arg>-rc</arg>
-            <arg>objs/libc.a</arg>
-            <arg>objs/*.o</arg>
-            <arg>objs/arch/*.o</arg>
-        </exec>
+        <ar>
+            <flag>-rc</flag>
+            <output>objs/libc.a</output>
+            <input>objs/*.o</input>
+            <input>objs/arch/*.o</input>
+        </ar>
     </target>
 
     <target name="install">

@@ -36,9 +36,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo></echo>
+        <echo/>
         <echo>Compiling RAM filesystem driver</echo>
-        <echo></echo>
+        <echo/>
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/drivers/filesystem/ramfs/${i}</echo>
@@ -48,7 +48,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <include>../../../kernel/include</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
-                <flag>-m32</flag>
                 <flag>-Wall</flag>
                 <flag>-Wshadow</flag>
                 <flag>-nostdinc</flag>
@@ -61,16 +60,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
         <echo>Linking RAM filesystem driver</echo>
         <echo/>
-        <echo>[GCC    ] source/drivers/filesystem/ramfs/objs/process</echo>
+        <echo>[LD     ] source/drivers/filesystem/ramfs/objs/process</echo>
 
-        <gcc>
+        <ld>
             <input>objs/*.o</input>
             <output>objs/ramfs</output>
-            <flag>-m32</flag>
             <flag>-shared</flag>
-            <flag>-nostartfiles</flag>
-            <flag>-nodefaultlibs</flag>
-        </gcc>
+        </ld>
     </target>
 
     <target name="install">
