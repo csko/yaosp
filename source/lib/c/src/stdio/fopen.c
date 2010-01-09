@@ -70,7 +70,7 @@ FILE* __init_file( int fd, int close_on_error, int mode ) {
     stream->buffer_size = _IO_BUFSIZE;
     stream->buffer_data_size = 0;
 
-    switch ( mode & O_RDWR ) {
+    switch ( mode & O_ACCMODE ) {
         case O_RDWR :   stream->flags |= ( __FILE_CAN_WRITE | __FILE_CAN_READ ); break;
         case O_RDONLY : stream->flags |= __FILE_CAN_READ; break;
         case O_WRONLY : stream->flags |= __FILE_CAN_WRITE; break;
