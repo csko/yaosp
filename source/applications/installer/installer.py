@@ -135,7 +135,6 @@ print
 
 for entry in base :
     print "Extracting /media/install/%s" % ( entry.name )
-
     base.extract( entry, "/media/install" )
 
 # Build a new menu.lst file for GRUB

@@ -780,6 +780,11 @@ static int ext2_open_file( ext2_inode_t* vinode, void** out, int flags ) {
 
     cookie->open_flags = flags;
 
+    if ( ( flags & O_TRUNC ) &&
+         ( vinode->fs_inode.i_size > 0 ) ) {
+        kprintf( WARNING, "%s(): O_TRUNC not yet handled properly!\n", __FUNCTION__ );
+    }
+
     *out = cookie;
 
     return 0;
@@ -1917,7 +1922,7 @@ static filesystem_calls_t ext2_calls = {
 };
 
 int init_module( void ) {
-    kprintf( INFO, "ext2: Registering filesystem driver\n" );
+    kprintf( INFO, "ext2: Registering filesystem driver.\n" );
 
     return register_filesystem( "ext2", &ext2_calls );
 }
