@@ -126,7 +126,7 @@ except OSError, e :
     sys.exit(0)
 
 try :
-    base = tarfile.open( "/yaosp/yaosp.tar.bz2" )
+    base = tarfile.open( "/yaosp/yaosp_base.tar.bz2" )
 except IOError, e :
     print "The yaosp base package is not found!"
     sys.exit(0)
@@ -150,7 +150,8 @@ f.write( "module /system/module/bus/pci\n" )
 f.write( "module /system/module/disk/pata\n" )
 f.write( "module /system/module/disk/partition\n" )
 f.write( "module /system/module/filesystem/ext2\n" )
-f.write( "module /system/module/input/ps2kbd\n" )
+f.write( "module /system/module/input/ps2\n" )
+f.write( "module /system/module/input/input\n" )
 f.write( "module /system/module/char/terminal\n" )
 
 f.close()
