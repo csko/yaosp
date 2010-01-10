@@ -517,7 +517,6 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
     ext2_inode_t* inode;
     uint32_t block_number;
     size_t saved_size;
-    off_t saved_pos;
     uint32_t inode_block;
     ext2_file_cookie_t* file_cookie;
 
@@ -540,7 +539,6 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
     }
 
     saved_size = size;
-    saved_pos = pos;
 
     if ( file_cookie->open_flags & O_APPEND ) {
         pos = inode->fs_inode.i_size;
@@ -553,6 +551,7 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
         uint32_t tmp2;
 
         tmp = ROUND_UP(inode->fs_inode.i_size, cookie->blocksize) - ROUND_DOWN(pos, cookie->blocksize);
+        ASSERT( tmp > 0 );
         ASSERT( ( tmp % cookie->blocksize ) == 0 );
 
         /* We have tmp / blocksize blocks at the end of the file that we can write without any allocation */
@@ -563,7 +562,7 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
 
         if ( tmp2 != 0 ) {
             uint8_t* block;
-            uint32_t tmp3;
+            uint32_t to_write;
 
             block = ( uint8_t* )kmalloc( cookie->blocksize );
 
@@ -572,53 +571,38 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
                 goto out2;
             }
 
-            error = ext2_calc_block_num( cookie, inode, inode_block, &block_number );
+            error = ext2_do_read_inode_block( cookie, inode, inode_block, block );
 
             if ( error < 0 ) {
                 kfree( block );
                 goto out2;
             }
 
-            if ( pread( cookie->fd, block, cookie->blocksize,
-                        block_number * cookie->blocksize ) != cookie->blocksize ) {
-                kfree( block );
-                error = -EIO;
-                goto out2;
-            }
+            to_write = MIN( cookie->blocksize - tmp2, size );
 
-            tmp3 = cookie->blocksize - tmp2;
-            tmp3 = MIN( tmp3, size );
+            memcpy( block + tmp2, data, to_write );
 
-            memcpy( block + tmp2, data, tmp3 );
-
-            error = pwrite( cookie->fd, block, cookie->blocksize, block_number * cookie->blocksize );
+            error = ext2_do_write_inode_block( cookie, inode, inode_block, block );
 
             kfree( block );
 
-            if ( error != cookie->blocksize ) {
-                error = -EIO;
+            if ( error < 0 ) {
                 goto out2;
             }
 
-            data += tmp3;
-            size -= tmp3;
+            data += to_write;
+            size -= to_write;
             tmp -= cookie->blocksize;
 
             inode_block++;
 
-            inode->fs_inode.i_size = MAX( inode->fs_inode.i_size, pos + tmp3 );
+            inode->fs_inode.i_size = MAX( inode->fs_inode.i_size, pos + to_write );
         }
 
         while ( ( size > cookie->blocksize ) && ( tmp > 0 ) ) {
-            error = ext2_calc_block_num( cookie, inode, inode_block, &block_number );
+            error = ext2_do_write_inode_block( cookie, inode, inode_block, data );
 
             if ( error < 0 ) {
-                goto out2;
-            }
-
-            if ( pwrite( cookie->fd, data, cookie->blocksize,
-                         block_number * cookie->blocksize ) != cookie->blocksize ) {
-                error = -EIO;
                 goto out2;
             }
 
@@ -627,43 +611,41 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
             tmp -= cookie->blocksize;
 
             inode_block++;
-
-            inode->fs_inode.i_size = MAX( inode->fs_inode.i_size, inode_block * cookie->blocksize );
+            ASSERT( ( inode_block * cookie->blocksize ) <= inode->fs_inode.i_size );
         }
-
-        ASSERT( size < cookie->blocksize );
 
         if ( ( size > 0 ) && ( tmp > 0 ) ) {
             uint8_t* block;
 
-            error = ext2_calc_block_num( cookie, inode, inode_block, &block_number );
-
-            if ( error < 0 ) {
-                goto out2;
-            }
+            ASSERT( size < cookie->blocksize );
+            ASSERT( tmp >= cookie->blocksize );
 
             block = ( uint8_t* )kmalloc( cookie->blocksize );
 
             if ( block == NULL ) {
                 error = -ENOMEM;
-                goto out;
+                goto out2;
+            }
+
+            error = ext2_do_read_inode_block( cookie, inode, inode_block, block );
+
+            if ( error < 0 ) {
+                kfree( block );
+                goto out2;
             }
 
             memcpy( block, data, size );
-            memset( block + size, 0, cookie->blocksize - size );
 
-            error = pwrite( cookie->fd, block, cookie->blocksize, block_number * cookie->blocksize );
+            error = ext2_do_write_inode_block( cookie, inode, inode_block, block );
 
             kfree( block );
 
-            if ( error != cookie->blocksize ) {
+            if ( error < 0 ) {
                 error = -EIO;
-                goto out;
+                goto out2;
             }
 
             inode->fs_inode.i_size = MAX( inode->fs_inode.i_size, inode_block * cookie->blocksize + size );
-
-            goto out;
         }
     }
 
@@ -674,9 +656,8 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
             goto out2;
         }
 
-        error = pwrite( cookie->fd, data, cookie->blocksize, block_number * cookie->blocksize );
-
-        if ( error != cookie->blocksize ) {
+        if ( pwrite( cookie->fd, data, cookie->blocksize,
+                     block_number * cookie->blocksize ) != cookie->blocksize ) {
             error = -EIO;
             goto out2;
         }
@@ -718,7 +699,6 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
         inode->fs_inode.i_size += size;
     }
 
- out:
     /* Update the inode on the disk */
 
     error = ext2_do_write_inode( cookie, inode );
