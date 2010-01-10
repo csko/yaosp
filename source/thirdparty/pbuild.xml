@@ -55,6 +55,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
     </target>
 
+    <target name="all-installer">
+        <call target="all" directory="util-linux-ng-2.16.1"/>
+    </target>
+
     <target name="clean">
         <for var="i" array="${libraries}">
             <call target="clean" directory="${i}"/>

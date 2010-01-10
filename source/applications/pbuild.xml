@@ -36,8 +36,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>yguictrl</item>
     </array>
 
+    <array name="subdirs_for_installer">
+        <item>fstools</item>
+        <item>installer</item>
+    </array>
+
     <target name="all">
         <for var="i" array="${subdirs}">
+            <call target="all" directory="${i}"/>
+        </for>
+    </target>
+
+    <target name="all-installer">
+        <for var="i" array="${subdirs_for_installer}">
             <call target="all" directory="${i}"/>
         </for>
     </target>

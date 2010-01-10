@@ -45,6 +45,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
     </target>
 
+    <target name="all-installer">
+        <call target="all-installer" directory="applications"/>
+        <call target="all-installer" directory="thirdparty"/>
+    </target>
+
     <target name="clean">
         <for var="i" array="${subdirs_before}">
             <call target="clean" directory="${i}"/>

@@ -289,6 +289,24 @@ class CopyHandler( handler.NodeHandler ) :
         if self.work != None :
             self.get_parent().add_work( self.work )
 
+class MoveHandler( handler.NodeHandler ) :
+    handled_node = "move"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.work = None
+
+    def node_started( self, attrs ) :
+        if not "from" in attrs or not "to" in attrs :
+            return
+
+        self.work = works.MoveWork( attrs[ "from" ], attrs[ "to" ] )
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
 class DeleteHandler( handler.NodeHandler ) :
     handled_node = "delete"
 
@@ -406,6 +424,7 @@ handlers = [
     CleanDirHandler,
     CallHandler,
     CopyHandler,
+    MoveHandler,
     DeleteHandler,
     ExecHandler,
     SymlinkHandler,

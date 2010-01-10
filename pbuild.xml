@@ -20,27 +20,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 -->
 
-<build default="all">
-    <target name="all">
-        <call target="prepare_build"/>
-        <call target="compile_sources"/>
-        <call target="create_iso"/>
-        <echo>Build done.</echo>
-    </target>
-
+<build>
     <target name="crosscompiler">
         <mkdir>build</mkdir>
         <mkdir>build/crosscompiler</mkdir>
         <call target="all" directory="toolchain"/>
     </target>
 
-    <target name="clean">
-        <call target="clean_sources"/>
-        <call target="clean_iso"/>
-    </target>
-
     <target name="prepare_build" type="private">
-        <mkdir>build</mkdir>
+        <cleandir>build/image</cleandir>
+        <delete>build/yaosp_base.tar.bz2</delete>
         <mkdir>build/image</mkdir>
         <mkdir>build/image/boot</mkdir>
         <mkdir>build/image/boot/grub</mkdir>
@@ -61,17 +50,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <mkdir>build/image/package</mkdir>
     </target>
 
-    <target name="compile_sources" type="private">
-        <call target="all" directory="source"/>
-    </target>
-
     <target name="create_iso">
         <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
         <copy from="scripts/grub/stage2_eltorito" to="build/image/boot/grub/stage2_eltorito"/>
         <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
         <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
 
-        <echo>Creating bootable ISO9660 CD-ROM image</echo>
+        <echo>Creating bootable iso9660 CD-ROM image</echo>
         <echo/>
         <echo>[MKISOFS] yaosp.iso</echo>
 
@@ -97,22 +82,37 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
         <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
 
+        <echo>Creating install base package</echo>
+        <echo/>
+        <echo>[TAR    ] yaosp_base.tar.bz2</echo>
+
         <chdir directory="build/image"/>
         <exec executable="tar">
             <arg>-cf</arg>
-            <arg>yaosp_base.tar</arg>
+            <arg>../yaosp_base.tar</arg>
             <arg>.</arg>
         </exec>
+        <chdir directory=".."/>
         <exec executable="bzip2">
             <arg>yaosp_base.tar</arg>
         </exec>
+        <chdir directory=".."/>
+
+        <move from="build/yaosp_base.tar.bz2" to="yaosp_base.tar.bz2"/>
     </target>
 
-    <target name="clean_sources" type="private">
-        <call target="clean" directory="source"/>
+    <target name="all-livecd">
+        <call target="prepare_build"/>
+        <call target="all" directory="source"/>
+        <call target="create_iso"/>
     </target>
 
-    <target name="clean_iso" type="private">
-        <delete>yaosp.iso</delete>
+    <target name="all-installcd">
+        <call target="prepare_build"/>
+        <call target="all" directory="source"/>
+        <call target="create_install_base"/>
+        <call target="all-installer" directory="source"/>
+        <copy from="build/yaosp_base.tar.bz2" to="build/image/yaosp_base.tar.bz2"/>
+        <call target="create_iso"/>
     </target>
 </build>

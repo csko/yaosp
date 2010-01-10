@@ -422,6 +422,39 @@ class CopyWork( Work ) :
         src_file.close()
         dest_file.close()
 
+class MoveWork( Work ) :
+    def __init__( self, src, dest ) :
+        self.src = src
+        self.dest = dest
+
+    def execute( self, context ) :
+        src = context.replace_definitions( self.src )
+        dest = context.replace_definitions( self.dest )
+
+        if os.path.isfile( src ) or not os.path.isfile( dest ) :
+            return
+
+        try :
+            src_file = open( src, "r" )
+        except IOError, e :
+            print "MoveWork: Failed to open source file: " + src
+            print "Build stopped."
+            sys.exit( 1 );
+
+        try :
+            dest_file = open( dest, "w" )
+        except IOError, e :
+            print "MoveWork: Failed to open destination file: " + dest
+            print "Build stopped."
+            sys.exit( 1 )
+
+        dest_file.write( src_file.read() )
+
+        src_file.close()
+        dest_file.close()
+
+        os.unlink( src )
+
 class DeleteWork( Work ) :
     def __init__( self ) :
         self.file = ""
