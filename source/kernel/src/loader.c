@@ -400,7 +400,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     return 0;
 
-/* Cleanup process before the memory context is destroyed */
+    /* Cleanup process before the memory context is destroyed */
 
 _error3:
     free_param_array( cloned_argv, argc );
@@ -411,7 +411,7 @@ _error2:
 _error1:
     return error;
 
-/* Cleanup process after the memory context is destroyed */
+    /* Cleanup process after the memory context is destroyed */
 
 error4:
     kfree( user_argv );

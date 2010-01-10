@@ -172,7 +172,7 @@ static int initialize_pty( void ) {
         dup2( slave_tty, 2 );
 
         win_size.ws_col = 80;
-        win_size.ws_row = 24;
+        win_size.ws_row = 25;
 
         ioctl( slave_tty, TIOCSWINSZ, &win_size );
 

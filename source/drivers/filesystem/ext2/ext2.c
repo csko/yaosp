@@ -392,13 +392,11 @@ static int ext2_write_inode( void* fs_cookie, void* node ) {
 
 static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buffer, off_t pos, size_t size ) {
     int error;
-    uint32_t i;
     uint8_t* data;
     uint8_t* block = NULL;
     uint32_t trunc;
     size_t saved_size;
-    uint32_t start_block;
-    uint32_t end_block;
+    uint32_t block_index;
     ext2_inode_t* inode;
     ext2_cookie_t* cookie;
 
@@ -425,13 +423,10 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
     }
 
     data = ( uint8_t* )buffer;
-
-    start_block = pos / cookie->blocksize;
-    end_block = ( pos + size ) / cookie->blocksize;
-
-    trunc = pos % cookie->blocksize;
+    block_index = pos / cookie->blocksize;
 
     saved_size = size;
+    trunc = pos % cookie->blocksize;
 
     /* Handle the first block */
 
@@ -445,7 +440,7 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
             goto out;
         }
 
-        error = ext2_do_read_inode_block( cookie, inode, start_block, block );
+        error = ext2_do_read_inode_block( cookie, inode, block_index, block );
 
         if ( __unlikely( error < 0 ) ) {
             goto out;
@@ -458,17 +453,21 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
         data += to_copy;
         size -= to_copy;
 
-        start_block++;
+        block_index++;
     }
 
     /* Handle full blocks */
 
-    for ( i = start_block; i < end_block; ++i, data += cookie->blocksize, size -= cookie->blocksize ) {
-        error = ext2_do_read_inode_block( cookie, inode, i, data );
+    while ( size >= cookie->blocksize ) {
+        error = ext2_do_read_inode_block( cookie, inode, block_index, data );
 
         if ( __unlikely( error < 0 ) ) {
             goto out;
         }
+
+        block_index++;
+        size -= cookie->blocksize;
+        data += cookie->blocksize;
     }
 
     /* Handle the last block */
@@ -483,7 +482,7 @@ static int ext2_read( void* fs_cookie, void* node, void* file_cookie, void* buff
             }
         }
 
-        error = ext2_do_read_inode_block( cookie, inode, end_block, block );
+        error = ext2_do_read_inode_block( cookie, inode, block_index, block );
 
         if ( __unlikely( error < 0 ) ) {
             goto out;

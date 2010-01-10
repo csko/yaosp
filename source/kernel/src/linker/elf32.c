@@ -59,6 +59,10 @@ int elf32_load_section_headers( elf32_image_info_t* info, binary_loader_t* loade
 
     sh_table_size = sizeof( elf_section_header_t ) * info->header.shnum;
 
+    if ( sh_table_size == 0 ) {
+        return -EINVAL;
+    }
+
     info->section_headers = ( elf_section_header_t* )kmalloc( sh_table_size );
 
     if ( info->section_headers == NULL ) {
@@ -81,6 +85,11 @@ int elf32_load_section_headers( elf32_image_info_t* info, binary_loader_t* loade
     /* Load the shstrtab section */
 
     shstrtab = &info->section_headers[ info->header.shstrndx ];
+
+    if ( shstrtab->size == 0 ) {
+        error = -EINVAL;
+        goto error2;
+    }
 
     info->sh_string_table = ( char* )kmalloc( shstrtab->size );
 
