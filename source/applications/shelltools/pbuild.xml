@@ -40,6 +40,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>copy</item>
         <item>unmount</item>
         <item>clear</item>
+        <item>md5sum</item>
     </array>
 
     <target name="all">
