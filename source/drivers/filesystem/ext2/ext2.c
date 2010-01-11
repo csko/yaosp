@@ -32,7 +32,7 @@
  */
 int ext2_calc_block_num( ext2_cookie_t* cookie, ext2_inode_t* node, uint32_t block_number, uint32_t* out ) {
     int error;
-    uint8_t* buffer;
+    uint32_t* buffer;
     uint32_t ind_block;
     ext2_fs_inode_t* inode = ( ext2_fs_inode_t* )&node->fs_inode;
 
@@ -55,7 +55,7 @@ int ext2_calc_block_num( ext2_cookie_t* cookie, ext2_inode_t* node, uint32_t blo
             return -EINVAL;
         }
 
-        buffer = ( uint8_t* )kmalloc( cookie->blocksize );
+        buffer = ( uint32_t* )kmalloc( cookie->blocksize );
 
         if ( __unlikely( buffer == NULL ) ) {
             return -ENOMEM;
@@ -63,9 +63,8 @@ int ext2_calc_block_num( ext2_cookie_t* cookie, ext2_inode_t* node, uint32_t blo
 
         /* Read the indirect block from the disk */
 
-        error = pread( cookie->fd, buffer, cookie->blocksize, ind_block * cookie->blocksize );
-
-        if ( __unlikely( error != cookie->blocksize ) ) {
+        if ( pread( cookie->fd, buffer, cookie->blocksize,
+                    ind_block * cookie->blocksize ) != cookie->blocksize ) {
             kfree( buffer );
             return -EIO;
         }
@@ -90,7 +89,7 @@ int ext2_calc_block_num( ext2_cookie_t* cookie, ext2_inode_t* node, uint32_t blo
             return -EINVAL;
         }
 
-        buffer = ( uint8_t* )kmalloc( cookie->blocksize );
+        buffer = ( uint32_t* )kmalloc( cookie->blocksize );
 
         if ( __unlikely( buffer == NULL ) ) {
             return -ENOMEM;
@@ -144,7 +143,7 @@ int ext2_calc_block_num( ext2_cookie_t* cookie, ext2_inode_t* node, uint32_t blo
             return -EINVAL;
         }
 
-        buffer = ( uint8_t* )kmalloc( cookie->blocksize );
+        buffer = ( uint32_t* )kmalloc( cookie->blocksize );
 
         if ( __unlikely( buffer == NULL ) ) {
             return -ENOMEM;

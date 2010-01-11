@@ -360,9 +360,8 @@ int ext2_do_read_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint32
         return error;
     }
 
-    error = pread( cookie->fd, buffer, cookie->blocksize, real_block_number * cookie->blocksize );
-
-    if ( __unlikely( error != cookie->blocksize ) ) {
+    if ( pread( cookie->fd, buffer, cookie->blocksize,
+                real_block_number * cookie->blocksize ) != cookie->blocksize ) {
         return -EIO;
     }
 
@@ -379,9 +378,8 @@ int ext2_do_write_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uint3
         return error;
     }
 
-    error = pwrite( cookie->fd, buffer, cookie->blocksize, real_block_number * cookie->blocksize );
-
-    if ( __unlikely( error != cookie->blocksize ) ) {
+    if ( pwrite( cookie->fd, buffer, cookie->blocksize,
+                 real_block_number * cookie->blocksize ) != cookie->blocksize ) {
         return -EIO;
     }
 
@@ -451,9 +449,8 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uin
             inode->fs_inode.i_block[ EXT2_IND_BLOCK ] = ind_block;
             inode->fs_inode.i_blocks += cookie->sectors_per_block;
         } else {
-            error = pread( cookie->fd, block, cookie->blocksize, ind_block * cookie->blocksize );
-
-            if ( __unlikely( error != cookie->blocksize ) ) {
+            if ( pread( cookie->fd, block, cookie->blocksize,
+                        ind_block * cookie->blocksize ) != cookie->blocksize ) {
                 error = -EIO;
                 goto error1;
             }
@@ -462,14 +459,12 @@ int ext2_do_get_new_inode_block( ext2_cookie_t* cookie, ext2_inode_t* inode, uin
         /* Update the indirect block */
 
         ASSERT( block[ new_index ] == 0 );
-
         block[ new_index ] = new_block;
 
         /* Write the indirect block back to the disk */
 
-        error = pwrite( cookie->fd, block, cookie->blocksize, ind_block * cookie->blocksize );
-
-        if ( __unlikely( error != cookie->blocksize ) ) {
+        if ( pwrite( cookie->fd, block, cookie->blocksize,
+                     ind_block * cookie->blocksize ) != cookie->blocksize ) {
             error = -EIO;
             goto error1;
         }
