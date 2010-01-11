@@ -131,7 +131,7 @@ int ext2_calc_block_num( ext2_cookie_t* cookie, ext2_inode_t* node, uint32_t blo
 
     }
 
-    block_number -= cookie->doubly_indirect_block_count;           // -65536
+    block_number -= cookie->doubly_indirect_block_count;
 
     /* Triply-indirect block... wow :) */
 

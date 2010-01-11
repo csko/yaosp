@@ -269,7 +269,7 @@ static int pty_read( void* fs_cookie, void* _node, void* file_cookie, void* buff
     select_request_t* request;
 
     if ( _node == ( void* )&root_inode ) {
-        return -EINVAL;
+        return -EISDIR;
     }
 
     read = 0;
@@ -496,13 +496,13 @@ static int pty_do_write_slave( pty_node_t* slave, const void* buffer, size_t siz
             goto write_and_echo;
         }
 
-write_and_echo:
+ write_and_echo:
         pty_do_write( slave, &c, 1 );
 
-echo:
+ echo:
         pty_echo_one_character( slave->partner, slave, c );
 
-no_echo:
+ no_echo:
         ;
     }
 
@@ -559,8 +559,8 @@ static int pty_ioctl( void* fs_cookie, void* _node, void* file_cookie, int comma
             break;
 
         default :
-            kprintf( WARNING, "Terminal: Unknown pty ioctl: %x\n", command );
-            error = -ENOSYS;
+            kprintf( WARNING, "pty: unknown ioctl: %x\n", command );
+            error = -EINVAL;
             break;
     }
 
@@ -611,7 +611,7 @@ static int pty_read_directory( void* fs_cookie, void* node, void* file_cookie, s
     pty_read_dir_data_t data;
 
     if ( node != ( void* )&root_inode ) {
-        return -EINVAL;
+        return -ENOTDIR;
     }
 
     cookie = ( pty_dir_cookie_t* )file_cookie;
@@ -639,23 +639,13 @@ static int pty_rewind_directory( void* fs_cookie, void* node, void* file_cookie 
     pty_dir_cookie_t* cookie;
 
     cookie = ( pty_dir_cookie_t* )file_cookie;
-
     cookie->current = 0;
 
     return 0;
 }
 
-static int pty_create(
-    void* fs_cookie,
-    void* node,
-    const char* name,
-    int name_length,
-    int mode,
-    int permissions,
-    ino_t* inode_number,
-    void** file_cookie
-) {
-    int error;
+static int pty_create( void* fs_cookie, void* node, const char* name, int name_length,
+                       int mode, int permissions, ino_t* inode_number, void** file_cookie ) {
     ino_t dummy;
     char* tty_name;
     pty_node_t* master;
@@ -665,15 +655,14 @@ static int pty_create(
 
     /* Make sure this is a valid node */
 
-    if ( ( name_length < 4 ) || ( strncmp( name, "pty", 3 ) != 0 ) ) {
+    if ( ( name_length < 4 ) ||
+         ( strncmp( name, "pty", 3 ) != 0 ) ) {
         return -EINVAL;
     }
 
     /* Check if the node already exist */
 
-    error = pty_lookup_inode( fs_cookie, node, name, name_length, &dummy );
-
-    if ( error == 0 ) {
+    if ( pty_lookup_inode( fs_cookie, node, name, name_length, &dummy ) == 0 ) {
         return -EEXIST;
     }
 
@@ -713,7 +702,6 @@ static int pty_create(
     /* Initialize terminal info */
 
     term_info = ( struct termios* )kmalloc( sizeof( struct termios ) );
-
     memset( term_info, 0, sizeof( struct termios ) );
 
     term_info->c_iflag = BRKINT | IGNPAR | ISTRIP | ICRNL | IXON;
@@ -907,20 +895,6 @@ static void* pty_key( hashitem_t* item ) {
     return ( void* )&node->inode_number;
 }
 
-static uint32_t pty_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, sizeof( ino_t ) );
-}
-
-static bool pty_compare( const void* key1, const void* key2 ) {
-    ino_t* inode_num_1;
-    ino_t* inode_num_2;
-
-    inode_num_1 = ( ino_t* )key1;
-    inode_num_2 = ( ino_t* )key2;
-
-    return ( *inode_num_1 == *inode_num_2 );
-}
-
 int init_pty_filesystem( void ) {
     int error;
 
@@ -928,8 +902,8 @@ int init_pty_filesystem( void ) {
         &pty_node_table,
         32,
         pty_key,
-        pty_hash,
-        pty_compare
+        hash_int64,
+        compare_int64
     );
 
     if ( error < 0 ) {
@@ -950,12 +924,12 @@ int init_pty_filesystem( void ) {
 
     return 0;
 
-error3:
+ error3:
     mutex_destroy( pty_lock );
 
-error2:
+ error2:
     destroy_hashtable( &pty_node_table );
 
-error1:
+ error1:
     return error;
 }
