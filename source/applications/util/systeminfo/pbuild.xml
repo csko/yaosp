@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>ifconfig.c</item>
+        <item>sysinfo.c</item>
     </array>
 
     <target name="clean">
@@ -37,11 +37,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo/>
-        <echo>Compiling ifconfig shell command</echo>
+        <echo>Compiling sysinfo shell command</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/ifconfig/${i}</echo>
+            <echo>[GCC    ] source/applications/util/systeminfo/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -52,18 +52,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking ifconfig application</echo>
+        <echo>Linking systeminfo application</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/ifconfig/objs/ifconfig</echo>
+        <echo>[GCC   ] source/applications/util/systeminfo/objs/systeminfo</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <output>objs/ifconfig</output>
+            <output>objs/systeminfo</output>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/ifconfig" to="../../../build/image/application/ifconfig"/>
+        <copy from="objs/systeminfo" to="../../../../build/image/application/systeminfo"/>
     </target>
 
     <target name="all">

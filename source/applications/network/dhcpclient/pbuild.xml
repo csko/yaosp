@@ -2,6 +2,7 @@
 
 This file is part of the yaosp build system
 
+Copyright (c) 2010 Zoltan Kovacs
 Copyright (c) 2009 Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
@@ -41,7 +42,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/dhcpclient/${i}</echo>
+            <echo>[GCC    ] source/applications/network/dhcpclient/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -55,7 +56,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
         <echo>Linking dhcpclient application</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/dhcpclient/objs/dhcpclient</echo>
+        <echo>[GCC    ] source/applications/network/dhcpclient/objs/dhcpclient</echo>
 
         <gcc>
             <input>objs/*.o</input>
@@ -64,7 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/dhcpclient" to="../../../build/image/application/dhcpclient"/>
+        <copy from="objs/dhcpclient" to="../../../../build/image/application/dhcpclient"/>
     </target>
 
     <target name="all">

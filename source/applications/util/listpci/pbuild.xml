@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,14 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>main.c</item>
-        <item>about.c</item>
-        <item>statusbar.c</item>
-        <item>io.c</item>
-    </array>
-
-    <array name="images">
-        <item>texteditor.png</item>
+        <item>listpci.c</item>
+        <item>deviceid.c</item>
     </array>
 
     <target name="clean">
@@ -43,11 +37,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling texteditor application</echo>
+        <echo/>
+        <echo>Compiling listpci shell command</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/texteditor/${i}</echo>
+            <echo>[GCC    ] source/applications/util/listpci/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -58,29 +53,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking texteditor application</echo>
+        <echo>Linking listpci application</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/texteditor/objs/texteditor</echo>
+        <echo>[GCC    ] source/applications/util/listpci/objs/lspci</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../lib/ygui/objs/libygui.a</input>
-            <input>../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
-            <input>../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
-            <input>../../lib/yutil/objs/libyutil.a</input>
-            <output>objs/texteditor</output>
+            <output>objs/lspci</output>
         </gcc>
     </target>
 
     <target name="install">
-        <mkdir>../../../build/image/application/texteditor</mkdir>
-        <mkdir>../../../build/image/application/texteditor/images</mkdir>
-
-        <copy from="objs/texteditor" to="../../../build/image/application/texteditor/texteditor"/>
-
-        <for var="i" array="${images}">
-            <copy from="images/${i}" to="../../../build/image/application/texteditor/images/${i}"/>
-        </for>
+        <copy from="objs/lspci" to="../../../../build/image/application/lspci"/>
     </target>
 
     <target name="all">

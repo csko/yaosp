@@ -19,12 +19,21 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 -->
 
-<build default="all">
-    <target name="install">
-        <copy from="installer.py" to="../../../build/image/application/installer.py"/>
-    </target>
+<build>
+    <array name="subdirs">
+        <item>ifconfig</item>
+        <item>dhcpclient</item>
+    </array>
 
     <target name="all">
-        <call target="install"/>
+        <for var="i" array="${subdirs}">
+            <call target="all" directory="${i}"/>
+        </for>
+    </target>
+
+    <target name="clean">
+        <for var="i" array="${subdirs}">
+            <call target="clean" directory="${i}"/>
+        </for>
     </target>
 </build>

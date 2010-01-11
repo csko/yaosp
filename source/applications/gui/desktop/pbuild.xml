@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+Copyright (c) 2009, 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>init.c</item>
+        <item>desktop.c</item>
+    </array>
+
+    <array name="images">
+        <item>background.png</item>
     </array>
 
     <target name="clean">
@@ -36,11 +40,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling init application</echo>
+        <echo>Compiling desktop application</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/init/${i}</echo>
+            <echo>[GCC    ] source/applications/gui/desktop/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -51,18 +55,29 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking init application</echo>
+        <echo>Linking desktop application</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/init/objs/init</echo>
+        <echo>[GCC    ] source/applications/gui/desktop/objs/desktop</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <output>objs/init</output>
+            <input>../../../lib/ygui/objs/libygui.a</input>
+            <input>../../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
+            <input>../../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
+            <input>../../../lib/yutil/objs/libyutil.a</input>
+            <output>objs/desktop</output>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/init" to="../../../build/image/system/init"/>
+        <mkdir>../../../../build/image/application/desktop</mkdir>
+        <mkdir>../../../../build/image/application/desktop/images</mkdir>
+
+        <copy from="objs/desktop" to="../../../../build/image/application/desktop/desktop"/>
+
+        <for var="i" array="${images}">
+            <copy from="images/${i}" to="../../../../build/image/application/desktop/images/${i}"/>
+        </for>
     </target>
 
     <target name="all">

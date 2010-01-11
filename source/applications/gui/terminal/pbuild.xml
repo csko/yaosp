@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+Copyright (c) 2009, 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>sysinfo.c</item>
+        <item>main.c</item>
+        <item>terminal.c</item>
+        <item>term_widget.c</item>
+        <item>buffer.c</item>
+        <item>history.c</item>
     </array>
 
     <target name="clean">
@@ -36,12 +40,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo/>
-        <echo>Compiling sysinfo shell command</echo>
+        <echo>Compiling terminal application</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/systeminfo/${i}</echo>
+            <echo>[GCC    ] source/applications/gui/terminal/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -52,18 +55,26 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking systeminfo application</echo>
+        <echo>Linking terminal application</echo>
         <echo/>
-        <echo>[GCC   ] source/applications/systeminfo/objs/systeminfo</echo>
+        <echo>[GCC    ] source/applications/gui/terminal/objs/terminal</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <output>objs/systeminfo</output>
+            <input>../../../lib/ygui/objs/libygui.a</input>
+            <input>../../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
+            <input>../../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
+            <input>../../../lib/yutil/objs/libyutil.a</input>
+            <output>objs/terminal</output>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/systeminfo" to="../../../build/image/application/systeminfo"/>
+        <mkdir>../../../../build/image/application/terminal</mkdir>
+        <mkdir>../../../../build/image/application/terminal/images</mkdir>
+
+        <copy from="objs/terminal" to="../../../../build/image/application/terminal/terminal"/>
+        <copy from="images/terminal.png" to="../../../../build/image/application/terminal/images/terminal.png"/>
     </target>
 
     <target name="all">

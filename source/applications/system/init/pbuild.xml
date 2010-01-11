@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,19 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>taskbar.c</item>
-        <item>window_list.c</item>
-        <item>plugin/datetime/datetime.c</item>
-        <item>plugin/cpuload/cpuload.c</item>
-        <item>plugin/memoryusage/memoryusage.c</item>
-    </array>
-
-    <array name="images">
-        <item>start.png</item>
-        <item>terminal.png</item>
-        <item>texteditor.png</item>
-        <item>shutdown.png</item>
-        <item>unknown.png</item>
+        <item>init.c</item>
     </array>
 
     <target name="clean">
@@ -48,11 +36,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling taskbar application</echo>
+        <echo>Compiling init application</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/taskbar/${i}</echo>
+            <echo>[GCC    ] source/applications/system/init/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -63,29 +51,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking taskbar application</echo>
+        <echo>Linking init application</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/taskbar/objs/taskbar</echo>
+        <echo>[GCC    ] source/applications/system/init/objs/init</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../lib/ygui/objs/libygui.a</input>
-            <input>../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
-            <input>../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
-            <input>../../lib/yutil/objs/libyutil.a</input>
-            <output>objs/taskbar</output>
+            <output>objs/init</output>
         </gcc>
     </target>
 
     <target name="install">
-        <mkdir>../../../build/image/application/taskbar</mkdir>
-        <mkdir>../../../build/image/application/taskbar/images</mkdir>
-
-        <copy from="objs/taskbar" to="../../../build/image/application/taskbar/taskbar"/>
-
-        <for var="i" array="${images}">
-            <copy from="images/${i}" to="../../../build/image/application/taskbar/images/${i}"/>
-        </for>
+        <copy from="objs/init" to="../../../../build/image/system/init"/>
     </target>
 
     <target name="all">

@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+Copyright (c) 2009, 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,8 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>listpci.c</item>
-        <item>deviceid.c</item>
+        <item>fstools.c</item>
+        <item>ext2/ext2.c</item>
     </array>
 
     <target name="clean">
@@ -37,12 +37,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo/>
-        <echo>Compiling listpci shell command</echo>
+        <echo>Compiling fstools application</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/listpci/${i}</echo>
+            <echo>[GCC    ] source/applications/util/fstools/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -53,18 +52,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking listpci application</echo>
+        <echo>Linking fstools application</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/listpci/objs/lspci</echo>
+        <echo>[GCC    ] source/applications/util/fstools/objs/fstools</echo>
 
         <gcc>
             <input>objs/*.o</input>
-            <output>objs/lspci</output>
+            <input>../../../lib/yutil/objs/libyutil.a</input>
+            <output>objs/fstools</output>
         </gcc>
     </target>
 
     <target name="install">
-        <copy from="objs/lspci" to="../../../build/image/application/lspci"/>
+        <copy from="objs/fstools" to="../../../../build/image/application/fstools"/>
     </target>
 
     <target name="all">

@@ -1,6 +1,6 @@
 /* Init application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -44,6 +44,7 @@ static int create_temp_directory( void ) {
     return 0;
 }
 
+#if 0
 static int start_shells( void ) {
     int i;
     int f;
@@ -108,6 +109,19 @@ static int start_shells( void ) {
 
     return 0;
 }
+#endif
+
+static int start_services( void ) {
+    if ( fork() == 0 ) {
+        char* const argv[] = { "configserver", "/system/config/cfgserver.bin", NULL };
+
+        execv( "/system/server/configserver", argv );
+        _exit( 0 );
+
+    }
+
+    return 0;
+}
 
 static int start_gui( void ) {
     load_module( "vesa" );
@@ -168,10 +182,13 @@ int main( int argc, char** argv ) {
     /* Create and mount the /temp directory */
 
     create_temp_directory();
+    start_services();
 
     /* Start shells */
 
-    //start_shells();
+#if 0
+    start_shells();
+#endif
     start_gui();
 
     return EXIT_SUCCESS;

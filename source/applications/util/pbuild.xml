@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+Copyright (c) 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,16 +21,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build>
     <array name="subdirs">
-        <item>system</item>
-        <item>network</item>
-        <item>gui</item>
-        <item>util</item>
-        <item>shelltools</item>
+        <item>systeminfo</item>
+        <item>listpci</item>
     </array>
 
     <array name="subdirs_for_installer">
-        <item>system</item>
-        <item>util</item>
+        <item>fstools</item>
     </array>
 
     <target name="all">
@@ -41,7 +37,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="all-installer">
         <for var="i" array="${subdirs_for_installer}">
-            <call target="all-installer" directory="${i}"/>
+            <call target="all" directory="${i}"/>
         </for>
     </target>
 
