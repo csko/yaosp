@@ -895,6 +895,20 @@ static void* pty_key( hashitem_t* item ) {
     return ( void* )&node->inode_number;
 }
 
+static uint32_t pty_hash( const void* key ) {
+    return hash_number( ( uint8_t* )key, sizeof( ino_t ) );
+}
+
+static bool pty_compare( const void* key1, const void* key2 ) {
+    ino_t* inode_num_1;
+    ino_t* inode_num_2;
+
+    inode_num_1 = ( ino_t* )key1;
+    inode_num_2 = ( ino_t* )key2;
+
+    return ( *inode_num_1 == *inode_num_2 );
+}
+
 int init_pty_filesystem( void ) {
     int error;
 
@@ -902,8 +916,8 @@ int init_pty_filesystem( void ) {
         &pty_node_table,
         32,
         pty_key,
-        hash_int64,
-        compare_int64
+        pty_hash,
+        pty_compare
     );
 
     if ( error < 0 ) {
@@ -913,6 +927,7 @@ int init_pty_filesystem( void ) {
     pty_lock = mutex_create( "PTY mutex", MUTEX_NONE );
 
     if ( pty_lock < 0 ) {
+        error = pty_lock;
         goto error2;
     }
 

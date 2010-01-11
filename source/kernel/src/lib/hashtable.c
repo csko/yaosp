@@ -358,4 +358,3 @@ bool compare_str( const void* key1, const void* key2 ) {
 
     return ( strcmp( str1, str2 ) == 0 );
 }
-
