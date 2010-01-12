@@ -735,9 +735,8 @@ static int do_isatty( io_context_t* io_context, int fd ) {
         return -EBADF;
     }
 
-    /* TODO: check file type */
-
-    if ( file->inode->mount_point->fs_calls->isatty == NULL ) {
+    if ( ( file->type == TYPE_FILE ) ||
+         ( file->inode->mount_point->fs_calls->isatty == NULL ) ) {
         error = 0;
     } else {
         error = file->inode->mount_point->fs_calls->isatty(
@@ -977,7 +976,7 @@ static int do_fchdir( io_context_t* io_context, int fd ) {
 
     put_inode( tmp );
 
-out:
+ out:
     io_context_put_file( io_context, file );
 
     return error;
