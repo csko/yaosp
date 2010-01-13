@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009, 2010 Zoltan Kovacs
+Copyright (c) 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,20 +21,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <array name="files">
-        <item>taskbar.c</item>
-        <item>window_list.c</item>
-        <item>menu.c</item>
-        <item>plugin/datetime/datetime.c</item>
-        <item>plugin/cpuload/cpuload.c</item>
-        <item>plugin/memoryusage/memoryusage.c</item>
-    </array>
-
-    <array name="images">
-        <item>start.png</item>
-        <item>terminal.png</item>
-        <item>texteditor.png</item>
-        <item>shutdown.png</item>
-        <item>unknown.png</item>
+        <item>src/connection.c</item>
+        <item>src/attrib.c</item>
+        <item>src/node.c</item>
     </array>
 
     <target name="clean">
@@ -49,11 +38,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="compile">
         <call target="prepare"/>
 
-        <echo>Compiling taskbar application</echo>
+        <echo/>
+        <echo>Compiling yconfig library</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/applications/gui/taskbar/${i}</echo>
+            <echo>[GCC    ] source/lib/yconfig/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -64,30 +54,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking taskbar application</echo>
+        <echo>Linking yconfig library</echo>
         <echo/>
-        <echo>[GCC    ] source/applications/gui/taskbar/objs/taskbar</echo>
+        <echo>[AR     ] source/lib/yconfig/objs/libyconfig.a</echo>
 
-        <gcc>
+        <ar>
             <input>objs/*.o</input>
-            <input>../../../lib/ygui/objs/libygui.a</input>
-            <input>../../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
-            <input>../../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
-            <input>../../../lib/yconfig/objs/libyconfig.a</input>
-            <input>../../../lib/yutil/objs/libyutil.a</input>
-            <output>objs/taskbar</output>
-        </gcc>
+            <output>objs/libyconfig.a</output>
+            <flag>-rc</flag>
+        </ar>
     </target>
 
     <target name="install">
-        <mkdir>../../../../build/image/application/taskbar</mkdir>
-        <mkdir>../../../../build/image/application/taskbar/images</mkdir>
-
-        <copy from="objs/taskbar" to="../../../../build/image/application/taskbar/taskbar"/>
-
-        <for var="i" array="${images}">
-            <copy from="images/${i}" to="../../../../build/image/application/taskbar/images/${i}"/>
-        </for>
     </target>
 
     <target name="all">

@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>c</item>
         <item>yutil</item>
         <item>ygui</item>
+        <item>yconfig</item>
     </array>
 
     <target name="all">

@@ -19,14 +19,8 @@
 #ifndef _CFG_ATTRIBUTE_H_
 #define _CFG_ATTRIBUTE_H_
 
+#include <yconfig/protocol.h>
 #include <yutil/hashtable.h>
-
-typedef enum attr_type {
-    NUMERIC,
-    ASCII,
-    BINARY,
-    BOOL
-} attr_type_t;
 
 typedef struct attribute {
     hashitem_t hash;
@@ -35,14 +29,14 @@ typedef struct attribute {
     attr_type_t type;
     union {
         uint8_t bool;
-        int64_t numeric;
+        uint64_t numeric;
 
-        union {
+        struct {
             off_t offset;
             uint64_t size;
         } binary;
 
-        union {
+        struct {
             off_t offset;
             uint32_t size;
         } ascii;
@@ -50,5 +44,7 @@ typedef struct attribute {
 } attribute_t;
 
 void* attribute_key( hashitem_t* item );
+
+attribute_t* attribute_create( const char* name, attr_type_t type );
 
 #endif /* _CFG_NODE_H_ */

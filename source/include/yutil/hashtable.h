@@ -1,6 +1,6 @@
 /* Hashtable implementation
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -40,7 +40,6 @@ typedef struct hashtable {
 } hashtable_t;
 
 typedef int hashtable_iter_callback_t( hashitem_t* item, void* data );
-typedef int hashtable_filter_callback_t( hashitem_t* item, void* data );
 
 int init_hashtable(
     hashtable_t* table,
@@ -54,6 +53,7 @@ void destroy_hashtable( hashtable_t* table );
 int hashtable_add( hashtable_t* table, hashitem_t* item );
 hashitem_t* hashtable_get( hashtable_t* table, const void* key );
 int hashtable_remove( hashtable_t* table, const void* key );
+int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data );
 
 uint32_t do_hash_number( uint8_t* data, size_t length );
 uint32_t do_hash_string( uint8_t* data, size_t length );

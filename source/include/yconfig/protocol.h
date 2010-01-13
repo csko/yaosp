@@ -1,4 +1,4 @@
-/* Config server
+/* yaosp configuration library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,16 +16,39 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _CFG_STORAGE_H_
-#define _CFG_STORAGE_H_
+#ifndef _YCONFIG_PROTOCOL_H_
+#define _YCONFIG_PROTOCOL_H_
 
-#include <configserver/node.h>
+#include <yaosp/ipc.h>
 
-typedef struct config_storage {
-    int ( *load )( const char* filename, node_t** root );
-    int ( *get_attribute_value )( attribute_t* attrib, void* data );
-} config_storage_t;
+enum {
+    MSG_GET_ATTRIBUTE_VALUE = 1,
+    MSG_LIST_NODE_CHILDREN
+};
 
-extern config_storage_t binary_storage;
+typedef enum attr_type {
+    NUMERIC,
+    ASCII,
+    BINARY,
+    BOOL
+} attr_type_t;
 
-#endif /* _CFG_STORAGE_H_ */
+typedef struct msg_get_attr {
+    ipc_port_id reply_port;
+} msg_get_attr_t;
+
+typedef struct msg_get_reply {
+    int error;
+    attr_type_t type;
+} msg_get_reply_t;
+
+typedef struct msg_list_children {
+    ipc_port_id reply_port;
+} msg_list_children_t;
+
+typedef struct msg_list_children_reply {
+    int error;
+    uint32_t count;
+} msg_list_children_reply_t;
+
+#endif /* _YCONFIG_PROTOCOL_H_ */

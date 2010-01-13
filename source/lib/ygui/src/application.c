@@ -63,14 +63,14 @@ int application_register_window_listener( int get_window_list ) {
 
 int application_init( uint32_t flags ) {
     int error;
-    struct timespec slp_time;
-
     msg_create_app_t request;
     msg_create_app_reply_t reply;
 
     /* Get the guiserver port ... */
 
     while ( 1 ) {
+        struct timespec slp_time;
+
         error = get_named_ipc_port( "guiserver", &guiserver_port );
 
         if ( error == 0 ) {

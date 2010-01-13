@@ -1,6 +1,6 @@
 /* Hashtable implementation
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -159,6 +159,30 @@ int hashtable_remove( hashtable_t* table, const void* key ) {
     }
 
     return -EINVAL;
+}
+
+int hashtable_iterate( hashtable_t* table, hashtable_iter_callback_t* callback, void* data ) {
+    int result;
+    uint32_t i;
+    hashitem_t* item;
+    hashitem_t* next;
+
+    for ( i = 0; i < table->size; i++ ) {
+        item = table->items[ i ];
+
+        while ( item != NULL ) {
+            next = item->next;
+            result = callback( item, data );
+
+            if ( result < 0 ) {
+                return result;
+            }
+
+            item = next;
+        }
+    }
+
+    return 0;
 }
 
 uint32_t do_hash_number( uint8_t* data, size_t length ) {

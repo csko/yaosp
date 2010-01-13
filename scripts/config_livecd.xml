@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<node name="config">
+    <node name="application">
+        <node name="taskbar">
+            <node name="menu">
+                <node name="terminal">
+                    <attrib type="ascii" name="name" value="Terminal"/>
+                    <attrib type="numeric" name="position" value="0"/>
+                    <attrib type="ascii" name="executable" value="/application/terminal/terminal"/>
+                </node>
+                <node name="texteditor">
+                    <attrib type="ascii" name="name" value="Text editor"/>
+                    <attrib type="numeric" name="position" value="1"/>
+                    <attrib type="ascii" name="executable" value="/application/texteditor/texteditor"/>
+                </node>
+            </node>
+        </node>
+
+        <node name="guiserver">
+            <node name="screen">
+                <attrib type="numeric" name="width" value="640"/>
+                <attrib type="numeric" name="height" value="480"/>
+                <attrib type="numeric" name="depth" value="32"/>
+            </node>
+        </node>
+    </node>
+</node>

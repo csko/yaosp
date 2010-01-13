@@ -21,13 +21,25 @@
 
 #include <yutil/hashtable.h>
 
+#include <configserver/attribute.h>
+
 typedef struct node {
     hashitem_t hash;
 
     char* name;
     hashtable_t children;
     hashtable_t attributes;
+
+    uint64_t file_offset;
 } node_t;
+
+int node_add_child( node_t* parent, node_t* child );
+int node_add_attribute( node_t* parent, attribute_t* attribute );
+
+node_t* node_get_child( node_t* parent, char* name );
+attribute_t* node_get_attribute( node_t* parent, char* name );
+
+int node_dump( node_t* node, int level );
 
 node_t* node_create( const char* name );
 

@@ -1,4 +1,4 @@
-/* Config server
+/* yaosp configuration library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,16 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _CFG_STORAGE_H_
-#define _CFG_STORAGE_H_
+#ifndef _YCONFIG_YCONFIG_H_
+#define _YCONFIG_YCONFIG_H_
 
-#include <configserver/node.h>
+#include <yutil/array.h>
 
-typedef struct config_storage {
-    int ( *load )( const char* filename, node_t** root );
-    int ( *get_attribute_value )( attribute_t* attrib, void* data );
-} config_storage_t;
+int ycfg_get_ascii_value( char* path, char* attrib, char** value );
+int ycfg_get_numeric_value( char* path, char* attrib, uint64_t* value );
 
-extern config_storage_t binary_storage;
+int ycfg_list_children( char* path, array_t* children );
 
-#endif /* _CFG_STORAGE_H_ */
+int ycfg_init( void );
+
+#endif /* _YCONFIG_YCONFIG_H_ */

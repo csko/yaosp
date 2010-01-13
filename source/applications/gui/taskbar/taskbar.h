@@ -1,4 +1,4 @@
-/* Config server
+/* Taskbar application
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,16 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _CFG_STORAGE_H_
-#define _CFG_STORAGE_H_
+#ifndef _TASKBAR_H_
+#define _TASKBAR_H_
 
-#include <configserver/node.h>
+#include <ygui/menu.h>
 
-typedef struct config_storage {
-    int ( *load )( const char* filename, node_t** root );
-    int ( *get_attribute_value )( attribute_t* attrib, void* data );
-} config_storage_t;
+extern menu_t* taskbar_menu;
 
-extern config_storage_t binary_storage;
+int taskbar_create_menu( void );
 
-#endif /* _CFG_STORAGE_H_ */
+#endif /* _TASKBAR_H_ */

@@ -46,10 +46,6 @@
 #define BUFSIZ _IO_BUFSIZE
 #endif /* BUFSIZ */
 
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-
 #define P_tmpdir "/temp"
 
 typedef struct FILE {

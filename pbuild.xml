@@ -50,11 +50,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <mkdir>build/image/package</mkdir>
     </target>
 
-    <target name="create_iso">
-        <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
+    <target name="create_iso" type="private">
         <copy from="scripts/grub/stage2_eltorito" to="build/image/boot/grub/stage2_eltorito"/>
-        <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
-        <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
 
         <echo>Creating bootable iso9660 CD-ROM image</echo>
         <echo/>
@@ -101,9 +98,39 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <move from="build/yaosp_base.tar.bz2" to="yaosp_base.tar.bz2"/>
     </target>
 
+    <target name="create-livecd-iso">
+        <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
+        <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
+        <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
+
+        <exec executable="python">
+            <arg>scripts/config_converter.py</arg>
+            <arg>scripts/config_livecd.xml</arg>
+            <arg>build/image/system/config/cfgserver.bin</arg>
+        </exec>
+
+        <call target="create_iso"/>
+    </target>
+
     <target name="all-livecd">
         <call target="prepare_build"/>
         <call target="all" directory="source"/>
+        <call target="create-livecd-iso"/>
+    </target>
+
+    <target name="create-installcd-iso">
+        <copy from="build/yaosp_base.tar.bz2" to="build/image/yaosp_base.tar.bz2"/>
+
+        <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
+        <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
+        <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
+
+        <exec executable="python">
+            <arg>scripts/config_converter.py</arg>
+            <arg>scripts/config_installcd.xml</arg>
+            <arg>build/image/system/config/cfgserver.bin</arg>
+        </exec>
+
         <call target="create_iso"/>
     </target>
 
@@ -112,7 +139,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="all" directory="source"/>
         <call target="create_install_base"/>
         <call target="all-installer" directory="source"/>
-        <copy from="build/yaosp_base.tar.bz2" to="build/image/yaosp_base.tar.bz2"/>
-        <call target="create_iso"/>
+        <call target="create-installcd-iso"/>
     </target>
 </build>

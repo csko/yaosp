@@ -32,6 +32,10 @@
 #endif /* __cplusplus */
 #endif /* NULL */
 
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
+
 #define INFINITE_TIMEOUT 18446744073709551615ULL
 
 typedef unsigned char u_char;
