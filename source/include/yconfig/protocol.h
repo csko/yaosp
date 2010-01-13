@@ -29,8 +29,8 @@ enum {
 typedef enum attr_type {
     NUMERIC,
     ASCII,
-    BINARY,
-    BOOL
+    BOOL,
+    BINARY
 } attr_type_t;
 
 typedef struct msg_get_attr {

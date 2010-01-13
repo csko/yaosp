@@ -95,8 +95,8 @@ static int handle_get_attribute_value( msg_get_attr_t* request ) {
             break;
 
         case BINARY :
-            /* todo */
-            return -1;
+            reply_size = sizeof( msg_get_reply_t ) + attrib->value.binary.size;
+            break;
     }
 
     reply = ( msg_get_reply_t* )malloc( reply_size );

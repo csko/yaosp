@@ -46,5 +46,6 @@ int bitmap_inc_ref( bitmap_t* bitmap );
 int bitmap_dec_ref( bitmap_t* bitmap );
 
 bitmap_t* bitmap_load_from_file( const char* file );
+bitmap_t* bitmap_load_from_buffer( void* data, size_t size );
 
 #endif /* _YGUI_BITMAP_H_ */

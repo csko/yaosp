@@ -34,7 +34,8 @@ enum {
 enum {
     ATTR_NUMERIC = 0,
     ATTR_ASCII,
-    ATTR_BOOL
+    ATTR_BOOL,
+    ATTR_BINARY
 };
 
 static int binary_file = -1;
@@ -97,6 +98,21 @@ static int binary_read_attribute_bool( int f, attribute_t* attrib ) {
     return 0;
 }
 
+static int binary_read_attribute_binary( int f, attribute_t* attrib ) {
+    uint32_t data_length;
+    uint64_t data_offset;
+
+    if ( ( read( f, &data_length, 4 ) != 4 ) ||
+         ( read( f, &data_offset, 8 ) != 8 ) ) {
+        return -1;
+    }
+
+    attrib->value.binary.offset = data_offset;
+    attrib->value.binary.size = data_length;
+
+    return 0;
+}
+
 static attribute_t* binary_read_attribute( int f, char* name ) {
     uint8_t type;
     attribute_t* attrib;
@@ -122,6 +138,10 @@ static attribute_t* binary_read_attribute( int f, char* name ) {
 
         case ATTR_BOOL :
             binary_read_attribute_bool( f, attrib );
+            break;
+
+        case ATTR_BINARY :
+            binary_read_attribute_binary( f, attrib );
             break;
     }
 
@@ -277,8 +297,17 @@ static int binary_get_attribute_value( attribute_t* attrib, void* data ) {
             break;
 
         case BINARY :
-            /* todo */
-            return -1;
+            if ( lseek( binary_file, attrib->value.binary.offset,
+                        SEEK_SET ) != attrib->value.binary.offset ) {
+                return -1;
+            }
+
+            if ( read( binary_file, data,
+                       attrib->value.binary.size ) != attrib->value.binary.size ) {
+                return -1;
+            }
+
+            break;
     }
 
     return 0;

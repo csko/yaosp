@@ -214,6 +214,7 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     int i;
     int fd;
     int error;
+    struct stat st;
     char* new_name;
     uint8_t* stack;
     thread_t* thread;
@@ -237,6 +238,22 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     if ( fd < 0 ) {
         error = fd;
         goto _error1;
+    }
+
+    error = sys_fstat( fd, &st );
+
+    if ( error != 0 ) {
+        goto _error2;
+    }
+
+    if ( S_ISDIR( st.st_mode ) ) {
+        error = -EISDIR;
+        goto _error2;
+    }
+
+    if ( !S_ISREG( st.st_mode ) ) {
+        error = -EINVAL;
+        goto _error2;
     }
 
     binary_loader = get_app_binary_loader( fd );

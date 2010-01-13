@@ -8,18 +8,20 @@ class Attribute :
     NUMERIC = 0
     ASCII = 1
     BOOL = 2
+    BINARY = 3
 
     TYPE_NAME_MAP = {
         "numeric" : NUMERIC,
         "ascii" : ASCII,
-        "bool" : BOOL
+        "bool" : BOOL,
+        "binary" : BINARY
     }
 
     def __init__( self, name, type, value ) :
         self.name = name
         self.type = type
 
-        if type == self.NUMERIC :
+        if type == self.NUMERIC or type == self.BOOL :
             self.value = int( value )
         else :
             self.value = value
@@ -45,6 +47,9 @@ class Attribute :
             size += 8 # 8 byte for an offset to the data section
         elif self.type == self.BOOL :
             size += 1 # 1 byte for the boolean value
+        elif self.type == self.BINARY :
+            size += 4 # 4 byte for the size
+            size += 8 # 8 byte for the data offset
 
         return size
 
@@ -174,7 +179,21 @@ class BinaryWriter :
 
                 self.data_position += len( attrib.getValue() )
             elif type == Attribute.BOOL :
-                self._wrintInt8( 0 )
+                self._wrintInt8( attrib.getValue() )
+            elif type == Attribute.BINARY :
+                bin = open( attrib.getValue(), "r" )
+                binData = bin.read()
+                bin.close()
+
+                self._writeInt32( len( binData ) )
+                self._writeInt64( self.data_position )
+
+                current_position = self.file.tell()
+                self.file.seek( self.data_position )
+                self._writeString( binData )
+                self.file.seek( current_position )
+
+                self.data_position += len( binData )
 
     def _writeInt8( self, value ) :
         self.file.write( struct.pack( "B", value ) )

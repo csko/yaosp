@@ -7,11 +7,13 @@
                 <node name="terminal">
                     <attrib type="ascii" name="name" value="Terminal"/>
                     <attrib type="numeric" name="position" value="0"/>
+                    <attrib type="binary" name="image" value="source/applications/gui/terminal/images/terminal.png"/>
                     <attrib type="ascii" name="executable" value="/application/terminal/terminal"/>
                 </node>
                 <node name="texteditor">
                     <attrib type="ascii" name="name" value="Text editor"/>
                     <attrib type="numeric" name="position" value="1"/>
+                    <attrib type="binary" name="image" value="source/applications/gui/texteditor/images/texteditor.png"/>
                     <attrib type="ascii" name="executable" value="/application/texteditor/texteditor"/>
                 </node>
             </node>

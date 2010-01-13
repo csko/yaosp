@@ -140,3 +140,42 @@ int ycfg_get_numeric_value( char* path, char* attrib, uint64_t* value ) {
 
     return error;
 }
+
+int ycfg_get_binary_value( char* path, char* attrib, void** _data, size_t* _size ) {
+    int error;
+    msg_get_reply_t* reply;
+
+    if ( ycfg_server_port == -1 ) {
+        return -EINVAL;
+    }
+
+    error = get_attribute_value( path, attrib, ( uint8_t** )&reply );
+
+    if ( error >= 0 ) {
+        if ( reply->error == 0 ) {
+            if ( reply->type == BINARY ) {
+                size_t size = error - sizeof( msg_get_reply_t );
+                void* data = malloc( size );
+
+                if ( data == NULL ) {
+                    error = -ENOMEM;
+                } else {
+                    memcpy( data, reply + 1, size );
+
+                    *_data = data;
+                    *_size = size;
+
+                    error = 0;
+                }
+            } else {
+                error = -EINVAL;
+            }
+        } else {
+            error = reply->error;
+        }
+
+        free( reply );
+    }
+
+    return error;
+}

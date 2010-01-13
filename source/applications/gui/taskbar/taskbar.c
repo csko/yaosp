@@ -97,26 +97,6 @@ static int taskbar_msg_handler( uint32_t code, void* data ) {
 }
 
 #if 0
-static int event_open_terminal( widget_t* widget, void* data ) {
-    if ( fork() == 0 ) {
-        char* argv[] = { "terminal", NULL };
-        execv( "/application/terminal/terminal", argv );
-        _exit( 1 );
-    }
-
-    return 0;
-}
-
-static int event_open_texteditor( widget_t* widget, void* data ) {
-    if ( fork() == 0 ) {
-        char* argv[] = { "texteditor", NULL };
-        execv( "/application/texteditor/texteditor", argv );
-        _exit( 1 );
-    }
-
-    return 0;
-}
-
 static int event_halt_clicked( widget_t* widget, void* data ) {
     halt();
     return 0;

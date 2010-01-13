@@ -346,3 +346,68 @@ bitmap_t* bitmap_load_from_file( const char* file ) {
  error1:
     return NULL;
 }
+
+bitmap_t* bitmap_load_from_buffer( void* data, size_t size ) {
+    bitmap_t* bitmap = NULL;
+    image_info_t img_info;
+    int bitmap_size = 0;
+    uint8_t* bitmap_data = NULL;
+
+    void* private;
+    image_loader_t* loader;
+
+    /* Find the appropriate image loader */
+
+    if ( image_loader_find( data, size, &loader, &private ) != 0 ) {
+        goto error1;
+    }
+
+    /* Pass the data to the loader */
+
+    loader->add_data( private, data, size, 1 );
+
+    /* Check if we have some information available about the image size */
+
+    if ( loader->get_available_size( private ) < sizeof( image_info_t ) ) {
+        goto error2;
+    }
+
+
+    loader->read_data( private, ( uint8_t* )&img_info, sizeof( image_info_t ) );
+
+    bitmap = bitmap_create( img_info.width, img_info.height, img_info.color_space );
+
+    if ( bitmap == NULL ) {
+        goto error2;
+    }
+
+    bitmap_data = bitmap->data;
+    bitmap_size = img_info.width * img_info.height * colorspace_to_bpp( img_info.color_space );
+
+    while ( bitmap_size > 0 ) {
+        int avail;
+
+        avail = loader->get_available_size( private );
+
+        if ( avail > 0 ) {
+            int size;
+
+            size = loader->read_data( private, bitmap_data, avail );
+
+            bitmap_data += size;
+            bitmap_size -= size;
+        } else {
+            break;
+        }
+    }
+
+    loader->destroy( private );
+
+    return bitmap;
+
+ error2:
+    loader->destroy( private );
+
+ error1:
+    return NULL;
+}
