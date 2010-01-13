@@ -94,6 +94,10 @@ void* widget_get_data( widget_t* widget ) {
     return widget->data;
 }
 
+void* widget_get_private( widget_t* widget ) {
+    return widget->private;
+}
+
 int widget_get_child_count( widget_t* widget ) {
     return array_get_size( &widget->children );
 }
@@ -178,25 +182,26 @@ int widget_get_viewport( widget_t* widget, rect_t* viewport ) {
 
 int widget_get_position( widget_t* widget, point_t* position ) {
     point_copy( position, &widget->position );
-
     return 0;
 }
 
 int widget_get_scroll_offset( widget_t* widget, point_t* offset ) {
     point_copy( offset, &widget->scroll_offset );
-
     return 0;
 }
 
 int widget_get_full_size( widget_t* widget, point_t* size ) {
     point_copy( size, &widget->full_size );
-
     return 0;
 }
 
 int widget_get_visible_size( widget_t* widget, point_t* size ) {
     point_copy( size, &widget->visible_size );
+    return 0;
+}
 
+int widget_set_private( widget_t* widget, void* private ) {
+    widget->private = private;
     return 0;
 }
 

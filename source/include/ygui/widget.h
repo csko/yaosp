@@ -88,6 +88,7 @@ typedef struct widget_operations {
 typedef struct widget {
     int id;
     void* data;
+    void* private;
     int flags;
     int ref_count;
 
@@ -120,6 +121,7 @@ int widget_add( widget_t* parent, widget_t* child, void* data );
 
 int widget_get_id( widget_t* widget );
 void* widget_get_data( widget_t* widget );
+void* widget_get_private( widget_t* widget );
 int widget_get_child_count( widget_t* widget );
 widget_t* widget_get_child_at( widget_t* widget, int index );
 int widget_get_bounds( widget_t* widget, rect_t* bounds );
@@ -132,6 +134,7 @@ int widget_get_scroll_offset( widget_t* widget, point_t* offset );
 int widget_get_full_size( widget_t* widget, point_t* size );
 int widget_get_visible_size( widget_t* widget, point_t* size );
 
+int widget_set_private( widget_t* widget, void* private );
 int widget_set_window( widget_t* widget, struct window* window );
 int widget_set_position_and_size( widget_t* widget, point_t* position, point_t* size );
 int widget_set_position_and_sizes( widget_t* widget, point_t* position, point_t* visible_size, point_t* full_size );
