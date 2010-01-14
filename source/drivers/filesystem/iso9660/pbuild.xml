@@ -2,7 +2,8 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+Copyright (c) 2009, 2010 Zoltan Kovacs
+Copyright (c) 2009 Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -50,6 +51,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-O2</flag>
                 <flag>-Wall</flag>
                 <flag>-Wshadow</flag>
+                <flag>-Werror</flag>
                 <flag>-nostdinc</flag>
                 <flag>-nostdlib</flag>
                 <flag>-fno-builtin</flag>

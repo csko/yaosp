@@ -155,6 +155,7 @@ static int mdio_read( pcnet32_private_t* device, int phy_id, int reg_num ) {
     return device->access->read_bcr( io_address, 34 );
 }
 
+#if 0
 static void mdio_write( pcnet32_private_t* device, int phy_id, int reg_num, int value ) {
     int io_address;
 
@@ -167,6 +168,7 @@ static void mdio_write( pcnet32_private_t* device, int phy_id, int reg_num, int 
     device->access->write_bcr( io_address, 33, ( ( phy_id & 0x1F ) << 5 ) | ( reg_num & 0x1F ) );
     device->access->write_bcr( io_address, 34, value );
 }
+#endif
 
 static int pcnet32_alloc_ring( pcnet32_private_t* device ) {
     uint32_t tmp;
