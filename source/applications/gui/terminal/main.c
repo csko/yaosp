@@ -1,6 +1,6 @@
 /* Terminal application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,9 +24,11 @@
 #include <errno.h>
 #include <pthread.h>
 #include <termios.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <sys/wait.h>
 #include <yaosp/debug.h>
 
 #include <ygui/application.h>
@@ -253,10 +255,20 @@ static int initialize_gui( void ) {
 }
 
 int main( int argc, char** argv ) {
+    int error;
+    ymsg_t msg;
+
+    /* Set SIGCHLD handler to default as we would
+       like to catch when the shell process exits. */
+
+    signal( SIGCHLD, SIG_DFL );
+
     if ( application_init( APP_NONE ) != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
         return EXIT_FAILURE;
     }
+
+    ymsg_init( &msg, 512 );
 
     initialize_terminal();
     initialize_gui();
@@ -266,7 +278,23 @@ int main( int argc, char** argv ) {
 
     window_show( window );
 
-    application_run();
+    while ( 1 ) {
+        /* Receive and process application messages. */
+
+        error = application_receive_msg( &msg, 100 * 1000 );
+
+        if ( ( error >= 0 ) &&
+             ( application_process_msg( &msg ) > 0 ) ) {
+            break;
+        }
+
+        /* Check if the shell process is still running. */
+
+        if ( wait4( shell_pid, NULL, WNOHANG, NULL ) == shell_pid ) {
+            window_destroy( window );
+            break;
+        }
+    }
 
     /* Stop the pty reader thread */
 
