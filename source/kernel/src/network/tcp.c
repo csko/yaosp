@@ -1,6 +1,6 @@
 /* TCP packet handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -32,8 +32,6 @@
 #include <network/route.h>
 #include <network/device.h>
 #include <lib/string.h>
-
-#include <arch/pit.h>
 
 #include <arch/interrupt.h>
 
@@ -373,7 +371,8 @@ static int tcp_recvmsg( socket_t* socket, struct msghdr* msg, int flags ) {
 
         /* Recalculate the available RX data size */
 
-        rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
+        rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data,
+                                              &tcp_socket->rx_free_data );
     }
 
     mutex_unlock( tcp_socket->mutex );
@@ -632,7 +631,7 @@ static socket_calls_t tcp_socket_calls = {
 };
 
 static int tcp_handle_syn_timeout( tcp_socket_t* tcp_socket ) {
-    /* Shut down the SYN retransmit timer */
+    /* Shut down the SYN timeout timer */
 
     tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].running = false;
 

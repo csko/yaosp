@@ -1,6 +1,6 @@
 /* Condition variable implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -26,8 +26,6 @@
 #include <lock/common.h>
 #include <sched/scheduler.h>
 #include <lib/string.h>
-
-#include <arch/pit.h>
 
 int do_acquire_mutex( lock_context_t* context, mutex_t* mutex, thread_t* thread,
                       time_t timeout, bool try_lock, int flags );

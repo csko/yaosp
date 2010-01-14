@@ -1,6 +1,6 @@
 /* Block cache
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -22,8 +22,6 @@
 #include <vfs/blockcache.h>
 #include <vfs/vfs.h>
 #include <lib/string.h>
-
-#include <arch/pit.h>
 
 int block_cache_get_block( block_cache_t* cache, uint64_t block_index, void** buffer ) {
     int error;

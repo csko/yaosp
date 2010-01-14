@@ -1,7 +1,7 @@
 /* Date and time handling
  *
  * Copyright (c) 2009 Kornel Csernai
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,20 +19,22 @@
 
 #include <lib/string.h>
 #include <lib/time.h>
-#include <arch/pit.h>
 
-const unsigned short int monthdays[13] =
-{ 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+const unsigned short int monthdays[ 13 ] = {
+    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365
+};
 
-const unsigned short int monthdays2[13] =
-{ 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
+const unsigned short int monthdays2[ 13 ] = {
+    0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366
+};
 
-const unsigned short int sumofdays[ 60 ] =
-{ 0, 366, 731, 1096, 1461, 1827, 2192, 2557, 2922, 3288, 3653, 4018, 4383, 4749,
-  5114, 5479, 5844, 6210, 6575, 6940, 7305, 7671, 8036, 8401, 8766, 9132, 9497,
-  9862, 10227, 10593, 10958, 11323, 11688, 12054, 12419, 12784, 13149, 13515,
-  13880, 14245, 14610, 14976, 15341, 15706, 16071, 16437, 16802, 17167, 17532,
-  17898, 18263, 18628, 18993, 19359, 19724, 20089, 20454, 20820, 21185, 21550 };
+const unsigned short int sumofdays[ 60 ] = {
+    0, 366, 731, 1096, 1461, 1827, 2192, 2557, 2922, 3288, 3653, 4018, 4383, 4749,
+    5114, 5479, 5844, 6210, 6575, 6940, 7305, 7671, 8036, 8401, 8766, 9132, 9497,
+    9862, 10227, 10593, 10958, 11323, 11688, 12054, 12419, 12784, 13149, 13515,
+    13880, 14245, 14610, 14976, 15341, 15706, 16071, 16437, 16802, 17167, 17532,
+    17898, 18263, 18628, 18993, 19359, 19724, 20089, 20454, 20820, 21185, 21550
+};
 
 tm_t gettime( time_t timeval ) {
     tm_t ret;

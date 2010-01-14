@@ -1,6 +1,6 @@
 /* Semaphore implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,8 +25,6 @@
 #include <lock/common.h>
 #include <sched/scheduler.h>
 #include <lib/string.h>
-
-#include <arch/pit.h>
 
 static int do_lock_semaphore( lock_context_t* context, lock_id semaphore_id, int count, int flags, uint64_t timeout ) {
     thread_t* thread;

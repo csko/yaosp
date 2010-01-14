@@ -1,6 +1,6 @@
 /* Common lock related functions and definitions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,8 +19,6 @@
 #include <errno.h>
 #include <lock/common.h>
 #include <sched/scheduler.h>
-
-#include <arch/pit.h>
 
 int lock_wait_on( lock_context_t* context, thread_t* thread, lock_type_t type, lock_id id, waitqueue_t* queue ) {
     waitnode_t waitnode;
