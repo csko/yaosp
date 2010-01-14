@@ -74,7 +74,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <mkdir>../../../../build/image/application/terminal/images</mkdir>
 
         <copy from="objs/terminal" to="../../../../build/image/application/terminal/terminal"/>
-        <copy from="images/terminal.png" to="../../../../build/image/application/terminal/images/terminal.png"/>
+        <copy from="images/terminal_16x16.png" to="../../../../build/image/application/terminal/images/terminal_16x16.png"/>
     </target>
 
     <target name="all">

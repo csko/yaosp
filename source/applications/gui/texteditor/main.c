@@ -151,7 +151,7 @@ int main( int argc, char** argv ) {
 
     window = create_window( "Text editor", &pos, &size, W_ORDER_NORMAL, WINDOW_NONE );
 
-    bitmap_t* icon = bitmap_load_from_file( "/application/texteditor/images/texteditor.png" );
+    bitmap_t* icon = bitmap_load_from_file( "/application/texteditor/images/texteditor_16x16.png" );
     window_set_icon( window, icon );
     bitmap_dec_ref( icon );
 

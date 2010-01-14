@@ -28,7 +28,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </array>
 
     <array name="images">
-        <item>texteditor.png</item>
+        <item>texteditor_16x16.png</item>
     </array>
 
     <target name="clean">
