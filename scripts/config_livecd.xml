@@ -21,8 +21,8 @@
 
         <node name="guiserver">
             <node name="screen">
-                <attrib type="numeric" name="width" value="640"/>
-                <attrib type="numeric" name="height" value="480"/>
+                <attrib type="numeric" name="width" value="800"/>
+                <attrib type="numeric" name="height" value="600"/>
                 <attrib type="numeric" name="depth" value="32"/>
             </node>
         </node>

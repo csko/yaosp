@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,6 +25,7 @@
 
 #include <ygui/protocol.h>
 #include <yutil/process.h>
+#include <yconfig/yconfig.h>
 
 #include <graphicsdriver.h>
 #include <bitmap.h>
@@ -71,6 +72,18 @@ static int choose_graphics_mode( void ) {
     uint32_t count;
     screen_mode_t screen_mode;
 
+    uint64_t width;
+    uint64_t height;
+    uint64_t depth;
+
+    if ( ( ycfg_get_numeric_value( "application/guiserver/screen", "width", &width ) != 0 ) ||
+         ( ycfg_get_numeric_value( "application/guiserver/screen", "height", &height ) != 0 ) ||
+         ( ycfg_get_numeric_value( "application/guiserver/screen", "depth", &depth ) != 0 ) ) {
+        width = 640;
+        height = 480;
+        depth = 32;
+    }
+
     count = graphics_driver->get_screen_mode_count();
 
     for ( i = 0; i < count; i++ ) {
@@ -80,9 +93,9 @@ static int choose_graphics_mode( void ) {
             continue;
         }
 
-        if ( ( screen_mode.width == 640 ) &&
-             ( screen_mode.height == 480 ) &&
-             ( screen_mode.color_space == CS_RGB32 ) ) {
+        if ( ( screen_mode.width == width ) &&
+             ( screen_mode.height == height ) &&
+             ( ( colorspace_to_bpp( screen_mode.color_space ) * 8 ) == depth ) ) {
             memcpy( &active_screen_mode, &screen_mode, sizeof( screen_mode_t ) );
 
             return 0;
@@ -234,13 +247,15 @@ int main( int argc, char** argv ) {
     }
 
     if ( init_bitmap() != 0 ) {
-        printf( "Failed to initialize bitmaps\n" );
+        dbprintf( "Failed to initialize bitmaps\n" );
         return EXIT_FAILURE;
     }
 
+    ycfg_init();
+
     if ( ( choose_graphics_driver() != 0 ) ||
          ( choose_graphics_mode() != 0 ) ) {
-        printf( "Failed to select proper graphics driver and/or mode!\n" );
+        dbprintf( "Failed to select proper graphics driver and/or mode!\n" );
         return EXIT_FAILURE;
     }
 
