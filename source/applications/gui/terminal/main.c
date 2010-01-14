@@ -164,7 +164,7 @@ static int initialize_pty( void ) {
         if ( slave_tty < 0 ) {
             dbprintf( "Failed to open the slave TTY!\n" );
 
-            _exit( 1 );
+            _exit( EXIT_FAILURE );
         }
 
         dup2( slave_tty, 0 );
@@ -184,7 +184,7 @@ static int initialize_pty( void ) {
             dbprintf( "Failed to start the shell!\n" );
         }
 
-        _exit( 1 );
+        _exit( EXIT_FAILURE );
     } else if ( shell_pid < 0 ) {
         return shell_pid;
     }

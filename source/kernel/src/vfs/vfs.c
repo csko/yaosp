@@ -366,7 +366,7 @@ static int do_open( io_context_t* io_context, const char* path, int flags, int p
         return error;
     }
 
-    if ( ( st.st_mode & S_IFMT ) == S_IFDIR ) {
+    if ( S_ISDIR( st.st_mode ) ) {
         file->type = TYPE_DIRECTORY;
     } else {
         file->type = TYPE_FILE;
@@ -735,7 +735,7 @@ static int do_isatty( io_context_t* io_context, int fd ) {
         return -EBADF;
     }
 
-    if ( ( file->type == TYPE_FILE ) ||
+    if ( ( file->type == TYPE_DIRECTORY ) ||
          ( file->inode->mount_point->fs_calls->isatty == NULL ) ) {
         error = 0;
     } else {
