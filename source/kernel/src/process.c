@@ -1,6 +1,6 @@
 /* Process implementation
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -22,6 +22,7 @@
 #include <macros.h>
 #include <kernel.h>
 #include <console.h>
+#include <ipc.h>
 #include <sched/scheduler.h>
 #include <mm/kmalloc.h>
 #include <mm/context.h>
@@ -68,13 +69,13 @@ process_t* allocate_process( char* name ) {
 
     return process;
 
-error3:
+ error3:
     kfree( process->name );
 
-error2:
+ error2:
     kfree( process );
 
-error1:
+ error1:
     return NULL;
 }
 
@@ -106,6 +107,10 @@ void destroy_process( process_t* process ) {
     if ( process->lock_context != NULL ) {
         lock_context_destroy( process->lock_context );
     }
+
+    /* Destroy the IPC ports of the process */
+
+    ipc_destroy_process_ports( process );
 
     /* Delete other resources allocated by the process */
 
@@ -175,9 +180,7 @@ uint32_t sys_get_process_count( void ) {
     uint32_t result;
 
     scheduler_lock();
-
     result = hashtable_get_item_count( &process_table );
-
     scheduler_unlock();
 
     return result;
@@ -216,9 +219,7 @@ uint32_t sys_get_process_info( process_info_t* info_table, uint32_t max_count ) 
     data.info_table = info_table;
 
     scheduler_lock();
-
     hashtable_iterate( &process_table, get_process_info_iterator, ( void* )&data );
-
     scheduler_unlock();
 
     return data.curr_index;

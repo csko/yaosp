@@ -1,6 +1,6 @@
 /* Process implementation
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -33,6 +33,8 @@
 #define WNOHANG   1
 #define WUNTRACED 2
 
+struct ipc_port;
+
 typedef struct process {
     hashitem_t hash;
 
@@ -44,6 +46,7 @@ typedef struct process {
     memory_context_t* memory_context;
     lock_context_t* lock_context;
     io_context_t* io_context;
+    struct ipc_port* ipc_port_list;
 
     memory_region_t* heap_region;
 
