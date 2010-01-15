@@ -27,7 +27,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <array name="libraries">
         <item>ncurses-5.7</item>
-        <item>readline-6.0</item>
+        <item>readline-6.1</item>
         <item>freetype-2.3.11</item>
         <item>bzip2-1.0.5</item>
         <item>curl-7.19.7</item>
