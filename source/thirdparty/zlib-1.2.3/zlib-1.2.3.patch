@@ -1,12 +1,12 @@
 diff -Nru zlib-1.2.3-orig/pbuild.xml zlib-1.2.3/pbuild.xml
 --- zlib-1.2.3-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ zlib-1.2.3/pbuild.xml	2010-01-08 16:17:25.000000000 +0100
-@@ -0,0 +1,94 @@
++++ zlib-1.2.3/pbuild.xml	2010-01-15 09:08:29.000000000 +0100
+@@ -0,0 +1,96 @@
 +<!--
 +
 +This file is part of the yaosp build system
 +
-+Copyright (c) 2009 Zoltan Kovacs
++Copyright (c) 2009, 2010 Zoltan Kovacs
 +
 +This program is free software; you can redistribute it and/or modify
 +it under the terms of version 2 of the GNU General Public License
@@ -82,6 +82,8 @@ diff -Nru zlib-1.2.3-orig/pbuild.xml zlib-1.2.3/pbuild.xml
 +    </target>
 +
 +    <target name="install">
++        <copy from="objs/libz.a" to="../../../../build/libs/libz.a"/>
++
 +        <echo>Installing zlib 1.2.3 headers</echo>
 +
 +        <for var="i" array="${headers_to_install}">

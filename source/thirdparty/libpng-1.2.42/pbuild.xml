@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,20 +21,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <target name="clean">
-        <cleandir>libpng-1.2.41</cleandir>
-        <rmdir>libpng-1.2.41</rmdir>
+        <cleandir>libpng-1.2.42</cleandir>
+        <rmdir>libpng-1.2.42</rmdir>
     </target>
 
     <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/libpng/libpng-1.2.41.tar.gz"
-                 to="libpng-1.2.41.tar.gz"
-                 md5="82ab87818fb22961620aac7eca9fea14"/>
+        <httpget address="http://files.yaosp.org/source/libpng/libpng-1.2.42.tar.gz"
+                 to="libpng-1.2.42.tar.gz"
+                 md5="562066eb8557db91156eaeb309458488"/>
 
         <echo>Extracting libpng source</echo>
 
         <exec executable="tar">
             <arg>-zxf</arg>
-            <arg>libpng-1.2.41.tar.gz</arg>
+            <arg>libpng-1.2.42.tar.gz</arg>
         </exec>
 
         <echo>Patching libpng source</echo>
@@ -43,13 +43,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <arg>-t</arg>
             <arg>-p0</arg>
             <arg>-i</arg>
-            <arg>libpng-1.2.41.patch</arg>
+            <arg>libpng-1.2.42.patch</arg>
         </exec>
     </target>
 
     <target name="all">
         <call target="clean"/>
         <call target="get_source"/>
-        <call target="all" directory="libpng-1.2.41"/>
+        <call target="all" directory="libpng-1.2.42"/>
     </target>
 </build>

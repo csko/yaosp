@@ -58,8 +58,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../lib/ygui/objs/libygui.a</input>
-            <input>../../../lib/yutil/objs/libyutil.a</input>
+            <input>../../../../build/libs/libygui.a</input>
+            <input>../../../../build/libs/libyutil.a</input>
             <output>objs/yguictrl</output>
         </gcc>
     </target>

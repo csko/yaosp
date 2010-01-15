@@ -1,6 +1,6 @@
-diff -Nru libpng-1.2.41-orig/config.h libpng-1.2.41/config.h
---- libpng-1.2.41-orig/config.h	1970-01-01 01:00:00.000000000 +0100
-+++ libpng-1.2.41/config.h	2010-01-08 16:10:58.000000000 +0100
+diff -Nru libpng-1.2.42-orig/config.h libpng-1.2.42/config.h
+--- libpng-1.2.42-orig/config.h	1970-01-01 01:00:00.000000000 +0100
++++ libpng-1.2.42/config.h	2010-01-15 09:27:30.000000000 +0100
 @@ -0,0 +1,86 @@
 +/* config.h.in.  Generated from configure.ac by autoheader.  */
 +
@@ -88,15 +88,15 @@ diff -Nru libpng-1.2.41-orig/config.h libpng-1.2.41/config.h
 +
 +/* Define to `unsigned int' if <sys/types.h> does not define. */
 +#undef size_t
-diff -Nru libpng-1.2.41-orig/pbuild.xml libpng-1.2.41/pbuild.xml
---- libpng-1.2.41-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ libpng-1.2.41/pbuild.xml	2010-01-08 16:11:26.000000000 +0100
-@@ -0,0 +1,98 @@
+diff -Nru libpng-1.2.42-orig/pbuild.xml libpng-1.2.42/pbuild.xml
+--- libpng-1.2.42-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ libpng-1.2.42/pbuild.xml	2010-01-15 09:28:00.000000000 +0100
+@@ -0,0 +1,100 @@
 +<!--
 +
 +This file is part of the yaosp build system
 +
-+Copyright (c) 2009 Zoltan Kovacs
++Copyright (c) 2010 Zoltan Kovacs
 +
 +This program is free software; you can redistribute it and/or modify
 +it under the terms of version 2 of the GNU General Public License
@@ -149,7 +149,7 @@ diff -Nru libpng-1.2.41-orig/pbuild.xml libpng-1.2.41/pbuild.xml
 +    <target name="compile">
 +        <call target="prepare"/>
 +
-+        <echo>Compiling libpng 1.2.41</echo>
++        <echo>Compiling libpng 1.2.42</echo>
 +
 +        <for var="i" array="${files}">
 +            <echo>-> ${i}</echo>
@@ -165,7 +165,7 @@ diff -Nru libpng-1.2.41-orig/pbuild.xml libpng-1.2.41/pbuild.xml
 +            </gcc>
 +        </for>
 +
-+        <echo>Linking libpng 1.2.41</echo>
++        <echo>Linking libpng 1.2.42</echo>
 +        <echo>-> objs/libpng.a</echo>
 +
 +        <ar>
@@ -176,7 +176,9 @@ diff -Nru libpng-1.2.41-orig/pbuild.xml libpng-1.2.41/pbuild.xml
 +    </target>
 +
 +    <target name="install">
-+        <echo>Installing libpng 1.2.41 headers</echo>
++        <copy from="objs/libpng.a" to="../../../../build/libs/libpng.a"/>
++
++        <echo>Installing libpng 1.2.42 headers</echo>
 +
 +        <for var="i" array="${headers_to_install}">
 +            <echo>-> ${i}</echo>

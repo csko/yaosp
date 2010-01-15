@@ -1,6 +1,6 @@
 diff -Nru curl-7.19.7-orig/include/curl/curl.h curl-7.19.7/include/curl/curl.h
 --- curl-7.19.7-orig/include/curl/curl.h	2009-10-17 20:31:50.000000000 +0200
-+++ curl-7.19.7/include/curl/curl.h	2010-01-08 16:06:21.000000000 +0100
++++ curl-7.19.7/include/curl/curl.h	2010-01-15 09:01:33.000000000 +0100
 @@ -74,7 +74,7 @@
     require it! */
  #if defined(_AIX) || defined(__NOVELL_LIBC__) || defined(__NetBSD__) || \
@@ -12,13 +12,13 @@ diff -Nru curl-7.19.7-orig/include/curl/curl.h curl-7.19.7/include/curl/curl.h
  
 diff -Nru curl-7.19.7-orig/pbuild.xml curl-7.19.7/pbuild.xml
 --- curl-7.19.7-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ curl-7.19.7/pbuild.xml	2010-01-08 16:06:46.000000000 +0100
-@@ -0,0 +1,166 @@
++++ curl-7.19.7/pbuild.xml	2010-01-15 09:02:08.000000000 +0100
+@@ -0,0 +1,168 @@
 +<!--
 +
 +This file is part of the yaosp build system
 +
-+Copyright (c) 2009 Zoltan Kovacs
++Copyright (c) 2009, 2010 Zoltan Kovacs
 +
 +This program is free software; you can redistribute it and/or modify
 +it under the terms of version 2 of the GNU General Public License
@@ -165,6 +165,8 @@ diff -Nru curl-7.19.7-orig/pbuild.xml curl-7.19.7/pbuild.xml
 +    </target>
 +
 +    <target name="install">
++        <copy from="objs/libcurl.a" to="../../../../build/libs/libcurl.a"/>
++
 +        <echo>Installing curl 7.19.7 headers</echo>
 +
 +        <mkdir>../../../include/curl</mkdir>
@@ -182,7 +184,7 @@ diff -Nru curl-7.19.7-orig/pbuild.xml curl-7.19.7/pbuild.xml
 +</build>
 diff -Nru curl-7.19.7-orig/src/curl_config.h curl-7.19.7/src/curl_config.h
 --- curl-7.19.7-orig/src/curl_config.h	1970-01-01 01:00:00.000000000 +0100
-+++ curl-7.19.7/src/curl_config.h	2010-01-08 16:06:21.000000000 +0100
++++ curl-7.19.7/src/curl_config.h	2010-01-15 09:01:33.000000000 +0100
 @@ -0,0 +1,955 @@
 +/* lib/curl_config.h.in.  Generated from configure.ac by autoheader.  */
 +

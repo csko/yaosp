@@ -2,7 +2,7 @@
 
 Top level build file of yaosp
 
-Copyright (c) 2008, 2009 Zoltan Kovacs
+Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
 Copyright (c) 2009 Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
@@ -24,11 +24,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="crosscompiler">
         <mkdir>build</mkdir>
         <mkdir>build/crosscompiler</mkdir>
+        <mkdir>build/libs</mkdir>
         <call target="all" directory="toolchain"/>
     </target>
 
     <target name="prepare_build" type="private">
         <cleandir>build/image</cleandir>
+        <cleandir>build/libs</cleandir>
         <delete>build/yaosp_base.tar.bz2</delete>
         <mkdir>build/image</mkdir>
         <mkdir>build/image/boot</mkdir>

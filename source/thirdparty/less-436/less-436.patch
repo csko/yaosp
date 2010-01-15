@@ -1,6 +1,6 @@
 diff -Nru less-436-orig/defines.h less-436/defines.h
 --- less-436-orig/defines.h	1970-01-01 01:00:00.000000000 +0100
-+++ less-436/defines.h	2010-01-08 16:10:00.000000000 +0100
++++ less-436/defines.h	2010-01-15 09:34:35.000000000 +0100
 @@ -0,0 +1,420 @@
 +/* defines.h.in.  Generated from configure.ac by autoheader.  */
 +
@@ -424,13 +424,13 @@ diff -Nru less-436-orig/defines.h less-436/defines.h
 +#undef size_t
 diff -Nru less-436-orig/pbuild.xml less-436/pbuild.xml
 --- less-436-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ less-436/pbuild.xml	2010-01-08 16:10:21.000000000 +0100
-@@ -0,0 +1,108 @@
++++ less-436/pbuild.xml	2010-01-15 09:35:16.000000000 +0100
+@@ -0,0 +1,107 @@
 +<!--
 +
 +This file is part of the yaosp build system
 +
-+Copyright (c) 2009 Zoltan Kovacs
++Copyright (c) 2009, 2010 Zoltan Kovacs
 +
 +This program is free software; you can redistribute it and/or modify
 +it under the terms of version 2 of the GNU General Public License
@@ -516,8 +516,7 @@ diff -Nru less-436-orig/pbuild.xml less-436/pbuild.xml
 +
 +        <gcc>
 +            <input>objs/*.o</input>
-+            <input>../../../thirdparty/readline-6.0/readline-6.0/objs/libreadline.a</input>
-+            <input>../../../thirdparty/ncurses-5.7/ncurses-5.7/objs/libncurses.a</input>
++            <input>../../../../build/libs/libncurses.a</input>
 +            <output>objs/less</output>
 +        </gcc>
 +    </target>

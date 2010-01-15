@@ -66,6 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
+        <copy from="objs/libyconfig.a" to="../../../build/libs/libyconfig.a"/>
     </target>
 
     <target name="all">

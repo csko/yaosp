@@ -61,10 +61,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../lib/ygui/objs/libygui.a</input>
-            <input>../../../thirdparty/libpng-1.2.41/libpng-1.2.41/objs/libpng.a</input>
-            <input>../../../thirdparty/zlib-1.2.3/zlib-1.2.3/objs/libz.a</input>
-            <input>../../../lib/yutil/objs/libyutil.a</input>
+            <input>../../../../build/libs/libygui.a</input>
+            <input>../../../../build/libs/libpng.a</input>
+            <input>../../../../build/libs/libz.a</input>
+            <input>../../../../build/libs/libyutil.a</input>
             <output>objs/terminal</output>
         </gcc>
     </target>

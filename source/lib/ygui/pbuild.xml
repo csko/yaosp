@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009, 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -95,6 +95,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
+        <copy from="objs/libygui.a" to="../../../build/libs/libygui.a"/>
+
         <mkdir>../../../build/image/system/images</mkdir>
 
         <for var="i" array="${images}">

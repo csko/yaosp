@@ -1,6 +1,6 @@
 diff -Nru freetype-2.3.11-orig/include/freetype/config/ftmodule.h freetype-2.3.11/include/freetype/config/ftmodule.h
 --- freetype-2.3.11-orig/include/freetype/config/ftmodule.h	2009-03-14 14:45:26.000000000 +0100
-+++ freetype-2.3.11/include/freetype/config/ftmodule.h	2010-01-08 16:08:46.000000000 +0100
++++ freetype-2.3.11/include/freetype/config/ftmodule.h	2010-01-15 09:02:57.000000000 +0100
 @@ -12,21 +12,21 @@
  
  FT_USE_MODULE( FT_Module_Class, autofit_module_class )
@@ -43,13 +43,13 @@ diff -Nru freetype-2.3.11-orig/objs/README freetype-2.3.11/objs/README
 -library.
 diff -Nru freetype-2.3.11-orig/pbuild.xml freetype-2.3.11/pbuild.xml
 --- freetype-2.3.11-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ freetype-2.3.11/pbuild.xml	2010-01-08 16:09:03.000000000 +0100
-@@ -0,0 +1,90 @@
++++ freetype-2.3.11/pbuild.xml	2010-01-15 09:03:24.000000000 +0100
+@@ -0,0 +1,92 @@
 +<!--
 +
 +This file is part of the yaosp build system
 +
-+Copyright (c) 2009 Zoltan Kovacs
++Copyright (c) 2009, 2010 Zoltan Kovacs
 +
 +This program is free software; you can redistribute it and/or modify
 +it under the terms of version 2 of the GNU General Public License
@@ -119,6 +119,8 @@ diff -Nru freetype-2.3.11-orig/pbuild.xml freetype-2.3.11/pbuild.xml
 +    </target>
 +
 +    <target name="install">
++        <copy from="objs/libfreetype.a" to="../../../../build/libs/libfreetype.a"/>
++
 +        <echo>Installing freetype 2.3.11 headers</echo>
 +
 +        <mkdir>../../../include/freetype</mkdir>
