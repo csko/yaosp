@@ -1,6 +1,6 @@
 /* IRQ handling code
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -30,9 +30,10 @@ typedef struct irq_action {
 } irq_action_t;
 
 int request_irq( int irq, irq_handler_t* handler, void* data );
+int release_irq( int irq, irq_handler_t* handler );
 
 void do_handle_irq( int irq, registers_t* regs );
 
 int init_irq_handlers( void );
 
-#endif // _IRQ_H_
+#endif /* _IRQ_H_ */

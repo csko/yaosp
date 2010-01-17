@@ -1,6 +1,6 @@
 /* IRQ handling code
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -30,7 +30,8 @@ int request_irq( int irq, irq_handler_t* handler, void* data ) {
     bool enable_arch_irq;
     irq_action_t* action;
 
-    if ( ( irq < 0 ) || ( irq >= ARCH_IRQ_COUNT ) ) {
+    if ( ( irq < 0 ) ||
+         ( irq >= ARCH_IRQ_COUNT ) ) {
         return -EINVAL;
     }
 
@@ -50,6 +51,45 @@ int request_irq( int irq, irq_handler_t* handler, void* data ) {
 
     if ( enable_arch_irq ) {
         arch_enable_irq( irq );
+    }
+
+    return 0;
+}
+
+int release_irq( int irq, irq_handler_t* handler ) {
+    irq_action_t* prev;
+    irq_action_t* current;
+
+    if ( ( irq < 0 ) ||
+         ( irq >= ARCH_IRQ_COUNT ) ) {
+        return -EINVAL;
+    }
+
+    prev = NULL;
+    current = irq_handlers[ irq ];
+
+    while ( current != NULL ) {
+        if ( current->handler == handler ) {
+            if ( prev == NULL ) {
+                irq_handlers[ irq ] = current->next;
+            } else {
+                prev->next = current->next;
+            }
+
+            goto removed;
+        }
+
+        prev = current;
+        current = current->next;
+    }
+
+    return -EINVAL;
+
+ removed:
+    kfree( current );
+
+    if ( irq_handlers[ irq ] == NULL ) {
+        arch_disable_irq( irq );
     }
 
     return 0;
