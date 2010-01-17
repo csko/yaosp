@@ -41,4 +41,4 @@ void* get_bus_driver( const char* name );
 
 int init_devices( void );
 
-#endif // _DEVICES_H_
+#endif /* _DEVICES_H_ */

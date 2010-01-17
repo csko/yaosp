@@ -28,4 +28,4 @@ static inline uint32_t bswap32( uint32_t value ) {
              ( value & 0x000000FF ) << 24 );
 }
 
-#endif // _BITOPS_H_
+#endif /* _BITOPS_H_ */

@@ -21,4 +21,4 @@
 
 int sys_fork( void );
 
-#endif // _FORK_H_
+#endif /* _FORK_H_ */
