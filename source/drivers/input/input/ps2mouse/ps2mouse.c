@@ -52,188 +52,48 @@ enum {
 static int mouse_device = -1;
 static thread_id mouse_thread = -1;
 
-static int mouse_packet_index = 0;
-static uint8_t mouse_buffer[ 3 ];
-
-static int mouse_buttons = 0;
-
-static uint8_t basic_init[] = {
-    PS2_AUX_ENABLE_DEV, PS2_AUX_SET_SAMPLE, 100
-};
-
-#if 0
-static uint8_t imps2_init[] = {
-    PS2_AUX_SET_SAMPLE, 200, PS2_AUX_SET_SAMPLE, 100, PS2_AUX_SET_SAMPLE, 80
-};
-#endif
-
-static uint8_t ps2_init[] = {
-    PS2_AUX_SET_SCALE11, PS2_AUX_ENABLE_DEV, PS2_AUX_SET_SAMPLE, 100, PS2_AUX_SET_RES, 3
-};
-
-static int ps2_mouse_write( uint8_t* data, size_t size ) {
-    size_t i;
-    int error;
-    uint8_t ack;
-
-    error = 0;
-
-    for ( i = 0; i < size; i++, data++ ) {
-        pwrite( mouse_device, data, 1, 0 );
-
-        if ( ( pread( mouse_device, &ack, 1, 0 ) != 1 ) ||
-             ( ack != PS2_AUX_ACK ) ) {
-            error++;
-        }
-    }
-
-    return error;
-}
-
-#if 0
-static int ps2_mouse_read_id( void ) {
-    int error;
-    uint8_t data;
-
-    data = PS2_AUX_SEND_ID;
-
-    error = pwrite( mouse_device, &data, 1, 0 );
-
-    if ( error < 0 ) {
-        return PS2_AUX_ID_ERROR;
-    }
-
-    if ( ( pread( mouse_device, &data, 1, 0 ) != 1 ) ||
-         ( data != PS2_AUX_ACK ) ) {
-        return PS2_AUX_ID_ERROR;
-    }
-
-    if ( pread( mouse_device, &data, 1, 0 ) != 1 ) {
-        return PS2_AUX_ID_ERROR;
-    }
-
-    return data;
-}
-#endif
-
 static int ps2_mouse_init( void ) {
-    //int id;
-    int error;
-
-    mouse_device = open( "/device/input/ps2mouse", O_RDONLY );
+    mouse_device = open( "/device/input/ps2/mouse", O_RDONLY );
 
     if ( mouse_device < 0 ) {
-        return mouse_device;
-    }
-
-    ps2_mouse_write( basic_init, sizeof( basic_init ) );
-
-    error = ps2_mouse_write( basic_init, sizeof( basic_init ) );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-#if 0
-    error = ps2_mouse_write( imps2_init, sizeof( imps2_init ) );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    id = ps2_mouse_read_id();
-
-    if ( id == PS2_AUX_ID_ERROR ) {
-        kprintf( ERROR, "PS/2 mouse: Invalid mouse ID: %x\n", id );
-        return -EINVAL;
-    }
-#endif
-
-    error = ps2_mouse_write( ps2_init, sizeof( ps2_init ) );
-
-    if ( error < 0 ) {
-        return error;
+        return -1;
     }
 
     return 0;
 }
 
-static void ps2_mouse_handle_input( void ) {
-    int x;
-    int y;
-    int buttons;
-    int act_buttons;
+static int ps2_mouse_thread( void* arg ) {
+    int prev_buttons = 0;
+    mouse_movement_t data;
 
-    x = mouse_buffer[ 1 ];
-    y = mouse_buffer[ 2 ];
+    while ( 1 ) {
+        if ( ioctl( mouse_device, IOCTL_INPUT_MOUSE_GET_MOVEMENT, &data ) != 0 ) {
+            kprintf( ERROR, "ps2mouse: Failed to read data from the device.!\n" );
+            break;
+        }
 
-    if ( mouse_buffer[ 0 ] & 0x10 ) {
-        x |= 0xFFFFFF00;
-    }
+        if ( ( data.dx != 0 ) &&
+             ( data.dy != 0 ) ) {
+            input_event_t event;
 
-    if ( mouse_buffer[ 0 ] & 0x20 ) {
-        y |= 0xFFFFFF00;
-    }
+            event.event = E_MOUSE_MOVED;
+            event.param1 = data.dx;
+            event.param2 = data.dy;
 
-    if ( ( x != 0 ) || ( y != 0 ) ) {
-        input_event_t event;
+            insert_input_event( &event );
+        }
 
-        event.event = E_MOUSE_MOVED;
-        event.param1 = x;
-        event.param2 = -y;
+        int act_buttons = prev_buttons ^ data.buttons;
+        prev_buttons = data.buttons;
 
-        insert_input_event( &event );
-    }
-
-    buttons = mouse_buffer[ 0 ] & 0x7;
-
-    act_buttons = buttons ^ mouse_buttons;
-    mouse_buttons = buttons;
-
-    /* Check if any button state changed */
-
-    if ( act_buttons != 0 ) {
         if ( act_buttons & PS2_BUTTON_LEFT ) {
             input_event_t event;
 
-            if ( buttons & PS2_BUTTON_LEFT ) {
-                event.event = E_MOUSE_PRESSED;
-            } else {
-                event.event = E_MOUSE_RELEASED;
-            }
-
+            event.event = ( data.buttons & PS2_BUTTON_LEFT ) ? E_MOUSE_PRESSED : E_MOUSE_RELEASED;
             event.param1 = MOUSE_BTN_LEFT;
             event.param2 = 0;
 
             insert_input_event( &event );
-        }
-    }
-}
-
-static int ps2_mouse_thread( void* arg ) {
-    uint8_t data;
-
-    while ( 1 ) {
-        if ( pread( mouse_device, &data, 1, 0 ) != 1 ) {
-            kprintf( ERROR, "PS2mouse: Failed to read data from the device!\n" );
-            break;
-        }
-
-        if ( ( mouse_packet_index >= 3 ) &&
-             ( data & 0x08 ) ) {
-            mouse_packet_index = 0;
-        }
-
-        switch ( mouse_packet_index ) {
-            case 0 :
-            case 1 :
-                mouse_buffer[ mouse_packet_index++ ] = data;
-                break;
-
-            case 2 :
-                mouse_buffer[ mouse_packet_index++ ] = data;
-                ps2_mouse_handle_input();
-                break;
         }
     }
 

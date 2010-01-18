@@ -103,6 +103,12 @@ enum {
     MOUSE_BTN_CENTER
 };
 
+typedef struct mouse_movement {
+    int dx;
+    int dy;
+    int buttons;
+} mouse_movement_t;
+
 typedef struct input_cmd_create_node {
     int flags;
     uint32_t node_number;

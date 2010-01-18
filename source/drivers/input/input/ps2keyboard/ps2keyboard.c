@@ -133,14 +133,11 @@ done:
 }
 
 static int ps2_keyboard_thread( void* arg ) {
-    int data;
-    uint8_t scancode;
-
     while ( 1 ) {
-        data = pread( device, &scancode, 1, 0 );
+        uint8_t scancode;
 
-        if ( data <= 0 ) {
-            continue;
+        if ( ioctl( device, IOCTL_INPUT_KBD_GET_KEY_CODE, &scancode ) != 0 ) {
+            break;
         }
 
         ps2_keyboard_handle( scancode );
@@ -152,7 +149,7 @@ static int ps2_keyboard_thread( void* arg ) {
 static int ps2_keyboard_init( void ) {
     int error;
 
-    device = open( "/device/input/ps2kbd", O_RDONLY );
+    device = open( "/device/input/ps2/keyboard", O_RDONLY );
 
     if ( device < 0 ) {
         error = device;
