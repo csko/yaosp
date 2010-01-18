@@ -28,12 +28,14 @@ typedef struct semaphore {
     lock_header_t header;
 
     int count;
+    int initial_count;
     waitqueue_t waiters;
 } semaphore_t;
 
 int semaphore_lock( lock_id semaphore, int count, int flags );
 int semaphore_timedlock( lock_id semaphore, int count, int flags, time_t timeout );
 int semaphore_unlock( lock_id semaphore, int count );
+int semaphore_reset( lock_id semaphore );
 
 lock_id semaphore_create( const char* name, int count );
 int semaphore_destroy( lock_id semaphore );

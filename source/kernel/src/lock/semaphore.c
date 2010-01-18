@@ -126,6 +126,33 @@ int semaphore_unlock( lock_id semaphore, int count ) {
     return do_unlock_semaphore( &kernel_lock_context, semaphore, count );
 }
 
+static int do_reset_semaphore( lock_context_t* context, lock_id semaphore_id ) {
+    lock_header_t* header;
+    semaphore_t* semaphore;
+
+    spinlock_disable( &context->lock );
+
+    header = lock_context_get( context, semaphore_id );
+
+    if ( ( header == NULL ) ||
+         ( header->type != SEMAPHORE ) ) {
+        spinunlock_enable( &context->lock );
+
+        return -EINVAL;
+    }
+
+    semaphore = ( semaphore_t* )header;
+    semaphore->count = semaphore->initial_count;
+
+    spinunlock_enable( &context->lock );
+
+    return 0;
+}
+
+int semaphore_reset( lock_id semaphore ) {
+    return do_reset_semaphore( &kernel_lock_context, semaphore );
+}
+
 static int do_create_semaphore( lock_context_t* context, const char* name, int count ) {
     int error;
     size_t name_length;
@@ -152,6 +179,7 @@ static int do_create_semaphore( lock_context_t* context, const char* name, int c
     /* Initialize semaphore specific fields */
 
     semaphore->count = count;
+    semaphore->initial_count = count;
 
     error = init_waitqueue( &semaphore->waiters );
 

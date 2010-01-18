@@ -23,6 +23,8 @@
 .global atomic_inc
 .global atomic_dec
 .global atomic_dec_and_test
+.global atomic_and
+.global atomic_or
 .global atomic_swap
 .global atomic_test_and_clear
 
@@ -76,6 +78,28 @@ atomic_dec_and_test:
     setz %al
     ret
 .size atomic_dec_and_test,.-atomic_dec_and_test
+
+/* void atomic_and( atomic_t* atomic, int value ); */
+
+.type atomic_and, @function
+atomic_and:
+    movl 4(%esp), %edx
+    movl 8(%esp), %eax
+    lock
+    andl %eax, (%edx)
+    ret
+.size atomic_and,.-atomic_and
+
+/* void atomic_or( atomic_t* atomic, int value ); */
+
+.type atomic_or, @function
+atomic_or:
+    movl 4(%esp), %edx
+    movl 8(%esp), %eax
+    lock
+    orl %eax, (%edx)
+    ret
+.size atomic_or,.-atomic_or
 
 /* int atomic_swap( atomic_t* atomic, int value ); */
 
