@@ -394,10 +394,28 @@ static int pci_scan_device( int bus, int dev, int func ) {
         }
 
         for ( i = 0; i < 6; i++ ) {
-            error = pci_access->read( bus, dev, func, PCI_BASE_REGISTERS + ( i * 4 ), 4, &device->base[ i ] );
+            uint32_t size;
+            uint32_t offset = PCI_BASE_REGISTERS + ( i * 4 );
 
-            if ( error < 0 ) {
-                return error;
+            pci_access->read( bus, dev, func, offset, 4, &device->base[ i ] );
+
+            pci_access->write( bus, dev, func, offset, 4, 0xFFFFFFFF );
+            pci_access->read( bus, dev, func, offset, 4, &size );
+            pci_access->write( bus, dev, func, offset, 4, device->base[ i ] );
+
+            if ( ( size == 0 ) ||
+                 ( size == 0xFFFFFFFF ) ) {
+                device->size[ i ] = 0;
+            } else {
+                if ( ( size & PCI_ADDRESS_SPACE ) == PCI_ADDRESS_SPACE_MEMORY ) {
+                    size &= PCI_ADDRESS_MEMORY_32_MASK;
+                    size &= ~( size - 1 );
+                } else {
+                    size &= PCI_ADDRESS_IO_MASK;
+                    size &= ~( size - 1 );
+                }
+
+                device->size[ i ] = size;
             }
         }
 

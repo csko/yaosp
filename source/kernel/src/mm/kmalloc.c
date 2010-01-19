@@ -191,6 +191,22 @@ block_found:
     return p;
 }
 
+void* kcalloc( uint32_t nmemb, uint32_t size ) {
+    void* p;
+    uint32_t s;
+
+    s = nmemb * size;
+    p = kmalloc( s );
+
+    if ( p == NULL ) {
+        return NULL;
+    }
+
+    memset( p, 0, s );
+
+    return p;
+}
+
 void kfree( void* p ) {
     kmalloc_chunk_t* chunk;
 

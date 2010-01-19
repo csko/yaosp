@@ -89,6 +89,10 @@
 #define PCI_ADDRESS_MEMORY_32_MASK 0xFFFFFFF0
 #define PCI_ADDRESS_MEMORY_64_MASK 0xFFFFFFFFFFFFFFF0ULL
 
+#define PCI_ADDRESS_SPACE        0x01  /* 0 = memory, 1 = I/O */
+#define PCI_ADDRESS_SPACE_IO     0x01
+#define PCI_ADDRESS_SPACE_MEMORY 0x00
+
 #define MAX_PCI_DEVICES 256
 
 typedef struct pci_device {
@@ -106,7 +110,9 @@ typedef struct pci_device {
     uint16_t subsystem_device_id;
 
     int interrupt_line;
+
     uint32_t base[ 6 ];
+    uint32_t size[ 6 ];
 } pci_device_t;
 
 typedef struct pci_bus {
