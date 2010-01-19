@@ -1,6 +1,6 @@
 /* Network device definitions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -29,6 +29,11 @@
 #define htonw ntohw
 #define htonl ntohl
 
+typedef enum netdev_tx {
+    NETDEV_TX_OK = 0,
+    NETDEV_TX_BUSY
+} netdev_tx_t;
+
 typedef struct net_device_stats {
     uint32_t rx_packets;
     uint32_t tx_packets;
@@ -39,5 +44,17 @@ typedef struct net_device_stats {
     uint32_t rx_dropped;
     uint32_t tx_dropped;
 } net_device_stats_t;
+
+typedef struct net_device {
+    int mtu;
+    uint8_t dev_addr[ 6 ];
+
+    void* private;
+} net_device_t;
+
+net_device_t* net_device_create( size_t priv_size );
+int net_device_free( net_device_t* device );
+
+void* net_device_get_private( net_device_t* device );
 
 #endif /* _NETWORK_DEVICE_H_ */

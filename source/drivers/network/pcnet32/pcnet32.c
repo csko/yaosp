@@ -1,4 +1,4 @@
-/* PCnet32 driver (based on the Linux driver)
+/* PCnet32 network driver (based on the Linux driver)
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *

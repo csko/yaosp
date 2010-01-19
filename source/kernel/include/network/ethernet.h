@@ -1,6 +1,6 @@
 /* Ethernet layer definitions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,11 +20,13 @@
 #define _NETWORK_ETHERNET_H_
 
 #include <types.h>
+#include <macros.h>
 #include <network/packet.h>
 
 #define ETH_ADDR_LEN   6
 #define ETH_HEADER_LEN 14
 #define ETH_DATA_LEN   1500
+#define ETH_ZLEN       60
 
 #define ETH_P_IP  0x0800
 #define ETH_P_ARP 0x0806
@@ -35,7 +37,20 @@ typedef struct ethernet_header {
     uint8_t dest[ ETH_ADDR_LEN ];
     uint8_t src[ ETH_ADDR_LEN ];
     uint16_t proto;
-} __attribute__(( packed )) ethernet_header_t;
+} __PACKED ethernet_header_t;
+
+static inline int is_zero_ethernet_address( uint8_t* address ) {
+    return !( address[0] | address[1] | address[2] | address[3] | address[4] | address[5] );
+}
+
+static inline int is_multicast_ethernet_address( uint8_t* address ) {
+    return ( address[ 0 ] & 0x01 );
+}
+
+static inline int is_valid_ethernet_address( uint8_t* address ) {
+    return ( ( !is_multicast_ethernet_address( address ) ) &&
+             ( !is_zero_ethernet_address( address ) ) );
+}
 
 int ethernet_send_packet( struct net_interface* interface, uint8_t* hw_address, uint16_t protocol, packet_t* packet );
 

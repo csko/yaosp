@@ -1,6 +1,6 @@
-/* IRQ handling code
+/* Network device handling
  *
- * Copyright (c) 2008, 2010 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,27 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IRQ_H_
-#define _IRQ_H_
+#include <mm/kmalloc.h>
+#include <network/device.h>
 
-#include <types.h>
+net_device_t* net_device_create( size_t priv_size ) {
+    net_device_t* device;
 
-typedef int irq_handler_t( int irq, void* data, registers_t* regs );
+    device = ( net_device_t* )kmalloc( sizeof( net_device_t ) + priv_size );
+    device->private = ( void* )( device + 1 );
 
-typedef struct irq_action {
-    irq_handler_t* handler;
-    void* data;
-    struct irq_action* next;
-} irq_action_t;
+    return device;
+}
 
-int request_irq( int irq, irq_handler_t* handler, void* data );
-int release_irq( int irq, irq_handler_t* handler );
+int net_device_free( net_device_t* device ) {
+    kfree( device );
 
-int enable_irq( int irq );
-int disable_irq( int irq );
+    return 0;
+}
 
-void do_handle_irq( int irq, registers_t* regs );
-
-int init_irq_handlers( void );
-
-#endif /* _IRQ_H_ */
+void* net_device_get_private( net_device_t* device ) {
+    return device->private;
+}

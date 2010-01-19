@@ -121,6 +121,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/tcp.c</item>
         <item>src/network/udp.c</item>
         <item>src/network/network.c</item>
+        <item>src/network/device.c</item>
     </array>
 
     <array name="files_lock">

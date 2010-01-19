@@ -69,6 +69,62 @@
 #define BMCR_LOOPBACK           0x4000  /* TXD loopback bits           */
 #define BMCR_RESET              0x8000  /* Reset the DP83840           */
 
+/* Basic mode status register. */
+
+#define BMSR_ERCAP              0x0001  /* Ext-reg capability          */
+#define BMSR_JCD                0x0002  /* Jabber detected             */
+#define BMSR_LSTATUS            0x0004  /* Link status                 */
+#define BMSR_ANEGCAPABLE        0x0008  /* Able to do auto-negotiation */
+#define BMSR_RFAULT             0x0010  /* Remote fault detected       */
+#define BMSR_ANEGCOMPLETE       0x0020  /* Auto-negotiation complete   */
+#define BMSR_RESV               0x00c0  /* Unused...                   */
+#define BMSR_ESTATEN            0x0100  /* Extended Status in R15 */
+#define BMSR_100HALF2           0x0200  /* Can do 100BASE-T2 HDX */
+#define BMSR_100FULL2           0x0400  /* Can do 100BASE-T2 FDX */
+#define BMSR_10HALF             0x0800  /* Can do 10mbps, half-duplex  */
+#define BMSR_10FULL             0x1000  /* Can do 10mbps, full-duplex  */
+#define BMSR_100HALF            0x2000  /* Can do 100mbps, half-duplex */
+#define BMSR_100FULL            0x4000  /* Can do 100mbps, full-duplex */
+#define BMSR_100BASE4           0x8000  /* Can do 100mbps, 4k packets  */
+
+/* Link partner ability register. */
+
+#define LPA_SLCT                0x001f  /* Same as advertise selector  */
+#define LPA_10HALF              0x0020  /* Can do 10mbps half-duplex   */
+#define LPA_1000XFULL           0x0020  /* Can do 1000BASE-X full-duplex */
+#define LPA_10FULL              0x0040  /* Can do 10mbps full-duplex   */
+#define LPA_1000XHALF           0x0040  /* Can do 1000BASE-X half-duplex */
+#define LPA_100HALF             0x0080  /* Can do 100mbps half-duplex  */
+#define LPA_1000XPAUSE          0x0080  /* Can do 1000BASE-X pause     */
+#define LPA_100FULL             0x0100  /* Can do 100mbps full-duplex  */
+#define LPA_1000XPAUSE_ASYM     0x0100  /* Can do 1000BASE-X pause asym*/
+#define LPA_100BASE4            0x0200  /* Can do 100mbps 4k packets   */
+#define LPA_PAUSE_CAP           0x0400  /* Can pause                   */
+#define LPA_PAUSE_ASYM          0x0800  /* Can pause asymetrically     */
+#define LPA_RESV                0x1000  /* Unused...                   */
+#define LPA_RFAULT              0x2000  /* Link partner faulted        */
+#define LPA_LPACK               0x4000  /* Link partner acked us       */
+#define LPA_NPAGE               0x8000  /* Next page bit               */
+
+#define LPA_DUPLEX              (LPA_10FULL | LPA_100FULL)
+#define LPA_100                 (LPA_100FULL | LPA_100HALF | LPA_100BASE4)
+
+/* 1000BASE-T Status register */
+
+#define LPA_1000LOCALRXOK       0x2000  /* Link partner local receiver status */
+#define LPA_1000REMRXOK         0x1000  /* Link partner remote receiver status */
+#define LPA_1000FULL            0x0800  /* Link partner 1000BASE-T full duplex */
+#define LPA_1000HALF            0x0400  /* Link partner 1000BASE-T half duplex */
+
+/* Expansion register for auto-negotiation. */
+
+#define EXPANSION_NWAY          0x0001  /* Can do N-way auto-nego      */
+#define EXPANSION_LCWP          0x0002  /* Got new RX page code word   */
+#define EXPANSION_ENABLENPAGE   0x0004  /* This enables npage words    */
+#define EXPANSION_NPCAPABLE     0x0008  /* Link partner supports npage */
+#define EXPANSION_MFAULTS       0x0010  /* Multiple faults detected    */
+#define EXPANSION_RESV          0xffe0  /* Unused...                   */
+
 typedef struct mii_if_info {
     int phy_id;
     int advertising;

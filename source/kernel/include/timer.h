@@ -1,6 +1,6 @@
-/* IRQ handling code
+/* Timer handling
  *
- * Copyright (c) 2008, 2010 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,27 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IRQ_H_
-#define _IRQ_H_
+#ifndef _TIMER_H_
+#define _TIMER_H_
 
-#include <types.h>
+typedef struct timer {
+    int dummy;
+} timer_t;
 
-typedef int irq_handler_t( int irq, void* data, registers_t* regs );
+int timer_set_expire_time( timer_t* timer, uint64_t expire_time );
 
-typedef struct irq_action {
-    irq_handler_t* handler;
-    void* data;
-    struct irq_action* next;
-} irq_action_t;
-
-int request_irq( int irq, irq_handler_t* handler, void* data );
-int release_irq( int irq, irq_handler_t* handler );
-
-int enable_irq( int irq );
-int disable_irq( int irq );
-
-void do_handle_irq( int irq, registers_t* regs );
-
-int init_irq_handlers( void );
-
-#endif /* _IRQ_H_ */
+#endif /* _TIMER_H_ */
