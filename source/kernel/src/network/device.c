@@ -17,6 +17,7 @@
  */
 
 #include <config.h>
+#include <lib/string.h>
 
 #ifdef ENABLE_NETWORK
 
@@ -27,6 +28,13 @@ net_device_t* net_device_create( size_t priv_size ) {
     net_device_t* device;
 
     device = ( net_device_t* )kmalloc( sizeof( net_device_t ) + priv_size );
+
+    if ( device == NULL ) {
+        return NULL;
+    }
+
+    memset( device, 0, sizeof( net_device_t ) );
+
     device->private = ( void* )( device + 1 );
 
     return device;
@@ -47,14 +55,16 @@ int net_device_running( net_device_t* device ) {
 }
 
 int net_device_carrier_ok( net_device_t* device ) {
-    return 0;
+    return ( atomic_get( &device->flags ) & NETDEV_CARRIER_ON );
 }
 
 int net_device_carrier_on( net_device_t* device ) {
+    atomic_or( &device->flags, NETDEV_CARRIER_ON );
     return 0;
 }
 
 int net_device_carrier_off( net_device_t* device ) {
+    atomic_and( &device->flags, ~NETDEV_CARRIER_ON );
     return 0;
 }
 

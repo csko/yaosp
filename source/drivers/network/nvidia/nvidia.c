@@ -3792,7 +3792,7 @@ static int nv_open(struct net_device *dev)
         uint32_t miistat;
         miistat = readl(base + NvRegMIIStatus);
         writel(NVREG_MIISTAT_MASK_ALL, base + NvRegMIIStatus);
-        kprintf( INFO, "nvidia: startup: got 0x%08x.\n", miistat);
+        DEBUG_LOG( "nvidia: startup: got 0x%08x.\n", miistat);
     }
     /* set linkspeed to invalid value, thus force nv_update_linkspeed
      * to init hw */
@@ -3904,10 +3904,7 @@ static int nv_probe( pci_bus_t* pci_bus, pci_device_t* pci_device, nvidia_pci_en
     }
 
     np = net_device_get_private(dev);
-    //np->dev = dev;
-    //np->pci_dev = pci_dev;
     init_spinlock( &np->lock, "nVidia network lock" );
-    //SET_NETDEV_DEV(dev, &pci_dev->dev);
 
     timer_init( &np->oom_kick, nv_do_rx_refill, dev );
     timer_init( &np->nic_poll, nv_do_nic_poll, dev );
@@ -4014,11 +4011,6 @@ static int nv_probe( pci_bus_t* pci_bus, pci_device_t* pci_device, nvidia_pci_en
     } else {
         dev->ops = &nv_netdev_ops_optimized;
     }
-
-    //SET_ETHTOOL_OPS(dev, &ops);
-    //dev->watchdog_timeo = NV_WATCHDOG_TIMEO;
-
-    //pci_set_drvdata(pci_dev, dev);
 
     /* read the mac address */
     base = get_hwbase(dev);
@@ -4226,32 +4218,11 @@ static int nv_probe( pci_bus_t* pci_bus, pci_device_t* pci_device, nvidia_pci_en
         goto out_error;
     }
 
-#if 0
-    kprintf(INFO, "ifname %s, PHY OUI 0x%x @ %d, "
-           "addr %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n",
-           dev->name,
-           np->phy_oui,
-           np->phyaddr,
-           dev->dev_addr[0],
-           dev->dev_addr[1],
-           dev->dev_addr[2],
-           dev->dev_addr[3],
-           dev->dev_addr[4],
-           dev->dev_addr[5]);
-
-    kprintf(INFO, "%s%s%s%s%s%s%s%sdesc-v%u\n",
-           dev->features & NETIF_F_HIGHDMA ? "highdma " : "",
-           dev->features & (NETIF_F_IP_CSUM | NETIF_F_SG) ?
-            "csum " : "",
-           dev->features & (NETIF_F_HW_VLAN_RX | NETIF_F_HW_VLAN_TX) ?
-            "vlan " : "",
-           id->driver_data & DEV_HAS_POWER_CNTRL ? "pwrctl " : "",
-           id->driver_data & DEV_HAS_MGMT_UNIT ? "mgmt " : "",
-           id->driver_data & DEV_NEED_TIMERIRQ ? "timirq " : "",
-           np->gigabit == PHY_GIGABIT ? "gbit " : "",
-           np->need_linktimer ? "lnktim " : "",
-           np->desc_ver);
-#endif
+    kprintf(
+        INFO, "nvidia: MAC address: %02x:%02x:%02x:%02x:%02x:%02x.\n",
+        dev->dev_addr[ 0 ], dev->dev_addr[ 1 ], dev->dev_addr[ 2 ],
+        dev->dev_addr[ 3 ], dev->dev_addr[ 4 ], dev->dev_addr[ 5 ]
+    );
 
     return 0;
 

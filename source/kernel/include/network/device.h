@@ -31,6 +31,10 @@
 #define htonw ntohw
 #define htonl ntohl
 
+enum {
+    NETDEV_CARRIER_ON = ( 1 << 0 )
+};
+
 typedef enum netdev_tx {
     NETDEV_TX_OK = 0,
     NETDEV_TX_BUSY
@@ -59,6 +63,7 @@ typedef struct net_device {
     char name[ IFNAMSIZ ];
 
     int mtu;
+    atomic_t flags;
     uint8_t dev_addr[ 6 ];
 
     net_device_ops_t* ops;
