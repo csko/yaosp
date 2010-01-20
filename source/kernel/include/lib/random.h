@@ -1,4 +1,4 @@
-/* Timer handling
+/* Random number generator
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,20 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _TIMER_H_
-#define _TIMER_H_
+#ifndef _LIB_RANDOM_H_
+#define _LIB_RANDOM_H_
 
 #include <types.h>
-#include <sched/waitqueue.h>
 
-typedef struct timer {
-    waitnode_t node;
-    timer_callback_t* callback;
-    void* data;
-} timer_t;
+int random_get_bytes( uint8_t* data, size_t size );
 
-int timer_init( timer_t* timer, timer_callback_t* callback, void* data );
-int timer_setup( timer_t* timer, uint64_t expire_time );
-int timer_cancel( timer_t* timer );
+int random_init( uint32_t seed );
 
-#endif /* _TIMER_H_ */
+#endif /* _LIB_RANDOM_H_ */

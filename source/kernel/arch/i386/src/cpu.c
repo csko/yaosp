@@ -26,6 +26,7 @@
 #include <time.h>
 #include <lib/string.h>
 #include <lib/ctype.h>
+#include <lib/random.h>
 
 #include <arch/cpu.h>
 #include <arch/gdt.h>
@@ -254,6 +255,10 @@ __init int detect_cpu( void ) {
         arch_processor_table[ i ].family = family;
         arch_processor_table[ i ].model = model;
     }
+
+    /* Initialize random number generator */
+
+    random_init( rdtsc() );
 
     return 0;
 }

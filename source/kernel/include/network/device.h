@@ -51,7 +51,7 @@ struct net_device;
 typedef struct net_device_ops {
     int ( *open )( struct net_device* dev );
     int ( *close )( struct net_device* dev );
-    int ( *transmit )( struct net_device* dev, packet_t* packet );
+    netdev_tx_t ( *transmit )( struct net_device* dev, packet_t* packet );
 } net_device_ops_t;
 
 typedef struct net_device {

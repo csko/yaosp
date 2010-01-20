@@ -63,3 +63,21 @@ int timer_setup( timer_t* timer, uint64_t expire_time ) {
 
     return 0;
 }
+
+int timer_cancel( timer_t* timer ) {
+    waitnode_t* node;
+
+    scheduler_lock();
+
+    node = &timer->node;
+
+    /* Remove the timer from the sleep list if it's already on it. */
+
+    if ( node->in_queue ) {
+        waitqueue_remove_node( &sleep_queue, node );
+    }
+
+    scheduler_unlock();
+
+    return 0;
+}

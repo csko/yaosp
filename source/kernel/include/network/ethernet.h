@@ -22,6 +22,7 @@
 #include <types.h>
 #include <macros.h>
 #include <network/packet.h>
+#include <lib/random.h>
 
 #define ETH_ADDR_LEN   6
 #define ETH_HEADER_LEN 14
@@ -51,6 +52,14 @@ static inline int is_valid_ethernet_address( uint8_t* address ) {
     return ( ( !is_multicast_ethernet_address( address ) ) &&
              ( !is_zero_ethernet_address( address ) ) );
 }
+
+static inline void random_ethernet_address( uint8_t* address ) {
+    random_get_bytes( address, ETH_ADDR_LEN );
+
+    address[ 0 ] &= 0xFE; /* clear multicast bit */
+    address[ 0 ] |= 0x02; /* set local assignment bit (IEEE802) */
+}
+
 
 int ethernet_send_packet( struct net_interface* interface, uint8_t* hw_address, uint16_t protocol, packet_t* packet );
 
