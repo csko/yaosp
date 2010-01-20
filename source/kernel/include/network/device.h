@@ -59,6 +59,7 @@ typedef struct net_device {
     uint8_t dev_addr[ 6 ];
 
     net_device_ops_t* ops;
+    net_device_stats_t stats;
 
     void* private;
 } net_device_t;
@@ -66,6 +67,12 @@ typedef struct net_device {
 net_device_t* net_device_create( size_t priv_size );
 int net_device_free( net_device_t* device );
 int net_device_register( net_device_t* device );
+
+int net_device_running( net_device_t* device );
+
+int net_device_carrier_ok( net_device_t* device );
+int net_device_carrier_on( net_device_t* device );
+int net_device_carrier_off( net_device_t* device );
 
 void* net_device_get_private( net_device_t* device );
 

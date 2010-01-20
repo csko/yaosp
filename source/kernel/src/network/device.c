@@ -38,6 +38,22 @@ int net_device_register( net_device_t* device ) {
     return 0;
 }
 
+int net_device_running( net_device_t* device ) {
+    return 0;
+}
+
+int net_device_carrier_ok( net_device_t* device ) {
+    return 0;
+}
+
+int net_device_carrier_on( net_device_t* device ) {
+    return 0;
+}
+
+int net_device_carrier_off( net_device_t* device ) {
+    return 0;
+}
+
 void* net_device_get_private( net_device_t* device ) {
     return device->private;
 }

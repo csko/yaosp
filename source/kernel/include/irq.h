@@ -31,6 +31,7 @@ typedef struct irq_action {
 
 int request_irq( int irq, irq_handler_t* handler, void* data );
 int release_irq( int irq, irq_handler_t* handler );
+int release_irq_all( int irq );
 
 int enable_irq( int irq );
 int disable_irq( int irq );

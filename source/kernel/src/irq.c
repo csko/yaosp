@@ -95,6 +95,30 @@ int release_irq( int irq, irq_handler_t* handler ) {
     return 0;
 }
 
+int release_irq_all( int irq ) {
+    irq_action_t* current;
+
+    if ( ( irq < 0 ) ||
+         ( irq >= ARCH_IRQ_COUNT ) ) {
+        return -EINVAL;
+    }
+
+    current = irq_handlers[ irq ];
+
+    while ( current != NULL ) {
+        irq_action_t* action;
+
+        action = current;
+        current = current->next;
+
+        kfree( action );
+    }
+
+    arch_disable_irq( irq );
+
+    return 0;
+}
+
 int enable_irq( int irq ) {
     if ( ( irq < 0 ) ||
          ( irq >= ARCH_IRQ_COUNT ) ) {
