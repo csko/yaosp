@@ -1,6 +1,6 @@
 /* Parallel AT Attachment driver
  *
- * Copyright (c) 2008 Zoltan Kovacs
+ * Copyright (c) 2008, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,7 +20,7 @@
 #define _PATA_H_
 
 #include <types.h>
-#include "../../bus/pci/pci.h"
+#include <pci.h>
 #include <lock/mutex.h>
 
 /* Maximum number of ports per controller */
@@ -213,4 +213,4 @@ void pata_port_write_pio( pata_port_t* port, void* buffer, size_t word_count );
 int pata_create_ata_device_node( pata_port_t* port );
 int pata_create_atapi_device_node( pata_port_t* port );
 
-#endif // _PATA_H_
+#endif /* _PATA_H_ */

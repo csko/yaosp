@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <config.h>
+
+#ifdef ENABLE_NETWORK
+
 #include <mm/kmalloc.h>
 #include <network/device.h>
 
@@ -57,3 +61,5 @@ int net_device_carrier_off( net_device_t* device ) {
 void* net_device_get_private( net_device_t* device ) {
     return device->private;
 }
+
+#endif /* ENABLE_NETWORK */

@@ -22,14 +22,14 @@
 #include <errno.h>
 #include <ioctl.h>
 #include <irq.h>
+#include <pci.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
+#include <network/ethernet.h>
 #include <lib/string.h>
 
 #include <arch/io.h>
 #include <arch/smp.h>
-
-#include "../../bus/pci/pci.h"
 
 #include "pcnet32.h"
 
@@ -37,11 +37,6 @@
 
 static int cards_found = 0;
 static int max_interrupt_work = 40;
-
-/* TODO: move to network stuff */
-static inline int is_valid_ether_addr( uint8_t* address ) {
-    return 1;
-}
 
 static pcnet32_pci_entry_t pci_table[] = {
     { PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_LANCE },
@@ -579,7 +574,7 @@ static int pcnet32_start( pcnet32_private_t* device ) {
 
     spinlock_disable( &device->lock );
 
-    if ( !is_valid_ether_addr( device->dev_address ) ) {
+    if ( !is_valid_ethernet_address( device->dev_address ) ) {
         goto error_free_irq;
     }
 
@@ -787,6 +782,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     uint8_t prom_addr[ 6 ];
     pcnet32_access_t* access = NULL;
     pcnet32_private_t* device;
+    net_device_t* dev;
 
     io_addr = pci_device->base[ 0 ] & PCI_ADDRESS_IO_MASK;
 
@@ -925,11 +921,13 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
         dxsuflo = 1;
     }
 
-    device = ( pcnet32_private_t* )kmalloc( sizeof( pcnet32_private_t ) );
+    dev = net_device_create( sizeof( pcnet32_private_t ) );
 
-    if ( device == NULL ) {
+    if ( dev == NULL ) {
         return -ENOMEM;
     }
+
+    device = ( pcnet32_private_t* )net_device_get_private( dev );
 
     /* In most chips, after a chip reset, the ethernet address is read from the
      * station address PROM at the base address and programmed into the
@@ -955,8 +953,8 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     }
 
     if ( ( memcmp( prom_addr, device->dev_address, ETH_ADDR_LEN ) ) ||
-         ( !is_valid_ether_addr( device->dev_address ) ) ) {
-        if ( is_valid_ether_addr( prom_addr ) ) {
+         ( !is_valid_ethernet_address( device->dev_address ) ) ) {
+        if ( is_valid_ethernet_address( prom_addr ) ) {
             kprintf( WARNING, "PCnet32: CSR address invalid, using PROM address instead\n" );
             memcpy( device->dev_address, prom_addr, ETH_ADDR_LEN );
         }
@@ -964,7 +962,7 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
 
     memcpy( device->perm_address, device->dev_address, ETH_ADDR_LEN );
 
-    if ( !is_valid_ether_addr( device->perm_address ) ) {
+    if ( !is_valid_ethernet_address( device->perm_address ) ) {
         memset( device->dev_address, 0, sizeof( device->dev_address ) );
     }
 

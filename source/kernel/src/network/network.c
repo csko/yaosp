@@ -34,8 +34,6 @@ __init void init_network( void ) {
     init_socket();
     init_tcp();
     init_udp();
-
-    create_network_interfaces();
 }
 
 #endif /* ENABLE_NETWORK */

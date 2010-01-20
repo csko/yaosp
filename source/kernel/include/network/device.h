@@ -21,6 +21,7 @@
 
 #include <types.h>
 #include <network/packet.h>
+#include <network/interface.h>
 
 #define ntohw(n) \
     ((((uint16_t)(n) & 0xFF) << 8) | ((uint16_t)(n) >> 8))
@@ -55,6 +56,8 @@ typedef struct net_device_ops {
 } net_device_ops_t;
 
 typedef struct net_device {
+    char name[ IFNAMSIZ ];
+
     int mtu;
     uint8_t dev_addr[ 6 ];
 

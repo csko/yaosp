@@ -21,6 +21,7 @@
 #include <macros.h>
 #include <errno.h>
 #include <devices.h>
+#include <pci.h>
 #include <mm/kmalloc.h>
 #include <sched/scheduler.h>
 #include <network/mii.h>
@@ -28,12 +29,12 @@
 #include <lib/string.h>
 #include <lib/random.h>
 
+#include <arch/smp.h>
+
 #include "nvidia.h"
-#include "../../bus/pci/pci.h"
 
 #define readl(addr) (*(volatile unsigned int *) (addr))
 #define writel(b,addr) (*(volatile unsigned int *) (addr) = (b))
-#define wmb() __asm__ __volatile__( "" : : : "memory" )
 
 /*
  * Maximum number of loops until we assume that a bit in the irq mask

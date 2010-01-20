@@ -1,6 +1,6 @@
 /* Network interface handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -341,7 +341,7 @@ static int start_network_interface( net_interface_t* interface ) {
     return 0;
 }
 
-static int create_network_interface( int device ) {
+int create_network_interface( int device ) {
     net_interface_t* interface;
 
     interface = alloc_network_interface();
@@ -401,40 +401,6 @@ int network_interface_ioctl( int command, void* buffer, bool from_kernel ) {
     }
 
     return error;
-}
-
-__init int create_network_interfaces( void ) {
-    int dir;
-    int device;
-    dirent_t entry;
-    char path[ 128 ];
-
-    dir = open( "/device/network", O_RDONLY );
-
-    if ( dir < 0 ) {
-        return dir;
-    }
-
-    while ( getdents( dir, &entry, sizeof( dirent_t ) ) == 1 ) {
-        if ( ( strcmp( entry.name, "." ) == 0 ) ||
-             ( strcmp( entry.name, ".." ) == 0 ) ) {
-            continue;
-        }
-
-        snprintf( path, sizeof( path ), "/device/network/%s", entry.name );
-
-        device = open( path, O_RDWR );
-
-        if ( device < 0 ) {
-            continue;
-        }
-
-        create_network_interface( device );
-    }
-
-    close( dir );
-
-    return 0;
 }
 
 static void* net_if_key( hashitem_t* item ) {

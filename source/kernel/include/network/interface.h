@@ -1,6 +1,6 @@
 /* Network interface handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -70,8 +70,8 @@ struct ifreq {
         struct sockaddr ifru_hwaddr;
         short ifru_flags;
 
-        int	ifru_ivalue;
-        int	ifru_mtu;
+        int ifru_ivalue;
+        int ifru_mtu;
         char ifru_slave[ IFNAMSIZ ];
         char ifru_newname[ IFNAMSIZ ];
         char* ifru_data;
@@ -79,7 +79,7 @@ struct ifreq {
 };
 
 struct ifconf {
-    int	ifc_len;
+    int ifc_len;
     union  {
         char* ifcu_buf;
         struct ifreq* ifcu_req;
@@ -88,8 +88,6 @@ struct ifconf {
 
 extern lock_id interface_mutex;
 extern hashtable_t interface_table;
-
-int create_network_interfaces( void );
 
 int network_interface_ioctl( int command, void* buffer, bool from_kernel );
 
