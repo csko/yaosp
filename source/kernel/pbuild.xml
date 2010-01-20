@@ -94,6 +94,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ipc.c</item>
         <item>src/signal.c</item>
         <item>src/debugger.c</item>
+        <item>src/timer.c</item>
         <item>src/sched/waitqueue.c</item>
         <item>src/sched/scheduler.c</item>
         <item>src/linker/elf.c</item>

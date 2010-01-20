@@ -452,7 +452,9 @@ static int do_sleep_thread( uint64_t microsecs, uint64_t* remaining ) {
     thread = current_thread();
 
     thread->state = THREAD_SLEEPING;
-    node.thread = thread->id;
+
+    node.type = WAIT_THREAD;
+    node.u.thread = thread->id;
 
     waitqueue_add_node( &sleep_queue, &node );
 

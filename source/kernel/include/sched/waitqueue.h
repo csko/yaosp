@@ -22,8 +22,26 @@
 #include <types.h>
 #include <thread.h>
 
+struct timer;
+
+typedef int timer_callback_t( void* data );
+
+typedef enum wait_type {
+    WAIT_THREAD = 1,
+    WAIT_CALLBACK
+} wait_type_t;
+
 typedef struct waitnode {
-    thread_id thread;
+    wait_type_t type;
+
+    union {
+        thread_id thread;
+        struct {
+            timer_callback_t* callback;
+            void* data;
+        };
+    } u;
+
     uint64_t wakeup_time;
     bool in_queue;
 

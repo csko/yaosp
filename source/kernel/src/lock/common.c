@@ -26,7 +26,8 @@ int lock_wait_on( lock_context_t* context, thread_t* thread, lock_type_t type, l
 
     spinlock( &scheduler_lock );
 
-    waitnode.thread = thread->id;
+    waitnode.type = WAIT_THREAD;
+    waitnode.u.thread = thread->id;
     waitnode.in_queue = false;
 
     waitqueue_add_node_tail( queue, &waitnode );
@@ -63,12 +64,14 @@ int lock_timed_wait_on( lock_context_t* context, thread_t* thread, lock_type_t t
 
     spinlock( &scheduler_lock );
 
-    waitnode.thread = thread->id;
+    waitnode.type = WAIT_THREAD;
+    waitnode.u.thread = thread->id;
     waitnode.in_queue = false;
 
     waitqueue_add_node_tail( queue, &waitnode );
 
-    sleepnode.thread = thread->id;
+    sleepnode.type = WAIT_THREAD;
+    sleepnode.u.thread = thread->id;
     sleepnode.wakeup_time = wakeup_time;
     sleepnode.in_queue = false;
 

@@ -19,10 +19,16 @@
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
+#include <types.h>
+#include <sched/waitqueue.h>
+
 typedef struct timer {
-    int dummy;
+    waitnode_t node;
+    timer_callback_t* callback;
+    void* data;
 } timer_t;
 
-int timer_set_expire_time( timer_t* timer, uint64_t expire_time );
+int timer_init( timer_t* timer, timer_callback_t* callback, void* data );
+int timer_setup( timer_t* timer, uint64_t expire_time );
 
 #endif /* _TIMER_H_ */

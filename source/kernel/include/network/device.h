@@ -20,6 +20,7 @@
 #define _NETWORK_DEVICE_H_
 
 #include <types.h>
+#include <network/packet.h>
 
 #define ntohw(n) \
     ((((uint16_t)(n) & 0xFF) << 8) | ((uint16_t)(n) >> 8))
@@ -45,15 +46,26 @@ typedef struct net_device_stats {
     uint32_t tx_dropped;
 } net_device_stats_t;
 
+struct net_device;
+
+typedef struct net_device_ops {
+    int ( *open )( struct net_device* dev );
+    int ( *close )( struct net_device* dev );
+    int ( *transmit )( struct net_device* dev, packet_t* packet );
+} net_device_ops_t;
+
 typedef struct net_device {
     int mtu;
     uint8_t dev_addr[ 6 ];
+
+    net_device_ops_t* ops;
 
     void* private;
 } net_device_t;
 
 net_device_t* net_device_create( size_t priv_size );
 int net_device_free( net_device_t* device );
+int net_device_register( net_device_t* device );
 
 void* net_device_get_private( net_device_t* device );
 

@@ -147,33 +147,53 @@ int waitqueue_wake_up( waitqueue_t* queue, uint64_t now ) {
     waitnode_t* node;
     waitnode_t* next;
 
+    waitnode_t* callbacks = NULL;
+
+    scheduler_lock();
+
     node = queue->first_node;
 
     while ( ( node != NULL ) && ( node->wakeup_time <= now ) ) {
-        thread_t* thread;
-
-        thread = get_thread_by_id( node->thread );
-
-        if ( __likely( thread != NULL ) ) {
-            /* If the thread doesn't have time to run add
-               it to the list of expired threads, otherwise
-               add it to the ready list */
-
-            if ( thread->quantum == 0 ) {
-                add_thread_to_expired( thread );
-            } else {
-                add_thread_to_ready( thread );
-            }
-        }
-
         next = node->next;
 
-        node->prev = NULL;
-        node->next = NULL;
-        node->in_queue = false;
+        switch ( node->type ) {
+            case WAIT_THREAD : {
+                thread_t* thread;
+
+                thread = get_thread_by_id( node->u.thread );
+
+                if ( __likely( thread != NULL ) ) {
+                    /* If the thread doesn't have time to run add
+                       it to the list of expired threads, otherwise
+                       add it to the ready list */
+
+                    if ( thread->quantum == 0 ) {
+                        add_thread_to_expired( thread );
+                    } else {
+                        add_thread_to_ready( thread );
+                    }
+                }
+
+                node->prev = NULL;
+                node->next = NULL;
+                node->in_queue = false;
+
+                break;
+            }
+
+            case WAIT_CALLBACK :
+                node->in_queue = false;
+                node->next = callbacks;
+                callbacks = node;
+
+                break;
+
+        }
 
         node = next;
     }
+
+    /* Update the waitqueue */
 
     queue->first_node = node;
 
@@ -181,6 +201,19 @@ int waitqueue_wake_up( waitqueue_t* queue, uint64_t now ) {
         queue->first_node->prev = NULL;
     } else {
         queue->last_node = NULL;
+    }
+
+    scheduler_unlock();
+
+    /* Fire callbacks */
+
+    while ( callbacks != NULL ) {
+        waitnode_t* callback;
+
+        callback = callbacks;
+        callbacks = callback->next;
+
+        callback->u.callback( callback->u.data );
     }
 
     return 0;
@@ -197,7 +230,9 @@ int waitqueue_wake_up_head( waitqueue_t* queue, int count ) {
     while ( ( node != NULL ) && ( count > 0 ) ) {
         thread_t* thread;
 
-        thread = get_thread_by_id( node->thread );
+        ASSERT( node->type == WAIT_THREAD );
+
+        thread = get_thread_by_id( node->u.thread );
 
         if ( __likely( thread != NULL ) ) {
             /* If the thread doesn't have time to run add
@@ -242,7 +277,9 @@ int waitqueue_wake_up_all( waitqueue_t* queue ) {
     while ( node != NULL ) {
         thread_t* thread;
 
-        thread = get_thread_by_id( node->thread );
+        ASSERT( node->type == WAIT_THREAD );
+
+        thread = get_thread_by_id( node->u.thread );
 
         if ( __likely( thread != NULL ) ) {
             /* If the thread doesn't have time to run add

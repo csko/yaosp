@@ -37,9 +37,7 @@ static uint64_t boot_time = 0;
 static int pit_irq( int irq, void* data, registers_t* regs ) {
     /* Wake up sleeper threads */
 
-    spinlock( &scheduler_lock );
     waitqueue_wake_up( &sleep_queue, get_system_time() );
-    spinunlock( &scheduler_lock );
 
     if ( !apic_present ) {
         /* The PIT irq was acked and masked by the interrupt handler.
