@@ -1,6 +1,6 @@
 /* Socket handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -28,7 +28,6 @@
 #include <lock/mutex.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
-#include <network/interface.h>
 #include <network/device.h>
 #include <network/tcp.h>
 #include <network/udp.h>
@@ -138,9 +137,15 @@ static int socket_write( void* fs_cookie, void* node, void* file_cookie, const v
 }
 
 static int socket_ioctl( void* fs_cookie, void* node, void* file_cookie, int command, void* buffer, bool from_kernel ) {
-    //return network_interface_ioctl( command, buffer, from_kernel );
-    // todo
-    return -ENOSYS;
+    int error;
+
+    switch ( command ) {
+        default :
+            error = net_device_ioctl( command, buffer, from_kernel );
+            break;
+    }
+
+    return error;
 }
 
 static int socket_read_stat( void* fs_cookie, void* node, struct stat* stat ) {
@@ -678,6 +683,52 @@ __init int init_socket( void ) {
 
  error1:
     return error;
+}
+
+#else
+
+int sys_socket( int family, int type, int protocol ) {
+    return -ENOSYS;
+}
+
+int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen ) {
+    return -ENOSYS;
+}
+
+int sys_bind( int sockfd, struct sockaddr* addr, socklen_t addrlen ) {
+    return -ENOSYS;
+}
+
+int sys_listen( int sockfd, int backlog ) {
+    return -ENOSYS;
+}
+
+int sys_accept( int sockfd, struct sockaddr* addr, socklen_t* addrlen ) {
+    return -ENOSYS:
+}
+
+int sys_getsockopt( int s, int level, int optname, void* optval, socklen_t* optlen ) {
+    return -ENOSYS;
+}
+
+int sys_setsockopt( int s, int level, int optname, void* optval, socklen_t optlen ) {
+    return -ENOSYS;
+}
+
+int sys_getsockname( int s, struct sockaddr* name, socklen_t* namelen ) {
+    return -ENOSYS;
+}
+
+int sys_getpeername( int s, struct sockaddr* name, socklen_t* namelen ) {
+    return -ENOSYS;
+}
+
+int sys_recvmsg( int fd, struct msghdr* msg, int flags ) {
+    return -ENOSYS;
+}
+
+int sys_sendmsg( int fd, struct msghdr* msg, int flags ) {
+    return -ENOSYS;
 }
 
 #endif /* ENABLE_NETWORK */

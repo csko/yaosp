@@ -33,7 +33,7 @@
 #define IFHWADDRLEN 6
 #define IFNAMSIZ    16
 
-#define IFF_UP      ( 1 << 0 )
+#define IFF_UP      ( 1 << 2 )
 
 typedef struct net_interface {
     hashitem_t hash;

@@ -37,7 +37,8 @@
 enum {
     NETDEV_CARRIER_ON = ( 1 << 0 ),
     NETDEV_RUNNING = ( 1 << 1 ),
-    NETDEV_UP = ( 1 << 2 )
+    NETDEV_UP = ( 1 << 2 ),
+    NETDEV_USER_MASK = NETDEV_UP
 };
 
 typedef enum netdev_tx {
@@ -65,14 +66,16 @@ typedef struct net_device_ops {
 } net_device_ops_t;
 
 typedef struct net_device {
-    char name[ IFNAMSIZ ];
+    lock_id lock;
     int ref_count;
+    char name[ IFNAMSIZ ];
 
     int mtu;
     atomic_t flags;
     uint8_t dev_addr[ ETH_ADDR_LEN ];
     uint8_t ip_addr[ IPV4_ADDR_LEN ];
     uint8_t netmask[ IPV4_ADDR_LEN ];
+    uint8_t broadcast[ IPV4_ADDR_LEN ];
 
     net_device_ops_t* ops;
     net_device_stats_t stats;
@@ -110,5 +113,7 @@ void* net_device_get_private( net_device_t* device );
 
 int net_device_init( void );
 int net_device_start( void );
+
+int net_device_ioctl( int command, void* buffer, bool from_kernel );
 
 #endif /* _NETWORK_DEVICE_H_ */

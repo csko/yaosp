@@ -66,7 +66,7 @@ __init void init_network( void ) {
     init_udp();
 
     net_load_drivers();
-    //net_device_start();
+    net_device_start();
 }
 
 #endif /* ENABLE_NETWORK */

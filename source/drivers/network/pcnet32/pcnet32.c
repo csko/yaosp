@@ -395,7 +395,7 @@ static netdev_tx_t pcnet32_start_xmit( net_device_t* dev, packet_t* packet ) {
     entry = device->cur_tx & device->tx_mod_mask;
 
     /* Caution: the write order is important here, set the status
-     * with the "ownership" bits last. */
+       with the "ownership" bits last. */
 
     device->tx_ring[ entry ].length = -packet->size;
     device->tx_ring[ entry ].misc = 0x00000000;

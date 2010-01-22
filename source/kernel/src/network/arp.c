@@ -206,14 +206,12 @@ int arp_send_packet( net_device_t* device, uint8_t* dest_ip, packet_t* packet ) 
 
     if ( item != NULL ) {
         uint8_t hw_address[ ETH_ADDR_LEN ];
+
         memcpy( hw_address, item->hw_address, ETH_ADDR_LEN );
 
         mutex_unlock( device->arp_lock );
 
-        ethernet_send_packet( device, hw_address, ETH_P_IP, packet );
-        delete_packet( packet );
-
-        return 0;
+        return ethernet_send_packet( device, hw_address, ETH_P_IP, packet );
     }
 
     ASSERT( !IP_EQUALS( dest_ip, broadcast_ip ) );
@@ -241,7 +239,6 @@ int arp_send_packet( net_device_t* device, uint8_t* dest_ip, packet_t* packet ) 
     mutex_unlock( device->arp_lock );
 
     if ( send_request ) {
-        int error;
         packet_t* arp_request;
         arp_header_t* arp_header;
         arp_data_t* arp_data;
@@ -273,13 +270,7 @@ int arp_send_packet( net_device_t* device, uint8_t* dest_ip, packet_t* packet ) 
         memcpy( arp_data->ip_target, dest_ip, IPV4_ADDR_LEN );
         memcpy( arp_data->ip_sender, device->ip_addr, IPV4_ADDR_LEN );
 
-        error = ethernet_send_packet( device, hw_broadcast, ETH_P_ARP, arp_request );
-
-        delete_packet( arp_request );
-
-        if ( error < 0 ) {
-            return error;
-        }
+        return ethernet_send_packet( device, hw_broadcast, ETH_P_ARP, arp_request );
     }
 
     return 0;

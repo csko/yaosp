@@ -20,8 +20,14 @@
 
 #ifdef ENABLE_NETWORK
 
+#include <ioctl.h>
+#include <errno.h>
+#include <console.h>
 #include <mm/kmalloc.h>
 #include <network/device.h>
+#include <network/interface.h>
+#include <network/socket.h>
+#include <network/arp.h>
 #include <lib/array.h>
 
 static uint32_t device_id;
@@ -42,8 +48,10 @@ net_device_t* net_device_create( size_t priv_size ) {
     device->ref_count = 1;
     device->private = ( void* )( device + 1 );
     device->mtu = 1500; /* todo */
+    device->lock = mutex_create( "net dev lock", MUTEX_NONE ); /* todo */
 
     packet_queue_init( &device->input_queue );
+    arp_interface_init( device );
 
     return device;
 }
@@ -54,7 +62,7 @@ int net_device_free( net_device_t* device ) {
     return 0;
 }
 
-static net_device_t* do_net_device_get_by_name( char* name ) {
+static net_device_t* do_net_device_get( char* name ) {
     int i;
     int size;
 
@@ -80,7 +88,7 @@ int net_device_register( net_device_t* device ) {
 
     do {
         snprintf( device->name, sizeof( device->name ), "eth%u", device_id++ );
-    } while ( do_net_device_get_by_name( device->name ) != NULL );
+    } while ( do_net_device_get( device->name ) != NULL );
 
     error = array_add_item( &device_table, ( void* )device );
 
@@ -90,25 +98,14 @@ int net_device_register( net_device_t* device ) {
 }
 
 net_device_t* net_device_get( char* name ) {
-    int i;
-    int size;
-    net_device_t* device = NULL;
+    net_device_t* device;
 
     mutex_lock( device_lock, LOCK_IGNORE_SIGNAL );
 
-    size = array_get_size( &device_table );
+    device = do_net_device_get( name );
 
-    for ( i = 0; i < size; i++ ) {
-        net_device_t* tmp;
-
-        tmp = ( net_device_t* )array_get_item( &device_table, i );
-
-        if ( strcmp( tmp->name, name ) == 0 ) {
-            device = tmp;
-            device->ref_count++;
-
-            break;
-        }
+    if ( device != NULL ) {
+        device->ref_count++;
     }
 
     mutex_unlock( device_lock );
@@ -190,7 +187,10 @@ int net_device_insert_packet( net_device_t* device, packet_t* packet ) {
 }
 
 int net_device_transmit( net_device_t* device, packet_t* packet ) {
-    /* todo */
+    if ( device->ops->transmit( device, packet ) != NETDEV_TX_OK ) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -234,6 +234,7 @@ static int network_rx_thread( void* data ) {
 
     while ( 1 ) {
         packet_t* packet;
+        ethernet_header_t* eth_header;
 
         /* Get the next packet from the input queue */
 
@@ -248,6 +249,25 @@ static int network_rx_thread( void* data ) {
         if ( ( net_device_flags( device ) & NETDEV_UP ) == 0 ) {
             delete_packet( packet );
             continue;
+        }
+
+        /* Process the incoming packet */
+
+        eth_header = ( ethernet_header_t* )packet->data;
+        packet->network_data = ( uint8_t* )( eth_header + 1 );
+
+        switch ( ntohw( eth_header->proto ) ) {
+            case ETH_P_IP :
+                ipv4_input( packet );
+                break;
+
+            case ETH_P_ARP :
+                arp_input( device, packet );
+                break;
+
+            default :
+                kprintf( WARNING, "net: unknown protocol: %x\n", ntohw( eth_header->proto ) );
+                break;
         }
     }
 
@@ -291,6 +311,166 @@ int net_device_start( void ) {
     }
 
     return 0;
+}
+
+static int get_interface_list( struct ifconf* list ) {
+    int i;
+    int size;
+
+    mutex_lock( device_lock, LOCK_IGNORE_SIGNAL );
+
+    size = array_get_size( &device_table );
+    size = MIN( size, list->ifc_len );
+
+    for ( i = 0; i < size; i++ ) {
+        struct ifreq* req;
+        net_device_t* device;
+
+        req = &list->ifc_ifcu.ifcu_req[ i ];
+        device = ( net_device_t* )array_get_item( &device_table, i );
+
+        strncpy( req->ifr_ifrn.ifrn_name, device->name, IFNAMSIZ );
+        req->ifr_ifrn.ifrn_name[ IFNAMSIZ - 1 ] = 0;
+    }
+
+    mutex_unlock( device_lock );
+
+    return 0;
+}
+
+static int get_interface_parameter( int param, struct ifreq* req ) {
+    net_device_t* device;
+    struct sockaddr_in* addr;
+
+    device = net_device_get( req->ifr_ifrn.ifrn_name );
+
+    if ( device == NULL ) {
+        return -EINVAL;
+    }
+
+    mutex_lock( device->lock, LOCK_IGNORE_SIGNAL );
+
+    switch ( param ) {
+        case SIOCGIFADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_addr;
+            memcpy( &addr->sin_addr, device->ip_addr, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCGIFNETMASK :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
+            memcpy( &addr->sin_addr, device->netmask, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCGIFBRDADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
+            memcpy( &addr->sin_addr, device->broadcast, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCGIFHWADDR :
+            memcpy( req->ifr_ifru.ifru_hwaddr.sa_data, device->dev_addr, ETH_ADDR_LEN );
+            break;
+
+        case SIOCGIFFLAGS :
+            req->ifr_ifru.ifru_flags = atomic_get( &device->flags );
+            break;
+
+        case SIOCGIFMTU :
+            req->ifr_ifru.ifru_mtu = device->mtu;
+            break;
+
+        default :
+            kprintf( ERROR, "get_interface_parameter(): invalid request: %d\n", param );
+            break;
+    }
+
+    mutex_unlock( device->lock );
+
+    net_device_put( device );
+
+    return 0;
+}
+
+static int set_interface_parameter( int param, struct ifreq* req ) {
+    net_device_t* device;
+    struct sockaddr_in* addr;
+
+    device = net_device_get( req->ifr_ifrn.ifrn_name );
+
+    if ( device == NULL ) {
+        return -EINVAL;
+    }
+
+    mutex_lock( device->lock, LOCK_IGNORE_SIGNAL );
+
+    switch ( param ) {
+        case SIOCSIFADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_addr;
+            memcpy( device->ip_addr, &addr->sin_addr, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCSIFNETMASK :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_netmask;
+            memcpy( device->netmask, &addr->sin_addr, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCSIFBRDADDR :
+            addr = ( struct sockaddr_in* )&req->ifr_ifru.ifru_broadaddr;
+            memcpy( device->broadcast, &addr->sin_addr, IPV4_ADDR_LEN );
+            break;
+
+        case SIOCSIFFLAGS :
+            /* todo: this is not really atomic ;) */
+            atomic_set(
+                &device->flags,
+                ( atomic_get( &device->flags ) & ~NETDEV_USER_MASK ) | ( req->ifr_ifru.ifru_flags & NETDEV_USER_MASK )
+            );
+
+            break;
+
+        default :
+            kprintf( ERROR, "set_interface_parameter(): invalid request: %d\n", param );
+            break;
+    }
+
+    mutex_unlock( device->lock );
+
+    return 0;
+}
+
+int net_device_ioctl( int command, void* buffer, bool from_kernel ) {
+    int error;
+
+    switch ( command ) {
+        case SIOCGIFCOUNT :
+            error = net_device_get_count();
+            break;
+
+        case SIOCGIFCONF :
+            error = get_interface_list( ( struct ifconf* )buffer );
+            break;
+
+        case SIOCGIFADDR :
+        case SIOCGIFNETMASK :
+        case SIOCGIFHWADDR :
+        case SIOCGIFMTU :
+        case SIOCGIFFLAGS :
+        case SIOCGIFBRDADDR :
+            error = get_interface_parameter( command, ( struct ifreq* )buffer );
+            break;
+
+        case SIOCSIFADDR :
+        case SIOCSIFNETMASK :
+        case SIOCSIFBRDADDR :
+        case SIOCSIFFLAGS :
+            error = set_interface_parameter( command, ( struct ifreq* )buffer );
+            break;
+
+        default :
+            error = -ENOSYS;
+            break;
+    }
+
+    return error;
 }
 
 #endif /* ENABLE_NETWORK */

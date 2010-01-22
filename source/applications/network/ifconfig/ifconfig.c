@@ -202,7 +202,7 @@ static int list_network_interfaces( void ) {
         return 0;
     }
 
-    if_conf.ifc_len = 0; /* todo */
+    if_conf.ifc_len = if_count;
     if_conf.ifc_ifcu.ifcu_req = if_table;
 
     if ( ioctl( sock, SIOCGIFCONF, ( void* )&if_conf ) != 0 ) {
