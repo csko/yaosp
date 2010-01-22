@@ -50,19 +50,11 @@ static net_interface_t* alloc_network_interface( void ) {
 
     memset( interface, 0, sizeof( net_interface_t ) );
 
-    interface->input_queue = create_packet_queue();
-
-    if ( interface->input_queue == NULL ) {
-        kfree( interface );
-        goto error2;
-    }
+    packet_queue_init( &interface->input_queue );
 
     interface->device = -1;
 
     return interface;
-
- error2:
-    kfree( interface );
 
  error1:
     return NULL;
@@ -119,7 +111,7 @@ static int network_rx_thread( void* data ) {
     while ( 1 ) {
         int if_up;
 
-        packet = packet_queue_pop_head( interface->input_queue, INFINITE_TIMEOUT );
+        packet = packet_queue_pop_head( &interface->input_queue, INFINITE_TIMEOUT );
 
         if ( packet == NULL ) {
             continue;
@@ -326,7 +318,7 @@ static int start_network_interface( net_interface_t* interface ) {
         return error;
     }
 
-    error = ioctl( interface->device, IOCTL_NET_SET_IN_QUEUE, ( void* )interface->input_queue );
+    error = ioctl( interface->device, IOCTL_NET_SET_IN_QUEUE, ( void* )&interface->input_queue );
 
     if ( error < 0 ) {
         return error;

@@ -112,7 +112,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/vfs/filesystem.c</item>
         <item>src/vfs/blockcache.c</item>
         <item>src/vfs/kdebugfs.c</item>
-        <item>src/network/interface.c</item>
         <item>src/network/packet.c</item>
         <item>src/network/arp.c</item>
         <item>src/network/ipv4.c</item>
@@ -123,6 +122,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/udp.c</item>
         <item>src/network/network.c</item>
         <item>src/network/device.c</item>
+        <item>src/network/ethernet.c</item>
     </array>
 
     <array name="files_lock">

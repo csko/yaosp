@@ -7,7 +7,6 @@ module /system/module/filesystem/iso9660
 module /system/module/input/ps2
 module /system/module/input/input
 module /system/module/char/terminal
-module /system/module/network/pcnet32
 
 title yaOSp 0.0.5 for VirtualBox
 kernel /system/kernel pit_freq=500
@@ -18,7 +17,6 @@ module /system/module/filesystem/iso9660
 module /system/module/input/ps2
 module /system/module/input/input
 module /system/module/char/terminal
-module /system/module/network/pcnet32
 
 title yaOSp (debug)
 kernel /system/kernel enable_debug=true
@@ -29,4 +27,3 @@ module /system/module/filesystem/iso9660
 module /system/module/input/ps2
 module /system/module/input/input
 module /system/module/char/terminal
-module /system/module/network/pcnet32

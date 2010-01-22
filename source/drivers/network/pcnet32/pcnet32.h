@@ -135,8 +135,6 @@ typedef struct pcnet32_private {
     uint32_t dirty_tx;
     uint32_t dirty_rx;
     uint32_t options;
-    uint8_t dev_address[ ETH_ADDR_LEN ];
-    uint8_t perm_address[ ETH_ADDR_LEN ];
 
     int mii;
     uint32_t phymask;
@@ -153,7 +151,6 @@ typedef struct pcnet32_private {
     packet_t** rx_packet_buf;
     packet_t** tx_packet_buf;
 
-    packet_queue_t* input_queue;
     net_device_stats_t stats;
 } pcnet32_private_t;
 

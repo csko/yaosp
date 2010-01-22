@@ -43,18 +43,11 @@ static arp_pending_request_t* arp_create_request( uint8_t* ip_address ) {
         goto error1;
     }
 
-    request->packet_queue = create_packet_queue();
-
-    if ( request->packet_queue == NULL ) {
-        goto error2;
-    }
+    packet_queue_init( &request->packet_queue );
 
     memcpy( request->ip_address, ip_address, IPV4_ADDR_LEN );
 
     return request;
-
- error2:
-    kfree( request );
 
  error1:
     return NULL;
@@ -94,7 +87,7 @@ static void* arp_cache_key( hashitem_t* item ) {
     return ( void* )cache_item->ip_address;
 }
 
-int arp_interface_init( net_interface_t* interface ) {
+int arp_interface_init( net_device_t* device ) {
     int error;
     arp_cache_item_t* item;
 
@@ -102,7 +95,7 @@ int arp_interface_init( net_interface_t* interface ) {
     static uint8_t broadcast_ip[] = { 0xff, 0xff, 0xff, 0xff };
 
     error = init_hashtable(
-        &interface->arp_requests, 32,
+        &device->arp_requests, 32,
         arp_pending_key, hash_int, compare_int
     );
 
@@ -111,7 +104,7 @@ int arp_interface_init( net_interface_t* interface ) {
     }
 
     error = init_hashtable(
-        &interface->arp_cache, 256,
+        &device->arp_cache, 256,
         arp_cache_key, hash_int, compare_int
     );
 
@@ -127,32 +120,32 @@ int arp_interface_init( net_interface_t* interface ) {
         goto error3;
     }
 
-    hashtable_add( &interface->arp_cache, ( hashitem_t* )item );
+    hashtable_add( &device->arp_cache, ( hashitem_t* )item );
 
     return 0;
 
  error3:
-    destroy_hashtable( &interface->arp_cache );
+    destroy_hashtable( &device->arp_cache );
 
  error2:
-    destroy_hashtable( &interface->arp_requests );
+    destroy_hashtable( &device->arp_requests );
 
  error1:
     return error;
 }
 
-int arp_cache_insert( net_interface_t* interface, uint8_t* hw_address, uint8_t* ip_address ) {
+int arp_cache_insert( net_device_t* device, uint8_t* hw_address, uint8_t* ip_address ) {
     arp_cache_item_t* item;
     arp_pending_request_t* pending_req = NULL;
 
-    mutex_lock( interface->arp_lock, LOCK_IGNORE_SIGNAL );
+    mutex_lock( device->arp_lock, LOCK_IGNORE_SIGNAL );
 
     /* Check if we already have this in the cache */
 
-    item = ( arp_cache_item_t* )hashtable_get( &interface->arp_cache, ( const void* )ip_address );
+    item = ( arp_cache_item_t* )hashtable_get( &device->arp_cache, ( const void* )ip_address );
 
     if ( item != NULL ) {
-        ASSERT( hashtable_get( &interface->arp_requests, ( const void* )ip_address ) == NULL );
+        ASSERT( hashtable_get( &device->arp_requests, ( const void* )ip_address ) == NULL );
         goto out;
     }
 
@@ -164,66 +157,60 @@ int arp_cache_insert( net_interface_t* interface, uint8_t* hw_address, uint8_t* 
         goto flush;
     }
 
-    if ( hashtable_add( &interface->arp_cache, ( hashitem_t* )item ) != 0 ) {
+    if ( hashtable_add( &device->arp_cache, ( hashitem_t* )item ) != 0 ) {
         kfree( item );
     }
 
     /* Flush any pending packets */
 
  flush:
-    pending_req = ( arp_pending_request_t* )hashtable_get( &interface->arp_requests, ( const void* )ip_address );
+    pending_req = ( arp_pending_request_t* )hashtable_get( &device->arp_requests, ( const void* )ip_address );
 
     if ( pending_req != NULL ) {
-        hashtable_remove( &interface->arp_requests, ( const void* )ip_address );
+        hashtable_remove( &device->arp_requests, ( const void* )ip_address );
     }
 
  out:
-    mutex_unlock( interface->arp_lock );
+    mutex_unlock( device->arp_lock );
 
     if ( pending_req != NULL ) {
         packet_t* packet;
 
-        while ( ( packet = packet_queue_pop_head( pending_req->packet_queue, 0 ) ) != NULL ) {
-            ethernet_send_packet( interface, hw_address, ETH_P_IP, packet );
-            delete_packet( packet );
+        while ( ( packet = packet_queue_pop_head( &pending_req->packet_queue, 0 ) ) != NULL ) {
+            ethernet_send_packet( device, hw_address, ETH_P_IP, packet );
         }
 
-        delete_packet_queue( pending_req->packet_queue );
+        packet_queue_destroy( &pending_req->packet_queue );
         kfree( pending_req );
     }
 
     return 0;
 }
 
-int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* packet ) {
-    int is_if_down;
+int arp_send_packet( net_device_t* device, uint8_t* dest_ip, packet_t* packet ) {
     bool send_request;
     arp_cache_item_t* item;
     arp_pending_request_t* request;
 
     static uint8_t broadcast_ip[] = { 0xff, 0xff, 0xff, 0xff };
 
-    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
-    is_if_down = ( ( interface->flags & IFF_UP ) == 0 );
-    mutex_unlock( interface_mutex );
-
-    if ( is_if_down ) {
+    if ( ( net_device_flags( device ) & NETDEV_UP ) == 0 ) {
         return -ENETDOWN;
     }
 
-    mutex_lock( interface->arp_lock, LOCK_IGNORE_SIGNAL );
+    mutex_lock( device->arp_lock, LOCK_IGNORE_SIGNAL );
 
     /* First check the ARP cache for the HW address */
 
-    item = ( arp_cache_item_t* )hashtable_get( &interface->arp_cache, ( const void* )dest_ip );
+    item = ( arp_cache_item_t* )hashtable_get( &device->arp_cache, ( const void* )dest_ip );
 
     if ( item != NULL ) {
         uint8_t hw_address[ ETH_ADDR_LEN ];
         memcpy( hw_address, item->hw_address, ETH_ADDR_LEN );
 
-        mutex_unlock( interface->arp_lock );
+        mutex_unlock( device->arp_lock );
 
-        ethernet_send_packet( interface, hw_address, ETH_P_IP, packet );
+        ethernet_send_packet( device, hw_address, ETH_P_IP, packet );
         delete_packet( packet );
 
         return 0;
@@ -233,7 +220,7 @@ int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* pac
 
     /* Not found in the cache, add to the pending table and send out an ARP request if needed */
 
-    request = ( arp_pending_request_t* )hashtable_get( &interface->arp_requests, ( const void* )dest_ip );
+    request = ( arp_pending_request_t* )hashtable_get( &device->arp_requests, ( const void* )dest_ip );
 
     if ( request == NULL ) {
         send_request = true;
@@ -244,14 +231,14 @@ int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* pac
             return -ENOMEM;
         }
 
-        hashtable_add( &interface->arp_requests, ( hashitem_t* )request );
+        hashtable_add( &device->arp_requests, ( hashitem_t* )request );
     } else {
         send_request = false;
     }
 
-    packet_queue_insert( request->packet_queue, packet );
+    packet_queue_insert( &request->packet_queue, packet );
 
-    mutex_unlock( interface->arp_lock );
+    mutex_unlock( device->arp_lock );
 
     if ( send_request ) {
         int error;
@@ -279,14 +266,14 @@ int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* pac
         /* HW addresses */
 
         memset( arp_data->hw_target, 0x00, ETH_ADDR_LEN );
-        memcpy( arp_data->hw_sender, interface->hw_address, ETH_ADDR_LEN );
+        memcpy( arp_data->hw_sender, device->dev_addr, ETH_ADDR_LEN );
 
         /* IP addresses */
 
         memcpy( arp_data->ip_target, dest_ip, IPV4_ADDR_LEN );
-        memcpy( arp_data->ip_sender, interface->ip_address, IPV4_ADDR_LEN );
+        memcpy( arp_data->ip_sender, device->ip_addr, IPV4_ADDR_LEN );
 
-        error = ethernet_send_packet( interface, hw_broadcast, ETH_P_ARP, arp_request );
+        error = ethernet_send_packet( device, hw_broadcast, ETH_P_ARP, arp_request );
 
         delete_packet( arp_request );
 
@@ -298,7 +285,7 @@ int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* pac
     return 0;
 }
 
-static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_header ) {
+static int arp_handle_request( net_device_t* device, arp_header_t* arp_header ) {
     int error;
     packet_t* reply;
     arp_data_t* arp_request;
@@ -310,7 +297,7 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
 
     arp_request = ( arp_data_t* )( arp_header + 1 );
 
-    if ( memcmp( arp_request->ip_target, interface->ip_address, IPV4_ADDR_LEN ) != 0 ) {
+    if ( memcmp( arp_request->ip_target, device->ip_addr, IPV4_ADDR_LEN ) != 0 ) {
         return 0;
     }
 
@@ -330,7 +317,7 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
     /* Ethernet header */
 
     memcpy( eth_header->dest, arp_request->hw_sender, ETH_ADDR_LEN );
-    memcpy( eth_header->src, interface->hw_address, ETH_ADDR_LEN );
+    memcpy( eth_header->src, device->dev_addr, ETH_ADDR_LEN );
     eth_header->proto = htonw( ETH_P_ARP );
 
     /* ARP header */
@@ -345,23 +332,22 @@ static int arp_handle_request( net_interface_t* interface, arp_header_t* arp_hea
 
     memcpy( arp_reply_data->hw_target, eth_header->dest, ETH_ADDR_LEN );
     memcpy( arp_reply_data->ip_target, arp_request->ip_sender, IPV4_ADDR_LEN );
-    memcpy( arp_reply_data->hw_sender, interface->hw_address, ETH_ADDR_LEN );
-    memcpy( arp_reply_data->ip_sender, interface->ip_address, IPV4_ADDR_LEN );
+    memcpy( arp_reply_data->hw_sender, device->dev_addr, ETH_ADDR_LEN );
+    memcpy( arp_reply_data->ip_sender, device->ip_addr, IPV4_ADDR_LEN );
 
     /* Send the packet */
 
-    error = pwrite( interface->device, reply->data, reply->size, 0 );
-
-    delete_packet( reply );
+    error = net_device_transmit( device, reply );
 
     if ( error < 0 ) {
         kprintf( ERROR, "net: failed to send ARP reply packet: %d\n", error );
+        delete_packet( reply );
     }
 
     return error;
 }
 
-int arp_input( net_interface_t* interface, packet_t* packet ) {
+int arp_input( net_device_t* device, packet_t* packet ) {
     arp_data_t* arp_data;
     arp_header_t* arp_header;
 
@@ -370,15 +356,15 @@ int arp_input( net_interface_t* interface, packet_t* packet ) {
     switch ( ntohw( arp_header->command ) ) {
         case ARP_CMD_REQUEST :
             arp_data = ( arp_data_t* )( arp_header + 1 );
-            arp_cache_insert( interface, arp_data->hw_sender, arp_data->ip_sender );
+            arp_cache_insert( device, arp_data->hw_sender, arp_data->ip_sender );
 
-            arp_handle_request( interface, arp_header );
+            arp_handle_request( device, arp_header );
 
             break;
 
         case ARP_CMD_REPLY :
             arp_data = ( arp_data_t* )( arp_header + 1 );
-            arp_cache_insert( interface, arp_data->hw_sender, arp_data->ip_sender );
+            arp_cache_insert( device, arp_data->hw_sender, arp_data->ip_sender );
 
             break;
 

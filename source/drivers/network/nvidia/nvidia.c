@@ -1764,16 +1764,11 @@ static int nv_rx_process(struct net_device *dev, int limit)
         }
 
         /* got a valid packet - forward it to the network core */
-#if 0
-        skb_put(skb, len);
-        skb->protocol = eth_type_trans(skb, dev);
-        dprintk(KERN_DEBUG "%s: nv_rx_process: %d bytes, proto %d accepted.\n",
-                    dev->name, len, skb->protocol);
-        netif_rx(skb);
+
+        net_device_insert_packet( dev, skb );
 
         dev->stats.rx_packets++;
         dev->stats.rx_bytes += len;
-#endif
 
 next_pkt:
         if (__unlikely(np->get_rx.orig++ == np->last_rx.orig))
@@ -1838,20 +1833,12 @@ static int nv_rx_process_optimized(struct net_device *dev, int limit)
                 //skb->ip_summed = CHECKSUM_UNNECESSARY;
             }
 
-#if 0
             /* got a valid packet - forward it to the network core */
-            skb_put(skb, len);
-            skb->protocol = eth_type_trans(skb, dev);
-            prefetch(skb->data);
 
-            dprintk(KERN_DEBUG "%s: nv_rx_process_optimized: %d bytes, proto %d accepted.\n",
-                dev->name, len, skb->protocol);
-
-            netif_rx(skb);
+            net_device_insert_packet( dev, skb );
 
             dev->stats.rx_packets++;
             dev->stats.rx_bytes += len;
-#endif
         } else {
             delete_packet(skb);
         }

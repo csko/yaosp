@@ -138,7 +138,9 @@ static int socket_write( void* fs_cookie, void* node, void* file_cookie, const v
 }
 
 static int socket_ioctl( void* fs_cookie, void* node, void* file_cookie, int command, void* buffer, bool from_kernel ) {
-    return network_interface_ioctl( command, buffer, from_kernel );
+    //return network_interface_ioctl( command, buffer, from_kernel );
+    // todo
+    return -ENOSYS;
 }
 
 static int socket_read_stat( void* fs_cookie, void* node, struct stat* stat ) {

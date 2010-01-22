@@ -92,16 +92,16 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     ip_header->time_to_live = 255;
     ip_header->protocol = protocol;
 
-    memcpy( ip_header->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
+    memcpy( ip_header->src_address, route->device->ip_addr, IPV4_ADDR_LEN );
     memcpy( ip_header->dest_address, dest_ip, IPV4_ADDR_LEN );
 
     ip_header->checksum = 0;
     ip_header->checksum = ip_checksum( ( uint16_t*)ip_header, sizeof( ipv4_header_t ) );
 
     if ( route->flags & ROUTE_GATEWAY ) {
-        error = arp_send_packet( route->interface, route->gateway_addr, packet );
+        error = arp_send_packet( route->device, route->gateway_addr, packet );
     } else {
-        error = arp_send_packet( route->interface, dest_ip, packet );
+        error = arp_send_packet( route->device, dest_ip, packet );
     }
 
     put_route( route );
@@ -127,16 +127,16 @@ int ipv4_send_packet_via_route( route_t* route, uint8_t* dest_ip, packet_t* pack
     ip_header->time_to_live = 255;
     ip_header->protocol = protocol;
 
-    memcpy( ip_header->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
+    memcpy( ip_header->src_address, route->device->ip_addr, IPV4_ADDR_LEN );
     memcpy( ip_header->dest_address, dest_ip, IPV4_ADDR_LEN );
 
     ip_header->checksum = 0;
     ip_header->checksum = ip_checksum( ( uint16_t*)ip_header, sizeof( ipv4_header_t ) );
 
     if ( route->flags & ROUTE_GATEWAY ) {
-        return arp_send_packet( route->interface, route->gateway_addr, packet );
+        return arp_send_packet( route->device, route->gateway_addr, packet );
     } else {
-        return arp_send_packet( route->interface, dest_ip, packet );
+        return arp_send_packet( route->device, dest_ip, packet );
     }
 }
 

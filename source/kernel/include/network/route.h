@@ -1,6 +1,6 @@
 /* Route handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,7 @@
 
 #include <types.h>
 #include <network/ipv4.h>
-#include <network/interface.h>
+#include <network/device.h>
 #include <lib/hashtable.h>
 
 #include <arch/atomic.h>
@@ -37,10 +37,10 @@ typedef struct route {
     uint8_t gateway_addr[ IPV4_ADDR_LEN ];
     uint32_t flags;
 
-    net_interface_t* interface;
+    net_device_t* device;
 } route_t;
 
-route_t* create_route( net_interface_t* interface, uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags );
+route_t* create_route( net_device_t* device, uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags );
 int insert_route( route_t* route );
 
 route_t* find_route( uint8_t* ipv4_address );

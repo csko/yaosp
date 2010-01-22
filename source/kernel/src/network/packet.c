@@ -49,19 +49,11 @@ void delete_packet( packet_t* packet ) {
     kfree( packet );
 }
 
-packet_queue_t* create_packet_queue( void ) {
-    packet_queue_t* queue;
-
-    queue = ( packet_queue_t* )kmalloc( sizeof( packet_queue_t ) );
-
-    if ( queue == NULL ) {
-        goto error1;
-    }
-
+int packet_queue_init( packet_queue_t* queue ) {
     queue->sync = semaphore_create( "packet queue semaphore", 0 );
 
     if ( queue->sync < 0 ) {
-        goto error2;
+        return -1;
     }
 
     init_spinlock( &queue->lock, "packet queue lock" );
@@ -69,27 +61,22 @@ packet_queue_t* create_packet_queue( void ) {
     queue->first = NULL;
     queue->last = NULL;
 
-    return queue;
-
- error2:
-    kfree( queue );
-
- error1:
-    return NULL;
+    return 0;
 }
 
-void delete_packet_queue( packet_queue_t* packet_queue ) {
+int packet_queue_destroy( packet_queue_t* queue ) {
     packet_t* packet;
 
-    while ( packet_queue->first != NULL ) {
-        packet = packet_queue->first;
-        packet_queue->first = packet->next;
+    while ( queue->first != NULL ) {
+        packet = queue->first;
+        queue->first = packet->next;
 
         delete_packet( packet );
     }
 
-    semaphore_destroy( packet_queue->sync );
-    kfree( packet_queue );
+    semaphore_destroy( queue->sync );
+
+    return 0;
 }
 
 int packet_queue_insert( packet_queue_t* queue, packet_t* packet ) {

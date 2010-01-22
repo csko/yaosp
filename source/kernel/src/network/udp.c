@@ -190,16 +190,16 @@ static int udp_recvmsg( socket_t* socket, struct msghdr* msg, int flags ) {
     }
 
     if ( udp_socket->nonblocking ) {
-        if ( packet_queue_is_empty( udp_socket->rx_queue ) ) {
+        if ( packet_queue_is_empty( &udp_socket->rx_queue ) ) {
             ret = -EWOULDBLOCK;
             goto out;
         }
     } else {
-        while ( packet_queue_is_empty( udp_socket->rx_queue ) ) {
+        while ( packet_queue_is_empty( &udp_socket->rx_queue ) ) {
             condition_wait( udp_socket->rx_condition, udp_socket->lock );
         }
 
-        if ( packet_queue_is_empty( udp_socket->rx_queue ) ) {
+        if ( packet_queue_is_empty( &udp_socket->rx_queue ) ) {
             ret = -EINTR;
             goto out;
         }
@@ -208,7 +208,7 @@ static int udp_recvmsg( socket_t* socket, struct msghdr* msg, int flags ) {
 
     /* Get the first packet from the RX queue of the socket */
 
-    packet = packet_queue_pop_head( udp_socket->rx_queue, 0 );
+    packet = packet_queue_pop_head( &udp_socket->rx_queue, 0 );
     ASSERT( packet != NULL );
 
     /* Copy the data from the packet */
@@ -447,12 +447,7 @@ int udp_create_socket( socket_t* socket ) {
         goto error3;
     }
 
-    udp_socket->rx_queue = create_packet_queue();
-
-    if ( udp_socket->rx_queue == NULL ) {
-        error = -ENOMEM;
-        goto error4;
-    }
+    packet_queue_init( &udp_socket->rx_queue );
 
     udp_socket->ref_count = 1;
     udp_socket->port = NULL;
@@ -464,9 +459,6 @@ int udp_create_socket( socket_t* socket ) {
     socket->operations = &udp_socket_calls;
 
     return 0;
-
- error4:
-    condition_destroy( udp_socket->rx_condition );
 
  error3:
     mutex_destroy( udp_socket->lock );
@@ -505,7 +497,7 @@ int udp_input( packet_t* packet ) {
     }
 
     mutex_lock( udp_socket->lock, LOCK_IGNORE_SIGNAL );
-    packet_queue_insert( udp_socket->rx_queue, packet );
+    packet_queue_insert( &udp_socket->rx_queue, packet );
     mutex_unlock( udp_socket->lock );
     condition_signal( udp_socket->rx_condition );
 

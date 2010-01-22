@@ -1,6 +1,6 @@
 /* Route handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -27,13 +27,12 @@
 #include <mm/kmalloc.h>
 #include <lock/mutex.h>
 #include <network/route.h>
-#include <network/interface.h>
 #include <lib/string.h>
 
 static lock_id route_mutex;
 static hashtable_t route_table;
 
-route_t* create_route( net_interface_t* interface, uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
+route_t* create_route( net_device_t* device, uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
     route_t* route;
 
     route = ( route_t* )kmalloc( sizeof( route_t ) );
@@ -53,7 +52,7 @@ route_t* create_route( net_interface_t* interface, uint8_t* net_addr, uint8_t* n
     }
 
     route->flags = flags;
-    route->interface = interface;
+    route->device = device;
 
     return route;
 }
@@ -87,32 +86,6 @@ typedef struct route_iterator_data {
     route_t* route;
 } route_iterator_data_t;
 
-static int interface_iterator( hashitem_t* item, void* _data ) {
-    net_interface_t* interface;
-    route_iterator_data_t* data;
-
-    interface = ( net_interface_t* )item;
-    data = ( route_iterator_data_t* )_data;
-
-    if ( ( interface->flags & IFF_UP ) == 0 ) {
-        return 0;
-    }
-
-    if ( IP_EQUALS_MASKED( interface->ip_address, data->ipv4_address, interface->netmask ) ) {
-        route_t* route;
-
-        route = create_route( interface, interface->ip_address, interface->netmask, NULL, 0 );
-
-        if ( route != NULL ) {
-            data->route = route;
-
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
 static int route_iterator( hashitem_t* item, void* _data ) {
     route_t* route;
     route_iterator_data_t* data;
@@ -130,21 +103,43 @@ static int route_iterator( hashitem_t* item, void* _data ) {
 }
 
 route_t* find_route( uint8_t* ipv4_address ) {
+    int i;
     int ret;
+    int size;
     route_iterator_data_t data;
 
     data.ipv4_address = ipv4_address;
     data.route = NULL;
 
-    /* Check the interfaces */
+    /* Check the network interfaces */
 
-    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
-    ret = hashtable_iterate( &interface_table, interface_iterator, &data );
-    mutex_unlock( interface_mutex );
+    size = net_device_get_count();
 
-    if ( ret != 0 ) {
-        ASSERT( data.route != NULL );
-        return data.route;
+    for ( i = 0; i < size; i++ ) {
+        net_device_t* device;
+
+        device = net_device_get_nth( i );
+
+        /* Skip those interfaces that are not UP. */
+
+        if ( ( net_device_flags( device ) & NETDEV_UP ) == 0 ) {
+            goto try_next;
+        }
+
+        /* Check if this interface is in the same subnet */
+
+        if ( IP_EQUALS_MASKED( device->ip_addr, ipv4_address, device->netmask ) ) {
+            route_t* route;
+
+            route = create_route( device, device->ip_addr, device->netmask, NULL, 0 );
+
+            if ( route != NULL ) {
+                return route;
+            }
+        }
+
+ try_next:
+        net_device_put( device );
     }
 
     /* Check the route table */
@@ -198,7 +193,7 @@ void put_route( route_t* route ) {
     mutex_unlock( route_mutex );
 
     if ( do_delete ) {
-        /* TODO: put the interface */
+        net_device_put( route->device );
         kfree( route );
     }
 }

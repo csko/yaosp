@@ -32,7 +32,7 @@
 #define ETH_P_IP  0x0800
 #define ETH_P_ARP 0x0806
 
-struct net_interface;
+struct net_device;
 
 typedef struct ethernet_header {
     uint8_t dest[ ETH_ADDR_LEN ];
@@ -61,6 +61,6 @@ static inline void random_ethernet_address( uint8_t* address ) {
 }
 
 
-int ethernet_send_packet( struct net_interface* interface, uint8_t* hw_address, uint16_t protocol, packet_t* packet );
+int ethernet_send_packet( struct net_device* device, uint8_t* hw_address, uint16_t protocol, packet_t* packet );
 
 #endif /* _NETWORK_ETHERNET_H_ */

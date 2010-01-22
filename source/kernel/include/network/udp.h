@@ -50,7 +50,7 @@ typedef struct udp_socket {
     int nonblocking;
 
     lock_id rx_condition;
-    packet_queue_t* rx_queue;
+    packet_queue_t rx_queue;
 
     udp_port_t* port;
     char bind_to_device[ IFNAMSIZ ];

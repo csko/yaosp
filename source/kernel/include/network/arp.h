@@ -24,7 +24,7 @@
 #include <network/packet.h>
 #include <network/ipv4.h>
 #include <network/ethernet.h>
-#include <network/interface.h>
+#include <network/device.h>
 
 #define ARP_HEADER_LEN 8
 #define ARP_DATA_LEN   ( 2 * ETH_ADDR_LEN + 2 * IPV4_ADDR_LEN )
@@ -57,7 +57,7 @@ typedef struct arp_pending_request {
     hashitem_t hash;
 
     uint8_t ip_address[ IPV4_ADDR_LEN ];
-    packet_queue_t* packet_queue;
+    packet_queue_t packet_queue;
 } arp_pending_request_t;
 
 typedef struct arp_cache_item {
@@ -69,12 +69,12 @@ typedef struct arp_cache_item {
     uint64_t expire_time;
 } arp_cache_item_t;
 
-int arp_interface_init( net_interface_t* interface );
+int arp_interface_init( net_device_t* device );
 
-int arp_cache_insert( net_interface_t* interface, uint8_t* hw_address, uint8_t* ip_address );
+int arp_cache_insert( net_device_t* device, uint8_t* hw_address, uint8_t* ip_address );
 
-int arp_send_packet( net_interface_t* interface, uint8_t* dest_ip, packet_t* packet );
-int arp_input( net_interface_t* interface, packet_t* packet );
+int arp_send_packet( net_device_t* device, uint8_t* dest_ip, packet_t* packet );
+int arp_input( net_device_t* device, packet_t* packet );
 
 int init_arp( void );
 

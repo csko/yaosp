@@ -20,8 +20,11 @@
 #define _NETWORK_DEVICE_H_
 
 #include <types.h>
+#include <thread.h>
 #include <network/packet.h>
 #include <network/interface.h>
+#include <network/ipv4.h>
+#include <lib/hashtable.h>
 
 #define ntohw(n) \
     ((((uint16_t)(n) & 0xFF) << 8) | ((uint16_t)(n) >> 8))
@@ -32,7 +35,9 @@
 #define htonl ntohl
 
 enum {
-    NETDEV_CARRIER_ON = ( 1 << 0 )
+    NETDEV_CARRIER_ON = ( 1 << 0 ),
+    NETDEV_RUNNING = ( 1 << 1 ),
+    NETDEV_UP = ( 1 << 2 )
 };
 
 typedef enum netdev_tx {
@@ -61,27 +66,48 @@ typedef struct net_device_ops {
 
 typedef struct net_device {
     char name[ IFNAMSIZ ];
+    int ref_count;
 
     int mtu;
     atomic_t flags;
-    uint8_t dev_addr[ 6 ];
+    uint8_t dev_addr[ ETH_ADDR_LEN ];
+    uint8_t ip_addr[ IPV4_ADDR_LEN ];
+    uint8_t netmask[ IPV4_ADDR_LEN ];
 
     net_device_ops_t* ops;
     net_device_stats_t stats;
 
     void* private;
+
+    thread_id rx_thread;
+    packet_queue_t input_queue;
+
+    lock_id arp_lock;
+    hashtable_t arp_cache;
+    hashtable_t arp_requests;
 } net_device_t;
 
 net_device_t* net_device_create( size_t priv_size );
 int net_device_free( net_device_t* device );
 int net_device_register( net_device_t* device );
 
+net_device_t* net_device_get_nth( int index );
+int net_device_get_count( void );
+int net_device_put( net_device_t* device );
+
+int net_device_flags( net_device_t* device );
 int net_device_running( net_device_t* device );
 
 int net_device_carrier_ok( net_device_t* device );
 int net_device_carrier_on( net_device_t* device );
 int net_device_carrier_off( net_device_t* device );
 
+int net_device_insert_packet( net_device_t* device, packet_t* packet );
+int net_device_transmit( net_device_t* device, packet_t* packet );
+
 void* net_device_get_private( net_device_t* device );
+
+int net_device_init( void );
+int net_device_start( void );
 
 #endif /* _NETWORK_DEVICE_H_ */
