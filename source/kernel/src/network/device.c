@@ -41,6 +41,7 @@ net_device_t* net_device_create( size_t priv_size ) {
 
     device->ref_count = 1;
     device->private = ( void* )( device + 1 );
+    device->mtu = 1500; /* todo */
 
     packet_queue_init( &device->input_queue );
 
@@ -86,6 +87,33 @@ int net_device_register( net_device_t* device ) {
     mutex_unlock( device_lock );
 
     return error;
+}
+
+net_device_t* net_device_get( char* name ) {
+    int i;
+    int size;
+    net_device_t* device = NULL;
+
+    mutex_lock( device_lock, LOCK_IGNORE_SIGNAL );
+
+    size = array_get_size( &device_table );
+
+    for ( i = 0; i < size; i++ ) {
+        net_device_t* tmp;
+
+        tmp = ( net_device_t* )array_get_item( &device_table, i );
+
+        if ( strcmp( tmp->name, name ) == 0 ) {
+            device = tmp;
+            device->ref_count++;
+
+            break;
+        }
+    }
+
+    mutex_unlock( device_lock );
+
+    return device;
 }
 
 net_device_t* net_device_get_nth( int index ) {

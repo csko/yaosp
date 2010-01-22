@@ -247,12 +247,12 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
         return -ENETUNREACH;
     }
 
-    memcpy( socket->src_address, route->interface->ip_address, IPV4_ADDR_LEN );
+    memcpy( socket->src_address, route->device->ip_addr, IPV4_ADDR_LEN );
     socket->src_port = ( get_system_time() % 65535 ) + 1;
 
     /* Calculate our MSS value */
 
-    tcp_socket->mss = route->interface->mtu - ( IPV4_HEADER_LEN + TCP_HEADER_LEN );
+    tcp_socket->mss = route->device->mtu - ( IPV4_HEADER_LEN + TCP_HEADER_LEN );
 
     put_route( route );
 

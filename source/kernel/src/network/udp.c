@@ -345,7 +345,7 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
 
     udp_header->checksum = 0;
     udp_header->checksum = udp_checksum(
-        route->interface->ip_address,
+        route->device->ip_addr,
         ( uint8_t* )&address->sin_addr.s_addr,
         ( uint8_t* )udp_header,
         sizeof( udp_header_t ) + payload_size

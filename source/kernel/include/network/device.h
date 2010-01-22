@@ -91,6 +91,7 @@ net_device_t* net_device_create( size_t priv_size );
 int net_device_free( net_device_t* device );
 int net_device_register( net_device_t* device );
 
+net_device_t* net_device_get( char* name );
 net_device_t* net_device_get_nth( int index );
 int net_device_get_count( void );
 int net_device_put( net_device_t* device );

@@ -33,7 +33,7 @@ int ethernet_send_packet( net_device_t* device, uint8_t* hw_address, uint16_t pr
     eth_header->proto = htonw( protocol );
 
     memcpy( eth_header->dest, hw_address, ETH_ADDR_LEN );
-    memcpy( eth_header->src, interface->hw_address, ETH_ADDR_LEN );
+    memcpy( eth_header->src, device->dev_addr, ETH_ADDR_LEN );
 
     /* Send the packet */
 

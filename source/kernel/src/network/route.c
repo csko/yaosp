@@ -104,7 +104,6 @@ static int route_iterator( hashitem_t* item, void* _data ) {
 
 route_t* find_route( uint8_t* ipv4_address ) {
     int i;
-    int ret;
     int size;
     route_iterator_data_t data;
 
@@ -159,23 +158,16 @@ route_t* find_route( uint8_t* ipv4_address ) {
     return data.route;
 }
 
-route_t* find_device_route( const char* device ) {
-    route_t* route;
-    net_interface_t* interface;
+route_t* find_device_route( char* name ) {
+    net_device_t* device;
 
-    mutex_lock( interface_mutex, LOCK_IGNORE_SIGNAL );
+    device = net_device_get( name );
 
-    interface = ( net_interface_t* )hashtable_get( &interface_table, ( const void* )device );
-
-    if ( interface != NULL ) {
-        route = create_route( interface, interface->ip_address, interface->netmask, NULL, 0 );
-    } else {
-        route = NULL;
+    if ( device == NULL ) {
+        return NULL;
     }
 
-    mutex_unlock( interface_mutex );
-
-    return route;
+    return create_route( device, device->ip_addr, device->netmask, NULL, 0 );
 }
 
 void put_route( route_t* route ) {
