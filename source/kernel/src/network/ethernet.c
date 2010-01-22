@@ -20,7 +20,34 @@
 
 #ifdef ENABLE_NETWORK
 
+#include <console.h>
 #include <network/device.h>
+#include <network/ethernet.h>
+#include <network/arp.h>
+
+int ethernet_input( net_device_t* device, packet_t* packet ) {
+    ethernet_header_t* eth_header;
+
+    eth_header = ( ethernet_header_t* )packet->data;
+    packet->network_data = ( uint8_t* )( eth_header + 1 );
+
+    switch ( ntohw( eth_header->proto ) ) {
+        case ETH_P_IP :
+            ipv4_input( packet );
+            break;
+
+        case ETH_P_ARP :
+            arp_input( device, packet );
+            break;
+
+        default :
+            kprintf( WARNING, "net: Unknown protocol: %x\n", ntohw( eth_header->proto ) );
+            delete_packet( packet );
+            break;
+    }
+
+    return 0;
+}
 
 int ethernet_send_packet( net_device_t* device, uint8_t* hw_address, uint16_t protocol, packet_t* packet ) {
     int error;

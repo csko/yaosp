@@ -47,14 +47,14 @@ static uint16_t tcp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8
     checksum = 0;
     data = ( uint16_t* )src_address;
 
-    for ( i = 0; i < IPV4_ADDR_LEN / 2; i++ ) {
-        checksum += data[ i ];
+    for ( i = 0; i < IPV4_ADDR_LEN / 2; i++, data++ ) {
+        checksum += *data;
     }
 
     data = ( uint16_t* )dest_address;
 
-    for ( i = 0; i < IPV4_ADDR_LEN / 2; i++ ) {
-        checksum += data[ i ];
+    for ( i = 0; i < IPV4_ADDR_LEN / 2; i++, data++ ) {
+        checksum += *data;
     }
 
     checksum += htonw( IP_PROTO_TCP );
@@ -62,18 +62,12 @@ static uint16_t tcp_checksum( uint8_t* src_address, uint8_t* dest_address, uint8
 
     data = ( uint16_t* )tcp_header;
 
-    for ( i = 0; i < tcp_size / 2; i++ ) {
-        checksum += data[ i ];
+    for ( i = 0; i < tcp_size / 2; i++, data++ ) {
+        checksum += *data;
     }
 
     if ( ( tcp_size % 2 ) != 0 ) {
-        uint8_t* tmp;
-        uint16_t tmp_data;
-
-        tmp = ( uint8_t* )( &data[ tcp_size / 2 ] );
-        tmp_data = ( uint16_t )*tmp;
-
-        checksum += tmp_data;
+        checksum += *( uint8_t* )data;
     }
 
     while ( checksum >> 16 ) {
@@ -1064,7 +1058,7 @@ int tcp_input( packet_t* packet ) {
 
     if ( tcp_checksum( ip_header->src_address, ip_header->dest_address,
                        ( uint8_t* )tcp_header, transport_size ) != 0 ) {
-        kprintf( WARNING, "tcp_input(): invalid TCP checksum, dropping packet.\n" );
+        kprintf( WARNING, "tcp_input(): Invalid TCP checksum, dropping packet.\n" );
         delete_packet( packet );
         return 0;
     }

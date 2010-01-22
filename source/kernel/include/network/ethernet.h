@@ -60,7 +60,7 @@ static inline void random_ethernet_address( uint8_t* address ) {
     address[ 0 ] |= 0x02; /* set local assignment bit (IEEE802) */
 }
 
-
+int ethernet_input( struct net_device* device, packet_t* packet );
 int ethernet_send_packet( struct net_device* device, uint8_t* hw_address, uint16_t protocol, packet_t* packet );
 
 #endif /* _NETWORK_ETHERNET_H_ */

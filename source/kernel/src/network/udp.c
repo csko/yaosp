@@ -92,6 +92,10 @@ static udp_socket_t* udp_get_endpoint( int port ) {
 
     mutex_unlock( udp_endpoint_lock );
 
+    if ( udp_port == NULL ) {
+        return NULL;
+    }
+
     return udp_port->udp_socket;
 }
 
@@ -476,7 +480,6 @@ int udp_input( packet_t* packet ) {
     udp_socket_t* udp_socket;
     ipv4_header_t* ip_header;
 
-
     ip_header = ( ipv4_header_t* )packet->network_data;
     udp_header = ( udp_header_t* )packet->transport_data;
 
@@ -484,7 +487,7 @@ int udp_input( packet_t* packet ) {
 
     if ( udp_checksum( ip_header->src_address, ip_header->dest_address,
                        ( uint8_t* )udp_header, transport_size ) != 0 ) {
-        kprintf( WARNING, "udp_input(): invalid UDP checksum, dropping packet.\n" );
+        kprintf( WARNING, "udp_input(): Invalid UDP checksum, dropping packet.\n" );
         delete_packet( packet );
         return 0;
     }

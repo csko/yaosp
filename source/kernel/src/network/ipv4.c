@@ -158,11 +158,10 @@ static int ipv4_handle_packet( packet_t* packet ) {
             return icmp_input( packet );
 
         default :
-            kprintf( WARNING, "ipv4_handle_packet(): unknown protocol: %x\n", ip_header->protocol );
+            kprintf( WARNING, "ipv4_handle_packet(): Unknown protocol: %x\n", ip_header->protocol );
+            delete_packet( packet );
             break;
     }
-
-    delete_packet( packet );
 
     return 0;
 }

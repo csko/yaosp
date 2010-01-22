@@ -234,7 +234,6 @@ static int network_rx_thread( void* data ) {
 
     while ( 1 ) {
         packet_t* packet;
-        ethernet_header_t* eth_header;
 
         /* Get the next packet from the input queue */
 
@@ -253,22 +252,7 @@ static int network_rx_thread( void* data ) {
 
         /* Process the incoming packet */
 
-        eth_header = ( ethernet_header_t* )packet->data;
-        packet->network_data = ( uint8_t* )( eth_header + 1 );
-
-        switch ( ntohw( eth_header->proto ) ) {
-            case ETH_P_IP :
-                ipv4_input( packet );
-                break;
-
-            case ETH_P_ARP :
-                arp_input( device, packet );
-                break;
-
-            default :
-                kprintf( WARNING, "net: unknown protocol: %x\n", ntohw( eth_header->proto ) );
-                break;
-        }
+        ethernet_input( device, packet );
     }
 
     return 0;
