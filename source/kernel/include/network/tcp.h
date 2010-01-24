@@ -1,6 +1,6 @@
 /* TCP packet handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,6 +20,7 @@
 #define _NETWORK_TCP_H_
 
 #include <types.h>
+#include <macros.h>
 #include <lock/mutex.h>
 #include <lock/condition.h>
 #include <vfs/vfs.h>
@@ -55,18 +56,18 @@ typedef struct tcp_header {
     uint16_t window_size;
     uint16_t checksum;
     uint16_t urgent_pointer;
-} __attribute__(( packed )) tcp_header_t;
+} __PACKED tcp_header_t;
 
 typedef struct tcp_option_header {
     uint8_t kind;
     uint8_t length;
-} __attribute__(( packed )) tcp_option_header_t;
+} __PACKED tcp_option_header_t;
 
 typedef struct tcp_mss_option {
     uint8_t kind;
     uint8_t length;
     uint16_t mss;
-} __attribute__(( packed )) tcp_mss_option_t;
+} __PACKED tcp_mss_option_t;
 
 typedef enum tcp_socket_state {
     TCP_STATE_CLOSED,

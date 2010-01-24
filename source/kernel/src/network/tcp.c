@@ -335,21 +335,29 @@ static int tcp_recvmsg( socket_t* socket, struct msghdr* msg, int flags ) {
 
     rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
 
-    /* If there is no available data on the socket, then wait for someting to come ... */
+    if ( tcp_socket->nonblocking ) {
+        if ( rx_data_size == 0 ) {
+            mutex_unlock( tcp_socket->mutex );
 
-    while ( rx_data_size == 0 ) {
-        condition_wait( tcp_socket->rx_queue, tcp_socket->mutex );
+            return -EWOULDBLOCK;
+        }
+    } else {
+        /* If there is no available data on the socket, then wait for someting to come ... */
 
-        rx_data_size = circular_pointer_diff(
-            &tcp_socket->rx_buffer,
-            &tcp_socket->rx_user_data,
-            &tcp_socket->rx_free_data
-        );
+        while ( rx_data_size == 0 ) {
+            condition_wait( tcp_socket->rx_queue, tcp_socket->mutex );
+
+            rx_data_size = circular_pointer_diff(
+                &tcp_socket->rx_buffer,
+                &tcp_socket->rx_user_data,
+                &tcp_socket->rx_free_data
+            );
+        }
     }
 
     /* Read the available data from the socket */
 
-    while ( rx_data_size > 0 ) {
+    while ( ( rx_data_size > 0 ) && ( i < msg->msg_iovlen ) ) {
         size_t to_copy;
         struct iovec* iov = &msg->msg_iov[ i ];
 
@@ -476,8 +484,6 @@ static int tcp_setsockopt( socket_t* socket, int level, int optname, void* optva
 static int tcp_set_flags( socket_t* socket, int flags ) {
     tcp_socket_t* tcp_socket;
 
-    DEBUG_LOG( "%s(): flags = %d\n", __FUNCTION__, flags );
-
     tcp_socket = ( tcp_socket_t* )socket->data;
 
     mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
@@ -495,8 +501,6 @@ static int tcp_set_flags( socket_t* socket, int flags ) {
 
 static int tcp_add_select_request( socket_t* socket, select_request_t* request ) {
     tcp_socket_t* tcp_socket;
-
-    DEBUG_LOG( "%s() type: %d\n", __FUNCTION__, request->type );
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
@@ -552,8 +556,6 @@ static int tcp_remove_select_request( socket_t* socket, select_request_t* reques
     tcp_socket_t* tcp_socket;
     select_request_t* prev;
     select_request_t* tmp;
-
-    DEBUG_LOG( "%s() type: %d\n", __FUNCTION__, request->type );
 
     tcp_socket = ( tcp_socket_t* )socket->data;
 
@@ -881,8 +883,6 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
 
                     mss_option = ( tcp_mss_option_t* )tcp_option_header;
 
-                    DEBUG_LOG( "MSS: %d\n", htonw( mss_option->mss ) );
-
                     break;
                 }
             }
@@ -938,25 +938,28 @@ static void tcp_notify_read_waiters( tcp_socket_t* tcp_socket ) {
 }
 
 static int tcp_handle_established( tcp_socket_t* tcp_socket, packet_t* packet ) {
+    uint8_t* data;
+    size_t data_size;
     socket_t* socket;
+    ipv4_header_t* ip_header;
     tcp_header_t* tcp_header;
 
     socket = ( socket_t* )tcp_socket->socket;
+    ip_header = ( ipv4_header_t* )packet->network_data;
     tcp_header = ( tcp_header_t* )packet->transport_data;
 
     tcp_socket->rx_last_received_seq = ntohl( tcp_header->seq_number );
 
-    if ( tcp_header->ctrl_flags & TCP_PSH ) {
-        uint8_t* data;
-        size_t data_size;
+    /* Calculate the data pointer and the data size in the incoming packet */
+
+    data = ( uint8_t* )tcp_header + ( tcp_header->data_offset >> 4 ) * 4;
+    data_size = htonw( ip_header->packet_size ) -
+        ( IPV4_HDR_SIZE( ip_header->version_and_size ) * 4 + ( tcp_header->data_offset >> 4 ) * 4 );
+
+    /* Handle incoming data if we have any ... */
+
+    if ( data_size > 0 ) {
         size_t handled_rx_size;
-
-        /* Calculate the data pointer and the data size in the incoming packet */
-
-        data = ( uint8_t* )tcp_header + ( tcp_header->data_offset >> 4 ) * 4;
-        data_size = ( packet->size -
-            ( ( ( uint32_t )packet->transport_data - ( uint32_t )packet->data ) +
-              ( tcp_header->data_offset >> 4 ) * 4 ) );
 
         /* Calculate the free size in the RX buffer */
 
