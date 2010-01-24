@@ -288,7 +288,7 @@ static int arp_handle_request( net_device_t* device, arp_header_t* arp_header ) 
 
     arp_request = ( arp_data_t* )( arp_header + 1 );
 
-    if ( memcmp( arp_request->ip_target, device->ip_addr, IPV4_ADDR_LEN ) != 0 ) {
+    if ( !IP_EQUALS( arp_request->ip_target, device->ip_addr ) ) {
         return 0;
     }
 
@@ -297,7 +297,7 @@ static int arp_handle_request( net_device_t* device, arp_header_t* arp_header ) 
     reply = create_packet( ETH_HEADER_LEN + ARP_HEADER_LEN + ARP_DATA_LEN );
 
     if ( reply == NULL ) {
-        kprintf( ERROR, "net: no memory for ARP reply packet!\n" );
+        kprintf( ERROR, "net: No memory for ARP reply packet.\n" );
         return -ENOMEM;
     }
 
@@ -322,9 +322,9 @@ static int arp_handle_request( net_device_t* device, arp_header_t* arp_header ) 
     /* ARP data */
 
     memcpy( arp_reply_data->hw_target, eth_header->dest, ETH_ADDR_LEN );
-    memcpy( arp_reply_data->ip_target, arp_request->ip_sender, IPV4_ADDR_LEN );
     memcpy( arp_reply_data->hw_sender, device->dev_addr, ETH_ADDR_LEN );
-    memcpy( arp_reply_data->ip_sender, device->ip_addr, IPV4_ADDR_LEN );
+    IP_COPY_ADDR( arp_reply_data->ip_target, arp_request->ip_sender );
+    IP_COPY_ADDR( arp_reply_data->ip_sender, device->ip_addr );
 
     /* Send the packet */
 
@@ -335,7 +335,7 @@ static int arp_handle_request( net_device_t* device, arp_header_t* arp_header ) 
         delete_packet( reply );
     }
 
-    return error;
+    return 0;
 }
 
 int arp_input( net_device_t* device, packet_t* packet ) {
