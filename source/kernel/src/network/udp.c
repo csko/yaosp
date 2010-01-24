@@ -482,8 +482,7 @@ int udp_input( packet_t* packet ) {
 
     ip_header = ( ipv4_header_t* )packet->network_data;
     udp_header = ( udp_header_t* )packet->transport_data;
-
-    transport_size = packet->size - ( ( uint32_t )packet->transport_data - ( uint32_t )packet->data );
+    transport_size = htonw( ip_header->packet_size ) - IPV4_HDR_SIZE( ip_header->version_and_size ) * 4;
 
     if ( udp_checksum( ip_header->src_address, ip_header->dest_address,
                        ( uint8_t* )udp_header, transport_size ) != 0 ) {
