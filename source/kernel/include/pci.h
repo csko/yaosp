@@ -81,7 +81,8 @@
 #define PCI_IDE                0x01 /* IDE controller */
 #define PCI_FLOPPY             0x02 /* floppy disk controller */
 #define PCI_IPI                0x03 /* IPI bus controller */
-#define PCI_RAID               0x03 /* RAID controller */
+#define PCI_RAID               0x04 /* RAID controller */
+#define PCI_SATA               0x06 /* SATA controller */
 #define PCI_MASS_STORAGE_OTHER 0x80 /* other mass storage controller */
 
 #define PCI_ADDRESS_IO_MASK        0xFFFFFFFC
@@ -116,6 +117,7 @@ typedef struct pci_bus {
     int ( *get_device_count )( void );
     pci_device_t* ( *get_device )( int index );
     int ( *enable_device )( pci_device_t* device, uint32_t flags );
+    int ( *enable_intx )( pci_device_t* device, int enable );
     int ( *read_config )( pci_device_t* device, int offset, int size, uint32_t* data );
     int ( *write_config )( pci_device_t* device, int offset, int size, uint32_t data );
 } pci_bus_t;

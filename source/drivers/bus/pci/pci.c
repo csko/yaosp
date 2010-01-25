@@ -107,15 +107,15 @@ static int pci_read_1( int bus, int dev, int func, int offset, int size, uint32_
 
     switch ( size ) {
         case 1 :
-            *data = inb( 0x0CFC + ( offset & 3 ) );
+            *( uint8_t* )data = inb( 0x0CFC + ( offset & 3 ) );
             break;
 
         case 2 :
-            *data = inw( 0x0CFC + ( offset & 2 ) );
+            *( uint16_t* )data = inw( 0x0CFC + ( offset & 2 ) );
             break;
 
         case 4 :
-            *data = inl( 0x0CFC );
+            *( uint32_t* )data = inl( 0x0CFC );
             break;
 
         default :
@@ -225,15 +225,15 @@ static int pci_read_2( int bus, int dev, int func, int offset, int size, uint32_
 
     switch ( size ) {
         case 1 :
-            *data = inb( 0xC000 | ( dev << 8 ) | offset );
+            *( uint8_t* )data = inb( 0xC000 | ( dev << 8 ) | offset );
             break;
 
         case 2 :
-            *data = inw( 0xC000 | ( dev << 8 ) | offset );
+            *( uint16_t* )data = inw( 0xC000 | ( dev << 8 ) | offset );
             break;
 
         case 4 :
-            *data = inl( 0xC000 | ( dev << 8 ) | offset );
+            *( uint32_t* )data = inl( 0xC000 | ( dev << 8 ) | offset );
             break;
 
         default :
@@ -517,25 +517,36 @@ static int pci_bus_enable_device( pci_device_t* device, uint32_t flags ) {
     return 0;
 }
 
+static int pci_bus_enable_intx( pci_device_t* device, int enable ) {
+    uint32_t command;
+    uint32_t new_command;
+
+    pci_access->read( device->bus, device->dev, device->func, PCI_COMMAND, 2, &command );
+
+    if ( enable ) {
+        new_command = command & ~PCI_COMMAND_INT_DISABLE;
+    } else {
+        new_command = command | PCI_COMMAND_INT_DISABLE;
+    }
+
+    if ( new_command != command ) {
+        pci_access->write( device->bus, device->dev, device->func, PCI_COMMAND, 2, new_command );
+    }
+
+    return 0;
+}
+
 static int pci_bus_read_config( pci_device_t* device, int offset, int size, uint32_t* data ) {
     return pci_access->read(
-        device->bus,
-        device->dev,
-        device->func,
-        offset,
-        size,
-        data
+        device->bus, device->dev, device->func,
+        offset, size, data
     );
 }
 
 static int pci_bus_write_config( pci_device_t* device, int offset, int size, uint32_t data ) {
     return pci_access->write(
-        device->bus,
-        device->dev,
-        device->func,
-        offset,
-        size,
-        data
+        device->bus, device->dev, device->func,
+        offset, size, data
     );
 }
 
@@ -543,6 +554,7 @@ static pci_bus_t pci_bus = {
     .get_device_count = pci_bus_get_device_count,
     .get_device = pci_bus_get_device,
     .enable_device = pci_bus_enable_device,
+    .enable_intx = pci_bus_enable_intx,
     .read_config = pci_bus_read_config,
     .write_config = pci_bus_write_config
 };
