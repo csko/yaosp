@@ -259,15 +259,15 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    printf( "Using graphics driver: %s\n", graphics_driver->name );
-    printf(
-        "Using screen mode: %dx%dx%d\n",
+    dbprintf( "Using graphics driver: %s.\n", graphics_driver->name );
+    dbprintf(
+        "Using screen mode: %dx%dx%d.\n",
         active_screen_mode.width, active_screen_mode.height,
-        colorspace_to_bpp( active_screen_mode.color_space ) * 4
+        colorspace_to_bpp( active_screen_mode.color_space ) * 8
     );
 
     if ( setup_graphics_mode() != 0 ) {
-        dbprintf( "Failed to setup graphics mode!\n" );
+        dbprintf( "Failed to setup graphics mode.\n" );
         return EXIT_FAILURE;
     }
 
@@ -278,41 +278,41 @@ int main( int argc, char** argv ) {
     init_applications();
 
     if ( init_font_manager() != 0 ) {
-        dbprintf( "Failed to initialize font manager\n" );
+        dbprintf( "Failed to initialize font manager.\n" );
         return EXIT_FAILURE;
     }
 
     font_manager_load_fonts();
 
     if ( init_default_decorator() != 0 ) {
-        dbprintf( "Failed to initialize default window decorator\n" );
+        dbprintf( "Failed to initialize default window decorator.\n" );
         return EXIT_FAILURE;
     }
 
     splash_inc_progress();
 
     if ( init_mouse_manager() != 0 ) {
-        printf( "Failed to initialize mouse manager\n" );
+        dbprintf( "Failed to initialize mouse manager.\n" );
         return EXIT_FAILURE;
     }
 
     splash_inc_progress();
 
     if ( init_windowmanager() != 0 ) {
-        printf( "Failed to initialize window manager\n" );
+        dbprintf( "Failed to initialize window manager.\n" );
         return EXIT_FAILURE;
     }
 
     splash_inc_progress();
 
     if ( init_input_system() != 0 ) {
-        dbprintf( "Failed to initialize input system!\n" );
+        dbprintf( "Failed to initialize input system.\n" );
         return EXIT_FAILURE;
     }
 
     splash_inc_progress();
 
-    if (  guiserver_mainloop() != 0 ) {
+    if ( guiserver_mainloop() != 0 ) {
         return EXIT_FAILURE;
     }
 
