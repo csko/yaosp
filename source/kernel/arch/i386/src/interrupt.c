@@ -1,6 +1,6 @@
 /* Interrupt handler functions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -73,18 +73,26 @@ idt_descriptor_t idt[ IDT_ENTRIES ];
 static uint8_t master_mask = 0xFF;
 static uint8_t slave_mask = 0xFF;
 
-static void set_trap_gate( int num, void* handler) {
-    idt[ num ].selector = KERNEL_CS;
-    idt[ num ].base_low = ( ( uint32_t )handler ) & 0xFFFF;
-    idt[ num ].base_high = ( ( uint32_t )handler ) >> 16;
-    idt[ num ].flags = 0xEF;
+static void set_trap_gate( int num, void* handler ) {
+    idt_descriptor_t* desc;
+
+    desc = &idt[ num ];
+
+    desc->selector = KERNEL_CS;
+    desc->base_low = ( ( uint32_t )handler ) & 0xFFFF;
+    desc->base_high = ( ( uint32_t )handler ) >> 16;
+    desc->flags = 0xEF;
 }
 
 static void set_interrupt_gate( int num, void* handler ) {
-    idt[ num ].selector = KERNEL_CS;
-    idt[ num ].base_low = ( ( uint32_t )handler ) & 0xFFFF;
-    idt[ num ].base_high = ( ( uint32_t )handler ) >> 16;
-    idt[ num ].flags = 0x8E;
+    idt_descriptor_t* desc;
+
+    desc = &idt[ num ];
+
+    desc->selector = KERNEL_CS;
+    desc->base_low = ( ( uint32_t )handler ) & 0xFFFF;
+    desc->base_high = ( ( uint32_t )handler ) >> 16;
+    desc->flags = 0x8E;
 }
 
 void arch_disable_irq( int irq ) {
