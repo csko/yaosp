@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -83,6 +83,7 @@ int window_mouse_exited( window_t* window );
 int window_mouse_moved( window_t* window, point_t* mouse_position );
 int window_mouse_pressed( window_t* window, int button );
 int window_mouse_released( window_t* window, int button );
+int window_mouse_scrolled( window_t* window, int amount );
 
 int window_close_request( window_t* window );
 

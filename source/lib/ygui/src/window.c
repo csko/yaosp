@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -597,10 +597,11 @@ static void* window_thread( void* arg ) {
                 window->mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
                 assert( window->mouse_widget != NULL );
 
+                point_copy( &window->mouse_position, &cmd->mouse_position );
+
                 /* Notify the widget */
 
                 point_sub_n( &widget_position, &cmd->mouse_position, &window->mouse_widget->position );
-
                 widget_mouse_entered( window->mouse_widget, &widget_position );
 
                 break;
@@ -624,6 +625,7 @@ static void* window_thread( void* arg ) {
                 new_mouse_widget = window_find_widget_at( window, &cmd->mouse_position );
                 assert( new_mouse_widget != NULL );
 
+                point_copy( &window->mouse_position, &cmd->mouse_position );
                 point_sub_n( &widget_position, &cmd->mouse_position, &new_mouse_widget->position );
 
                 if ( window->mouse_widget == new_mouse_widget ) {
@@ -683,10 +685,22 @@ static void* window_thread( void* arg ) {
                 cmd = ( msg_mouse_released_t* )buffer;
 
                 assert( window->mouse_down_widget != NULL );
-
                 widget_mouse_released( window->mouse_down_widget, cmd->button );
 
                 window->mouse_down_widget = NULL;
+
+                break;
+            }
+
+            case MSG_MOUSE_SCROLLED : {
+                point_t widget_position;
+                msg_mouse_scrolled_t* cmd;
+
+                cmd = ( msg_mouse_scrolled_t* )buffer;
+
+                assert( window->mouse_widget != NULL );
+                point_sub_n( &widget_position, &window->mouse_position, &window->mouse_widget->position );
+                widget_mouse_scrolled( window->mouse_widget, &widget_position, cmd->amount );
 
                 break;
             }

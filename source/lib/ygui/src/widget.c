@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -500,6 +500,14 @@ int widget_mouse_released( widget_t* widget, int mouse_button ) {
     }
 
     return widget->ops->mouse_released( widget, mouse_button );
+}
+
+int widget_mouse_scrolled( widget_t* widget, point_t* position, int amount ) {
+    if ( widget->ops->mouse_scrolled == NULL ) {
+        return 0;
+    }
+
+    return widget->ops->mouse_scrolled( widget, position, amount );
 }
 
 static int widget_find_event_handler( widget_t* widget, const char* name, int* pos ) {

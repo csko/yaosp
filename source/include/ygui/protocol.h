@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -68,6 +68,7 @@ enum {
     MSG_MOUSE_MOVED,
     MSG_MOUSE_PRESSED,
     MSG_MOUSE_RELEASED,
+    MSG_MOUSE_SCROLLED,
     MSG_WINDOW_CALLBACK,
     MSG_WINDOW_SET_ICON,
     MSG_WINDOW_ICON_UPDATED,
@@ -169,6 +170,10 @@ typedef struct msg_mouse_pressed {
 typedef struct msg_mouse_released {
     int button;
 } msg_mouse_released_t;
+
+typedef struct msg_mouse_scrolled {
+    int amount;
+} msg_mouse_scrolled_t;
 
 /* MSG_DESKTOP_GET_SIZE */
 

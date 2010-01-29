@@ -1,6 +1,6 @@
 /* PS/2 mouse driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -79,6 +79,16 @@ static int ps2_mouse_thread( void* arg ) {
             event.event = E_MOUSE_MOVED;
             event.param1 = data.dx;
             event.param2 = data.dy;
+
+            insert_input_event( &event );
+        }
+
+        if ( data.scroll != 0 ) {
+            input_event_t event;
+
+            event.event = E_MOUSE_SCROLLED;
+            event.param1 = data.scroll;
+            event.param2 = 0;
 
             insert_input_event( &event );
         }

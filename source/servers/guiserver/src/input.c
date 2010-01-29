@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -79,6 +79,7 @@ static void* input_thread_entry( void* arg ) {
                 break;
 
             case E_MOUSE_SCROLLED :
+                wm_mouse_scrolled( event.param1 );
                 break;
         }
     }

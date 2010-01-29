@@ -291,6 +291,16 @@ static int ps2_mouse_ioctl( void* node, void* _cookie, uint32_t command, void* a
             data->dy = -( ( ( packet[ 0 ] & 0x20 ) ? 0xFFFFFF00 : 0 ) | packet[ 2 ] );
             data->buttons = packet[ 0 ] & 0x7;
 
+            if ( device->packet_size == 4 ) {
+                data->scroll = packet[ 3 ] & 0x07;
+
+                if ( packet[ 3 ] & 0x08 ) {
+                    data->scroll |= ~0x07;
+                }
+            } else {
+                data->scroll = 0;
+            }
+
             ps2_lock_controller();
 
             if ( cookie->buffer_pos > device->packet_size ) {

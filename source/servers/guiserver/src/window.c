@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -549,6 +549,19 @@ int window_mouse_released( window_t* window, int mouse_button ) {
         cmd.button = mouse_button;
 
         send_ipc_message( window->client_port, MSG_MOUSE_RELEASED, &cmd, sizeof( msg_mouse_released_t ) );
+    }
+
+    return 0;
+}
+
+int window_mouse_scrolled( window_t* window, int amount ) {
+    if ( window->mouse_on_decorator ) {
+    } else {
+        msg_mouse_scrolled_t cmd;
+
+        cmd.amount = amount;
+
+        send_ipc_message( window->client_port, MSG_MOUSE_SCROLLED, &cmd, sizeof( msg_mouse_scrolled_t ) );
     }
 
     return 0;

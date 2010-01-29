@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -862,6 +862,18 @@ int wm_mouse_released( int button ) {
     if ( mouse_down_window != NULL ) {
         window_mouse_released( mouse_down_window, button );
         mouse_down_window = NULL;
+    }
+
+    pthread_mutex_unlock( &wm_mutex );
+
+    return 0;
+}
+
+int wm_mouse_scrolled( int amount ) {
+    pthread_mutex_lock( &wm_mutex );
+
+    if ( mouse_window != NULL ) {
+        window_mouse_scrolled( mouse_window, amount );
     }
 
     pthread_mutex_unlock( &wm_mutex );

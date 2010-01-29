@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -793,6 +793,41 @@ static int scrollpanel_mouse_released( widget_t* widget, int button ) {
     return 0;
 }
 
+static int scrollpanel_mouse_scrolled( widget_t* widget, point_t* position, int amount ) {
+    scrollpanel_t* scrollpanel;
+    scrollbar_hit_type_t hit_type;
+
+    scrollpanel = ( scrollpanel_t* )widget_get_data( widget );
+
+    hit_type = scrollbar_check_hit( &scrollpanel->vertical, position );
+
+    switch ( hit_type ) {
+        case HIT_SCROLL_BAR :
+        case HIT_BEFORE_SCROLL_BAR :
+        case HIT_AFTER_SCROLL_BAR :
+            do_v_scroll( widget, &scrollpanel->vertical, -amount * 15 );
+            break;
+
+        default :
+            break;
+    }
+
+    hit_type = scrollbar_check_hit( &scrollpanel->horizontal, position );
+
+    switch ( hit_type ) {
+        case HIT_SCROLL_BAR :
+        case HIT_BEFORE_SCROLL_BAR :
+        case HIT_AFTER_SCROLL_BAR :
+            do_h_scroll( widget, &scrollpanel->horizontal, -amount * 15 );
+            break;
+
+        default :
+            break;
+    }
+
+    return 0;
+}
+
 static int scrollpanel_get_preferred_size( widget_t* widget, point_t* size ) {
     scrollpanel_t* scrollpanel;
 
@@ -1180,6 +1215,7 @@ static widget_operations_t scrollpanel_ops = {
     .mouse_moved = scrollpanel_mouse_moved,
     .mouse_pressed = scrollpanel_mouse_pressed,
     .mouse_released = scrollpanel_mouse_released,
+    .mouse_scrolled = scrollpanel_mouse_scrolled,
     .get_minimum_size = NULL,
     .get_preferred_size = scrollpanel_get_preferred_size,
     .get_maximum_size = NULL,

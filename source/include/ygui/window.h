@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -71,6 +71,8 @@ typedef struct window {
     point_t position;
     widget_t* container;
     widget_t* focused_widget;
+
+    point_t mouse_position;
     widget_t* mouse_widget;
     widget_t* mouse_down_widget;
 

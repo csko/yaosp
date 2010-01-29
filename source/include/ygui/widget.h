@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -74,6 +74,7 @@ typedef struct widget_operations {
     int ( *mouse_moved )( struct widget* widget, point_t* position );
     int ( *mouse_pressed )( struct widget* widget, point_t* position, int mouse_button );
     int ( *mouse_released )( struct widget* widget, int mouse_button );
+    int ( *mouse_scrolled )( struct widget* widget, point_t* position, int amount );
     int ( *get_minimum_size )( struct widget* widget, point_t* size );
     int ( *get_preferred_size )( struct widget* widget, point_t* size );
     int ( *get_maximum_size )( struct widget* widget, point_t* size );
@@ -156,6 +157,7 @@ int widget_mouse_exited( widget_t* widget );
 int widget_mouse_moved( widget_t* widget, point_t* position );
 int widget_mouse_pressed( widget_t* widget, point_t* position, int mouse_button );
 int widget_mouse_released( widget_t* widget, int mouse_button );
+int widget_mouse_scrolled( widget_t* widget, point_t* position, int amount );
 
 /* Event related functions */
 

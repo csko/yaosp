@@ -1,6 +1,6 @@
 /* Input definitions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -106,6 +106,7 @@ enum {
 typedef struct mouse_movement {
     int dx;
     int dy;
+    int scroll;
     int buttons;
 } mouse_movement_t;
 
