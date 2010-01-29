@@ -107,15 +107,15 @@ static int pci_read_1( int bus, int dev, int func, int offset, int size, uint32_
 
     switch ( size ) {
         case 1 :
-            *( uint8_t* )data = inb( 0x0CFC + ( offset & 3 ) );
+            *data = inb( 0x0CFC + ( offset & 3 ) );
             break;
 
         case 2 :
-            *( uint16_t* )data = inw( 0x0CFC + ( offset & 2 ) );
+            *data = inw( 0x0CFC + ( offset & 2 ) );
             break;
 
         case 4 :
-            *( uint32_t* )data = inl( 0x0CFC );
+            *data = inl( 0x0CFC );
             break;
 
         default :
@@ -225,15 +225,15 @@ static int pci_read_2( int bus, int dev, int func, int offset, int size, uint32_
 
     switch ( size ) {
         case 1 :
-            *( uint8_t* )data = inb( 0xC000 | ( dev << 8 ) | offset );
+            *data = inb( 0xC000 | ( dev << 8 ) | offset );
             break;
 
         case 2 :
-            *( uint16_t* )data = inw( 0xC000 | ( dev << 8 ) | offset );
+            *data = inw( 0xC000 | ( dev << 8 ) | offset );
             break;
 
         case 4 :
-            *( uint32_t* )data = inl( 0xC000 | ( dev << 8 ) | offset );
+            *data = inl( 0xC000 | ( dev << 8 ) | offset );
             break;
 
         default :
