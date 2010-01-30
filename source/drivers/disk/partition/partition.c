@@ -1,6 +1,6 @@
 /* Partition table parser
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -141,7 +141,7 @@ int create_device_partition( int fd, const char* device, int index, off_t offset
         return error;
     }
 
-    kprintf( INFO, "Created device node for partition: /device/%s\n", path );
+    kprintf( INFO, "/device/%s, size: %u Mb\n", path, node->size / 1000000 );
 
     return 0;
 }
@@ -165,6 +165,8 @@ int init_module( void ) {
     int dir;
     dirent_t entry;
     int error;
+
+    kprintf( INFO, "Detecting partitions ...\n" );
 
     error = mkdir( "/device/storage/partition", 0777 );
 

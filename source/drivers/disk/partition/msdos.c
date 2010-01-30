@@ -1,6 +1,6 @@
 /* Partition table parser
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -105,10 +105,10 @@ static int msdos_scan_partitions( const char* device ) {
 
     error = 0;
 
-error2:
+ error2:
     close( fd );
 
-error1:
+ error1:
     return error;
 }
 
