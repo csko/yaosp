@@ -1,6 +1,6 @@
 # yaOSp installer
 #
-# Copyright (c) 2009 Zoltan Kovacs
+# Copyright (c) 2009, 2010 Zoltan Kovacs
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -18,6 +18,7 @@
 import os
 import sys
 import tarfile
+import _yaosp
 
 def get_partition_list() :
     i = 1
@@ -65,6 +66,10 @@ def execute_and_wait( app, args ) :
             return False
 
     return True
+
+# Load the ext2 module if it is not loaded already
+
+_yaosp.load_module( "ext2" )
 
 # Select partition to install
 

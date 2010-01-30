@@ -1,6 +1,6 @@
 diff -Nru Python-2.5.4-orig/Lib/yaosp.py Python-2.5.4/Lib/yaosp.py
 --- Python-2.5.4-orig/Lib/yaosp.py	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Lib/yaosp.py	2010-01-15 09:37:08.000000000 +0100
++++ Python-2.5.4/Lib/yaosp.py	2010-01-30 14:06:01.000000000 +0100
 @@ -0,0 +1,139 @@
 +# yaosp bindings for python
 +#
@@ -143,8 +143,8 @@ diff -Nru Python-2.5.4-orig/Lib/yaosp.py Python-2.5.4/Lib/yaosp.py
 +				self._notify_msg_listeners( message, code, result )
 diff -Nru Python-2.5.4-orig/Modules/_yaospmodule.c Python-2.5.4/Modules/_yaospmodule.c
 --- Python-2.5.4-orig/Modules/_yaospmodule.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Modules/_yaospmodule.c	2010-01-15 09:37:08.000000000 +0100
-@@ -0,0 +1,415 @@
++++ Python-2.5.4/Modules/_yaospmodule.c	2010-01-30 18:26:17.000000000 +0100
+@@ -0,0 +1,429 @@
 +/* yaosp bindings for python
 + *
 + * Copyright (c) 2009 Attila Magyar
@@ -526,6 +526,19 @@ diff -Nru Python-2.5.4-orig/Modules/_yaospmodule.c Python-2.5.4/Modules/_yaospmo
 +	return Py_BuildValue( "i", result ) ;
 +}
 +
++static PyObject *yaosp_load_module( PyObject *self, PyObject *args ) {
++    int result;
++    const char* name;
++
++    if ( !PyArg_ParseTuple( args, "s", &name ) ) {
++        return NULL;
++    }
++
++    result = load_module( name );
++
++    return Py_BuildValue( "i", result );
++}
++
 +// TODO convert boottime, systemtime, uptime to datetime format
 +
 +static PyMethodDef yaospMethods[] = {
@@ -544,6 +557,7 @@ diff -Nru Python-2.5.4-orig/Modules/_yaospmodule.c Python-2.5.4/Modules/_yaospmo
 +	{"recv_ipc_message", yaosp_ipc_receive_message, METH_VARARGS, "Receive IPC message"},
 +	{"register_named_ipc", yaosp_register_named_ipc_port, METH_VARARGS, "Register named IPC port"},
 +	{"get_named_ipc", yaosp_get_named_ipc_port, METH_VARARGS, "Get named IPC port"},
++    {"load_module", yaosp_load_module, METH_VARARGS, "Load module"},
 +	{NULL, NULL, 0, NULL}
 +};
 +
@@ -562,7 +576,7 @@ diff -Nru Python-2.5.4-orig/Modules/_yaospmodule.c Python-2.5.4/Modules/_yaospmo
 +}
 diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 --- Python-2.5.4-orig/Modules/config.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/Modules/config.c	2010-01-15 09:37:08.000000000 +0100
++++ Python-2.5.4/Modules/config.c	2010-01-30 14:06:01.000000000 +0100
 @@ -0,0 +1,101 @@
 +/* Generated automatically from ./Modules/config.c.in by makesetup. */
 +/* -*- C -*- ***********************************************
@@ -667,7 +681,7 @@ diff -Nru Python-2.5.4-orig/Modules/config.c Python-2.5.4/Modules/config.c
 +
 diff -Nru Python-2.5.4-orig/Modules/getpath.c Python-2.5.4/Modules/getpath.c
 --- Python-2.5.4-orig/Modules/getpath.c	2006-07-10 03:18:57.000000000 +0200
-+++ Python-2.5.4/Modules/getpath.c	2010-01-15 09:37:08.000000000 +0100
++++ Python-2.5.4/Modules/getpath.c	2010-01-30 14:06:01.000000000 +0100
 @@ -6,102 +6,12 @@
  #include <sys/types.h>
  #include <string.h>
@@ -1255,7 +1269,7 @@ diff -Nru Python-2.5.4-orig/Modules/getpath.c Python-2.5.4/Modules/getpath.c
  
 diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodule.c
 --- Python-2.5.4-orig/Modules/posixmodule.c	2008-12-13 16:14:30.000000000 +0100
-+++ Python-2.5.4/Modules/posixmodule.c	2010-01-15 09:37:08.000000000 +0100
++++ Python-2.5.4/Modules/posixmodule.c	2010-01-30 14:06:01.000000000 +0100
 @@ -15,7 +15,7 @@
  
  #ifdef __APPLE__
@@ -1596,7 +1610,7 @@ diff -Nru Python-2.5.4-orig/Modules/posixmodule.c Python-2.5.4/Modules/posixmodu
  #ifdef HAVE_FSTATVFS
 diff -Nru Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform.c
 --- Python-2.5.4-orig/Python/getplatform.c	2000-09-02 01:29:29.000000000 +0200
-+++ Python-2.5.4/Python/getplatform.c	2010-01-15 09:37:08.000000000 +0100
++++ Python-2.5.4/Python/getplatform.c	2010-01-30 14:06:01.000000000 +0100
 @@ -2,7 +2,7 @@
  #include "Python.h"
  
@@ -1608,7 +1622,7 @@ diff -Nru Python-2.5.4-orig/Python/getplatform.c Python-2.5.4/Python/getplatform
  const char *
 diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 --- Python-2.5.4-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pbuild.xml	2010-01-15 09:37:35.000000000 +0100
++++ Python-2.5.4/pbuild.xml	2010-01-30 14:06:01.000000000 +0100
 @@ -0,0 +1,218 @@
 +<!--
 +
@@ -1830,7 +1844,7 @@ diff -Nru Python-2.5.4-orig/pbuild.xml Python-2.5.4/pbuild.xml
 +</build>
 diff -Nru Python-2.5.4-orig/pyconfig.h Python-2.5.4/pyconfig.h
 --- Python-2.5.4-orig/pyconfig.h	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.5.4/pyconfig.h	2010-01-15 09:37:08.000000000 +0100
++++ Python-2.5.4/pyconfig.h	2010-01-30 14:06:01.000000000 +0100
 @@ -0,0 +1,1001 @@
 +/* pyconfig.h.  Generated from pyconfig.h.in by configure.  */
 +/* pyconfig.h.in.  Generated from configure.in by autoheader.  */
