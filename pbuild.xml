@@ -81,6 +81,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
         <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
 
+        <exec executable="python">
+            <arg>scripts/config_converter.py</arg>
+            <arg>scripts/config_livecd.xml</arg>
+            <arg>build/image/system/config/cfgserver.bin</arg>
+        </exec>
+
         <echo>Creating install base package</echo>
         <echo/>
         <echo>[TAR    ] yaosp_base.tar.bz2</echo>

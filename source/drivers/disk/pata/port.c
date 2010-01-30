@@ -1,6 +1,6 @@
 /* Parallel AT Attachment driver
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -41,7 +41,7 @@ int pata_port_wait( pata_port_t* port, uint8_t set, uint8_t clear, bool check_er
 
         if ( ( check_error ) &&
              ( ( status & PATA_STATUS_ERROR ) != 0 ) ) {
-            kprintf( ERROR, "pata: pata_port_wait(): Error! (status=%x)\n", status );
+            kprintf( ERROR, "pata: pata_port_wait(): Error! (port=%d:%d,status=%x)\n", port->channel, port->is_slave ? 1 : 0, status );
             return -1;
         }
 

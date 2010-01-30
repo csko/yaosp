@@ -1,6 +1,6 @@
 /* Parallel AT Attachment driver
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -112,9 +112,7 @@ static int pata_cdrom_open( void* node, uint32_t flags, void** cookie ) {
 
     if ( error < 0 ) {
         mutex_lock( port->mutex, LOCK_IGNORE_SIGNAL );
-
         port->open = false;
-
         mutex_unlock( port->mutex );
 
         return error;
@@ -158,15 +156,12 @@ static int pata_cdrom_read( void* node, void* cookie, void* buffer, off_t positi
 
     port = ( pata_port_t* )node;
 
-    if ( __unlikely( ( position % port->sector_size ) != 0 ) ) {
+    if ( ( ( position % port->sector_size ) != 0 ) ||
+         ( ( size % port->sector_size ) != 0 ) ) {
         return -EINVAL;
     }
 
-    if ( __unlikely( ( size % port->sector_size ) != 0 ) ) {
-        return -EINVAL;
-    }
-
-    if ( __unlikely( ( position + size ) > port->capacity ) ) {
+    if ( ( position + size ) > port->capacity ) {
         return -EINVAL;
     }
 

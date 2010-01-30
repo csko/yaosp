@@ -22,6 +22,7 @@
 
 #include <console.h>
 #include <module.h>
+#include <kernel.h>
 #include <vfs/vfs.h>
 #include <network/interface.h>
 #include <network/arp.h>
@@ -57,6 +58,8 @@ __init int net_load_drivers( void ) {
 }
 
 __init void init_network( void ) {
+    bool network_enabled;
+
     net_device_init();
 
     init_routes();
@@ -64,6 +67,15 @@ __init void init_network( void ) {
     init_socket();
     init_tcp();
     init_udp();
+
+    /* Don't load network drivers and don't start network interfaces if
+       networking is disabled by a kernel parameter. */
+
+    if ( ( get_kernel_param_as_bool( "enable_network", &network_enabled ) == 0 ) &&
+         ( !network_enabled ) ) {
+        kprintf( INFO, "Networking is disabled by kernel parameter.\n" );
+        return;
+    }
 
     net_load_drivers();
     net_device_start();

@@ -1,6 +1,6 @@
 /* VESA graphics driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <yaosp/region.h>
+#include <yaosp/debug.h>
 
 #include "vesa.h"
 
@@ -110,7 +111,7 @@ static int vesa_detect( void ) {
         mode_table[ i ].screen_mode.private = &mode_table[ i ];
     }
 
-    printf( "Found %d usable VESA video modes.\n", mode_count );
+    dbprintf( "Found %d usable VESA video modes.\n", mode_count );
 
     return 0;
 
