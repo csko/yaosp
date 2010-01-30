@@ -1,6 +1,6 @@
 /* Network interface configurator
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -96,11 +96,11 @@ static int if_up( struct ifreq* req, char* param ) {
         return 0;
     }
 
-    if ( req->ifr_ifru.ifru_flags & IFF_UP ) {
+    if ( req->ifr_flags & IFF_UP ) {
         return 0;
     }
 
-    req->ifr_ifru.ifru_flags |= IFF_UP;
+    req->ifr_flags |= IFF_UP;
 
     if ( ioctl( sock, SIOCSIFFLAGS, req ) != 0 ) {
         fprintf( stderr, "%s: failed to set interface flags.\n", argv0 );
@@ -115,11 +115,11 @@ static int if_down( struct ifreq* req, char* param ) {
         return 0;
     }
 
-    if ( ( req->ifr_ifru.ifru_flags & IFF_UP ) == 0 ) {
+    if ( ( req->ifr_flags & IFF_UP ) == 0 ) {
         return 0;
     }
 
-    req->ifr_ifru.ifru_flags &= ~IFF_UP;
+    req->ifr_flags &= ~IFF_UP;
 
     if ( ioctl( sock, SIOCSIFFLAGS, req ) != 0 ) {
         fprintf( stderr, "%s: failed to set interface flags.\n", argv0 );
@@ -172,8 +172,15 @@ static int show_network_interface( struct ifreq* req ) {
     printf( "      MTU: %d", req->ifr_ifru.ifru_mtu );
 
     ioctl( sock, SIOCGIFFLAGS, req );
-    printf( " Flags: -" );
-    /* todo */
+    printf( " Flags:" );
+
+    if ( req->ifr_flags == 0 ) {
+        printf( " -" );
+    } else {
+        if ( req->ifr_flags & IFF_RUNNING ) { printf( " running" ); }
+        if ( req->ifr_flags & IFF_UP ) { printf( " up" ); }
+    }
+
     printf( "\n" );
 
     return 0;

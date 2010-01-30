@@ -19,7 +19,8 @@
 #ifndef _NET_IF_H_
 #define _NET_IF_H_
 
-#define IFF_UP ( 1 << 2 )
+#define IFF_RUNNING ( 1 << 1 )
+#define IFF_UP      ( 1 << 2 )
 
 #define IFHWADDRLEN 6
 #define IFNAMSIZ    16
