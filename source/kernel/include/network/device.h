@@ -24,6 +24,7 @@
 #include <network/packet.h>
 #include <network/interface.h>
 #include <network/ipv4.h>
+#include <network/ethernet.h>
 #include <lib/hashtable.h>
 
 #define ntohw(n) \
@@ -55,6 +56,24 @@ typedef struct net_device_stats {
     uint32_t tx_errors;
     uint32_t rx_dropped;
     uint32_t tx_dropped;
+    uint32_t multicast;
+    uint32_t collisions;
+
+    uint32_t rx_length_errors;
+    uint32_t rx_over_errors;
+    uint32_t rx_crc_errors;
+    uint32_t rx_frame_errors;
+    uint32_t rx_fifo_errors;
+    uint32_t rx_missed_errors;
+
+    uint32_t tx_aborted_errors;
+    uint32_t tx_carrier_errors;
+    uint32_t tx_fifo_errors;
+    uint32_t tx_heartbeat_errors;
+    uint32_t tx_window_errors;
+
+    uint32_t rx_compressed;
+    uint32_t tx_compressed;
 } net_device_stats_t;
 
 struct net_device;

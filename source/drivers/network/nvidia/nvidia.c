@@ -1051,7 +1051,7 @@ static void nv_drain_tx(struct net_device *dev)
         }
 
         if (nv_release_txskb(np, &np->tx_skb[i])) {
-            // todo giszo dev->stats.tx_dropped++;
+            dev->stats.tx_dropped++;
         }
 
         np->tx_skb[i].dma = 0;
@@ -1421,17 +1421,17 @@ static int nv_tx_done(struct net_device *dev, int limit)
             if (flags & NV_TX_LASTPACKET) {
                 if (flags & NV_TX_ERROR) {
                     if (flags & NV_TX_UNDERFLOW){
-                        //dev->stats.tx_fifo_errors++;
+                        dev->stats.tx_fifo_errors++;
                     }
                     if (flags & NV_TX_CARRIERLOST){
-                        //dev->stats.tx_carrier_errors++;
+                        dev->stats.tx_carrier_errors++;
                     }
                     if ((flags & NV_TX_RETRYERROR) && !(flags & NV_TX_RETRYCOUNT_MASK))
                         nv_legacybackoff_reseed(dev);
-                    //dev->stats.tx_errors++;
+                    dev->stats.tx_errors++;
                 } else {
-                    //dev->stats.tx_packets++;
-                    //dev->stats.tx_bytes += np->get_tx_ctx->skb->len;
+                    dev->stats.tx_packets++;
+                    dev->stats.tx_bytes += np->get_tx_ctx->skb->size;
                 }
                 delete_packet(np->get_tx_ctx->skb);
                 np->get_tx_ctx->skb = NULL;
@@ -1441,17 +1441,17 @@ static int nv_tx_done(struct net_device *dev, int limit)
             if (flags & NV_TX2_LASTPACKET) {
                 if (flags & NV_TX2_ERROR) {
                     if (flags & NV_TX2_UNDERFLOW) {
-                        //dev->stats.tx_fifo_errors++;
+                        dev->stats.tx_fifo_errors++;
                     }
                     if (flags & NV_TX2_CARRIERLOST) {
-                        //dev->stats.tx_carrier_errors++;
+                        dev->stats.tx_carrier_errors++;
                     }
                     if ((flags & NV_TX2_RETRYERROR) && !(flags & NV_TX2_RETRYCOUNT_MASK))
                         nv_legacybackoff_reseed(dev);
-                    //dev->stats.tx_errors++;
+                    dev->stats.tx_errors++;
                 } else {
-                    //dev->stats.tx_packets++;
-                    //dev->stats.tx_bytes += np->get_tx_ctx->skb->len;
+                    dev->stats.tx_packets++;
+                    dev->stats.tx_bytes += np->get_tx_ctx->skb->size;
                 }
                 delete_packet(np->get_tx_ctx->skb);
                 np->get_tx_ctx->skb = NULL;
@@ -1487,7 +1487,7 @@ static int nv_tx_done_optimized(struct net_device *dev, int limit)
 
         if (flags & NV_TX2_LASTPACKET) {
             if (!(flags & NV_TX2_ERROR)) {
-                //dev->stats.tx_packets++;
+                dev->stats.tx_packets++;
             } else {
                 if ((flags & NV_TX2_RETRYERROR) && !(flags & NV_TX2_RETRYCOUNT_MASK)) {
                     if (np->driver_data & DEV_HAS_GEAR_MODE)
@@ -1691,7 +1691,7 @@ static int nv_rx_process(struct net_device *dev, int limit)
                     if ((flags & NV_RX_ERROR_MASK) == NV_RX_ERROR4) {
                         len = nv_getlen(dev, skb->data, len);
                         if (len < 0) {
-                            //dev->stats.rx_errors++;
+                            dev->stats.rx_errors++;
                             delete_packet(skb);
                             goto next_pkt;
                         }
@@ -1705,15 +1705,15 @@ static int nv_rx_process(struct net_device *dev, int limit)
                     /* the rest are hard errors */
                     else {
                         if (flags & NV_RX_MISSEDFRAME) {
-                            //dev->stats.rx_missed_errors++;
+                            dev->stats.rx_missed_errors++;
                         }
                         if (flags & NV_RX_CRCERR) {
-                            //dev->stats.rx_crc_errors++;
+                            dev->stats.rx_crc_errors++;
                         }
                         if (flags & NV_RX_OVERFLOW) {
-                            //dev->stats.rx_over_errors++;
+                            dev->stats.rx_over_errors++;
                         }
-                        //dev->stats.rx_errors++;
+                        dev->stats.rx_errors++;
                         delete_packet(skb);
                         goto next_pkt;
                     }
@@ -1729,7 +1729,7 @@ static int nv_rx_process(struct net_device *dev, int limit)
                     if ((flags & NV_RX2_ERROR_MASK) == NV_RX2_ERROR4) {
                         len = nv_getlen(dev, skb->data, len);
                         if (len < 0) {
-                            //dev->stats.rx_errors++;
+                            dev->stats.rx_errors++;
                             delete_packet(skb);
                             goto next_pkt;
                         }
@@ -1743,12 +1743,12 @@ static int nv_rx_process(struct net_device *dev, int limit)
                     /* the rest are hard errors */
                     else {
                         if (flags & NV_RX2_CRCERR) {
-                            //dev->stats.rx_crc_errors++;
+                            dev->stats.rx_crc_errors++;
                         }
                         if (flags & NV_RX2_OVERFLOW) {
-                            //dev->stats.rx_over_errors++;
+                            dev->stats.rx_over_errors++;
                         }
-                        //dev->stats.rx_errors++;
+                        dev->stats.rx_errors++;
                         delete_packet(skb);
                         goto next_pkt;
                     }

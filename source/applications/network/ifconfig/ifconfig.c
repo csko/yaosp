@@ -137,8 +137,25 @@ static if_command_t if_commands[] = {
     { NULL,        0,              NULL }
 };
 
+static char* format_size( char* buf, size_t len, uint64_t size ) {
+    if ( size < 1024 ) {
+        snprintf( buf, len, "%llu b", size );
+    } else if ( size < ( 1024 * 1024 ) ) {
+        snprintf( buf, len, "%llu Kb", size / 1024 );
+    } else if ( size < ( 1024 * 1024 * 1024 ) ) {
+        snprintf( buf, len, "%llu Mb", size / ( 1024 * 1024 ) );
+    } else {
+        snprintf( buf, len, "%llu Gb", size / ( 1024 * 1024 * 1024 ) );
+    }
+
+    return buf;
+}
+
 static int show_network_interface( struct ifreq* req ) {
     char ip[ 32 ];
+    if_stat_t stat;
+    char rx_size[ 32 ];
+    char tx_size[ 32 ];
     struct sockaddr_in* addr;
 
     ioctl( sock, SIOCGIFHWADDR, req );
@@ -182,6 +199,17 @@ static int show_network_interface( struct ifreq* req ) {
     }
 
     printf( "\n" );
+
+    req->ifr_ifru.ifru_data = ( char* )&stat;
+    ioctl( sock, SIOCGIFSTAT, req );
+
+    printf( "      RX packets: %u errors: %u dropped: %u\n", stat.rx_packets, stat.rx_errors, stat.rx_dropped );
+    printf( "      TX packets: %u errors: %u dropped: %u\n", stat.tx_packets, stat.tx_errors, stat.tx_dropped );
+    printf(
+        "      RX bytes: %llu (%s) TX bytes: %llu (%s)\n",
+        stat.rx_bytes, format_size( rx_size, sizeof( rx_size ), stat.rx_bytes ),
+        stat.tx_bytes, format_size( tx_size, sizeof( tx_size ), stat.tx_bytes )
+    );
 
     return 0;
 }

@@ -1,6 +1,6 @@
 /* ioctl constant values
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -27,6 +27,7 @@
 #define SIOCGIFFLAGS   0x89300013
 #define SIOCGIFBRDADDR 0x89300019
 #define SIOCGIFMTU     0x89300021
+#define SIOCGIFSTAT    0x89300022
 
 #define SIOCSIFADDR    0x89400005
 #define SIOCSIFNETMASK 0x89400006

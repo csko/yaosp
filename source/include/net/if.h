@@ -38,8 +38,8 @@ struct ifreq {
         struct sockaddr ifru_hwaddr;
         short ifru_flags;
 
-        int	ifru_ivalue;
-        int	ifru_mtu;
+        int ifru_ivalue;
+        int ifru_mtu;
         char ifru_slave[ IFNAMSIZ ];
         char ifru_newname[ IFNAMSIZ ];
         char* ifru_data;
@@ -57,11 +57,40 @@ struct ifreq {
 };
 
 struct ifconf {
-    int	ifc_len;
+    int ifc_len;
     union  {
         char* ifcu_buf;
         struct ifreq* ifcu_req;
     } ifc_ifcu;
 };
+
+typedef struct if_stat {
+    uint32_t rx_packets;
+    uint32_t tx_packets;
+    uint64_t rx_bytes;
+    uint64_t tx_bytes;
+    uint32_t rx_errors;
+    uint32_t tx_errors;
+    uint32_t rx_dropped;
+    uint32_t tx_dropped;
+    uint32_t multicast;
+    uint32_t collisions;
+
+    uint32_t rx_length_errors;
+    uint32_t rx_over_errors;
+    uint32_t rx_crc_errors;
+    uint32_t rx_frame_errors;
+    uint32_t rx_fifo_errors;
+    uint32_t rx_missed_errors;
+
+    uint32_t tx_aborted_errors;
+    uint32_t tx_carrier_errors;
+    uint32_t tx_fifo_errors;
+    uint32_t tx_heartbeat_errors;
+    uint32_t tx_window_errors;
+
+    uint32_t rx_compressed;
+    uint32_t tx_compressed;
+} if_stat_t;
 
 #endif /* _NET_IF_H_ */

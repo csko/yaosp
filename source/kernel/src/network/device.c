@@ -362,6 +362,10 @@ static int get_interface_parameter( int param, struct ifreq* req ) {
             req->ifr_ifru.ifru_mtu = device->mtu;
             break;
 
+        case SIOCGIFSTAT :
+            memcpy( req->ifr_ifru.ifru_data, &device->stats, sizeof( net_device_stats_t ) );
+            break;
+
         default :
             kprintf( ERROR, "get_interface_parameter(): invalid request: %d\n", param );
             break;
@@ -439,6 +443,7 @@ int net_device_ioctl( int command, void* buffer, bool from_kernel ) {
         case SIOCGIFMTU :
         case SIOCGIFFLAGS :
         case SIOCGIFBRDADDR :
+        case SIOCGIFSTAT :
             error = get_interface_parameter( command, ( struct ifreq* )buffer );
             break;
 

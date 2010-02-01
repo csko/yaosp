@@ -19,43 +19,12 @@
 #ifndef _NETWORK_INTERFACE_H_
 #define _NETWORK_INTERFACE_H_
 
-#include <types.h>
-#include <thread.h>
-#include <lock/mutex.h>
-#include <network/packet.h>
-#include <network/ipv4.h>
-#include <network/ethernet.h>
 #include <network/socket.h>
-#include <lib/hashtable.h>
-
-#include <arch/atomic.h>
 
 #define IFHWADDRLEN 6
 #define IFNAMSIZ    16
 
 #define IFF_UP      ( 1 << 2 )
-
-typedef struct net_interface {
-    hashitem_t hash;
-
-    char name[ 16 ];
-    atomic_t ref_count;
-
-    int mtu;
-    uint8_t hw_address[ ETH_ADDR_LEN ];
-    uint8_t ip_address[ IPV4_ADDR_LEN ];
-    uint8_t netmask[ IPV4_ADDR_LEN ];
-    uint8_t broadcast[ IPV4_ADDR_LEN ];
-
-    int device;
-    uint32_t flags;
-    thread_id rx_thread;
-    packet_queue_t input_queue;
-
-    lock_id arp_lock;
-    hashtable_t arp_cache;
-    hashtable_t arp_requests;
-} net_interface_t;
 
 struct ifreq {
     union {
@@ -85,12 +54,5 @@ struct ifconf {
         struct ifreq* ifcu_req;
     } ifc_ifcu;
 };
-
-extern lock_id interface_mutex;
-extern hashtable_t interface_table;
-
-int network_interface_ioctl( int command, void* buffer, bool from_kernel );
-
-int init_network_interfaces( void );
 
 #endif /* _NETWORK_INTERFACE_H_ */
