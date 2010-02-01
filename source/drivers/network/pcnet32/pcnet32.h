@@ -1,6 +1,6 @@
 /* PCnet32 driver (based on the Linux driver)
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -150,8 +150,6 @@ typedef struct pcnet32_private {
     pcnet32_tx_head_t* tx_ring;
     packet_t** rx_packet_buf;
     packet_t** tx_packet_buf;
-
-    net_device_stats_t stats;
 } pcnet32_private_t;
 
 #endif /* _PCNET32_H_ */

@@ -1,6 +1,6 @@
 /* PCnet32 network driver (based on the Linux driver)
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -220,7 +220,7 @@ static void pcnet32_rx_entry( net_device_t* dev, pcnet32_private_t* device, pcne
 
     if ( status != 0x03 ) {   /* There was an error. */
         if ( status & 0x01 ) {
-            device->stats.rx_errors++;
+            dev->stats.rx_errors++;
         }
 
         return;
@@ -232,13 +232,13 @@ static void pcnet32_rx_entry( net_device_t* dev, pcnet32_private_t* device, pcne
 
     if ( pkt_len > PKT_BUF_SKB ) {
         kprintf( ERROR, "pcnet32: Impossible packet size %d!\n", pkt_len );
-        device->stats.rx_errors++;
+        dev->stats.rx_errors++;
         return;
     }
 
     if ( pkt_len < 60 ) {
         kprintf( ERROR, "pcnet32: Runt packet!\n" );
-        device->stats.rx_errors++;
+        dev->stats.rx_errors++;
         return;
     }
 
@@ -266,8 +266,8 @@ static void pcnet32_rx_entry( net_device_t* dev, pcnet32_private_t* device, pcne
 
     /* ... and update some statistics stuff */
 
-    device->stats.rx_bytes += pkt_len;
-    device->stats.rx_packets++;
+    dev->stats.rx_bytes += pkt_len;
+    dev->stats.rx_packets++;
 }
 
 static int pcnet32_rx( net_device_t* dev, pcnet32_private_t* device ) {
@@ -298,7 +298,7 @@ static int pcnet32_rx( net_device_t* dev, pcnet32_private_t* device ) {
     return npackets;
 }
 
-static int pcnet32_tx( pcnet32_private_t* device ) {
+static int pcnet32_tx( net_device_t* dev, pcnet32_private_t* device ) {
     int delta;
     int must_restart;
     uint32_t dirty_tx;
@@ -325,13 +325,13 @@ static int pcnet32_tx( pcnet32_private_t* device ) {
             /* There was a major error, log it. */
 
             err_status = device->tx_ring[ entry ].misc;
-            device->stats.tx_errors++;
+            dev->stats.tx_errors++;
 
             kprintf( ERROR, "pcnet32: Tx error status=%04x err_status=%08x\n", status, err_status );
 
             must_restart = 1;
         } else {
-            device->stats.tx_packets++;
+            dev->stats.tx_packets++;
         }
 
         /* We must free the original skb */
@@ -409,7 +409,7 @@ static netdev_tx_t pcnet32_start_xmit( net_device_t* dev, packet_t* packet ) {
     device->tx_ring[ entry ].status = status;
 
     device->cur_tx++;
-    device->stats.tx_bytes += packet->size;
+    dev->stats.tx_bytes += packet->size;
 
     /* Trigger an immediate send poll. */
 
@@ -455,7 +455,7 @@ static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
         /* Log misc errors. */
 
         if ( csr0 & 0x4000 ) {
-            device->stats.tx_errors++; /* Tx babble. */
+            dev->stats.tx_errors++; /* Tx babble. */
         }
 
         if ( csr0 & 0x1000 ) {
@@ -473,9 +473,8 @@ static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
 
             pcnet32_rx( dev, device );
 
-            device->stats.rx_errors++; /* Missed a Rx frame. */
+            dev->stats.rx_errors++; /* Missed a Rx frame. */
         }
-
 
         if ( csr0 & 0x0800 ) {
             /* Unlike for the lance, there is no restart needed */
@@ -488,7 +487,7 @@ static int pcnet32_interrupt( int irq, void* data, registers_t* regs ) {
         }
 
         if ( csr0 & 0x0200 ) {
-            pcnet32_tx( device );
+            pcnet32_tx( dev, device );
         }
 
         csr0 = device->access->read_csr( io_address, CSR0 );
@@ -958,7 +957,6 @@ static int pcnet32_do_probe( pci_device_t* pci_device ) {
     device->mii_if.phy_id_mask = 0x1F;
     device->mii_if.reg_num_mask = 0x1F;
     device->options = PCNET32_PORT_ASEL;
-    memset( &device->stats, 0, sizeof( net_device_stats_t ) );
 
     error = pcnet32_alloc_ring( device );
 
