@@ -1,6 +1,6 @@
 /* Desktop application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -30,8 +30,8 @@
 #include <ygui/desktop.h>
 #include <ygui/protocol.h>
 #include <ygui/layout/borderlayout.h>
-
 #include <yutil/process.h>
+#include <yconfig/yconfig.h>
 
 window_t* window;
 
@@ -67,11 +67,14 @@ static int send_guiserver_notification( void ) {
 int main( int argc, char** argv ) {
     point_t pos;
     point_t size;
+    char* img_file;
 
     if ( process_count_of( "desktop" ) != 1 ) {
         fprintf( stderr, "Taskbar is already running!\n" );
         return EXIT_FAILURE;
     }
+
+    ycfg_init();
 
     if ( application_init( APP_NOTIFY_RESOLUTION_CHANGE ) != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
@@ -96,13 +99,16 @@ int main( int argc, char** argv ) {
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
-    bitmap_t* bitmap = bitmap_load_from_file( "/application/desktop/images/background.png" );
+    if ( ycfg_get_ascii_value( "application/desktop/background", "file", &img_file ) == 0 ) {
+        bitmap_t* bitmap = bitmap_load_from_file( img_file );
+        free( img_file );
 
-    widget_t* image = create_image( bitmap );
-    widget_add( container, image, BRD_CENTER );
-    widget_dec_ref( image );
+        widget_t* image = create_image( bitmap );
+        widget_add( container, image, BRD_CENTER );
+        widget_dec_ref( image );
 
-    bitmap_dec_ref( bitmap );
+        bitmap_dec_ref( bitmap );
+    }
 
     window_show( window );
 

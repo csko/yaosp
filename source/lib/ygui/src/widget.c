@@ -52,6 +52,11 @@ static int do_invalidate_widget( widget_t* widget, int notify_window ) {
 int widget_add( widget_t* parent, widget_t* child, void* data ) {
     widget_wrapper_t* wrapper;
 
+    if ( ( parent == NULL ) ||
+         ( child == NULL ) ) {
+        return -EINVAL;
+    }
+
     wrapper = ( widget_wrapper_t* )malloc( sizeof( widget_wrapper_t ) );
 
     if ( wrapper == NULL ) {
@@ -293,6 +298,10 @@ int widget_set_border( widget_t* widget, border_t* border ) {
 }
 
 int widget_inc_ref( widget_t* widget ) {
+    if ( widget == NULL ) {
+        return -EINVAL;
+    }
+
     assert( widget->ref_count > 0 );
 
     widget->ref_count++;
@@ -301,6 +310,10 @@ int widget_inc_ref( widget_t* widget ) {
 }
 
 int widget_dec_ref( widget_t* widget ) {
+    if ( widget == NULL ) {
+        return -EINVAL;
+    }
+
     assert( widget->ref_count > 0 );
 
     if ( --widget->ref_count == 0 ) {
