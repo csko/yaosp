@@ -295,6 +295,8 @@ int ext2_do_free_inode_blocks( ext2_cookie_t* cookie, ext2_inode_t* inode ) {
         if ( error < 0 ) {
             return error;
         }
+
+        fs_inode->i_block[ i ] = 0;
     }
 
     /* Free indirect blocks */
@@ -342,11 +344,16 @@ int ext2_do_free_inode_blocks( ext2_cookie_t* cookie, ext2_inode_t* inode ) {
         if ( error < 0 ) {
             return error;
         }
+
+        fs_inode->i_block[ EXT2_IND_BLOCK ] = 0;
     }
 
     /* TODO: free ..... */
 
-done:
+    inode->fs_inode.i_blocks = 0;
+    inode->fs_inode.i_size = 0;
+
+ done:
     return 0;
 }
 

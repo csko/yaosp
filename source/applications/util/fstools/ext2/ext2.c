@@ -1,6 +1,6 @@
 /* Ext2 filesystem implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -243,7 +243,7 @@ int ext2_initialize( const char* device, ext2_info_t* info ) {
 
     return 0;
 
-error5:
+ error5:
     for ( i = 0; i < info->group_count; i++ ) {
         group = &info->groups[ i ];
 
@@ -258,16 +258,16 @@ error5:
 
     free( info->groups );
 
-error4:
+ error4:
     close( info->fd );
 
-error3:
+ error3:
     destroy_array( &info->inode_list );
 
-error2:
+ error2:
     destroy_array( &info->block_list );
 
-error1:
+ error1:
     return -1;
 }
 
@@ -320,10 +320,10 @@ int ext2_allocate_block( ext2_info_t* info, ext2_block_t** _block ) {
 
     return -ENOSPC;
 
-error2:
+ error2:
     free( block );
 
-error1:
+ error1:
     return -ENOMEM;
 }
 
@@ -378,7 +378,8 @@ int ext2_inode_add_block( ext2_info_t* info, ext2_inode_t* inode, ext2_block_t**
     return 0;
 }
 
-int ext2_dir_entry_initialize( ext2_dir_entry_t* entry, uint32_t inode, char* name, int name_len, int name_len_to_copy, int file_type ) {
+int ext2_dir_entry_initialize( ext2_dir_entry_t* entry, uint32_t inode, char* name,
+                               int name_len, int name_len_to_copy, int file_type ) {
     entry->inode = inode;
     entry->name_len = name_len;
     entry->file_type = file_type;
@@ -532,9 +533,17 @@ static int ext2_write_to_disk( ext2_info_t* info ) {
 
     memset( empty_blocks, 0, 32 * info->block_size );
 
+    printf( "ext2: Writing group descriptors: " );
+
     /* Write group informations */
 
     for ( i = 0; i < info->group_count; i++ ) {
+        if ( i > 0 ) {
+            printf( "," );
+        }
+
+        printf( "%d", i );
+
         first_block = i * info->blocks_per_group;
 
         /* Write the superblock */
@@ -563,6 +572,8 @@ static int ext2_write_to_disk( ext2_info_t* info ) {
             do_write_block3( first_block + 4 + j, empty_blocks, 32 );
         }
     }
+
+    printf( " done!\n" );
 
     /* Write inodes */
 
@@ -604,13 +615,13 @@ static int ext2_write_to_disk( ext2_info_t* info ) {
 
     error = 0;
 
-error3:
+ error3:
     free( gd_block );
 
-error2:
+ error2:
     free( block );
 
-error1:
+ error1:
     return error;
 }
 
@@ -660,16 +671,11 @@ static int ext2_create( const char* device ) {
 
     printf( "done!\n" );
 
-    printf( "ext2: Writing the structure to the disk ... " );
-
     error = ext2_write_to_disk( &info );
 
     if ( error < 0 ) {
-        printf( "failed. error=%d\n", error );
         return error;
     }
-
-    printf( "done!\n" );
 
     ext2_finish( &info );
 

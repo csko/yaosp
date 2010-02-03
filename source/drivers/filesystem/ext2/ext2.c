@@ -731,7 +731,7 @@ static int ext2_write( void* fs_cookie, void* node, void* _file_cookie, const vo
     return error;
 }
 
-static int ext2_open_directory( ext2_inode_t* vinode, void** out ) {
+static int ext2_open_directory( ext2_inode_t* inode, void** out ) {
     ext2_dir_cookie_t* cookie;
 
     cookie = ( ext2_dir_cookie_t* )kmalloc( sizeof( ext2_dir_cookie_t ) );
@@ -747,23 +747,29 @@ static int ext2_open_directory( ext2_inode_t* vinode, void** out ) {
     return 0;
 }
 
-static int ext2_open_file( ext2_inode_t* vinode, void** out, int flags ) {
-    ext2_file_cookie_t* cookie;
+static int ext2_open_file( ext2_cookie_t* cookie, ext2_inode_t* inode, void** out, int flags ) {
+    ext2_file_cookie_t* file_cookie;
 
-    cookie = ( ext2_file_cookie_t* )kmalloc( sizeof( ext2_file_cookie_t ) );
+    file_cookie = ( ext2_file_cookie_t* )kmalloc( sizeof( ext2_file_cookie_t ) );
 
-    if ( cookie == NULL ) {
+    if ( file_cookie == NULL ) {
         return -ENOMEM;
     }
 
-    cookie->open_flags = flags;
+    file_cookie->open_flags = flags;
 
     if ( ( flags & O_TRUNC ) &&
-         ( vinode->fs_inode.i_size > 0 ) ) {
-        kprintf( WARNING, "%s(): O_TRUNC not yet handled properly!\n", __FUNCTION__ );
+         ( inode->fs_inode.i_size > 0 ) ) {
+        int error;
+
+        error = ext2_do_free_inode_blocks( cookie, inode );
+
+        if ( error < 0 ) {
+            return error;
+        }
     }
 
-    *out = cookie;
+    *out = file_cookie;
 
     return 0;
 }
@@ -781,7 +787,7 @@ static int ext2_open( void* fs_cookie, void* node, int mode, void** file_cookie 
     if ( ( inode->fs_inode.i_mode & S_IFDIR ) == S_IFDIR ) {
         error = ext2_open_directory( inode, file_cookie );
     } else {
-        error = ext2_open_file( inode, file_cookie, mode );
+        error = ext2_open_file( cookie, inode, file_cookie, mode );
     }
 
     mutex_unlock( cookie->lock );
@@ -887,7 +893,8 @@ static bool ext2_lookup_inode_helper( ext2_dir_entry_t* entry, void* _data ) {
     return false;
 }
 
-static int ext2_create( void* fs_cookie, void* node, const char* name, int name_length, int mode, int perms, ino_t* inode_number, void** _file_cookie ) {
+static int ext2_create( void* fs_cookie, void* node, const char* name, int name_length, int mode,
+                        int perms, ino_t* inode_number, void** _file_cookie ) {
     int error;
     ext2_cookie_t* cookie;
     ext2_inode_t* parent;
