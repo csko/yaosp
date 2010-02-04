@@ -272,6 +272,7 @@ int handle_page_fault( registers_t* regs ) {
 
     if ( region == NULL ) {
         invalid_page_fault( thread, regs, cr2, "invalid access" );
+        return 0;
     }
 
     /* Handle copy-on-write pages */
