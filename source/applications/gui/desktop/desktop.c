@@ -34,8 +34,10 @@
 #include <yconfig/yconfig.h>
 
 window_t* window;
+widget_t* image_wallpaper;
 
 extern ipc_port_id guiserver_port;
+extern ipc_port_id app_client_port;
 
 static int desktop_handle_resolution_change( msg_scr_res_changed_t* msg ) {
     point_t size;
@@ -46,10 +48,31 @@ static int desktop_handle_resolution_change( msg_scr_res_changed_t* msg ) {
     return 0;
 }
 
+static int desktop_change_wallpaper( char* path ) {
+    bitmap_t* new_bitmap;
+
+    new_bitmap = bitmap_load_from_file( path );
+
+    if ( new_bitmap == NULL ) {
+        return 0;
+    }
+
+    image_set_bitmap( image_wallpaper, new_bitmap );
+    bitmap_dec_ref( new_bitmap );
+
+    dbprintf( "Wallpaper changed to: '%s'.\n", path );
+
+    return 0;
+}
+
 static int desktop_msg_handler( uint32_t code, void* data ) {
     switch ( code ) {
         case MSG_SCREEN_RESOLUTION_CHANGED :
             desktop_handle_resolution_change( ( msg_scr_res_changed_t* )data );
+            break;
+
+        case MSG_DESKTOP_CHANGE_WALLPAPER :
+            desktop_change_wallpaper( ( char* )data );
             break;
 
         default :
@@ -84,6 +107,8 @@ int main( int argc, char** argv ) {
     point_init( &pos, 0, 0 );
     desktop_get_size( &size );
 
+    register_named_ipc_port( "desktop", app_client_port );
+
     /* Create a window */
 
     window = create_window( "Desktop", &pos, &size, W_ORDER_ALWAYS_ON_BOTTOM, WINDOW_NO_BORDER );
@@ -103,9 +128,9 @@ int main( int argc, char** argv ) {
         bitmap_t* bitmap = bitmap_load_from_file( img_file );
         free( img_file );
 
-        widget_t* image = create_image( bitmap );
-        widget_add( container, image, BRD_CENTER );
-        widget_dec_ref( image );
+        image_wallpaper = create_image( bitmap );
+        widget_add( container, image_wallpaper, BRD_CENTER );
+        widget_dec_ref( image_wallpaper );
 
         bitmap_dec_ref( bitmap );
     }

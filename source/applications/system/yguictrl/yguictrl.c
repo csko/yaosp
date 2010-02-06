@@ -28,6 +28,7 @@ char* argv0 = NULL;
 
 static ctrl_subsystem_t* registered_subsystems[] = {
     &screen,
+    &wallpaper,
     NULL
 };
 

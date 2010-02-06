@@ -17,6 +17,7 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 
 #include <ygui/image.h>
 
@@ -136,4 +137,26 @@ widget_t* create_image( bitmap_t* bitmap ) {
 
  error1:
     return NULL;
+}
+
+int image_set_bitmap( widget_t* widget, bitmap_t* bitmap ) {
+    image_t* image;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id( widget ) != W_IMAGE ) ) {
+        return -EINVAL;
+    }
+
+    image = ( image_t* )widget_get_data( widget );
+
+    if ( image != NULL ) {
+        bitmap_dec_ref( image->bitmap );
+    }
+
+    image->bitmap = bitmap;
+    bitmap_inc_ref( image->bitmap );
+
+    widget_invalidate( widget );
+
+    return 0;
 }

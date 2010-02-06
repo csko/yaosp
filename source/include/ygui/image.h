@@ -23,5 +23,6 @@
 #include <ygui/bitmap.h>
 
 widget_t* create_image( bitmap_t* bitmap );
+int image_set_bitmap( widget_t* widget, bitmap_t* bitmap );
 
 #endif /* _YGUI_IMAGE_H_ */

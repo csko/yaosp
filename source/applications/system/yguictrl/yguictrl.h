@@ -33,5 +33,6 @@ typedef struct ctrl_subsystem {
 
 extern char* argv0;
 extern ctrl_subsystem_t screen;
+extern ctrl_subsystem_t wallpaper;
 
 #endif /* _YGUICTRL_H_ */
