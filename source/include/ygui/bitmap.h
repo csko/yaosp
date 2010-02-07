@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -36,8 +36,15 @@ typedef struct bitmap {
     uint8_t* data;
 } bitmap_t;
 
+typedef enum {
+    NEAREST,
+    BILINEAR,
+    BICUBIC
+} resize_algorithm_t;
+
 bitmap_t* bitmap_create( int width, int height, color_space_t color_space );
 bitmap_t* bitmap_clone( int id );
+bitmap_t* bitmap_resize( bitmap_t* src, int width, int height, resize_algorithm_t algorithm );
 
 int bitmap_get_width( bitmap_t* bitmap );
 int bitmap_get_height( bitmap_t* bitmap );

@@ -33,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/scrollpanel.c</item>
         <item>src/gc.c</item>
         <item>src/bitmap.c</item>
+        <item>src/bitmap_resize.c</item>
         <item>src/image.c</item>
         <item>src/menu.c</item>
         <item>src/menuitem.c</item>
