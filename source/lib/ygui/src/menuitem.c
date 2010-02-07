@@ -123,13 +123,14 @@ static int menu_item_mouse_entered( widget_t* widget, point_t* position ) {
     menu_item_t* item;
 
     item = ( menu_item_t* )widget_get_data( widget );
-    item->active = 1;
 
     switch ( item->parent_type ) {
         case M_PARENT_BAR : {
             menu_bar_t* bar = item->parent.bar;
 
-            if ( bar->active_item != NULL ) {
+            if ( bar->active_item == widget ) {
+                return 0;
+            } else if ( bar->active_item != NULL ) {
                 menu_item_t* prev_active;
 
                 prev_active = ( menu_item_t* )widget_get_data( bar->active_item );
@@ -146,6 +147,8 @@ static int menu_item_mouse_entered( widget_t* widget, point_t* position ) {
 
                 bar->active_item = widget;
             }
+
+            item->active = 1;
 
             break;
         }
