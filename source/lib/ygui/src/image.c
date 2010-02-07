@@ -111,10 +111,6 @@ widget_t* create_image( bitmap_t* bitmap ) {
     image_t* image;
     widget_t* widget;
 
-    if ( bitmap == NULL ) {
-        return NULL;
-    }
-
     image = ( image_t* )malloc( sizeof( image_t ) );
 
     if ( image == NULL ) {
@@ -161,6 +157,11 @@ int image_set_bitmap( widget_t* widget, bitmap_t* bitmap ) {
     if ( image->bitmap != NULL ) {
         bitmap_inc_ref( image->bitmap );
     }
+
+    widget_signal_event_handler(
+        widget,
+        widget->event_ids[ E_PREF_SIZE_CHANGED ]
+    );
 
     widget_invalidate( widget );
 
