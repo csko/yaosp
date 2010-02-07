@@ -128,7 +128,10 @@ widget_t* create_image( bitmap_t* bitmap ) {
     }
 
     image->bitmap = bitmap;
-    bitmap_inc_ref( image->bitmap );
+
+    if ( image->bitmap != NULL ) {
+        bitmap_inc_ref( image->bitmap );
+    }
 
     return widget;
 
@@ -149,12 +152,15 @@ int image_set_bitmap( widget_t* widget, bitmap_t* bitmap ) {
 
     image = ( image_t* )widget_get_data( widget );
 
-    if ( image != NULL ) {
+    if ( image->bitmap != NULL ) {
         bitmap_dec_ref( image->bitmap );
     }
 
     image->bitmap = bitmap;
-    bitmap_inc_ref( image->bitmap );
+
+    if ( image->bitmap != NULL ) {
+        bitmap_inc_ref( image->bitmap );
+    }
 
     widget_invalidate( widget );
 
