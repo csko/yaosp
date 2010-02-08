@@ -1,0 +1,184 @@
+diff -Nru jpeg-8-orig/jconfig.h jpeg-8/jconfig.h
+--- jpeg-8-orig/jconfig.h	1970-01-01 01:00:00.000000000 +0100
++++ jpeg-8/jconfig.h	2010-02-08 09:01:32.000000000 +0100
+@@ -0,0 +1,46 @@
++/* jconfig.h.  Generated from jconfig.cfg by configure.  */
++/* jconfig.cfg --- source file edited by configure script */
++/* see jconfig.txt for explanations */
++
++#define HAVE_PROTOTYPES 1
++#define HAVE_UNSIGNED_CHAR 1
++#define HAVE_UNSIGNED_SHORT 1
++/* #undef void */
++/* #undef const */
++/* #undef CHAR_IS_UNSIGNED */
++#define HAVE_STDDEF_H 1
++#define HAVE_STDLIB_H 1
++#define HAVE_LOCALE_H 1
++/* #undef NEED_BSD_STRINGS */
++#define NEED_SYS_TYPES_H 1
++/* #undef NEED_FAR_POINTERS */
++/* #undef NEED_SHORT_EXTERNAL_NAMES */
++/* Define this if you get warnings about undefined structures. */
++/* #undef INCOMPLETE_TYPES_BROKEN */
++
++#ifdef JPEG_INTERNALS
++
++/* #undef RIGHT_SHIFT_IS_UNSIGNED */
++#define INLINE __inline__
++/* These are for configuring the JPEG memory manager. */
++/* #undef DEFAULT_MAX_MEM */
++/* #undef NO_MKTEMP */
++
++#endif /* JPEG_INTERNALS */
++
++#ifdef JPEG_CJPEG_DJPEG
++
++#define BMP_SUPPORTED		/* BMP image file format */
++#define GIF_SUPPORTED		/* GIF image file format */
++#define PPM_SUPPORTED		/* PBMPLUS PPM/PGM image file format */
++/* #undef RLE_SUPPORTED */
++#define TARGA_SUPPORTED		/* Targa image file format */
++
++/* #undef TWO_FILE_COMMANDLINE */
++/* #undef NEED_SIGNAL_CATCHER */
++/* #undef DONT_USE_B_MODE */
++
++/* Define this if you want percent-done progress reports from cjpeg/djpeg. */
++/* #undef PROGRESS_REPORT */
++
++#endif /* JPEG_CJPEG_DJPEG */
+diff -Nru jpeg-8-orig/pbuild.xml jpeg-8/pbuild.xml
+--- jpeg-8-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ jpeg-8/pbuild.xml	2010-02-08 09:32:15.000000000 +0100
+@@ -0,0 +1,130 @@
++<!--
++
++This file is part of the yaosp build system
++
++Copyright (c) 2010 Zoltan Kovacs
++
++This program is free software; you can redistribute it and/or modify
++it under the terms of version 2 of the GNU General Public License
++as published by the Free Software Foundation.
++
++This program is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along
++with this program; if not, write to the Free Software Foundation, Inc.,
++51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++
++-->
++
++<build default="all">
++    <array name="files">
++        <item>jaricom.c</item>
++        <item>jcapimin.c</item>
++        <item>jcapistd.c</item>
++        <item>jcarith.c</item>
++        <item>jccoefct.c</item>
++        <item>jccolor.c</item>
++        <item>jcdctmgr.c</item>
++        <item>jchuff.c</item>
++        <item>jcinit.c</item>
++        <item>jcmainct.c</item>
++        <item>jcmarker.c</item>
++        <item>jcmaster.c</item>
++        <item>jcomapi.c</item>
++        <item>jcparam.c</item>
++        <item>jcprepct.c</item>
++        <item>jcsample.c</item>
++        <item>jctrans.c</item>
++        <item>jdapimin.c</item>
++        <item>jdapistd.c</item>
++        <item>jdarith.c</item>
++        <item>jdatadst.c</item>
++        <item>jdatasrc.c</item>
++        <item>jdcoefct.c</item>
++        <item>jdcolor.c</item>
++        <item>jddctmgr.c</item>
++        <item>jdhuff.c</item>
++        <item>jdinput.c</item>
++        <item>jdmainct.c</item>
++        <item>jdmarker.c</item>
++        <item>jdmaster.c</item>
++        <item>jdmerge.c</item>
++        <item>jdpostct.c</item>
++        <item>jdsample.c</item>
++        <item>jdtrans.c</item>
++        <item>jerror.c</item>
++        <item>jfdctflt.c</item>
++        <item>jfdctfst.c</item>
++        <item>jfdctint.c</item>
++        <item>jidctflt.c</item>
++        <item>jidctfst.c</item>
++        <item>jidctint.c</item>
++        <item>jquant1.c</item>
++        <item>jquant2.c</item>
++        <item>jutils.c</item>
++        <item>jmemmgr.c</item>
++        <item>jmemnobs.c</item>
++    </array>
++
++    <array name="headers_to_install">
++        <item>jerror.h</item>
++        <item>jmorecfg.h</item>
++        <item>jpeglib.h</item>
++    </array>
++
++    <target name="clean">
++        <delete>objs/*</delete>
++        <rmdir>objs</rmdir>
++    </target>
++
++    <target name="prepare" type="private">
++        <mkdir>objs</mkdir>
++    </target>
++
++    <target name="compile">
++        <call target="prepare"/>
++
++        <echo>Compiling jpeg 8</echo>
++
++        <for var="i" array="${files}">
++            <echo>-> ${i}</echo>
++            <gcc>
++                <input>${i}</input>
++                <output>objs/filename(${i}).o</output>
++                <include>./</include>
++                <flag>-c</flag>
++                <flag>-O2</flag>
++                <flag>-Wall</flag>
++            </gcc>
++        </for>
++
++        <echo>Linking jpeg 8</echo>
++        <echo>-> objs/libjpeg.a</echo>
++
++        <ar>
++            <flag>-rc</flag>
++            <output>objs/libjpeg.a</output>
++            <input>objs/*.o</input>
++        </ar>
++    </target>
++
++    <target name="install">
++        <copy from="objs/libjpeg.a" to="../../../../build/libs/libjpeg.a"/>
++
++        <echo>Installing jpeg 8 headers</echo>
++
++        <for var="i" array="${headers_to_install}">
++            <echo>-> ${i}</echo>
++            <copy from="${i}" to="../../../include/${i}"/>
++        </for>
++    </target>
++
++    <target name="all">
++        <call target="clean"/>
++        <call target="compile"/>
++        <call target="install"/>
++    </target>
++</build>
