@@ -36,12 +36,13 @@ static thread_t* last_expired;
 int add_thread_to_ready( thread_t* thread ) {
     ASSERT( scheduler_is_locked() );
 
-    if ( __unlikely( thread->queue_next != NULL ) ) {
+    if ( thread->in_scheduler ) {
         return 0;
     }
 
     thread->state = THREAD_READY;
     thread->queue_next = NULL;
+    thread->in_scheduler = 1;
 
     if ( first_ready == NULL ) {
         first_ready = thread;
@@ -57,12 +58,13 @@ int add_thread_to_ready( thread_t* thread ) {
 int add_thread_to_expired( thread_t* thread ) {
     ASSERT( scheduler_is_locked() );
 
-    if ( __unlikely( thread->queue_next != NULL ) ) {
+    if ( thread->in_scheduler ) {
         return 0;
     }
 
     thread->state = THREAD_READY;
     thread->queue_next = NULL;
+    thread->in_scheduler = 1;
 
     reset_thread_quantum( thread );
 
@@ -114,6 +116,8 @@ static void update_prev_thread( thread_t* thread, uint64_t now ) {
 
     if ( thread == cpu->idle_thread ) {
         thread->state = THREAD_WAITING;
+        thread->in_scheduler = 1;
+
         cpu->idle_time += runtime;
 
         return;
@@ -166,6 +170,7 @@ static void update_prev_thread( thread_t* thread, uint64_t now ) {
 static void update_next_thread( thread_t* thread, uint64_t now ) {
     thread->exec_time = now;
     thread->prev_checkpoint = now;
+    thread->in_scheduler = 0;
 }
 
 thread_t* do_schedule( thread_t* current ) {

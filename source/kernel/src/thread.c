@@ -104,16 +104,16 @@ thread_t* allocate_thread( const char* name, process_t* process, int priority, u
 
     return thread;
 
-error4:
+ error4:
     free_pages( thread->kernel_stack, kernel_stack_pages );
 
-error3:
+ error3:
     kfree( thread->name );
 
-error2:
+ error2:
     kfree( thread );
 
-error1:
+ error1:
     return NULL;
 }
 
@@ -330,10 +330,10 @@ thread_id create_kernel_thread( const char* name, int priority, thread_entry_t* 
 
     return error;
 
-error2:
+ error2:
     destroy_thread( thread );
 
-error1:
+ error1:
     return error;
 }
 
@@ -411,10 +411,10 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
 
     return error;
 
-error2:
+ error2:
     destroy_thread( thread );
 
-error1:
+ error1:
     return error;
 }
 
