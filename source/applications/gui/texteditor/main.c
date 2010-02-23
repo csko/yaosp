@@ -1,6 +1,6 @@
 /* Text editor application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -159,7 +159,7 @@ int main( int argc, char** argv ) {
 
     /* Set the layout of the window */
 
-    layout_t* layout = create_border_layout();
+    layout_t* layout = create_borderlayout();
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 

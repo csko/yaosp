@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,8 @@
 
 #include <ygui/widget.h>
 #include <ygui/layout/layout.h>
+
+layout_t* panel_get_layout( widget_t* widget );
 
 int panel_set_layout( widget_t* widget, layout_t* layout );
 int panel_set_background_color( widget_t* widget, color_t* color );

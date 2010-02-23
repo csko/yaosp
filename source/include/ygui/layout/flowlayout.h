@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,9 +18,9 @@
 
 #include <ygui/layout/layout.h>
 
-#ifndef _YAOSP_FLOWLAYOUT_H_
-#define _YAOSP_FLOWLAYOUT_H_
+#ifndef _YGUI_FLOWLAYOUT_H_
+#define _YGUI_FLOWLAYOUT_H_
 
-layout_t* create_flow_layout( void );
+layout_t* create_flowlayout( void );
 
-#endif /* _YAOSP_FLOWLAYOUT_H_ */
+#endif /* _YGUI_FLOWLAYOUT_H_ */

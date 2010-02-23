@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -59,7 +59,7 @@ menu_t* create_menu( void ) {
 
     container = window_get_container( menu->window );
 
-    border = create_line_border();
+    border = create_lineborder();
     widget_set_border( container, border );
     border_dec_ref( border );
 

@@ -205,6 +205,18 @@ int widget_get_visible_size( widget_t* widget, point_t* size ) {
     return 0;
 }
 
+border_t* widget_get_border( widget_t* widget ) {
+    border_t* border;
+
+    border = widget->border;
+
+    if ( border != NULL ) {
+        border_inc_ref(border);
+    }
+
+    return border;
+}
+
 int widget_set_private( widget_t* widget, void* private ) {
     widget->private = private;
     return 0;
@@ -292,7 +304,10 @@ int widget_set_border( widget_t* widget, border_t* border ) {
     }
 
     widget->border = border;
-    border_inc_ref( widget->border );
+
+    if ( widget->border != NULL ) {
+        border_inc_ref( widget->border );
+    }
 
     return 0;
 }

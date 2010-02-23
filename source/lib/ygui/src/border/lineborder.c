@@ -59,10 +59,10 @@ static border_operations_t line_border_ops = {
     .paint = line_border_paint
 };
 
-border_t* create_line_border( void ) {
+border_t* create_lineborder( void ) {
     border_t* border;
 
-    border = create_border( &line_border_ops );
+    border = create_border( &line_border_ops, 0 );
 
     if ( border == NULL ) {
         return NULL;

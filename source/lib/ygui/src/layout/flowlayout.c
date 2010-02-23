@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -86,17 +86,14 @@ static layout_operations_t flowlayout_ops = {
     .get_preferred_size = flowlayout_get_preferred_size
 };
 
-layout_t* create_flow_layout( void ) {
+layout_t* create_flowlayout( void ) {
     layout_t* layout;
 
-    layout = create_layout( &flowlayout_ops );
+    layout = create_layout( L_FLOW, &flowlayout_ops, 0 );
 
     if ( layout == NULL ) {
-        goto error1;
+        return NULL;
     }
 
     return layout;
-
- error1:
-    return NULL;
 }

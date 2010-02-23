@@ -21,6 +21,6 @@
 
 #include <ygui/border/border.h>
 
-border_t* create_line_border( void );
+border_t* create_lineborder( void );
 
 #endif /* _YGUI_LINEBORDER_H_ */

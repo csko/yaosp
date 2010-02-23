@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -28,6 +28,7 @@
 #include <ygui/scrollpanel.h>
 #include <ygui/dialog/filechooser.h>
 #include <ygui/layout/borderlayout.h>
+#include <ygui/border/emptyborder.h>
 
 static int file_chooser_window_closed( window_t* window, void* data ) {
     /* todo: destroy the file chooser stuffs */
@@ -164,7 +165,12 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
 
     widget_t* container = window_get_container( chooser->window );
 
-    layout_t* layout = create_border_layout();
+    border_t* border = create_emptyborder( 3, 3, 3, 3 );
+    widget_set_border( container, border );
+    border_dec_ref(border);
+
+    layout_t* layout = create_borderlayout();
+    borderlayout_set_spacing( layout, 3 );
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
@@ -194,7 +200,8 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
     widget_add( container, panel, BRD_PAGE_END );
     widget_dec_ref( panel );
 
-    layout = create_border_layout();
+    layout = create_borderlayout();
+    borderlayout_set_spacing( layout, 3 );
     panel_set_layout( panel, layout );
     layout_dec_ref( layout );
 

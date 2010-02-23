@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -100,15 +100,32 @@ static widget_operations_t panel_ops = {
     .destroy = panel_destroy
 };
 
+layout_t* panel_get_layout( widget_t* widget ) {
+    panel_t* panel;
+    layout_t* layout;
+
+    if ( ( widget == NULL ) ||
+         ( widget_get_id(widget) != W_PANEL ) ) {
+        return NULL;
+    }
+
+    panel = ( panel_t* )widget_get_data( widget );
+
+    layout = panel->layout;
+
+    if ( layout != NULL ) {
+        layout_inc_ref(layout);
+    }
+
+    return layout;
+}
+
 int panel_set_layout( widget_t* widget, layout_t* layout ) {
     panel_t* panel;
 
     if ( ( widget == NULL ) ||
-         ( layout == NULL ) ) {
-        return -EINVAL;
-    }
-
-    if ( widget_get_id( widget ) != W_PANEL ) {
+         ( layout == NULL ) ||
+         ( widget_get_id(widget) != W_PANEL ) ) {
         return -EINVAL;
     }
 
@@ -119,7 +136,10 @@ int panel_set_layout( widget_t* widget, layout_t* layout ) {
     }
 
     panel->layout = layout;
-    layout_inc_ref( panel->layout );
+
+    if ( panel->layout != NULL ) {
+        layout_inc_ref( panel->layout );
+    }
 
     return 0;
 }

@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,19 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui/layout/layout.h>
+#ifndef _YGUI_EMPTYBORDER_H_
+#define _YGUI_EMPTYBORDER_H_
 
-#ifndef _YAOSP_BORDERLAYOUT_H_
-#define _YAOSP_BORDERLAYOUT_H_
+#include <ygui/border/border.h>
 
-#define BRD_PAGE_START ((void*)1)
-#define BRD_PAGE_END   ((void*)2)
-#define BRD_LINE_START ((void*)3)
-#define BRD_LINE_END   ((void*)4)
-#define BRD_CENTER     ((void*)5)
+border_t* create_emptyborder( int left, int top, int right, int bottom );
 
-int borderlayout_set_spacing( layout_t* layout, int spacing );
-
-layout_t* create_borderlayout( void );
-
-#endif /* _YAOSP_BORDERLAYOUT_H_ */
+#endif /* _YGUI_EMPTYBORDER_H_ */

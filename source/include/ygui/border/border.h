@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -37,6 +37,8 @@ typedef struct border {
 int border_inc_ref( border_t* border );
 int border_dec_ref( border_t* border );
 
-border_t* create_border( border_operations_t* ops );
+void* border_get_data( border_t* border );
+
+border_t* create_border( border_operations_t* ops, int data_size );
 
 #endif /* _YGUI_BORDER_H_ */

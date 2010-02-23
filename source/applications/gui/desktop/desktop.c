@@ -120,7 +120,7 @@ int main( int argc, char** argv ) {
 
     /* Set the layout of the window */
 
-    layout_t* layout = create_border_layout();
+    layout_t* layout = create_borderlayout();
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 

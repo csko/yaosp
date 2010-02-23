@@ -121,7 +121,7 @@ static int event_open_shutdown_window( widget_t* widget, void* data ) {
 
     container = window_get_container( window );
 
-    layout = create_border_layout();
+    layout = create_borderlayout();
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
@@ -208,7 +208,7 @@ int main( int argc, char** argv ) {
 
     /* Set the layout of the window */
 
-    layout_t* layout = create_border_layout();
+    layout_t* layout = create_borderlayout();
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
@@ -225,7 +225,7 @@ int main( int argc, char** argv ) {
     widget_t* plugin_panel = create_panel();
     widget_add( container, plugin_panel, BRD_LINE_END );
 
-    layout = create_flow_layout();
+    layout = create_flowlayout();
     panel_set_layout( plugin_panel, layout );
     layout_dec_ref( layout );
 

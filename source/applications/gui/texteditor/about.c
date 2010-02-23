@@ -1,6 +1,6 @@
 /* Text editor application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -36,7 +36,7 @@ int about_open( void ) {
 
     container = window_get_container( about_win );
 
-    layout = create_border_layout();
+    layout = create_borderlayout();
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 

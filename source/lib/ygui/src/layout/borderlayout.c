@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -17,9 +17,10 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/param.h>
-#include <yaosp/debug.h>
 
+#include <ygui/panel.h>
 #include <ygui/layout/borderlayout.h>
 
 #include "../internal.h"
@@ -33,7 +34,12 @@ enum {
     W_COUNT
 };
 
-static void borderlayout_do_page_start( widget_t* widget, point_t* panel_size, point_t* center_position, point_t* center_size ) {
+typedef struct borderlayout {
+    int spacing;
+} borderlayout_t;
+
+static void borderlayout_do_page_start( borderlayout_t* borderlayout, widget_t* widget, point_t* panel_size,
+                                        point_t* center_position, point_t* center_size ) {
     point_t widget_size;
     point_t widget_position;
     point_t preferred_size;
@@ -60,11 +66,12 @@ static void borderlayout_do_page_start( widget_t* widget, point_t* panel_size, p
         &widget_size
     );
 
-    center_position->y = widget_size.y;
-    center_size->y -= widget_size.y;
+    center_position->y = widget_size.y + borderlayout->spacing;
+    center_size->y -= ( widget_size.y + borderlayout->spacing );
 }
 
-static void borderlayout_do_page_end( widget_t* widget, point_t* panel_size, point_t* center_size ) {
+static void borderlayout_do_page_end( borderlayout_t* borderlayout, widget_t* widget,
+                                      point_t* panel_size, point_t* center_size ) {
     point_t widget_size;
     point_t widget_position;
     point_t preferred_size;
@@ -91,10 +98,11 @@ static void borderlayout_do_page_end( widget_t* widget, point_t* panel_size, poi
         &widget_size
     );
 
-    center_size->y -= widget_size.y;
+    center_size->y -= ( widget_size.y + borderlayout->spacing );
 }
 
-static void borderlayout_do_line_start( widget_t* widget, point_t* panel_size, point_t* center_position, point_t* center_size ) {
+static void borderlayout_do_line_start( borderlayout_t* borderlayout, widget_t* widget, point_t* panel_size,
+                                        point_t* center_position, point_t* center_size ) {
     point_t widget_position;
     point_t widget_size;
     point_t preferred_size;
@@ -121,11 +129,12 @@ static void borderlayout_do_line_start( widget_t* widget, point_t* panel_size, p
         &widget_size
     );
 
-    center_position->x += widget_size.x;
-    center_size->x -= widget_size.x;
+    center_position->x += widget_size.x + borderlayout->spacing;
+    center_size->x -= ( widget_size.x + borderlayout->spacing );
 }
 
-static void borderlayout_do_line_end( widget_t* widget, point_t* panel_size, point_t* center_position, point_t* center_size ) {
+static void borderlayout_do_line_end( borderlayout_t* borderlayout, widget_t* widget, point_t* panel_size,
+                                      point_t* center_position, point_t* center_size ) {
     point_t widget_position;
     point_t widget_size;
     point_t preferred_size;
@@ -152,7 +161,7 @@ static void borderlayout_do_line_end( widget_t* widget, point_t* panel_size, poi
         &widget_size
     );
 
-    center_size->x -= widget_size.x;
+    center_size->x -= ( widget_size.x + borderlayout->spacing );
 }
 
 static void borderlayout_do_center( widget_t* widget, point_t* panel_size,
@@ -220,7 +229,12 @@ static int borderlayout_do_layout( widget_t* widget ) {
     point_t center_size;
     point_t center_position;
     point_t panel_size;
+    layout_t* layout;
+    borderlayout_t* borderlayout;
     widget_t* widget_table[ W_COUNT ] = { NULL, NULL, NULL, NULL, NULL };
+
+    layout = panel_get_layout(widget);
+    borderlayout = (borderlayout_t*)layout_get_data(layout);
 
     widget_get_bounds( widget, &tmp );
     panel_size.x = rect_width( &tmp );
@@ -231,71 +245,96 @@ static int borderlayout_do_layout( widget_t* widget ) {
     point_init( &center_position, 0, 0 );
     point_copy( &center_size, &panel_size );
 
-    if ( widget_table[ W_PAGE_START ] != NULL ) {
+    /* Page start widget */
+
+    if ( widget_table[W_PAGE_START] != NULL ) {
         borderlayout_do_page_start(
-            widget_table[ W_PAGE_START ],
-            &panel_size,
-            &center_position,
-            &center_size
+            borderlayout, widget_table[W_PAGE_START], &panel_size,
+            &center_position, &center_size
         );
     }
 
-    if ( widget_table[ W_PAGE_END ] != NULL ) {
+    /* Page end widget */
+
+    if ( widget_table[W_PAGE_END] != NULL ) {
         borderlayout_do_page_end(
-            widget_table[ W_PAGE_END ],
-            &panel_size,
-            &center_size
+            borderlayout, widget_table[W_PAGE_END],
+            &panel_size, &center_size
         );
     }
 
-    if ( widget_table[ W_LINE_START ] != NULL ) {
+    /* Line start widget */
+
+    if ( widget_table[W_LINE_START] != NULL ) {
         borderlayout_do_line_start(
-            widget_table[ W_LINE_START ],
-            &panel_size,
-            &center_position,
-            &center_size
+            borderlayout, widget_table[W_LINE_START], &panel_size,
+            &center_position, &center_size
         );
     }
 
-    if ( widget_table[ W_LINE_END ] != NULL ) {
+    /* Line end widget */
+
+    if ( widget_table[W_LINE_END] != NULL ) {
         borderlayout_do_line_end(
-            widget_table[ W_LINE_END ],
-            &panel_size,
-            &center_position,
-            &center_size
+            borderlayout, widget_table[W_LINE_END], &panel_size,
+            &center_position, &center_size
         );
     }
 
-    if ( widget_table[ W_CENTER ] != NULL ) {
+    /* Center widget */
+
+    if ( widget_table[W_CENTER] != NULL ) {
         borderlayout_do_center(
-            widget_table[ W_CENTER ],
-            &panel_size,
-            &center_position,
-            &center_size
+            widget_table[W_CENTER], &panel_size,
+            &center_position, &center_size
         );
     }
+
+    layout_dec_ref(layout);
 
     return 0;
 }
 
 static int borderlayout_get_preferred_size( widget_t* widget, point_t* size ) {
     int i;
+    layout_t* layout;
+    borderlayout_t* borderlayout;
     point_t pref_size[ W_COUNT ];
     widget_t* widget_table[ W_COUNT ] = { NULL, NULL, NULL, NULL, NULL };
+
+    layout = panel_get_layout(widget);
+    borderlayout = (borderlayout_t*)layout_get_data(layout);
 
     borderlayout_fill_widget_table( widget, widget_table );
 
     for ( i = 0; i < W_COUNT; i++ ) {
-        if ( widget_table[ i ] == NULL ) {
-            point_init( &pref_size[ i ], 0, 0 );
+        if ( widget_table[i] == NULL ) {
+            point_init( &pref_size[i], 0, 0 );
         } else {
-            widget_get_preferred_size( widget_table[ i ], &pref_size[ i ] );
+            widget_get_preferred_size( widget_table[i], &pref_size[i] );
         }
     }
 
     size->x = pref_size[ W_LINE_START ].x +
               pref_size[ W_CENTER ].x +
               pref_size[ W_LINE_END ].x;
+
+    /* Add X spacing */
+
+    if ( widget_table[W_CENTER] == NULL ) {
+        if ( widget_table[W_LINE_START] != NULL &&
+             widget_table[W_LINE_END] != NULL ) {
+            size->x += borderlayout->spacing;
+        }
+    } else {
+        if ( widget_table[W_LINE_START] != NULL ) {
+            size->x += borderlayout->spacing;
+        }
+
+        if ( widget_table[W_LINE_END] != NULL ) {
+            size->x += borderlayout->spacing;
+        }
+    }
 
     size->y = pref_size[ W_PAGE_START ].y +
               pref_size[ W_CENTER ].y +
@@ -307,6 +346,29 @@ static int borderlayout_get_preferred_size( widget_t* widget, point_t* size ) {
                             pref_size[ W_LINE_END ].y +
                             pref_size[ W_PAGE_END ].y );
 
+    /* Add Y spacing */
+
+    int has_mid_line = ( widget_table[W_LINE_START] != NULL ||
+                         widget_table[W_CENTER] != NULL ||
+                         widget_table[W_LINE_END] != NULL );
+
+    if ( has_mid_line ) {
+        if ( widget_table[W_PAGE_START] != NULL ) {
+            size->y += borderlayout->spacing;
+        }
+
+        if ( widget_table[W_PAGE_END] != NULL ) {
+            size->y += borderlayout->spacing;
+        }
+    } else {
+        if ( widget_table[W_PAGE_START] != NULL &&
+             widget_table[W_PAGE_END] != NULL ) {
+            size->y += borderlayout->spacing;
+        }
+    }
+
+    layout_dec_ref(layout);
+
     return 0;
 }
 
@@ -315,14 +377,32 @@ static layout_operations_t borderlayout_ops = {
     .get_preferred_size = borderlayout_get_preferred_size
 };
 
-layout_t* create_border_layout( void ) {
+layout_t* create_borderlayout( void ) {
     layout_t* layout;
+    borderlayout_t* borderlayout;
 
-    layout = create_layout( &borderlayout_ops );
+    layout = create_layout( L_BORDER, &borderlayout_ops, sizeof(borderlayout_t) );
 
     if ( layout == NULL ) {
         return NULL;
     }
 
+    borderlayout = ( borderlayout_t* )layout_get_data( layout );
+
+    borderlayout->spacing = 0;
+
     return layout;
+}
+
+int borderlayout_set_spacing( layout_t* layout, int spacing ) {
+    borderlayout_t* borderlayout;
+
+    if ( layout_get_type( layout ) != L_BORDER ) {
+        return -EINVAL;
+    }
+
+    borderlayout = ( borderlayout_t* )layout_get_data( layout );
+    borderlayout->spacing = spacing;
+
+    return 0;
 }

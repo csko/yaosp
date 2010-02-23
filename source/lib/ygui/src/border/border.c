@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -30,10 +30,14 @@ int border_dec_ref( border_t* border ) {
     return 0;
 }
 
-border_t* create_border( border_operations_t* ops ) {
+void* border_get_data( border_t* border ) {
+    return ( void* )( border + 1 );
+}
+
+border_t* create_border( border_operations_t* ops, int data_size ) {
     border_t* border;
 
-    border = ( border_t* )malloc( sizeof( border_t ) );
+    border = ( border_t* )malloc( sizeof( border_t ) + data_size );
 
     if ( border == NULL ) {
         return NULL;

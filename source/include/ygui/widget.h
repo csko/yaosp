@@ -134,6 +134,7 @@ int widget_get_position( widget_t* widget, point_t* position );
 int widget_get_scroll_offset( widget_t* widget, point_t* offset );
 int widget_get_full_size( widget_t* widget, point_t* size );
 int widget_get_visible_size( widget_t* widget, point_t* size );
+border_t* widget_get_border( widget_t* widget );
 
 int widget_set_private( widget_t* widget, void* private );
 int widget_set_window( widget_t* widget, struct window* window );

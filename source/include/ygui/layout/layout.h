@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,12 +21,18 @@
 
 #include <ygui/widget.h>
 
+enum {
+    L_BORDER,
+    L_FLOW
+};
+
 typedef struct layout_operations {
     int ( *do_layout )( widget_t* widget );
     int ( *get_preferred_size )( widget_t* widget, point_t* size );
 } layout_operations_t;
 
 typedef struct layout {
+    int type;
     int ref_count;
     layout_operations_t* ops;
 } layout_t;
@@ -34,6 +40,9 @@ typedef struct layout {
 int layout_inc_ref( layout_t* layout );
 int layout_dec_ref( layout_t* layout );
 
-layout_t* create_layout( layout_operations_t* ops );
+int layout_get_type( layout_t* layout );
+void* layout_get_data( layout_t* layout );
 
-#endif /* _YAOSP_LAYOUT_H_ */
+layout_t* create_layout( int type, layout_operations_t* ops, int data_size );
+
+#endif /* _YGUI_LAYOUT_H_ */

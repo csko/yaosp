@@ -241,7 +241,7 @@ static int initialize_gui( void ) {
 
     widget_t* container = window_get_container( window );
 
-    layout_t* layout = create_border_layout();
+    layout_t* layout = create_borderlayout();
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
