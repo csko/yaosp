@@ -133,6 +133,10 @@ static inline int ps2_set_sample_rate( ps2_device_t* device, uint8_t rate ) {
     return ps2_device_command( device, PS2_CMD_SET_SAMPLE_RATE, &rate, 1, NULL, 0 );
 }
 
+static inline int ps2_set_resolution( ps2_device_t* device, uint8_t resolution ) {
+    return ps2_device_command( device, PS2_CMD_SET_RESOLUTION, &resolution, 1, NULL, 0 );
+}
+
 int ps2_detect_mouse( ps2_device_t* device ) {
     int error;
     uint8_t deviceId = 0;
@@ -243,6 +247,8 @@ static int ps2_mouse_open( void* node, uint32_t flags, void** _cookie ) {
     device->interrupt = ps2_mouse_interrupt;
     device->cookie = cookie;
 
+    ps2_device_command( device, PS2_CMD_SET_SCALE11, NULL, 0, NULL, 0 );
+
     error = ps2_device_command( device, PS2_CMD_ENABLE, NULL, 0, NULL, 0 );
 
     if ( error != 0 ) {
@@ -251,6 +257,9 @@ static int ps2_mouse_open( void* node, uint32_t flags, void** _cookie ) {
         kfree( cookie );
         return error;
     }
+
+    ps2_set_sample_rate( device, 100 );
+    ps2_set_resolution( device, 3 );
 
     atomic_or( &device->flags, PS2_FLAG_ENABLED );
 
