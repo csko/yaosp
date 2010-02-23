@@ -1,6 +1,6 @@
 /* yaOSp GUI control application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -46,7 +46,13 @@ static int print_usage( void ) {
 }
 
 static int print_subsystem_usage( ctrl_subsystem_t* subsystem ) {
-    printf( "todo: subsystem usage!\n" );
+    int i;
+
+    printf( "%s commands:\n", subsystem->name );
+
+    for ( i = 0; subsystem->commands[i].name != NULL; i++ ) {
+        printf( "  %s - %s\n", subsystem->commands[i].name, subsystem->commands[i].help );
+    }
 
     return 0;
 }
@@ -86,7 +92,7 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    if ( argc < 3 ) {
+    if ( argc < 2 ) {
         print_usage();
         return EXIT_FAILURE;
     }
@@ -98,7 +104,11 @@ int main( int argc, char** argv ) {
         return EXIT_FAILURE;
     }
 
-    command = command_find( subsystem, argv[ 2 ] );
+    if ( argc < 3 ) {
+        command = NULL;
+    } else {
+        command = command_find( subsystem, argv[ 2 ] );
+    }
 
     if ( command == NULL ) {
         print_subsystem_usage( subsystem );

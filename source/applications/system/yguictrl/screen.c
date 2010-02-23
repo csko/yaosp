@@ -1,6 +1,6 @@
 /* yaOSp GUI control application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -99,8 +99,8 @@ static int screen_set_mode( int argc, char** argv ) {
 }
 
 static ctrl_command_t screen_commands[] = {
-    { "listmodes", screen_list_modes },
-    { "setmode", screen_set_mode },
+    { "listmodes", "lists available screen modes", screen_list_modes },
+    { "setmode", "sets the current screen mode", screen_set_mode },
     { NULL, NULL }
 };
 

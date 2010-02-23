@@ -1,6 +1,6 @@
 /* yaOSp GUI control application
  *
- * Copyright (c) 2010 Kasper Mikkelsen
+ * Copyright (c) 2010 Kasper Mikkelsen, Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -32,14 +32,20 @@ int send_set_wallpaper_msg_to_desktop( char* data ) {
     return 0;
 }
 
-static int change_wallpaper( int argc, char** argv) {
+static int change_wallpaper( int argc, char** argv ) {
+    if ( argc != 1 ) {
+        fprintf( stderr, "New wallpeper file parameter is missing.\n" );
+        return -1;
+    }
+
     printf( "Set new wallpaper to: %s.\n", argv[0] );
     send_set_wallpaper_msg_to_desktop( argv[0] );
+
     return 0;
 }
 
 static ctrl_command_t wallpaper_commands[] = {
-    { "set", change_wallpaper },
+    { "set", "changes the current wallpaper", change_wallpaper },
     { NULL, NULL }
 };
 

@@ -23,6 +23,7 @@ typedef int command_handler_t( int argc, char** argv );
 
 typedef struct ctrl_command {
     const char* name;
+    const char* help;
     command_handler_t* handler;
 } ctrl_command_t;
 
