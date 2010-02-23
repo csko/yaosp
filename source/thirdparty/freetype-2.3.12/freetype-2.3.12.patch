@@ -1,6 +1,6 @@
-diff -Nru freetype-2.3.11-orig/include/freetype/config/ftmodule.h freetype-2.3.11/include/freetype/config/ftmodule.h
---- freetype-2.3.11-orig/include/freetype/config/ftmodule.h	2009-03-14 14:45:26.000000000 +0100
-+++ freetype-2.3.11/include/freetype/config/ftmodule.h	2010-01-15 09:02:57.000000000 +0100
+diff -Nru freetype-2.3.12-orig/include/freetype/config/ftmodule.h freetype-2.3.12/include/freetype/config/ftmodule.h
+--- freetype-2.3.12-orig/include/freetype/config/ftmodule.h	2009-03-14 14:45:26.000000000 +0100
++++ freetype-2.3.12/include/freetype/config/ftmodule.h	2010-02-23 11:18:50.000000000 +0100
 @@ -12,21 +12,21 @@
  
  FT_USE_MODULE( FT_Module_Class, autofit_module_class )
@@ -35,21 +35,15 @@ diff -Nru freetype-2.3.11-orig/include/freetype/config/ftmodule.h freetype-2.3.1
 +//FT_USE_MODULE( FT_Driver_ClassRec, bdf_driver_class )
  
  /* EOF */
-diff -Nru freetype-2.3.11-orig/objs/README freetype-2.3.11/objs/README
---- freetype-2.3.11-orig/objs/README	2009-03-14 14:45:26.000000000 +0100
-+++ freetype-2.3.11/objs/README	1970-01-01 01:00:00.000000000 +0100
-@@ -1,2 +0,0 @@
--This directory contains all the object files created when building the
--library.
-diff -Nru freetype-2.3.11-orig/pbuild.xml freetype-2.3.11/pbuild.xml
---- freetype-2.3.11-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ freetype-2.3.11/pbuild.xml	2010-01-15 09:03:24.000000000 +0100
+diff -Nru freetype-2.3.12-orig/pbuild.xml freetype-2.3.12/pbuild.xml
+--- freetype-2.3.12-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ freetype-2.3.12/pbuild.xml	2010-02-23 12:06:13.000000000 +0100
 @@ -0,0 +1,92 @@
 +<!--
 +
 +This file is part of the yaosp build system
 +
-+Copyright (c) 2009, 2010 Zoltan Kovacs
++Copyright (c) 2010 Zoltan Kovacs
 +
 +This program is free software; you can redistribute it and/or modify
 +it under the terms of version 2 of the GNU General Public License
@@ -92,7 +86,7 @@ diff -Nru freetype-2.3.11-orig/pbuild.xml freetype-2.3.11/pbuild.xml
 +    <target name="compile">
 +        <call target="prepare"/>
 +
-+        <echo>Compiling freetype 2.3.11</echo>
++        <echo>Compiling freetype 2.3.12</echo>
 +
 +        <for var="i" array="${files}">
 +            <echo>-> ${i}</echo>
@@ -108,7 +102,7 @@ diff -Nru freetype-2.3.11-orig/pbuild.xml freetype-2.3.11/pbuild.xml
 +            </gcc>
 +        </for>
 +
-+        <echo>Linking freetype 2.3.9</echo>
++        <echo>Linking freetype 2.3.12</echo>
 +        <echo>-> objs/libfreetype.a</echo>
 +
 +        <ar>
@@ -121,7 +115,7 @@ diff -Nru freetype-2.3.11-orig/pbuild.xml freetype-2.3.11/pbuild.xml
 +    <target name="install">
 +        <copy from="objs/libfreetype.a" to="../../../../build/libs/libfreetype.a"/>
 +
-+        <echo>Installing freetype 2.3.11 headers</echo>
++        <echo>Installing freetype 2.3.12 headers</echo>
 +
 +        <mkdir>../../../include/freetype</mkdir>
 +        <mkdir>../../../include/freetype/config</mkdir>
