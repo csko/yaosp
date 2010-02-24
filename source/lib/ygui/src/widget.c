@@ -317,15 +317,25 @@ int widget_inc_ref( widget_t* widget ) {
         return -EINVAL;
     }
 
-    assert( widget->ref_count > 0 );
+    assert( widget->ref_floating || widget->ref_count > 0 );
 
-    widget->ref_count++;
+    if ( widget->ref_floating ) {
+        widget->ref_floating = 0;
+        widget->ref_count = 1;
+    } else {
+        widget->ref_count++;
+    }
 
     return 0;
 }
 
 int widget_dec_ref( widget_t* widget ) {
     if ( widget == NULL ) {
+        return -EINVAL;
+    }
+
+    if ( widget->ref_floating ) {
+        dbprintf( "widget_dec_ref(): Called on a widget with floating reference!\n" );
         return -EINVAL;
     }
 
@@ -644,7 +654,8 @@ widget_t* create_widget( int id, int flags, widget_operations_t* ops, void* data
     widget->id = id;
     widget->data = data;
     widget->flags = flags;
-    widget->ref_count = 1;
+    widget->ref_count = 0;
+    widget->ref_floating = 1;
     widget->border = NULL;
     widget->parent = NULL;
 

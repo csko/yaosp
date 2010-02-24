@@ -130,7 +130,7 @@ int main( int argc, char** argv ) {
 
         image_wallpaper = create_image( bitmap );
         widget_add( container, image_wallpaper, BRD_CENTER );
-        widget_dec_ref( image_wallpaper );
+        widget_inc_ref( image_wallpaper ); /* reference for the global variable */
 
         bitmap_dec_ref( bitmap );
     }

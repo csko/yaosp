@@ -214,13 +214,11 @@ int main( int argc, char** argv ) {
 
     widget_t* image = create_image( bitmap_load_from_file( "/application/taskbar/images/start.png" ) );
     widget_add( container, image, BRD_LINE_START );
-    widget_dec_ref( image );
-
     widget_connect_event_handler( image, "mouse-down", event_open_taskbar, NULL );
 
     win_list_widget = window_list_create();
     widget_add( container, win_list_widget, BRD_CENTER );
-    widget_dec_ref( win_list_widget );
+    widget_inc_ref( win_list_widget ); /* one reference for the global variable */
 
     widget_t* plugin_panel = create_panel();
     widget_add( container, plugin_panel, BRD_LINE_END );
@@ -234,10 +232,7 @@ int main( int argc, char** argv ) {
         widget_t* plugin_widget = plugin->create();
 
         widget_add( plugin_panel, plugin_widget, 0 );
-        widget_dec_ref( plugin_widget );
     }
-
-    widget_dec_ref( plugin_panel );
 
     /* Create the menu */
 

@@ -165,52 +165,40 @@ int main( int argc, char** argv ) {
 
     widget_t* menubar = create_menubar();
     widget_add( container, menubar, BRD_PAGE_START );
-    widget_dec_ref( menubar );
 
     /* File menu */
 
     widget_t* item = create_menuitem_with_label( "File" );
     menubar_add_item( menubar, item );
-    widget_dec_ref( item );
 
     menu_t* menu = create_menu();
     menuitem_set_submenu( item, menu );
 
     item = create_menuitem_with_label( "Open" );
     menu_add_item( menu, item );
-    widget_dec_ref( item );
-
     widget_connect_event_handler( item, "mouse-down", event_open_file, NULL );
 
     item = create_menuitem_with_label( "Save" );
     menu_add_item( menu, item );
-    widget_dec_ref( item );
-
     widget_connect_event_handler( item, "mouse-down", event_save_file, NULL );
 
     item = create_separator_menuitem();
     menu_add_item( menu, item );
-    widget_dec_ref( item );
 
     item = create_menuitem_with_label( "Exit" );
     menu_add_item( menu, item );
-    widget_dec_ref( item );
-
     widget_connect_event_handler( item, "mouse-down", event_application_exit, NULL );
 
     /* Help menu */
 
     item = create_menuitem_with_label( "Help" );
     menubar_add_item( menubar, item );
-    widget_dec_ref( item );
 
     menu = create_menu();
     menuitem_set_submenu( item, menu );
 
     item = create_menuitem_with_label( "About" );
     menu_add_item( menu, item );
-    widget_dec_ref( item );
-
     widget_connect_event_handler( item, "mouse-down", event_about_open, NULL );
 
     /* Textarea ... */
@@ -220,13 +208,12 @@ int main( int argc, char** argv ) {
 
     textarea = create_textarea();
     widget_add( scrollpanel, textarea, NULL );
-    widget_dec_ref( textarea );
-    widget_dec_ref( scrollpanel );
+    widget_inc_ref( textarea ); /* one ref for global variable */
 
     statusbar = create_label();
     label_set_horizontal_alignment( statusbar, H_ALIGN_LEFT );
     widget_add( container, statusbar, BRD_PAGE_END );
-    widget_dec_ref( statusbar );
+    widget_inc_ref( statusbar ); /* global variable again ... */
 
     window_show( window );
 

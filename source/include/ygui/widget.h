@@ -91,7 +91,9 @@ typedef struct widget {
     void* data;
     void* private;
     int flags;
+
     int ref_count;
+    int ref_floating;
 
     struct window* window;
     widget_operations_t* ops;
