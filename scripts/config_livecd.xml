@@ -16,6 +16,12 @@
                     <attrib type="binary" name="image" value="source/applications/gui/texteditor/images/texteditor_32x32.png"/>
                     <attrib type="ascii" name="executable" value="/application/texteditor/texteditor"/>
                 </node>
+                <node name="iview">
+                    <attrib type="ascii" name="name" value="Image viewer"/>
+                    <attrib type="numeric" name="position" value="2"/>
+                    <attrib type="binary" name="image" value="source/applications/gui/iview/images/iview_32x32.png"/>
+                    <attrib type="ascii" name="executable" value="/application/iview/iview"/>
+                </node>
             </node>
         </node>
 

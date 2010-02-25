@@ -150,6 +150,10 @@ int ui_init( void ) {
 
     window = create_window( "iView", &pos, &size, W_ORDER_NORMAL, WINDOW_NONE );
 
+    bitmap_t* icon = bitmap_load_from_file( "/application/iview/images/iview_16x16.png" );
+    window_set_icon( window, icon );
+    bitmap_dec_ref( icon );
+
     widget_t* container = window_get_container( window );
 
     layout_t* layout = create_borderlayout();

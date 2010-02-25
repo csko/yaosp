@@ -71,7 +71,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <mkdir>../../../../build/image/application/iview</mkdir>
+        <mkdir>../../../../build/image/application/iview/images</mkdir>
+
         <copy from="objs/iview" to="../../../../build/image/application/iview/iview"/>
+        <copy from="images/iview_16x16.png" to="../../../../build/image/application/iview/images/iview_16x16.png"/>
     </target>
 
     <target name="all">
