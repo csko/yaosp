@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>texteditor</item>
         <item>desktop</item>
         <item>taskbar</item>
+        <item>iview</item>
     </array>
 
     <target name="all">
