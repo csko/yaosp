@@ -75,6 +75,7 @@ static window_t* window_create( point_t* size ) {
         goto error5;
     }
 
+    widget_inc_ref( window->container );
     widget_set_window( window->container, window );
 
     if ( size != NULL ) {
