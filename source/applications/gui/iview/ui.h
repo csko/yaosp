@@ -16,30 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <yaosp/debug.h>
+#ifndef _UI_H_
+#define _UI_H_
 
-#include <ygui/application.h>
+#include <ygui/window.h>
+#include <ygui/image.h>
 
-#include "ui.h"
-#include "worker.h"
+extern window_t* window;
+extern widget_t* image_widget;
 
-int main( int argc, char** argv ) {
-    if ( application_init( APP_NONE ) != 0 ) {
-        return EXIT_FAILURE;
-    }
+extern point_t current_size;
+extern bitmap_t* orig_bitmap;
 
-    ui_init();
-    worker_init();
-    worker_start();
+int ui_set_statusbar( const char* format, ... );
+int ui_set_image_info( const char* format, ... );
 
-    window_show( window );
+int ui_init( void );
 
-    /* The mainloop of the application ... */
-
-    application_run();
-
-    return EXIT_SUCCESS;
-}
+#endif /* _UI_H_ */

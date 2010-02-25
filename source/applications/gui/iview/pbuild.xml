@@ -22,7 +22,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build default="all">
     <array name="files">
         <item>iview.c</item>
+        <item>ui.c</item>
+        <item>ui-event.c</item>
         <item>worker.c</item>
+        <item>util.c</item>
     </array>
 
     <target name="clean">

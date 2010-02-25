@@ -16,30 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <yaosp/debug.h>
+#ifndef _UTIL_H_
+#define _UTIL_H_
 
-#include <ygui/application.h>
+char* extract_filename( char* path );
 
-#include "ui.h"
-#include "worker.h"
-
-int main( int argc, char** argv ) {
-    if ( application_init( APP_NONE ) != 0 ) {
-        return EXIT_FAILURE;
-    }
-
-    ui_init();
-    worker_init();
-    worker_start();
-
-    window_show( window );
-
-    /* The mainloop of the application ... */
-
-    application_run();
-
-    return EXIT_SUCCESS;
-}
+#endif /* _UTIL_H_ */
