@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -34,7 +34,8 @@ static inline void point_init( point_t* point, int x, int y ) {
 }
 
 static inline void point_copy( point_t* new, point_t* old ) {
-    memcpy( ( void* )new, ( void* )old, sizeof( point_t ) );
+    new->x = old->x;
+    new->y = old->y;
 }
 
 static inline void point_add( point_t* point1, point_t* point2 ) {
@@ -45,6 +46,11 @@ static inline void point_add( point_t* point1, point_t* point2 ) {
 static inline void point_add_xy( point_t* point, int x, int y ) {
     point->x += x;
     point->y += y;
+}
+
+static inline void point_add_xy_n( point_t* dest, point_t* point, int x, int y ) {
+    dest->x = point->x + x;
+    dest->y = point->y + y;
 }
 
 static inline void point_add_n( point_t* dest, point_t* point1, point_t* point2 ) {

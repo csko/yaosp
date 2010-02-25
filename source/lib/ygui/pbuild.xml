@@ -40,6 +40,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/menubar.c</item>
         <item>src/textarea.c</item>
         <item>src/dirview.c</item>
+        <item>src/region.c</item>
         <item>src/layout/layout.c</item>
         <item>src/layout/borderlayout.c</item>
         <item>src/layout/flowlayout.c</item>

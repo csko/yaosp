@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +19,7 @@
 #ifndef _PTHREAD_H_
 #define _PTHREAD_H_
 
+#include <stddef.h>
 #include <inttypes.h>
 
 #define PTHREAD_MUTEX_MAGIC 0xC001C0DE

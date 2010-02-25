@@ -20,6 +20,7 @@
 #include <errno.h>
 
 #include <ygui/image.h>
+#include <ygui/region.h>
 
 typedef struct image {
     bitmap_t* bitmap;
@@ -38,22 +39,49 @@ static int image_paint( widget_t* widget, gc_t* gc ) {
         return 0;
     }
 
-    gc_set_drawing_mode( gc, DM_BLEND );
+    int bitmap_w = bitmap_get_width(image->bitmap);
+    int bitmap_h = bitmap_get_height(image->bitmap);
+    rect_t bitmap_rect;
 
     if ( rect_width( &bounds ) > bitmap_get_width( image->bitmap ) ) {
-        position.x = ( rect_width( &bounds ) - bitmap_get_width( image->bitmap ) ) / 2;
+        position.x = ( rect_width( &bounds ) - bitmap_w ) / 2;
     } else {
         position.x = 0;
     }
 
     if ( rect_height( &bounds ) > bitmap_get_height( image->bitmap ) ) {
-        position.y = ( rect_height( &bounds ) - bitmap_get_height( image->bitmap ) ) / 2;
+        position.y = ( rect_height( &bounds ) - bitmap_h ) / 2;
     } else {
         position.y = 0;
     }
 
+    rect_init(
+        &bitmap_rect,
+        position.x, position.y,
+        position.x + bitmap_w - 1, position.y + bitmap_h - 1
+    );
+
+    gc_set_drawing_mode( gc, DM_BLEND );
     gc_draw_bitmap( gc, &position, image->bitmap );
     gc_set_drawing_mode( gc, DM_COPY );
+
+    /* Fill those parts of the widget that is not covered by the image itself. */
+
+    static color_t black = { 0, 0, 0, 255 };
+    gc_set_pen_color( gc, &black );
+
+    region_t region;
+    clip_rect_t* clip_rect;
+
+    region_init(&region);
+    region_add(&region, &bounds);
+    region_exclude(&region, &bitmap_rect);
+
+    for ( clip_rect = region.rects; clip_rect != NULL; clip_rect = clip_rect->next ) {
+        gc_fill_rect( gc, &clip_rect->rect );
+    }
+
+    region_destroy(&region);
 
     return 0;
 }

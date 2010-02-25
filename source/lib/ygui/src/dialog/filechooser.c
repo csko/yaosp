@@ -177,15 +177,12 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
     chooser->path_label = create_label_with_text( path );
     label_set_horizontal_alignment( chooser->path_label, H_ALIGN_LEFT );
     widget_add( container, chooser->path_label, BRD_PAGE_START );
-    widget_dec_ref( chooser->path_label );
 
     widget_t* scrollpanel = create_scroll_panel( SCROLLBAR_ALWAYS, SCROLLBAR_ALWAYS );
     widget_add( container, scrollpanel, BRD_CENTER );
 
     chooser->directory_view = create_directory_view( path );
     widget_add( scrollpanel, chooser->directory_view, NULL );
-    widget_dec_ref( chooser->directory_view );
-    widget_dec_ref( scrollpanel );
 
     widget_connect_event_handler(
         chooser->directory_view, "item-selected",
@@ -198,7 +195,6 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
 
     widget_t* panel = create_panel();
     widget_add( container, panel, BRD_PAGE_END );
-    widget_dec_ref( panel );
 
     layout = create_borderlayout();
     borderlayout_set_spacing( layout, 3 );
@@ -207,12 +203,9 @@ file_chooser_t* create_file_chooser( chooser_type_t type, const char* path,
 
     chooser->filename_field = create_textfield();
     widget_add( panel, chooser->filename_field, BRD_CENTER );
-    widget_dec_ref( chooser->filename_field );
 
     widget_t* button = create_button( type == T_OPEN_DIALOG ? "Open" : "Save" );
     widget_add( panel, button, BRD_LINE_END );
-    widget_dec_ref( button );
-
     widget_connect_event_handler( button, "clicked", file_chooser_open_pressed, ( void* )chooser );
 
     return chooser;
