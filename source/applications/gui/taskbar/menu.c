@@ -28,6 +28,7 @@
 
 typedef struct menu_item {
     uint64_t position;
+    int separator;
     char* name;
     char* executable;
     bitmap_t* image;
@@ -106,6 +107,12 @@ int taskbar_create_menu( void ) {
             continue;
         }
 
+        item->separator = ( strncmp( name, "separator", 9 ) == 0 );
+
+        if ( item->separator ) {
+            goto done;
+        }
+
         if ( ycfg_get_ascii_value( path, "name", &item->name ) != 0 ) {
             free( item );
             continue;
@@ -124,6 +131,7 @@ int taskbar_create_menu( void ) {
             item->image = NULL;
         }
 
+ done:
         array_add_item( &menu_items, item );
     }
 
@@ -135,11 +143,16 @@ int taskbar_create_menu( void ) {
 
         item = ( menu_item_t* )array_get_item( &menu_items, i );
 
-        menuitem = create_menuitem_with_label_and_image( item->name, item->image );
-        menu_add_item( taskbar_menu, menuitem );
+        if ( item->separator ) {
+            menuitem = create_separator_menuitem();
+        } else {
+            menuitem = create_menuitem_with_label_and_image( item->name, item->image );
 
-        widget_set_private( menuitem, item );
-        widget_connect_event_handler( menuitem, "clicked", event_taskbar_item_clicked, NULL );
+            widget_set_private( menuitem, item );
+            widget_connect_event_handler( menuitem, "clicked", event_taskbar_item_clicked, NULL );
+        }
+
+        menu_add_item( taskbar_menu, menuitem );
     }
 
     return 0;

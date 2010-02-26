@@ -28,5 +28,6 @@ int panel_set_layout( widget_t* widget, layout_t* layout );
 int panel_set_background_color( widget_t* widget, color_t* color );
 
 widget_t* create_panel( void );
+widget_t* create_panel_with_layout( layout_t* layout );
 
 #endif /* _YGUI_PANEL_H_ */

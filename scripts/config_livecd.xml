@@ -22,6 +22,15 @@
                     <attrib type="binary" name="image" value="source/applications/gui/iview/images/iview_32x32.png"/>
                     <attrib type="ascii" name="executable" value="/application/iview/iview"/>
                 </node>
+                <node name="separator1">
+                    <attrib type="numeric" name="position" value="3"/>
+                </node>
+                <node name="shutdown">
+                    <attrib type="ascii" name="name" value="Shut down"/>
+                    <attrib type="numeric" name="position" value="4"/>
+                    <attrib type="binary" name="image" value="source/applications/gui/shutdown/images/shutdown_32x32.png"/>
+                    <attrib type="ascii" name="executable" value="/application/shutdown/shutdown"/>
+                </node>
             </node>
         </node>
 

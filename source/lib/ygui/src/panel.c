@@ -164,6 +164,10 @@ int panel_set_background_color( widget_t* widget, color_t* color ) {
 }
 
 widget_t* create_panel( void ) {
+    return create_panel_with_layout(NULL);
+}
+
+widget_t* create_panel_with_layout( layout_t* layout ) {
     panel_t* panel;
     widget_t* widget;
 
@@ -179,7 +183,12 @@ widget_t* create_panel( void ) {
         goto error2;
     }
 
-    panel->layout = NULL;
+    panel->layout = layout;
+
+    if ( panel->layout != NULL ) {
+        layout_inc_ref(panel->layout);
+    }
+
     color_init( &panel->background, 216, 216, 216, 255 );
 
     return widget;

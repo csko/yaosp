@@ -44,7 +44,7 @@ static int empty_border_paint( widget_t* widget, gc_t* gc ) {
     gc_set_pen_color( gc, &bg );
 
     /* top - */
-    rect_init( &tmp, 0, 0, size.y - 1, emptyborder->top - 1 );
+    rect_init( &tmp, 0, 0, size.x - 1, emptyborder->top - 1 );
     gc_fill_rect( gc, &tmp );
     /* bottom - */
     rect_init( &tmp, 0, size.y - emptyborder->bottom, size.x - 1, size.y - 1 );

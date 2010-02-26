@@ -96,65 +96,6 @@ static int taskbar_msg_handler( uint32_t code, void* data ) {
     return 0;
 }
 
-#if 0
-static int event_halt_clicked( widget_t* widget, void* data ) {
-    halt();
-    return 0;
-}
-
-static int event_reboot_clicked( widget_t* widget, void* data ) {
-    reboot();
-    return 0;
-}
-
-static int event_open_shutdown_window( widget_t* widget, void* data ) {
-    window_t* window;
-    widget_t* button;
-    layout_t* layout;
-    widget_t* panel;
-    widget_t* container;
-
-    point_t position = { 270, 210 };
-    point_t size = { 120, 40 };
-
-    window = create_window( "Shut down", &position, &size, W_ORDER_NORMAL, WINDOW_FIXED_SIZE );
-
-    container = window_get_container( window );
-
-    layout = create_borderlayout();
-    panel_set_layout( container, layout );
-    layout_dec_ref( layout );
-
-    panel = create_panel();
-
-    layout = create_flow_layout();
-    panel_set_layout( panel, layout );
-    layout_dec_ref( layout );
-
-    widget_add( container, panel, BRD_CENTER );
-
-    button = create_button( "  Halt  " );
-    widget_add( panel, button, NULL );
-    widget_dec_ref( button );
-
-    widget_connect_event_handler( button, "clicked", event_halt_clicked, NULL );
-
-    button = create_button( "  Reboot  " );
-    widget_add( panel, button, NULL );
-    widget_dec_ref( button );
-
-    widget_connect_event_handler( button, "clicked", event_reboot_clicked, NULL );
-
-    widget_get_preferred_size( panel, &size );
-    widget_set_maximum_size( panel, &size );
-    widget_dec_ref( panel );
-
-    window_show( window );
-
-    return 0;
-}
-#endif
-
 static int event_open_taskbar( widget_t* widget, void* data ) {
     point_t size;
     point_t position;
