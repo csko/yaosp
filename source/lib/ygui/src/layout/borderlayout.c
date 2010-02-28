@@ -397,7 +397,8 @@ layout_t* create_borderlayout( void ) {
 int borderlayout_set_spacing( layout_t* layout, int spacing ) {
     borderlayout_t* borderlayout;
 
-    if ( layout_get_type( layout ) != L_BORDER ) {
+    if ( ( layout == NULL ) ||
+         ( layout_get_type(layout) != L_BORDER ) ) {
         return -EINVAL;
     }
 

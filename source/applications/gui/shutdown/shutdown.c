@@ -61,6 +61,7 @@ static int init_ui( void ) {
     border_dec_ref(border);
 
     layout = create_flowlayout();
+    flowlayout_set_spacing(layout, 3);
     panel_set_layout(container, layout);
     layout_dec_ref(layout);
 

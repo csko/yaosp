@@ -21,6 +21,8 @@
 #ifndef _YGUI_FLOWLAYOUT_H_
 #define _YGUI_FLOWLAYOUT_H_
 
+int flowlayout_set_spacing( layout_t* layout, int spacing );
+
 layout_t* create_flowlayout( void );
 
 #endif /* _YGUI_FLOWLAYOUT_H_ */

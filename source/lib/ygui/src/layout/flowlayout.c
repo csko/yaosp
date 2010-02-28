@@ -17,12 +17,18 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/param.h>
 #include <yaosp/debug.h>
 
+#include <ygui/panel.h>
 #include <ygui/layout/flowlayout.h>
 
 #include "../internal.h"
+
+typedef struct flowlayout {
+    int spacing;
+} flowlayout_t;
 
 static int flowlayout_do_layout( widget_t* widget ) {
     int i;
@@ -33,6 +39,12 @@ static int flowlayout_do_layout( widget_t* widget ) {
     rect_t bounds;
     int pref_w_sum;
     int w_inc_per_widget;
+
+    layout_t* layout;
+    flowlayout_t* flowlayout;
+
+    layout = panel_get_layout(widget);
+    flowlayout = (flowlayout_t*)( layout + 1 );
 
     widget_get_bounds( widget, &bounds );
     width = rect_width( &bounds );
@@ -58,6 +70,8 @@ static int flowlayout_do_layout( widget_t* widget ) {
         pref_w_sum += pref_size.x;
     }
 
+    pref_w_sum += ( size - 1 ) * flowlayout->spacing;
+
     if ( pref_w_sum < width ) {
         w_inc_per_widget = ( width - pref_w_sum ) / size;
     } else {
@@ -80,8 +94,10 @@ static int flowlayout_do_layout( widget_t* widget ) {
 
         widget_set_position_and_size( child, &widget_position, &widget_size );
 
-        left += ( pref_size.x + w_inc_per_widget );
+        left += ( pref_size.x + w_inc_per_widget + flowlayout->spacing );
     }
+
+    layout_dec_ref(layout);
 
     return 0;
 }
@@ -115,14 +131,32 @@ static layout_operations_t flowlayout_ops = {
     .get_preferred_size = flowlayout_get_preferred_size
 };
 
+int flowlayout_set_spacing( layout_t* layout, int spacing ) {
+    flowlayout_t* flowlayout;
+
+    if ( ( layout == NULL ) ||
+         ( layout_get_type(layout) != L_FLOW ) ) {
+        return -EINVAL;
+    }
+
+    flowlayout = (flowlayout_t*)( layout + 1 );
+    flowlayout->spacing = spacing;
+
+    return 0;
+}
+
 layout_t* create_flowlayout( void ) {
     layout_t* layout;
+    flowlayout_t* flowlayout;
 
-    layout = create_layout( L_FLOW, &flowlayout_ops, 0 );
+    layout = create_layout( L_FLOW, &flowlayout_ops, sizeof(flowlayout_t) );
 
     if ( layout == NULL ) {
         return NULL;
     }
+
+    flowlayout = (flowlayout_t*)( layout + 1 );
+    flowlayout->spacing = 0;
 
     return layout;
 }
