@@ -932,8 +932,6 @@ static void tcp_notify_read_waiters( tcp_socket_t* tcp_socket ) {
         tmp = tmp->next;
     }
 
-    tcp_socket->first_read_select = NULL;
-
     condition_broadcast( tcp_socket->rx_queue );
 }
 

@@ -302,6 +302,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/inet_ntoa.c</item>
         <item>src/network/inet_ntop.c</item>
         <item>src/network/gethostbyname.c</item>
+        <item>src/network/dns.c</item>
         <item>src/pthread/mutex.c</item>
         <item>src/pthread/mutexattr.c</item>
         <item>src/pthread/thread.c</item>
@@ -357,6 +358,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <define key="USE_LOCKS">1</define>
                 <define key="YAOSP"/>
                 <define key="TRIO_FEATURE_LOCALE">0</define>
+                <define key="TRIO_PLATFORM_UNIX"/>
             </gcc>
         </for>
 

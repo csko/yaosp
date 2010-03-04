@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include <inttypes.h>
+#include <time.h>
 
 #define PTHREAD_MUTEX_MAGIC 0xC001C0DE
 #define PTHREAD_COND_MAGIC  0xDEADBEEF
@@ -88,6 +89,7 @@ int pthread_mutex_unlock( pthread_mutex_t* mutex );
 int pthread_cond_init( pthread_cond_t* cond, const pthread_condattr_t* attr );
 int pthread_cond_destroy( pthread_cond_t* cond );
 int pthread_cond_wait( pthread_cond_t* cond, pthread_mutex_t* mutex );
+int pthread_cond_timedwait( pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime );
 int pthread_cond_signal( pthread_cond_t* cond );
 int pthread_cond_broadcast( pthread_cond_t* cond );
 

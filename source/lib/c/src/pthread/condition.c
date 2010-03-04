@@ -1,6 +1,6 @@
 /* pthread condition functions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -50,6 +50,23 @@ int pthread_cond_wait( pthread_cond_t* cond, pthread_mutex_t* mutex ) {
     /* todo */
 
     error = syscall2( SYS_condition_wait, cond->cond_id, mutex->mutex_id );
+
+    if ( error < 0 ) {
+        return -error;
+    }
+
+    return 0;
+}
+
+int pthread_cond_timedwait( pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime ) {
+    int error;
+    time_t wakeup_time;
+
+    /* todo */
+
+    wakeup_time = (time_t)abstime->tv_sec * 1000000 + (time_t)abstime->tv_nsec / 1000;
+
+    error = syscall3( SYS_condition_timedwait, cond->cond_id, mutex->mutex_id, &wakeup_time );
 
     if ( error < 0 ) {
         return -error;

@@ -105,10 +105,6 @@ int condition_wait( lock_id condition, lock_id mutex ) {
     return do_wait_condition( &kernel_lock_context, condition, mutex, INFINITE_TIMEOUT );
 }
 
-int condition_timedwait( lock_id condition, lock_id mutex, time_t timeout ) {
-    return do_wait_condition( &kernel_lock_context, condition, mutex, timeout );
-}
-
 static int do_signal_condition( lock_context_t* context, lock_id condition_id ) {
     lock_header_t* header;
     condition_t* condition;
@@ -267,8 +263,8 @@ int sys_condition_wait( lock_id condition, lock_id mutex ) {
     return do_wait_condition( current_process()->lock_context, condition, mutex, INFINITE_TIMEOUT );
 }
 
-int sys_condition_timedwait( lock_id condition, lock_id mutex, time_t* timeout ) {
-    return do_wait_condition( current_process()->lock_context, condition, mutex, *timeout );
+int sys_condition_timedwait( lock_id condition, lock_id mutex, time_t* wakeup_time ) {
+    return do_wait_condition( current_process()->lock_context, condition, mutex, *wakeup_time - get_system_time() );
 }
 
 int sys_condition_signal( lock_id condition ) {

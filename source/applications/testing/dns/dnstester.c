@@ -1,4 +1,4 @@
-/* usleep function
+/* DNS resolv tester application
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,22 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <unistd.h>
-#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <netdb.h>
 
-#include <yaosp/syscall.h>
-#include <yaosp/syscall_table.h>
+static char* argv0 = NULL;
+static char* domain = NULL;
 
-int usleep( useconds_t _usec ) {
-    int error;
-    uint64_t usec = _usec;
-
-    error = syscall2( SYS_sleep_thread, (int)&usec, (int)NULL );
-
-    if ( error < 0 ) {
-        errno = -error;
-        return -1;
+int main( int argc, char** argv ) {
+    if ( argc != 2 ) {
+        fprintf( stderr, "%s domain\n", argv[ 0 ] );
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    argv0 = argv[0];
+    domain = argv[1];
+
+    gethostbyname(domain);
+
+    return EXIT_SUCCESS;
 }

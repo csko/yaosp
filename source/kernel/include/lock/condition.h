@@ -1,6 +1,6 @@
 /* Condition variable definitions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -31,7 +31,6 @@ typedef struct condition {
 } condition_t;
 
 int condition_wait( lock_id condition, lock_id mutex );
-int condition_timedwait( lock_id condition, lock_id mutex, time_t timeout );
 int condition_signal( lock_id condition );
 int condition_broadcast( lock_id condition );
 
@@ -39,7 +38,7 @@ int condition_clone( condition_t* old, condition_t* new );
 int condition_update( condition_t* condition, thread_id new_thread );
 
 int sys_condition_wait( lock_id condition, lock_id mutex );
-int sys_condition_timedwait( lock_id condition, lock_id mutex, time_t* timeout );
+int sys_condition_timedwait( lock_id condition, lock_id mutex, time_t* wakeup_time );
 int sys_condition_signal( lock_id condition );
 int sys_condition_broadcast( lock_id condition );
 int sys_condition_create( const char* name );

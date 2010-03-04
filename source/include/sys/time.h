@@ -23,4 +23,4 @@
 
 int gettimeofday( struct timeval* tv, struct timezone* tz );
 
-#endif // _SYS_TIME_H_
+#endif /* _SYS_TIME_H_ */

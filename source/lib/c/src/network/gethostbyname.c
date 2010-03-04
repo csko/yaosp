@@ -1,4 +1,4 @@
-/* accept function
+/* gethostbyname function
  *
  * Copyright (c) 2009 Zoltan Kovacs
  *
@@ -28,9 +28,12 @@ static char* addrs[ 2 ];
 
 static struct hostent hent;
 
+int dns_resolv( char* name );
+
 struct hostent* gethostbyname( const char* name ) {
     dbprintf( "gethostbyname(): name = %s\n", name );
 
+#if 0
     hent.h_name = ( char* )name;
     hent.h_aliases = NULL;
     hent.h_addrtype = AF_INET;
@@ -45,4 +48,9 @@ struct hostent* gethostbyname( const char* name ) {
     }
 
     return &hent;
+#endif
+
+    dns_resolv( name );
+
+    return NULL;
 }

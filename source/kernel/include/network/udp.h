@@ -1,6 +1,6 @@
 /* UDP packet handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -54,6 +54,8 @@ typedef struct udp_socket {
 
     udp_port_t* port;
     char bind_to_device[ IFNAMSIZ ];
+
+    select_request_t* first_read_select;
 } udp_socket_t;
 
 int udp_create_socket( socket_t* socket );

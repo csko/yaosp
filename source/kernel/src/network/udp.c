@@ -413,6 +413,80 @@ static int udp_setsockopt( socket_t* socket, int level, int optname, void* optva
     return error;
 }
 
+static int udp_add_select_request( socket_t* socket, select_request_t* request ) {
+    udp_socket_t* udp_socket;
+
+    udp_socket = ( udp_socket_t* )socket->data;
+
+    mutex_lock( udp_socket->lock, LOCK_IGNORE_SIGNAL );
+
+    switch ( ( int )request->type ) {
+        case SELECT_READ :
+            request->next = udp_socket->first_read_select;
+            udp_socket->first_read_select = request;
+
+            if ( !packet_queue_is_empty( &udp_socket->rx_queue ) ) {
+                request->ready = true;
+                semaphore_unlock( request->sync, 1 );
+            }
+
+            break;
+
+        case SELECT_WRITE :
+            request->ready = true;
+            semaphore_unlock( request->sync, 1 );
+
+            break;
+
+        case SELECT_EXCEPT :
+            break;
+    }
+
+    mutex_unlock( udp_socket->lock );
+
+    return 0;
+}
+
+static int udp_remove_select_request( socket_t* socket, select_request_t* request ) {
+    udp_socket_t* udp_socket;
+
+    udp_socket = ( udp_socket_t* )socket->data;
+
+    mutex_lock( udp_socket->lock, LOCK_IGNORE_SIGNAL );
+
+    switch ( ( int )request->type ) {
+        case SELECT_READ : {
+            select_request_t* prev = NULL;
+            select_request_t* tmp = udp_socket->first_read_select;
+
+            while ( tmp != NULL ) {
+                if ( tmp == request ) {
+                    if ( prev == NULL ) {
+                        udp_socket->first_read_select = tmp->next;
+                    } else {
+                        prev->next = tmp->next;
+                    }
+
+                    break;
+                }
+
+                prev = tmp;
+                tmp = tmp->next;
+            }
+
+            break;
+        }
+
+        case SELECT_WRITE :
+        case SELECT_EXCEPT :
+            break;
+    }
+
+    mutex_unlock( udp_socket->lock );
+
+    return 0;
+}
+
 static socket_calls_t udp_socket_calls = {
     .close = udp_close,
     .connect = NULL,
@@ -422,8 +496,8 @@ static socket_calls_t udp_socket_calls = {
     .getsockopt = udp_getsockopt,
     .setsockopt = udp_setsockopt,
     .set_flags = NULL,
-    .add_select_request = NULL,
-    .remove_select_request = NULL
+    .add_select_request = udp_add_select_request,
+    .remove_select_request = udp_remove_select_request
 };
 
 int udp_create_socket( socket_t* socket ) {
@@ -456,6 +530,7 @@ int udp_create_socket( socket_t* socket ) {
     udp_socket->ref_count = 1;
     udp_socket->port = NULL;
     udp_socket->nonblocking = 0;
+    udp_socket->first_read_select = NULL;
 
     memset( udp_socket->bind_to_device, 0, IFNAMSIZ );
 
@@ -472,6 +547,21 @@ int udp_create_socket( socket_t* socket ) {
 
  error1:
     return error;
+}
+
+static void udp_notify_read_waiters( udp_socket_t* udp_socket ) {
+    select_request_t* tmp;
+
+    tmp = udp_socket->first_read_select;
+
+    while ( tmp != NULL ) {
+        tmp->ready = true;
+        semaphore_unlock( tmp->sync, 1 );
+
+        tmp = tmp->next;
+    }
+
+    condition_signal( udp_socket->rx_condition );
 }
 
 int udp_input( packet_t* packet ) {
@@ -499,9 +589,11 @@ int udp_input( packet_t* packet ) {
     }
 
     mutex_lock( udp_socket->lock, LOCK_IGNORE_SIGNAL );
+
     packet_queue_insert( &udp_socket->rx_queue, packet );
+    udp_notify_read_waiters(udp_socket);
+
     mutex_unlock( udp_socket->lock );
-    condition_signal( udp_socket->rx_condition );
 
     udp_put_endpoint( udp_socket );
 
