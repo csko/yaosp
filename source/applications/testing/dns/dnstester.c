@@ -19,20 +19,48 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
-
-static char* argv0 = NULL;
-static char* domain = NULL;
+#include <assert.h>
+#include <netinet/in.h>
 
 int main( int argc, char** argv ) {
-    if ( argc != 2 ) {
-        fprintf( stderr, "%s domain\n", argv[ 0 ] );
-        return EXIT_FAILURE;
-    }
+    uint8_t* addr;
+    struct hostent* hent;
 
-    argv0 = argv[0];
-    domain = argv[1];
+    printf( "[*] Resolving 1.2.3.4 ..." );
 
-    gethostbyname(domain);
+    hent = gethostbyname("1.2.3.4");
+    assert( hent != NULL );
+    assert( hent->h_addrtype == AF_INET );
+    assert( hent->h_length == 4 );
+    assert( hent->h_addr_list[0] != NULL );
+    assert( hent->h_addr_list[1] == NULL );
+
+    addr = (uint8_t*)hent->h_addr_list[0];
+    assert( addr[0] == 1 );
+    assert( addr[1] == 2 );
+    assert( addr[2] == 3 );
+    assert( addr[3] == 4 );
+
+    printf( "OK\n" );
+
+    // ---
+
+    printf( "[*] Resolving svn.yaosp.org ..." );
+
+    hent = gethostbyname("svn.yaosp.org");
+    assert( hent != NULL );
+    assert( hent->h_addrtype == AF_INET );
+    assert( hent->h_length == 4 );
+    assert( hent->h_addr_list[0] != NULL );
+    assert( hent->h_addr_list[1] == NULL );
+
+    addr = (uint8_t*)hent->h_addr_list[0];
+    assert( addr[0] == 94 );
+    assert( addr[1] == 199 );
+    assert( addr[2] == 181 );
+    assert( addr[3] == 22 );
+
+    printf( "OK\n" );
 
     return EXIT_SUCCESS;
 }

@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -62,6 +62,7 @@
 #define EALREADY      41
 #define ENETDOWN      42
 #define ENOTCONN      43
+#define EAFNOTSUPPORT 44
 
 extern int errno;
 

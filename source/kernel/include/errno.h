@@ -1,6 +1,6 @@
 /* Error number definitions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -63,5 +63,6 @@
 #define EALREADY      41
 #define ENETDOWN      42
 #define ENOTCONN      43
+#define EAFNOTSUPPORT 44
 
 #endif /* _ERRNO_H_ */

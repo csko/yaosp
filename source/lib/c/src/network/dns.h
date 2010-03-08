@@ -19,6 +19,8 @@
 #ifndef _INTERNAL_DNS_H_
 #define _INTERNAL_DNS_H_
 
+#include <pthread.h>
+
 #define DNS_RECURSION_DESIRED 0x100
 
 typedef enum {
@@ -46,6 +48,14 @@ typedef struct dns_question_end {
     uint16_t class;
 } __attribute__(( packed )) dns_question_end_t;
 
+typedef struct dns_answer {
+    uint16_t  name;
+    uint16_t  type;
+    uint16_t  cls;
+    uint32_t  ttl;
+    uint16_t  length;
+} __attribute__(( packed )) dns_answer_t;
+
 typedef struct dns_request {
     char* hostname;
     struct dns_request* next;
@@ -55,6 +65,8 @@ typedef struct dns_request {
     dns_server_t* server_current;
 
     pthread_cond_t result_sync;
+    struct in_addr* result_v4;
+    size_t result_v4_cnt;
 } dns_request_t;
 
 /* DNS server */
@@ -66,5 +78,9 @@ int dns_server_free( dns_server_t* server );
 
 dns_request_t* dns_request_create( char* hostname );
 int dns_request_add_server( dns_request_t* request, dns_server_t* server );
+
+/* DNS resolv */
+
+int dns_resolv( char* hostname, struct in_addr** v4_table, size_t* v4_cnt );
 
 #endif /* _INTERNAL_DNS_H_ */

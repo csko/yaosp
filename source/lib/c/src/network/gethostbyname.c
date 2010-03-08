@@ -1,6 +1,6 @@
 /* gethostbyname function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,39 +18,60 @@
 
 #include <netdb.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <sys/param.h>
 #include <arpa/inet.h>
 
 #include <yaosp/debug.h>
 
-static char addr[ 4 ];
-static char* addrs[ 2 ];
+#include "dns.h"
+
+#define MAX_ADDR_ENTRY 8
+
+static struct in_addr addr4[MAX_ADDR_ENTRY];
+static struct in6_addr addr6[MAX_ADDR_ENTRY];
+static char* addr_list[MAX_ADDR_ENTRY + 1];
 
 static struct hostent hent;
 
-int dns_resolv( char* name );
+static int build_hostent_result_v4( const char* name, size_t cnt ) {
+    size_t i;
 
-struct hostent* gethostbyname( const char* name ) {
-    dbprintf( "gethostbyname(): name = %s\n", name );
+    for ( i = 0; i < cnt; i++ ) {
+        addr_list[i] = (char*)&addr4[i];
+    }
+    addr_list[cnt] = NULL;
 
-#if 0
-    hent.h_name = ( char* )name;
+    hent.h_name = (char*)name;
     hent.h_aliases = NULL;
     hent.h_addrtype = AF_INET;
     hent.h_length = 4;
-    hent.h_addr_list = addrs;
+    hent.h_addr_list = addr_list;
 
-    addrs[ 0 ] = addr;
-    addrs[ 1 ] = NULL;
+    return 0;
+}
 
-    if ( inet_pton( AF_INET, name, &addr ) != 1 ) {
-        return NULL;
+struct hostent* gethostbyname( const char* name ) {
+    dbprintf( "gethostbyname(): name = '%s'\n", name );
+
+    if ( inet_pton( AF_INET, name, &addr4[0] ) == 1 ) {
+        build_hostent_result_v4(name, 1);
+    } else if ( inet_pton( AF_INET6, name, &addr6[0] ) == 1 ) {
+        /* todo */
+    } else {
+        size_t v4_count;
+        struct in_addr* v4_table;
+
+        if ( dns_resolv( (char*)name, &v4_table, &v4_count ) != 0 ) {
+            return NULL;
+        }
+
+        memcpy( addr4, v4_table, sizeof(struct in_addr) * MIN(v4_count, MAX_ADDR_ENTRY) );
+        free( v4_table );
+
+        build_hostent_result_v4( name, v4_count );
     }
 
     return &hent;
-#endif
-
-    dns_resolv( name );
-
-    return NULL;
 }

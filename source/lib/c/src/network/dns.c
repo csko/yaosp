@@ -84,6 +84,8 @@ dns_request_t* dns_request_create( char* hostname ) {
     request->server_first = NULL;
     request->server_current = NULL;
     request->next = NULL;
+    request->result_v4 = NULL;
+    request->result_v4_cnt = 0;
     strcpy( request->hostname, hostname );
 
     return request;
@@ -113,6 +115,28 @@ int dns_request_insert( dns_request_t* request ) {
     return 0;
 }
 
+int dns_request_remove( dns_request_t* request ) {
+    dns_request_t* prev = NULL;
+    dns_request_t* current = dns_req_list;
+
+    while ( current != NULL ) {
+        if ( current == request ) {
+            if ( prev == NULL ) {
+                dns_req_list = current->next;
+            } else {
+                prev->next = current->next;
+            }
+
+            return 0;
+        }
+
+        prev = current;
+        current = current->next;
+    }
+
+    return -1;
+}
+
 dns_request_t* dns_request_get_by_id( int id ) {
     dns_request_t* current;
 
@@ -129,8 +153,50 @@ dns_request_t* dns_request_get_by_id( int id ) {
     return NULL;
 }
 
+static int dns_convert_name( char* buffer, const char* name ) {
+    char* to;
+    char* from;
+    int part_len;
+    size_t i;
+    size_t length;
+
+    length = strlen(name);
+    from = (char*)name + length;
+    length += 1;
+    to = buffer + length;
+
+    part_len = -1; /* hack for the ending 0 */
+
+    for ( i = 0; i < length; i++, to--, from-- ) {
+        if ( *from == '.' ) {
+            *to = part_len;
+            part_len = 0;
+        } else {
+            *to = *from;
+            part_len++;
+        }
+    }
+
+    *to = part_len;
+
+    return length + 1;
+}
+
+static size_t dns_calc_question_len( uint8_t* data ) {
+    size_t length = 0;
+
+    while ( *data != 0 ) {
+        uint8_t len = *data;
+        length += len + 1;
+        data += len + 1;
+    }
+
+    return length + 1; /* +1 for the ending zero */
+}
+
 static int dns_handle_packet( char* buffer, int size ) {
-    uint16_t i;
+    int i;
+    uint8_t* data;
     uint16_t answers;
     uint16_t requests;
     dns_header_t* header;
@@ -150,7 +216,50 @@ static int dns_handle_packet( char* buffer, int size ) {
         return 0;
     }
 
-    /* todo */
+    /* Run through the requests */
+
+    data = (uint8_t*)( header + 1 );
+
+    for ( i = 0; i < requests; i++ ) {
+        size_t len = dns_calc_question_len(data);
+
+        data += len;
+        data += sizeof(dns_question_end_t);
+    }
+
+    /* Parse the answers */
+
+    for ( i = 0; i < answers; i++ ) {
+        uint16_t type;
+        uint16_t length;
+        dns_answer_t* answer = (dns_answer_t*)data;
+
+        type = htons(answer->type);
+        length = htons(answer->length);
+
+        switch ( type ) {
+            case 0x0001 : { /* A record */
+                if ( length == 4 ) {
+                    struct in_addr* res_v4;
+
+                    res_v4 = (struct in_addr*)realloc( request->result_v4, sizeof(struct in_addr) * ( request->result_v4_cnt + 1 ) );
+
+                    if ( res_v4 != NULL ) {
+                        uint8_t* ip = (uint8_t*)(answer+1);
+                        memcpy( &res_v4[request->result_v4_cnt], ip, 4 );
+
+                        request->result_v4 = res_v4;
+                        request->result_v4_cnt++;
+                    }
+                }
+
+                break;
+            }
+        }
+
+        data += sizeof(dns_answer_t);
+        data += length;
+    }
 
     pthread_cond_broadcast(&request->result_sync);
 
@@ -197,35 +306,6 @@ static int dns_initialize( void ) {
     pthread_create( &dns_thread, NULL, dns_thread_entry, NULL );
 
     return 0;
-}
-
-static int dns_convert_name( char* buffer, const char* name ) {
-    char* to;
-    char* from;
-    int part_len;
-    size_t i;
-    size_t length;
-
-    length = strlen(name);
-    from = (char*)name + length;
-    length += 1;
-    to = buffer + length;
-
-    part_len = -1; /* hack for the ending 0 */
-
-    for ( i = 0; i < length; i++, to--, from-- ) {
-        if ( *from == '.' ) {
-            *to = part_len;
-            part_len = 0;
-        } else {
-            *to = *from;
-            part_len++;
-        }
-    }
-
-    *to = part_len;
-
-    return length + 1;
 }
 
 static int dns_send_request( dns_request_t* request ) {
@@ -282,7 +362,7 @@ static int dns_send_request( dns_request_t* request ) {
     return 0;
 }
 
-int dns_resolv( char* hostname ) {
+int dns_resolv( char* hostname, struct in_addr** v4_table, size_t* v4_cnt ) {
     dns_server_t* server;
     dns_request_t* request;
 
@@ -302,15 +382,23 @@ int dns_resolv( char* hostname ) {
         dns_initialized = 1;
     }
 
-    while ( request->server_current != NULL ) {
+    while ( ( request->server_current != NULL ) &&
+            ( request->result_v4_cnt == 0 ) ) {
         dns_send_request(request);
-
-        //pthread_cond_timedwait( &request->result_sync, &dns_lock, NULL );
         pthread_cond_wait( &request->result_sync, &dns_lock );
-        dbprintf( "result!\n" );
+        dns_request_remove(request);
     }
 
     pthread_mutex_unlock(&dns_lock);
+
+    if ( request->result_v4_cnt == 0 ) {
+        return -1;
+    }
+
+    *v4_table = request->result_v4;
+    *v4_cnt = request->result_v4_cnt;
+
+    /* todo: free stuffs */
 
     return 0;
 }
