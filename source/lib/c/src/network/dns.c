@@ -137,7 +137,7 @@ static int dns_handle_packet( char* buffer, int size ) {
     dns_request_t* request;
 
     header = (dns_header_t*)buffer;
-    requests = htons(header->r_count);
+    requests = htons(header->q_count);
     answers = htons(header->a_count);
 
     if ( answers == 0 ) {

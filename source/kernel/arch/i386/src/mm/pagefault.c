@@ -292,7 +292,15 @@ int handle_page_fault( registers_t* regs ) {
     /* In case of any error, this is an invalid page fault */
 
     if ( error != 0 ) {
-        invalid_page_fault( thread, regs, cr2, "???" );
+        char* error_msg;
+
+        switch ( error ) {
+            case -ENOMEM : error_msg = "not enough memory"; break;
+            case -EIO : error_msg = "I/O error"; break;
+            default : error_msg = "unknown error"; break;
+        }
+
+        invalid_page_fault( thread, regs, cr2, error_msg );
     }
 
     return 0;
