@@ -154,8 +154,6 @@ void destroy_thread( thread_t* thread ) {
 }
 
 int insert_thread( thread_t* thread ) {
-    int error;
-
     ASSERT( scheduler_is_locked() );
 
     do {
@@ -166,13 +164,7 @@ int insert_thread( thread_t* thread ) {
         }
     } while ( hashtable_get( &thread_table, ( const void* )&thread->id ) != NULL );
 
-    error = hashtable_add( &thread_table, ( hashitem_t* )thread );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    return 0;
+    return hashtable_add( &thread_table, ( hashitem_t* )thread );
 }
 
 int rename_thread( thread_t* thread, char* new_name ) {
@@ -528,9 +520,7 @@ uint32_t sys_get_thread_count_for_process( process_id id ) {
     uint32_t count;
 
     scheduler_lock();
-
     count = hashtable_get_filtered_item_count( &thread_table, thread_info_process_filter, ( void* )&id );
-
     scheduler_unlock();
 
     return count;
@@ -567,13 +557,17 @@ int do_wake_up_thread( thread_t* thread ) {
 
     ASSERT( scheduler_is_locked() );
 
-    if ( ( thread->state == THREAD_NEW ) ||
-         ( thread->state == THREAD_WAITING ) ||
-         ( thread->state == THREAD_SLEEPING ) ) {
-        add_thread_to_ready( thread );
-        error = 0;
-    } else {
-        error = -EINVAL;
+    switch ( thread->state ) {
+        case THREAD_NEW :
+        case THREAD_WAITING :
+        case THREAD_SLEEPING :
+            add_thread_to_ready( thread );
+            error = 0;
+            break;
+
+        default :
+            error = -EINVAL;
+            break;
     }
 
     return error;
@@ -760,11 +754,8 @@ __init int init_threads( void ) {
     int error;
 
     error = init_hashtable(
-        &thread_table,
-        256,
-        thread_key,
-        hash_int,
-        compare_int
+        &thread_table, 256, thread_key,
+        hash_int, compare_int
     );
 
     if ( error < 0 ) {
