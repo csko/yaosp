@@ -27,6 +27,7 @@
 #include <mm/kmalloc.h>
 #include <lock/mutex.h>
 #include <network/route.h>
+#include <network/socket.h>
 #include <lib/array.h>
 
 static lock_id route_mutex;
@@ -36,7 +37,7 @@ static array_t device_routes;
 static route_t* route_create( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
     route_t* route;
 
-    route = ( route_t* )kmalloc( sizeof( route_t ) );
+    route = (route_t*)kmalloc( sizeof(route_t) );
 
     if ( route == NULL ) {
         return NULL;
@@ -44,16 +45,16 @@ static route_t* route_create( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gat
 
     memset( route, 0, sizeof( route_t ) );
 
-    route->ref_count = 1;
-    memcpy( route->network_addr, net_addr, IPV4_ADDR_LEN );
-    memcpy( route->network_mask, net_mask, IPV4_ADDR_LEN );
+    IP_COPY_ADDR( route->network_addr, net_addr );
+    IP_COPY_ADDR( route->network_mask, net_mask );
 
     if ( flags & RTF_GATEWAY ) {
-        memcpy( route->gateway_addr, gateway_addr, IPV4_ADDR_LEN );
+        IP_COPY_ADDR( route->gateway_addr, gateway_addr );
     }
 
     route->flags = flags;
     route->device = NULL;
+    route->ref_count = 1;
 
     return route;
 }
@@ -68,9 +69,9 @@ static route_t* route_clone( route_t* original ) {
     }
 
     clone->ref_count = 1;
-    memcpy( clone->network_addr, original->network_addr, IPV4_ADDR_LEN );
-    memcpy( clone->network_mask, original->network_mask, IPV4_ADDR_LEN );
-    memcpy( clone->gateway_addr, original->gateway_addr, IPV4_ADDR_LEN );
+    IP_COPY_ADDR( clone->network_addr, original->network_addr );
+    IP_COPY_ADDR( clone->network_mask, original->network_mask );
+    IP_COPY_ADDR( clone->gateway_addr, original->gateway_addr );
 
     clone->flags = original->flags;
     clone->device = NULL;
@@ -237,12 +238,31 @@ void route_put( route_t* route ) {
 }
 
 int route_add( struct rtentry* entry ) {
-    /* todo */
-    return 0;
+    int error;
+    route_t* route;
+    struct sockaddr_in* dst;
+    struct sockaddr_in* netmask;
+    struct sockaddr_in* gateway;
+
+    dst = (struct sockaddr_in*)&entry->rt_dst;
+    netmask = (struct sockaddr_in*)&entry->rt_genmask;
+    gateway = (struct sockaddr_in*)&entry->rt_gateway;
+
+    route = route_create( (uint8_t*)&dst->sin_addr, (uint8_t*)&netmask->sin_addr, (uint8_t*)&gateway->sin_addr, entry->rt_flags );
+
+    if ( route == NULL ) {
+        return -ENOMEM;
+    }
+
+    error = route_insert( &static_routes, route );
+    route_put( route );
+
+    return error;
 }
 
 int route_get_table( struct rttable* table ) {
     int i;
+    int size;
     int count;
     int remaining;
     struct rtabentry* entry;
@@ -250,6 +270,36 @@ int route_get_table( struct rttable* table ) {
     entry = (struct rtabentry*)( table + 1 );
     remaining = table->rtt_count;
     table->rtt_count = 0;
+
+    /* Static routes */
+
+    mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
+
+    size = array_get_size(&static_routes);
+
+    for ( i = 0; ( i < size ) && ( remaining > 0 ); i++, entry++, remaining--, table->rtt_count++ ) {
+        route_t* tmp;
+        struct sockaddr_in* addr;
+
+        tmp = (route_t*)array_get_item( &static_routes, i );
+
+        addr = (struct sockaddr_in*)&entry->rt_dst;
+        IP_COPY_ADDR( &addr->sin_addr, tmp->network_addr );
+        addr = (struct sockaddr_in*)&entry->rt_genmask;
+        IP_COPY_ADDR( &addr->sin_addr, tmp->network_mask );
+        addr = (struct sockaddr_in*)&entry->rt_gateway;
+        IP_COPY_ADDR( &addr->sin_addr, tmp->gateway_addr );
+        entry->rt_flags = tmp->flags;
+
+        if ( tmp->device != NULL ) {
+            strncpy( entry->rt_dev, tmp->device->name, 64 );
+            entry->rt_dev[63] = 0;
+        } else {
+            entry->rt_dev[0] = 0;
+        }
+    }
+
+    mutex_unlock( route_mutex );
 
     /* Network interface routes */
 
@@ -259,6 +309,7 @@ int route_get_table( struct rttable* table ) {
           ( i < count ) && ( remaining > 0 );
           i++ ) {
         net_device_t* device;
+        struct sockaddr_in* addr;
 
         device = net_device_get_nth(i);
 
@@ -269,8 +320,10 @@ int route_get_table( struct rttable* table ) {
 
         entry->rt_flags = RTF_UP;
 
-        IP_COPY_ADDR_MASKED( &entry->rt_dst, device->ip_addr, device->netmask );
-        IP_COPY_ADDR( &entry->rt_genmask, device->netmask );
+        addr = (struct sockaddr_in*)&entry->rt_dst;
+        IP_COPY_ADDR_MASKED( &addr->sin_addr, device->ip_addr, device->netmask );
+        addr = (struct sockaddr_in*)&entry->rt_genmask;
+        IP_COPY_ADDR( &addr->sin_addr, device->netmask );
 
         strncpy( entry->rt_dev, device->name, 64 );
         entry->rt_dev[63] = 0;

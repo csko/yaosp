@@ -47,7 +47,10 @@ static int route_format_flags( struct rtabentry* entry, char* buf, size_t size )
 
 static int route_format_gateway( struct rtabentry* entry, char* buf, size_t size ) {
     if ( entry->rt_flags & RTF_GATEWAY ) {
-        inet_ntop( AF_INET, &entry->rt_gateway, buf, size );
+        struct sockaddr_in* addr;
+
+        addr = (struct sockaddr_in*)&entry->rt_gateway;
+        inet_ntop( AF_INET, &addr->sin_addr, buf, size );
     } else {
         buf[0] = 0; /* empty string */
     }
@@ -80,12 +83,15 @@ static int list_routes( void ) {
 
     for ( i = 0; i < table->rtt_count; i++, entry++ ) {
         char buf[32];
+        struct sockaddr_in* addr;
 
-        inet_ntop( AF_INET, &entry->rt_dst, buf, sizeof(buf) );
+        addr = (struct sockaddr_in*)&entry->rt_dst;
+        inet_ntop( AF_INET, &addr->sin_addr, buf, sizeof(buf) );
         printf( "%-15s ", buf );
         route_format_gateway( entry, buf, sizeof(buf) );
         printf( "%-15s ", buf );
-        inet_ntop( AF_INET, &entry->rt_genmask, buf, sizeof(buf) );
+        addr = (struct sockaddr_in*)&entry->rt_genmask;
+        inet_ntop( AF_INET, &addr->sin_addr, buf, sizeof(buf) );
         printf( "%-15s ", buf );
         route_format_flags( entry, buf, sizeof(buf) );
         printf( "%-5s ", buf );
@@ -113,18 +119,27 @@ static int add_route( int argc, char** argv ) {
     entry.rt_flags = RTF_UP;
 
     for ( i = 0; i < argc; i += 2 ) {
+        struct sockaddr_in* addr;
+
         if ( strcmp( argv[i], "ip" ) == 0 ) {
             ip_found = 1;
+            addr = (struct sockaddr_in*)&entry.rt_dst;
 
-            if ( inet_pton( AF_INET, argv[i+1], &entry.rt_dst ) != 1 ) {
+            if ( strcmp( argv[i+1], "default" ) == 0 ) {
+                /* do nothing as the destination address is already 0.0.0.0 */
+            } else if ( inet_pton( AF_INET, argv[i+1], &addr->sin_addr ) != 1 ) {
                 return -1;
             }
         } else if ( strcmp( argv[i], "mask" ) == 0 ) {
-            if ( inet_pton( AF_INET, argv[i+1], &entry.rt_genmask ) != 1 ) {
+            addr = (struct sockaddr_in*)&entry.rt_genmask;
+
+            if ( inet_pton( AF_INET, argv[i+1], &addr->sin_addr ) != 1 ) {
                 return -1;
             }
         } else if ( strcmp( argv[i], "gw" ) == 0 ) {
-            if ( inet_pton( AF_INET, argv[i+1], &entry.rt_gateway ) != 1 ) {
+            addr = (struct sockaddr_in*)&entry.rt_gateway;
+
+            if ( inet_pton( AF_INET, argv[i+1], &addr->sin_addr ) != 1 ) {
                 return -1;
             }
 
