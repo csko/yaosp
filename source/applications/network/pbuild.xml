@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build>
     <array name="subdirs">
         <item>ifconfig</item>
+        <item>route</item>
         <item>dhcpclient</item>
         <item>httpget</item>
     </array>

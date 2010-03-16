@@ -70,10 +70,13 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     route_t* route;
     ipv4_header_t* ip_header;
 
-    route = find_route( dest_ip );
+    route = route_find( dest_ip );
 
     if ( route == NULL ) {
-        kprintf( WARNING, "net: no route to address: %d.%d.%d.%d.\n", dest_ip[ 0 ], dest_ip[ 1 ], dest_ip[ 2 ], dest_ip[ 3 ] );
+        kprintf(
+            WARNING, "net: no route to address: %d.%d.%d.%d.\n",
+            dest_ip[0], dest_ip[1], dest_ip[2], dest_ip[3]
+        );
         return -EINVAL;
     }
 
@@ -98,13 +101,13 @@ int ipv4_send_packet( uint8_t* dest_ip, packet_t* packet, uint8_t protocol ) {
     ip_header->checksum = 0;
     ip_header->checksum = ip_checksum( ( uint16_t*)ip_header, sizeof( ipv4_header_t ) );
 
-    if ( route->flags & ROUTE_GATEWAY ) {
+    if ( route->flags & RTF_GATEWAY ) {
         error = arp_send_packet( route->device, route->gateway_addr, packet );
     } else {
         error = arp_send_packet( route->device, dest_ip, packet );
     }
 
-    put_route( route );
+    route_put( route );
 
     return error;
 }
@@ -133,7 +136,7 @@ int ipv4_send_packet_via_route( route_t* route, uint8_t* dest_ip, packet_t* pack
     ip_header->checksum = 0;
     ip_header->checksum = ip_checksum( ( uint16_t*)ip_header, sizeof( ipv4_header_t ) );
 
-    if ( route->flags & ROUTE_GATEWAY ) {
+    if ( route->flags & RTF_GATEWAY ) {
         return arp_send_packet( route->device, route->gateway_addr, packet );
     } else {
         return arp_send_packet( route->device, dest_ip, packet );

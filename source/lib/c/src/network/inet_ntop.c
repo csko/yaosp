@@ -26,7 +26,7 @@ const char* inet_ntop( int af, const void* src, char* dst, socklen_t size ) {
 
     switch ( af ) {
         case AF_INET :
-            snprintf( dst, size, "%d.%d.%d.%d", data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ] );
+            snprintf( dst, size, "%d.%d.%d.%d", data[0], data[1], data[2], data[3] );
             break;
 
         default :

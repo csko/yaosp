@@ -27,12 +27,13 @@
 #include <mm/kmalloc.h>
 #include <lock/mutex.h>
 #include <network/route.h>
-#include <lib/string.h>
+#include <lib/array.h>
 
 static lock_id route_mutex;
-static hashtable_t route_table;
+static array_t static_routes;
+static array_t device_routes;
 
-route_t* create_route( net_device_t* device, uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
+static route_t* route_create( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
     route_t* route;
 
     route = ( route_t* )kmalloc( sizeof( route_t ) );
@@ -43,192 +44,275 @@ route_t* create_route( net_device_t* device, uint8_t* net_addr, uint8_t* net_mas
 
     memset( route, 0, sizeof( route_t ) );
 
-    atomic_set( &route->ref_count, 1 );
+    route->ref_count = 1;
     memcpy( route->network_addr, net_addr, IPV4_ADDR_LEN );
     memcpy( route->network_mask, net_mask, IPV4_ADDR_LEN );
 
-    if ( flags & ROUTE_GATEWAY ) {
+    if ( flags & RTF_GATEWAY ) {
         memcpy( route->gateway_addr, gateway_addr, IPV4_ADDR_LEN );
     }
 
     route->flags = flags;
-    route->device = device;
+    route->device = NULL;
 
     return route;
 }
 
-int insert_route( route_t* route ) {
-    int error;
-    route_t* tmp;
+static route_t* route_clone( route_t* original ) {
+    route_t* clone;
 
-    mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
+    clone = ( route_t* )kmalloc( sizeof(route_t) );
 
-    tmp = ( route_t* )hashtable_get( &route_table, ( const void* )&route->network_addr[ 0 ] );
-
-    if ( tmp != NULL ) {
-        kprintf( WARNING, "NET: insert_route(): Route already present!\n" );
-        error = -EINVAL;
-        goto out;
+    if ( clone == NULL ) {
+        return NULL;
     }
 
-    hashtable_add( &route_table, ( hashitem_t* )route );
+    clone->ref_count = 1;
+    memcpy( clone->network_addr, original->network_addr, IPV4_ADDR_LEN );
+    memcpy( clone->network_mask, original->network_mask, IPV4_ADDR_LEN );
+    memcpy( clone->gateway_addr, original->gateway_addr, IPV4_ADDR_LEN );
 
-    error = 0;
+    clone->flags = original->flags;
+    clone->device = NULL;
 
- out:
-    mutex_unlock( route_mutex );
-
-    return error;
+    return clone;
 }
 
-typedef struct route_iterator_data {
-    uint8_t* ipv4_address;
-    route_t* route;
-} route_iterator_data_t;
-
-static int route_iterator( hashitem_t* item, void* _data ) {
-    route_t* route;
-    route_iterator_data_t* data;
-
-    route = ( route_t* )item;
-    data = ( route_iterator_data_t* )_data;
-
-    if ( ( IP_EQUALS_MASKED( route->network_addr, data->ipv4_address, route->network_mask ) ) &&
-         ( route->flags & ROUTE_GATEWAY ) ) {
-        data->route = route;
-        return -1;
-    }
+static int route_insert( array_t* route_table, route_t* route ) {
+    /* TODO: check if the same route already exists. */
+    route->ref_count++;
+    array_add_item( route_table, route );
 
     return 0;
 }
 
-route_t* find_route( uint8_t* ipv4_address ) {
+route_t* route_find( uint8_t* ipv4_addr ) {
     int i;
     int size;
-    route_iterator_data_t data;
-
-    data.ipv4_address = ipv4_address;
-    data.route = NULL;
-
-    /* Check the network interfaces */
-
-    size = net_device_get_count();
-
-    for ( i = 0; i < size; i++ ) {
-        net_device_t* device;
-
-        device = net_device_get_nth( i );
-
-        /* Skip those interfaces that are not UP. */
-
-        if ( ( net_device_flags( device ) & NETDEV_UP ) == 0 ) {
-            goto try_next;
-        }
-
-        /* Check if this interface is in the same subnet */
-
-        if ( IP_EQUALS_MASKED( device->ip_addr, ipv4_address, device->netmask ) ) {
-            route_t* route;
-
-            route = create_route( device, device->ip_addr, device->netmask, NULL, 0 );
-
-            if ( route != NULL ) {
-                return route;
-            }
-        }
-
- try_next:
-        net_device_put( device );
-    }
-
-    /* Check the route table */
-
-    data.route = NULL;
+    route_t* route;
+    route_t* found;
+    net_device_t* device;
 
     mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
 
-    hashtable_iterate( &route_table, route_iterator, ( void* )&data );
+    /* Find a device that has a suitable address and netmask to send the packet. */
 
-    if ( data.route != NULL ) {
-        atomic_inc( &data.route->ref_count );
+    device = net_device_get_by_address(ipv4_addr);
+
+    if ( device != NULL ) {
+        route = route_create( device->ip_addr, device->netmask, NULL, RTF_UP );
+
+        if ( route != NULL ) {
+            route->device = device;
+        }
+
+        goto out;
     }
 
-    mutex_unlock( route_mutex );
+    /* Try to find a suitable static route. */
 
-    return data.route;
-}
+    size = array_get_size(&static_routes);
+    found = NULL;
 
-route_t* find_device_route( char* name ) {
-    net_device_t* device;
+    for ( i = 0; i < size; i++ ) {
+        route_t* tmp;
 
-    device = net_device_get( name );
+        tmp = (route_t*)array_get_item( &static_routes, i );
+
+        if ( IP_EQUALS_MASKED( tmp->network_addr, ipv4_addr, tmp->network_mask ) ) {
+            found = tmp;
+            break;
+        }
+    }
+
+    /* If nothing is found, or the found
+       route is not a gateway then we failed. */
+
+    if ( ( found == NULL ) ||
+         ( ( found->flags & RTF_GATEWAY ) == 0 ) ) {
+        route = NULL;
+        goto out;
+    }
+
+    /* Find a network interface for the gateway address. */
+
+    device = net_device_get_by_address(found->gateway_addr);
 
     if ( device == NULL ) {
-        return NULL;
+        route = NULL;
+        goto out;
     }
 
-    return create_route( device, device->ip_addr, device->netmask, NULL, 0 );
+    /* Clone the original route and assign the network device to it. */
+
+    route = route_clone(found);
+
+    if ( route == NULL ) {
+        goto out;
+    }
+
+    route->device = device;
+
+ out:
+    mutex_unlock( route_mutex );
+
+    return route;
 }
 
-void put_route( route_t* route ) {
+route_t* route_find_device( char* dev_name ) {
+    int i;
+    int size;
+    route_t* route;
+    net_device_t* device;
+
+    mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
+
+    size = array_get_size(&device_routes);
+
+    for ( i = 0; i < size; i++ ) {
+        route_t* tmp;
+
+        tmp = (route_t*)array_get_item( &device_routes, i );
+
+        if ( tmp->device == NULL ) {
+            kprintf( ERROR, "route_find_device(): found device route without a valid network device!\n" );
+            continue;
+        }
+
+        if ( strcmp( tmp->device->name, dev_name ) == 0 ) {
+            tmp->ref_count++;
+            route = tmp;
+            goto out;
+        }
+    }
+
+    device = net_device_get(dev_name);
+
+    if ( device == NULL ) {
+        route = NULL;
+        goto out;
+    }
+
+    route = route_create( device->ip_addr, device->netmask, NULL, RTF_UP );
+
+    if ( route == NULL ) {
+        net_device_put(device);
+        goto out;
+    }
+
+    /* NOTE: we don't have to put the net_device_t later as we assign
+             the device to the newly created route entry. */
+
+    route->device = device;
+
+    route_insert( &device_routes, route );
+
+ out:
+    mutex_unlock( route_mutex );
+
+    return route;
+}
+
+void route_put( route_t* route ) {
     bool do_delete;
 
     do_delete = false;
 
     mutex_lock( route_mutex, LOCK_IGNORE_SIGNAL );
 
-    if ( atomic_dec_and_test( &route->ref_count ) ) {
-        hashtable_remove( &route_table, ( const void* )&route->network_addr[ 0 ] );
+    if ( --route->ref_count == 0 ) {
+        array_remove_item( &device_routes, route );
         do_delete = true;
     }
 
     mutex_unlock( route_mutex );
 
     if ( do_delete ) {
-        net_device_put( route->device );
+        if ( route->device != NULL ) {
+            net_device_put( route->device );
+        }
+
         kfree( route );
     }
 }
 
-static void* route_key( hashitem_t* item ) {
-    route_t* route;
-
-    route = ( route_t* )item;
-
-    return &route->network_addr[ 0 ];
+int route_add( struct rtentry* entry ) {
+    /* todo */
+    return 0;
 }
 
-static uint32_t route_hash( const void* key ) {
-    return hash_number( ( uint8_t* )key, 3 * IPV4_ADDR_LEN );
-}
+int route_get_table( struct rttable* table ) {
+    int i;
+    int count;
+    int remaining;
+    struct rtabentry* entry;
 
-static bool route_compare( const void* key1, const void* key2 ) {
-    return ( memcmp( key1, key2, 3 * IPV4_ADDR_LEN ) == 0 );
+    entry = (struct rtabentry*)( table + 1 );
+    remaining = table->rtt_count;
+    table->rtt_count = 0;
+
+    /* Network interface routes */
+
+    count = net_device_get_count();
+
+    for ( i = 0;
+          ( i < count ) && ( remaining > 0 );
+          i++ ) {
+        net_device_t* device;
+
+        device = net_device_get_nth(i);
+
+        if ( ( net_device_flags(device) & NETDEV_UP ) == 0 ) {
+            net_device_put(device);
+            continue;
+        }
+
+        entry->rt_flags = RTF_UP;
+
+        IP_COPY_ADDR_MASKED( &entry->rt_dst, device->ip_addr, device->netmask );
+        IP_COPY_ADDR( &entry->rt_genmask, device->netmask );
+
+        strncpy( entry->rt_dev, device->name, 64 );
+        entry->rt_dev[63] = 0;
+
+        entry++;
+        remaining--;
+        table->rtt_count++;
+
+        net_device_put(device);
+    }
+
+    return 0;
 }
 
 __init int init_routes( void ) {
-    int error;
-
-    error = init_hashtable(
-        &route_table,
-        32,
-        route_key,
-        route_hash,
-        route_compare
-    );
-
-    if ( error < 0 ) {
-        return error;
+    if ( array_init( &static_routes ) != 0 ) {
+        goto error1;
     }
+
+    if ( array_init( &device_routes ) != 0 ) {
+        goto error2;
+    }
+
+    array_set_realloc_size( &static_routes, 32 );
+    array_set_realloc_size( &device_routes, 8 );
 
     route_mutex = mutex_create( "route mutex", MUTEX_NONE );
 
     if ( route_mutex < 0 ) {
-        destroy_hashtable( &route_table );
-        return route_mutex;
+        goto error3;
     }
 
     return 0;
+
+ error3:
+    array_destroy( &device_routes );
+
+ error2:
+    array_destroy( &static_routes );
+
+ error1:
+    return -1;
 }
 
 #endif /* ENABLE_NETWORK */

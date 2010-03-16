@@ -233,7 +233,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     /* Find out the MSS value to the destination */
 
     ip = ( uint8_t* )&in_address->sin_addr.s_addr;
-    route = find_route( ip );
+    route = route_find( ip );
 
     if ( route == NULL ) {
         mutex_unlock( tcp_socket->mutex );
@@ -248,7 +248,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
 
     tcp_socket->mss = route->device->mtu - ( IPV4_HEADER_LEN + TCP_HEADER_LEN );
 
-    put_route( route );
+    route_put( route );
 
     /* Copy the endpoint information to the TCP socket structure */
 

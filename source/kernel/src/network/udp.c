@@ -266,7 +266,7 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
     ip = ( uint8_t* )&address->sin_addr.s_addr;
 
     if ( bind_to_device ) {
-        route = find_device_route( udp_socket->bind_to_device );
+        route = route_find_device( udp_socket->bind_to_device );
 
         if ( route == NULL ) {
             kprintf( WARNING, "net: no route for device: %s.\n", udp_socket->bind_to_device );
@@ -274,7 +274,7 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
             goto error1;
         }
     } else {
-        route = find_route( ip );
+        route = route_find( ip );
 
         if ( route == NULL ) {
             kprintf( WARNING, "net: no route for UDP endpoint: %d.%d.%d.%d.\n", ip[ 0 ], ip[ 1 ], ip[ 2 ], ip[ 3 ] );
@@ -361,7 +361,7 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
         error = ipv4_send_packet( ip, packet, IP_PROTO_UDP );
     }
 
-    put_route( route );
+    route_put( route );
 
     if ( error < 0 ) {
         goto error3;
@@ -373,7 +373,7 @@ static int udp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
     delete_packet( packet );
 
  error2:
-    put_route( route );
+    route_put( route );
 
  error1:
     return error;

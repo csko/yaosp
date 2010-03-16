@@ -115,6 +115,7 @@ int net_device_register( net_device_t* device );
 
 net_device_t* net_device_get( char* name );
 net_device_t* net_device_get_nth( int index );
+net_device_t* net_device_get_by_address( uint8_t* ipv4_addr );
 int net_device_get_count( void );
 int net_device_put( net_device_t* device );
 

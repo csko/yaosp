@@ -40,6 +40,7 @@
 #define IP_EQUALS(a,b) ( *(uint32_t*)(a) == *(uint32_t*)(b) )
 #define IP_EQUALS_MASKED(a,b,m) (( *(uint32_t*)(a) & *(uint32_t*)(m) ) == ( *(uint32_t*)(b) & *(uint32_t*)(m)))
 #define IP_COPY_ADDR(t,s) *(uint32_t*)(t) = *(uint32_t*)(s)
+#define IP_COPY_ADDR_MASKED(t,s,m) *(uint32_t*)(t) = *(uint32_t*)(s) & *(uint32_t*)(m)
 
 typedef struct ipv4_header {
     uint8_t version_and_size;

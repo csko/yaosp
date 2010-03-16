@@ -28,6 +28,7 @@
 #include <network/interface.h>
 #include <network/socket.h>
 #include <network/arp.h>
+#include <network/route.h>
 #include <lib/array.h>
 
 static uint32_t device_id;
@@ -40,20 +41,31 @@ net_device_t* net_device_create( size_t priv_size ) {
     device = ( net_device_t* )kmalloc( sizeof( net_device_t ) + priv_size );
 
     if ( device == NULL ) {
-        return NULL;
+        goto error1;
     }
 
     memset( device, 0, sizeof( net_device_t ) );
 
+    device->lock = mutex_create( "net dev lock", MUTEX_NONE ); /* todo */
+
+    if ( device->lock < 0 ) {
+        goto error2;
+    }
+
     device->ref_count = 1;
     device->private = ( void* )( device + 1 );
     device->mtu = 1500; /* todo */
-    device->lock = mutex_create( "net dev lock", MUTEX_NONE ); /* todo */
 
     packet_queue_init( &device->input_queue );
     arp_interface_init( device );
 
     return device;
+
+ error2:
+    kfree( device );
+
+ error1:
+    return NULL;
 }
 
 int net_device_free( net_device_t* device ) {
@@ -124,6 +136,32 @@ net_device_t* net_device_get_nth( int index ) {
     } else {
         device = ( net_device_t* )array_get_item( &device_table, index );
         device->ref_count++;
+    }
+
+    mutex_unlock( device_lock );
+
+    return device;
+}
+
+net_device_t* net_device_get_by_address( uint8_t* ipv4_addr ) {
+    int i;
+    int size;
+    net_device_t* device = NULL;
+
+    mutex_lock( device_lock, LOCK_IGNORE_SIGNAL );
+
+    size = array_get_size(&device_table);
+
+    for ( i = 0; i < size; i++ ) {
+        net_device_t* tmp;
+
+        tmp = (net_device_t*)array_get_item( &device_table, i );
+
+        if ( IP_EQUALS_MASKED( tmp->ip_addr, ipv4_addr, tmp->netmask ) ) {
+            device = tmp;
+            device->ref_count++;
+            break;
+        }
     }
 
     mutex_unlock( device_lock );
@@ -452,6 +490,18 @@ int net_device_ioctl( int command, void* buffer, bool from_kernel ) {
         case SIOCSIFBRDADDR :
         case SIOCSIFFLAGS :
             error = set_interface_parameter( command, ( struct ifreq* )buffer );
+            break;
+
+        case SIOCADDRT :
+            error = route_add( ( struct rtentry* )buffer );;
+            break;
+
+        case SIOCDELRT :
+            error = -ENOSYS;
+            break;
+
+        case SIOCGETRTAB :
+            error = route_get_table( ( struct rttable* )buffer );
             break;
 
         default :

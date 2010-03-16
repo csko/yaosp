@@ -1,6 +1,6 @@
-/* Route handling
+/* yaosp C library
  *
- * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,14 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETWORK_ROUTE_H_
-#define _NETWORK_ROUTE_H_
+#ifndef _NET_ROUTE_H_
+#define _NET_ROUTE_H_
 
-#include <types.h>
-#include <network/ipv4.h>
-#include <network/device.h>
-
-#include <arch/atomic.h>
+#include <inttypes.h>
 
 #define RTF_UP      0x0001
 #define RTF_GATEWAY 0x0002
@@ -65,24 +61,4 @@ struct rttable {
     /* array of struct rtabentry follows */
 };
 
-typedef struct route {
-    int ref_count;
-
-    uint8_t network_addr[ IPV4_ADDR_LEN ];
-    uint8_t network_mask[ IPV4_ADDR_LEN ];
-    uint8_t gateway_addr[ IPV4_ADDR_LEN ];
-    uint32_t flags;
-
-    net_device_t* device;
-} route_t;
-
-route_t* route_find( uint8_t* ipv4_address );
-route_t* route_find_device( char* name );
-void route_put( route_t* route );
-
-int route_add( struct rtentry* entry );
-int route_get_table( struct rttable* table );
-
-int init_routes( void );
-
-#endif /* _NETWORK_ROUTE_H_ */
+#endif /* _NET_ROUTE_H_ */
