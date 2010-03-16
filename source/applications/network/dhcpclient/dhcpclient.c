@@ -1,6 +1,7 @@
 /* DHCP client
  *
- * Copyright (c) 2009 Kornel Csernai, Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,8 +22,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+#include <net/route.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <time.h>
@@ -84,6 +87,22 @@ static int if_set_broadcast( struct ifreq* req, uint32_t broadcast ) {
     return 0;
 }
 
+static int set_default_router( uint32_t router ) {
+    struct rtentry entry;
+    struct sockaddr_in* addr;
+
+    memset( &entry, 0, sizeof(struct rtentry) );
+
+    entry.rt_flags = RTF_UP | RTF_GATEWAY;
+    addr = (struct sockaddr_in*)&entry.rt_gateway;
+    memcpy( &addr->sin_addr, &router, sizeof(uint32_t) );
+
+    if ( ioctl( sock, SIOCADDRT, &entry ) != 0 ) {
+        fprintf( stderr, "%s: failed to add default router address.\n", argv0 );
+    }
+
+    return 0;
+}
 
 void init_packet( dhcp_msg_t* msg, uint8_t type ) {
     memset( msg, 0, sizeof( dhcp_msg_t ) );
@@ -266,9 +285,16 @@ void parse_message( dhcp_msg_t* msg, dhcp_info_t* info ) {
                 break;
 
             case DHCP_ROUTERS : {
-                uint8_t size = *(options+1);
+                uint8_t size = *( options + 1 );
                 options += 2;
-                memcpy(&(info->routers), options, size);
+
+                info->routers = (uint32_t*)malloc(size);
+
+                if ( info->routers != NULL ) {
+                    memcpy( info->routers, options, size );
+                    info->router_count = size / sizeof(uint32_t);
+                }
+
                 options += size;
                 break;
             }
@@ -317,12 +343,9 @@ void parse_message( dhcp_msg_t* msg, dhcp_info_t* info ) {
                     status == REQUEST ) {
             struct ifreq req;
 
-            uint8_t *ip = (uint8_t*) &(info->ip_addr);
-            uint8_t *nm = (uint8_t*) &(info->netmask);
-            uint8_t *sip = (uint8_t*) &(info->server_addr);
-            uint8_t *r = (uint8_t*) &(info->routers);
-            uint8_t *bc = (uint8_t*) &(info->broadcast);
-            uint8_t *ns = (uint8_t*) &(info->name_servers);
+            uint8_t* ip = (uint8_t*)&info->ip_addr;
+            uint8_t* nm = (uint8_t*)&info->netmask;
+            uint8_t* sip = (uint8_t*)&info->server_addr;
 
             status = DONE;
 
@@ -339,26 +362,34 @@ void parse_message( dhcp_msg_t* msg, dhcp_info_t* info ) {
                 nm[0], nm[1], nm[2], nm[3]
             );
 
-            // TODO: use more than one routers
-            if(info->routers != NULL){
-                printf("  router: %d.%d.%d.%d,\n", r[0], r[1], r[2], r[3]);
-            }
-
-            if(broadcast_set == 1){
-                printf("  broadcast: %d.%d.%d.%d,\n", bc[0], bc[1], bc[2], bc[3]);
-            }
-
-            // TODO: use more than one name servers
-            if(info->name_servers != NULL){
-                printf("  nameserver: %d.%d.%d.%d\n", ns[0], ns[1], ns[2], ns[3]);
-            }
-
             strncpy( req.ifr_name, device, IFNAMSIZ );
             req.ifr_name[ IFNAMSIZ - 1 ] = 0;
 
             if_set_ip_address(&req, info->ip_addr);
             if_set_netmask(&req, info->netmask);
-            if_set_broadcast(&req, info->broadcast);
+
+            if(broadcast_set == 1){
+                uint8_t* bc = (uint8_t*)&info->broadcast;
+                printf("  broadcast: %d.%d.%d.%d,\n", bc[0], bc[1], bc[2], bc[3]);
+                if_set_broadcast(&req, info->broadcast);
+            }
+
+            // TODO: use more than one router
+            if ( info->router_count > 0 ) {
+                uint8_t* r;
+
+                assert( info->routers != NULL );
+                r = (uint8_t*)info->routers;
+                printf("  router: %d.%d.%d.%d,\n", r[0], r[1], r[2], r[3]);
+
+                set_default_router(*info->routers);
+            }
+
+            // TODO: use more than one name server
+            if ( info->name_servers != NULL ) {
+                uint8_t* ns = (uint8_t*)info->name_servers;
+                printf("  nameserver: %d.%d.%d.%d\n", ns[0], ns[1], ns[2], ns[3]);
+            }
         } else if ( msgtype == DHCPNAK &&
                     status == REQUEST ) {
             status = DISCOVER;
@@ -435,6 +466,8 @@ int dhcp_mainloop( void ) {
         if ( size >= sizeof( dhcp_msg_t ) ) {
             dhcp_info_t info;
             dhcp_msg_t* msg = ( dhcp_msg_t* )in_buffer;
+
+            memset( &info, 0, sizeof(dhcp_info_t) );
 
             parse_message( msg, &info );
         }

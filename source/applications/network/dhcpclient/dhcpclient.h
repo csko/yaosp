@@ -1,5 +1,6 @@
 /* DHCP client
  *
+ * Copyright (c) 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -88,19 +89,19 @@ typedef struct dhcp_msg {
 } __attribute__(( packed )) dhcp_msg_t;
 
 typedef struct dhcp_info {
-
     uint32_t server_addr;
     uint32_t ip_addr;
     uint32_t broadcast;
     uint32_t netmask;
-    uint32_t *routers;
-    uint32_t *name_servers;
+
+    uint32_t* routers;
+    size_t router_count;
+
+    uint32_t* name_servers;
 
     uint32_t lease_time;
     uint32_t arp_cache_timeout;
-
 } dhcp_info_t;
-
 
 /*
  * DHCP message options
