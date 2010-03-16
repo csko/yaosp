@@ -84,7 +84,9 @@ view_t* ui_get_channel( const char* chan_name ) {
 }
 
 int ui_handle_command( const char* command, const char* params ) {
-    if ( strcasecmp( command, "/quit" ) == 0 ) {
+    if ( strcasecmp( command, "/server" ) == 0 ) {
+        irc_connect_to(params);
+    } else if ( strcasecmp( command, "/quit" ) == 0 ) {
         irc_quit_server( params );
         event_manager_quit();
     } else if ( strcasecmp( command, "/join" ) == 0 ) {
@@ -281,21 +283,27 @@ int ui_activate_view( view_t* view ) {
     return 0;
 }
 
-int ui_error_message( const char* errormsg ){
+int ui_error_message( const char* errormsg, ... ) {
+    va_list va;
     char _errormsg[ 256 ];
 
-    snprintf(_errormsg, 256, "ERROR: %s", errormsg );
+    va_start(va, errormsg);
+    vsnprintf(_errormsg, 256, errormsg, va);
+    va_end(va);
 
-    return active_view_add_text( _errormsg );
+    return view_add_text( &server_view, _errormsg );
 }
 
-int ui_debug_message( const char* debugmsg ){
+int ui_debug_message( const char* debugmsg, ... ){
 #ifdef WITH_DEBUG
+    va_list va;
     char _debugmsg[ 256 ];
 
-    snprintf(_debugmsg, 256, "DEBUG: %s", debugmsg );
+    va_start(va,debugmsg);
+    vsnprintf(_debugmsg, 256, debugmsg, va);
+    va_end(va);
 
-    return active_view_add_text( _debugmsg );
+    return view_add_text( &server_view, _debugmsg );
 #else
     return 0;
 #endif
@@ -340,11 +348,10 @@ int init_ui( void ) {
 
     /* Register an event for stdin */
 
+    event_init( &stdin_event );
     stdin_event.fd = STDIN_FILENO;
-    stdin_event.events[ EVENT_READ ].interested = 1;
-    stdin_event.events[ EVENT_READ ].callback = ui_stdin_event;
-    stdin_event.events[ EVENT_WRITE ].interested = 0;
-    stdin_event.events[ EVENT_EXCEPT ].interested = 0;
+    stdin_event.events[EVENT_READ].interested = 1;
+    stdin_event.events[EVENT_READ].callback = ui_stdin_event;
 
     event_manager_add_event( &stdin_event );
 

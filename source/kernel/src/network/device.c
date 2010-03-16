@@ -157,6 +157,10 @@ net_device_t* net_device_get_by_address( uint8_t* ipv4_addr ) {
 
         tmp = (net_device_t*)array_get_item( &device_table, i );
 
+        if ( ( net_device_flags(tmp) & NETDEV_UP ) == 0 ) {
+            continue;
+        }
+
         if ( IP_EQUALS_MASKED( tmp->ip_addr, ipv4_addr, tmp->netmask ) ) {
             device = tmp;
             device->ref_count++;

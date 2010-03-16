@@ -63,6 +63,6 @@
 #define EALREADY      41
 #define ENETDOWN      42
 #define ENOTCONN      43
-#define EAFNOTSUPPORT 44
+#define EAFNOSUPPORT  44
 
 #endif /* _ERRNO_H_ */

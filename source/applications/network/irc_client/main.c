@@ -31,7 +31,7 @@ int main( int argc, char** argv ) {
         return EXIT_SUCCESS;
     }
 
-    my_nick = argv[ 1 ];
+    my_nick = argv[1];
 
     init_event_manager();
     init_ui();

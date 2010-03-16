@@ -79,7 +79,7 @@ int inet_pton( int af, const char* src, void* dst ) {
         /* todo: add IPv6 support */
 
         default :
-            errno = EAFNOTSUPPORT;
+            errno = EAFNOSUPPORT;
             return -1;
     }
 }

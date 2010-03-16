@@ -1,6 +1,7 @@
 /* IRC client
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,10 +21,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <time.h>
 #include <yaosp/debug.h>
 
 #include "../core/event.h"
@@ -35,8 +39,9 @@
 
 char* my_nick;
 
-static int s;
+static int sock = -1;
 static event_t irc_read;
+static event_t irc_connect;
 
 static size_t input_size = 0;
 static char* input_buffer = NULL;
@@ -112,7 +117,6 @@ static void parse_line2(const char* line){
     ui_debug_message( tmp );
 }
 
-
 static void irc_handle_line( char* line ) {
     char tmp[ 256 ];
 
@@ -129,7 +133,6 @@ static void irc_handle_line( char* line ) {
         parse_line2(line);
     }
 }
-
 
 int irc_handle_privmsg( const char* sender, const char* chan, const char* msg ) {
     char buf[ 256 ];
@@ -255,7 +258,6 @@ int irc_handle_mode( const char* sender, const char* chan, const char* msg){
 }
 
 int irc_handle_topic( const char* sender, const char* chan, const char* msg){
-
     return 0;
 }
 
@@ -293,21 +295,20 @@ int irc_handle_part( const char* sender, const char* chan, const char* msg){
     return 0;
 }
 
-
 int irc_handle_ping(const char* params){
     char buf[256];
     int length;
 
     length = snprintf(buf, sizeof(buf), "PONG %s\n", params);
 
-    return irc_write(s, buf, length);
+    return irc_write(sock, buf, length);
 }
 
 static int irc_handle_incoming( event_t* event ) {
     int size;
     char buffer[ 512 ];
 
-    size = read( s, buffer, sizeof( buffer ) - 1 );
+    size = read( sock, buffer, sizeof( buffer ) - 1 );
 
     if ( size > 0 ) {
         char* tmp;
@@ -365,13 +366,87 @@ static int irc_handle_incoming( event_t* event ) {
     return 0;
 }
 
+static int irc_handle_connect_finish( event_t* event ) {
+    size_t length;
+    char buffer[ 256 ];
+
+    ui_error_message( "irc_handle_connect_finish() called\n" );
+
+    event_manager_remove_event( &irc_connect );
+
+    event_init( &irc_read );
+    irc_read.fd = sock;
+    irc_read.events[ EVENT_READ ].interested = 1;
+    irc_read.events[ EVENT_READ ].callback = irc_handle_incoming;
+
+    event_manager_add_event( &irc_read );
+
+    length = snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER \"elte.irc.hu\" :yaOSp IRC client\r\n", my_nick, my_nick );
+    irc_write( sock, buffer, length );
+
+    return 0;
+}
+
+int irc_connect_to( const char* server ) {
+    int ret;
+    char buf[32];
+    struct hostent* hent;
+    struct sockaddr_in addr;
+
+    if ( sock != -1 ) {
+        return 0;
+    }
+
+    ui_error_message( "Connecting to %s ...\n", server );
+
+    sock = socket( AF_INET, SOCK_STREAM, 0 );
+
+    if ( sock == -1 ) {
+        ui_error_message( "Failed to create socket: %s.\n", strerror(errno) );
+        return 0;
+    }
+
+    /* Set the socket to nonblocking. */
+
+    fcntl( sock, F_SETFL, fcntl( sock, F_GETFL ) | O_NONBLOCK );
+
+    hent = gethostbyname(server);
+
+    if ( hent == NULL ) {
+        ui_error_message( "Failed to resolv server address: %s.\n", server );
+        return 0;
+    }
+
+    addr.sin_family = AF_INET;
+    memcpy( &addr.sin_addr, hent->h_addr, hent->h_length );
+    addr.sin_port = htons(6667);
+
+    inet_ntop( AF_INET, &addr.sin_addr, buf, sizeof(buf) );
+    ui_error_message( "Address of %s is resolved: %s.\n", server, buf );
+
+    ret = connect( sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in) );
+
+    if ( ret < 0 && errno != EINPROGRESS ) {
+        ui_error_message( "Failed to connect to the server: %s.\n", strerror(errno) );
+        return 0;
+    }
+
+    event_init( &irc_connect );
+    irc_connect.fd = sock;
+    irc_connect.events[ EVENT_WRITE ].interested = 1;
+    irc_connect.events[ EVENT_WRITE ].callback = irc_handle_connect_finish;
+
+    event_manager_add_event( &irc_connect );
+
+    return 0;
+}
+
 int irc_join_channel( const char* channel ) {
     char buf[ 128 ];
     size_t length;
 
     length = snprintf( buf, sizeof( buf ), "JOIN %s\r\n", channel );
-
-    irc_write( s, buf, length );
+    irc_write( sock, buf, length );
 
     return 0;
 }
@@ -381,8 +456,7 @@ int irc_part_channel( const char* channel, const char* message ) {
     size_t length;
 
     length = snprintf( buf, sizeof( buf ), "PART %s :%s\r\n", channel, message );
-
-    irc_write( s, buf, length );
+    irc_write( sock, buf, length );
 
     return 0;
 }
@@ -392,8 +466,7 @@ int irc_send_privmsg( const char* channel, const char* message ) {
     size_t length;
 
     length = snprintf( buf, sizeof( buf ), "PRIVMSG %s :%s\r\n", channel, message );
-
-    irc_write( s, buf, length );
+    irc_write( sock, buf, length );
 
     return 0;
 }
@@ -403,52 +476,13 @@ int irc_raw_command( const char* command ) {
     size_t length;
 
     length = snprintf( buf, sizeof( buf ), "%s\r\n", command );
-
-    irc_write( s, buf, length );
+    irc_write( sock, buf, length );
 
     return 0;
 }
 
 int init_irc( void ) {
-    int error;
-    char buffer[ 256 ];
-
-    struct sockaddr_in address;
-
-    /* Initialize the channels */
-
     init_array( &chan_list );
-
-    /* Initialize the connection */
-    s = socket( AF_INET, SOCK_STREAM, 0 );
-
-    if ( s < 0 ) {
-        return s;
-    }
-
-    address.sin_family = AF_INET;
-    inet_aton( "157.181.1.129", &address.sin_addr ); /* elte.irc.hu */
-    address.sin_port = htons( 6667 );
-
-    error = connect( s, ( struct sockaddr* )&address, sizeof( struct sockaddr_in ) );
-
-    if ( error < 0 ) {
-        return error;
-    }
-
-    /* TODO: parameterize */
-    snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER \"elte.irc.hu\" :yaOSp IRC client\r\n", my_nick, my_nick );
-    irc_write( s, buffer, strlen( buffer ) );
-
-    /* TODO: handle "nickname already in use" */
-
-    irc_read.fd = s;
-    irc_read.events[ EVENT_READ ].interested = 1;
-    irc_read.events[ EVENT_READ ].callback = irc_handle_incoming;
-    irc_read.events[ EVENT_WRITE ].interested = 0;
-    irc_read.events[ EVENT_EXCEPT ].interested = 0;
-
-    event_manager_add_event( &irc_read );
 
     return 0;
 }
@@ -463,7 +497,7 @@ int irc_quit_server( const char* reason ) {
         length = snprintf( buf, sizeof( buf ), "QUIT :%s\r\n", reason );
     }
 
-    irc_write( s, buf, length );
+    irc_write( sock, buf, length );
 
     return 0;
 }

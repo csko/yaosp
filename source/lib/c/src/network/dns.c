@@ -384,9 +384,10 @@ int dns_resolv( char* hostname, struct in_addr** v4_table, size_t* v4_cnt ) {
 
     while ( ( request->server_current != NULL ) &&
             ( request->result_v4_cnt == 0 ) ) {
-        dns_send_request(request);
-        pthread_cond_wait( &request->result_sync, &dns_lock );
-        dns_request_remove(request);
+        if ( dns_send_request(request) == 0 ) {
+            pthread_cond_wait( &request->result_sync, &dns_lock );
+            dns_request_remove(request);
+        }
     }
 
     pthread_mutex_unlock(&dns_lock);

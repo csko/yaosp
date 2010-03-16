@@ -32,6 +32,7 @@ typedef struct client {
 } client_t;
 
 /* User commands */
+int irc_connect_to( const char* server );
 int irc_join_channel( const char* channel );
 int irc_part_channel( const char* channel, const char* message );
 int irc_send_privmsg( const char* channel, const char* message );

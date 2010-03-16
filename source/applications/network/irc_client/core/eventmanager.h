@@ -1,6 +1,6 @@
 /* IRC client
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,10 @@
 
 #include "event.h"
 
+int event_init( event_t* event );
+
 int event_manager_add_event( event_t* event );
+int event_manager_remove_event( event_t* event );
 
 int event_manager_mainloop( void );
 int event_manager_quit( void );

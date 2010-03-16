@@ -1,6 +1,6 @@
 /* IRC client
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,13 +24,25 @@
 
 #include <yaosp/debug.h>
 
+static array_t event_list;
 static volatile int running = 1;
 
-static array_t event_list;
+int event_init( event_t* event ) {
+    event->fd = -1;
+    event->events[EVENT_READ].interested = 0;
+    event->events[EVENT_WRITE].interested = 0;
+    event->events[EVENT_EXCEPT].interested = 0;
+
+    return 0;
+}
 
 int event_manager_add_event( event_t* event ) {
-    array_add_item( &event_list, ( void* )event );
+    array_add_item( &event_list, (void*)event );
+    return 0;
+}
 
+int event_manager_remove_event( event_t* event ) {
+    array_remove_item( &event_list, (void*)event );
     return 0;
 }
 
@@ -52,6 +64,8 @@ int event_manager_mainloop( void ) {
     };
 
     while ( running ) {
+        struct timeval timeout;
+
         /* Clear all fd_set */
 
         for ( i = 0; i < EVENT_COUNT; i++ ) {
@@ -77,6 +91,9 @@ int event_manager_mainloop( void ) {
                 }
             }
         }
+
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 100 * 1000;
 
         /* Call select */
 

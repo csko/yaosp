@@ -1,6 +1,7 @@
 /* IRC client
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -26,8 +27,8 @@ int ui_handle_command( const char* command, const char* params );
 
 void ui_draw_view( view_t* view );
 int ui_activate_view( view_t* view );
-int ui_error_message( const char* errormsg );
-int ui_debug_message( const char* debugmsg );
+int ui_error_message( const char* errormsg, ... );
+int ui_debug_message( const char* debugmsg, ... );
 
 int init_ui( void );
 int destroy_ui( void );

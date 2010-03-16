@@ -21,10 +21,37 @@
 #include <netdb.h>
 #include <assert.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+
+static char* argv0 = NULL;
+
+static int resolv_dns_address( char* address ) {
+    struct hostent* hent;
+
+    hent = gethostbyname(address);
+
+    if ( hent == NULL ) {
+        fprintf( stderr, "%s: failed to resolv host address: %s.\n", argv0, address );
+    } else {
+        char buf[64];
+
+        inet_ntop( AF_INET, hent->h_addr, buf, sizeof(buf) );
+        printf( "Address of %s is %s.\n", address, buf );
+    }
+
+    return 0;
+}
 
 int main( int argc, char** argv ) {
     uint8_t* addr;
     struct hostent* hent;
+
+    argv0 = argv[0];
+
+    if ( argc == 2 ) {
+        resolv_dns_address( argv[1] );
+        return EXIT_SUCCESS;
+    }
 
     printf( "[*] Resolving 1.2.3.4 ..." );
 

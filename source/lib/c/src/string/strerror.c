@@ -51,7 +51,18 @@ static char* error_strings[] = {
     "No child processes", /* ECHILD */
     "File name too long", /* ENAMETOOLONG */
     "Illegal seek", /* ESPIPE */
-    "Permission denied" /* EACCES */
+    "Permission denied", /* EACCES */
+    "Resource deadlock avoided", /* EDEADLK */
+    "Address already in use", /* EADDRINUSE */
+    "Resource temporarily unavailable", /* EWOULDBLOCK */
+    "Cannot assign requested address", /* EADDRNOTAVAIL */
+    "Transport endpoint is already connected", /* EISCONN */
+    "Operation now in progress", /* EINPROGRESS */
+    "Network is unreachable", /* ENETUNREACH */
+    "Operation already in progress", /* EALREADY */
+    "Network is down", /* ENETDOWN */
+    "Transport endpoint is not connected", /* ENOTCONN */
+    "Address family not supported by protocol" /* EAFNOSUPPORT */
 };
 
 char* strerror( int errnum ) {
