@@ -46,59 +46,55 @@ static event_t irc_connect;
 static size_t input_size = 0;
 static char* input_buffer = NULL;
 
-static const char* timestamp_format = "%D %T";
+static const char* timestamp_format = "%H:%M";
 
 static void parse_line1(const char* line){
-    char tmp[256];
     char* cmd = NULL;
     char* param1 = NULL;
     char* param2 = NULL;
 
     cmd = strchr( line, ' ' );
 
-    if(cmd != NULL){ /* found command */
-        *cmd++ = '\0';
+    if ( cmd == NULL ) {
+        return;
+    }
 
-        param1 = strchr( cmd, ' ' );
+    *cmd++ = '\0';
 
-        if(param1 != NULL){ /* found param1 */
-            *param1++ = '\0';
+    param1 = strchr( cmd, ' ' );
 
-            /* Look for a one-parameter command */
-            if(strcmp(cmd, "JOIN") == 0){
-                irc_handle_join(line, param1);
-            }else{ /* Command not found */
-                param2 = strchr( param1, ' ' );
+    if(param1 != NULL){ /* found param1 */
+        *param1++ = '\0';
 
-                if(param2 != NULL){ /* found param2 */
-                    *param2++ = '\0';
+        /* Look for a one-parameter command */
+        if(strcmp(cmd, "JOIN") == 0){
+            irc_handle_join(line, param1);
+        }else{ /* Command not found */
+            param2 = strchr( param1, ' ' );
 
-                    /* Look for a two-parameter command */
-                    if(strcmp(cmd, "PRIVMSG") == 0){
-                        irc_handle_privmsg(line, param1, param2 + 1);
-                    }else if(strcmp(cmd, "NOTICE") == 0){
-                        irc_handle_notice(line, param1, param2 + 1);
-                    }else if(strcmp(cmd, "MODE") == 0){
-                        irc_handle_mode(line, param1, param2 + 1);
-                    }else if(strcmp(cmd, "TOPIC") == 0){
-                        irc_handle_topic(line, param1, param2 + 1);
-                    }else if(strcmp(cmd, "NAMES") == 0){
-                        irc_handle_names(line, param1, param2 + 1);
-                    }else if(strcmp(cmd, "PART") == 0){
-                        irc_handle_part(line, param1, param2 + 1);
-                    }
+            if(param2 != NULL){ /* found param2 */
+                *param2++ = '\0';
+
+                /* Look for a two-parameter command */
+                if(strcmp(cmd, "PRIVMSG") == 0){
+                    irc_handle_privmsg(line, param1, param2 + 1);
+                }else if(strcmp(cmd, "NOTICE") == 0){
+                    irc_handle_notice(line, param1, param2 + 1);
+                }else if(strcmp(cmd, "MODE") == 0){
+                    irc_handle_mode(line, param1, param2 + 1);
+                }else if(strcmp(cmd, "TOPIC") == 0){
+                    irc_handle_topic(line, param1, param2 + 1);
+                }else if(strcmp(cmd, "NAMES") == 0){
+                    irc_handle_names(line, param1, param2 + 1);
+                }else if(strcmp(cmd, "PART") == 0){
+                    irc_handle_part(line, param1, param2 + 1);
                 }
             }
         }
     }
-
-    snprintf( tmp, sizeof( tmp ), "line1 sender='%s' cmd='%s', param1='%s', param2='%s'", line, cmd, param1, param2 );
-
-    ui_debug_message( tmp );
 }
 
 static void parse_line2(const char* line){
-    char tmp[256];
     char* params;
 
     params = strchr( line, ' ' );
@@ -111,26 +107,20 @@ static void parse_line2(const char* line){
 
         }
     }
-
-    snprintf(tmp, sizeof( tmp ), "line2 cmd='%s' params='%s'", line, params);
-
-    ui_debug_message( tmp );
 }
 
 static void irc_handle_line( char* line ) {
-    char tmp[ 256 ];
+    switch ( line[0] ) {
+        case 0 :
+            return;
 
-    snprintf(tmp, sizeof( tmp ), "<< %s", line);
-    ui_debug_message( tmp );
+        case ':' :
+            parse_line1(++line);
+            break;
 
-    if(line[0] == 0) {
-        return;
-    }
-
-    if(line[0] == ':') {
-        parse_line1(++line);
-    } else {
-        parse_line2(line);
+        default :
+            parse_line2(line);
+            break;
     }
 }
 
@@ -308,7 +298,7 @@ static int irc_handle_incoming( event_t* event ) {
     int size;
     char buffer[ 512 ];
 
-    size = read( sock, buffer, sizeof( buffer ) - 1 );
+    size = recv( sock, buffer, sizeof( buffer ) - 1, MSG_NOSIGNAL );
 
     if ( size > 0 ) {
         char* tmp;
@@ -370,8 +360,6 @@ static int irc_handle_connect_finish( event_t* event ) {
     size_t length;
     char buffer[ 256 ];
 
-    ui_error_message( "irc_handle_connect_finish() called\n" );
-
     event_manager_remove_event( &irc_connect );
 
     event_init( &irc_read );
@@ -381,7 +369,9 @@ static int irc_handle_connect_finish( event_t* event ) {
 
     event_manager_add_event( &irc_read );
 
-    length = snprintf( buffer, sizeof( buffer ), "NICK %s\r\nUSER %s SERVER \"elte.irc.hu\" :yaOSp IRC client\r\n", my_nick, my_nick );
+    length = snprintf( buffer, sizeof( buffer ),
+        "NICK %s\r\nUSER %s SERVER \"elte.irc.hu\" :yaOSp IRC client\r\n", my_nick, my_nick
+    );
     irc_write( sock, buffer, length );
 
     return 0;
@@ -502,15 +492,22 @@ int irc_quit_server( const char* reason ) {
     return 0;
 }
 
-ssize_t irc_write(int fd, const void *buf, size_t count) {
-    char tmp[256];
+ssize_t irc_write(int fd, const void* buf, size_t count) {
+    char* data = (char*)buf;
+    size_t remaining = count;
 
-    /* NOTE: size of buf unknown, '\0' is delimiter */
-    snprintf(tmp, sizeof( tmp ), ">> %s", ( char* )buf );
+    while ( remaining > 0 ) {
+        ssize_t ret = send(fd, data, remaining, MSG_NOSIGNAL);
 
-    ui_debug_message( tmp );
+        if ( ret < 0 ) {
+            return ret;
+        }
 
-    return write(fd, buf, count);
+        data += ret;
+        remaining -= ret;
+    }
+
+    return count;
 }
 
 int parse_client( const char* str, client_t* sender ) {
