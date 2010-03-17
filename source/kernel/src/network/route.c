@@ -35,6 +35,7 @@ static array_t static_routes;
 static array_t device_routes;
 
 static route_t* route_create( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gateway_addr, uint32_t flags ) {
+    uint32_t tmp;
     route_t* route;
 
     route = (route_t*)kmalloc( sizeof(route_t) );
@@ -55,6 +56,16 @@ static route_t* route_create( uint8_t* net_addr, uint8_t* net_mask, uint8_t* gat
     route->flags = flags;
     route->device = NULL;
     route->ref_count = 1;
+    route->mask_bits = 0;
+
+    /* Count bits in the network mask field. */
+
+    tmp = *(uint32_t*)net_mask;
+
+    while ( tmp != 0 ) {
+        route->mask_bits += ( tmp & 1 );
+        tmp >>= 1;
+    }
 
     return route;
 }
@@ -73,6 +84,7 @@ static route_t* route_clone( route_t* original ) {
     IP_COPY_ADDR( clone->network_mask, original->network_mask );
     IP_COPY_ADDR( clone->gateway_addr, original->gateway_addr );
 
+    clone->mask_bits = original->mask_bits;
     clone->flags = original->flags;
     clone->device = NULL;
 
@@ -80,9 +92,25 @@ static route_t* route_clone( route_t* original ) {
 }
 
 static int route_insert( array_t* route_table, route_t* route ) {
+    int i;
+    int size;
+
     /* TODO: check if the same route already exists. */
+
+    size = array_get_size(route_table);
+
+    for ( i = 0; i < size; i++ ) {
+        route_t* tmp;
+
+        tmp = (route_t*)array_get_item( route_table, i );
+
+        if ( route->mask_bits >= tmp->mask_bits ) {
+            break;
+        }
+    }
+
     route->ref_count++;
-    array_add_item( route_table, route );
+    array_insert_item( route_table, i, route );
 
     return 0;
 }

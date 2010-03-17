@@ -58,6 +58,33 @@ static int route_format_gateway( struct rtabentry* entry, char* buf, size_t size
     return 0;
 }
 
+static int route_comparator( const void* d1, const void* d2 ) {
+    int mb1 = 0;
+    int mb2 = 0;
+    uint32_t tmp;
+    struct sockaddr_in* addr;
+    struct rtabentry* route1 = (struct rtabentry*)d1;
+    struct rtabentry* route2 = (struct rtabentry*)d2;
+
+    addr = (struct sockaddr_in*)&route1->rt_genmask;
+    tmp = *(uint32_t*)&addr->sin_addr;
+
+    while ( tmp != 0 ) {
+        mb1 += ( tmp & 1 );
+        tmp >>= 1;
+    }
+
+    addr = (struct sockaddr_in*)&route2->rt_genmask;
+    tmp = *(uint32_t*)&addr->sin_addr;
+
+    while ( tmp != 0 ) {
+        mb2 += ( tmp & 1 );
+        tmp >>= 1;
+    }
+
+    return ( mb2 - mb1 );
+}
+
 static int list_routes( void ) {
     int i;
     struct rttable* table;
@@ -80,6 +107,12 @@ static int list_routes( void ) {
     entry = (struct rtabentry*)( table + 1 );
 
     printf( "Destination     Gateway         Genmask         Flags Interface\n" );
+
+    if ( table->rtt_count == 0 ) {
+        return 0;
+    }
+
+    qsort( entry, table->rtt_count, sizeof(struct rtabentry), route_comparator );
 
     for ( i = 0; i < table->rtt_count; i++, entry++ ) {
         char buf[32];
@@ -166,7 +199,7 @@ static int del_route( int argc, char** argv ) {
 
 static int print_usage( void ) {
     printf( "Usage:\n" );
-    printf( "  %s add ip <address> [mask <netmask>] [gw <gateway>] [dev <device>]\n", argv0 );
+    printf( "  %s add ip <address> [mask <netmask>] [gw <gateway>]\n", argv0 );
     printf( "  %s list\n", argv0 );
 
     return 0;

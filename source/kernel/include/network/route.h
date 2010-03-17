@@ -71,6 +71,7 @@ typedef struct route {
     uint8_t network_addr[ IPV4_ADDR_LEN ];
     uint8_t network_mask[ IPV4_ADDR_LEN ];
     uint8_t gateway_addr[ IPV4_ADDR_LEN ];
+    int mask_bits;
     uint32_t flags;
 
     net_device_t* device;
