@@ -1,6 +1,6 @@
 /* Image loader handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,9 +21,11 @@
 #include <ygui/image/imageloader.h>
 
 extern image_loader_t png_loader;
+extern image_loader_t jpeg_loader;
 
 static image_loader_t* image_loaders[] = {
     &png_loader,
+    &jpeg_loader,
     NULL
 };
 

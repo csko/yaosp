@@ -18,6 +18,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <ygui/desktop.h>
 #include <ygui/protocol.h>
 
@@ -33,8 +36,15 @@ int send_set_wallpaper_msg_to_desktop( char* data ) {
 }
 
 static int change_wallpaper( int argc, char** argv ) {
+    struct stat st;
+
     if ( argc != 1 ) {
         fprintf( stderr, "New wallpeper file parameter is missing.\n" );
+        return -1;
+    }
+
+    if ( stat( argv[0], &st ) != 0 ) {
+        fprintf( stderr, "Failed to set new wallpaper: %s.\n", strerror(errno) );
         return -1;
     }
 

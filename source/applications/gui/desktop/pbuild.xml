@@ -22,10 +22,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build default="all">
     <array name="files">
         <item>desktop.c</item>
+        <item>wallpaper.c</item>
     </array>
 
     <array name="images">
-        <item>background.png</item>
+        <item>tunnel.jpg</item>
+        <item>magneticfield.jpg</item>
     </array>
 
     <target name="clean">
@@ -63,6 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../../../build/libs/libygui.a</input>
             <input>../../../../build/libs/libpng.a</input>
+            <input>../../../../build/libs/libjpeg.a</input>
             <input>../../../../build/libs/libz.a</input>
             <input>../../../../build/libs/libyconfig.a</input>
             <input>../../../../build/libs/libyutil.a</input>
@@ -72,12 +75,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <mkdir>../../../../build/image/application/desktop</mkdir>
-        <mkdir>../../../../build/image/application/desktop/images</mkdir>
-
         <copy from="objs/desktop" to="../../../../build/image/application/desktop/desktop"/>
 
+        <mkdir>../../../../build/image/system/images/backgrounds</mkdir>
         <for var="i" array="${images}">
-            <copy from="images/${i}" to="../../../../build/image/application/desktop/images/${i}"/>
+            <copy from="images/${i}" to="../../../../build/image/system/images/backgrounds/${i}"/>
         </for>
     </target>
 

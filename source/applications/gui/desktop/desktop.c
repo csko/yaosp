@@ -33,6 +33,8 @@
 #include <yutil/process.h>
 #include <yconfig/yconfig.h>
 
+#include "wallpaper.h"
+
 window_t* window;
 widget_t* image_wallpaper;
 
@@ -45,22 +47,15 @@ static int desktop_handle_resolution_change( msg_scr_res_changed_t* msg ) {
     point_init( &size, msg->mode_info.width, msg->mode_info.height );
     window_resize( window, &size );
 
+    /* Resize the background image as well. */
+
+    wallpaper_resize(msg->mode_info.width, msg->mode_info.height);
+
     return 0;
 }
 
 static int desktop_change_wallpaper( char* path ) {
-    bitmap_t* new_bitmap;
-
-    new_bitmap = bitmap_load_from_file( path );
-
-    if ( new_bitmap == NULL ) {
-        return 0;
-    }
-
-    image_set_bitmap( image_wallpaper, new_bitmap );
-    bitmap_dec_ref( new_bitmap );
-
-    dbprintf( "Wallpaper changed to: '%s'.\n", path );
+    wallpaper_set(path);
 
     return 0;
 }
@@ -98,6 +93,7 @@ int main( int argc, char** argv ) {
     }
 
     ycfg_init();
+    wallpaper_init();
 
     if ( application_init( APP_NOTIFY_RESOLUTION_CHANGE ) != 0 ) {
         dbprintf( "Failed to initialize taskbar application!\n" );
@@ -106,6 +102,7 @@ int main( int argc, char** argv ) {
 
     point_init( &pos, 0, 0 );
     desktop_get_size( &size );
+    point_copy( &wallpaper_size, &size );
 
     register_named_ipc_port( "desktop", app_client_port );
 
@@ -124,18 +121,28 @@ int main( int argc, char** argv ) {
     panel_set_layout( container, layout );
     layout_dec_ref( layout );
 
+    /* Create and add the background image widget to the window. */
+
+    image_wallpaper = create_image(NULL);
+    widget_add( container, image_wallpaper, BRD_CENTER );
+    widget_inc_ref( image_wallpaper ); /* reference for the global variable */
+
+    /* Start the wallpaper handler thread. */
+
+    wallpaper_start();
+
+    /* Set the default wallpaper according to the configuration. */
+
     if ( ycfg_get_ascii_value( "application/desktop/background", "file", &img_file ) == 0 ) {
-        bitmap_t* bitmap = bitmap_load_from_file( img_file );
-        free( img_file );
-
-        image_wallpaper = create_image( bitmap );
-        widget_add( container, image_wallpaper, BRD_CENTER );
-        widget_inc_ref( image_wallpaper ); /* reference for the global variable */
-
-        bitmap_dec_ref( bitmap );
+        wallpaper_set(img_file);
+        free(img_file);
     }
 
+    /* Make the desktop window visible. */
+
     window_show( window );
+
+    /* Send a notification to the GUI server that the desktop application is running. */
 
     send_guiserver_notification();
     application_set_message_handler( desktop_msg_handler );

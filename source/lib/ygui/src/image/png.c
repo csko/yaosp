@@ -136,7 +136,6 @@ static int png_get_available_size( void* _private ) {
     png_private_t* private;
 
     private = ( png_private_t* )_private;
-
     return block_buffer_get_size( &private->output_buffer );
 }
 
@@ -144,7 +143,6 @@ static int png_read_data( void* _private, uint8_t* data, size_t size ) {
     png_private_t* private;
 
     private = ( png_private_t* )_private;
-
     return block_buffer_read_and_delete( &private->output_buffer, data, size );
 }
 
