@@ -66,6 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../../../build/libs/libygui.a</input>
             <input>../../../../build/libs/libpng.a</input>
+            <input>../../../../build/libs/libjpeg.a</input>
             <input>../../../../build/libs/libz.a</input>
             <input>../../../../build/libs/libyutil.a</input>
             <output>objs/texteditor</output>
@@ -74,10 +75,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <mkdir>../../../../build/image/application/texteditor</mkdir>
-        <mkdir>../../../../build/image/application/texteditor/images</mkdir>
-
         <copy from="objs/texteditor" to="../../../../build/image/application/texteditor/texteditor"/>
 
+        <mkdir>../../../../build/image/application/texteditor/images</mkdir>
         <for var="i" array="${images}">
             <copy from="images/${i}" to="../../../../build/image/application/texteditor/images/${i}"/>
         </for>

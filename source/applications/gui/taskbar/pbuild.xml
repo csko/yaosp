@@ -69,6 +69,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../../../build/libs/libygui.a</input>
             <input>../../../../build/libs/libpng.a</input>
+            <input>../../../../build/libs/libjpeg.a</input>
             <input>../../../../build/libs/libz.a</input>
             <input>../../../../build/libs/libyconfig.a</input>
             <input>../../../../build/libs/libyutil.a</input>
@@ -78,10 +79,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <mkdir>../../../../build/image/application/taskbar</mkdir>
-        <mkdir>../../../../build/image/application/taskbar/images</mkdir>
-
         <copy from="objs/taskbar" to="../../../../build/image/application/taskbar/taskbar"/>
 
+        <mkdir>../../../../build/image/application/taskbar/images</mkdir>
         <for var="i" array="${images}">
             <copy from="images/${i}" to="../../../../build/image/application/taskbar/images/${i}"/>
         </for>

@@ -27,6 +27,8 @@ char* extract_filename( char* path ) {
 
     if ( filename == NULL ) {
         filename = path;
+    } else {
+        filename++;
     }
 
     return filename;

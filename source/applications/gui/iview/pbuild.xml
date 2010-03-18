@@ -63,6 +63,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>../../../../build/libs/libygui.a</input>
             <input>../../../../build/libs/libpng.a</input>
+            <input>../../../../build/libs/libjpeg.a</input>
             <input>../../../../build/libs/libz.a</input>
             <input>../../../../build/libs/libyutil.a</input>
             <output>objs/iview</output>
@@ -71,9 +72,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <mkdir>../../../../build/image/application/iview</mkdir>
-        <mkdir>../../../../build/image/application/iview/images</mkdir>
-
         <copy from="objs/iview" to="../../../../build/image/application/iview/iview"/>
+
+        <mkdir>../../../../build/image/application/iview/images</mkdir>
         <copy from="images/iview_16x16.png" to="../../../../build/image/application/iview/images/iview_16x16.png"/>
     </target>
 
