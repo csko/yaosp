@@ -19,12 +19,6 @@
             </node>
         </node>
 
-        <node name="desktop">
-            <node name="background">
-                <attrib type="ascii" name="file" value="/application/desktop/images/background.png"/>
-            </node>
-        </node>
-
         <node name="guiserver">
             <node name="screen">
                 <attrib type="numeric" name="width" value="640"/>
