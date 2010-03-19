@@ -24,6 +24,8 @@
 
 #include "worker.h"
 
+static volatile int running = 1;
+
 static array_t work_list;
 static pthread_mutex_t work_lock;
 static pthread_cond_t work_sync;
@@ -90,12 +92,17 @@ int worker_put( work_header_t* work ) {
 static void* worker_thread( void* arg ) {
     pthread_mutex_lock( &work_lock );
 
-    while ( 1 ) {
+    while ( running ) {
         int ret;
         work_header_t* work;
 
-        while ( array_get_size(&work_list) == 0 ) {
+        while ( ( running ) &&
+              ( array_get_size(&work_list) == 0 ) ) {
             pthread_cond_wait( &work_sync, &work_lock );
+        }
+
+        if ( !running ) {
+            break;
         }
 
         work = array_get_item( &work_list, 0 );
@@ -128,6 +135,13 @@ int worker_start( void ) {
     pthread_t thread;
 
     pthread_create( &thread, NULL, worker_thread, NULL );
+
+    return 0;
+}
+
+int worker_shutdown( void ) {
+    running = 0;
+    pthread_cond_signal(&work_sync);
 
     return 0;
 }

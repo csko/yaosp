@@ -41,5 +41,7 @@ int main( int argc, char** argv ) {
 
     application_run();
 
+    worker_shutdown();
+
     return EXIT_SUCCESS;
 }

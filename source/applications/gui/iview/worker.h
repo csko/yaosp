@@ -56,5 +56,6 @@ int worker_put( work_header_t* work );
 
 int worker_init( void );
 int worker_start( void );
+int worker_shutdown( void );
 
 #endif /* _WORKER_H_ */
