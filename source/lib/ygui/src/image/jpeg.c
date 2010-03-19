@@ -178,7 +178,23 @@ static int jpeg_loader_create( void** _private ) {
 }
 
 static int jpeg_loader_destroy( void* _private ) {
-    /* todo */
+    jpeg_private_t* private;
+
+    private = (jpeg_private_t*)_private;
+
+    jpeg_destroy_decompress(&private->decinfo);
+
+    if ( private->line_jpeg != NULL ) {
+        free(private->line_jpeg);
+    }
+
+    if ( private->line_output != NULL ) {
+        free(private->line_output);
+    }
+
+    destroy_block_buffer(&private->output_buffer);
+    free(private);
+
     return 0;
 }
 
