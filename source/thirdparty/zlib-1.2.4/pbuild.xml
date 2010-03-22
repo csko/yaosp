@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -21,20 +21,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <target name="clean">
-        <cleandir>zlib-1.2.3</cleandir>
-        <rmdir>zlib-1.2.3</rmdir>
+        <cleandir>zlib-1.2.4</cleandir>
+        <rmdir>zlib-1.2.4</rmdir>
     </target>
 
     <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/zlib/zlib-1.2.3.tar.bz2"
-                 to="zlib-1.2.3.tar.bz2"
-                 md5="dee233bf288ee795ac96a98cc2e369b6"/>
+        <httpget address="http://files.yaosp.org/source/zlib/zlib-1.2.4.tar.gz"
+                 to="zlib-1.2.4.tar.gz"
+                 md5="47f6ed51b3c83a8534f9228531effa18"/>
 
         <echo>Extracting zlib source</echo>
 
         <exec executable="tar">
-            <arg>-jxf</arg>
-            <arg>zlib-1.2.3.tar.bz2</arg>
+            <arg>-zxf</arg>
+            <arg>zlib-1.2.4.tar.gz</arg>
         </exec>
 
         <echo>Patching zlib source</echo>
@@ -43,13 +43,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <arg>-t</arg>
             <arg>-p0</arg>
             <arg>-i</arg>
-            <arg>zlib-1.2.3.patch</arg>
+            <arg>zlib-1.2.4.patch</arg>
         </exec>
     </target>
 
     <target name="all">
         <call target="clean"/>
         <call target="get_source"/>
-        <call target="all" directory="zlib-1.2.3"/>
+        <call target="all" directory="zlib-1.2.4"/>
     </target>
 </build>
