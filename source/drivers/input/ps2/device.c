@@ -17,6 +17,7 @@
  */
 
 #include <errno.h>
+#include <macros.h>
 
 #include "ps2.h"
 
@@ -178,7 +179,7 @@ int ps2_device_interrupt( ps2_device_t* device, uint8_t status, uint8_t data ) {
 
     flags = atomic_get( &device->flags );
 
-    if ( flags & PS2_FLAG_CMD ) {
+    if ( __unlikely( flags & PS2_FLAG_CMD ) ) {
         if ( ( flags & ( PS2_FLAG_ACK | PS2_FLAG_NACK ) ) == 0 ) {
             int cnt = 1;
 
