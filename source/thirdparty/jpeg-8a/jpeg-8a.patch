@@ -1,6 +1,6 @@
-diff -Nru jpeg-8-orig/jconfig.h jpeg-8/jconfig.h
---- jpeg-8-orig/jconfig.h	1970-01-01 01:00:00.000000000 +0100
-+++ jpeg-8/jconfig.h	2010-02-08 09:41:40.000000000 +0100
+diff -Nru jpeg-8a-orig//jconfig.h jpeg-8a/jconfig.h
+--- jpeg-8a-orig//jconfig.h	1970-01-01 01:00:00.000000000 +0100
++++ jpeg-8a/jconfig.h	2010-03-22 11:58:27.000000000 +0100
 @@ -0,0 +1,46 @@
 +/* jconfig.h.  Generated from jconfig.cfg by configure.  */
 +/* jconfig.cfg --- source file edited by configure script */
@@ -48,9 +48,9 @@ diff -Nru jpeg-8-orig/jconfig.h jpeg-8/jconfig.h
 +/* #undef PROGRESS_REPORT */
 +
 +#endif /* JPEG_CJPEG_DJPEG */
-diff -Nru jpeg-8-orig/pbuild.xml jpeg-8/pbuild.xml
---- jpeg-8-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ jpeg-8/pbuild.xml	2010-02-08 10:05:07.000000000 +0100
+diff -Nru jpeg-8a-orig//pbuild.xml jpeg-8a/pbuild.xml
+--- jpeg-8a-orig//pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ jpeg-8a/pbuild.xml	2010-03-22 11:58:27.000000000 +0100
 @@ -0,0 +1,131 @@
 +<!--
 +
