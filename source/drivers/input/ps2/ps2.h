@@ -25,6 +25,7 @@
 
 #include <arch/io.h>
 #include <arch/atomic.h>
+#include <arch/spinlock.h>
 
 #define PS2_PORT_DATA    0x60
 #define PS2_PORT_COMMAND 0x64
@@ -94,22 +95,28 @@ static inline void ps2_write_command( uint8_t command ) {
     outb( command, PS2_PORT_COMMAND );
 }
 
-#define PS2_KBD_BUF_SIZE   ( 4 * 1024 )
-#define PS2_MOUSE_BUF_SIZE ( 4 * 1024 )
+#define PS2_BUF_SIZE ( 4 * 1024 )
+
+typedef struct ps2_buffer {
+    int read_pos;
+    int write_pos;
+    int free_size;
+    uint8_t data[PS2_BUF_SIZE];
+} ps2_buffer_t;
 
 typedef struct ps2_keyboard_cookie {
-    int buffer_pos;
-    uint8_t buffer[ PS2_KBD_BUF_SIZE ];
+    ps2_buffer_t buffer;
     lock_id buffer_sync;
+    spinlock_t buffer_lock;
 } ps2_keyboard_cookie_t;
 
 typedef struct ps2_mouse_cookie {
     int packet_index;
-    uint8_t packet[ 4 ];
+    uint8_t packet[4];
 
-    int buffer_pos;
-    uint8_t buffer[ PS2_MOUSE_BUF_SIZE ];
+    ps2_buffer_t buffer;
     lock_id buffer_sync;
+    spinlock_t buffer_lock;
 } ps2_mouse_cookie_t;
 
 typedef struct ps2_device {
@@ -131,6 +138,12 @@ typedef struct ps2_device {
 
 extern int ps2_mux_enabled;
 extern ps2_device_t ps2_devices[ PS2_DEV_COUNT ];
+
+/* Buffer functions */
+
+int ps2_buffer_init( ps2_buffer_t* buffer );
+int ps2_buffer_read( ps2_buffer_t* buffer, uint8_t* data, int size );
+int ps2_buffer_write( ps2_buffer_t* buffer, uint8_t* data, int size );
 
 /* Controller functions */
 

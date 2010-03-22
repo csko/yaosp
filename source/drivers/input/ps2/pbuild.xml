@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>device.c</item>
         <item>aux.c</item>
         <item>keyboard.c</item>
+        <item>buffer.c</item>
     </array>
 
     <target name="clean">

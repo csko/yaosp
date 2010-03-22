@@ -19,6 +19,7 @@
 #include <thread.h>
 #include <console.h>
 #include <errno.h>
+#include <macros.h>
 
 #include <arch/spinlock.h>
 
@@ -94,11 +95,11 @@ int ps2_interrupt( int irq, void* _data, registers_t* regs ) {
 
     status = ps2_read_status();
 
-    if ( ( status & PS2_STATUS_OBF ) == 0 ) {
+    if ( __unlikely( ( status & PS2_STATUS_OBF ) == 0 ) ) {
         return 0;
     }
 
-    if ( atomic_get( &ps2_ignore_int ) > 0 ) {
+    if ( __unlikely( atomic_get( &ps2_ignore_int ) > 0 ) ) {
         return 0;
     }
 

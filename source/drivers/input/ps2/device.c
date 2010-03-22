@@ -224,7 +224,7 @@ int ps2_device_interrupt( ps2_device_t* device, uint8_t status, uint8_t data ) {
  pass_to_handler:
     /* If the device is not enabled, simply discard the interrupt. */
 
-    if ( ( flags & PS2_FLAG_ENABLED ) ==  0) {
+    if ( ( flags & PS2_FLAG_ENABLED ) ==  0 ) {
         return 0;
     }
 

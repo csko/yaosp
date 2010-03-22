@@ -45,13 +45,9 @@ static int ps2_keyboard_interrupt( ps2_device_t* device, uint8_t status, uint8_t
 
     cookie = ( ps2_keyboard_cookie_t* )device->cookie;
 
-    ps2_lock_controller();
-
-    if ( cookie->buffer_pos < PS2_KBD_BUF_SIZE ) {
-        cookie->buffer[ cookie->buffer_pos++ ] = data;
-    }
-
-    ps2_unlock_controller();
+    spinlock_disable( &cookie->buffer_lock );
+    ps2_buffer_write( &cookie->buffer, &data, 1 );
+    spinunlock_enable( &cookie->buffer_lock );
 
     semaphore_unlock( cookie->buffer_sync, 1 );
 
@@ -74,8 +70,10 @@ static int ps2_keyboard_open( void* node, uint32_t flags, void** _cookie ) {
         return -ENOMEM;
     }
 
-    cookie->buffer_pos = 0;
     cookie->buffer_sync = semaphore_create( "PS/2 keyboard buffer sync", 0 );
+
+    ps2_buffer_init( &cookie->buffer );
+    init_spinlock( &cookie->buffer_lock, "PS/2 buffer lock" );
 
     device->interrupt = ps2_keyboard_interrupt;
     device->cookie = cookie;
@@ -107,21 +105,16 @@ static int ps2_keyboard_ioctl( void* node, void* _cookie, uint32_t command, void
 
     switch ( command ) {
         case IOCTL_INPUT_KBD_GET_KEY_CODE :
-            semaphore_timedlock( cookie->buffer_sync, 1, LOCK_IGNORE_SIGNAL, INFINITE_TIMEOUT );
+            error = semaphore_timedlock( cookie->buffer_sync, 1, LOCK_IGNORE_SIGNAL, INFINITE_TIMEOUT );
 
-            ps2_lock_controller();
-
-            *( uint8_t* )args = cookie->buffer[ 0 ];
-
-            if ( cookie->buffer_pos > 1 ) {
-                memmove( cookie->buffer, cookie->buffer + 1, cookie->buffer_pos - 1 );
+            if ( error != 0 ) {
+                break;
             }
 
-            cookie->buffer_pos -= 1;
+            spinlock_disable( &cookie->buffer_lock );
+            error = ps2_buffer_read( &cookie->buffer, args, 1 );
+            spinunlock_enable( &cookie->buffer_lock );
 
-            ps2_unlock_controller();
-
-            error = 0;
             break;
 
         default :

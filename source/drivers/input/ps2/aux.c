@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <ioctl.h>
 #include <input.h>
+#include <macros.h>
 #include <mm/kmalloc.h>
 #include <vfs/devfs.h>
 #include <lib/string.h>
@@ -195,7 +196,7 @@ static int ps2_mouse_interrupt( ps2_device_t* device, uint8_t status, uint8_t da
 
     cookie = ( ps2_mouse_cookie_t* )device->cookie;
 
-    if ( cookie->packet_index == 0 ) {
+    if ( __unlikely( cookie->packet_index == 0 ) ) {
         if ( ( data & 0x08 ) == 0 ) {
             kprintf( WARNING, "ps2_mouse_interrupt(): Bad mouse data, resyncing ...\n" );
             return 0;
@@ -210,16 +211,17 @@ static int ps2_mouse_interrupt( ps2_device_t* device, uint8_t status, uint8_t da
     cookie->packet[ cookie->packet_index++ ] = data;
 
     if ( cookie->packet_index == device->packet_size ) {
-        ps2_lock_controller();
+        /* Put the new packet into the internal buffer. */
 
-        if ( ( cookie->buffer_pos + device->packet_size ) < PS2_MOUSE_BUF_SIZE ) {
-            memcpy( cookie->buffer + cookie->buffer_pos, cookie->packet, device->packet_size );
-            cookie->buffer_pos += device->packet_size;
+        spinlock_disable( &cookie->buffer_lock );
+        ps2_buffer_write( &cookie->buffer, cookie->packet, device->packet_size );
+        spinunlock_enable( &cookie->buffer_lock );
 
-            semaphore_unlock( cookie->buffer_sync, 1 );
-        }
+        /* Notify the readers about the new data. */
 
-        ps2_unlock_controller();
+        semaphore_unlock( cookie->buffer_sync, 1 );
+
+        /* Reset packet index. */
 
         cookie->packet_index = 0;
     }
@@ -241,8 +243,10 @@ static int ps2_mouse_open( void* node, uint32_t flags, void** _cookie ) {
     }
 
     cookie->packet_index = 0;
-    cookie->buffer_pos = 0;
     cookie->buffer_sync = semaphore_create( "PS/2 mouse buffer sync", 0 );
+
+    ps2_buffer_init( &cookie->buffer );
+    init_spinlock( &cookie->buffer_lock, "PS/2 buffer lock" );
 
     device->interrupt = ps2_mouse_interrupt;
     device->cookie = cookie;
@@ -288,12 +292,22 @@ static int ps2_mouse_ioctl( void* node, void* _cookie, uint32_t command, void* a
 
     switch ( command ) {
         case IOCTL_INPUT_MOUSE_GET_MOVEMENT : {
-            uint8_t* packet;
+            uint8_t packet[4];
             mouse_movement_t* data;
 
-            semaphore_timedlock( cookie->buffer_sync, 1, LOCK_IGNORE_SIGNAL, INFINITE_TIMEOUT );
+            error = semaphore_timedlock( cookie->buffer_sync, 1, LOCK_IGNORE_SIGNAL, INFINITE_TIMEOUT );
 
-            packet = cookie->buffer;
+            if ( error != 0 ) {
+                break;
+            }
+
+            spinlock_disable( &cookie->buffer_lock );
+            error = ps2_buffer_read( &cookie->buffer, packet, device->packet_size );
+            spinunlock_enable( &cookie->buffer_lock );
+
+            if ( error != 0 ) {
+                break;
+            }
 
             data = ( mouse_movement_t* )args;
             data->dx =    ( ( packet[ 0 ] & 0x10 ) ? 0xFFFFFF00 : 0 ) | packet[ 1 ];
@@ -310,16 +324,8 @@ static int ps2_mouse_ioctl( void* node, void* _cookie, uint32_t command, void* a
                 data->scroll = 0;
             }
 
-            ps2_lock_controller();
-
-            if ( cookie->buffer_pos > device->packet_size ) {
-                memmove( cookie->buffer, cookie->buffer + device->packet_size, cookie->buffer_pos - device->packet_size );
-            }
-            cookie->buffer_pos -= device->packet_size;
-
-            ps2_unlock_controller();
-
             error = 0;
+
             break;
         }
 
