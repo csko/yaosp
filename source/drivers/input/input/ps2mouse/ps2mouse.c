@@ -72,7 +72,7 @@ static int ps2_mouse_thread( void* arg ) {
             break;
         }
 
-        if ( ( data.dx != 0 ) &&
+        if ( ( data.dx != 0 ) ||
              ( data.dy != 0 ) ) {
             input_event_t event;
 
