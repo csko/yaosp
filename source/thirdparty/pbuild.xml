@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 <build>
     <array name="libraries-early">
         <item>zlib-1.2.4</item>
-        <item>libpng-1.2.42</item>
+        <item>libpng-1.2.43</item>
         <item>jpeg-8</item>
     </array>
 
