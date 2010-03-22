@@ -37,7 +37,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="applications">
         <item>python-2.5.4</item>
         <item>bash-4.0</item>
-        <item>nano-2.2.1</item>
+        <item>nano-2.2.3</item>
         <item>less-436</item>
     </array>
 
