@@ -63,6 +63,14 @@ static int image_open_done( work_header_t* work ) {
     return 0;
 }
 
+static int image_open_failed( work_header_t* work ) {
+    open_work_t* open = (open_work_t*)work;
+
+    ui_set_statusbar( "Failed to load image: %s.", extract_filename(open->path) );
+
+    return 0;
+}
+
 static int image_resize_done( work_header_t* work ) {
     resize_work_t* resize = (resize_work_t*)work;
 
@@ -77,7 +85,7 @@ static int event_open_file_chooser_done( file_chooser_t* chooser, chooser_event_
 
         work->header.type = OPEN_IMAGE;
         work->header.done = image_open_done;
-        work->header.failed = NULL;
+        work->header.failed = image_open_failed;
         work->path = file_chooser_get_selected_file( chooser );
 
         ui_set_statusbar( "Opening image: %s ...", extract_filename(work->path) );

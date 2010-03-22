@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -316,7 +316,7 @@ static int dirview_paint( widget_t* widget, gc_t* gc ) {
 
 static int dirview_key_pressed( widget_t* widget, int key ) {
     int prev_selected;
-    int viewport_changed;
+    int selected_changed;
     dir_view_t* dirview;
 
     dirview = ( dir_view_t* )widget_get_data( widget );
@@ -351,13 +351,18 @@ static int dirview_key_pressed( widget_t* widget, int key ) {
             break;
     }
 
-    viewport_changed = ( prev_selected != dirview->selected );
+    selected_changed = ( prev_selected != dirview->selected );
 
     pthread_mutex_unlock( &dirview->lock );
 
-    /* Check if viewport is changed ... */
+    /* Check if the selected item is changed ... */
 
-    if ( viewport_changed ) {
+    if ( selected_changed ) {
+        widget_signal_event_handler(
+            widget,
+            dirview_events[ E_ITEM_SELECTED ]
+        );
+
         widget_signal_event_handler(
             widget,
             widget->event_ids[ E_VIEWPORT_CHANGED ]
