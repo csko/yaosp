@@ -269,6 +269,7 @@ static int network_rx_thread( void* data ) {
     error = device->ops->open( device );
 
     if ( error < 0 ) {
+        kprintf( ERROR, "network_rx_thread(): failed to open %s network device: %d.\n", device->name, error );
         return 0;
     }
 

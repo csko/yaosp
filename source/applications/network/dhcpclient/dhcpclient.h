@@ -155,7 +155,7 @@ typedef struct dhcp_info {
 #define MAC_BCAST_ADDR      ((uint8_t *) "\xff\xff\xff\xff\xff\xff")
 
 void create_packet(dhcp_msg_t *msg, int type);
-void send_discover( void );
+int send_discover( void );
 void set_chaddr(dhcp_msg_t *msg);
 int send_packet(dhcp_msg_t *msg, uint32_t source_ip, int source_port,
         uint32_t dest_ip, int dest_port, uint8_t *dest_arp);

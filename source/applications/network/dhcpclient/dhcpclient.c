@@ -152,7 +152,10 @@ int send_packet( dhcp_msg_t* msg, uint32_t source_ip, int source_port,
         ( struct sockaddr* )&dest, sizeof( struct sockaddr_in )
     );
 
-//    printf( "%s: sendto() returned: %d.\n", argv0, ret );
+    if ( ret < 0 ) {
+        fprintf( stderr, "%s: failed to send DHCP packet: %s.\n", argv0, strerror(errno) );
+        return -1;
+    }
 
     return 0;
 }
@@ -189,7 +192,7 @@ int create_socket( void ) {
     return -1;
 }
 
-void send_discover( void ) {
+int send_discover( void ) {
     dhcp_msg_t msg;
 
     init_packet( &msg, DHCPDISCOVER );
@@ -201,7 +204,7 @@ void send_discover( void ) {
 
     printf( "%s: sending DISCOVER.\n", argv0 );
 
-    send_packet(
+    return send_packet(
         &msg, INADDR_ANY, CLIENT_PORT, INADDR_BROADCAST,
         SERVER_PORT, MAC_BCAST_ADDR
     );
@@ -501,7 +504,10 @@ int main( int argc, char** argv ) {
 
     status = DISCOVER;
 
-    send_discover();
+    if ( send_discover() != 0 ) {
+        return EXIT_FAILURE;
+    }
+
     dhcp_mainloop();
 
     return 0;

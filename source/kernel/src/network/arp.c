@@ -219,10 +219,9 @@ int arp_send_packet( net_device_t* device, uint8_t* dest_ip, packet_t* packet ) 
     /* Not found in the cache, add to the pending table and send out an ARP request if needed */
 
     request = ( arp_pending_request_t* )hashtable_get( &device->arp_requests, ( const void* )dest_ip );
+    send_request = ( request == NULL );
 
     if ( request == NULL ) {
-        send_request = true;
-
         request = arp_create_request( dest_ip );
 
         if ( request == NULL ) {
@@ -230,8 +229,6 @@ int arp_send_packet( net_device_t* device, uint8_t* dest_ip, packet_t* packet ) 
         }
 
         hashtable_add( &device->arp_requests, ( hashitem_t* )request );
-    } else {
-        send_request = false;
     }
 
     packet_queue_insert( &request->packet_queue, packet );

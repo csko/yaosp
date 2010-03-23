@@ -1300,6 +1300,7 @@ static netdev_tx_t nv_start_xmit_optimized(struct net_device* dev, packet_t* skb
     struct nv_skb_map* start_tx_ctx;
 
     spinlock_disable(&np->lock);
+
     empty_slots = nv_get_empty_tx_slots(np);
     if (__unlikely(empty_slots <= entries)) {
         // todo giszo netif_stop_queue(dev);
@@ -1330,6 +1331,7 @@ static netdev_tx_t nv_start_xmit_optimized(struct net_device* dev, packet_t* skb
         tx_flags = NV_TX2_VALID;
         offset += bcnt;
         size -= bcnt;
+
         if (__unlikely(put_tx++ == np->last_tx.ex))
             put_tx = np->first_tx.ex;
         if (__unlikely(np->put_tx_ctx++ == np->last_tx_ctx))
@@ -1346,7 +1348,7 @@ static netdev_tx_t nv_start_xmit_optimized(struct net_device* dev, packet_t* skb
 
     start_tx->txvlan = 0;
 
-    spinlock_disable(&np->lock );
+    spinlock_disable(&np->lock);
 
     if (np->tx_limit) {
         /* Limit the number of outstanding tx. Setup all fragments, but
