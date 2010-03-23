@@ -66,6 +66,23 @@ static int do_download( char* url, int file ) {
 
     res = curl_easy_perform( curl );
 
+    switch ( res ) {
+        case CURLE_COULDNT_RESOLVE_HOST :
+            fprintf( stderr, "%s: failed to resolv the hostname.\n", argv0 );
+            break;
+
+        case CURLE_COULDNT_CONNECT :
+            fprintf( stderr, "%s: failed to connect to the server.\n", argv0 );
+            break;
+
+        case CURLE_OK :
+            break;
+
+        default :
+            fprintf( stderr, "%s: unhandled cURL error: %d\n", argv0, res );
+            break;
+    }
+
     curl_easy_cleanup( curl );
 
     return 0;
