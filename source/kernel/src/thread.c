@@ -184,27 +184,21 @@ int rename_thread( thread_t* thread, char* new_name ) {
     return 0;
 }
 
-static int thread_reparent_iterator( hashitem_t* item, void* data ) {
+typedef struct {
     thread_id parent;
+    int children_found;
+} thread_reparent_data_t;
+
+static int thread_reparent_iterator( hashitem_t* item, void* _data ) {
     thread_t* thread;
+    thread_reparent_data_t* data;
 
     thread = ( thread_t* )item;
-    parent = *( ( thread_id* )data );
+    data = ( thread_reparent_data_t* )_data;
 
-    if ( thread->parent_id == parent ) {
+    if ( thread->parent_id == data->parent ) {
         thread->parent_id = init_thread_id;
-
-        /* If we have a zombie child at this point, then the current thread
-           will not handle signals anymore, so after reparenting the child thread
-           to the init thread, we also send a SIGCHLD signal to it to destroy the
-           zombie thread(s). */
-
-        if ( thread->state == THREAD_ZOMBIE ) {
-            do_send_signal(
-                get_thread_by_id( init_thread_id ),
-                SIGCHLD
-            );
-        }
+        data->children_found = 1;
     }
 
     return 0;
@@ -212,6 +206,7 @@ static int thread_reparent_iterator( hashitem_t* item, void* data ) {
 
 void thread_exit( int exit_code ) {
     thread_t* thread;
+    thread_reparent_data_t data;
 
     /* Disable interrupts to make sure the timer interrupt won't preempt us */
 
@@ -245,9 +240,22 @@ void thread_exit( int exit_code ) {
         );
     }
 
-    /* Reparent the children of the current thread */
+    /* Reparent the children of the current thread. */
 
-    hashtable_iterate( &thread_table, thread_reparent_iterator, ( void* )&thread->id );
+    data.parent = thread->id;
+    data.children_found = 0;
+
+    hashtable_iterate( &thread_table, thread_reparent_iterator, ( void* )&data );
+
+    /* Send SIGCHLD to the init thread if the currently exiting thread
+       has at least one child. */
+
+    if ( data.children_found ) {
+        do_send_signal(
+            get_thread_by_id( init_thread_id ),
+            SIGCHLD
+        );
+    }
 
     spinunlock( &scheduler_lock );
 
