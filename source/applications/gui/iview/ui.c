@@ -137,6 +137,7 @@ static int menu_init( widget_t* container ) {
 
     item = create_menuitem_with_label( "About" );
     menu_add_item( menu, item );
+    widget_connect_event_handler( item, "mouse-down", event_help_about, NULL );
 
     return 0;
 }

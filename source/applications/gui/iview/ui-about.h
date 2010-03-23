@@ -16,15 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _UI_EVENT_H_
-#define _UI_EVENT_H_
+#ifndef _UI_ABOUT_H_
+#define _UI_ABOUT_H_
 
-#include <ygui/widget.h>
+int ui_about_open( void );
 
-int event_open_file( widget_t* widget, void* data );
-int event_zoom_in( widget_t* widget, void* data );
-int event_zoom_out( widget_t* widget, void* data );
-int event_application_exit( widget_t* widget, void* data );
-int event_help_about( widget_t* widget, void* data );
-
-#endif /* _UI_EVENT_H_ */
+#endif /* _UI_ABOUT_H_ */

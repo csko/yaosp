@@ -25,6 +25,7 @@
 
 #include "ui.h"
 #include "ui-event.h"
+#include "ui-about.h"
 #include "worker.h"
 #include "util.h"
 
@@ -147,6 +148,12 @@ int event_zoom_out( widget_t* widget, void* data ) {
 
 int event_application_exit( widget_t* widget, void* data ) {
     window_close( window );
+
+    return 0;
+}
+
+int event_help_about( widget_t* widget, void* data ) {
+    ui_about_open();
 
     return 0;
 }
