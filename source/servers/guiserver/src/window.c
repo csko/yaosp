@@ -87,7 +87,6 @@ static int window_destroy( window_t* window ) {
 
     if ( window->bitmap != NULL ) {
         bitmap_put( window->bitmap );
-        window->bitmap = NULL;
     }
 
     destroy_region( &window->visible_regions );

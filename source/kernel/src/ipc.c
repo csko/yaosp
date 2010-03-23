@@ -147,6 +147,7 @@ static int do_destroy_ipc_port( ipc_port_t* port ) {
         kfree( msg );
     }
 
+    semaphore_destroy( port->queue_semaphore );
     kfree( port );
 
     return 0;
@@ -306,7 +307,8 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         error = semaphore_timedlock( port->queue_semaphore, 1, LOCK_IGNORE_SIGNAL, 0 );
 
         if ( error != 0 ) {
-            kprintf( ERROR, "sys_recv_ipc_message(): Failed to lock queue semaphore while the message queue was not empty!\n" );
+            kprintf( ERROR,
+                "sys_recv_ipc_message(): Failed to lock queue semaphore while the message queue was not empty!\n" );
         }
     }
 
@@ -336,7 +338,6 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
 
     if ( message->size > 0 ) {
         ASSERT( message->size <= size );
-
         memcpy( buffer, ( void* )( message + 1 ), message->size );
     }
 
