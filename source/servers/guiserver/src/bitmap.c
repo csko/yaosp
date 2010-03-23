@@ -98,13 +98,13 @@ bitmap_t* create_bitmap( uint32_t width, uint32_t height, color_space_t color_sp
 
     return bitmap;
 
-error3:
+ error3:
     free( buffer );
 
-error2:
+ error2:
     free( bitmap );
 
-error1:
+ error1:
     return NULL;
 }
 
@@ -139,10 +139,10 @@ bitmap_t* create_bitmap_from_buffer( uint32_t width, uint32_t height, color_spac
 
     return bitmap;
 
-error2:
+ error2:
     free( bitmap );
 
-error1:
+ error1:
     return NULL;
 }
 
@@ -361,9 +361,9 @@ int init_bitmap( void ) {
 
     return 0;
 
-error2:
+ error2:
     destroy_hashtable( &bitmap_table );
 
-error1:
+ error1:
     return error;
 }

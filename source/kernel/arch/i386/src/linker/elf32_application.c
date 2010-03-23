@@ -158,6 +158,8 @@ static int elf32_application_load( binary_loader_t* loader ) {
         goto error1;
     }
 
+    memset( elf_application, 0, sizeof( elf_application_t ) );
+
     error = elf32_init_image_info( &elf_application->image_info );
 
     if ( __unlikely( error < 0 ) ) {
@@ -247,6 +249,14 @@ static int elf32_application_destroy( void* data ) {
     elf_application_t* app;
 
     app = ( elf_application_t* )data;
+
+    if ( app->text_region != NULL ) {
+        memory_region_put( app->text_region );
+    }
+
+    if ( app->data_region != NULL ) {
+        memory_region_put( app->data_region );
+    }
 
     elf32_destroy_image_info( &app->image_info );
     kfree( app );
