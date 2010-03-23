@@ -193,6 +193,18 @@ static int thread_reparent_iterator( hashitem_t* item, void* data ) {
 
     if ( thread->parent_id == parent ) {
         thread->parent_id = init_thread_id;
+
+        /* If we have a zombie child at this point, then the current thread
+           will not handle signals anymore, so after reparenting the child thread
+           to the init thread, we also send a SIGCHLD signal to it to destroy the
+           zombie thread(s). */
+
+        if ( thread->state == THREAD_ZOMBIE ) {
+            do_send_signal(
+                get_thread_by_id( init_thread_id ),
+                SIGCHLD
+            );
+        }
     }
 
     return 0;

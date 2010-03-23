@@ -133,9 +133,7 @@ int send_signal( thread_t* thread, int signal ) {
     }
 
     scheduler_lock();
-
     error = do_send_signal( thread, signal );
-
     scheduler_unlock();
 
     return error;
