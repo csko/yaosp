@@ -104,6 +104,9 @@ int release_irq_all( int irq ) {
     }
 
     current = irq_handlers[ irq ];
+    irq_handlers[ irq ] = NULL;
+
+    arch_disable_irq( irq );
 
     while ( current != NULL ) {
         irq_action_t* action;
@@ -113,8 +116,6 @@ int release_irq_all( int irq ) {
 
         kfree( action );
     }
-
-    arch_disable_irq( irq );
 
     return 0;
 }
