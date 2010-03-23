@@ -30,11 +30,16 @@ static char* argv0 = NULL;
 /* Example URL: http://domain.org/path/to/filename.txt */
 
 static int validate_url( char* url ) {
+    char* separator;
+
     if ( strncmp( url, "http://", 7 ) != 0 ) {
         return -1;
     }
 
-    if ( strchr( url + 7, '/' ) == NULL ) {
+    separator = strchr( url + 7, '/' );
+
+    if ( ( separator == NULL ) ||
+         ( strlen( separator ) == 1 ) ) {
         return -1;
     }
 
@@ -103,6 +108,7 @@ int main( int argc, char** argv ) {
 
     if ( validate_url( url ) != 0 ) {
         fprintf( stderr, "%s: invalid url: %s.\n", argv0, url );
+        fprintf( stderr, "%s: valid url format is http://domain/file\n", argv0 );
         return EXIT_FAILURE;
     }
 
