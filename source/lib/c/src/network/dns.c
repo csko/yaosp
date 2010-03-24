@@ -20,11 +20,13 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <yaosp/debug.h>
+#include <yaosp/config.h>
 
 #include "dns.h"
 
@@ -89,6 +91,24 @@ dns_request_t* dns_request_create( char* hostname ) {
     strcpy( request->hostname, hostname );
 
     return request;
+}
+
+int dns_request_destroy( dns_request_t* request ) {
+    dns_server_t* server;
+
+    server = request->server_first;
+
+    while ( server != NULL ) {
+        dns_server_t* todel = server;
+        server = server->next;
+
+        dns_server_free(todel);
+    }
+
+    free(request->result_v4);
+    free(request);
+
+    return 0;
 }
 
 int dns_request_add_server( dns_request_t* request, dns_server_t* server ) {
@@ -242,7 +262,9 @@ static int dns_handle_packet( char* buffer, int size ) {
                 if ( length == 4 ) {
                     struct in_addr* res_v4;
 
-                    res_v4 = (struct in_addr*)realloc( request->result_v4, sizeof(struct in_addr) * ( request->result_v4_cnt + 1 ) );
+                    res_v4 = (struct in_addr*)realloc(
+                        request->result_v4, sizeof(struct in_addr) * ( request->result_v4_cnt + 1 )
+                    );
 
                     if ( res_v4 != NULL ) {
                         uint8_t* ip = (uint8_t*)(answer+1);
@@ -288,7 +310,7 @@ static void* dns_thread_entry( void* arg ) {
                 dns_handle_packet( buffer, size );
             }
         } else if ( ret < 0 ) {
-            dbprintf( "select returned error: %d %s\n", errno, strerror(errno) );
+            dbprintf( "dns_thread_entry(): select returned error: %d (%s).\n", errno, strerror(errno) );
             break;
         }
     }
@@ -363,8 +385,21 @@ static int dns_send_request( dns_request_t* request ) {
 }
 
 int dns_resolv( char* hostname, struct in_addr** v4_table, size_t* v4_cnt ) {
-    dns_server_t* server;
+    int i;
+    int ns_count;
+    char** ns_names;
     dns_request_t* request;
+
+    /* Initialize the configserver connection if it's not done already. */
+
+    ycfg_init();
+
+    /* List all the name servers. */
+
+    if ( ( ycfg_list_children( "network/nameservers", &ns_names ) != 0 ) ||
+         ( ns_names[0] == NULL ) ) {
+        return -1;
+    }
 
     request = dns_request_create(hostname);
 
@@ -372,8 +407,36 @@ int dns_resolv( char* hostname, struct in_addr** v4_table, size_t* v4_cnt ) {
         return -ENOMEM;
     }
 
-    server = dns_server_create( "192.168.1.1", DNS_SERVER_UDP );
-    dns_request_add_server( request, server );
+    ns_count = 0;
+
+    for ( i = 0; ns_names[i] != NULL; i++ ) {
+        char path[256];
+        char* address;
+        dns_server_t* server;
+
+        snprintf( path, sizeof(path), "network/nameservers/%s", ns_names[i] );
+        free( ns_names[i] );
+
+        if ( ycfg_get_ascii_value( path, "address", &address ) != 0 ) {
+            continue;
+        }
+
+        server = dns_server_create( address, DNS_SERVER_UDP );
+
+        if ( server != NULL ) {
+            dns_request_add_server( request, server );
+            ns_count++;
+        }
+
+        free( address );
+    }
+
+    free( ns_names );
+
+    if ( ns_count == 0 ) {
+        dns_request_destroy(request);
+        return -1;
+    }
 
     pthread_mutex_lock(&dns_lock);
 
@@ -399,7 +462,7 @@ int dns_resolv( char* hostname, struct in_addr** v4_table, size_t* v4_cnt ) {
     *v4_table = request->result_v4;
     *v4_cnt = request->result_v4_cnt;
 
-    /* todo: free stuffs */
+    dns_request_destroy(request);
 
     return 0;
 }

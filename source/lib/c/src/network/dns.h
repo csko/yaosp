@@ -49,11 +49,11 @@ typedef struct dns_question_end {
 } __attribute__(( packed )) dns_question_end_t;
 
 typedef struct dns_answer {
-    uint16_t  name;
-    uint16_t  type;
-    uint16_t  cls;
-    uint32_t  ttl;
-    uint16_t  length;
+    uint16_t name;
+    uint16_t type;
+    uint16_t cls;
+    uint32_t ttl;
+    uint16_t length;
 } __attribute__(( packed )) dns_answer_t;
 
 typedef struct dns_request {
