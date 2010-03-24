@@ -22,10 +22,10 @@
 #include <sys/types.h>
 #include <yaosp/debug.h>
 #include <yaosp/ipc.h>
+#include <yaosp/config.h>
 
 #include <ygui/protocol.h>
 #include <yutil/process.h>
-#include <yconfig/yconfig.h>
 
 #include <graphicsdriver.h>
 #include <bitmap.h>

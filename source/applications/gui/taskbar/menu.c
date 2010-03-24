@@ -19,10 +19,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <yaosp/config.h>
 
 #include <ygui/bitmap.h>
 #include <ygui/menuitem.h>
-#include <yconfig/yconfig.h>
 
 #include "taskbar.h"
 
@@ -65,26 +65,20 @@ int taskbar_create_menu( void ) {
     int i;
     int size;
     array_t menu_items;
-    array_t menu_item_names;
+    char** menu_item_names;
 
     taskbar_menu = create_menu();
-
-    if ( init_array( &menu_item_names ) != 0 ) {
-        return -1;
-    }
 
     if ( init_array( &menu_items ) != 0 ) {
         return -1;
     }
 
     if ( ycfg_list_children( "application/taskbar/menu", &menu_item_names ) != 0 ) {
-        destroy_array( &menu_item_names );
+        destroy_array( &menu_items );
         return -1;
     }
 
-    size = array_get_size( &menu_item_names );
-
-    for ( i = 0; i < size; i++ ) {
+    for ( i = 0; menu_item_names[i] != NULL; i++ ) {
         char* name;
         char path[ 256 ];
         menu_item_t* item;
@@ -98,16 +92,18 @@ int taskbar_create_menu( void ) {
             continue;
         }
 
-        name = ( char* )array_get_item( &menu_item_names, i );
-
+        name = menu_item_names[i];
         snprintf( path, sizeof( path ), "application/taskbar/menu/%s", name );
 
         if ( ycfg_get_numeric_value( path, "position", &item->position ) != 0 ) {
             free( item );
+            free( name );
             continue;
         }
 
         item->separator = ( strncmp( name, "separator", 9 ) == 0 );
+
+        free( name );
 
         if ( item->separator ) {
             goto done;
@@ -135,7 +131,10 @@ int taskbar_create_menu( void ) {
         array_add_item( &menu_items, item );
     }
 
+    free( menu_item_names );
+
     array_sort( &menu_items, taskbar_menu_comparator );
+    size = array_get_size( &menu_items );
 
     for ( i = 0; i < size; i++ ) {
         menu_item_t* item;

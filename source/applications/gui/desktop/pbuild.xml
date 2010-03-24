@@ -67,7 +67,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>../../../../build/libs/libpng.a</input>
             <input>../../../../build/libs/libjpeg.a</input>
             <input>../../../../build/libs/libz.a</input>
-            <input>../../../../build/libs/libyconfig.a</input>
             <input>../../../../build/libs/libyutil.a</input>
             <output>objs/desktop</output>
         </gcc>

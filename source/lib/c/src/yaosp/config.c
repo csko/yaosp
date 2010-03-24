@@ -1,4 +1,4 @@
-/* yaosp configuration library
+/* Configuration handling functions
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,18 +16,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <pthread.h>
+#include <time.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
+#include <pthread.h>
 #include <yaosp/ipc.h>
 
 #include <yconfig/protocol.h>
 
-extern ipc_port_id ycfg_server_port;
-extern ipc_port_id ycfg_reply_port;
+ipc_port_id ycfg_server_port = -1;
+ipc_port_id ycfg_reply_port = -1;
 
-extern pthread_mutex_t ycfg_lock;
+pthread_mutex_t ycfg_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int get_attribute_value( char* path, char* attrib, uint8_t** _reply ) {
     int error;
@@ -178,4 +179,129 @@ int ycfg_get_binary_value( char* path, char* attrib, void** _data, size_t* _size
     }
 
     return error;
+}
+
+int ycfg_list_children( char* path, char*** _children ) {
+    int error;
+    size_t path_length;
+    size_t request_length;
+    msg_list_children_t* request;
+
+    size_t reply_size;
+    uint8_t* reply_buffer = NULL;
+
+    path_length = strlen( path );
+    request_length = sizeof( msg_list_children_t ) + path_length + 1;
+
+    request = ( msg_list_children_t* )malloc( request_length );
+
+    if ( request == NULL ) {
+        return -ENOMEM;
+    }
+
+    request->reply_port = ycfg_reply_port;
+    memcpy( request + 1, path, path_length + 1 );
+
+    pthread_mutex_lock( &ycfg_lock );
+
+    error = send_ipc_message( ycfg_server_port, MSG_LIST_NODE_CHILDREN, request, request_length );
+
+    free( request );
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    error = peek_ipc_message( ycfg_reply_port, NULL, &reply_size, INFINITE_TIMEOUT );
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    reply_buffer = ( uint8_t* )malloc( reply_size );
+
+    if ( reply_buffer == NULL ) {
+        error = -ENOMEM;
+        goto out;
+    }
+
+    error = recv_ipc_message( ycfg_reply_port, NULL, reply_buffer, reply_size, 0 );
+
+ out:
+    pthread_mutex_unlock( &ycfg_lock );
+
+    if ( error >= 0 ) {
+        msg_list_children_reply_t* reply;
+
+        reply = ( msg_list_children_reply_t* )reply_buffer;
+
+        if ( reply->error == 0 ) {
+            char** children;
+            uint32_t i;
+            char* name = ( char* )( reply + 1 );
+            size_t length;
+
+            children = ( char** )malloc( sizeof(char*) * ( reply->count + 1 ) );
+
+            if ( children == NULL ) {
+                error = -ENOMEM;
+                goto out2;
+            }
+
+            for ( i = 0; i < reply->count; i++ ) {
+                length = strlen( name );
+                children[i] = strdup(name);
+
+                name += ( length + 1 );
+            }
+
+            children[ reply->count ] = NULL;
+            *_children = children;
+
+            error = 0;
+        } else {
+            error = reply->error;
+        }
+    }
+
+ out2:
+    free( reply_buffer );
+
+    return error;
+}
+
+int ycfg_init( void ) {
+    if ( ycfg_server_port != -1 ) {
+        return 0;
+    }
+
+    /* Get the configserver port ... */
+
+    while ( 1 ) {
+        int error;
+        struct timespec slp_time;
+
+        error = get_named_ipc_port( "configserver", &ycfg_server_port );
+
+        if ( error == 0 ) {
+            break;
+        }
+
+        /* Wait 200ms ... */
+
+        slp_time.tv_sec = 0;
+        slp_time.tv_nsec = 200 * 1000 * 1000;
+
+        nanosleep( &slp_time, NULL );
+    }
+
+    /* Create a reply port */
+
+    ycfg_reply_port = create_ipc_port();
+
+    if ( ycfg_reply_port < 0 ) {
+        return -1;
+    }
+
+    return 0;
 }

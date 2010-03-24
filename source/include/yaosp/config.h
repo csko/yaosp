@@ -1,4 +1,4 @@
-/* yaosp configuration library
+/* Configuration handling functions
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,17 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YCONFIG_YCONFIG_H_
-#define _YCONFIG_YCONFIG_H_
-
-#include <yutil/array.h>
+#ifndef _YAOSP_CONFIG_H_
+#define _YAOSP_CONFIG_H_
 
 int ycfg_get_ascii_value( char* path, char* attrib, char** value );
 int ycfg_get_numeric_value( char* path, char* attrib, uint64_t* value );
-int ycfg_get_binary_value( char* path, char* attrib, void** data, size_t* size );
+int ycfg_get_binary_value( char* path, char* attrib, void** _data, size_t* _size );
 
-int ycfg_list_children( char* path, array_t* children );
+int ycfg_list_children( char* path, char*** _children );
 
 int ycfg_init( void );
 
-#endif /* _YCONFIG_YCONFIG_H_ */
+#endif /* _YAOSP_CONFIG_H_ */

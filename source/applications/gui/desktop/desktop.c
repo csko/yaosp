@@ -22,6 +22,7 @@
 #include <yaosp/debug.h>
 #include <yaosp/ipc.h>
 #include <yaosp/yaosp.h>
+#include <yaosp/config.h>
 
 #include <ygui/application.h>
 #include <ygui/window.h>
@@ -31,7 +32,6 @@
 #include <ygui/protocol.h>
 #include <ygui/layout/borderlayout.h>
 #include <yutil/process.h>
-#include <yconfig/yconfig.h>
 
 #include "wallpaper.h"
 
