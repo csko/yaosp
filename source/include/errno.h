@@ -63,6 +63,7 @@
 #define ENETDOWN      42
 #define ENOTCONN      43
 #define EAFNOSUPPORT  44
+#define ECONNREFUSED  45
 
 extern int errno;
 

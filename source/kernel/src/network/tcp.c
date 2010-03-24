@@ -228,8 +228,6 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
         return error;
     }
 
-    tcp_socket->state = TCP_STATE_SYN_SENT;
-
     /* Find out the MSS value to the destination */
 
     ip = ( uint8_t* )&in_address->sin_addr.s_addr;
@@ -263,7 +261,11 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     mss_option.length = sizeof( tcp_mss_option_t );
     mss_option.mss = htonw( tcp_socket->mss );
 
-    /* Make the SYN retransmit timer active */
+    /* Put the socket to SYN_SENT state. */
+
+    tcp_socket->state = TCP_STATE_SYN_SENT;
+
+    /* Make the SYN timeout checker timer active. */
 
     syn_timeout_timer = &tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ];
 
@@ -275,9 +277,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     /* Put the new endpoint to the table */
 
     mutex_lock( tcp_endpoint_lock, LOCK_IGNORE_SIGNAL );
-
     hashtable_add( &tcp_endpoint_table, ( hashitem_t* )tcp_socket );
-
     mutex_unlock( tcp_endpoint_lock );
 
     /* Send the SYN packet */
@@ -310,11 +310,7 @@ static int tcp_connect( socket_t* socket, struct sockaddr* address, socklen_t ad
     if ( tcp_socket->state == TCP_STATE_ESTABLISHED ) {
         error = 0;
     } else {
-        if ( get_system_time() >= syn_timeout_timer->expire_time ) {
-            error = -ETIMEDOUT;
-        } else {
-            error = -EINVAL; /* TODO: proper error code here? */
-        }
+        error = -socket_get_error( tcp_socket->socket );
     }
 
     mutex_unlock( tcp_socket->mutex );
@@ -332,6 +328,11 @@ static int tcp_recvmsg( socket_t* socket, struct msghdr* msg, int flags ) {
     tcp_socket = ( tcp_socket_t* )socket->data;
 
     mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
+
+    if ( tcp_socket->state != TCP_STATE_ESTABLISHED ) {
+        mutex_unlock( tcp_socket->mutex );
+        return -ENOTCONN;
+    }
 
     rx_data_size = circular_pointer_diff( &tcp_socket->rx_buffer, &tcp_socket->rx_user_data, &tcp_socket->rx_free_data );
 
@@ -392,6 +393,11 @@ static int tcp_sendmsg( socket_t* socket, struct msghdr* msg, int flags ) {
 
     mutex_lock( tcp_socket->mutex, LOCK_IGNORE_SIGNAL );
 
+    if ( tcp_socket->state != TCP_STATE_ESTABLISHED ) {
+        mutex_unlock( tcp_socket->mutex );
+        return -ENOTCONN;
+    }
+
     for ( i = 0; i < msg->msg_iovlen; i++ ) {
         size_t length;
         uint8_t* data;
@@ -448,17 +454,6 @@ static int tcp_getsockopt( socket_t* socket, int level, int optname, void* optva
     int error;
 
     switch ( optname ) {
-        case SO_ERROR : {
-            int* intval;
-
-            intval = ( int* )optval;
-            *intval = 0;
-
-            error = 0;
-
-            break;
-        }
-
         default :
             kprintf( WARNING, "tcp_getsockopt(): unknown option: %d.\n", optname );
             error = -EINVAL;
@@ -511,12 +506,25 @@ static int tcp_add_select_request( socket_t* socket, select_request_t* request )
             request->next = tcp_socket->first_read_select;
             tcp_socket->first_read_select = request;
 
-            if ( circular_pointer_diff(
-                    &tcp_socket->rx_buffer,
-                    &tcp_socket->rx_user_data,
-                    &tcp_socket->rx_free_data ) > 0 ) {
-                request->ready = true;
-                semaphore_unlock( request->sync, 1 );
+            switch ( tcp_socket->state ) {
+                case TCP_STATE_CLOSED :
+                    request->ready = true;
+                    semaphore_unlock( request->sync, 1 );
+                    break;
+
+                case TCP_STATE_ESTABLISHED :
+                    if ( circular_pointer_diff(
+                            &tcp_socket->rx_buffer,
+                            &tcp_socket->rx_user_data,
+                            &tcp_socket->rx_free_data ) > 0 ) {
+                        request->ready = true;
+                        semaphore_unlock( request->sync, 1 );
+                    }
+
+                    break;
+
+                default :
+                    break;
             }
 
             break;
@@ -525,19 +533,31 @@ static int tcp_add_select_request( socket_t* socket, select_request_t* request )
             request->next = tcp_socket->first_write_select;
             tcp_socket->first_write_select = request;
 
-            if ( tcp_socket->state == TCP_STATE_ESTABLISHED ) {
-                size_t free_size;
-
-                free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
-                    &tcp_socket->tx_buffer,
-                    &tcp_socket->tx_first_unacked,
-                    &tcp_socket->tx_free_data
-                );
-
-                if ( free_size > 0 ) {
+            switch ( tcp_socket->state ) {
+                case TCP_STATE_CLOSED :
                     request->ready = true;
                     semaphore_unlock( request->sync, 1 );
+                    break;
+
+                case TCP_STATE_ESTABLISHED : {
+                    size_t free_size;
+
+                    free_size = circular_buffer_size( &tcp_socket->tx_buffer ) - circular_pointer_diff(
+                        &tcp_socket->tx_buffer,
+                        &tcp_socket->tx_first_unacked,
+                        &tcp_socket->tx_free_data
+                    );
+
+                    if ( free_size > 0 ) {
+                        request->ready = true;
+                        semaphore_unlock( request->sync, 1 );
+                    }
+
+                    break;
                 }
+
+                default :
+                    break;
             }
 
             break;
@@ -626,16 +646,36 @@ static socket_calls_t tcp_socket_calls = {
     .remove_select_request = tcp_remove_select_request
 };
 
+static int tcp_notify_write_listeners( tcp_socket_t* tcp_socket ) {
+    select_request_t* request;
+
+    request = tcp_socket->first_write_select;
+
+    while ( request != NULL ) {
+        request->ready = true;
+        semaphore_unlock( request->sync, 1 );
+
+        request = request->next;
+    }
+
+    return 0;
+}
+
 static int tcp_handle_syn_timeout( tcp_socket_t* tcp_socket ) {
-    /* Shut down the SYN timeout timer */
+    /* Shut down the SYN timeout timer. */
 
     tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].running = false;
 
-    /* Connection failed :( */
+    /* Connection failed as we did not receive the SYN|ACK in time. */
 
     tcp_socket->state = TCP_STATE_CLOSED;
+    socket_set_error( tcp_socket->socket, ETIMEDOUT );
 
-    semaphore_unlock( tcp_socket->sync, 1 );
+    if ( tcp_socket->nonblocking ) {
+        tcp_notify_write_listeners( tcp_socket );
+    } else {
+        semaphore_unlock( tcp_socket->sync, 1 );
+    }
 
     return 0;
 }
@@ -832,37 +872,28 @@ void put_tcp_endpoint( tcp_socket_t* tcp_socket ) {
     }
 }
 
-static int tcp_notify_write_listeners( tcp_socket_t* tcp_socket ) {
-    select_request_t* request;
-
-    request = tcp_socket->first_write_select;
-
-    while ( request != NULL ) {
-        request->ready = true;
-        semaphore_unlock( request->sync, 1 );
-
-        request = request->next;
-    }
-
-    return 0;
-}
-
 static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
-    socket_t* socket;
     int option_size;
+    socket_t* socket;
     tcp_header_t* tcp_header;
     tcp_option_header_t* tcp_option_header;
 
     tcp_header = ( tcp_header_t* )packet->transport_data;
     socket = ( socket_t* )tcp_socket->socket;
 
+    /* Check if we got something other than SYN|ACK. It means an error, definitely. */
+
     if ( ( tcp_header->ctrl_flags & ( TCP_SYN | TCP_ACK ) ) != ( TCP_SYN | TCP_ACK ) ) {
         tcp_socket->state = TCP_STATE_CLOSED;
-        tcp_send_reset( packet );
 
-        semaphore_unlock( tcp_socket->sync, 1 );
+        if ( tcp_header->ctrl_flags & TCP_RST ) {
+            socket_set_error( socket, ECONNREFUSED );
+        } else {
+            socket_set_error( socket, EINVAL );
+            tcp_send_reset( packet );
+        }
 
-        return -EINVAL;
+        goto out;
     }
 
     /* Parse options in the TCP header */
@@ -911,6 +942,11 @@ static int tcp_handle_syn_sent( tcp_socket_t* tcp_socket, packet_t* packet ) {
 
     tcp_socket->timers[ TCP_TIMER_SYN_TIMEOUT ].running = false;
 
+    /* Connection has been established properly. Clear errors on the socket. */
+
+    socket_set_error( tcp_socket->socket, 0 );
+
+ out:
     if ( tcp_socket->nonblocking ) {
         tcp_notify_write_listeners( tcp_socket );
     } else {

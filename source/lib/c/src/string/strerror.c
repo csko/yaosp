@@ -1,6 +1,6 @@
 /* strerror function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -62,7 +62,8 @@ static char* error_strings[] = {
     "Operation already in progress", /* EALREADY */
     "Network is down", /* ENETDOWN */
     "Transport endpoint is not connected", /* ENOTCONN */
-    "Address family not supported by protocol" /* EAFNOSUPPORT */
+    "Address family not supported by protocol", /* EAFNOSUPPORT */
+    "Connection refused" /* ECONNREFUSED */
 };
 
 char* strerror( int errnum ) {

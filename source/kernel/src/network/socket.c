@@ -38,6 +38,16 @@ static hashtable_t socket_inode_table;
 
 static mount_point_t* socket_mount_point;
 
+int socket_get_error( socket_t* socket ) {
+    return socket->so_error;
+}
+
+int socket_set_error( socket_t* socket, int error ) {
+    socket->so_error = error;
+
+    return 0;
+}
+
 static int socket_read_inode( void* fs_cookie, ino_t inode_number, void** node ) {
     socket_t* socket;
 
@@ -470,6 +480,7 @@ int sys_accept( int sockfd, struct sockaddr* addr, socklen_t* addrlen ) {
 
 static int do_getsockopt( bool kernel, int sockfd, int level, int optname, void* optval, socklen_t* optlen ) {
     int error;
+    int* intval;
     file_t* file;
     socket_t* socket;
 
@@ -479,9 +490,17 @@ static int do_getsockopt( bool kernel, int sockfd, int level, int optname, void*
         goto error1;
     }
 
+    intval = ( int* )optval;
+
     switch ( level ) {
         case SOL_SOCKET :
             switch ( optname ) {
+                case SO_ERROR :
+                    kprintf( INFO, "%s(): SO_ERROR: %d\n", __FUNCTION__, socket->so_error );
+                    *intval = socket->so_error;
+                    error = 0;
+                    break;
+
                 default :
                     if ( socket->operations->getsockopt != NULL ) {
                         error = socket->operations->getsockopt( socket, level, optname, optval, optlen );
@@ -525,6 +544,10 @@ static int do_setsockopt( bool kernel, int sockfd, int level, int optname, void*
     switch ( level ) {
         case SOL_SOCKET :
             switch ( optname ) {
+                case SO_ERROR :
+                    error = -EINVAL;
+                    break;
+
                 default :
                     if ( socket->operations->setsockopt != NULL ) {
                         error = socket->operations->setsockopt( socket, level, optname, optval, optlen );

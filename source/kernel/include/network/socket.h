@@ -1,6 +1,6 @@
 /* Socket handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +19,7 @@
 #ifndef _NETWORK_SOCKET_H_
 #define _NETWORK_SOCKET_H_
 
+#include <macros.h>
 #include <vfs/inode.h>
 #include <vfs/vfs.h>
 #include <network/ipv4.h>
@@ -116,9 +117,11 @@ typedef struct socket {
     uint8_t dest_address[ IPV4_ADDR_LEN ];
     uint16_t dest_port;
 
+    int so_error;
+
     void* data;
     struct socket_calls* operations;
-} __attribute__(( packed )) socket_t;
+} __PACKED socket_t;
 
 struct select_request;
 
@@ -134,6 +137,10 @@ typedef struct socket_calls {
     int ( *add_select_request )( socket_t* socket, struct select_request* request );
     int ( *remove_select_request )( socket_t* socket, struct select_request* request );
 } socket_calls_t;
+
+int socket_get_error( socket_t* socket );
+
+int socket_set_error( socket_t* socket, int error );
 
 int sys_socket( int family, int type, int protocol );
 int sys_connect( int fd, struct sockaddr* address, socklen_t addrlen );
