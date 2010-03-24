@@ -50,9 +50,7 @@
     </node>
     <node name="network">
         <node name="nameservers">
-            <node name="ns1">
-                <attrib type="ascii" name="address" value="192.168.1.1"/>
-            </node>
+            <node name="192.168.1.1"/>
         </node>
     </node>
 </node>

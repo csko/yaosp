@@ -23,7 +23,8 @@
 
 enum {
     MSG_GET_ATTRIBUTE_VALUE = 1,
-    MSG_LIST_NODE_CHILDREN
+    MSG_NODE_ADD_CHILD,
+    MSG_NODE_LIST_CHILDREN
 };
 
 typedef enum attr_type {
@@ -41,6 +42,14 @@ typedef struct msg_get_reply {
     int error;
     attr_type_t type;
 } msg_get_reply_t;
+
+typedef struct msg_add_child {
+    ipc_port_id reply_port;
+} msg_add_child_t;
+
+typedef struct msg_add_child_reply {
+    int error;
+} msg_add_child_reply_t;
 
 typedef struct msg_list_children {
     ipc_port_id reply_port;

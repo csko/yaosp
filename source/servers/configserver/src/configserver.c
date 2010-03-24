@@ -138,7 +138,48 @@ static int list_node_children_helper( hashitem_t* item, void* data ) {
     return 0;
 }
 
-static int handle_list_node_children( msg_list_children_t* request ) {
+static int handle_node_add_child( msg_add_child_t* request ) {
+    char* path;
+    char* child_name;
+    node_t* child;
+    node_t* parent;
+    msg_add_child_reply_t reply;
+
+    path = (char*)( request + 1 );
+    child_name = path + strlen(path) + 1;
+
+    parent = find_node_by_path(path);
+
+    if ( parent == NULL ) {
+        reply.error = -EINVAL;
+        goto send_reply;
+    }
+
+    if ( node_get_child( parent, child_name ) != NULL ) {
+        reply.error = -EEXIST;
+        goto send_reply;
+    }
+
+    child = node_create(child_name);
+
+    if ( child == NULL ) {
+        reply.error = -ENOMEM;
+        goto send_reply;
+    }
+
+    reply.error = node_add_child( parent, child );
+
+    if ( reply.error != 0 ) {
+        /* todo: free the child node. */
+    }
+
+ send_reply:
+    send_ipc_message( request->reply_port, 0, &reply, sizeof(msg_add_child_reply_t) );
+
+    return 0;
+}
+
+static int handle_node_list_children( msg_list_children_t* request ) {
     int i;
     int size;
     char* path;
@@ -237,8 +278,12 @@ static int configserver_mainloop( void ) {
                 handle_get_attribute_value( ( msg_get_attr_t* )recv_buffer );
                 break;
 
-            case MSG_LIST_NODE_CHILDREN :
-                handle_list_node_children( ( msg_list_children_t* )recv_buffer );
+            case MSG_NODE_ADD_CHILD :
+                handle_node_add_child( ( msg_add_child_t* )recv_buffer );
+                break;
+
+            case MSG_NODE_LIST_CHILDREN :
+                handle_node_list_children( ( msg_list_children_t* )recv_buffer );
                 break;
 
             default :

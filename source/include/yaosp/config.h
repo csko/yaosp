@@ -23,6 +23,7 @@ int ycfg_get_ascii_value( char* path, char* attrib, char** value );
 int ycfg_get_numeric_value( char* path, char* attrib, uint64_t* value );
 int ycfg_get_binary_value( char* path, char* attrib, void** _data, size_t* _size );
 
+int ycfg_add_child( char* path, char* child );
 int ycfg_list_children( char* path, char*** _children );
 
 int ycfg_init( void );

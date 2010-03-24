@@ -410,25 +410,15 @@ int dns_resolv( char* hostname, struct in_addr** v4_table, size_t* v4_cnt ) {
     ns_count = 0;
 
     for ( i = 0; ns_names[i] != NULL; i++ ) {
-        char path[256];
-        char* address;
         dns_server_t* server;
 
-        snprintf( path, sizeof(path), "network/nameservers/%s", ns_names[i] );
+        server = dns_server_create( ns_names[i], DNS_SERVER_UDP );
         free( ns_names[i] );
-
-        if ( ycfg_get_ascii_value( path, "address", &address ) != 0 ) {
-            continue;
-        }
-
-        server = dns_server_create( address, DNS_SERVER_UDP );
 
         if ( server != NULL ) {
             dns_request_add_server( request, server );
             ns_count++;
         }
-
-        free( address );
     }
 
     free( ns_names );
