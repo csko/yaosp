@@ -40,6 +40,13 @@ static int screen_list_modes( int argc, char** argv ) {
 
         mode_info = ( screen_mode_info_t* )array_get_item( mode_list, i );
 
+        /* NOTE: At the moment, the guiserver supports only bitmaps with
+                 CS_RGB32 color space, so we skip all the others. */
+
+        if ( mode_info->color_space != CS_RGB32 ) {
+            continue;
+        }
+
         printf(
             "%dx%dx%d\n", mode_info->width, mode_info->height,
             colorspace_to_bpp( mode_info->color_space ) * 8
@@ -82,8 +89,10 @@ static int screen_set_mode( int argc, char** argv ) {
     height = strtol( sep1 + 1, NULL, 10 );
     depth = strtol( sep2 + 1, NULL, 10 );
 
-    if ( ( depth != 16 ) &&
-         ( depth != 24 ) &&
+    /* Check the NOTE above. */
+
+    if ( /*( depth != 16 ) &&
+           ( depth != 24 ) &&*/
          ( depth != 32 ) ) {
         fprintf( stderr, "%s: invalid color depth: %d.\n", argv0, depth );
         return 0;
