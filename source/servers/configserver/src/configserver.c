@@ -170,11 +170,44 @@ static int handle_node_add_child( msg_add_child_t* request ) {
     reply.error = node_add_child( parent, child );
 
     if ( reply.error != 0 ) {
-        /* todo: free the child node. */
+        node_destroy( child );
     }
 
  send_reply:
     send_ipc_message( request->reply_port, 0, &reply, sizeof(msg_add_child_reply_t) );
+
+    return 0;
+}
+
+static int handle_node_del_child( msg_del_child_t* request ) {
+    char* path;
+    char* child_name;
+    node_t* child;
+    node_t* parent;
+    msg_del_child_reply_t reply;
+
+    path = (char*)( request + 1 );
+    child_name = path + strlen(path) + 1;
+
+    parent = find_node_by_path(path);
+
+    if ( parent == NULL ) {
+        reply.error = -EINVAL;
+        goto send_reply;
+    }
+
+    child = node_remove_child( parent, child_name );
+
+    if ( child == NULL ) {
+        reply.error = -ENOENT;
+        goto send_reply;
+    }
+
+    node_destroy( child );
+    reply.error = 0;
+
+ send_reply:
+    send_ipc_message( request->reply_port, 0, &reply, sizeof(msg_del_child_reply_t) );
 
     return 0;
 }
@@ -280,6 +313,10 @@ static int configserver_mainloop( void ) {
 
             case MSG_NODE_ADD_CHILD :
                 handle_node_add_child( ( msg_add_child_t* )recv_buffer );
+                break;
+
+            case MSG_NODE_DEL_CHILD :
+                handle_node_del_child( ( msg_del_child_t* )recv_buffer );
                 break;
 
             case MSG_NODE_LIST_CHILDREN :

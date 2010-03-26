@@ -38,6 +38,20 @@ attribute_t* node_get_attribute( node_t* parent, char* name ) {
     return ( attribute_t* )hashtable_get( &parent->attributes, ( const void* )name );
 }
 
+node_t* node_remove_child( node_t* parent, char* child_name ) {
+    node_t* child;
+
+    child = ( node_t* )hashtable_get( &parent->children, ( const void* )child_name );
+
+    if ( child == NULL ) {
+        return NULL;
+    }
+
+    hashtable_remove( &parent->children, ( const void* )child_name );
+
+    return child;
+}
+
 static int node_dump_child_helper( hashitem_t* item, void* data ) {
     int level = *( int* )data;
     node_t* node = ( node_t* )item;
@@ -104,7 +118,7 @@ node_t* node_create( const char* name ) {
     }
 
     node->name = ( char* )( node + 1 );
-    memcpy( node->name, name, name_len );
+    strcpy( node->name, name );
 
     return node;
 
@@ -116,4 +130,23 @@ node_t* node_create( const char* name ) {
 
  error1:
     return NULL;
+}
+
+static int node_child_del_helper( hashitem_t* item, void* data ) {
+    node_destroy( ( node_t* )item );
+    return 0;
+}
+
+static int node_attrib_del_helper( hashitem_t* item, void* data ) {
+    attribute_destroy( ( attribute_t* )item );
+    return 0;
+}
+
+int node_destroy( node_t* node ) {
+    hashtable_iterate( &node->children, node_child_del_helper, NULL );
+    hashtable_iterate( &node->attributes, node_attrib_del_helper, NULL );
+
+    free(node);
+
+    return 0;
 }

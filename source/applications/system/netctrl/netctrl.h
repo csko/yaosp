@@ -1,4 +1,4 @@
-/* Configuration handling functions
+/* yaOSp network control application
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,17 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_CONFIG_H_
-#define _YAOSP_CONFIG_H_
+#ifndef _NETCTRL_H_
+#define _NETCTRL_H_
 
-int ycfg_get_ascii_value( char* path, char* attrib, char** value );
-int ycfg_get_numeric_value( char* path, char* attrib, uint64_t* value );
-int ycfg_get_binary_value( char* path, char* attrib, void** _data, size_t* _size );
+typedef int command_handler_t( int argc, char** argv );
 
-int ycfg_add_child( char* path, char* child );
-int ycfg_del_child( char* path, char* child );
-int ycfg_list_children( char* path, char*** _children );
+typedef struct ctrl_command {
+    const char* name;
+    const char* help;
+    command_handler_t* handler;
+} ctrl_command_t;
 
-int ycfg_init( void );
+typedef struct ctrl_subsystem {
+    const char* name;
+    ctrl_command_t* commands;
+} ctrl_subsystem_t;
 
-#endif /* _YAOSP_CONFIG_H_ */
+extern char* argv0;
+extern ctrl_subsystem_t ns;
+
+#endif /* _NSCTRL_H_ */

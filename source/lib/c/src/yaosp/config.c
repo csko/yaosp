@@ -227,6 +227,52 @@ int ycfg_add_child( char* path, char* child ) {
     return error;
 }
 
+int ycfg_del_child( char* path, char* child ) {
+    int error;
+    char* tmp;
+    size_t path_length;
+    size_t child_length;
+    size_t request_length;
+    msg_del_child_t* request;
+    msg_del_child_reply_t reply;
+
+    path_length = strlen(path);
+    child_length = strlen(child);
+    request_length = sizeof(msg_del_child_t) + path_length + 1 + child_length + 1;
+
+    request = (msg_del_child_t*)malloc( request_length );
+
+    if ( request == NULL ) {
+        return -ENOMEM;
+    }
+
+    request->reply_port = ycfg_reply_port;
+    strcpy( (char*)(request + 1), path );
+    tmp = (char*)(request + 1) + path_length + 1;
+    strcpy( tmp, child );
+
+    pthread_mutex_lock( &ycfg_lock );
+
+    error = send_ipc_message( ycfg_server_port, MSG_NODE_DEL_CHILD, request, request_length );
+
+    free( request );
+
+    if ( error < 0 ) {
+        goto out;
+    }
+
+    error = recv_ipc_message( ycfg_reply_port, NULL, &reply, sizeof(msg_del_child_reply_t), INFINITE_TIMEOUT );
+
+ out:
+    pthread_mutex_unlock( &ycfg_lock );
+
+    if ( error >= 0 ) {
+        return reply.error;
+    }
+
+    return error;
+}
+
 int ycfg_list_children( char* path, char*** _children ) {
     int error;
     size_t path_length;

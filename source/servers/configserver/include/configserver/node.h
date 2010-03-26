@@ -39,8 +39,11 @@ int node_add_attribute( node_t* parent, attribute_t* attribute );
 node_t* node_get_child( node_t* parent, char* name );
 attribute_t* node_get_attribute( node_t* parent, char* name );
 
+node_t* node_remove_child( node_t* parent, char* child_name );
+
 int node_dump( node_t* node, int level );
 
 node_t* node_create( const char* name );
+int node_destroy( node_t* node );
 
 #endif /* _CFG_NODE_H_ */

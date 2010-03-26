@@ -46,5 +46,6 @@ typedef struct attribute {
 void* attribute_key( hashitem_t* item );
 
 attribute_t* attribute_create( const char* name, attr_type_t type );
+int attribute_destroy( attribute_t* attrib );
 
 #endif /* _CFG_NODE_H_ */

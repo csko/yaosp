@@ -40,7 +40,13 @@ attribute_t* attribute_create( const char* name, attr_type_t type ) {
 
     attrib->name = ( char* )( attrib + 1 );
     attrib->type = type;
-    memcpy( attrib->name, name, name_length + 1 );
+    strcpy( attrib->name, name );
 
     return attrib;
+}
+
+int attribute_destroy( attribute_t* attrib ) {
+    free( attrib );
+    /* todo: destroy the value as well! */
+    return 0;
 }
