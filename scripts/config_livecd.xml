@@ -50,7 +50,6 @@
     </node>
     <node name="network">
         <node name="nameservers">
-            <node name="192.168.1.1"/>
         </node>
     </node>
 </node>

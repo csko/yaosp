@@ -105,7 +105,6 @@ int dns_request_destroy( dns_request_t* request ) {
         dns_server_free(todel);
     }
 
-    free(request->result_v4);
     free(request);
 
     return 0;

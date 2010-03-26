@@ -98,6 +98,7 @@ typedef struct dhcp_info {
     size_t router_count;
 
     uint32_t* name_servers;
+    size_t name_server_count;
 
     uint32_t lease_time;
     uint32_t arp_cache_timeout;
@@ -115,11 +116,8 @@ typedef struct dhcp_info {
 #define DHCP_SUBNET_MASK_LEN    4
 
 #define DHCP_ROUTERS        3
-
-#define DHCP_NAME_SERVERS   5
-
+#define DHCP_NAME_SERVERS   6
 #define DHCP_HOSTNAME       12
-
 #define DHCP_DOMAIN_NAME    15
 
 #define DHCP_IP_TTL         23

@@ -23,12 +23,13 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <time.h>
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <net/route.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <time.h>
+#include <yaosp/config.h>
 
 #include "dhcpclient.h"
 
@@ -302,8 +303,22 @@ void parse_message( dhcp_msg_t* msg, dhcp_info_t* info ) {
                 break;
             }
 
+            case DHCP_NAME_SERVERS : {
+                uint8_t size = *( options + 1 );
+                options += 2;
+
+                info->name_servers = (uint32_t*)malloc(size);
+
+                if ( info->name_servers != NULL ) {
+                    memcpy( info->name_servers, options, size );
+                    info->name_server_count = size / sizeof(uint32_t);
+                }
+
+                options += size;
+                break;
+            }
+
             // TODO
-            case DHCP_NAME_SERVERS :
             case DHCP_HOSTNAME :
             case DHCP_DOMAIN_NAME :
             case DHCP_IP_TTL :
@@ -388,10 +403,20 @@ void parse_message( dhcp_msg_t* msg, dhcp_info_t* info ) {
                 set_default_router(*info->routers);
             }
 
-            // TODO: use more than one name server
-            if ( info->name_servers != NULL ) {
-                uint8_t* ns = (uint8_t*)info->name_servers;
-                printf("  nameserver: %d.%d.%d.%d\n", ns[0], ns[1], ns[2], ns[3]);
+            if ( info->name_server_count > 0 ) {
+                size_t i;
+                char ns_addr[32];
+
+                assert( info->name_servers != NULL );
+
+                for ( i = 0; i < info->name_server_count; i++ ) {
+                    uint8_t* ns = (uint8_t*)&info->name_servers[i];
+
+                    printf("  nameserver: %d.%d.%d.%d\n", ns[0], ns[1], ns[2], ns[3]);
+
+                    snprintf( ns_addr, sizeof(ns_addr), "%d.%d.%d.%d", ns[0], ns[1], ns[2], ns[3] );
+                    ycfg_add_child( "network/nameservers", ns_addr );
+                }
             }
         } else if ( msgtype == DHCPNAK &&
                     status == REQUEST ) {
@@ -484,6 +509,8 @@ int main( int argc, char** argv ) {
         printf( "Usage: %s device\n", argv[ 0 ] );
         return EXIT_FAILURE;
     }
+
+    ycfg_init();
 
     argv0 = argv[ 0 ];
     device = argv[ 1 ];
