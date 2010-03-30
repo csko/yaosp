@@ -40,7 +40,7 @@ static int channel_handle_text( view_t* view, const char* text ) {
     char timestamp[ 128 ];
     struct tm* tmval;
     time_t now;
-    char* timestamp_format = "%D %T"; /* TODO: make global variable */
+    char* timestamp_format = "%H:%M"; /* TODO: make global variable */
 
     channel_data_t* channel;
 

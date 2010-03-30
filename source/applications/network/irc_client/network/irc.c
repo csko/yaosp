@@ -48,7 +48,7 @@ static char* input_buffer = NULL;
 
 static const char* timestamp_format = "%H:%M";
 
-static void parse_line1(const char* line){
+static void parse_line1( const char* line ) {
     char* cmd = NULL;
     char* param1 = NULL;
     char* param2 = NULL;
@@ -63,31 +63,33 @@ static void parse_line1(const char* line){
 
     param1 = strchr( cmd, ' ' );
 
-    if(param1 != NULL){ /* found param1 */
+    if ( param1 != NULL ) { /* found param1 */
         *param1++ = '\0';
 
         /* Look for a one-parameter command */
-        if(strcmp(cmd, "JOIN") == 0){
-            irc_handle_join(line, param1);
-        }else{ /* Command not found */
+        if ( strcmp( cmd, "JOIN" ) == 0 ) {
+            irc_handle_join( line, param1 );
+        } else { /* Command not found */
             param2 = strchr( param1, ' ' );
 
-            if(param2 != NULL){ /* found param2 */
+            if ( param2 != NULL ) { /* found param2 */
                 *param2++ = '\0';
 
                 /* Look for a two-parameter command */
-                if(strcmp(cmd, "PRIVMSG") == 0){
+                if ( strcmp( cmd, "PRIVMSG" ) == 0 ) {
                     irc_handle_privmsg(line, param1, param2 + 1);
-                }else if(strcmp(cmd, "NOTICE") == 0){
+                } else if ( strcmp(cmd, "NOTICE") == 0 ) {
                     irc_handle_notice(line, param1, param2 + 1);
-                }else if(strcmp(cmd, "MODE") == 0){
+                } else if ( strcmp(cmd, "MODE") == 0 ) {
                     irc_handle_mode(line, param1, param2 + 1);
-                }else if(strcmp(cmd, "TOPIC") == 0){
+                } else if ( strcmp(cmd, "TOPIC") == 0 ) {
                     irc_handle_topic(line, param1, param2 + 1);
-                }else if(strcmp(cmd, "NAMES") == 0){
+                } else if ( strcmp(cmd, "NAMES") == 0 ) {
                     irc_handle_names(line, param1, param2 + 1);
-                }else if(strcmp(cmd, "PART") == 0){
+                } else if ( strcmp(cmd, "PART") == 0 ) {
                     irc_handle_part(line, param1, param2 + 1);
+                } else {
+                    ui_error_message( "%s\n", param2 + 1 );
                 }
             }
         }
@@ -357,10 +359,24 @@ static int irc_handle_incoming( event_t* event ) {
 }
 
 static int irc_handle_connect_finish( event_t* event ) {
+    int error;
+    socklen_t len;
     size_t length;
     char buffer[ 256 ];
 
     event_manager_remove_event( &irc_connect );
+
+    /* Check if connect() was successful or not. */
+
+    len = sizeof(int);
+    getsockopt( sock, SOL_SOCKET, SO_ERROR, &error, &len );
+
+    if ( error != 0 ) {
+        ui_error_message( "Failed to connect to the server.\n" );
+        return 0;
+    }
+
+    ui_error_message( "Connected to the server.\n" );
 
     event_init( &irc_read );
     irc_read.fd = sock;
