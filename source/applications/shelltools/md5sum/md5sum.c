@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include "md5.h"
 
@@ -31,6 +32,7 @@ static int do_md5sum( char* filename ) {
     int i;
     int f;
     int ret;
+    struct stat st;
     MD5_CTX context;
     unsigned char digest[ 16 ];
 
@@ -40,6 +42,18 @@ static int do_md5sum( char* filename ) {
 
     if ( f < 0 ) {
         fprintf( stderr, "%s: failed to open %s: %s.\n", argv0, filename, strerror( errno ) );
+        return -1;
+    }
+
+    if ( fstat( f, &st ) != 0 ) {
+        fprintf( stderr, "%s: failed to stat %s: %s.\n", argv0, filename, strerror( errno ) );
+        close( f );
+        return -1;
+    }
+
+    if ( !S_ISREG( st.st_mode ) ) {
+        fprintf( stderr, "%s: %s is not a regular file!\n", argv0, filename );
+        close( f );
         return -1;
     }
 
