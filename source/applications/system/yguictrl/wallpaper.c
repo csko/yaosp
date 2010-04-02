@@ -48,6 +48,11 @@ static int change_wallpaper( int argc, char** argv ) {
         return -1;
     }
 
+    if ( !S_ISREG( st.st_mode ) ) {
+        fprintf( stderr, "%s is not a regular file.\n", argv[0] );
+        return -1;
+    }
+
     printf( "Set new wallpaper to: %s.\n", argv[0] );
     send_set_wallpaper_msg_to_desktop( argv[0] );
 
