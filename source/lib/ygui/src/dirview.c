@@ -155,7 +155,6 @@ static void* dirview_worker( void* data ) {
             continue;
         }
 
-        int found_d = 0;
         int found_dd = 0;
         dir_item_t* dir_item;
 
@@ -163,8 +162,7 @@ static void* dirview_worker( void* data ) {
             dir_item = NULL;
 
             if ( strcmp( entry->d_name, "." ) == 0 ) {
-                found_d = 1;
-                dir_item = create_dir_item( entry->d_name, T_DIRECTORY );
+                continue;
             } else if ( strcmp( entry->d_name, ".." ) == 0 ) {
                 found_dd = 1;
                 dir_item = create_dir_item( entry->d_name, T_DIRECTORY );
@@ -186,10 +184,6 @@ static void* dirview_worker( void* data ) {
         closedir( dir );
 
         if ( strcmp( dir_view->path, "/" ) != 0 ) {
-            if ( !found_d ) {
-                dir_item = create_dir_item( ".", T_DIRECTORY );
-                array_add_item( &dir_view->items, ( void* )dir_item );
-            }
             if ( !found_dd ) {
                 dir_item = create_dir_item( "..", T_DIRECTORY );
                 array_add_item( &dir_view->items, ( void* )dir_item );
