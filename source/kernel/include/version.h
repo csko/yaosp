@@ -1,6 +1,6 @@
 /* Kernel version
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,7 @@
 
 #define KERNEL_MAJOR_VERSION   0
 #define KERNEL_MINOR_VERSION   0
-#define KERNEL_RELEASE_VERSION 5
+#define KERNEL_RELEASE_VERSION 6
 
 extern const char* build_date;
 extern const char* build_time;
