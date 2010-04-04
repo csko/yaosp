@@ -1,6 +1,7 @@
 # Python build system
 #
 # Copyright (c) 2008, 2010 Zoltan Kovacs
+# Copyright (c) 2010 Kornel Csernai
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -22,11 +23,12 @@ import context as ctx
 import handler as hndlr
 import work_handlers
 import definition_handlers
+import logging
 
 if __name__ == "__main__" :
     if not os.path.isfile( "pbuild.xml" ) :
-        print "pbuild.xml not found in the current directory!"
-        sys.exit( 0 )
+        logging.critical("pbuild.xml not found in the current directory!")
+        sys.exit( 1 )
 
     pcontext = ctx.ProjectContext()
     pcontext.init()
@@ -46,15 +48,15 @@ if __name__ == "__main__" :
         target_name = context.get_default_target()
 
         if target_name == None :
-            print "Default target not specified!"
-            sys.exit( 0 )
+            logging.critical( "Default target not specified!" )
+            sys.exit( 1 )
     else :
         target_name = sys.argv[ -1 ]
 
     target = context.get_target( target_name )
 
     if target == None :
-        print "Target " + target_name + " not found!"
-        sys.exit( 0 )
+        logging.critical( "Target " + target_name + " not found!" )
+        sys.exit( 1 )
 
     target.execute( context )

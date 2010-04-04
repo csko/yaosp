@@ -25,6 +25,7 @@ import hashlib
 import definitions
 import handler as hndlr
 import context as ctx
+import logging
 
 class Work :
     def __init__( self ) :
@@ -72,7 +73,7 @@ class ForWork( Work ) :
             definition = context.get_definition( def_name )
 
             if definition == None :
-                print "Definition " + def_name + " not found"
+                logging.error( "Definition " + def_name + " not found" )
                 return
 
             array = definition.to_array()
@@ -97,6 +98,7 @@ class EchoWork( Work ) :
         self.text = text
 
     def execute( self, context ) :
+        # use logging.info()?
         print context.replace_definitions( self.text )
 
 class GccWork( Work ) :
@@ -163,8 +165,8 @@ class GccWork( Work ) :
         retcode = subprocess.call( command )
         # If the return code is not 0, the build process must stop
         if retcode != 0 :
-            print "Process returned with return code %d" % retcode
-            print "Build stopped."
+            logging.error( "Process returned with return code %d" % retcode )
+            logging.error( "Build stopped." )
             sys.exit( retcode )
 
 
@@ -212,8 +214,8 @@ class LdWork( Work ) :
         retcode = subprocess.call( command )
         # If the return code is not 0, the build process must stop
         if retcode != 0 :
-            print "Process returned with return code %d" % retcode
-            print "Build stopped."
+            logging.error( "Process returned with return code %d" % retcode )
+            logging.error( "Build stopped." )
             sys.exit( retcode )
 
 class ArWork( Work ) :
@@ -252,8 +254,8 @@ class ArWork( Work ) :
         retcode = subprocess.call( command )
         # If the return code is not 0, the build process must stop
         if retcode != 0 :
-            print "Process returned with return code %d" % retcode
-            print "Build stopped."
+            logging.error( "Process returned with return code %d" % retcode )
+            logging.error( "Build stopped." )
             sys.exit( retcode )
 
 class MakeDirectory( Work ) :
@@ -332,7 +334,7 @@ class CallTarget( Work ) :
             directory = context.handle_everything( self.directory )
 
             if not os.path.isdir( directory ) :
-                print directory + " is not a directory!"
+                logging.error( directory + " is not a directory!" )
                 return
 
             cached_cwd = os.getcwd()
@@ -342,8 +344,8 @@ class CallTarget( Work ) :
             handler = hndlr.BuildHandler( context )
 
             if not os.path.isfile( "pbuild.xml" ) :
-                print "pbuild.xml not found in " + os.getcwd()
-                print "Build stopped."
+                logging.critical( "pbuild.xml not found in " + os.getcwd() )
+                logging.critical( "Build stopped." )
                 sys.exit( 1 )
 
             xml_parser = xml.sax.make_parser()
@@ -352,8 +354,8 @@ class CallTarget( Work ) :
             try :
                 xml_parser.parse( "pbuild.xml" )
             except :
-                print "pbuild.xml is not valid at %s" % ( os.getcwd() )
-                print "Build stopped."
+                logging.critical( "pbuild.xml is not valid at %s" % ( os.getcwd() ) )
+                logging.critical( "Build stopped." )
                 sys.exit( 1 )
 
         target = context.get_target( self.target, True )
@@ -406,15 +408,15 @@ class CopyWork( Work ) :
         try :
             src_file = open( src, "r" )
         except IOError, e :
-            print "CopyWork: Failed to open source file: " + src
-            print "Build stopped."
+            logging.critical( "CopyWork: Failed to open source file: " + src )
+            logging.critical( "Build stopped." )
             sys.exit( 1 );
 
         try :
             dest_file = open( dest, "w" )
         except IOError, e :
-            print "CopyWork: Failed to open destination file: " + dest
-            print "Build stopped."
+            logging.critical( "CopyWork: Failed to open destination file: " + dest )
+            logging.critical( "Build stopped." )
             sys.exit( 1 )
 
         dest_file.write( src_file.read() )
@@ -437,15 +439,15 @@ class MoveWork( Work ) :
         try :
             src_file = open( src, "r" )
         except IOError, e :
-            print "MoveWork: Failed to open source file: " + src
-            print "Build stopped."
+            logging.critical( "MoveWork: Failed to open source file: " + src )
+            logging.critical( "Build stopped." )
             sys.exit( 1 );
 
         try :
             dest_file = open( dest, "w" )
         except IOError, e :
-            print "MoveWork: Failed to open destination file: " + dest
-            print "Build stopped."
+            logging.critical( "MoveWork: Failed to open destination file: " + dest )
+            logging.critical( "Build stopped." )
             sys.exit( 1 )
 
         dest_file.write( src_file.read() )
@@ -498,8 +500,8 @@ class ExecWork( Work ) :
         # If the return code is not 0, the build process must stop
 
         if retcode != 0 :
-            print "Process returned with return code %d" % retcode
-            print "Build stopped."
+            logging.critical( "Process returned with return code %d" % retcode )
+            logging.critical( "Build stopped." )
             sys.exit( retcode )
 
 class SymlinkWork( Work ) :
@@ -538,10 +540,10 @@ class HTTPGetWork( Work ) :
                 data = localfile.read( 4096 )
 
             if m.hexdigest() == self.md5sum :
-                print "File %s already exists." % self.dest
+                logging.info( "File %s already exists." % self.dest )
                 return
 
-        print "Downloading " + self.address
+        logging.info( "Downloading " + self.address )
 
         urlfile = urllib.urlopen( self.address )
         urlfile_size = int( urlfile.headers.getheader( "Content-Length" ) )

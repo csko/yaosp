@@ -1,6 +1,7 @@
 # Python build system
 #
 # Copyright (c) 2008, 2010 Zoltan Kovacs
+# Copyright (c) 2010 Kornel Csernai
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -19,6 +20,7 @@ import re
 import os
 import functions
 import definitions
+import logging
 
 class ProjectContext :
     TOPLEVEL_FILE = "pbuild.toplevel"
@@ -32,7 +34,8 @@ class ProjectContext :
             cwd = cwd[:-1]
 
         while not os.path.isfile( cwd + os.path.sep + self.TOPLEVEL_FILE ) :
-            if cwd == "" :
+            if cwd == "":
+                logging.error("Can't find toplevel.")
                 return False
 
             index = cwd.rfind( os.path.sep )

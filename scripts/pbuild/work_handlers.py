@@ -1,6 +1,7 @@
 # Python build system
 #
 # Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
+# Copyright (c) 2010 Kornel Csernai
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -23,6 +24,7 @@ import works
 import handler
 import context
 import definition_handlers
+import logging
 
 class TargetHandler( handler.NodeHandler ) :
     handled_node = "target"
@@ -431,8 +433,8 @@ class IncludeHandler( handler.NodeHandler ) :
         filename = self.get_context().replace_definitions( attrs["file"] )
 
         if not os.path.isfile(filename) :
-            print "Unable to include %s because it is not a valid file." % filename
-            sys.exit(0)
+            logging.critical( "Unable to include %s because it is not a valid file." % filename )
+            sys.exit( 1 )
 
         inc_context = context.BuildContext( self.get_context().get_project_context() )
         inc_handler = handler.BuildHandler(inc_context)
