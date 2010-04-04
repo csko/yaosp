@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>main.c</item>
         <item>about.c</item>
@@ -74,12 +76,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <mkdir>../../../../build/image/application/texteditor</mkdir>
-        <copy from="objs/texteditor" to="../../../../build/image/application/texteditor/texteditor"/>
+        <mkdir>${imagedir}/application/texteditor</mkdir>
+        <copy from="objs/texteditor" to="${imagedir}/application/texteditor/texteditor"/>
 
-        <mkdir>../../../../build/image/application/texteditor/images</mkdir>
+        <mkdir>${imagedir}/application/texteditor/images</mkdir>
         <for var="i" array="${images}">
-            <copy from="images/${i}" to="../../../../build/image/application/texteditor/images/${i}"/>
+            <copy from="images/${i}" to="${imagedir}/application/texteditor/images/${i}"/>
         </for>
     </target>
 

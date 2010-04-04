@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>iview.c</item>
         <item>ui.c</item>
@@ -72,11 +74,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <mkdir>../../../../build/image/application/iview</mkdir>
-        <copy from="objs/iview" to="../../../../build/image/application/iview/iview"/>
+        <mkdir>${imagedir}/application/iview</mkdir>
+        <copy from="objs/iview" to="${imagedir}/application/iview/iview"/>
 
-        <mkdir>../../../../build/image/application/iview/images</mkdir>
-        <copy from="images/iview_16x16.png" to="../../../../build/image/application/iview/images/iview_16x16.png"/>
+        <mkdir>${imagedir}/application/iview/images</mkdir>
+        <copy from="images/iview_16x16.png" to="${imagedir}/application/iview/images/iview_16x16.png"/>
     </target>
 
     <target name="all">

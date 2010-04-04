@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>main.c</item>
         <item>terminal.c</item>
@@ -71,11 +73,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <mkdir>../../../../build/image/application/terminal</mkdir>
-        <mkdir>../../../../build/image/application/terminal/images</mkdir>
+        <mkdir>${imagedir}/application/terminal</mkdir>
+        <copy from="objs/terminal" to="${imagedir}/application/terminal/terminal"/>
 
-        <copy from="objs/terminal" to="../../../../build/image/application/terminal/terminal"/>
-        <copy from="images/terminal_16x16.png" to="../../../../build/image/application/terminal/images/terminal_16x16.png"/>
+        <mkdir>${imagedir}/application/terminal/images</mkdir>
+        <copy from="images/terminal_16x16.png" to="${imagedir}/application/terminal/images/terminal_16x16.png"/>
     </target>
 
     <target name="all">

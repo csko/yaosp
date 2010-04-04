@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>main.c</item>
         <item>core/eventmanager.c</item>
@@ -71,7 +73,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/irc_client" to="../../../../build/image/application/irc_client"/>
+        <copy from="objs/irc_client" to="${imagedir}/application/irc_client"/>
     </target>
 
     <target name="all">

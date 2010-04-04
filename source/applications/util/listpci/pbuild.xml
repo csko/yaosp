@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>listpci.c</item>
         <item>deviceid.c</item>
@@ -64,7 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/lspci" to="../../../../build/image/application/lspci"/>
+        <copy from="objs/lspci" to="${imagedir}/application/lspci"/>
     </target>
 
     <target name="all">

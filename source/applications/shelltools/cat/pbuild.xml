@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>cat.c</item>
     </array>
@@ -63,7 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/cat" to="../../../../build/image/application/cat"/>
+        <copy from="objs/cat" to="${imagedir}/application/cat"/>
     </target>
 
     <target name="all">

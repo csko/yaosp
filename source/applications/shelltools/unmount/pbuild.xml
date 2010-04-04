@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>unmount.c</item>
     </array>
@@ -63,7 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/unmount" to="../../../../build/image/application/unmount"/>
+        <copy from="objs/unmount" to="${imagedir}/application/unmount"/>
     </target>
 
     <target name="all">

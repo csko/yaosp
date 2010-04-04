@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>yguictrl.c</item>
         <item>screen.c</item>
@@ -66,7 +68,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/yguictrl" to="../../../../build/image/application/yguictrl"/>
+        <copy from="objs/yguictrl" to="${imagedir}/application/yguictrl"/>
     </target>
 
     <target name="all">

@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>fstools.c</item>
         <item>ext2/ext2.c</item>
@@ -64,7 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/fstools" to="../../../../build/image/application/fstools"/>
+        <copy from="objs/fstools" to="${imagedir}/application/fstools"/>
     </target>
 
     <target name="all">

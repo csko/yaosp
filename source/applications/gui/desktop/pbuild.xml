@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>desktop.c</item>
         <item>wallpaper.c</item>
@@ -73,12 +75,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <mkdir>../../../../build/image/application/desktop</mkdir>
-        <copy from="objs/desktop" to="../../../../build/image/application/desktop/desktop"/>
+        <mkdir>${imagedir}/application/desktop</mkdir>
+        <copy from="objs/desktop" to="${imagedir}/application/desktop/desktop"/>
 
-        <mkdir>../../../../build/image/system/images/backgrounds</mkdir>
+        <mkdir>${imagedir}/system/images/backgrounds</mkdir>
         <for var="i" array="${images}">
-            <copy from="images/${i}" to="../../../../build/image/system/images/backgrounds/${i}"/>
+            <copy from="images/${i}" to="${imagedir}/system/images/backgrounds/${i}"/>
         </for>
     </target>
 

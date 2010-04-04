@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>halt.c</item>
     </array>
@@ -63,7 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/halt" to="../../../../build/image/application/halt"/>
+        <copy from="objs/halt" to="${imagedir}/application/halt"/>
     </target>
 
     <target name="all">

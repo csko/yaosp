@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>md5sum.c</item>
         <item>md5.c</item>
@@ -64,7 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/md5sum" to="../../../../build/image/application/md5sum"/>
+        <copy from="objs/md5sum" to="${imagedir}/application/md5sum"/>
     </target>
 
     <target name="all">

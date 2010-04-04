@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>ifconfig.c</item>
     </array>
@@ -63,7 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ifconfig" to="../../../../build/image/application/ifconfig"/>
+        <copy from="objs/ifconfig" to="${imagedir}/application/ifconfig"/>
     </target>
 
     <target name="all">

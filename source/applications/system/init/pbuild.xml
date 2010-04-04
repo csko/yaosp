@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>init.c</item>
     </array>
@@ -62,7 +64,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/init" to="../../../../build/image/system/init"/>
+        <copy from="objs/init" to="${imagedir}/system/init"/>
     </target>
 
     <target name="all">

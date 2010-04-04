@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>netctrl.c</item>
         <item>ns.c</item>
@@ -63,7 +65,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/netctrl" to="../../../../build/image/application/netctrl"/>
+        <copy from="objs/netctrl" to="${imagedir}/application/netctrl"/>
     </target>
 
     <target name="all">

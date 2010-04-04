@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>shutdown.c</item>
     </array>
@@ -66,11 +68,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <mkdir>../../../../build/image/application/shutdown</mkdir>
-        <mkdir>../../../../build/image/application/shutdown/images</mkdir>
-
-        <copy from="objs/shutdown" to="../../../../build/image/application/shutdown/shutdown"/>
-        <!--copy from="images/iview_16x16.png" to="../../../../build/image/application/iview/images/iview_16x16.png"/-->
+        <mkdir>${imagedir}/application/shutdown</mkdir>
+        <copy from="objs/shutdown" to="${imagedir}/application/shutdown/shutdown"/>
     </target>
 
     <target name="all">
