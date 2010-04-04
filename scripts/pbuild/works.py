@@ -265,7 +265,7 @@ class MakeDirectory( Work ) :
 
     def execute( self, context ) :
         try :
-            os.mkdir( self.directory )
+            os.mkdir( context.replace_definitions(self.directory) )
         except OSError, e :
             pass
 
