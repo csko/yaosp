@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008, 2009 Zoltan Kovacs
+# Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -15,8 +15,13 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+import os
+import xml.sax
+
 import works
 import handler
+import context
+import definition_handlers
 
 class TargetHandler( handler.NodeHandler ) :
     handled_node = "target"
@@ -412,6 +417,32 @@ class HTTPGetHandler( handler.NodeHandler ) :
         if self.work != None :
             self.get_parent().add_work( self.work )
 
+class IncludeHandler( handler.NodeHandler ) :
+    handled_node = "pinclude"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+    def node_started( self, attrs ) :
+        if not "file" in attrs :
+            return
+
+        filename = self.get_context().replace_definitions( attrs["file"] )
+
+        if not os.path.isfile(filename) :
+            print "Unable to include %s because it is not a valid file." % filename
+            sys.exit(0)
+
+        inc_context = context.BuildContext( self.get_context().get_project_context() )
+        inc_handler = handler.BuildHandler(inc_context)
+        inc_handler.add_node_handlers( definition_handlers.handlers )
+
+        xml_parser = xml.sax.make_parser()
+        xml_parser.setContentHandler(inc_handler)
+        xml_parser.parse(filename)
+
+        self.get_context().include(inc_context)
+
 handlers = [
     TargetHandler,
     GccHandler,
@@ -429,5 +460,6 @@ handlers = [
     ExecHandler,
     SymlinkHandler,
     ChdirHandler,
-    HTTPGetHandler
+    HTTPGetHandler,
+    IncludeHandler
 ]

@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008, 2009 Zoltan Kovacs
+# Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
 # Copyright (c) 2009 Kornel Csernai
 #
 # This program is free software; you can redistribute it and/or modify
@@ -338,13 +338,13 @@ class CallTarget( Work ) :
             cached_cwd = os.getcwd()
             os.chdir( cached_cwd + os.sep + directory )
 
-            context = ctx.BuildContext()
+            context = ctx.BuildContext( context.get_project_context() )
             handler = hndlr.BuildHandler( context )
 
             if not os.path.isfile( "pbuild.xml" ) :
                 print "pbuild.xml not found in " + os.getcwd()
                 print "Build stopped."
-                sys.exit( 1 );
+                sys.exit( 1 )
 
             xml_parser = xml.sax.make_parser()
             xml_parser.setContentHandler( handler )

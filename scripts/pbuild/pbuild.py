@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008 Zoltan Kovacs
+# Copyright (c) 2008, 2010 Zoltan Kovacs
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -28,8 +28,10 @@ if __name__ == "__main__" :
         print "pbuild.xml not found in the current directory!"
         sys.exit( 0 )
 
-    context = ctx.BuildContext()
-    handler = hndlr.BuildHandler( context )
+    pcontext = ctx.ProjectContext()
+    pcontext.init()
+    context = ctx.BuildContext(pcontext)
+    handler = hndlr.BuildHandler(context)
 
     handler.add_node_handlers( work_handlers.handlers )
     handler.add_node_handlers( definition_handlers.handlers )

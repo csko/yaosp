@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008 Zoltan Kovacs
+# Copyright (c) 2008, 2010 Zoltan Kovacs
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -47,6 +47,22 @@ class ArrayHandler( handler.NodeHandler ) :
     def element_data( self, data ) :
         self.data = data
 
+class StringHandler( handler.NodeHandler ) :
+    handled_node = "string"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+    def node_started( self, attrs ) :
+        if not "name" in attrs or \
+           not "value" in attrs :
+           return
+
+        self.get_context().add_definition(
+            definitions.String( attrs[ "name" ], attrs[ "value" ] )
+        )
+
 handlers = [
-    ArrayHandler
+    ArrayHandler,
+    StringHandler
 ]
