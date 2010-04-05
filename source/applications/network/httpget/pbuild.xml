@@ -61,7 +61,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../../build/libs/libcurl.a</input>
+            <input>${staticlibdir}/libcurl.a</input>
             <output>objs/httpget</output>
         </gcc>
     </target>

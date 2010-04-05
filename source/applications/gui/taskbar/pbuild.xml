@@ -69,11 +69,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../../build/libs/libygui.a</input>
-            <input>../../../../build/libs/libpng.a</input>
-            <input>../../../../build/libs/libjpeg.a</input>
-            <input>../../../../build/libs/libz.a</input>
-            <input>../../../../build/libs/libyutil.a</input>
+            <input>${staticlibdir}/libygui.a</input>
+            <input>${staticlibdir}/libpng.a</input>
+            <input>${staticlibdir}/libjpeg.a</input>
+            <input>${staticlibdir}/libz.a</input>
+            <input>${staticlibdir}/libyutil.a</input>
             <output>objs/taskbar</output>
         </gcc>
     </target>
