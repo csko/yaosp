@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>src/application.c</item>
         <item>src/window.c</item>
@@ -99,12 +101,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/libygui.a" to="../../../build/libs/libygui.a"/>
+        <copy from="objs/libygui.a" to="${staticlibdir}/libygui.a"/>
 
         <mkdir>../../../build/image/system/images</mkdir>
 
         <for var="i" array="${images}">
-            <copy from="images/${i}" to="../../../build/image/system/images/${i}"/>
+            <copy from="images/${i}" to="${imagedir}/system/images/${i}"/>
         </for>
     </target>
 

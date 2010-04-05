@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>pata.c</item>
         <item>controller.c</item>
@@ -78,7 +80,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/pata" to="../../../../build/image/system/module/disk/pata"/>
+        <copy from="objs/pata" to="${imagedir}/system/module/disk/pata"/>
     </target>
 
     <target name="all">

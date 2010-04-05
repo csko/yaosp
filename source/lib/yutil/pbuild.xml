@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>src/hashtable.c</item>
         <item>src/array.c</item>
@@ -70,7 +72,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/libyutil.a" to="../../../build/libs/libyutil.a"/>
+        <copy from="objs/libyutil.a" to="${staticlibdir}/libyutil.a"/>
     </target>
 
     <target name="test">

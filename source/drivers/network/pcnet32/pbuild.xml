@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>pcnet32.c</item>
     </array>
@@ -71,7 +73,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/pcnet32" to="../../../../build/image/system/module/network/pcnet32"/>
+        <copy from="objs/pcnet32" to="${imagedir}/system/module/network/pcnet32"/>
     </target>
 
     <target name="all">

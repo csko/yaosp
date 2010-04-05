@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>ramdisk.c</item>
         <item>control.c</item>
@@ -73,7 +75,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ramdisk" to="../../../../build/image/system/module/disk/ramdisk"/>
+        <copy from="objs/ramdisk" to="${imagedir}/system/module/disk/ramdisk"/>
     </target>
 
     <target name="all">

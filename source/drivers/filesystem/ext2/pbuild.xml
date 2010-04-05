@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>ext2.c</item>
         <item>inode.c</item>
@@ -75,7 +77,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ext2" to="../../../../build/image/system/module/filesystem/ext2"/>
+        <copy from="objs/ext2" to="${imagedir}/system/module/filesystem/ext2"/>
     </target>
 
     <target name="all">

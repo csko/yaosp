@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>ps2.c</item>
         <item>controller.c</item>
@@ -76,7 +78,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/ps2" to="../../../../build/image/system/module/input/ps2"/>
+        <copy from="objs/ps2" to="${imagedir}/system/module/input/ps2"/>
     </target>
 
     <target name="all">

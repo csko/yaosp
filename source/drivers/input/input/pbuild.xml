@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>input.c</item>
         <item>control.c</item>
@@ -77,7 +79,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/input" to="../../../../build/image/system/module/input/input"/>
+        <copy from="objs/input" to="${imagedir}/system/module/input/input"/>
     </target>
 
     <target name="all">

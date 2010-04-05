@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>pci.c</item>
         <item>devices.c</item>
@@ -59,9 +61,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             </gcc>
         </for>
 
-        <echo></echo>
+        <echo/>
         <echo>Linking PCI busmanager</echo>
-        <echo></echo>
+        <echo/>
         <echo>[LD     ] source/drivers/bus/pci/objs/pci</echo>
 
         <ld>
@@ -72,7 +74,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/pci" to="../../../../build/image/system/module/bus/pci"/>
+        <copy from="objs/pci" to="${imagedir}/system/module/bus/pci"/>
     </target>
 
     <target name="all">

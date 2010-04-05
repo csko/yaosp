@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>src/configserver.c</item>
         <item>src/node.c</item>
@@ -62,14 +64,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../build/libs/libyutil.a</input>
+            <input>${staticlibdir}/libyutil.a</input>
             <output>objs/configserver</output>
         </gcc>
     </target>
 
     <target name="install">
         <echo>Installing configserver</echo>
-        <copy from="objs/configserver" to="../../../build/image/system/server/configserver"/>
+        <copy from="objs/configserver" to="${imagedir}/system/server/configserver"/>
     </target>
 
     <target name="all">

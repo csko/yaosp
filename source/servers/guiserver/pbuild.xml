@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files">
         <item>src/guiserver.c</item>
         <item>src/bitmap.c</item>
@@ -74,20 +76,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../build/libs/libfreetype.a</input>
-            <input>../../../build/libs/libpng.a</input>
-            <input>../../../build/libs/libz.a</input>
-            <input>../../../build/libs/libyutil.a</input>
+            <input>${staticlibdir}/libfreetype.a</input>
+            <input>${staticlibdir}/libpng.a</input>
+            <input>${staticlibdir}/libz.a</input>
+            <input>${staticlibdir}/libyutil.a</input>
             <output>objs/guiserver</output>
         </gcc>
     </target>
 
     <target name="install">
         <echo>Installing guiserver</echo>
-        <copy from="objs/guiserver" to="../../../build/image/system/server/guiserver"/>
+        <copy from="objs/guiserver" to="${imagedir}/system/server/guiserver"/>
 
-        <copy from="images/yaosp.png" to="../../../build/image/system/images/yaosp.png"/>
-        <copy from="images/unknown.png" to="../../../build/image/system/images/unknown.png"/>
+        <copy from="images/yaosp.png" to="${imagedir}/system/images/yaosp.png"/>
+        <copy from="images/unknown.png" to="${imagedir}/system/images/unknown.png"/>
 
         <echo>Downloading DejaVu fonts</echo>
         <httpget address="http://files.yaosp.org/source/dejavu-fonts/dejavu-fonts-ttf-2.30.tar.bz2"
@@ -108,7 +110,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </exec>
 
         <mkdir>../../../build/image/system/fonts</mkdir>
-        <copy from="fonts/dejavu-fonts-ttf-2.30/ttf/*.ttf" to="../../../build/image/system/fonts"/>
+        <copy from="fonts/dejavu-fonts-ttf-2.30/ttf/*.ttf" to="${imagedir}/system/fonts"/>
     </target>
 
     <target name="all">

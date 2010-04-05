@@ -21,4 +21,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build>
     <string name="imagedir" value="${toplevel}/build/image"/>
+    <string name="staticlibdir" value="${toplevel}/build/libs"/>
 </build>
