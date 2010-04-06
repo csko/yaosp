@@ -34,5 +34,6 @@ int terminal_history_get_size( terminal_history_t* history );
 terminal_line_t* terminal_history_get_line_at( terminal_history_t* history, int index );
 
 int terminal_history_init( terminal_history_t* history, int width );
+int terminal_history_destroy( terminal_history_t* history );
 
 #endif /* _HISTORY_H_ */

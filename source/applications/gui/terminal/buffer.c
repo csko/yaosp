@@ -535,13 +535,33 @@ int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
         line->buffer = ( char* )malloc( width );
 
         if ( line->buffer == NULL ) {
-            return -ENOMEM;
+            int j;
+
+            line = buffer->lines;
+
+            for ( j = 0; j < i; j++, line++ ){
+                free( line->buffer );
+                free( line->attr );
+            }
+            error = -ENOMEM;
+            goto error3;
         }
 
         line->attr = ( terminal_attr_t* )malloc( sizeof( terminal_attr_t ) * width );
 
         if ( line->attr == NULL ) {
-            return -ENOMEM;
+            int j;
+
+            line = buffer->lines;
+
+            for ( j = 0; j < i; j++, line++ ){
+                free( line->buffer );
+                free( line->attr );
+            }
+            line++;
+            free(line->buffer);
+            error = -ENOMEM;
+            goto error3;
         }
 
         line->size = 0;
@@ -556,9 +576,28 @@ int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
 
     return 0;
 
+ error3:
+    free( buffer->lines );
+
  error2:
-    /* TODO: destroy the history */
+    terminal_history_destroy( &buffer->history );
 
  error1:
     return error;
+}
+
+int terminal_buffer_destroy( terminal_buffer_t* buffer ) {
+    terminal_line_t* line;
+    int i;
+
+    line = buffer->lines;
+
+    for ( i = 0; i < buffer->height; i++, line++ ) {
+        free( line->buffer );
+        free( line->attr );
+    }
+    free( buffer->lines );
+
+    terminal_history_destroy( &buffer->history );
+    return 0;
 }

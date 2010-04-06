@@ -376,7 +376,7 @@ widget_t* create_terminal_widget( terminal_t* terminal ) {
     return widget;
 
  error3:
-    /* TODO: destroy the font */
+    destroy_font( terminal_widget->font );
 
  error2:
     free( terminal );

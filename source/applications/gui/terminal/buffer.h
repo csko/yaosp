@@ -88,5 +88,6 @@ int terminal_buffer_get_history_size( terminal_buffer_t* buffer );
 int terminal_buffer_dump( terminal_buffer_t* buffer );
 
 int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height );
+int terminal_buffer_destroy( terminal_buffer_t* buffer );
 
 #endif /* _BUFFER_H_ */

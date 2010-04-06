@@ -73,3 +73,8 @@ int terminal_history_init( terminal_history_t* history, int width ) {
 
     return 0;
 }
+
+int terminal_history_destroy( terminal_history_t* history ) {
+    destroy_array( &history->lines );
+    return 0;
+}

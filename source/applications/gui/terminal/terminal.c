@@ -612,7 +612,7 @@ terminal_t* create_terminal( int width, int height ) {
     return terminal;
 
  error3:
-    /* TODO */
+    terminal_buffer_destroy( &terminal->buffer );
 
  error2:
     free( terminal );
