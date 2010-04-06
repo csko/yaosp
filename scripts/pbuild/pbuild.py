@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Python build system
 #
 # Copyright (c) 2008, 2010 Zoltan Kovacs
@@ -26,8 +27,14 @@ import definition_handlers
 import logging
 
 if __name__ == "__main__" :
+    # Set up logging.
+    logging.basicConfig(level=logging.INFO,
+#    logging.basicConfig(level=logging.DEBUG,
+       format='%(asctime)s %(name)-6s %(levelname)-7s %(message)s',
+       datefmt='%Y-%m-%d %H:%M')
+
     if not os.path.isfile( "pbuild.xml" ) :
-        logging.critical("pbuild.xml not found in the current directory!")
+        logging.critical( "pbuild.xml not found in the current directory!" )
         sys.exit( 1 )
 
     pcontext = ctx.ProjectContext()
