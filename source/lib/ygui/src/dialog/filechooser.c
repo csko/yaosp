@@ -88,10 +88,7 @@ static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
         char path[ 256 ];
         char* new_path;
 
-        if ( strcmp( name, "." ) == 0 ) {
-            /* do nothing */
-            goto out;
-        } else if ( strcmp( name, ".." ) == 0 ) {
+        if ( strcmp( name, ".." ) == 0 ) {
             char* pos;
 
             snprintf( path, sizeof( path ), "%s", chooser->current_path );
@@ -122,6 +119,8 @@ static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
 
             directory_view_set_path( chooser->directory_view, new_path );
         }
+    } else { /* Open when double click on a file */
+        file_chooser_open_pressed( widget, data );
     }
 
  out:
