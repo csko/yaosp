@@ -198,8 +198,8 @@ int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint
 
         default :
             kprintf(
-                WARNING, "arch_memory_region_unmap_pages(): invalid mapping mode: %x\n",
-                region->flags & REGION_MAPPING_FLAGS
+                WARNING, "arch_memory_region_unmap_pages(): invalid mapping mode (%x) for region %s.\n",
+                region->flags & REGION_MAPPING_FLAGS, region->name
             );
             return -1;
     }
