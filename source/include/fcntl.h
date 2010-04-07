@@ -19,7 +19,6 @@
 #ifndef _FCNTL_H_
 #define _FCNTL_H_
 
-#include <bits/fcntl.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
