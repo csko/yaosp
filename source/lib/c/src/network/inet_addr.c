@@ -1,6 +1,6 @@
-/* yaosp C library
+/* inet_addr function
  *
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2010 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,14 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _NETINET_UDP_H_
-#define _NETINET_UDP_H_
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
-struct udphdr {
-  uint16_t source;  /* source port */
-  uint16_t dest;  /* destination port */
-  uint16_t len;   /* udp length */
-  uint16_t check;    /* udp checksum */
-};
+in_addr_t inet_addr( const char* cp ) {
+    in_addr_t result;
 
-#endif /* _NETINET_UDP_H_ */
+    /* TODO */
+    return result;
+}

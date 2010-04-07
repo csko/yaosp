@@ -239,6 +239,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/send.c</item>
         <item>src/sys/sendto.c</item>
         <item>src/sys/sendmsg.c</item>
+        <item>src/sys/shutdown.c</item>
         <item>src/sys/getsockopt.c</item>
         <item>src/sys/setsockopt.c</item>
         <item>src/sys/getsockname.c</item>
@@ -302,7 +303,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/network/inet_pton.c</item>
         <item>src/network/inet_ntoa.c</item>
         <item>src/network/inet_ntop.c</item>
+        <item>src/network/inet_addr.c</item>
         <item>src/network/gethostbyname.c</item>
+        <item>src/network/gethostbyaddr.c</item>
+        <item>src/network/getservbyport.c</item>
+        <item>src/network/getservbyname.c</item>
+        <item>src/network/getprotobyname.c</item>
         <item>src/network/dns.c</item>
         <item>src/pthread/mutex.c</item>
         <item>src/pthread/mutexattr.c</item>

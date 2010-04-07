@@ -20,6 +20,8 @@
 #define _NETINET_IP_H_
 
 #include <endian.h>
+#include <stdint.h>
+#include <netinet/in.h>
 
 struct ip {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -63,5 +65,10 @@ struct iphdr {
     uint32_t daddr;
     /* The options start here. */
 };
+
+#define IPVERSION       4       /* IP version number */
+#define IP_MAXPACKET    65535   /* maximum packet size */
+
+#define    IPDEFTTL        64              /* default ttl, from RFC 1340 */
 
 #endif /* _NETINET_IP_H_ */

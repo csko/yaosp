@@ -21,14 +21,22 @@
 
 #include <netinet/in.h> /* struct in_addr */
 
+#define ntohw(n) \
+    ((((uint16_t)(n) & 0xFF) << 8) | ((uint16_t)(n) >> 8))
+#define ntohl(n) \
+    (((uint32_t)(n) << 24) | (((uint32_t)(n) & 0xFF00) << 8) | (((uint32_t)(n) & 0x00FF0000) >> 8) | ((uint32_t)(n) >> 24))
+
+#define htonw ntohw
+#define htonl ntohl
+
 int inet_aton( const char* cp, struct in_addr* inp );
 int inet_pton( int af, const char* src, void* dst );
 
 char* inet_ntoa( struct in_addr in );
 const char* inet_ntop( int af, const void* src, char* dst, socklen_t size );
+in_addr_t inet_addr( const char* cp );
 
 /*
-in_addr_t inet_addr( const char* cp );
 in_addr_t inet_network( const char* cp );
 struct in_addr inet_makeaddr( int net, int host );
 in_addr_t inet_lnaof( struct in_addr in );

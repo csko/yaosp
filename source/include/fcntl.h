@@ -19,6 +19,7 @@
 #ifndef _FCNTL_H_
 #define _FCNTL_H_
 
+#include <bits/fcntl.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -44,6 +45,12 @@
 #define F_SETFL 4
 
 #define FD_CLOEXEC 1
+
+#define F_ULOCK 0  /* Unlock a previously locked region.  */
+#define F_LOCK  1  /* Lock a region for exclusive use.  */
+#define F_TLOCK 2  /* Test and lock a region for exclusive use.  */
+#define F_TEST  3  /* Test a region for other processes locks.  */
+
 
 int open( const char* filename, int flags, ... ) __nonnull((1));
 int creat( const char* pathname, mode_t mode ) __nonnull((1));

@@ -53,4 +53,9 @@ typedef int gid_t;
 typedef int blksize_t;
 typedef int64_t blkcnt_t;
 
+typedef unsigned char u_char;
+typedef unsigned short int u_short;
+typedef unsigned int u_int;
+typedef unsigned long int u_long;
+
 #endif /* _SYS_TYPES_H_ */

@@ -1,6 +1,7 @@
 /* yaosp C library
  *
  * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2010 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -131,6 +132,9 @@ enum socket_type {
 #define SOCK_DGRAM SOCK_DGRAM
   SOCK_RAW = 3,                 /* Raw protocol interface.  */
 #define SOCK_RAW SOCK_RAW
+  SOCK_SEQPACKET = 5,           /* Sequenced, reliable, connection-based,
+                                   datagrams of fixed maximum length.  */
+#define SOCK_SEQPACKET SOCK_SEQPACKET
 };
 
 /* Bits in the FLAGS argument to `send', `recv', et al.  */
@@ -219,9 +223,10 @@ ssize_t send( int s, const void* buf, size_t len, int flags );
 ssize_t sendto( int s, const void* buf, size_t len, int flags, const struct sockaddr* to, socklen_t tolen );
 ssize_t sendmsg( int s, const struct msghdr* msg, int flags );
 
+int shutdown( int sockfd, int how );
+
 /* Not implemented functions
 int socketpair( int d, int type, int protocol, int sv[2] );
-int shutdown( int s, int how );
 */
 
 #endif /* _SYS_SOCKET_H_ */
