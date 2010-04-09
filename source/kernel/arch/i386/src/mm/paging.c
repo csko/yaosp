@@ -48,7 +48,7 @@ int get_paging_flags_for_region( memory_region_t* region ) {
     return flags;
 }
 
-int paging_alloc_table_entries( uint32_t* table, uint32_t from, uint32_t to, uint32_t flags ) {
+int paging_alloc_table_entries( uint32_t* table, uint32_t from, uint32_t to, uint32_t flags, int fail_on_nonempty ) {
     uint32_t i;
 
     ASSERT( ( to >= 0 ) && ( to <= 1023 ) );
@@ -60,13 +60,21 @@ int paging_alloc_table_entries( uint32_t* table, uint32_t from, uint32_t to, uin
         /* If it's already allocated, just skip the entry */
 
         if ( table[ i ] != 0 ) {
-            continue;
+            if ( fail_on_nonempty ) {
+                kprintf(
+                    WARNING, "paging_alloc_table_entries(): Table (%p) entry %u is not empty: %x.\n",
+                    table, i, table[ i ]
+                );
+                return -EINVAL;
+            } else {
+                continue;
+            }
         }
 
         p = alloc_pages( 1, MEM_COMMON );
 
         if ( p == NULL ) {
-            return -ENOMEM;
+            goto error;
         }
 
         memsetl( p, 0, PAGE_SIZE / 4 );
@@ -75,6 +83,9 @@ int paging_alloc_table_entries( uint32_t* table, uint32_t from, uint32_t to, uin
     }
 
     return 0;
+
+ error:
+    return -ENOMEM;
 }
 
 int paging_fill_table_entries( uint32_t* table, uint32_t address, uint32_t from, uint32_t to, uint32_t flags ) {
@@ -88,12 +99,11 @@ int paging_fill_table_entries( uint32_t* table, uint32_t address, uint32_t from,
     for ( i = from; i <= to; i++, address += PAGE_SIZE ) {
         if ( __unlikely( table[ i ] != 0 ) ) {
             kprintf(
-                WARNING,
-                "fill_table_entries(): Table (%p) entry %d is not empty: %x!\n",
+                WARNING, "paging_fill_table_entries(): Table (%p) entry %u is not empty: %x!\n",
                 table, i, table[ i ]
             );
 
-            return -1;
+            return -EINVAL;
         }
 
         table[ i ] = address;

@@ -52,7 +52,8 @@ int arch_memory_region_remap_pages( memory_region_t* region, ptr_t physical_addr
         page_directory,
         curr_pt,
         last_pt,
-        paging_flags | PAGE_WRITE
+        paging_flags | PAGE_WRITE,
+        0
     );
 
     if ( __unlikely( error < 0 ) ) {
@@ -125,7 +126,8 @@ int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint
 
     error = paging_alloc_table_entries(
         page_directory, curr_pt,
-        last_pt, paging_flags | PAGE_WRITE
+        last_pt, paging_flags | PAGE_WRITE,
+        0
     );
 
     if ( __unlikely( error < 0 ) ) {
@@ -139,11 +141,12 @@ int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint
 
     error = paging_alloc_table_entries(
         ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
-        first_page, last_page, paging_flags
+        first_page, last_page, paging_flags,
+        1
     );
 
     if ( __unlikely( error < 0 ) ) {
-        return error;
+        goto error1;
     }
 
     curr_pt++;
@@ -151,18 +154,20 @@ int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint
     for ( ; curr_pt < last_pt; curr_pt++ ) {
         error = paging_alloc_table_entries(
             ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
-            0, 1023, paging_flags
+            0, 1023, paging_flags,
+            1
         );
 
         if ( __unlikely( error < 0 ) ) {
-            return error;
+            goto error2;
         }
     }
 
     if ( curr_pt == last_pt ) {
         error = paging_alloc_table_entries(
             ( uint32_t* )( page_directory[ curr_pt ] & PAGE_MASK ),
-            0, PT_INDEX( virtual + size - 1 ), paging_flags
+            0, PT_INDEX( virtual + size - 1 ), paging_flags,
+            1
         );
 
         if ( __unlikely( error < 0 ) ) {
@@ -171,6 +176,11 @@ int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint
     }
 
     return 0;
+
+ error2:
+
+ error1:
+    return error;
 }
 
 typedef int table_unmap_func_t( uint32_t* table, uint32_t from, uint32_t to );
@@ -195,6 +205,10 @@ int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint
         case REGION_CLONED :
             unmap_function = paging_free_table_entries;
             break;
+
+        case 0 :
+            /* Nothing has been mapped to this region, so we don't have to unmap anything. */
+            return 0;
 
         default :
             kprintf(
@@ -264,7 +278,8 @@ static int do_clone_allocated_region_pages( memory_region_t* old_region, memory_
         new_page_directory,
         curr_pt,
         last_pt,
-        paging_flags | PAGE_WRITE
+        paging_flags | PAGE_WRITE,
+        0
     );
 
     if ( __unlikely( error < 0 ) ) {
@@ -336,7 +351,8 @@ static int do_clone_region_pages( memory_region_t* old_region, memory_region_t* 
         new_page_directory,
         PGD_INDEX( new_region->address ),
         PGD_INDEX( new_region->address + new_region->size - 1 ),
-        paging_flags | PAGE_WRITE
+        paging_flags | PAGE_WRITE,
+        0
     );
 
     if ( __unlikely( error < 0 ) ) {

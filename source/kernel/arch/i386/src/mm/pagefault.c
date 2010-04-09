@@ -160,7 +160,8 @@ static int handle_file_mapping( memory_region_t* region, uint32_t address ) {
         page_directory,
         PGD_INDEX( address ),
         PGD_INDEX( address ),
-        paging_flags | PAGE_WRITE
+        paging_flags | PAGE_WRITE,
+        0
     );
 
     if ( __unlikely( error < 0 ) ) {
