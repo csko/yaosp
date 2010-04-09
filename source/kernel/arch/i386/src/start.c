@@ -47,6 +47,10 @@ extern int __kernel_end;
 
 multiboot_header_t mb_header;
 
+#ifdef ENABLE_KMALLOC_DEBUG
+int init_serial_kmalloc_output( void );
+#endif /* ENABLE_KMALLOC_DEBUG */
+
 __init static int arch_init_page_allocator( multiboot_header_t* header ) {
     int error;
     int module_count;
@@ -265,6 +269,10 @@ __init void arch_start( multiboot_header_t* header ) {
         kprintf( ERROR, "Failed to initialize kernel memory allocator (error=%d)\n", error );
         return;
     }
+
+#ifdef ENABLE_KMALLOC_DEBUG
+    init_serial_kmalloc_output();
+#endif /* ENABLE_KMALLOC_DEBUG */
 
     /* Initialize memory region manager */
 

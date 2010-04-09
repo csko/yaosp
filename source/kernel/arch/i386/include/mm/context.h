@@ -31,8 +31,6 @@ int arch_memory_context_destroy( memory_context_t* context );
 
 int arch_memory_context_clone( memory_context_t* old_context, memory_context_t* new_context );
 
-#ifdef ENABLE_DEBUGGER
 int arch_memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical );
-#endif /* ENABLE_DEBUGGER */
 
 #endif /* _ARCH_MM_CONTEXT_H_ */

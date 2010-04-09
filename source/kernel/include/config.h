@@ -1,6 +1,6 @@
 /* Configuration definitions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,6 +24,7 @@
 //#define ENABLE_SMP 1
 //#define ENABLE_DEBUGGER 1
 #define ENABLE_NETWORK 1
+//#define ENABLE_KMALLOC_DEBUG 1
 
 /**
  * The maximum number of CPUs supported.

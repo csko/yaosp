@@ -182,7 +182,6 @@ static void debug_init( console_t* debug ) {
 
 static void debug_putchar( console_t* debug, char c ) {
     while ( ( inb( 0x3F8 + 5 ) & 0x20 ) == 0 ) ;
-
     outb( c, 0x3F8 );
 }
 

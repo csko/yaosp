@@ -61,6 +61,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/mm/paging.c</item>
         <item>arch/i386/src/mm/context.c</item>
         <item>arch/i386/src/mm/region.c</item>
+        <item>arch/i386/src/mm/kmalloc_debug.c</item>
         <item>arch/i386/src/linker/elf32_module.c</item>
         <item>arch/i386/src/linker/elf32_application.c</item>
     </array>
@@ -103,6 +104,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/linker/elf32.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
+        <item>src/mm/kmalloc_debug.c</item>
         <item>src/mm/context.c</item>
         <item>src/mm/region.c</item>
         <item>src/mm/sbrk.c</item>

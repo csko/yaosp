@@ -19,6 +19,7 @@
 #ifndef _DEBUG_H_
 #define _DEBUG_H_
 
+#include <types.h>
 #include <config.h>
 
 #ifdef ENABLE_DEBUGGER
@@ -45,6 +46,9 @@ int start_kernel_debugger( void );
 
 #endif /* ENABLE_DEBUGGER */
 
+typedef int trace_callback_t( ptr_t ip, ptr_t symbol, const char* name, void* data );
+
 int debug_print_stack_trace( void );
+int debug_print_stack_trace_cb( trace_callback_t* callback, void* data );
 
 #endif /* _DEBUG_H_ */

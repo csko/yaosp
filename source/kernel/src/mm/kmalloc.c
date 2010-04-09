@@ -1,6 +1,6 @@
 /* Memory allocator
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -180,6 +180,10 @@ void* kmalloc( uint32_t size ) {
 block_found:
     p = __kmalloc_from_block( block, size );
 
+#ifdef ENABLE_KMALLOC_DEBUG
+    kmalloc_debug( size, p );
+#endif
+
     spinunlock_enable( &kmalloc_lock );
 
     if ( __likely( p != NULL ) ) {
@@ -225,6 +229,10 @@ void kfree( void* p ) {
     if ( __unlikely( chunk->type != CHUNK_ALLOCATED ) ) {
         panic( "kfree(): Tried to free a non-allocated memory region! (%x)\n", p );
     }
+
+#ifdef ENABLE_KMALLOC_DEBUG
+    kfree_debug( p );
+#endif
 
     alloc_size -= chunk->real_size;
 

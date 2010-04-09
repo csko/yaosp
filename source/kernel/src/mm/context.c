@@ -327,7 +327,6 @@ int memory_context_delete_regions( memory_context_t* context ) {
     return 0;
 }
 
-#ifdef ENABLE_DEBUGGER
 int memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical ) {
     if ( linear < FIRST_USER_ADDRESS ) {
         *physical = linear;
@@ -337,7 +336,6 @@ int memory_context_translate_address( memory_context_t* context, ptr_t linear, p
 
     return arch_memory_context_translate_address( context, linear, physical );
 }
-#endif /* ENABLE_DEBUGGER */
 
 void memory_context_dump( memory_context_t* context ) {
     int i;

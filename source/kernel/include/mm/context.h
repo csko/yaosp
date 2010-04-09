@@ -105,9 +105,7 @@ memory_context_t* memory_context_clone( memory_context_t* old_context, struct pr
  */
 int memory_context_delete_regions( memory_context_t* context );
 
-#ifdef ENABLE_DEBUGGER
 int memory_context_translate_address( memory_context_t* context, ptr_t linear, ptr_t* physical );
-#endif /* ENABLE_DEBUGGER */
 
 void memory_context_dump( memory_context_t* context );
 

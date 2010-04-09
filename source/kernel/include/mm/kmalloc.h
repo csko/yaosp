@@ -1,6 +1,6 @@
 /* Memory allocator
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,6 +20,7 @@
 #define _MM_KMALLOC_H_
 
 #include <types.h>
+#include <config.h>
 
 /**
  * Minimum block size that should be allocated when a new
@@ -61,6 +62,21 @@ typedef struct kmalloc_chunk {
     struct kmalloc_chunk* prev;
     struct kmalloc_chunk* next;
 } kmalloc_chunk_t;
+
+#ifdef ENABLE_KMALLOC_DEBUG
+
+typedef struct {
+    int ( *init )( void );
+    int ( *malloc )( uint32_t size, void* p );
+    int ( *malloc_trace )( const char* name );
+    int ( *free )( void* p );
+} kmalloc_debug_output_t;
+
+void kmalloc_debug( uint32_t size, void* p );
+void kfree_debug( void* p );
+void kmalloc_set_debug_output( kmalloc_debug_output_t* out );
+
+#endif /* ENABLE_KMALLOC_DEBUG */
 
 /**
  * Allocates a size byte(s) long memory chunk.
