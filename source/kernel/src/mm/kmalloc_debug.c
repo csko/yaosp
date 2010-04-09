@@ -31,9 +31,9 @@ static int kmalloc_debug_trace( ptr_t ip, ptr_t symbol_address, const char* symb
     out = ( kmalloc_debug_output_t* )data;
 
     if ( symbol_name != NULL ) {
-        out->malloc_trace( symbol_name );
+        out->malloc_trace( ip, symbol_name );
     } else {
-        out->malloc_trace( "<unknown>" );
+        out->malloc_trace( 0, "<unknown>" );
     }
 
     return 0;

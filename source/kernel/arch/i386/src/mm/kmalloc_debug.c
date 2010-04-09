@@ -79,11 +79,12 @@ static int serial_malloc( uint32_t size, void* p ) {
     return 0;
 }
 
-static int serial_malloc_trace( const char* name ) {
+static int serial_malloc_trace( ptr_t ip, const char* name ) {
     size_t i;
     size_t length;
 
     serial_output_byte( EVENT_BT_ITEM );
+    serial_output_uint32( ip );
 
     length = strlen( name );
     serial_output_byte( length );

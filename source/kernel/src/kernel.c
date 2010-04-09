@@ -235,7 +235,6 @@ int sys_shutdown( void ) {
 __init void kernel_main( void ) {
     int error;
 
-    init_kernel_symbols();
     init_locking();
     init_regions();
     init_devices();

@@ -49,7 +49,11 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
     char tmp[ 32 ];
     pty_node_t* node;
 
-    node = ( pty_node_t* )kmalloc( sizeof( pty_node_t ) );
+    if ( name_length == -1 ) {
+        name_length = strlen( name );
+    }
+
+    node = ( pty_node_t* )kmalloc( sizeof( pty_node_t ) + name_length + 1 );
 
     if ( node == NULL ) {
         goto error1;
@@ -57,20 +61,14 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
 
     memset( node, 0, sizeof( pty_node_t ) );
 
-    if ( name_length == -1 ) {
-        node->name = strdup( name );
-    } else {
-        node->name = strndup( name, name_length );
-    }
-
-    if ( node->name == NULL ) {
-        goto error2;
-    }
+    node->name = ( char* )( node + 1 );
+    strncpy( node->name, name, name_length );
+    node->name[ name_length ] = 0;
 
     node->buffer = ( uint8_t* )kmalloc( buffer_size );
 
     if ( node->buffer == NULL ) {
-        goto error3;
+        goto error2;
     }
 
     snprintf( tmp, sizeof( tmp ), "%s lock", name );
@@ -78,7 +76,7 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
     node->lock = mutex_create( tmp, MUTEX_NONE );
 
     if ( node->lock < 0 ) {
-        goto error4;
+        goto error3;
     }
 
     snprintf( tmp, sizeof( tmp ), "%s read queue", name );
@@ -86,7 +84,7 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
     node->read_queue = condition_create( tmp );
 
     if ( node->read_queue < 0 ) {
-        goto error5;
+        goto error4;
     }
 
     snprintf( tmp,  sizeof( tmp ), "%s write queue", name );
@@ -94,7 +92,7 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
     node->write_queue = condition_create( tmp );
 
     if ( node->write_queue < 0 ) {
-        goto error6;
+        goto error5;
     }
 
     node->mode = mode;
@@ -109,17 +107,14 @@ static pty_node_t* pty_create_node( const char* name, int name_length, size_t bu
 
     return node;
 
-error6:
+error5:
     condition_destroy( node->read_queue );
 
-error5:
+error4:
     mutex_destroy( node->lock );
 
-error4:
-    kfree( node->buffer );
-
 error3:
-    kfree( node->name );
+    kfree( node->buffer );
 
 error2:
     kfree( node );

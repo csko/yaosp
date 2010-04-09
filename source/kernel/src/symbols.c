@@ -91,7 +91,7 @@ static int get_kernel_sym_info_iterator( hashitem_t* item, void* data ) {
     if ( info->sym_info->address == 0 ) {
         info->sym_info->name = symbol->name;
         info->sym_info->address = symbol->address;
-    } else if ( symbol->address <= info->address ) {
+    } else {
         int last_diff;
         int current_diff;
 

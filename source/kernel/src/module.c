@@ -331,10 +331,14 @@ static int do_load_module( const char* name ) {
     }
 
     mutex_lock( module_mutex, LOCK_IGNORE_SIGNAL );
-
     module->status = MODULE_LOADED;
-
     mutex_unlock( module_mutex );
+
+    if ( is_bootmodule ) {
+        put_bootmodule_loader( loader );
+    } else {
+        put_file_module_loader( loader );
+    }
 
     return 0;
 

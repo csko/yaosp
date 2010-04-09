@@ -38,10 +38,13 @@ while i < len(data) :
         else :
             alloc_table.pop(ptr)
     elif type == EVENT_BT_ITEM :
+        ip = struct.unpack("I",data[i:i+4])[0]
+        i += 4
         name_length = ord(data[i])
         i += 1
         name = data[i:i+name_length]
         i += name_length
+        #alloc_table[last_ptr]["trace"] += [name + "@%x" % ip]
         alloc_table[last_ptr]["trace"] += [name]
     else :
         print "Invalid event: %d" % type

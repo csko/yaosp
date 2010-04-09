@@ -35,12 +35,15 @@ static hashtable_t devfs_node_table;
 static devfs_node_t* devfs_root_node = NULL;
 
 static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, int length, bool is_directory ) {
-    int error;
     devfs_node_t* node;
+
+    if ( length == -1 ) {
+        length = strlen( name );
+    }
 
     /* Create a new node */
 
-    node = ( devfs_node_t* )kmalloc( sizeof( devfs_node_t ) );
+    node = ( devfs_node_t* )kmalloc( sizeof( devfs_node_t ) + length + 1 );
 
     if ( node == NULL ) {
         goto error1;
@@ -48,15 +51,9 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
 
     /* Initialize the node */
 
-    if ( length == -1 ) {
-        node->name = strdup( name );
-    } else {
-        node->name = strndup( name, length );
-    }
-
-    if ( node->name == NULL ) {
-        goto error2;
-    }
+    node->name = ( char* )( node + 1 );
+    strncpy( node->name, name, length );
+    node->name[ length ] = 0;
 
     node->is_directory = is_directory;
     node->parent = parent;
@@ -75,10 +72,8 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
         }
     } while ( hashtable_get( &devfs_node_table, ( const void* )&node->inode_number ) != NULL );
 
-    error = hashtable_add( &devfs_node_table, ( hashitem_t* )node );
-
-    if ( error < 0 ) {
-        goto error3;
+    if ( hashtable_add( &devfs_node_table, ( hashitem_t* )node ) != 0 ) {
+        goto error2;
     }
 
     if ( parent != NULL ) {
@@ -88,13 +83,10 @@ static devfs_node_t* devfs_create_node( devfs_node_t* parent, const char* name, 
 
     return node;
 
-error3:
-    kfree( node->name );
-
-error2:
+ error2:
     kfree( node );
 
-error1:
+ error1:
     return NULL;
 }
 

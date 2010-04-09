@@ -23,6 +23,7 @@
 #include <bootmodule.h>
 #include <version.h>
 #include <macros.h>
+#include <symbols.h>
 #include <linker/elf32.h>
 #include <mm/pages.h>
 #include <mm/kmalloc.h>
@@ -270,6 +271,9 @@ __init void arch_start( multiboot_header_t* header ) {
         return;
     }
 
+    init_kernel_symbols();
+    init_elf32_kernel_symbols();
+
 #ifdef ENABLE_KMALLOC_DEBUG
     init_serial_kmalloc_output();
 #endif /* ENABLE_KMALLOC_DEBUG */
@@ -302,7 +306,6 @@ __init int arch_late_init( void ) {
     init_pit();
     init_apic_timer();
     init_system_time();
-    init_elf32_kernel_symbols();
     init_elf32_module_loader();
     init_elf32_application_loader();
     init_bios_access();

@@ -68,7 +68,7 @@ typedef struct kmalloc_chunk {
 typedef struct {
     int ( *init )( void );
     int ( *malloc )( uint32_t size, void* p );
-    int ( *malloc_trace )( const char* name );
+    int ( *malloc_trace )( ptr_t ip, const char* name );
     int ( *free )( void* p );
 } kmalloc_debug_output_t;
 
