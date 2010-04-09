@@ -46,7 +46,7 @@ typedef struct ipc_port {
 typedef struct named_ipc_port_t {
     hashitem_t hash;
 
-    const char* name;
+    char* name;
     ipc_port_id port_id;
 } named_ipc_port_t;
 

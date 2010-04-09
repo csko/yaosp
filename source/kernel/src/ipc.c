@@ -426,6 +426,7 @@ int sys_peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uin
 
 int sys_register_named_ipc_port( const char* name, ipc_port_id port_id ) {
     int error;
+    size_t name_length;
     named_ipc_port_t* port;
 
     mutex_lock( named_ipc_port_mutex, LOCK_IGNORE_SIGNAL );
@@ -434,43 +435,39 @@ int sys_register_named_ipc_port( const char* name, ipc_port_id port_id ) {
 
     if ( port != NULL ) {
         error = -EEXIST;
-        goto error1;
+        port = NULL; /* This is needed, so the error handler won't destroy the port. */
+        goto error;
     }
 
-    port = ( named_ipc_port_t* )kmalloc( sizeof( named_ipc_port_t ) );
+    name_length = strlen( name );
+
+    port = ( named_ipc_port_t* )kmalloc( sizeof( named_ipc_port_t ) + name_length + 1 );
 
     if ( port == NULL ) {
         error = -ENOMEM;
-        goto error1;
-    }
-
-    port->name = strdup( name );
-
-    if ( port->name == NULL ) {
-        error = -ENOMEM;
-        goto error2;
+        goto error;
     }
 
     port->port_id = port_id;
+    port->name = ( char* )( port + 1 );
+    strcpy( port->name, name );
 
     error = hashtable_add( &named_ipc_port_table, ( hashitem_t* )port );
 
     if ( error < 0 ) {
-        goto error3;
+        goto error;
     }
 
     mutex_unlock( named_ipc_port_mutex );
 
     return 0;
 
-error3:
-    kfree( ( void* )port->name );
-
-error2:
-    kfree( port );
-
-error1:
+ error:
     mutex_unlock( named_ipc_port_mutex );
+
+    if ( port != NULL ) {
+        kfree( port );
+    }
 
     return error;
 }

@@ -192,6 +192,8 @@ static int elf32_application_load( binary_loader_t* loader ) {
         goto error3;
     }
 
+    elf32_free_section_headers( &elf_application->image_info );
+
     current_process()->loader_data = ( void* )elf_application;
 
     return 0;

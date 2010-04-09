@@ -337,18 +337,20 @@ static int elf32_module_load( module_t* module, binary_loader_t* loader ) {
 
     module->loader_data = ( void* )elf_module;
 
+    elf32_free_section_headers( &elf_module->image_info );
+
     return 0;
 
-error4:
+ error4:
     /* TODO: unmap the module */
 
-error3:
+ error3:
     elf32_destroy_image_info( &elf_module->image_info );
 
-error2:
+ error2:
     kfree( elf_module );
 
-error1:
+ error1:
     return error;
 }
 

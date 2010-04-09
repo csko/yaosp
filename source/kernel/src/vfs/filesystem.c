@@ -37,20 +37,18 @@ static void* filesystem_key( hashitem_t* item ) {
 
 int register_filesystem( const char* name, filesystem_calls_t* calls ) {
     int error = 0;
+    size_t name_length;
     filesystem_descriptor_t* fs_desc;
 
-    fs_desc = ( filesystem_descriptor_t* )kmalloc( sizeof( filesystem_descriptor_t ) );
+    name_length = strlen( name );
+    fs_desc = ( filesystem_descriptor_t* )kmalloc( sizeof( filesystem_descriptor_t ) + name_length + 1 );
 
     if ( fs_desc == NULL ) {
         return -ENOMEM;
     }
 
-    fs_desc->name = strdup( name );
-
-    if ( fs_desc->name == NULL ) {
-        kfree( fs_desc );
-        return -ENOMEM;
-    }
+    fs_desc->name = ( char* )( fs_desc + 1 );
+    strcpy( fs_desc->name, name );
 
     fs_desc->calls = calls;
 
@@ -67,7 +65,6 @@ int register_filesystem( const char* name, filesystem_calls_t* calls ) {
     mutex_unlock( filesystem_mutex );
 
     if ( error < 0 ) {
-        kfree( fs_desc->name );
         kfree( fs_desc );
     }
 
@@ -78,9 +75,7 @@ filesystem_descriptor_t* get_filesystem( const char* name ) {
     filesystem_descriptor_t* fs_desc;
 
     mutex_lock( filesystem_mutex, LOCK_IGNORE_SIGNAL );
-
     fs_desc = ( filesystem_descriptor_t* )hashtable_get( &filesystem_table, ( const void* )name );
-
     mutex_unlock( filesystem_mutex );
 
     return fs_desc;
@@ -115,9 +110,7 @@ filesystem_descriptor_t* probe_filesystem( const char* device ) {
     data.fs_desc = NULL;
 
     mutex_lock( filesystem_mutex, LOCK_IGNORE_SIGNAL );
-
     hashtable_iterate( &filesystem_table, probe_fs_iterator, ( void* )&data );
-
     mutex_unlock( filesystem_mutex );
 
     return data.fs_desc;

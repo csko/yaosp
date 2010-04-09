@@ -31,21 +31,21 @@ static ino_t next_inode_number = 0;
 static kdbgfs_node_t* root_node = NULL;
 
 static kdbgfs_node_t* kdebugfs_do_create_node( const char* name, size_t max_buffer_size ) {
+    size_t name_length;
     kdbgfs_node_t* node;
 
-    node = ( kdbgfs_node_t* )kmalloc( sizeof( kdbgfs_node_t ) + max_buffer_size );
+    name_length = strlen( name );
+
+    node = ( kdbgfs_node_t* )kmalloc( sizeof( kdbgfs_node_t ) + name_length + 1 + max_buffer_size );
 
     if ( node == NULL ) {
-        goto error1;
+        return NULL;
     }
 
-    node->name = strdup( name );
+    node->name = ( char* )( node + 1 );
+    strcpy( node->name, name );
 
-    if ( node->name == NULL ) {
-        goto error2;
-    }
-
-    node->buffer = ( char* )( node + 1 );
+    node->buffer = node->name + name_length + 1;
     node->buffer_size = 0;
     node->max_buffer_size = max_buffer_size;
 
@@ -64,12 +64,6 @@ static kdbgfs_node_t* kdebugfs_do_create_node( const char* name, size_t max_buff
     mutex_unlock( inode_lock );
 
     return node;
-
- error2:
-    kfree( node );
-
- error1:
-    return NULL;
 }
 
 static int kdebugfs_mount( const char* device, uint32_t flags, void** fs_cookie, ino_t* root_inode_number ) {

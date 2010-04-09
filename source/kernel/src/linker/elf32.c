@@ -1,6 +1,6 @@
 /* 32bit ELF object functions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -112,15 +112,15 @@ int elf32_load_section_headers( elf32_image_info_t* info, binary_loader_t* loade
 
     return 0;
 
-error3:
+ error3:
     kfree( info->sh_string_table );
     info->sh_string_table = NULL;
 
-error2:
+ error2:
     kfree( info->section_headers );
     info->section_headers = NULL;
 
-error1:
+ error1:
     return error;
 }
 
@@ -506,6 +506,15 @@ int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* load
     return 0;
 }
 
+int elf32_free_section_headers( elf32_image_info_t* info ) {
+    kfree( info->sh_string_table );
+    info->sh_string_table = NULL;
+    kfree( info->section_headers );
+    info->section_headers = NULL;
+
+    return 0;
+}
+
 my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name ) {
     return ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
 }
@@ -568,11 +577,8 @@ int elf32_init_image_info( elf32_image_info_t* info ) {
     int error;
 
     error = init_hashtable(
-        &info->symbol_hash_table,
-        256,
-        symbol_key,
-        hash_str,
-        compare_str
+        &info->symbol_hash_table, 256,
+        symbol_key, hash_str, compare_str
     );
 
     if ( error < 0 ) {
