@@ -1,6 +1,7 @@
 /* Memory and string manipulator functions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -203,6 +204,16 @@ int strncasecmp( const char* s1, const char* s2, size_t c ) {
     return result;
 }
 #endif // ARCH_HAVE_STRNCASECMP
+
+#ifndef ARCH_HAVE_STRCPY
+char* strcpy( char* d, const char* s ) {
+    char* tmp = d;
+
+    while ( ( *d++ = *s++ ) != 0 ) ;
+
+    return tmp;
+}
+#endif /* ARCH_HAVE_STRCPY */
 
 #ifndef ARCH_HAVE_STRCHR
 char* strchr( const char* s, int c ) {

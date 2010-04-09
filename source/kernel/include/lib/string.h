@@ -1,7 +1,7 @@
 /* Memory and string manipulator functions
  *
- * Copyright (c) 2008 Zoltan Kovacs, Kornel Csernai
- * Copyright (c) 2009 Kornel Csernai
+ * Copyright (c) 2008, 2010 Zoltan Kovacs
+ * Copyright (c) 2008, 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -35,6 +35,7 @@ int strcmp( const char* s1, const char* s2 );
 int strncmp( const char* s1, const char* s2, size_t c );
 int strcasecmp( const char* s1, const char* s2 );
 int strncasecmp( const char* s1, const char* s2, size_t c );
+char* strcpy( char* d, const char* s );
 char* strchr( const char* s, int c );
 char* strrchr( const char* s, int c );
 char* strncpy( char* d, const char* s, size_t c );

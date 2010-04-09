@@ -59,7 +59,7 @@ memory_region_t* memory_region_allocate( memory_context_t* context, const char* 
     region->flags = flags;
     region->context = context;
 
-    memcpy( region->name, name, name_length + 1 );
+    strcpy( region->name, name );
 
     return region;
 }

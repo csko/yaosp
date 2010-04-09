@@ -1,6 +1,6 @@
 /* Module loader and manager
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -47,32 +47,24 @@ static int do_load_module( const char* name );
 
 static module_t* create_module( const char* name ) {
     module_t* module;
+    size_t name_length;
 
-    module = ( module_t* )kmalloc( sizeof( module_t ) );
+    name_length = strlen( name );
+    module = ( module_t* )kmalloc( sizeof( module_t ) + name_length + 1 );
 
     if ( module == NULL ) {
-        goto error1;
+        return NULL;
     }
 
     memset( module, 0, sizeof( module_t ) );
 
-    module->name = strdup( name );
-
-    if ( module->name == NULL ) {
-        goto error2;
-    }
+    module->name = ( char* )( module + 1 );
+    strcpy( module->name, name );
 
     return module;
-
-error2:
-    kfree( module );
-
-error1:
-    return NULL;
 }
 
 static void destroy_module( module_t* module ) {
-    kfree( module->name );
     kfree( module );
 }
 
