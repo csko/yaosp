@@ -78,12 +78,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="create_install_base">
         <copy from="scripts/grub/stage1" to="build/image/boot/grub/stage1"/>
         <copy from="scripts/grub/stage2" to="build/image/boot/grub/stage2"/>
-        <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
-        <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
+        <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
+        <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>
-            <arg>scripts/config_livecd.xml</arg>
+            <arg>config/config_livecd.xml</arg>
             <arg>build/image/system/config/cfgserver.bin</arg>
         </exec>
 
@@ -108,12 +108,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="create-livecd-iso">
         <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
-        <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
-        <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
+        <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
+        <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>
-            <arg>scripts/config_livecd.xml</arg>
+            <arg>config/config_livecd.xml</arg>
             <arg>build/image/system/config/cfgserver.bin</arg>
         </exec>
 
@@ -130,12 +130,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="build/yaosp_base.tar.bz2" to="build/image/yaosp_base.tar.bz2"/>
 
         <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
-        <copy from="scripts/xterm" to="build/image/system/terminfo/x/xterm"/>
-        <copy from="scripts/bashrc" to="build/image/system/config/bashrc"/>
+        <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
+        <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>
-            <arg>scripts/config_installcd.xml</arg>
+            <arg>config/config_installcd.xml</arg>
             <arg>build/image/system/config/cfgserver.bin</arg>
         </exec>
 
