@@ -567,10 +567,11 @@ class HTTPGetWork( Work ) :
                 sys.stdout.flush()
 
                 data = urlfile.read( 4096 )
-                urlfile.close()
-                localfile.close()
 
-                sys.stdout.write( "\n" )
+            urlfile.close()
+            localfile.close()
+
+            sys.stdout.write( "\n" )
         except IOError, e:
             logging.error( 'Failed to httpget "%s": %s' % ( self.address, e ) )
             return False
