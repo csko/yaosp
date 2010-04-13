@@ -21,8 +21,11 @@
 #ifdef NDEBUG
 #define assert(expr) ((void)0)
 #else
-#define assert(expr) \
-    if ( !(expr) ) { __assert_fail( #expr, __FILE__, __LINE__ ); }
+# define __ASSERT_VOID_CAST (void)
+# define assert(expr)                                                  \
+  ((expr)                                                              \
+  ? __ASSERT_VOID_CAST (0)                                             \
+  : __assert_fail (#expr, __FILE__, __LINE__))
 #endif /* NDEBUG */
 
 #ifndef _ASSERT_H_

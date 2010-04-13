@@ -131,4 +131,6 @@ struct sockaddr_in {
 
 #define IN_CLASSA_NSHIFT 24
 
+#define INET_ADDRSTRLEN 16
+
 #endif /* _NETINET_IN_H_ */
