@@ -1,6 +1,6 @@
 /* Common ELF format definitions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -73,6 +73,12 @@ typedef struct elf_header {
     uint16_t shnum;
     uint16_t shstrndx;
 } __attribute__(( packed )) elf_header_t;
+
+typedef enum elf_binary_type {
+    ELF_KERNEL_MODULE,
+    ELF_APPLICATION,
+    ELF_LIBRARY
+} elf_binary_type_t;
 
 bool elf_check_header( elf_header_t* header, uint8_t class, uint8_t data, uint16_t type, uint16_t machine );
 

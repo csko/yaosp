@@ -1,6 +1,6 @@
-/* longjmp function
+/* i386 ELF loader
  *
- * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,35 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-.section .text
+#ifndef _ARCH_ELF32_H_
+#define _ARCH_ELF32_H_
 
-.global longjmp
+#include <linker/elf32.h>
 
-.type longjmp, @function
-longjmp:
-    movl 4(%esp), %edx
-    movl 8(%esp), %eax
+enum {
+    R_386_NONE,
+    R_386_32,
+    R_386_PC32,
+    R_386_GOT32,
+    R_386_PLT32,
+    R_386_COPY,
+    R_386_GLOB_DATA,
+    R_386_JMP_SLOT,
+    R_386_RELATIVE,
+    R_386_GOTOFF,
+    R_386_GOTPC
+};
 
-    /* Restore registers */
+int elf32_relocate_i386( elf32_context_t* context, elf32_image_t* image );
 
-    movl 4(%edx), %ebp
-    movl 8(%edx), %esp
-    movl 12(%edx), %ebx
-    movl 16(%edx), %edi
-    movl 20(%edx), %esi
-
-    /* Restore return address */
-
-    movl 0(%edx), %ecx
-    movl %ecx, 0(%esp)
-
-    /* Check return code */
-
-    cmpl $0, %eax
-    je  1f
-    ret
-
-1:
-    movl $1, %eax
-    ret
-.size longjmp,.-longjmp
+#endif /* _ARCH_ELF32_H_ */

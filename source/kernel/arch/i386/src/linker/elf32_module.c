@@ -1,6 +1,6 @@
-/* 32bit ELF module loader
+/* 32bit ELF kernel module loader
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,14 +29,13 @@
 #include <lib/string.h>
 
 #include <arch/mm/config.h>
+#include <arch/linker/elf32.h>
 
 static bool elf32_module_check( binary_loader_t* loader ) {
     int error;
     elf32_image_info_t info;
 
-    error = elf32_init_image_info( &info );
-
-    if ( __unlikely( error < 0 ) ) {
+    if ( elf32_init_image_info( &info, 0x00000000 ) != 0 ) {
         return false;
     }
 
@@ -299,7 +298,7 @@ static int elf32_module_load( module_t* module, binary_loader_t* loader ) {
         goto error1;
     }
 
-    error = elf32_init_image_info( &elf_module->image_info );
+    error = elf32_init_image_info( &elf_module->image_info, 0x00000000 );
 
     if ( __unlikely( error < 0 ) ) {
         goto error2;

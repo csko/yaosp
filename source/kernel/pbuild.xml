@@ -64,6 +64,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/src/mm/kmalloc_debug.c</item>
         <item>arch/i386/src/linker/elf32_module.c</item>
         <item>arch/i386/src/linker/elf32_application.c</item>
+        <item>arch/i386/src/linker/elf32_relocate.c</item>
     </array>
 
     <array name="arch_files_x86emu">

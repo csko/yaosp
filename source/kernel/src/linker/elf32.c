@@ -24,6 +24,7 @@
 #include <symbols.h>
 #include <errno.h>
 #include <mm/kmalloc.h>
+#include <vfs/vfs.h>
 #include <linker/elf32.h>
 #include <lib/string.h>
 
@@ -197,7 +198,9 @@ static int elf32_load_symtab_section( elf32_image_info_t* info, binary_loader_t*
           i++, elf_symbol++, my_elf_symbol++ ) {
         my_elf_symbol->name = info->string_table + elf_symbol->name;
         my_elf_symbol->address = elf_symbol->value;
+        my_elf_symbol->size = elf_symbol->size;
         my_elf_symbol->info = elf_symbol->info;
+        my_elf_symbol->section = elf_symbol->shndx;
 
         hashtable_add( &info->symbol_hash_table, ( hashitem_t* )my_elf_symbol );
     }
@@ -265,6 +268,28 @@ static int elf32_load_dynamic_section( elf32_image_info_t* info, binary_loader_t
             case DYN_PLTRELSZ :
                 pltrel_size = dynamic->value;
                 break;
+
+            case DYN_NEEDED :
+                info->needed_count++;
+                break;
+        }
+    }
+
+    /* Build the table of the needed subimages if it's not empty. */
+
+    if ( info->needed_count > 0 ) {
+        uint32_t needed_index = 0;
+
+        info->needed_table = ( char** )kmalloc( sizeof( char* ) * info->needed_count );
+
+        if ( info->needed_table == NULL ) {
+            goto error2;
+        }
+
+        for ( i = 0, dynamic = &dynamic_table[ 0 ]; i < dynamic_count; i++, dynamic++ ) {
+            if ( dynamic->tag == DYN_NEEDED ) {
+                info->needed_table[ needed_index++ ] = info->dyn_string_table + dynamic->value;
+            }
         }
     }
 
@@ -286,7 +311,7 @@ static int elf32_load_dynamic_section( elf32_image_info_t* info, binary_loader_t
             error = loader->read(
                 loader->private,
                 ( void* )info->reloc_table,
-                rel_address,
+                rel_address - info->virtual_address,
                 rel_size
             );
 
@@ -300,7 +325,7 @@ static int elf32_load_dynamic_section( elf32_image_info_t* info, binary_loader_t
             error = loader->read(
                 loader->private,
                 ( char* )info->reloc_table + rel_size,
-                pltrel_address,
+                pltrel_address - info->virtual_address,
                 pltrel_size
             );
 
@@ -314,6 +339,12 @@ static int elf32_load_dynamic_section( elf32_image_info_t* info, binary_loader_t
     return 0;
 
  error3:
+    if ( info->needed_count > 0 ) {
+        info->needed_count = 0;
+        kfree( info->needed_table );
+        info->needed_table = NULL;
+    }
+
     info->reloc_count = 0;
     kfree( info->reloc_table );
     info->reloc_table = NULL;
@@ -400,7 +431,9 @@ static int elf32_load_dynsym_section( elf32_image_info_t* info, binary_loader_t*
           i++, elf_symbol++, my_elf_symbol++ ) {
         my_elf_symbol->name = info->dyn_string_table + elf_symbol->name;
         my_elf_symbol->address = elf_symbol->value;
+        my_elf_symbol->size = elf_symbol->size;
         my_elf_symbol->info = elf_symbol->info;
+        my_elf_symbol->section = elf_symbol->shndx;
     }
 
     kfree( elf_symbols );
@@ -469,28 +502,28 @@ int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* load
 
     error = elf32_load_strtab_section( info, loader, strtab );
 
-    if ( __unlikely( error < 0 ) ) {
+    if ( error < 0 ) {
         return error;
     }
 
     error = elf32_load_symtab_section( info, loader, symtab );
 
-    if ( __unlikely( error < 0 ) ) {
+    if ( error < 0 ) {
         return error;
-    }
-
-    if ( dynamic != NULL ) {
-        error = elf32_load_dynamic_section( info, loader, dynamic );
-
-        if ( __unlikely( error < 0 ) ) {
-            return error;
-        }
     }
 
     if ( dynstr != NULL ) {
         error = elf32_load_dynstr_section( info, loader, dynstr );
 
-        if ( __unlikely( error < 0 ) ) {
+        if ( error < 0 ) {
+            return error;
+        }
+    }
+
+    if ( dynamic != NULL ) {
+        error = elf32_load_dynamic_section( info, loader, dynamic );
+
+        if ( error < 0 ) {
             return error;
         }
     }
@@ -498,7 +531,7 @@ int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* load
     if ( dynsym != NULL ) {
         error = elf32_load_dynsym_section( info, loader, dynsym );
 
-        if ( __unlikely( error < 0 ) ) {
+        if ( error < 0 ) {
             return error;
         }
     }
@@ -516,7 +549,16 @@ int elf32_free_section_headers( elf32_image_info_t* info ) {
 }
 
 my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name ) {
-    return ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
+    my_elf_symbol_t* symbol;
+
+    symbol = ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
+
+    if ( ( symbol == NULL ) ||
+         ( symbol->section == 0 /* undefined */ ) ) {
+        return NULL;
+    }
+
+    return symbol;
 }
 
 int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_t* symbol_info ) {
@@ -573,8 +615,10 @@ static void* symbol_key( hashitem_t* item ) {
     return ( void* )symbol->name;
 }
 
-int elf32_init_image_info( elf32_image_info_t* info ) {
+int elf32_init_image_info( elf32_image_info_t* info, ptr_t virtual_address ) {
     int error;
+
+    memset( info, 0, sizeof( elf32_image_info_t ) );
 
     error = init_hashtable(
         &info->symbol_hash_table, 256,
@@ -585,16 +629,7 @@ int elf32_init_image_info( elf32_image_info_t* info ) {
         return error;
     }
 
-    info->section_headers = NULL;
-    info->string_table = NULL;
-    info->sh_string_table = NULL;
-    info->dyn_string_table = NULL;
-    info->symbol_count = 0;
-    info->symbol_table = NULL;
-    info->dyn_symbol_count = 0;
-    info->dyn_symbol_table = NULL;
-    info->reloc_count = 0;
-    info->reloc_table = NULL;
+    info->virtual_address = virtual_address;
 
     return 0;
 }
@@ -627,6 +662,303 @@ int elf32_destroy_image_info( elf32_image_info_t* info ) {
     return 0;
 }
 
+static binary_loader_t* elf32_get_image_loader( char* filename ) {
+    int fd;
+    char path[256];
+
+    snprintf( path, sizeof(path), "/yaosp/system/lib/%s", filename );
+
+    fd = sys_open( path, O_RDONLY );
+
+    if ( fd < 0 ) {
+        return NULL;
+    }
+
+    return get_app_binary_loader( fd );
+}
+
+static int elf32_image_map( elf32_image_t* image, binary_loader_t* loader, elf_binary_type_t type ) {
+    uint32_t i;
+    elf_section_header_t* section_header;
+
+    bool text_found = false;
+    uint32_t text_start = 0;
+    uint32_t text_end = 0;
+    uint32_t text_size;
+    uint32_t text_offset = 0;
+
+    bool data_found = false;
+    uint32_t data_start = 0;
+    uint32_t data_end = 0;
+    uint32_t data_size;
+    uint32_t data_offset = 0;
+
+    uint32_t bss_end = 0;
+    uint32_t data_size_with_bss;
+
+    for ( i = 0; i < image->info.header.shnum; i++ ) {
+        section_header = &image->info.section_headers[i];
+
+        /* Check if the current section occupies memory during execution */
+
+        if ( section_header->flags & SF_ALLOC ) {
+            if ( section_header->flags & SF_WRITE ) {
+                if ( !data_found ) {
+                    data_found = true;
+                    data_start = section_header->address;
+                    data_offset = section_header->offset;
+                }
+
+                switch ( section_header->type ) {
+                    case SECTION_NOBITS :
+                        bss_end = section_header->address + section_header->size - 1;
+                        break;
+
+                    default :
+                        data_end = section_header->address + section_header->size - 1;
+                        bss_end = data_end;
+                        break;
+                }
+            } else {
+                if ( !text_found ) {
+                    text_found = true;
+                    text_start = section_header->address;
+                    text_offset = section_header->offset;
+                }
+
+                text_end = section_header->address + section_header->size - 1;
+            }
+        }
+    }
+
+    if ( !text_found ) {
+        return -EINVAL;
+    }
+
+    text_offset -= ( text_start & ~PAGE_MASK );
+    text_start &= PAGE_MASK;
+    text_size = text_end - text_start + 1;
+
+    data_offset -= ( data_start & ~PAGE_MASK );
+    data_start &= PAGE_MASK;
+    data_size = data_end - data_start + 1;
+    data_size_with_bss = bss_end - data_start + 1;
+
+    switch ( type ) {
+        case ELF_KERNEL_MODULE :
+            /* todo */
+            break;
+
+        case ELF_APPLICATION :
+            image->text_region = memory_region_create(
+                "ro", PAGE_ALIGN( text_size ),
+                REGION_READ | REGION_EXECUTE
+            );
+
+            if ( image->text_region == NULL ) {
+                return -1;
+            }
+
+            memory_region_map_to_file(
+                image->text_region, loader->get_fd( loader->private ),
+                text_offset, text_size
+            );
+
+            break;
+
+        case ELF_LIBRARY :
+            image->text_region = memory_region_create(
+                "lib_ro", PAGE_ALIGN( text_size ),
+                REGION_READ | REGION_EXECUTE | REGION_CALL_FROM_USERSPACE /* todo! */
+            );
+
+            if ( image->text_region == NULL ) {
+                return -1;
+            }
+
+            memory_region_map_to_file(
+                image->text_region, loader->get_fd( loader->private ),
+                text_offset, text_size
+            );
+
+            break;
+    }
+
+    if ( data_found > 0 ) {
+        switch ( type ) {
+            case ELF_KERNEL_MODULE :
+                /* todo */
+                break;
+
+            case ELF_APPLICATION :
+                image->data_region = memory_region_create(
+                    "rw", PAGE_ALIGN( data_size_with_bss ),
+                    REGION_READ | REGION_WRITE
+                );
+
+                if ( image->data_region == NULL ) {
+                    /* TODO: delete text region */
+                    return -1;
+                }
+
+                if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
+                    memory_region_map_to_file(
+                        image->data_region, loader->get_fd( loader->private ),
+                        data_offset, data_size
+                    );
+                } else {
+                    kprintf( WARNING, "%s(): nothing has been mapped to data region!\n", __FUNCTION__ );
+                }
+
+                break;
+
+            case ELF_LIBRARY :
+                image->data_region = memory_region_create(
+                    "lib_rw", PAGE_ALIGN( data_size_with_bss ),
+                    REGION_READ | REGION_WRITE | REGION_CALL_FROM_USERSPACE /* todo */
+                );
+
+                if ( image->data_region == NULL ) {
+                    /* TODO: delete text region */
+                    return -1;
+                }
+
+                if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
+                    memory_region_map_to_file(
+                        image->data_region, loader->get_fd( loader->private ),
+                        data_offset, data_size
+                    );
+                } else {
+                    kprintf( WARNING, "%s(): nothing has been mapped to data region!\n", __FUNCTION__ );
+                }
+
+                break;
+        }
+    }
+
+    return 0;
+}
+
+int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtual_address, elf_binary_type_t type ) {
+    int error;
+    uint32_t i;
+    uint16_t elf_type;
+
+    switch ( type ) {
+        case ELF_KERNEL_MODULE : elf_type = ELF_TYPE_DYN; break;
+        case ELF_APPLICATION : elf_type = ELF_TYPE_EXEC; break;
+        case ELF_LIBRARY : elf_type = ELF_TYPE_DYN; break;
+        default : return -EINVAL;
+    }
+
+    memset( image, 0, sizeof( elf32_image_t ) );
+
+    error = elf32_init_image_info( &image->info, virtual_address );
+
+    if ( error != 0 ) {
+        goto error1;
+    }
+
+    error = elf32_load_and_validate_header( &image->info, loader, elf_type );
+
+    if ( error != 0 ) {
+        goto error2;
+    }
+
+    error = elf32_load_section_headers( &image->info, loader );
+
+    if ( error != 0 ) {
+        goto error2;
+    }
+
+    error = elf32_parse_section_headers( &image->info, loader );
+
+    if ( error != 0 ) {
+        goto error2;
+    }
+
+    error = elf32_image_map( image, loader, type );
+
+    if ( error != 0 ) {
+        goto error2;
+    }
+
+    /* Load the required subimages. */
+
+    if ( image->info.needed_count > 0 ) {
+        image->subimages = ( elf32_image_t* )kmalloc( sizeof( elf32_image_t ) * image->info.needed_count );
+
+        if ( image->subimages == NULL ) {
+            goto error2;
+        }
+
+        for ( i = 0; i < image->info.needed_count; i++ ) {
+            binary_loader_t* img_loader = elf32_get_image_loader( image->info.needed_table[i] );
+
+            if ( img_loader == NULL ) {
+                kprintf( WARNING, "%s(): unable to find binary loader for %s.\n",
+                         __FUNCTION__, image->info.needed_table[i] );
+                error = -EINVAL;
+                goto error2; /* todo: better error handling. */
+            }
+
+            error = elf32_image_load( &image->subimages[i], img_loader, 0x00000000, ELF_LIBRARY );
+
+            put_app_binary_loader( img_loader );
+
+            if ( error != 0 ) {
+                goto error2; /* todo: better error handling. */
+            }
+        }
+    }
+
+    return 0;
+
+ error2:
+    elf32_destroy_image_info( &image->info );
+
+ error1:
+    return error;
+}
+
+int elf32_context_init( elf32_context_t* context ) {
+    memset( context, 0, sizeof( elf32_context_t ) );
+
+    return 0;
+}
+
+static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* name,
+                                                         elf32_image_t** img, my_elf_symbol_t** sym ) {
+    uint32_t i;
+    my_elf_symbol_t* symbol;
+    elf32_image_info_t* info;
+
+    info = &image->info;
+
+    for ( i = 0; i < info->needed_count; i++ ) {
+        if ( elf32_context_get_symbol_helper( &image->subimages[i], name, img, sym ) == 0 ) {
+            return 0;
+        }
+    }
+
+    symbol = ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
+
+    if ( ( symbol != NULL ) &&
+         ( symbol->section != 0 /* not undefined */ ) ) {
+        *img = image;
+        *sym = symbol;
+        return 0;
+    }
+
+
+    return -ENOENT;
+}
+
+int elf32_context_get_symbol( elf32_context_t* context, const char* name,
+                              elf32_image_t** image, my_elf_symbol_t** symbol ) {
+    return elf32_context_get_symbol_helper( &context->main, name, image, symbol );
+}
+
 __init int init_elf32_kernel_symbols( void ) {
     uint32_t i;
     elf_symbol_t* symbol;
@@ -639,7 +971,6 @@ __init int init_elf32_kernel_symbols( void ) {
 
     if ( ( mb_header.flags & MB_FLAG_ELF_SYM_INFO ) == 0 ) {
         kprintf( WARNING, "ELF symbol information not provided for the kernel!\n" );
-
         return 0;
     }
 

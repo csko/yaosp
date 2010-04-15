@@ -49,6 +49,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <mkdir>build/image/system/terminfo/x</mkdir>
         <mkdir>build/image/system/config</mkdir>
         <mkdir>build/image/system/server</mkdir>
+        <mkdir>build/image/system/lib</mkdir>
         <mkdir>build/image/package</mkdir>
     </target>
 

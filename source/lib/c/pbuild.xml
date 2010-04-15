@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <array name="files_i386">
         <item>arch/i386/syscall.S</item>
         <item>arch/i386/getpagesize.c</item>
@@ -380,10 +382,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <input>objs/arch/*.o</input>
         </ar>
+
+        <ld>
+            <flag>-shared</flag>
+            <input>objs/*.o</input>
+            <input>objs/arch/*.o</input>
+            <output>objs/libc.so</output>
+        </ld>
     </target>
 
     <target name="install">
-        <copy from="objs/libc.a" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libc.a"/>
+        <copy from="objs/libc.so" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libc.so"/>
+        <copy from="objs/libc.so" to="${imagedir}/system/lib"/>
     </target>
 
     <target name="all">
