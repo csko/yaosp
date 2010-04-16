@@ -28,7 +28,7 @@ typedef struct binary_loader {
     int ( *get_fd )( void* private );
 } binary_loader_t;
 
-binary_loader_t* get_app_binary_loader( int fd );
+binary_loader_t* get_app_binary_loader( char* name, int fd );
 void put_app_binary_loader( binary_loader_t* loader );
 
 /* Application loader calls */

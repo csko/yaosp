@@ -674,7 +674,7 @@ static binary_loader_t* elf32_get_image_loader( char* filename ) {
         return NULL;
     }
 
-    return get_app_binary_loader( fd );
+    return get_app_binary_loader( filename, fd );
 }
 
 static int elf32_image_map( elf32_image_t* image, binary_loader_t* loader, elf_binary_type_t type ) {
@@ -744,95 +744,66 @@ static int elf32_image_map( elf32_image_t* image, binary_loader_t* loader, elf_b
     data_size = data_end - data_start + 1;
     data_size_with_bss = bss_end - data_start + 1;
 
-    switch ( type ) {
-        case ELF_KERNEL_MODULE :
-            /* todo */
-            break;
+    if ( ( type == ELF_APPLICATION ) ||
+         ( type == ELF_LIBRARY ) ) {
+        char name[128];
+        uint32_t flags;
 
-        case ELF_APPLICATION :
-            image->text_region = memory_region_create(
-                "ro", PAGE_ALIGN( text_size ),
-                REGION_READ | REGION_EXECUTE
-            );
+        snprintf( name, sizeof(name), "%s_ro", loader->get_name( loader->private ) );
+        flags = REGION_READ | REGION_EXECUTE;
 
-            if ( image->text_region == NULL ) {
-                return -1;
-            }
+        if ( type == ELF_LIBRARY ) {
+            flags |= REGION_CALL_FROM_USERSPACE; /* todo */
+        }
 
-            memory_region_map_to_file(
-                image->text_region, loader->get_fd( loader->private ),
-                text_offset, text_size
-            );
+        image->text_region = memory_region_create(
+            name, PAGE_ALIGN( text_size ), flags
+        );
 
-            break;
+        if ( image->text_region == NULL ) {
+            return -1;
+        }
 
-        case ELF_LIBRARY :
-            image->text_region = memory_region_create(
-                "lib_ro", PAGE_ALIGN( text_size ),
-                REGION_READ | REGION_EXECUTE | REGION_CALL_FROM_USERSPACE /* todo! */
-            );
-
-            if ( image->text_region == NULL ) {
-                return -1;
-            }
-
-            memory_region_map_to_file(
-                image->text_region, loader->get_fd( loader->private ),
-                text_offset, text_size
-            );
-
-            break;
+        memory_region_map_to_file(
+            image->text_region, loader->get_fd( loader->private ),
+            text_offset, text_size
+        );
+    } else if ( type == ELF_KERNEL_MODULE ) {
+        /* todo */
     }
 
     if ( data_found > 0 ) {
-        switch ( type ) {
-            case ELF_KERNEL_MODULE :
-                /* todo */
-                break;
+        if ( ( type == ELF_APPLICATION ) ||
+             ( type == ELF_LIBRARY ) ) {
+            char name[128];
+            uint32_t flags;
 
-            case ELF_APPLICATION :
-                image->data_region = memory_region_create(
-                    "rw", PAGE_ALIGN( data_size_with_bss ),
-                    REGION_READ | REGION_WRITE
+            snprintf( name, sizeof(name), "%s_rw", loader->get_name( loader->private ) );
+            flags = REGION_READ | REGION_WRITE;
+
+            if ( type == ELF_LIBRARY ) {
+                flags |= REGION_CALL_FROM_USERSPACE; /* todo */
+            }
+
+            image->data_region = memory_region_create(
+                name, PAGE_ALIGN( data_size_with_bss ), flags
+            );
+
+            if ( image->data_region == NULL ) {
+                /* TODO: delete text region */
+                return -1;
+            }
+
+            if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
+                memory_region_map_to_file(
+                    image->data_region, loader->get_fd( loader->private ),
+                    data_offset, data_size
                 );
-
-                if ( image->data_region == NULL ) {
-                    /* TODO: delete text region */
-                    return -1;
-                }
-
-                if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
-                    memory_region_map_to_file(
-                        image->data_region, loader->get_fd( loader->private ),
-                        data_offset, data_size
-                    );
-                } else {
-                    kprintf( WARNING, "%s(): nothing has been mapped to data region!\n", __FUNCTION__ );
-                }
-
-                break;
-
-            case ELF_LIBRARY :
-                image->data_region = memory_region_create(
-                    "lib_rw", PAGE_ALIGN( data_size_with_bss ),
-                    REGION_READ | REGION_WRITE | REGION_CALL_FROM_USERSPACE /* todo */
-                );
-
-                if ( image->data_region == NULL ) {
-                    /* TODO: delete text region */
-                    return -1;
-                }
-
-                if ( ( data_end != 0 ) && ( data_size > 0 ) ) {
-                    memory_region_map_to_file(
-                        image->data_region, loader->get_fd( loader->private ),
-                        data_offset, data_size
-                    );
-                } else {
-                    kprintf( WARNING, "%s(): nothing has been mapped to data region!\n", __FUNCTION__ );
-                }
-
-                break;
+            } else {
+                kprintf( WARNING, "%s(): nothing has been mapped to data region!\n", __FUNCTION__ );
+            }
+        } else if ( type == ELF_KERNEL_MODULE ) {
+            /* todo */
         }
     }
 
@@ -893,6 +864,7 @@ int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtu
         }
 
         for ( i = 0; i < image->info.needed_count; i++ ) {
+            int fd;
             binary_loader_t* img_loader = elf32_get_image_loader( image->info.needed_table[i] );
 
             if ( img_loader == NULL ) {
@@ -904,7 +876,9 @@ int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtu
 
             error = elf32_image_load( &image->subimages[i], img_loader, 0x00000000, ELF_LIBRARY );
 
+            fd = img_loader->get_fd( img_loader->private );
             put_app_binary_loader( img_loader );
+            sys_close( fd );
 
             if ( error != 0 ) {
                 goto error2; /* todo: better error handling. */
