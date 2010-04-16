@@ -158,7 +158,6 @@ int elf32_parse_section_headers( elf32_image_info_t* info, binary_loader_t* load
 int elf32_free_section_headers( elf32_image_info_t* info );
 
 my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name );
-my_elf_symbol_t* elf32_get_symbol_new( elf32_image_info_t* info, const char* name );
 int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_t* symbol_info );
 
 int elf32_init_image_info( elf32_image_info_t* info, ptr_t virtual_address );

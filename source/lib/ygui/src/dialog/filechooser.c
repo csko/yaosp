@@ -123,7 +123,6 @@ static int file_chooser_item_double_clicked( widget_t* widget, void* data ) {
         file_chooser_open_pressed( widget, data );
     }
 
- out:
     free( name );
 
     return 0;

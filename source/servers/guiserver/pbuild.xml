@@ -79,8 +79,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>${staticlibdir}/libfreetype.a</input>
             <input>${staticlibdir}/libpng.a</input>
             <input>${staticlibdir}/libz.a</input>
-            <input>${staticlibdir}/libyutil.a</input>
             <output>objs/guiserver</output>
+            <flag>-lyutil</flag>
         </gcc>
     </target>
 

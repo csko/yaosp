@@ -91,17 +91,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
         <echo>Linking ygui library</echo>
         <echo/>
-        <echo>[AR     ] source/lib/ygui/objs/libygui.a</echo>
+        <echo>[LD     ] source/lib/ygui/objs/libygui.so</echo>
 
-        <ar>
+        <ld>
+            <flag>-shared</flag>
             <input>objs/*.o</input>
-            <output>objs/libygui.a</output>
-            <flag>-rc</flag>
-        </ar>
+            <output>objs/libygui.so</output>
+        </ld>
     </target>
 
     <target name="install">
-        <copy from="objs/libygui.a" to="${staticlibdir}/libygui.a"/>
+        <copy from="objs/libygui.so" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libygui.so"/>
+        <copy from="objs/libygui.so" to="${imagedir}/system/lib"/>
 
         <mkdir>../../../build/image/system/images</mkdir>
 

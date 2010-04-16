@@ -38,9 +38,6 @@
 window_t* window;
 widget_t* image_wallpaper;
 
-extern ipc_port_id guiserver_port;
-extern ipc_port_id app_client_port;
-
 static int desktop_handle_resolution_change( msg_scr_res_changed_t* msg ) {
     point_t size;
 
@@ -78,7 +75,7 @@ static int desktop_msg_handler( uint32_t code, void* data ) {
 }
 
 static int send_guiserver_notification( void ) {
-    send_ipc_message( guiserver_port, MSG_DESKTOP_STARTED, NULL, 0 );
+    send_ipc_message( application_get_guiserver_port(), MSG_DESKTOP_STARTED, NULL, 0 );
     return 0;
 }
 
@@ -104,7 +101,7 @@ int main( int argc, char** argv ) {
     desktop_get_size( &size );
     point_copy( &wallpaper_size, &size );
 
-    register_named_ipc_port( "desktop", app_client_port );
+    register_named_ipc_port( "desktop", application_get_client_port() );
 
     /* Create a window */
 

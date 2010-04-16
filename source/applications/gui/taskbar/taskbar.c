@@ -47,7 +47,6 @@ widget_t* win_list_widget;
 
 menu_t* taskbar_menu;
 
-extern ipc_port_id guiserver_port;
 extern taskbar_plugin_t datetime_plugin;
 extern taskbar_plugin_t cpuload_plugin;
 extern taskbar_plugin_t memoryusage_plugin;
@@ -111,7 +110,7 @@ static int event_open_taskbar( widget_t* widget, void* data ) {
 }
 
 static int send_guiserver_notification( void ) {
-    send_ipc_message( guiserver_port, MSG_TASKBAR_STARTED, NULL, 0 );
+    send_ipc_message( application_get_guiserver_port(), MSG_TASKBAR_STARTED, NULL, 0 );
     return 0;
 }
 

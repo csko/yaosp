@@ -374,14 +374,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
         <echo>Linking C library</echo>
         <echo/>
-        <echo>[AR     ] source/lib/c/objs/libc.a</echo>
-
-        <ar>
-            <flag>-rc</flag>
-            <output>objs/libc.a</output>
-            <input>objs/*.o</input>
-            <input>objs/arch/*.o</input>
-        </ar>
+        <echo>[LD     ] source/lib/c/objs/libc.so</echo>
 
         <ld>
             <flag>-shared</flag>

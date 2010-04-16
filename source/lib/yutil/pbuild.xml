@@ -62,17 +62,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
         <echo>Linking yutil library</echo>
         <echo/>
-        <echo>[AR     ] source/lib/yutil/objs/libyutil.a</echo>
+        <echo>[LD     ] source/lib/yutil/objs/libyutil.so</echo>
 
-        <ar>
+        <ld>
+            <flag>-shared</flag>
             <input>objs/*.o</input>
-            <output>objs/libyutil.a</output>
-            <flag>-rc</flag>
-        </ar>
+            <output>objs/libyutil.so</output>
+        </ld>
     </target>
 
     <target name="install">
-        <copy from="objs/libyutil.a" to="${staticlibdir}/libyutil.a"/>
+        <copy from="objs/libyutil.so" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libyutil.so"/>
+        <copy from="objs/libyutil.so" to="${imagedir}/system/lib"/>
+
     </target>
 
     <target name="test">

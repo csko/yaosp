@@ -53,7 +53,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-Wall</flag>
-                <define key="USE_i386_ASM"/>
             </gcc>
         </for>
 
@@ -64,8 +63,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>${staticlibdir}/libyutil.a</input>
             <output>objs/configserver</output>
+            <flag>-lyutil</flag>
         </gcc>
     </target>
 

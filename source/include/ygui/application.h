@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -20,6 +20,7 @@
 #define _YGUI_APPLICATION_H_
 
 #include <inttypes.h>
+#include <yaosp/ipc.h>
 
 typedef int msg_handler_t( uint32_t code, void* buffer );
 
@@ -35,6 +36,9 @@ typedef struct ymsg {
 } ymsg_t;
 
 int ymsg_init( ymsg_t* msg, size_t max_size );
+
+ipc_port_id application_get_guiserver_port( void );
+ipc_port_id application_get_client_port( void );
 
 int application_set_message_handler( msg_handler_t* handler );
 int application_register_window_listener( int get_window_list );

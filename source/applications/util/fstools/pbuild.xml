@@ -60,8 +60,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>../../../lib/yutil/objs/libyutil.a</input>
             <output>objs/fstools</output>
+            <flag>-lyutil</flag>
         </gcc>
     </target>
 

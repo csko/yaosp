@@ -59,11 +59,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>${staticlibdir}/libygui.a</input>
             <input>${staticlibdir}/libpng.a</input>
+            <input>${staticlibdir}/libjpeg.a</input>
             <input>${staticlibdir}/libz.a</input>
-            <input>${staticlibdir}/libyutil.a</input>
             <output>objs/shutdown</output>
+            <flag>-lygui</flag>
+            <flag>-lyutil</flag>
         </gcc>
     </target>
 
