@@ -25,7 +25,9 @@
 #include <macros.h>
 #include <mm/region.h>
 #include <linker/elf.h>
+#include <lock/mutex.h>
 #include <lib/hashtable.h>
+#include <lib/array.h>
 
 #define ELF32_R_SYM(i)  ((i)>>8)
 #define ELF32_R_TYPE(i) ((unsigned char)(i))
@@ -138,8 +140,15 @@ typedef struct elf32_image {
     struct elf32_image* subimages;
 } elf32_image_t;
 
+struct elf32_context;
+
+typedef int elf32_relocate_t( struct elf32_context* context, elf32_image_t* image );
+
 typedef struct elf32_context {
     elf32_image_t main;
+    elf32_relocate_t* relocate;
+    lock_id lock;
+    array_t libraries;
 } elf32_context_t;
 
 typedef struct elf_module {
@@ -165,8 +174,12 @@ int elf32_destroy_image_info( elf32_image_info_t* info );
 
 int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtual_address, elf_binary_type_t type );
 
-int elf32_context_init( elf32_context_t* context );
+int elf32_context_init( elf32_context_t* context, elf32_relocate_t* relocate );
 int elf32_context_get_symbol( elf32_context_t* context, const char* name, elf32_image_t** image, my_elf_symbol_t** symbol );
+
+void* sys_dlopen( const char* filename, int flag );
+int sys_dlclose( void* handle );
+int sys_dlsym( void* handle, const char* symbol );
 
 int init_elf32_kernel_symbols( void );
 int init_elf32_module_loader( void );

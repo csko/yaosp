@@ -1,6 +1,6 @@
-/* Internal stdio definitions
+/* dlopen function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,9 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _STDIO_INTERNAL_H_
-#define _STDIO_INTERNAL_H_
+#include <dlfcn.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-int __set_stream_flags( FILE* stream, int new_flags );
+void* dlopen( const char* filename, int flag ) {
+    syscall2( SYS_dlopen, (int)filename, flag );
+    return NULL;
+}
 
-#endif /* _STDIO_INTERNAL_H_ */

@@ -31,6 +31,7 @@
 #include <console.h>
 #include <mm/userspace.h>
 #include <mm/pages.h>
+#include <linker/elf32.h>
 #include <sched/scheduler.h>
 #include <vfs/vfs.h>
 #include <network/socket.h>
@@ -136,7 +137,10 @@ static system_call_entry_t system_call_table[] = {
     { "getsockopt", sys_getsockopt, 0, PARAM_COUNT(0) },
     { "setsockopt", sys_setsockopt, 0, PARAM_COUNT(0) },
     { "getpeername", sys_getpeername, 0, PARAM_COUNT(0) },
-    { "getsockname", sys_getsockname, 0, PARAM_COUNT(0) }
+    { "getsockname", sys_getsockname, 0, PARAM_COUNT(0) },
+    { "dlopen", sys_dlopen, 0, PARAM_COUNT(2) },
+    { "dlclose", sys_dlclose, 0, PARAM_COUNT(1) },
+    { "dlsym", sys_dlsym, 0, PARAM_COUNT(2) }
 };
 
 static int trace_system_call_enter( system_call_entry_t* syscall, uint32_t* params ) {

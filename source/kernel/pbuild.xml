@@ -103,6 +103,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sched/scheduler.c</item>
         <item>src/linker/elf.c</item>
         <item>src/linker/elf32.c</item>
+        <item>src/linker/elf32_context.c</item>
         <item>src/mm/pages.c</item>
         <item>src/mm/kmalloc.c</item>
         <item>src/mm/kmalloc_debug.c</item>

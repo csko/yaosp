@@ -323,6 +323,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/regex/regerror.c</item>
         <item>src/regex/regexec.c</item>
         <item>src/regex/regfree.c</item>
+        <item>src/dl/dlopen.c</item>
     </array>
 
     <target name="clean">

@@ -59,7 +59,7 @@ static int elf32_application_load( binary_loader_t* loader ) {
         goto error1;
     }
 
-    elf32_context_init( app_context );
+    elf32_context_init( app_context, elf32_relocate_i386 );
 
     error = elf32_image_load( &app_context->main, loader, 0x40000000, ELF_APPLICATION );
 
@@ -119,11 +119,11 @@ int elf32_application_execute( void ) {
 }
 
 static int elf32_application_get_symbol_info( thread_t* thread, ptr_t address, symbol_info_t* info ) {
-    elf32_image_t* app_image;
+    elf32_context_t* app_context;
 
-    app_image = ( elf32_image_t* )thread->process->loader_data;
+    app_context = ( elf32_context_t* )thread->process->loader_data;
 
-    return elf32_get_symbol_info( &app_image->info, address, info );
+    return elf32_get_symbol_info( &app_context->main.info, address, info );
 }
 
 static int elf32_application_destroy( void* data ) {

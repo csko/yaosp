@@ -103,7 +103,6 @@ static int start_shells( void ) {
         int tmp = 0;
 
         ioctl( f, IOCTL_TERM_SET_ACTIVE, &tmp );
-
         close( f );
     }
 
@@ -117,7 +116,6 @@ static int start_services( void ) {
 
         execv( "/system/server/configserver", argv );
         _exit( 0 );
-
     }
 
     return 0;
