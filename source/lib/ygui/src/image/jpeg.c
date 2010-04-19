@@ -400,7 +400,7 @@ static int jpeg_loader_read_data( void* _private, uint8_t* data, size_t size ) {
     return block_buffer_read_and_delete( &private->output_buffer, data, size );
 }
 
-image_loader_t jpeg_loader = {
+static image_loader_t jpeg_loader = {
     .name = "JPEG",
     .identify = jpeg_loader_identify,
     .create = jpeg_loader_create,
@@ -409,3 +409,11 @@ image_loader_t jpeg_loader = {
     .get_available_size = jpeg_loader_get_available_size,
     .read_data = jpeg_loader_read_data
 };
+
+int image_loader_get_count( void ) {
+    return 1;
+}
+
+image_loader_t* image_loader_get_at( int index ) {
+    return &jpeg_loader;
+}

@@ -179,7 +179,7 @@ int elf32_context_get_symbol( elf32_context_t* context, const char* name, elf32_
 
 void* sys_dlopen( const char* filename, int flag );
 int sys_dlclose( void* handle );
-int sys_dlsym( void* handle, const char* symbol );
+void* sys_dlsym( void* handle, const char* symbol );
 
 int init_elf32_kernel_symbols( void );
 int init_elf32_module_loader( void );

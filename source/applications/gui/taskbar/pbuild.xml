@@ -69,9 +69,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <gcc>
             <input>objs/*.o</input>
-            <input>${staticlibdir}/libpng.a</input>
-            <input>${staticlibdir}/libjpeg.a</input>
-            <input>${staticlibdir}/libz.a</input>
             <output>objs/taskbar</output>
             <flag>-lygui</flag>
             <flag>-lyutil</flag>

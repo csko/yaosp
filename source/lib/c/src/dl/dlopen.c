@@ -21,7 +21,5 @@
 #include <yaosp/syscall_table.h>
 
 void* dlopen( const char* filename, int flag ) {
-    syscall2( SYS_dlopen, (int)filename, flag );
-    return NULL;
+    return ( void* )syscall2( SYS_dlopen, (int)filename, flag );
 }
-

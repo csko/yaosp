@@ -1,4 +1,4 @@
-/* yaosp C library
+/* dlsym function
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,14 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DLFCN_H_
-#define _DLFCN_H_
+#include <dlfcn.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-#define RTLD_LAZY 0x01
-#define RTLD_NOW  0x02
-
-void* dlopen( const char* filename, int flag );
-void* dlsym( void* handle, const char* symbol );
-int dlclose( void* handle );
-
-#endif /* _DLFCN_H_ */
+void* dlsym( void* handle, const char* symbol ) {
+    return ( void* )syscall2( SYS_dlsym, (int)handle, (int)symbol );
+}

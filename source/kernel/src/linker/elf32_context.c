@@ -292,7 +292,7 @@ int elf32_context_init( elf32_context_t* context, elf32_relocate_t* relocate ) {
 }
 
 static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* name,
-                                                         elf32_image_t** img, my_elf_symbol_t** sym ) {
+                                            elf32_image_t** img, my_elf_symbol_t** sym ) {
     uint32_t i;
     my_elf_symbol_t* symbol;
     elf32_image_info_t* info;
@@ -389,7 +389,7 @@ void* sys_dlopen( const char* filename, int flag ) {
     }
 
     error = elf32_image_load( image, loader, 0x00000000, ELF_LIBRARY );
-    DEBUG_LOG( "%s() load=%d\n", __FUNCTION__, error );
+
     if ( error != 0 ) {
         goto error3;
     }
@@ -398,7 +398,6 @@ void* sys_dlopen( const char* filename, int flag ) {
 
     array_add_item( &context->libraries, image );
     error = context->relocate( context, image );
-    DEBUG_LOG( "%s() relocate=%d\n", __FUNCTION__, error );
 
     mutex_unlock( context->lock );
 
@@ -406,7 +405,7 @@ void* sys_dlopen( const char* filename, int flag ) {
         goto error4;
     }
 
-    return NULL;
+    return ( void* )image;
 
  error4:
     /* todo */
@@ -426,6 +425,31 @@ int sys_dlclose( void* handle ) {
     return 0;
 }
 
-int sys_dlsym( void* handle, const char* symbol ) {
-    return -1;
+void* sys_dlsym( void* handle, const char* symname ) {
+    void* ptr = NULL;
+    elf32_image_t* image;
+    my_elf_symbol_t* symbol;
+    elf32_context_t* context;
+
+    context = ( elf32_context_t* )current_process()->loader_data;
+
+    mutex_lock( context->lock, LOCK_IGNORE_SIGNAL );
+
+    if ( array_index_of( &context->libraries, handle ) < 0 ) {
+        goto out;
+    }
+
+    image = ( elf32_image_t* )handle;
+    symbol = elf32_get_symbol( &image->info, symname );
+
+    if ( symbol == NULL ) {
+        goto out;
+    }
+
+    ptr = ( void* )( image->text_region->address + symbol->address - image->info.virtual_address );
+
+ out:
+    mutex_unlock( context->lock );
+
+    return ptr;
 }

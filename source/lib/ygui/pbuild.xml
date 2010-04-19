@@ -48,8 +48,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/layout/flowlayout.c</item>
         <item>src/render/render.c</item>
         <item>src/image/imageloader.c</item>
-        <item>src/image/png.c</item>
-        <item>src/image/jpeg.c</item>
+        <!--item>src/image/png.c</item>
+        <item>src/image/jpeg.c</item-->
         <item>src/dialog/filechooser.c</item>
         <item>src/border/border.c</item>
         <item>src/border/lineborder.c</item>
@@ -62,12 +62,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </array>
 
     <target name="clean">
+        <delete>objs/image/*</delete>
+        <rmdir>objs/image</rmdir>
         <delete>objs/*</delete>
         <rmdir>objs</rmdir>
     </target>
 
     <target name="prepare" type="private">
         <mkdir>objs</mkdir>
+        <mkdir>objs/image</mkdir>
     </target>
 
     <target name="compile">
@@ -82,11 +85,21 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
+                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
+
+        <gcc>
+            <input>src/image/png.c</input>
+            <output>objs/image/png.o</output>
+            <flags>-c -O2 -Wall</flags>
+        </gcc>
+
+        <gcc>
+            <input>src/image/jpeg.c</input>
+            <output>objs/image/jpeg.o</output>
+            <flags>-c -O2 -Wall</flags>
+        </gcc>
 
         <echo/>
         <echo>Linking ygui library</echo>
@@ -98,13 +111,29 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>objs/*.o</input>
             <output>objs/libygui.so</output>
         </ld>
+
+        <ld>
+            <flag>-shared</flag>
+            <input>objs/image/png.o</input>
+            <input>${staticlibdir}/libpng.a</input>
+            <input>${staticlibdir}/libz.a</input>
+            <output>objs/png.so</output>
+        </ld>
+
+        <ld>
+            <flag>-shared</flag>
+            <input>objs/image/jpeg.o</input>
+            <input>${staticlibdir}/libjpeg.a</input>
+            <input>${staticlibdir}/libz.a</input>
+            <output>objs/jpeg.so</output>
+        </ld>
     </target>
 
     <target name="install">
         <copy from="objs/libygui.so" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libygui.so"/>
         <copy from="objs/libygui.so" to="${imagedir}/system/lib"/>
-
-        <mkdir>../../../build/image/system/images</mkdir>
+        <copy from="objs/png.so" to="${imagedir}/system/lib/imageloader"/>
+        <copy from="objs/jpeg.so" to="${imagedir}/system/lib/imageloader"/>
 
         <for var="i" array="${images}">
             <copy from="images/${i}" to="${imagedir}/system/images/${i}"/>

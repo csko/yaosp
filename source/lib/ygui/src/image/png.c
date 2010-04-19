@@ -1,6 +1,6 @@
 /* PNG image loader
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -212,7 +212,7 @@ static void png_row_callback( png_structp png_ptr, png_bytep new_row, png_uint_3
 static void png_end_callback( png_structp png_ptr, png_infop info ) {
 }
 
-image_loader_t png_loader = {
+static image_loader_t png_loader = {
     .name = "PNG",
     .identify = png_identify,
     .create = png_create,
@@ -221,3 +221,11 @@ image_loader_t png_loader = {
     .get_available_size = png_get_available_size,
     .read_data = png_read_data
 };
+
+int image_loader_get_count( void ) {
+    return 1;
+}
+
+image_loader_t* image_loader_get_at( int index ) {
+    return &png_loader;
+}

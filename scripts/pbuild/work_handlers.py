@@ -83,6 +83,9 @@ class GccHandler( handler.NodeHandler ) :
             self.work.set_output( self.data )
         elif name == "flag" :
             self.work.add_flag( self.data )
+        elif name == "flags" :
+            for flag in self.data.split( " " ) :
+                self.work.add_flag( flag )
         elif name == "include" :
             self.work.add_include( self.data )
         elif name == "define" :

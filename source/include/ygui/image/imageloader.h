@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -49,5 +49,6 @@ typedef struct image_loader {
 } image_loader_t;
 
 int image_loader_find( uint8_t* data, size_t size, image_loader_t** loader, void** private );
+int image_loader_init( void );
 
 #endif /* _YGUI_IMAGE_IMAGELOADER_H_ */
