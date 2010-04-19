@@ -37,11 +37,13 @@
 #include <network/socket.h>
 #include <lock/mutex.h>
 
+//#define ENABLE_SYSCALL_TRACE
+
 static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK, PARAM_COUNT(0) },
     { "execve", sys_execve, SYSCALL_SAVE_STACK, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_STRING) },
     { "dbprintf", sys_dbprintf, 0, PARAM_COUNT(0) },
-    { "sbrk", sys_sbrk, 0, PARAM_COUNT(0) },
+    { "sbrk", sys_sbrk, 0, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_INT) },
     { "open", sys_open, 0, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_STRING) },
     { "close", sys_close, 0, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_INT) },
     { "read", sys_read, 0, PARAM_COUNT(0) },
@@ -56,12 +58,12 @@ static system_call_entry_t system_call_table[] = {
     { "rewinddir", sys_rewinddir, 0, PARAM_COUNT(0) },
     { "chdir", sys_chdir, 0, PARAM_COUNT(0) },
     { "fchdir", sys_fchdir, 0, PARAM_COUNT(0) },
-    { "stat", sys_stat, 0, PARAM_COUNT(0) },
+    { "stat", sys_stat, 0, PARAM_COUNT(2) | PARAM_TYPE(0,P_TYPE_STRING) | PARAM_TYPE(1,P_TYPE_PTR) },
     { "lstat", sys_lstat, 0, PARAM_COUNT(0) },
     { "fstat", sys_fstat, 0, PARAM_COUNT(2) | PARAM_TYPE(0,P_TYPE_INT) | PARAM_TYPE(1,P_TYPE_PTR) },
     { "lseek", sys_lseek, 0, PARAM_COUNT(0) },
     { "fcntl", sys_fcntl, 0, PARAM_COUNT(0) },
-    { "access", sys_access, 0, PARAM_COUNT(0) },
+    { "access", sys_access, 0, PARAM_COUNT(2) | PARAM_TYPE(0,P_TYPE_STRING) | PARAM_TYPE(1,P_TYPE_INT) },
     { "mkdir", sys_mkdir, 0, PARAM_COUNT(0) },
     { "rmdir", sys_rmdir, 0, PARAM_COUNT(0) },
     { "unlink", sys_unlink, 0, PARAM_COUNT(0) },
@@ -104,8 +106,8 @@ static system_call_entry_t system_call_table[] = {
     { "wake_up_thread", sys_wake_up_thread, 0, PARAM_COUNT(0) },
     { "create_ipc_port", sys_create_ipc_port, 0, PARAM_COUNT(0) },
     { "destroy_ipc_port", sys_destroy_ipc_port, 0, PARAM_COUNT(0) },
-    { "send_ipc_message", sys_send_ipc_message, 0, PARAM_COUNT(0) },
-    { "recv_ipc_message", sys_recv_ipc_message, 0, PARAM_COUNT(0) },
+    { "send_ipc_message", sys_send_ipc_message, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
+    { "recv_ipc_message", sys_recv_ipc_message, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
     { "peek_ipc_message", sys_peek_ipc_message, 0, PARAM_COUNT(0) },
     { "register_named_ipc_port", sys_register_named_ipc_port, 0, PARAM_COUNT(0) },
     { "get_named_ipc_port", sys_get_named_ipc_port, 0, PARAM_COUNT(0) },
@@ -114,12 +116,12 @@ static system_call_entry_t system_call_table[] = {
     { "kill", sys_kill, 0, PARAM_COUNT(0) },
     { "kill_thread", sys_kill_thread, 0, PARAM_COUNT(0) },
     { "signal_return", sys_signal_return, SYSCALL_SAVE_STACK },
-    { "mutex_lock", sys_mutex_lock, 0, PARAM_COUNT(0) },
-    { "mutex_trylock", sys_mutex_trylock, 0, PARAM_COUNT(0) },
-    { "mutex_timedlock", sys_mutex_timedlock, 0, PARAM_COUNT(0) },
-    { "mutex_unlock", sys_mutex_unlock, 0, PARAM_COUNT(0) },
-    { "mutex_create", sys_mutex_create, 0, PARAM_COUNT(0) },
-    { "mutex_destroy", sys_mutex_destroy, 0, PARAM_COUNT(0) },
+    { "mutex_lock", sys_mutex_lock, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
+    { "mutex_trylock", sys_mutex_trylock, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
+    { "mutex_timedlock", sys_mutex_timedlock, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
+    { "mutex_unlock", sys_mutex_unlock, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
+    { "mutex_create", sys_mutex_create, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
+    { "mutex_destroy", sys_mutex_destroy, SYSCALL_DONT_TRACE, PARAM_COUNT(0) },
     { "condition_wait", sys_condition_wait, 0, PARAM_COUNT(0) },
     { "condition_timedwait", sys_condition_timedwait, 0, PARAM_COUNT(0) },
     { "condition_signal", sys_condition_signal, 0, PARAM_COUNT(0) },
@@ -147,7 +149,8 @@ static int trace_system_call_enter( system_call_entry_t* syscall, uint32_t* para
     int i;
     int param_count;
 
-    kprintf( INFO, "%s(", syscall->name );
+    //kprintf( INFO, "%s(", syscall->name );
+    DEBUG_LOG( "%s(", syscall->name );
 
     param_count = PARAM_COUNT_GET( syscall->params );
 
@@ -156,38 +159,46 @@ static int trace_system_call_enter( system_call_entry_t* syscall, uint32_t* para
 
         switch ( param_type ) {
             case P_TYPE_INT :
-                kprintf( INFO, "%d", params[ i ] );
+                //kprintf( INFO, "%d", params[ i ] );
+                DEBUG_LOG( "%d", params[i] );
                 break;
 
             case P_TYPE_UINT :
-                kprintf( INFO, "%u", params[ i ] );
+                //kprintf( INFO, "%u", params[ i ] );
+                DEBUG_LOG( "%u", params[i] );
                 break;
 
             case P_TYPE_STRING :
-                kprintf( INFO, "%s", ( char* )params[ i ] );
+                //kprintf( INFO, "%s", ( char* )params[ i ] );
+                DEBUG_LOG( "%s", ( char* )params[i] );
                 break;
 
             case P_TYPE_PTR :
-                kprintf( INFO, "%p", params[ i ] );
+                //kprintf( INFO, "%p", params[ i ] );
+                DEBUG_LOG( "%p", params[i] );
                 break;
 
             default :
-                kprintf( INFO, "unknown" );
+                //kprintf( INFO, "unknown" );
+                DEBUG_LOG( "unknown" );
                 break;
         }
 
         if ( i != ( param_count - 1 ) ) {
-            kprintf( INFO, "," );
+            //kprintf( INFO, "," );
+            DEBUG_LOG( "," );
         }
     }
 
-    kprintf( INFO, ")" );
+    //kprintf( INFO, ")" );
+    DEBUG_LOG( ")" );
 
     return 0;
 }
 
 static int trace_system_call_exit( system_call_entry_t* syscall, int result ) {
-    kprintf( INFO, "=%d\n", result );
+    //kprintf( INFO, "=%d\n", result );
+    DEBUG_LOG( "=%d\n", result );
 
     return 0;
 }
@@ -228,9 +239,11 @@ int handle_system_call( uint32_t number, uint32_t* params, void* stack ) {
 
     /* System call tracing */
 
-    if ( 0 ) {
+#ifdef ENABLE_SYSCALL_TRACE
+    if ( ( syscall_entry->flags & SYSCALL_DONT_TRACE ) == 0 ) {
         trace_system_call_enter( syscall_entry, params );
     }
+#endif /* ENABLE_SYSCALL_TRACE */
 
     /* Call the function associated with the system call number */
 
@@ -244,9 +257,11 @@ int handle_system_call( uint32_t number, uint32_t* params, void* stack ) {
 
     /* System call tracing */
 
-    if ( 0 ) {
+#ifdef ENABLE_SYSCALL_TRACE
+    if ( ( syscall_entry->flags & SYSCALL_DONT_TRACE ) == 0 ) {
         trace_system_call_exit( syscall_entry, result );
     }
+#endif /* ENABLE_SYSCALL_TRACE */
 
     /* Update timing information again :) */
 

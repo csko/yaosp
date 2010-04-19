@@ -22,6 +22,7 @@
 #include <types.h>
 
 #define SYSCALL_SAVE_STACK 0x01
+#define SYSCALL_DONT_TRACE 0x02
 
 #define PARAM_COUNT(count)         (count)
 #define PARAM_COUNT_GET(flag)      ((flag)&0xF)
