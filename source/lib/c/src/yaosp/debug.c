@@ -1,6 +1,6 @@
 /* Debug functions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -25,4 +25,8 @@ int dbprintf( const char* format, ... ) {
         ( unsigned int )format,
         ( unsigned int )( ( ( char** )( &format ) ) + 1 )
     );
+}
+
+int dbtrace( void ) {
+    return syscall0( SYS_dbtrace );
 }

@@ -58,6 +58,7 @@ int sys_get_kernel_info( kernel_info_t* kernel_info );
 int sys_get_kernel_statistics( statistics_info_t* statistics_info );
 
 int sys_dbprintf( const char* format, char** parameters );
+int sys_dbtrace( void );
 
 void handle_panic( const char* file, int line, const char* format, ... );
 

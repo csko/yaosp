@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,8 +19,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <yaosp/debug.h>
 
 void abort( void ) {
     fprintf( stderr, "Application aborted!\n" );
+    dbprintf( "Application aborted.\n" );
+    dbtrace();
     _exit( -1 );
 }

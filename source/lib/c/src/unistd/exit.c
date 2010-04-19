@@ -41,7 +41,6 @@ int atexit( void ( *function )( void ) ) {
 
 void _exit( int status ) {
     /* Flush stdout before exit */
-
     fflush( stdout );
 
     syscall1( SYS_exit, status );

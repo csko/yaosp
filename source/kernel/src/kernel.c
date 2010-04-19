@@ -1,6 +1,6 @@
 /* Miscellaneous kernel functions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -189,6 +189,11 @@ int sys_dbprintf( const char* format, char** parameters ) {
     DEBUG_LOG( "%s", buf );
 #endif /* !MK_RELEASE_BUILD */
 
+    return 0;
+}
+
+int sys_dbtrace( void ) {
+    debug_print_stack_trace();
     return 0;
 }
 

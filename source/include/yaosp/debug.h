@@ -1,6 +1,6 @@
 /* Debug functions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -27,4 +27,11 @@
  */
 int dbprintf( const char* format, ... );
 
-#endif // _YAOSP_DEBUG_H_
+/**
+ * Writes the current stacktrace to the kernel debug console.
+ *
+ * @return On success 0 is returned
+ */
+int dbtrace( void );
+
+#endif /* _YAOSP_DEBUG_H_ */

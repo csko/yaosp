@@ -43,6 +43,7 @@ static system_call_entry_t system_call_table[] = {
     { "fork", sys_fork, SYSCALL_SAVE_STACK, PARAM_COUNT(0) },
     { "execve", sys_execve, SYSCALL_SAVE_STACK, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_STRING) },
     { "dbprintf", sys_dbprintf, 0, PARAM_COUNT(0) },
+    { "dbtrace", sys_dbtrace, 0, PARAM_COUNT(0) },
     { "sbrk", sys_sbrk, 0, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_INT) },
     { "open", sys_open, 0, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_STRING) },
     { "close", sys_close, 0, PARAM_COUNT(1) | PARAM_TYPE(0,P_TYPE_INT) },
