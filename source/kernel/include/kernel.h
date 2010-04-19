@@ -1,6 +1,6 @@
 /* Miscellaneous kernel functions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -42,6 +42,7 @@ typedef struct statistics_info {
 
 extern int __ro_end;
 extern int __data_start;
+extern int __k_init_start;
 extern int __kernel_end;
 
 extern int kernel_running;

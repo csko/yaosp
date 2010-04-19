@@ -1,6 +1,6 @@
 /* Init thread
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -34,9 +34,6 @@
 #include <arch/loader.h>
 #include <arch/smp.h>
 
-extern int __k_init_start;
-extern int __kernel_end;
-
 thread_id init_thread_id;
 
 __init static void load_bootmodules( void ) {
@@ -58,6 +55,8 @@ __init static void load_bootmodules( void ) {
             kprintf( INFO, "Failed to load module: %s\n", bootmodule->name );
         }
     }
+
+    release_bootmodules();
 }
 
 __init static int scan_and_mount_root_filesystem( void ) {

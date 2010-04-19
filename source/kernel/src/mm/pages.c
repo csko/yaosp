@@ -218,9 +218,8 @@ void free_pages( void* address, uint32_t count ) {
 
     spinlock_disable( &pages_lock );
 
-    ASSERT( tmp->ref_count > 0 );
-
     for ( i = 0; i < count; i++, tmp++ ) {
+        ASSERT( tmp->ref_count == 1 );
         tmp->ref_count = 0;
     }
 

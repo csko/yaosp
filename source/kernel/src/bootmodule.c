@@ -1,6 +1,6 @@
 /* Boot module management
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,7 @@
 #include <config.h>
 #include <kernel.h>
 #include <mm/kmalloc.h>
+#include <mm/pages.h>
 #include <lib/string.h>
 
 static int bootmodule_count = 0;
@@ -31,7 +32,8 @@ int get_bootmodule_count( void ) {
 }
 
 bootmodule_t* get_bootmodule_at( int index ) {
-    if ( ( index < 0 ) || ( index >= MAX_BOOTMODULE_COUNT ) ) {
+    if ( ( index < 0 ) ||
+         ( index >= MAX_BOOTMODULE_COUNT ) ) {
         return NULL;
     }
 
@@ -65,13 +67,14 @@ static char* bm_get_name( void* private ) {
 binary_loader_t* get_bootmodule_loader( int index ) {
     binary_loader_t* loader;
 
-    if ( ( index < 0 ) || ( index >= MAX_BOOTMODULE_COUNT ) ) {
+    if ( ( index < 0 ) ||
+         ( index >= MAX_BOOTMODULE_COUNT ) ) {
         return NULL;
     }
 
     loader = ( binary_loader_t* )kmalloc( sizeof( binary_loader_t ) );
 
-    if ( __unlikely( loader == NULL ) ) {
+    if ( loader == NULL ) {
         return NULL;
     }
 
@@ -95,8 +98,11 @@ __init int init_bootmodules( multiboot_header_t* header ) {
     modules = ( multiboot_module_t* )header->first_module;
 
     for ( i = 0; i < bootmodule_count; i++ ) {
-        bootmodules[ i ].address = ( void* )modules[ i ].start;
-        bootmodules[ i ].size = ( size_t )( modules[ i ].end - modules[ i ].start );
+        bootmodule_t* bootmodule;
+
+        bootmodule = &bootmodules[i];
+        bootmodule->address = ( void* )modules[ i ].start;
+        bootmodule->size = ( size_t )( modules[ i ].end - modules[ i ].start );
 
         /* Extract the bootmodule name from the parameters */
 
@@ -132,6 +138,21 @@ __init int init_bootmodules( multiboot_header_t* header ) {
             bootmodules[ i ].name[ length ] = 0;
         }
     }
+
+    return 0;
+}
+
+__init int release_bootmodules( void ) {
+    int i;
+
+    for ( i = 0; i < bootmodule_count; i++ ) {
+        bootmodule_t* module;
+
+        module = &bootmodules[i];
+        free_pages( module->address, PAGE_ALIGN( module->size ) / PAGE_SIZE );
+    }
+
+    bootmodule_count = 0;
 
     return 0;
 }

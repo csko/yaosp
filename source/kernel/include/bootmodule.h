@@ -1,6 +1,6 @@
 /* Boot module management
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -51,5 +51,6 @@ binary_loader_t* get_bootmodule_loader( int index );
 void put_bootmodule_loader( binary_loader_t* loader );
 
 int init_bootmodules( multiboot_header_t* header );
+int release_bootmodules( void );
 
 #endif /* _BOOTMODULE_H_ */
