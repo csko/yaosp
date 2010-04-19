@@ -68,6 +68,10 @@ enum {
     STT_FUNC = 2
 };
 
+enum {
+    SHN_UNDEF = 0
+};
+
 typedef struct elf_section_header {
     uint32_t name;
     uint32_t type;
