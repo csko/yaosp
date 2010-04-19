@@ -18,17 +18,13 @@
  */
 
 #include <types.h>
-#include <multiboot.h>
 #include <console.h>
 #include <macros.h>
-#include <symbols.h>
 #include <errno.h>
 #include <mm/kmalloc.h>
 #include <vfs/vfs.h>
 #include <linker/elf32.h>
 #include <lib/string.h>
-
-extern multiboot_header_t mb_header;
 
 int elf32_load_and_validate_header( elf32_image_info_t* info, binary_loader_t* loader, uint16_t type ) {
     if ( loader->read( loader->private, &info->header, 0, sizeof( elf_header_t ) ) != sizeof( elf_header_t ) ) {
@@ -600,66 +596,6 @@ int elf32_destroy_image_info( elf32_image_info_t* info ) {
     kfree( info->reloc_table );
     info->reloc_table = NULL;
     info->reloc_count = 0;
-
-    return 0;
-}
-
-__init int init_elf32_kernel_symbols( void ) {
-    uint32_t i;
-    elf_symbol_t* symbol;
-    const char* string_table = NULL;
-    const char* tmp_string_table;
-    elf_section_header_t* strtab;
-    elf_section_header_t* symtab;
-
-    /* Do we have ELF information from the multiboot header? */
-
-    if ( ( mb_header.flags & MB_FLAG_ELF_SYM_INFO ) == 0 ) {
-        kprintf( WARNING, "ELF symbol information not provided for the kernel!\n" );
-        return 0;
-    }
-
-    /* Get the string table */
-
-    strtab = ( elf_section_header_t* )( mb_header.elf_info.addr + mb_header.elf_info.shndx * mb_header.elf_info.size );
-    tmp_string_table = ( const char* )strtab->address;
-
-    /* Get the symbol table */
-
-    symtab = NULL;
-
-    for ( i = 1; i < mb_header.elf_info.num; i++ ) {
-        const char* section_name;
-        elf_section_header_t* tmp;
-
-        tmp = ( elf_section_header_t* )( mb_header.elf_info.addr + i * mb_header.elf_info.size );
-        section_name = tmp_string_table + tmp->name;
-
-        if ( strcmp( section_name, ".symtab" ) == 0 ) {
-            symtab = tmp;
-        } else if ( strcmp( section_name, ".strtab" ) == 0 ) {
-            string_table = ( const char* )tmp->address;
-        }
-    }
-
-    if ( ( symtab == NULL ) ||
-         ( string_table == NULL ) ) {
-        kprintf( WARNING, "ELF symbol table not found for the kernel!\n" );
-
-        return 0;
-    }
-
-    for ( i = 0, symbol = ( elf_symbol_t* )symtab->address; i < ( symtab->size / sizeof( elf_symbol_t ) ); i++, symbol++ ) {
-        switch ( ELF32_ST_TYPE( symbol->info ) ) {
-            case STT_FUNC :
-                add_kernel_symbol(
-                    string_table + symbol->name,
-                    symbol->value
-                );
-
-                break;
-        }
-    }
 
     return 0;
 }
