@@ -457,7 +457,34 @@ void* sys_dlopen( const char* filename, int flag ) {
 }
 
 int sys_dlclose( void* handle ) {
-    return 0;
+    int index;
+    int error = 0;
+    elf32_image_t* image;
+    elf32_context_t* context;
+
+    context = ( elf32_context_t* )current_process()->loader_data;
+
+    mutex_lock( context->lock, LOCK_IGNORE_SIGNAL );
+
+    index = array_index_of( &context->libraries, handle );
+
+    if ( index < 0 ) {
+        error = -EINVAL;
+        goto out;
+    }
+
+    array_remove_item_from( &context->libraries, index );
+
+ out:
+    mutex_unlock( context->lock );
+
+    if ( error == 0 ) {
+        image = ( elf32_image_t* )handle;
+        elf32_image_destroy( image );
+        kfree( image );
+    }
+
+    return error;
 }
 
 void* sys_dlsym( void* handle, const char* symname ) {
