@@ -127,22 +127,12 @@ static int elf32_application_get_symbol_info( thread_t* thread, ptr_t address, s
 }
 
 static int elf32_application_destroy( void* data ) {
-    /*elf_application_t* app;
+    elf32_context_t* context;
 
-    app = ( elf_application_t* )data;
+    context = ( elf32_context_t* )data;
 
-    if ( app->text_region != NULL ) {
-        memory_region_put( app->text_region );
-    }
-
-    if ( app->data_region != NULL ) {
-        memory_region_put( app->data_region );
-    }
-
-    elf32_destroy_image_info( &app->image_info );
-    kfree( app );*/
-
-    // todo!
+    elf32_context_destroy( context );
+    kfree( context );
 
     return 0;
 }

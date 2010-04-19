@@ -175,6 +175,7 @@ int elf32_destroy_image_info( elf32_image_info_t* info );
 int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtual_address, elf_binary_type_t type );
 
 int elf32_context_init( elf32_context_t* context, elf32_relocate_t* relocate );
+int elf32_context_destroy( elf32_context_t* context );
 int elf32_context_get_symbol( elf32_context_t* context, const char* name, elf32_image_t** image, my_elf_symbol_t** symbol );
 
 void* sys_dlopen( const char* filename, int flag );

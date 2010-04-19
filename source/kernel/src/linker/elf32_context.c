@@ -44,6 +44,21 @@ static int elf32_image_init( elf32_image_t* image ) {
     return 0;
 }
 
+static int elf32_image_destroy( elf32_image_t* image ) {
+    uint32_t i;
+
+    for ( i = 0; i < image->info.needed_count; i++ ) {
+        elf32_image_destroy( &image->subimages[i] );
+    }
+
+    elf32_destroy_image_info( &image->info );
+    memory_region_put( image->text_region );
+    memory_region_put( image->data_region );
+    kfree( image->subimages );
+
+    return 0;
+}
+
 static int elf32_image_map( elf32_image_t* image, binary_loader_t* loader, elf_binary_type_t type ) {
     uint32_t i;
     elf_section_header_t* section_header;
@@ -289,6 +304,26 @@ int elf32_context_init( elf32_context_t* context, elf32_relocate_t* relocate ) {
 
  error1:
     return error;
+}
+
+int elf32_context_destroy( elf32_context_t* context ) {
+    int i;
+    int size;
+
+    size = array_get_size( &context->libraries );
+
+    for ( i = 0; i < size; i++ ) {
+        elf32_image_t* image;
+
+        image = ( elf32_image_t* )array_get_item( &context->libraries, i );
+        elf32_image_destroy( image );
+    }
+
+    elf32_image_destroy( &context->main );
+    array_destroy( &context->libraries );
+    mutex_destroy( context->lock );
+
+    return 0;
 }
 
 static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* name,
