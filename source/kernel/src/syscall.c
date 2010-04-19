@@ -145,6 +145,7 @@ static system_call_entry_t system_call_table[] = {
     { "dlsym", sys_dlsym, 0, PARAM_COUNT(2) }
 };
 
+#ifdef ENABLE_SYSCALL_TRACE
 static int trace_system_call_enter( system_call_entry_t* syscall, uint32_t* params ) {
     int i;
     int param_count;
@@ -202,6 +203,7 @@ static int trace_system_call_exit( system_call_entry_t* syscall, int result ) {
 
     return 0;
 }
+#endif
 
 int handle_system_call( uint32_t number, uint32_t* params, void* stack ) {
     int result;

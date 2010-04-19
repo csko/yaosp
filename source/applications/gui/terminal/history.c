@@ -1,6 +1,6 @@
 /* Terminal application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -24,20 +24,28 @@
 #include "history.h"
 
 int terminal_history_add_line( terminal_history_t* history, terminal_line_t* line ) {
+    int size;
     terminal_line_t* new_line;
 
     assert( line->size <= history->width );
 
-    new_line = ( terminal_line_t* )malloc(
-        sizeof( terminal_line_t ) + sizeof( char ) * history->width + sizeof( terminal_attr_t ) * history->width
-    );
+    size = array_get_size( &history->lines );
 
-    if ( new_line == NULL ) {
-        return -ENOMEM;
+    if ( size < history->max_history_size ) {
+        new_line = ( terminal_line_t* )malloc(
+            sizeof( terminal_line_t ) + sizeof( char ) * history->width + sizeof( terminal_attr_t ) * history->width
+        );
+
+        if ( new_line == NULL ) {
+            return -ENOMEM;
+        }
+
+        new_line->buffer = ( char* )( new_line + 1 );
+        new_line->attr = ( terminal_attr_t* )( new_line->buffer + history->width );
+    } else {
+        new_line = ( terminal_line_t* )array_get_item( &history->lines, 0 );
+        array_remove_item_from( &history->lines, 0 );
     }
-
-    new_line->buffer = ( char* )( new_line + 1 );
-    new_line->attr = ( terminal_attr_t* )( new_line->buffer + history->width );
 
     memcpy( new_line->buffer, line->buffer, history->width );
     memcpy( new_line->attr, line->attr, sizeof( terminal_attr_t ) * history->width );
@@ -58,7 +66,7 @@ terminal_line_t* terminal_history_get_line_at( terminal_history_t* history, int 
     return ( terminal_line_t* )array_get_item( &history->lines, index );
 }
 
-int terminal_history_init( terminal_history_t* history, int width ) {
+int terminal_history_init( terminal_history_t* history, int width, int max_size ) {
     int error;
 
     error = init_array( &history->lines );
@@ -67,9 +75,10 @@ int terminal_history_init( terminal_history_t* history, int width ) {
         return error;
     }
 
-    array_set_realloc_size( &history->lines, 32 );
+    array_set_realloc_size( &history->lines, 128 );
 
     history->width = width;
+    history->max_history_size = max_size;
 
     return 0;
 }

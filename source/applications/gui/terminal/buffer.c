@@ -1,6 +1,6 @@
 /* Terminal application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -504,7 +504,7 @@ int terminal_buffer_init( terminal_buffer_t* buffer, int width, int height ) {
     int error;
     terminal_line_t* line;
 
-    error = terminal_history_init( &buffer->history, width );
+    error = terminal_history_init( &buffer->history, width, 1024 );
 
     if ( error < 0 ) {
         goto error1;
