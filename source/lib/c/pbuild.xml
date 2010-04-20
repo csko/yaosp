@@ -29,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/setjmp.S</item>
         <item>arch/i386/longjmp.S</item>
         <item>arch/i386/memcpy.S</item>
+        <item>arch/i386/arch_start.c</item>
         <item>arch/i386/math/e_exp.S</item>
         <item>arch/i386/math/e_log.S</item>
         <item>arch/i386/math/s_sin.S</item>

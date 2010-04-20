@@ -1,6 +1,6 @@
 /* Entry point of the C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,15 +23,15 @@
 
 #define MAX_ENV_COUNT 256
 
-extern int init_malloc( void );
 extern int main( int argc, char** argv, char** envp );
+extern int __libc_arch_start( char** argv, char** envp, void* relp );
 
 int errno;
 
 char** environ;
 int __environ_allocated;
 
-void __libc_start_main( char** argv, char** envp ) {
+void __libc_start_main( char** argv, char** envp, void* relp ) {
     int argc;
     int error;
 
@@ -43,6 +43,8 @@ void __libc_start_main( char** argv, char** envp ) {
 
     environ = envp;
     __environ_allocated = 0;
+
+    __libc_arch_start( argv, envp, relp );
 
     /* Call the main function of the application */
 

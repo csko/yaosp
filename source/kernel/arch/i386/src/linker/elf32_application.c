@@ -92,11 +92,16 @@ int elf32_application_execute( void ) {
     registers_t* regs;
     elf32_context_t* app_context;
 
-    /* Change the registers on the stack pushed by the syscall
-       entry to return to the userspace. */
-
     thread = current_thread();
     app_context = ( elf32_context_t* )thread->process->loader_data;
+
+    /* Insert a list about R_386_COPY reloc entries, so the architecture
+       specific part of the C library can handle them. */
+
+    elf32_insert_copy_information( app_context, thread->user_stack_region->address );
+
+    /* Change the registers on the stack pushed by the syscall
+       entry to return to the userspace. */
 
     regs = ( registers_t* )( thread->syscall_stack );
 
