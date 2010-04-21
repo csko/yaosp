@@ -21,20 +21,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <target name="clean">
-        <cleandir>zlib-1.2.4</cleandir>
-        <rmdir>zlib-1.2.4</rmdir>
+        <cleandir>zlib-1.2.5</cleandir>
+        <rmdir>zlib-1.2.5</rmdir>
     </target>
 
     <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/zlib/zlib-1.2.4.tar.gz"
-                 to="zlib-1.2.4.tar.gz"
-                 md5="47f6ed51b3c83a8534f9228531effa18"/>
+        <httpget address="http://files.yaosp.org/source/zlib/zlib-1.2.5.tar.gz"
+                 to="zlib-1.2.5.tar.gz"
+                 md5="c735eab2d659a96e5a594c9e8541ad63"/>
 
         <echo>Extracting zlib source</echo>
 
         <exec executable="tar">
             <arg>-zxf</arg>
-            <arg>zlib-1.2.4.tar.gz</arg>
+            <arg>zlib-1.2.5.tar.gz</arg>
         </exec>
 
         <echo>Patching zlib source</echo>
@@ -43,13 +43,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <arg>-t</arg>
             <arg>-p0</arg>
             <arg>-i</arg>
-            <arg>zlib-1.2.4.patch</arg>
+            <arg>zlib-1.2.5.patch</arg>
         </exec>
     </target>
 
     <target name="all">
         <call target="clean"/>
         <call target="get_source"/>
-        <call target="all" directory="zlib-1.2.4"/>
+        <call target="all" directory="zlib-1.2.5"/>
     </target>
 </build>
