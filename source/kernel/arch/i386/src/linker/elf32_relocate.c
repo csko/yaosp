@@ -65,9 +65,19 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
                 break;
             }
 
-            case R_386_COPY :
-                /* This will be handled by the initialization part of the C library. */
+            case R_386_COPY : {
+                elf32_image_t* img;
+                my_elf_symbol_t* sym;
+
+                /* This reloc entry will be handled by the initialization part of the C library. */
+
+                if ( elf32_context_get_symbol( context, symbol->name, &img, &sym ) != 0 ) {
+                    kprintf( ERROR, "Symbol %s not found.\n", symbol->name );
+                    return -ENOENT;
+                }
+
                 break;
+            }
 
             case R_386_JMP_SLOT : {
                 elf32_image_t* img;
@@ -138,13 +148,13 @@ static uint32_t do_elf32_insert_copy_information( elf32_context_t* context, elf3
 
         switch ( ELF32_R_TYPE( reloc->info ) ) {
             case R_386_COPY : {
+                int ret;
                 elf32_image_t* img;
                 my_elf_symbol_t* sym;
 
-                if ( elf32_context_get_symbol( context, symbol->name, &img, &sym ) != 0 ) {
-                    kprintf( ERROR, "Symbol %s not found.\n", symbol->name );
-                    return -ENOENT;
-                }
+                /* The assert should never fail as the symbol is already checked by do_elf32_relocate_i386(). */
+                ret = elf32_context_get_symbol( context, symbol->name, &img, &sym );
+                ASSERT( ret == 0 );
 
                 info->to = ( uint32_t )target;
                 info->from = img->text_region->address + sym->address - img->info.virtual_address;
