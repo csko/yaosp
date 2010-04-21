@@ -65,6 +65,9 @@
 #define EAFNOSUPPORT  44
 #define ECONNREFUSED  45
 
-extern int errno;
+//extern int errno;
+#define errno (*__errno_location())
+
+int* __errno_location( void );
 
 #endif /* _ERRNO_H_ */

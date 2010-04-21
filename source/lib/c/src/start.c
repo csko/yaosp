@@ -26,7 +26,11 @@
 extern int main( int argc, char** argv, char** envp );
 extern int __libc_arch_start( char** argv, char** envp, void* relp );
 
-int errno;
+static int errno;
+
+int* __errno_location( void ) {
+    return &errno;
+}
 
 char** environ;
 int __environ_allocated;

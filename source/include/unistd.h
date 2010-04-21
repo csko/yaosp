@@ -86,6 +86,8 @@ struct dirent {
     char d_name[ NAME_MAX + 1 ];
 };
 
+extern char** environ;
+
 void _exit( int status );
 
 pid_t fork( void );
