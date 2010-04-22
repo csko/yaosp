@@ -142,50 +142,24 @@ static int elf32_load_strtab_section( elf32_image_info_t* info, binary_loader_t*
 
 static int elf32_load_symtab_section( elf32_image_info_t* info, binary_loader_t* loader, elf_section_header_t* symtab ) {
     int error;
-    uint32_t i;
-    uint32_t symbol_count;
-    elf_symbol_t* elf_symbol;
-    elf_symbol_t* elf_symbols;
-    my_elf_symbol_t* my_elf_symbol;
 
-    symbol_count = symtab->size / sizeof( elf_symbol_t );
-    elf_symbols = ( elf_symbol_t* )kmalloc( symtab->size );
+    info->symbol_count = symtab->size / sizeof( elf_symbol_t );
+    info->symbol_table = ( elf_symbol_t* )kmalloc( symtab->size );
 
-    if ( elf_symbols == NULL ) {
+    if ( info->symbol_table == NULL ) {
         error = -ENOMEM;
         goto error1;
     }
 
-    if ( loader->read( loader->private, elf_symbols, symtab->offset, symtab->size ) != symtab->size ) {
+    if ( loader->read( loader->private, info->symbol_table, symtab->offset, symtab->size ) != symtab->size ) {
         error = -EIO;
         goto error2;
     }
 
-    info->symbol_table = ( my_elf_symbol_t* )kmalloc( sizeof( my_elf_symbol_t ) * symbol_count );
-
-    if ( info->symbol_table == NULL ) {
-        error = -ENOMEM;
-        goto error2;
-    }
-
-    for ( i = 0, elf_symbol = &elf_symbols[ 0 ], my_elf_symbol = &info->symbol_table[ 0 ];
-          i < symbol_count;
-          i++, elf_symbol++, my_elf_symbol++ ) {
-        my_elf_symbol->name = info->string_table + elf_symbol->name;
-        my_elf_symbol->address = elf_symbol->value;
-        my_elf_symbol->size = elf_symbol->size;
-        my_elf_symbol->info = elf_symbol->info;
-        my_elf_symbol->section = elf_symbol->shndx;
-    }
-
-    kfree( elf_symbols );
-
-    info->symbol_count = symbol_count;
-
     return 0;
 
  error2:
-    kfree( elf_symbols );
+    kfree( info->symbol_table );
 
  error1:
     return error;
@@ -566,7 +540,7 @@ my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name ) 
 
 int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_t* symbol_info ) {
     uint32_t i;
-    my_elf_symbol_t* symbol;
+    elf_symbol_t* symbol;
 
     /* Image without symbols?! */
 
@@ -582,23 +556,27 @@ int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_
     symbol = info->symbol_table;
 
     for ( i = 0; i < info->symbol_count; i++, symbol++ ) {
-        if ( symbol->address > address ) {
+        char* name;
+
+        if ( symbol->value > address ) {
             continue;
         }
 
+        name = info->string_table + symbol->name;
+
         if ( symbol_info->name == NULL ) {
-            symbol_info->name = symbol->name;
-            symbol_info->address = symbol->address;
+            symbol_info->name = name;
+            symbol_info->address = symbol->value;
         } else {
             int last_diff;
             int curr_diff;
 
             last_diff = address - symbol_info->address;
-            curr_diff = address - symbol->address;
+            curr_diff = address - symbol->value;
 
             if ( curr_diff < last_diff ) {
-                symbol_info->name = symbol->name;
-                symbol_info->address = symbol->address;
+                symbol_info->name = name;
+                symbol_info->address = symbol->value;
             }
         }
     }

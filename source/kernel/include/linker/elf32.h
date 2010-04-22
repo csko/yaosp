@@ -133,7 +133,7 @@ typedef struct elf32_image_info {
     char* dyn_string_table;
 
     uint32_t symbol_count;
-    my_elf_symbol_t* symbol_table;
+    elf_symbol_t* symbol_table;
 
     uint32_t dyn_symbol_count;
     my_elf_symbol_t* dyn_symbol_table;
