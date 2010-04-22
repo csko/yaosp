@@ -44,8 +44,6 @@
 #include <arch/mm/config.h>
 #include <arch/mm/paging.h>
 
-extern int __kernel_end;
-
 multiboot_header_t mb_header;
 
 #ifdef ENABLE_KMALLOC_DEBUG
@@ -87,15 +85,17 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
         uint32_t i;
         elf_section_header_t* section_header;
 
-        first_free_address = MAX( first_free_address, PAGE_ALIGN( header->elf_info.addr + header->elf_info.num * header->elf_info.size ) );
+        first_free_address = MAX( first_free_address,
+                                  PAGE_ALIGN( header->elf_info.addr + header->elf_info.num * header->elf_info.size ) );
 
         for ( i = 1; i < header->elf_info.num; i++ ) {
             section_header = ( elf_section_header_t* )( header->elf_info.addr + i * header->elf_info.size );
 
             switch ( section_header->type ) {
-                case SECTION_STRTAB :
-                case SECTION_SYMTAB :
-                    first_free_address = MAX( first_free_address, PAGE_ALIGN( section_header->address + section_header->size ) );
+                case SHT_STRTAB :
+                case SHT_SYMTAB :
+                    first_free_address = MAX( first_free_address,
+                                              PAGE_ALIGN( section_header->address + section_header->size ) );
                     break;
             }
         }
@@ -155,8 +155,8 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
             section_header = ( elf_section_header_t* )( header->elf_info.addr + i * header->elf_info.size );
 
             switch ( section_header->type ) {
-                case SECTION_STRTAB :
-                case SECTION_SYMTAB :
+                case SHT_STRTAB :
+                case SHT_SYMTAB :
                     reserve_memory_pages(
                         ( ptr_t )( section_header->address & PAGE_MASK ),
                         PAGE_ALIGN( section_header->size + ( section_header->address & ~PAGE_MASK ) )

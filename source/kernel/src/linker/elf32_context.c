@@ -92,7 +92,7 @@ static int elf32_image_map( elf32_image_t* image, binary_loader_t* loader, elf_b
                 }
 
                 switch ( section_header->type ) {
-                    case SECTION_NOBITS :
+                    case SHT_NOBITS :
                         bss_end = section_header->address + section_header->size - 1;
                         break;
 
@@ -334,12 +334,12 @@ static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* na
 
     info = &image->info;
 
-    symbol = ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
+    symbol = elf32_get_symbol( info, name );
 
-    if ( ( symbol != NULL ) &&
-         ( symbol->section != SHN_UNDEF ) ) {
+    if ( symbol != NULL ) {
         *img = image;
         *sym = symbol;
+
         return 0;
     }
 

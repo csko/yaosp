@@ -36,18 +36,18 @@
 #define ELF32_ST_TYPE(i) ((i)&0xF)
 
 enum {
-    SECTION_NULL = 0,
-    SECTION_PROGBITS,
-    SECTION_SYMTAB,
-    SECTION_STRTAB,
-    SECTION_RELA,
-    SECTION_HASH,
-    SECTION_DYNAMIC,
-    SECTION_NOTE,
-    SECTION_NOBITS,
-    SECTION_REL,
-    SECTION_SHLIB,
-    SECTION_DYNSYM
+    SHT_NULL = 0,
+    SHT_PROGBITS,
+    SHT_SYMTAB,
+    SHT_STRTAB,
+    SHT_RELA,
+    SHT_HASH,
+    SHT_DYNAMIC,
+    SHT_NOTE,
+    SHT_NOBITS,
+    SHT_REL,
+    SHT_SHLIB,
+    SHT_DYNSYM
 };
 
 enum {
@@ -56,11 +56,11 @@ enum {
 };
 
 enum {
-    DYN_NEEDED = 1,
-    DYN_PLTRELSZ = 2,
-    DYN_REL = 17,
-    DYN_RELSZ = 18,
-    DYN_JMPREL = 23
+    DT_NEEDED = 1,
+    DT_PLTRELSZ = 2,
+    DT_REL = 17,
+    DT_RELSZ = 18,
+    DT_JMPREL = 23
 };
 
 enum {
@@ -70,6 +70,10 @@ enum {
 
 enum {
     SHN_UNDEF = 0
+};
+
+enum {
+    STN_UNDEF = 0
 };
 
 typedef struct elf_section_header {
@@ -104,6 +108,11 @@ typedef struct elf_reloc {
     uint32_t info;
 } elf_reloc_t;
 
+typedef struct elf_hashtable {
+    uint32_t bucket_cnt;
+    uint32_t chain_cnt;
+} elf_hashtable_t;
+
 typedef struct my_elf_symbol {
     hashitem_t hash;
 
@@ -125,7 +134,6 @@ typedef struct elf32_image_info {
 
     uint32_t symbol_count;
     my_elf_symbol_t* symbol_table;
-    hashtable_t symbol_hash_table;
 
     uint32_t dyn_symbol_count;
     my_elf_symbol_t* dyn_symbol_table;
@@ -135,6 +143,10 @@ typedef struct elf32_image_info {
 
     char** needed_table;
     uint32_t needed_count;
+
+    elf_hashtable_t* symhash;
+    uint32_t* sym_bucket;
+    uint32_t* sym_chain;
 } elf32_image_info_t;
 
 typedef struct elf32_image {

@@ -81,7 +81,7 @@ static int elf32_module_map( elf_module_t* elf_module, binary_loader_t* loader )
                 }
 
                 switch ( section_header->type ) {
-                    case SECTION_NOBITS :
+                    case SHT_NOBITS :
                         bss_end = section_header->address + section_header->size - 1;
                         break;
 
