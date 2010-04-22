@@ -1513,20 +1513,20 @@ diff -Nru Python-2.6.5-orig/pbuild.xml Python-2.6.5/pbuild.xml
 +    </target>
 +
 +    <target name="install">
-+        <mkdir>${imagedir}/package/python-2.5.4</mkdir>
-+        <mkdir>${imagedir}/package/python-2.5.4/lib</mkdir>
-+        <mkdir>${imagedir}/package/python-2.5.4/lib/curses</mkdir>
-+        <mkdir>${imagedir}/package/python-2.5.4/lib-dynload</mkdir>
++        <mkdir>${imagedir}/package/python-2.6.5</mkdir>
++        <mkdir>${imagedir}/package/python-2.6.5/lib</mkdir>
++        <mkdir>${imagedir}/package/python-2.6.5/lib/curses</mkdir>
++        <mkdir>${imagedir}/package/python-2.6.5/lib-dynload</mkdir>
 +
 +        <echo>Installing python binary</echo>
 +
-+        <copy from="objs/python" to="${imagedir}/package/python-2.5.4/python"/>
++        <copy from="objs/python" to="${imagedir}/package/python-2.6.5/python"/>
 +
 +        <echo>Installing python libraries ...</echo>
 +
 +        <for var="i" array="${libs_to_install}">
 +            <echo>-> ${i}</echo>
-+            <copy from="Lib/${i}" to="${imagedir}/package/python-2.5.4/lib/${i}"/>
++            <copy from="Lib/${i}" to="${imagedir}/package/python-2.6.5/lib/${i}"/>
 +        </for>
 +    </target>
 +
