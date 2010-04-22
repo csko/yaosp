@@ -62,7 +62,7 @@ static int start_shells( void ) {
 
             char* argv[] = { "bash", NULL };
             char* envv[] = {
-                "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
+                "PATH=/yaosp/application:/yaosp/package/python-2.6.5",
                 "HOME=/",
                 "TERM=xterm",
                 "TEMP=/temp",
@@ -134,7 +134,7 @@ static int start_gui( void ) {
     if ( fork() == 0 ) {
         char* const argv[] = { "taskbar", NULL };
         char* const envv[] = {
-            "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
+            "PATH=/yaosp/application:/yaosp/package/python-2.6.5",
             "HOME=/",
             "TERM=xterm",
             "TEMP=/temp",
@@ -148,7 +148,7 @@ static int start_gui( void ) {
     if ( fork() == 0 ) {
         char* const argv[] = { "desktop", NULL };
         char* const envv[] = {
-            "PATH=/yaosp/application:/yaosp/package/python-2.5.4",
+            "PATH=/yaosp/application:/yaosp/package/python-2.6.5",
             "HOME=/",
             "TERM=xterm",
             "TEMP=/temp",

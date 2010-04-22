@@ -3,6 +3,7 @@
 This file is part of the yaosp build system
 
 Copyright (c) 2009, 2010 Zoltan Kovacs
+Copyright (c) 2010 Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -35,7 +36,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </array>
 
     <array name="applications">
-        <item>python-2.5.4</item>
+        <item>python-2.6.5</item>
         <item>bash-4.0</item>
         <item>nano-2.2.3</item>
         <item>less-436</item>
