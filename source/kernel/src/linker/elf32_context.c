@@ -334,34 +334,49 @@ static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* na
 
     info = &image->info;
 
+    symbol = ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
+
+    if ( ( symbol != NULL ) &&
+         ( symbol->section != SHN_UNDEF ) ) {
+        *img = image;
+        *sym = symbol;
+        return 0;
+    }
+
     for ( i = 0; i < info->needed_count; i++ ) {
         if ( elf32_context_get_symbol_helper( &image->subimages[i], name, img, sym ) == 0 ) {
             return 0;
         }
     }
 
-    symbol = ( my_elf_symbol_t* )hashtable_get( &info->symbol_hash_table, ( const void* )name );
-
-    if ( ( symbol != NULL ) &&
-         ( symbol->section != 0 /* not undefined */ ) ) {
-        *img = image;
-        *sym = symbol;
-        return 0;
-    }
-
     return -ENOENT;
 }
 
-int elf32_context_get_symbol( elf32_context_t* context, const char* name,
+int elf32_context_get_symbol( elf32_context_t* context, const char* name, int skip_main,
                               elf32_image_t** image, my_elf_symbol_t** symbol ) {
     int i;
     int size;
-    int error;
+    int error = -EINVAL;
 
-    error = elf32_context_get_symbol_helper( &context->main, name, image, symbol );
+    if ( skip_main ) {
+        uint32_t j;
+        elf32_image_info_t* info;
 
-    if ( error == 0 ) {
-        return 0;
+        info = &context->main.info;
+
+        for ( j = 0; j < info->needed_count; j++ ) {
+            error = elf32_context_get_symbol_helper( &context->main.subimages[j], name, image, symbol );
+
+            if ( error == 0 ) {
+                return 0;
+            }
+        }
+    } else {
+        error = elf32_context_get_symbol_helper( &context->main, name, image, symbol );
+
+        if ( error == 0 ) {
+            return 0;
+        }
     }
 
     size = array_get_size( &context->libraries );

@@ -35,13 +35,6 @@ enum {
     R_386_GOTPC
 };
 
-typedef struct elf32_i386_copy_info {
-    uint32_t from;
-    uint32_t to;
-    uint32_t size;
-} elf32_i386_copy_info_t;
-
 int elf32_relocate_i386( elf32_context_t* context, elf32_image_t* image );
-int elf32_insert_copy_information( elf32_context_t* context, ptr_t address );
 
 #endif /* _ARCH_ELF32_H_ */

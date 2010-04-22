@@ -24,7 +24,6 @@
 #define MAX_ENV_COUNT 256
 
 extern int main( int argc, char** argv, char** envp );
-extern int __libc_arch_start( char** argv, char** envp, void* relp );
 
 static int errno;
 
@@ -35,7 +34,7 @@ int* __errno_location( void ) {
 char** environ;
 int __environ_allocated;
 
-void __libc_start_main( char** argv, char** envp, void* relp ) {
+void __libc_start_main( char** argv, char** envp ) {
     int argc;
     int error;
 
@@ -47,8 +46,6 @@ void __libc_start_main( char** argv, char** envp, void* relp ) {
 
     environ = envp;
     __environ_allocated = 0;
-
-    __libc_arch_start( argv, envp, relp );
 
     /* Call the main function of the application */
 

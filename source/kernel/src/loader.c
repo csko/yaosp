@@ -418,8 +418,6 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     /* Push argv and envp to the stack */
 
     stack -= sizeof( void* );
-    *( ( void** )stack ) = ( void* )thread->user_stack_region->address;
-    stack -= sizeof( void* );
     *( ( void** )stack ) = ( void* )envp;
     stack -= sizeof( void* );
     *( ( void** )stack ) = ( void* )argv;

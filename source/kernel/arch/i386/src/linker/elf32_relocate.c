@@ -41,7 +41,7 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
                 elf32_image_t* img;
                 my_elf_symbol_t* sym;
 
-                if ( elf32_context_get_symbol( context, symbol->name, &img, &sym ) != 0 ) {
+                if ( elf32_context_get_symbol( context, symbol->name, 0, &img, &sym ) != 0 ) {
                     kprintf( ERROR, "Symbol %s not found.\n", symbol->name );
                     return -ENOENT;
                 }
@@ -55,12 +55,13 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
                 elf32_image_t* img;
                 my_elf_symbol_t* sym;
 
-                if ( elf32_context_get_symbol( context, symbol->name, &img, &sym ) != 0 ) {
+                if ( elf32_context_get_symbol( context, symbol->name, 0, &img, &sym ) != 0 ) {
                     kprintf( ERROR, "Symbol %s not found.\n", symbol->name );
                     return -ENOENT;
                 }
 
-                *target = *target + img->text_region->address + sym->address - img->info.virtual_address - ( uint32_t )target;
+                *target = *target +
+                    img->text_region->address + sym->address - img->info.virtual_address - ( uint32_t )target;
 
                 break;
             }
@@ -69,12 +70,13 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
                 elf32_image_t* img;
                 my_elf_symbol_t* sym;
 
-                /* This reloc entry will be handled by the initialization part of the C library. */
-
-                if ( elf32_context_get_symbol( context, symbol->name, &img, &sym ) != 0 ) {
+                if ( elf32_context_get_symbol( context, symbol->name, 1, &img, &sym ) != 0 ) {
                     kprintf( ERROR, "Symbol %s not found.\n", symbol->name );
                     return -ENOENT;
                 }
+
+                ASSERT( sym->size == 4 );
+                *target = *( uint32_t* )( img->text_region->address + sym->address - img->info.virtual_address );
 
                 break;
             }
@@ -83,7 +85,7 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
                 elf32_image_t* img;
                 my_elf_symbol_t* sym;
 
-                if ( elf32_context_get_symbol( context, symbol->name, &img, &sym ) != 0 ) {
+                if ( elf32_context_get_symbol( context, symbol->name, 0, &img, &sym ) != 0 ) {
                     kprintf( ERROR, "Symbol %s not found.\n", symbol->name );
                     return -ENOENT;
                 }
@@ -123,63 +125,4 @@ int elf32_relocate_i386( elf32_context_t* context, elf32_image_t* image ) {
     }
 
     return do_elf32_relocate_i386( context, image );
-}
-
-static uint32_t do_elf32_insert_copy_information( elf32_context_t* context, elf32_image_t* image, void** _address ) {
-    uint32_t i;
-    uint32_t count = 0;
-    elf_reloc_t* reloc;
-    elf32_i386_copy_info_t* info;
-    my_elf_symbol_t* symbol_table;
-
-    for ( i = 0; i < image->info.needed_count; i++ ) {
-        count += do_elf32_insert_copy_information( context, &image->subimages[i], _address );
-    }
-
-    info = ( elf32_i386_copy_info_t* )*_address;
-    symbol_table = image->info.dyn_symbol_table;
-
-    for ( i = 0, reloc = &image->info.reloc_table[0]; i < image->info.reloc_count; i++, reloc++ ) {
-        uint32_t* target;
-        my_elf_symbol_t* symbol;
-
-        symbol = &symbol_table[ ELF32_R_SYM( reloc->info ) ];
-        target = ( uint32_t* )( image->text_region->address + reloc->offset - image->info.virtual_address );
-
-        switch ( ELF32_R_TYPE( reloc->info ) ) {
-            case R_386_COPY : {
-                int ret;
-                elf32_image_t* img;
-                my_elf_symbol_t* sym;
-
-                /* The assert should never fail as the symbol is already checked by do_elf32_relocate_i386(). */
-                ret = elf32_context_get_symbol( context, symbol->name, &img, &sym );
-                ASSERT( ret == 0 );
-
-                info->to = ( uint32_t )target;
-                info->from = img->text_region->address + sym->address - img->info.virtual_address;
-                info->size = sym->size;
-
-                count++;
-                info++;
-
-                break;
-            }
-        }
-    }
-
-    *_address = ( void* )info;
-
-    return count;
-}
-
-int elf32_insert_copy_information( elf32_context_t* context, ptr_t address ) {
-    void* addr;
-    uint32_t count;
-
-    addr = ( void* )( address + sizeof( uint32_t ) );
-    count = do_elf32_insert_copy_information( context, &context->main, &addr );
-    *( uint32_t* )address = count;
-
-    return 0;
 }

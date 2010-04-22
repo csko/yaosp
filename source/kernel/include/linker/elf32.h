@@ -180,7 +180,8 @@ int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtu
 
 int elf32_context_init( elf32_context_t* context, elf32_relocate_t* relocate );
 int elf32_context_destroy( elf32_context_t* context );
-int elf32_context_get_symbol( elf32_context_t* context, const char* name, elf32_image_t** image, my_elf_symbol_t** symbol );
+int elf32_context_get_symbol( elf32_context_t* context, const char* name, int skip_main,
+                              elf32_image_t** image, my_elf_symbol_t** symbol );
 
 void* sys_dlopen( const char* filename, int flag );
 int sys_dlclose( void* handle );
