@@ -1,6 +1,6 @@
 diff -Nru Python-2.6.5-orig/Lib/yaosp.py Python-2.6.5/Lib/yaosp.py
 --- Python-2.6.5-orig/Lib/yaosp.py	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.6.5/Lib/yaosp.py	2010-04-22 10:21:15.000000000 +0200
++++ Python-2.6.5/Lib/yaosp.py	2010-04-22 11:22:28.000000000 +0200
 @@ -0,0 +1,139 @@
 +# yaosp bindings for python
 +#
@@ -143,7 +143,7 @@ diff -Nru Python-2.6.5-orig/Lib/yaosp.py Python-2.6.5/Lib/yaosp.py
 +				self._notify_msg_listeners( message, code, result )
 diff -Nru Python-2.6.5-orig/Modules/config.c Python-2.6.5/Modules/config.c
 --- Python-2.6.5-orig/Modules/config.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.6.5/Modules/config.c	2010-04-22 10:21:15.000000000 +0200
++++ Python-2.6.5/Modules/config.c	2010-04-22 11:22:28.000000000 +0200
 @@ -0,0 +1,107 @@
 +/* Generated automatically from ./Modules/config.c.in by makesetup. */
 +/* -*- C -*- ***********************************************          
@@ -254,7 +254,7 @@ diff -Nru Python-2.6.5-orig/Modules/config.c Python-2.6.5/Modules/config.c
 +#endif
 diff -Nru Python-2.6.5-orig/Modules/getpath.c Python-2.6.5/Modules/getpath.c
 --- Python-2.6.5-orig/Modules/getpath.c	2007-03-10 08:38:14.000000000 +0100
-+++ Python-2.6.5/Modules/getpath.c	2010-04-22 10:21:15.000000000 +0200
++++ Python-2.6.5/Modules/getpath.c	2010-04-22 11:22:28.000000000 +0200
 @@ -97,11 +97,7 @@
  
  
@@ -740,7 +740,7 @@ diff -Nru Python-2.6.5-orig/Modules/getpath.c Python-2.6.5/Modules/getpath.c
  
 diff -Nru Python-2.6.5-orig/Modules/posixmodule.c Python-2.6.5/Modules/posixmodule.c
 --- Python-2.6.5-orig/Modules/posixmodule.c	2010-03-01 06:48:57.000000000 +0100
-+++ Python-2.6.5/Modules/posixmodule.c	2010-04-22 10:27:58.000000000 +0200
++++ Python-2.6.5/Modules/posixmodule.c	2010-04-22 11:22:28.000000000 +0200
 @@ -2639,6 +2639,7 @@
  }
  
@@ -857,7 +857,7 @@ diff -Nru Python-2.6.5-orig/Modules/posixmodule.c Python-2.6.5/Modules/posixmodu
 -
 diff -Nru Python-2.6.5-orig/Modules/_yaospmodule.c Python-2.6.5/Modules/_yaospmodule.c
 --- Python-2.6.5-orig/Modules/_yaospmodule.c	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.6.5/Modules/_yaospmodule.c	2010-04-22 10:21:15.000000000 +0200
++++ Python-2.6.5/Modules/_yaospmodule.c	2010-04-22 11:22:28.000000000 +0200
 @@ -0,0 +1,429 @@
 +/* yaosp bindings for python
 + *
@@ -1288,10 +1288,15 @@ diff -Nru Python-2.6.5-orig/Modules/_yaospmodule.c Python-2.6.5/Modules/_yaospmo
 +
 +	PyModule_AddObject( module, "error", yaospError );
 +}
+Binary files Python-2.6.5-orig/objs/cStringIO.o and Python-2.6.5/objs/cStringIO.o differ
+Binary files Python-2.6.5-orig/objs/getbuildinfo.o and Python-2.6.5/objs/getbuildinfo.o differ
+Binary files Python-2.6.5-orig/objs/selectmodule.o and Python-2.6.5/objs/selectmodule.o differ
+Binary files Python-2.6.5-orig/objs/socketmodule.o and Python-2.6.5/objs/socketmodule.o differ
+Binary files Python-2.6.5-orig/objs/_yaospmodule.o and Python-2.6.5/objs/_yaospmodule.o differ
 diff -Nru Python-2.6.5-orig/pbuild.xml Python-2.6.5/pbuild.xml
 --- Python-2.6.5-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.6.5/pbuild.xml	2010-04-22 10:21:15.000000000 +0200
-@@ -0,0 +1,242 @@
++++ Python-2.6.5/pbuild.xml	2010-04-22 11:25:04.000000000 +0200
+@@ -0,0 +1,239 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -1315,6 +1320,8 @@ diff -Nru Python-2.6.5-orig/pbuild.xml Python-2.6.5/pbuild.xml
 +-->
 +
 +<build default="all">
++    <pinclude file="${toplevel}/config/paths.xml"/>
++
 +    <array name="files">
 +<!--        <item>Modules/_typesmodule.c</item> -->
 +        <item>Modules/getbuildinfo.c</item>
@@ -1485,10 +1492,7 @@ diff -Nru Python-2.6.5-orig/pbuild.xml Python-2.6.5/pbuild.xml
 +                <output>objs/filename(${i}).o</output>
 +                <include>./</include>
 +                <include>./Include</include>
-+                <flag>-c</flag>
-+                <flag>-O2</flag>
-+                <flag>-Wall</flag>
-+                <flag>-fno-strict-aliasing</flag>
++                <flags>-c -O2 -Wall -fno-strict-aliasing</flags>
 +                <define key="Py_BUILD_CORE"/>
 +                <define key="PREFIX">"/yaosp/package"</define>
 +                <define key="EXEC_PREFIX">"/yaosp/package"</define>
@@ -1501,30 +1505,28 @@ diff -Nru Python-2.6.5-orig/pbuild.xml Python-2.6.5/pbuild.xml
 +        <echo>-> objs/python</echo>
 +
 +        <gcc>
++            <flags>-lreadline -lncurses</flags>
 +            <input>objs/*.o</input>
-+            <input>../../../../build/libs/libreadline.a</input>
-+            <input>../../../../build/libs/libncurses.a</input>
 +            <input>../../../../build/libs/libbzip2.a</input>
 +            <output>objs/python</output>
 +        </gcc>
 +    </target>
 +
 +    <target name="install">
-+        <mkdir>../../../../build/image/package/python-2.6.5</mkdir>
-+        <mkdir>../../../../build/image/package/python-2.6.5/lib</mkdir>
-+        <mkdir>../../../../build/image/package/python-2.6.5/lib/curses</mkdir>
-+        <mkdir>../../../../build/image/package/python-2.6.5/lib-dynload</mkdir>
++        <mkdir>${imagedir}/package/python-2.5.4</mkdir>
++        <mkdir>${imagedir}/package/python-2.5.4/lib</mkdir>
++        <mkdir>${imagedir}/package/python-2.5.4/lib/curses</mkdir>
++        <mkdir>${imagedir}/package/python-2.5.4/lib-dynload</mkdir>
 +
 +        <echo>Installing python binary</echo>
 +
-+        <copy from="objs/python" to="../../../../build/image/package/python-2.6.5/python"/>
++        <copy from="objs/python" to="${imagedir}/package/python-2.5.4/python"/>
 +
 +        <echo>Installing python libraries ...</echo>
 +
 +        <for var="i" array="${libs_to_install}">
 +            <echo>-> ${i}</echo>
-+
-+            <copy from="Lib/${i}" to="../../../../build/image/package/python-2.6.5/lib/${i}"/>
++            <copy from="Lib/${i}" to="${imagedir}/package/python-2.5.4/lib/${i}"/>
 +        </for>
 +    </target>
 +
@@ -1536,7 +1538,7 @@ diff -Nru Python-2.6.5-orig/pbuild.xml Python-2.6.5/pbuild.xml
 +</build>
 diff -Nru Python-2.6.5-orig/pyconfig.h Python-2.6.5/pyconfig.h
 --- Python-2.6.5-orig/pyconfig.h	1970-01-01 01:00:00.000000000 +0100
-+++ Python-2.6.5/pyconfig.h	2010-04-22 10:21:15.000000000 +0200
++++ Python-2.6.5/pyconfig.h	2010-04-22 11:22:28.000000000 +0200
 @@ -0,0 +1,1096 @@
 +/* pyconfig.h.  Generated from pyconfig.h.in by configure.  */
 +/* pyconfig.h.in.  Generated from configure.in by autoheader.  */
@@ -2636,7 +2638,7 @@ diff -Nru Python-2.6.5-orig/pyconfig.h Python-2.6.5/pyconfig.h
 +
 diff -Nru Python-2.6.5-orig/Python/getplatform.c Python-2.6.5/Python/getplatform.c
 --- Python-2.6.5-orig/Python/getplatform.c	2000-09-02 01:29:29.000000000 +0200
-+++ Python-2.6.5/Python/getplatform.c	2010-04-22 10:21:15.000000000 +0200
++++ Python-2.6.5/Python/getplatform.c	2010-04-22 11:22:28.000000000 +0200
 @@ -2,7 +2,7 @@
  #include "Python.h"
  
