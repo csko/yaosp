@@ -1,6 +1,6 @@
-diff -Nru readline-6.1-orig/bind.c readline-6.1/bind.c
---- readline-6.1-orig/bind.c	2009-10-09 21:40:24.000000000 +0200
-+++ readline-6.1/bind.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//bind.c readline-6.1/bind.c
+--- readline-6.1-orig//bind.c	2009-10-09 21:40:24.000000000 +0200
++++ readline-6.1/bind.c	2010-04-22 11:01:13.000000000 +0200
 @@ -340,6 +340,7 @@
    register int i;
    KEYMAP_ENTRY k;
@@ -54,9 +54,9 @@ diff -Nru readline-6.1-orig/bind.c readline-6.1/bind.c
      {
        rl_command_func_t *function;
        char **invokers;
-diff -Nru readline-6.1-orig/complete.c readline-6.1/complete.c
---- readline-6.1-orig/complete.c	2009-11-30 00:39:30.000000000 +0100
-+++ readline-6.1/complete.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//complete.c readline-6.1/complete.c
+--- readline-6.1-orig//complete.c	2009-11-30 00:39:30.000000000 +0100
++++ readline-6.1/complete.c	2010-04-22 11:01:13.000000000 +0200
 @@ -959,7 +959,7 @@
        /* We didn't find an unclosed quoted substring upon which to do
           completion, so use the word break characters to find the
@@ -93,9 +93,27 @@ diff -Nru readline-6.1-orig/complete.c readline-6.1/complete.c
    int dirlen, dentlen, convlen;
    struct dirent *entry;
  
-diff -Nru readline-6.1-orig/config.h readline-6.1/config.h
---- readline-6.1-orig/config.h	1970-01-01 01:00:00.000000000 +0100
-+++ readline-6.1/config.h	2010-01-15 10:21:35.000000000 +0100
+@@ -2138,7 +2138,7 @@
+ 	 All other entries except "." and ".." match. */
+       if (filename_len == 0)
+ 	{
+-	  if (_rl_match_hidden_files == 0 && HIDDEN_FILE (entry->d_name))
++	  if (_rl_match_hidden_files == 0 && HIDDEN_FILE (convfn))
+ 	    continue;
+ 
+ 	  if (convfn[0] != '.' ||
+@@ -2219,7 +2219,7 @@
+ 		temp[dirlen++] = '/';
+ 	    }
+ 
+-	  strcpy (temp + dirlen, entry->d_name);
++	  strcpy (temp + dirlen, convfn);
+ 	}
+       else
+ 	temp = savestring (convfn);
+diff -Nru readline-6.1-orig//config.h readline-6.1/config.h
+--- readline-6.1-orig//config.h	1970-01-01 01:00:00.000000000 +0100
++++ readline-6.1/config.h	2010-04-22 11:01:13.000000000 +0200
 @@ -0,0 +1,269 @@
 +/* config.h.  Generated from config.h.in by configure.  */
 +/* config.h.in.  Maintained by hand. */
@@ -366,9 +384,9 @@ diff -Nru readline-6.1-orig/config.h readline-6.1/config.h
 +#    define USE_VARARGS
 +#  endif
 +#endif
-diff -Nru readline-6.1-orig/display.c readline-6.1/display.c
---- readline-6.1-orig/display.c	2009-09-26 20:37:33.000000000 +0200
-+++ readline-6.1/display.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//display.c readline-6.1/display.c
+--- readline-6.1-orig//display.c	2009-09-26 20:37:33.000000000 +0200
++++ readline-6.1/display.c	2010-04-22 11:01:13.000000000 +0200
 @@ -253,7 +253,11 @@
       int *lp, *lip, *niflp, *vlp;
  {
@@ -429,9 +447,9 @@ diff -Nru readline-6.1-orig/display.c readline-6.1/display.c
    if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
      {
        adjust = 1;
-diff -Nru readline-6.1-orig/histexpand.c readline-6.1/histexpand.c
---- readline-6.1-orig/histexpand.c	2009-10-07 13:53:21.000000000 +0200
-+++ readline-6.1/histexpand.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//histexpand.c readline-6.1/histexpand.c
+--- readline-6.1-orig//histexpand.c	2009-10-07 13:53:21.000000000 +0200
++++ readline-6.1/histexpand.c	2010-04-22 11:01:13.000000000 +0200
 @@ -204,7 +204,7 @@
      }
  
@@ -441,9 +459,9 @@ diff -Nru readline-6.1-orig/histexpand.c readline-6.1/histexpand.c
      {
  #if defined (HANDLE_MULTIBYTE)
        if (MB_CUR_MAX > 1 && rl_byte_oriented == 0)
-diff -Nru readline-6.1-orig/input.c readline-6.1/input.c
---- readline-6.1-orig/input.c	2009-04-19 19:12:03.000000000 +0200
-+++ readline-6.1/input.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//input.c readline-6.1/input.c
+--- readline-6.1-orig//input.c	2009-04-19 19:12:03.000000000 +0200
++++ readline-6.1/input.c	2010-04-22 11:01:13.000000000 +0200
 @@ -421,7 +421,7 @@
    else
      {
@@ -453,9 +471,9 @@ diff -Nru readline-6.1-orig/input.c readline-6.1/input.c
  	return (c);
  
        /* If the user has an event function, then call it periodically. */
-diff -Nru readline-6.1-orig/misc.c readline-6.1/misc.c
---- readline-6.1-orig/misc.c	2009-01-08 14:58:26.000000000 +0100
-+++ readline-6.1/misc.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//misc.c readline-6.1/misc.c
+--- readline-6.1-orig//misc.c	2009-01-08 14:58:26.000000000 +0100
++++ readline-6.1/misc.c	2010-04-22 11:01:13.000000000 +0200
 @@ -453,7 +453,7 @@
    entry = (hpos == history_length) ? previous_history () : current_history ();
    while (entry)
@@ -465,10 +483,18 @@ diff -Nru readline-6.1-orig/misc.c readline-6.1/misc.c
  	{
  	  if (ul == saved_undo_list)
  	    saved_undo_list = 0;
-diff -Nru readline-6.1-orig/pbuild.xml readline-6.1/pbuild.xml
---- readline-6.1-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ readline-6.1/pbuild.xml	2010-01-15 10:15:56.000000000 +0100
-@@ -0,0 +1,138 @@
+diff -Nru readline-6.1-orig//patchlevel readline-6.1/patchlevel
+--- readline-6.1-orig//patchlevel	2008-11-18 17:01:14.000000000 +0100
++++ readline-6.1/patchlevel	2010-04-22 11:01:13.000000000 +0200
+@@ -1,3 +1,3 @@
+ # Do not edit -- exists only for use by patch
+ 
+-0
++2
+diff -Nru readline-6.1-orig//pbuild.xml readline-6.1/pbuild.xml
+--- readline-6.1-orig//pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ readline-6.1/pbuild.xml	2010-04-22 11:01:33.000000000 +0200
+@@ -0,0 +1,137 @@
 +<!--
 +
 +This file is part of the yaosp build system
@@ -491,6 +517,8 @@ diff -Nru readline-6.1-orig/pbuild.xml readline-6.1/pbuild.xml
 +-->
 +
 +<build default="all">
++    <pinclude file="${toplevel}/config/paths.xml"/>
++
 +    <array name="files">
 +        <item>readline.c</item>
 +        <item>funmap.c</item>
@@ -556,9 +584,7 @@ diff -Nru readline-6.1-orig/pbuild.xml readline-6.1/pbuild.xml
 +                <input>${i}</input>
 +                <output>objs/filename(${i}).o</output>
 +                <include>./</include>
-+                <flag>-c</flag>
-+                <flag>-O2</flag>
-+                <flag>-Wall</flag>
++                <flags>-c -O2 -Wall</flags>
 +                <flag>-fno-strict-aliasing</flag>
 +                <define key="HAVE_CONFIG_H"/>
 +                <define key="_POSIX_VERSION"/>
@@ -570,9 +596,7 @@ diff -Nru readline-6.1-orig/pbuild.xml readline-6.1/pbuild.xml
 +            <input>tilde.c</input>
 +            <output>objs/tilde.o</output>
 +            <include>./</include>
-+            <flag>-c</flag>
-+            <flag>-O2</flag>
-+            <flag>-Wall</flag>
++            <flags>-c -O2 -Wall</flags>
 +            <flag>-fno-strict-aliasing</flag>
 +            <define key="HAVE_CONFIG_H"/>
 +            <define key="_POSIX_VERSION"/>
@@ -580,24 +604,25 @@ diff -Nru readline-6.1-orig/pbuild.xml readline-6.1/pbuild.xml
 +        </gcc>
 +
 +        <echo>Linking readline 6.1</echo>
-+        <echo>-> objs/libreadline.a</echo>
++        <echo>-> objs/libreadline.so</echo>
 +
-+        <ar>
-+            <flag>-rc</flag>
-+            <output>objs/libreadline.a</output>
++        <ld>
++            <flag>-shared</flag>
 +            <input>objs/*.o</input>
-+        </ar>
++            <output>objs/libreadline.so</output>
++        </ld>
 +    </target>
 +
 +    <target name="install">
-+        <copy from="objs/libreadline.a" to="../../../../build/libs/libreadline.a"/>
++        <copy from="objs/libreadline.so" to="${sharedlibdir}"/>
++        <copy from="objs/libreadline.so" to="${imagedir}/system/lib"/>
 +
 +        <echo>Installing readline 6.1 headers</echo>
 +
-+        <mkdir>../../../include/readline</mkdir>
++        <mkdir>${includedir}/readline</mkdir>
 +        <for var="i" array="${headers_to_install}">
 +            <echo>-> ${i}</echo>
-+            <copy from="${i}" to="../../../include/readline/${i}"/>
++            <copy from="${i}" to="${includedir}/readline/${i}"/>
 +        </for>
 +    </target>
 +
@@ -607,9 +632,9 @@ diff -Nru readline-6.1-orig/pbuild.xml readline-6.1/pbuild.xml
 +        <call target="install"/>
 +    </target>
 +</build>
-diff -Nru readline-6.1-orig/readline.c readline-6.1/readline.c
---- readline-6.1-orig/readline.c	2009-08-31 14:45:31.000000000 +0200
-+++ readline-6.1/readline.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//readline.c readline-6.1/readline.c
+--- readline-6.1-orig//readline.c	2009-08-31 14:45:31.000000000 +0200
++++ readline-6.1/readline.c	2010-04-22 11:01:13.000000000 +0200
 @@ -90,7 +90,6 @@
  static void bind_arrow_keys PARAMS((void));
  
@@ -637,9 +662,24 @@ diff -Nru readline-6.1-orig/readline.c readline-6.1/readline.c
  /* Bind some common arrow key sequences in MAP. */
  static void
  bind_arrow_keys_internal (map)
-diff -Nru readline-6.1-orig/shell.c readline-6.1/shell.c
---- readline-6.1-orig/shell.c	2009-01-04 20:32:33.000000000 +0100
-+++ readline-6.1/shell.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//readline.h readline-6.1/readline.h
+--- readline-6.1-orig//readline.h	2009-08-27 05:05:55.000000000 +0200
++++ readline-6.1/readline.h	2010-04-22 11:01:13.000000000 +0200
+@@ -39,9 +39,9 @@
+ #endif
+ 
+ /* Hex-encoded Readline version number. */
+-#define RL_READLINE_VERSION	0x0600		/* Readline 6.0 */
++#define RL_READLINE_VERSION	0x0601		/* Readline 6.1 */
+ #define RL_VERSION_MAJOR	6
+-#define RL_VERSION_MINOR	0
++#define RL_VERSION_MINOR	1
+ 
+ /* Readline data structures. */
+ 
+diff -Nru readline-6.1-orig//shell.c readline-6.1/shell.c
+--- readline-6.1-orig//shell.c	2009-01-04 20:32:33.000000000 +0100
++++ readline-6.1/shell.c	2010-04-22 11:01:13.000000000 +0200
 @@ -124,7 +124,9 @@
  sh_set_lines_and_columns (lines, cols)
       int lines, cols;
@@ -662,9 +702,9 @@ diff -Nru readline-6.1-orig/shell.c readline-6.1/shell.c
    entry = getpwuid (getuid ());
    if (entry)
      home_dir = entry->pw_dir;
-diff -Nru readline-6.1-orig/tilde.c readline-6.1/tilde.c
---- readline-6.1-orig/tilde.c	2009-01-04 20:32:37.000000000 +0100
-+++ readline-6.1/tilde.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//tilde.c readline-6.1/tilde.c
+--- readline-6.1-orig//tilde.c	2009-01-04 20:32:37.000000000 +0100
++++ readline-6.1/tilde.c	2010-04-22 11:01:13.000000000 +0200
 @@ -196,7 +196,7 @@
    int result_size, result_index;
  
@@ -674,9 +714,9 @@ diff -Nru readline-6.1-orig/tilde.c readline-6.1/tilde.c
      result = (char *)xmalloc (result_size = (strlen (string) + 16));
    else
      result = (char *)xmalloc (result_size = (strlen (string) + 1));
-diff -Nru readline-6.1-orig/undo.c readline-6.1/undo.c
---- readline-6.1-orig/undo.c	2009-09-07 20:03:10.000000000 +0200
-+++ readline-6.1/undo.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//undo.c readline-6.1/undo.c
+--- readline-6.1-orig//undo.c	2009-09-07 20:03:10.000000000 +0200
++++ readline-6.1/undo.c	2010-04-22 11:01:13.000000000 +0200
 @@ -137,7 +137,7 @@
  _rl_copy_undo_list (head)
       UNDO_LIST *head;
@@ -686,9 +726,9 @@ diff -Nru readline-6.1-orig/undo.c readline-6.1/undo.c
  
    if (head == 0)
      return head;
-diff -Nru readline-6.1-orig/util.c readline-6.1/util.c
---- readline-6.1-orig/util.c	2009-11-27 21:23:38.000000000 +0100
-+++ readline-6.1/util.c	2010-01-15 10:15:56.000000000 +0100
+diff -Nru readline-6.1-orig//util.c readline-6.1/util.c
+--- readline-6.1-orig//util.c	2009-11-27 21:23:38.000000000 +0100
++++ readline-6.1/util.c	2010-04-22 11:01:13.000000000 +0200
 @@ -492,7 +492,7 @@
  
    if (_rl_tracefp)

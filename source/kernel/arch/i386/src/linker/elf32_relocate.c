@@ -75,8 +75,11 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
                     return -ENOENT;
                 }
 
-                ASSERT( sym->size == 4 );
-                *target = *( uint32_t* )( img->text_region->address + sym->address - img->info.virtual_address );
+                memcpy(
+                    target,
+                    ( void* )( img->text_region->address + sym->address - img->info.virtual_address ),
+                    sym->size
+                );
 
                 break;
             }

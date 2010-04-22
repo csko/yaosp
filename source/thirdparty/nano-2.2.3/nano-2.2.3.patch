@@ -1,6 +1,6 @@
 diff -Nru nano-2.2.3-orig//config.h nano-2.2.3/config.h
 --- nano-2.2.3-orig//config.h	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.2.3/config.h	2010-03-22 12:56:52.000000000 +0100
++++ nano-2.2.3/config.h	2010-04-22 10:08:42.000000000 +0200
 @@ -0,0 +1,246 @@
 +/* config.h.  Generated from configure.ac by autoheader.  */
 +
@@ -250,7 +250,7 @@ diff -Nru nano-2.2.3-orig//config.h nano-2.2.3/config.h
 +#define SYSCONFDIR "/system/config"
 diff -Nru nano-2.2.3-orig//doc/nanorc nano-2.2.3/doc/nanorc
 --- nano-2.2.3-orig//doc/nanorc	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.2.3/doc/nanorc	2010-03-22 12:45:16.000000000 +0100
++++ nano-2.2.3/doc/nanorc	2010-04-22 10:08:42.000000000 +0200
 @@ -0,0 +1,316 @@
 +## Sample initialization file for GNU nano.
 +##
@@ -570,7 +570,7 @@ diff -Nru nano-2.2.3-orig//doc/nanorc nano-2.2.3/doc/nanorc
 +include "/system/config/nano/xml.nanorc"
 diff -Nru nano-2.2.3-orig//pbuild.xml nano-2.2.3/pbuild.xml
 --- nano-2.2.3-orig//pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ nano-2.2.3/pbuild.xml	2010-03-22 12:57:39.000000000 +0100
++++ nano-2.2.3/pbuild.xml	2010-04-22 10:10:16.000000000 +0200
 @@ -0,0 +1,126 @@
 +<!--
 +
@@ -594,6 +594,8 @@ diff -Nru nano-2.2.3-orig//pbuild.xml nano-2.2.3/pbuild.xml
 +-->
 +
 +<build default="all">
++    <pinclude file="${toplevel}/config/paths.xml"/>
++
 +    <array name="files">
 +        <item>src/browser.c</item>
 +        <item>src/chars.c</item>
@@ -661,9 +663,7 @@ diff -Nru nano-2.2.3-orig//pbuild.xml nano-2.2.3/pbuild.xml
 +                <input>${i}</input>
 +                <output>objs/filename(${i}).o</output>
 +                <include>./</include>
-+                <flag>-c</flag>
-+                <flag>-O2</flag>
-+                <flag>-Wall</flag>
++                <flags>-c -O2 -Wall</flags>
 +                <flag>-fno-strict-aliasing</flag>
 +                <define key="HAVE_CONFIG_H"/>
 +            </gcc>
@@ -674,21 +674,21 @@ diff -Nru nano-2.2.3-orig//pbuild.xml nano-2.2.3/pbuild.xml
 +
 +        <gcc>
 +            <input>objs/*.o</input>
-+            <input>../../../../build/libs/libncurses.a</input>
 +            <output>objs/nano</output>
++            <flag>-lncurses</flag>
 +        </gcc>
 +    </target>
 +
 +    <target name="install">
 +        <echo>Installing nano binary</echo>
 +
-+        <copy from="objs/nano" to="../../../../build/image/application/nano"/>
++        <copy from="objs/nano" to="${imagedir}/application/nano"/>
 +
-+        <mkdir>../../../../build/image/system/config/nano</mkdir>
++        <mkdir>${imagedir}/system/config/nano</mkdir>
 +
-+        <copy from="doc/nanorc" to="../../../../build/image/system/config/nanorc"/>
++        <copy from="doc/nanorc" to="${imagedir}/system/config/nanorc"/>
 +        <for var="i" array="${nanorc_files}">
-+            <copy from="doc/syntax/${i}" to="../../../../build/image/system/config/nano/${i}"/>
++            <copy from="doc/syntax/${i}" to="${imagedir}/system/config/nano/${i}"/>
 +        </for>
 +    </target>
 +

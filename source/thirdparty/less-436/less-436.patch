@@ -1,6 +1,6 @@
-diff -Nru less-436-orig/defines.h less-436/defines.h
---- less-436-orig/defines.h	1970-01-01 01:00:00.000000000 +0100
-+++ less-436/defines.h	2010-01-15 09:34:35.000000000 +0100
+diff -Nru less-436-orig//defines.h less-436/defines.h
+--- less-436-orig//defines.h	1970-01-01 01:00:00.000000000 +0100
++++ less-436/defines.h	2010-04-22 10:16:20.000000000 +0200
 @@ -0,0 +1,420 @@
 +/* defines.h.in.  Generated from configure.ac by autoheader.  */
 +
@@ -422,9 +422,9 @@ diff -Nru less-436-orig/defines.h less-436/defines.h
 +
 +/* Define to `unsigned int' if <sys/types.h> does not define. */
 +#undef size_t
-diff -Nru less-436-orig/pbuild.xml less-436/pbuild.xml
---- less-436-orig/pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ less-436/pbuild.xml	2010-01-15 09:35:16.000000000 +0100
+diff -Nru less-436-orig//pbuild.xml less-436/pbuild.xml
+--- less-436-orig//pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ less-436/pbuild.xml	2010-04-22 10:36:52.000000000 +0200
 @@ -0,0 +1,107 @@
 +<!--
 +
@@ -448,6 +448,8 @@ diff -Nru less-436-orig/pbuild.xml less-436/pbuild.xml
 +-->
 +
 +<build default="all">
++    <pinclude file="${toplevel}/config/paths.xml"/>
++
 +    <array name="files">
 +        <item>main.c</item>
 +        <item>screen.c</item>
@@ -504,9 +506,7 @@ diff -Nru less-436-orig/pbuild.xml less-436/pbuild.xml
 +                <input>${i}</input>
 +                <output>objs/filename(${i}).o</output>
 +                <include>./</include>
-+                <flag>-c</flag>
-+                <flag>-O2</flag>
-+                <flag>-Wall</flag>
++                <flags>-c -O2 -Wall</flags>
 +                <flag>-fno-strict-aliasing</flag>
 +            </gcc>
 +        </for>
@@ -515,8 +515,8 @@ diff -Nru less-436-orig/pbuild.xml less-436/pbuild.xml
 +        <echo>-> objs/less</echo>
 +
 +        <gcc>
++            <flag>-lncurses</flag>
 +            <input>objs/*.o</input>
-+            <input>../../../../build/libs/libncurses.a</input>
 +            <output>objs/less</output>
 +        </gcc>
 +    </target>
@@ -524,7 +524,7 @@ diff -Nru less-436-orig/pbuild.xml less-436/pbuild.xml
 +    <target name="install">
 +        <echo>Installing less binary</echo>
 +
-+        <copy from="objs/less" to="../../../../build/image/application/less"/>
++        <copy from="objs/less" to="${imagedir}/application/less"/>
 +    </target>
 +
 +    <target name="all">

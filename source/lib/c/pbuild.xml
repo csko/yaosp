@@ -388,7 +388,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/libc.so" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libc.so"/>
+        <copy from="objs/libc.so" to="${sharedlibdir}/libc.so"/>
         <copy from="objs/libc.so" to="${imagedir}/system/lib"/>
     </target>
 
