@@ -236,6 +236,8 @@ int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtu
         goto error2;
     }
 
+    elf32_free_section_headers( &image->info );
+
     /* Load the required subimages. */
 
     if ( image->info.needed_count > 0 ) {

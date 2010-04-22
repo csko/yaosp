@@ -112,6 +112,8 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
         }
     }
 
+    elf32_free_reloc_table( &image->info );
+
     return 0;
 }
 

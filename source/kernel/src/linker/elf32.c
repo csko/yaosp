@@ -143,7 +143,6 @@ static int elf32_load_strtab_section( elf32_image_info_t* info, binary_loader_t*
 static int elf32_load_symtab_section( elf32_image_info_t* info, binary_loader_t* loader, elf_section_header_t* symtab ) {
     int error;
 
-    info->symbol_count = symtab->size / sizeof( elf_symbol_t );
     info->symbol_table = ( elf_symbol_t* )kmalloc( symtab->size );
 
     if ( info->symbol_table == NULL ) {
@@ -156,10 +155,13 @@ static int elf32_load_symtab_section( elf32_image_info_t* info, binary_loader_t*
         goto error2;
     }
 
+    info->symbol_count = symtab->size / sizeof( elf_symbol_t );
+
     return 0;
 
  error2:
     kfree( info->symbol_table );
+    info->symbol_table = 0;
 
  error1:
     return error;
@@ -354,7 +356,7 @@ static int elf32_load_dynsym_section( elf32_image_info_t* info, binary_loader_t*
         goto error2;
     }
 
-    for ( i = 0, elf_symbol = &elf_symbols[ 0 ], my_elf_symbol = &info->dyn_symbol_table[ 0 ];
+    for ( i = 0, elf_symbol = &elf_symbols[0], my_elf_symbol = &info->dyn_symbol_table[0];
           i < symbol_count;
           i++, elf_symbol++, my_elf_symbol++ ) {
         my_elf_symbol->name = info->dyn_string_table + elf_symbol->name;
@@ -518,6 +520,14 @@ int elf32_free_section_headers( elf32_image_info_t* info ) {
     return 0;
 }
 
+int elf32_free_reloc_table( elf32_image_info_t* info ) {
+    kfree( info->reloc_table );
+    info->reloc_table = NULL;
+    info->reloc_count = 0;
+
+    return 0;
+}
+
 my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name ) {
     uint32_t hash = elf32_symbol_name_hash( name );
     uint32_t index = info->sym_bucket[ hash % info->symhash->bucket_cnt ];
@@ -618,6 +628,15 @@ int elf32_destroy_image_info( elf32_image_info_t* info ) {
     kfree( info->reloc_table );
     info->reloc_table = NULL;
     info->reloc_count = 0;
+
+    kfree( info->needed_table );
+    info->needed_table = NULL;
+    info->needed_count = 0;
+
+    kfree( info->symhash );
+    info->symhash = NULL;
+    info->sym_bucket = NULL;
+    info->sym_chain = NULL;
 
     return 0;
 }
