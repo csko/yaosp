@@ -1,0 +1,20 @@
+The memory layout on i386 architecture:
+
+------------
+|0x00000000| kernel-only
+|.         |
+|.         |
+|----------|
+|0x40000000| application binary
+|.         |
+|.         |
+|----------|
+|0x80000000| memory regions and dynamic libraries
+|.         |
+|.         |
+|----------|
+|0xc0000000| stack(s)
+|.         |
+|.         |
+|0xffffffff| end-of-memory
+------------
