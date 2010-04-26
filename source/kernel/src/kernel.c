@@ -34,6 +34,7 @@
 #include <lock/context.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>
+#include <lib/ctype.h>
 
 #include <arch/interrupt.h>
 #include <arch/cpu.h>
@@ -137,8 +138,7 @@ int get_kernel_param_as_int( const char* key, int* _value ) {
     while ( *tmp != 0 ) {
         char c = *tmp++;
 
-        if ( ( c < '0' ) ||
-             ( c > '9' ) ) {
+        if ( !isdigit( c ) ) {
             return -EINVAL;
         }
 
@@ -238,8 +238,6 @@ int sys_shutdown( void ) {
 }
 
 __init void kernel_main( void ) {
-    int error;
-
     init_locking();
     init_regions();
     init_devices();
@@ -252,9 +250,7 @@ __init void kernel_main( void ) {
     init_ipc();
     init_smp();
 
-    error = arch_late_init();
-
-    if ( error < 0 ) {
+    if ( arch_late_init() != 0 ) {
         return;
     }
 

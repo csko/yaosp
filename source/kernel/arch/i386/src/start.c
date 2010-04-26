@@ -202,8 +202,6 @@ __init static int arch_init_page_allocator( multiboot_header_t* header ) {
 }
 
 __init void arch_start( multiboot_header_t* header ) {
-    int error;
-
     /* Save the multiboot structure */
 
     memcpy( &mb_header, header, sizeof( multiboot_header_t ) );
@@ -232,10 +230,8 @@ __init void arch_start( multiboot_header_t* header ) {
 
     /* Initialize CPU features */
 
-    error = detect_cpu();
-
-    if ( error < 0 ) {
-        kprintf( ERROR, "Failed to detect CPU: %d\n", error );
+    if ( detect_cpu() != 0 ) {
+        kprintf( ERROR, "Failed to detect CPU features.\n" );
         return;
     }
 
@@ -253,10 +249,8 @@ __init void arch_start( multiboot_header_t* header ) {
 
     /* Initialize page allocator */
 
-    error = arch_init_page_allocator( header );
-
-    if ( error < 0 ) {
-        kprintf( ERROR, "Failed to initialize page allocator (error=%d)\n", error );
+    if ( arch_init_page_allocator( header ) != 0 ) {
+        kprintf( ERROR, "Failed to initialize page allocator.\n" );
         return;
     }
 
@@ -264,10 +258,8 @@ __init void arch_start( multiboot_header_t* header ) {
 
     /* Initialize kmalloc */
 
-    error = init_kmalloc();
-
-    if ( error < 0 ) {
-        kprintf( ERROR, "Failed to initialize kernel memory allocator (error=%d)\n", error );
+    if ( init_kmalloc() != 0 ) {
+        kprintf( ERROR, "Failed to initialize kernel memory allocator.\n" );
         return;
     }
 
@@ -284,10 +276,8 @@ __init void arch_start( multiboot_header_t* header ) {
 
     /* Initialize paging */
 
-    error = init_paging();
-
-    if ( error < 0 ) {
-        kprintf( ERROR, "Failed to initialize paging (error=%d)\n", error );
+    if ( init_paging() != 0 ) {
+        kprintf( ERROR, "Failed to initialize paging.\n" );
         return;
     }
 

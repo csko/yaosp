@@ -29,4 +29,4 @@
 int toupper( int c );
 int tolower( int c );
 
-#endif // _LIB_CTYPE_H_
+#endif /* _LIB_CTYPE_H_ */
