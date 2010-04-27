@@ -1,6 +1,6 @@
 /* Taskbar application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -314,11 +314,15 @@ static widget_operations_t win_list_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = window_list_mouse_pressed,
     .mouse_released = NULL,
+    .mouse_scrolled = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = NULL,
     .get_maximum_size = NULL,
     .do_validate = NULL,
-    .size_changed = NULL
+    .size_changed = NULL,
+    .added_to_window = NULL,
+    .child_added = NULL,
+    .destroy = NULL
 };
 
 widget_t* window_list_create( void ) {

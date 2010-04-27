@@ -89,6 +89,7 @@ static widget_operations_t panel_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
     .mouse_released = NULL,
+    .mouse_scrolled = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = panel_get_preferred_size,
     .get_maximum_size = NULL,

@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -193,6 +193,7 @@ static widget_operations_t button_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = button_pressed,
     .mouse_released = button_released,
+    .mouse_scrolled = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = button_get_preferred_size,
     .get_maximum_size = NULL,

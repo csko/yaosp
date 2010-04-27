@@ -1,6 +1,6 @@
 /* CPU load plugin for the taskbar application
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -107,13 +107,15 @@ static widget_operations_t cpuload_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
     .mouse_released = NULL,
+    .mouse_scrolled = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = cpuload_get_preferred_size,
     .get_maximum_size = NULL,
     .do_validate = NULL,
     .size_changed = NULL,
     .added_to_window = cpuload_added_to_window,
-    .child_added = NULL
+    .child_added = NULL,
+    .destroy = NULL
 };
 
 static widget_t* cpuload_create( void ) {

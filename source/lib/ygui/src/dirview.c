@@ -476,6 +476,7 @@ static widget_operations_t dirview_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = dirview_mouse_pressed,
     .mouse_released = NULL,
+    .mouse_scrolled = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = dirview_get_preferred_size,
     .get_maximum_size = NULL,

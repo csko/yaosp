@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -284,6 +284,7 @@ static widget_operations_t menu_item_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
     .mouse_released = menu_item_mouse_released,
+    .mouse_scrolled = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = menu_item_get_preferred_size,
     .get_maximum_size = NULL,
@@ -405,6 +406,7 @@ static widget_operations_t separator_menu_item_ops = {
     .mouse_moved = NULL,
     .mouse_pressed = NULL,
     .mouse_released = NULL,
+    .mouse_scrolled = NULL,
     .get_minimum_size = NULL,
     .get_preferred_size = separator_menu_item_get_preferred_size,
     .get_maximum_size = NULL,
