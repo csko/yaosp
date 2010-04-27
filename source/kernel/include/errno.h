@@ -65,5 +65,6 @@
 #define ENOTCONN      43
 #define EAFNOSUPPORT  44
 #define ECONNREFUSED  45
+#define ENOTSOCK      46
 
 #endif /* _ERRNO_H_ */

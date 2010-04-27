@@ -1,4 +1,4 @@
-/* yaosp C library
+/* mknod function
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,15 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DLFCN_H_
-#define _DLFCN_H_
+#include <errno.h>
+#include <sys/stat.h>
+#include <yaosp/debug.h>
 
-#define RTLD_LAZY 0x01
-#define RTLD_NOW  0x02
-
-void* dlopen( const char* filename, int flag );
-void* dlsym( void* handle, const char* symbol );
-int dlclose( void* handle );
-char* dlerror( void );
-
-#endif /* _DLFCN_H_ */
+int mknod( const char* pathname, mode_t mode, dev_t dev ) {
+    dbprintf( "mknod() called!\n" );
+    errno = ENOSYS;
+    return -1;
+}

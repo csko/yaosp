@@ -1,6 +1,7 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -38,6 +39,7 @@ int strcmp( const char* s1, const char* s2 );
 int strncmp( const char* s1, const char* s2, size_t c );
 int strcasecmp( const char* s1, const char* s2 );
 int strncasecmp( const char* s1, const char* s2, size_t c );
+int strcoll( const char* s1, const char* s2 );
 char* strcpy( char* d, const char* s );
 char* strncpy( char* d, const char* s, size_t c );
 char* strcat( char* d, const char* s );

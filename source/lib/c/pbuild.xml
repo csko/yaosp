@@ -92,6 +92,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strncmp.c</item>
         <item>src/string/strcasecmp.c</item>
         <item>src/string/strncasecmp.c</item>
+        <item>src/string/strcoll.c</item>
         <item>src/string/strdup.c</item>
         <item>src/string/strndup.c</item>
         <item>src/string/strcpy.c</item>
@@ -217,6 +218,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/sys/fstat.c</item>
         <item>src/sys/stime.c</item>
         <item>src/sys/mkdir.c</item>
+        <item>src/sys/mknod.c</item>
         <item>src/sys/ioctl.c</item>
         <item>src/sys/select.c</item>
         <item>src/sys/mount.c</item>
@@ -326,6 +328,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/dl/dlopen.c</item>
         <item>src/dl/dlsym.c</item>
         <item>src/dl/dlclose.c</item>
+        <item>src/dl/dlerror.c</item>
     </array>
 
     <target name="clean">

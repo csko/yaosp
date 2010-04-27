@@ -1,4 +1,4 @@
-/* yaosp C library
+/* strcoll function
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,15 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DLFCN_H_
-#define _DLFCN_H_
+#include <string.h>
 
-#define RTLD_LAZY 0x01
-#define RTLD_NOW  0x02
-
-void* dlopen( const char* filename, int flag );
-void* dlsym( void* handle, const char* symbol );
-int dlclose( void* handle );
-char* dlerror( void );
-
-#endif /* _DLFCN_H_ */
+int strcoll( const char* s1, const char* s2 ) {
+    /* TODO: this is only OK for "C" and "POSIX" locales. */
+    return strcmp( s1, s2 );
+}

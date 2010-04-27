@@ -64,8 +64,8 @@
 #define ENOTCONN      43
 #define EAFNOSUPPORT  44
 #define ECONNREFUSED  45
+#define ENOTSOCK      46
 
-//extern int errno;
 #define errno (*__errno_location())
 
 int* __errno_location( void );
