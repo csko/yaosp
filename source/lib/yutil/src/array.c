@@ -23,8 +23,8 @@
 #include <yutil/array.h>
 
 static int check_array_buffer( array_t* array, int new_item_count ) {
-    void** new_items;
     int new_size;
+    void** new_items;
 
     if ( ( array->item_count + new_item_count ) <= array->max_item_count ) {
         return 0;

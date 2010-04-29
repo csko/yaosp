@@ -144,6 +144,7 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     rect_t bounds;
     int line_height;
     int history_size;
+    point_t visible_size;
     terminal_line_t* term_line;
     terminal_widget_t* terminal_widget;
 
@@ -152,6 +153,7 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     terminal_widget = ( terminal_widget_t* )widget_get_data( widget );
 
     widget_get_bounds( widget, &bounds );
+    widget_get_visible_size( widget, &visible_size );
 
     /* Fill the background */
 
@@ -182,7 +184,7 @@ static int terminal_paint( widget_t* widget, gc_t* gc ) {
     widget_get_scroll_offset( widget, &offset );
 
     int first_line = -offset.y / line_height;
-    int last_line = first_line + ( rect_height( &bounds ) + line_height - 1 ) / line_height;
+    int last_line = first_line + ( visible_size.y + line_height - 1 ) / line_height;
 
     assert( first_line < line_count );
     last_line = MIN( last_line, line_count - 1 );
