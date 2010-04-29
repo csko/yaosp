@@ -1,6 +1,6 @@
 /* String implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -33,6 +33,10 @@ int string_clear( string_t* string ) {
 
 int string_append( string_t* string, char* data, int size ) {
     return string_insert( string, string->length, data, size );
+}
+
+int string_append_char( string_t* string, char c ) {
+    return string_insert( string, string->length, &c, 1 );
 }
 
 int string_append_string( string_t* dest, string_t* src ) {

@@ -1,6 +1,6 @@
 /* Array implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -39,6 +39,7 @@ void* array_get_item( array_t* array, int index );
 int array_index_of( array_t* array, void* item );
 int array_make_empty( array_t* array );
 int array_sort( array_t* array, array_item_comparator_t* comparator );
+int array_copy( array_t* array, array_t* other );
 
 int array_set_realloc_size( array_t* array, int realloc_size );
 

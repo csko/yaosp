@@ -1,6 +1,6 @@
 /* Array implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -198,6 +198,18 @@ int array_sort( array_t* array, array_item_comparator_t* comparator ) {
     }
 
     qsort( array->items, array->item_count, sizeof( void* ), comparator );
+
+    return 0;
+}
+
+int array_copy( array_t* array, array_t* other ) {
+    array->items = realloc( array->items, sizeof( void* ) * other->max_item_count );
+    array->item_count = other->item_count;
+    array->max_item_count = other->max_item_count;
+    array->realloc_size = other->realloc_size;
+    array->realloc_mask = other->realloc_mask;
+
+    memcpy( array->items, other->items, sizeof( void* ) * array->max_item_count );
 
     return 0;
 }

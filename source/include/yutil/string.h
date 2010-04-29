@@ -1,6 +1,6 @@
 /* String implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,6 +19,8 @@
 #ifndef _YUTIL_STRING_H_
 #define _YUTIL_STRING_H_
 
+#include <stddef.h>
+
 typedef struct string {
     int length;
     int max_length;
@@ -29,6 +31,7 @@ typedef struct string {
 
 int string_clear( string_t* string );
 int string_append( string_t* string, char* data, int size );
+int string_append_char( string_t* string, char c );
 int string_append_string( string_t* dest, string_t* src );
 int string_append_from_string( string_t* dest, string_t* src, int pos, int size );
 int string_insert( string_t* string, int pos, char* data, int size );
