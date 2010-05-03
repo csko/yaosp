@@ -1,6 +1,7 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
+ * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -55,6 +56,9 @@ typedef struct tm {
 
 void tzset( void );
 
+clock_t clock( void );
+double difftime( time_t time1, time_t time0 );
+
 time_t time(time_t* tloc);
 int stime(time_t* tptr);
 
@@ -78,4 +82,4 @@ char* ctime_r( const time_t* timep, char* buf );
 
 int nanosleep( const struct timespec* req, struct timespec* rem );
 
-#endif // _TIME_H_
+#endif /* _TIME_H_ */

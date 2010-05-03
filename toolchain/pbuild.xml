@@ -86,7 +86,7 @@
             <arg>--target=i686-pc-yaosp</arg>
             <arg>--disable-nls</arg>
             <arg>--enable-shared</arg>
-            <arg>--enable-languages=c</arg>
+            <arg>--enable-languages=c,c++</arg>
             <arg>--with-headers=../../source/include</arg>
         </exec>
 
@@ -113,6 +113,8 @@
 
     <target name="finalize">
         <copy from="libg.a" to="../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libg.a"/>
+        <copy from="libm.a" to="../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libm.a"/>
+        <copy from="libstdc++-i386.so" to="../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libstdc++.so"/>
 
         <cleandir>../build/crosscompiler/i686-pc-yaosp/sys-include</cleandir>
         <rmdir>../build/crosscompiler/i686-pc-yaosp/sys-include</rmdir>

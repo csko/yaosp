@@ -49,9 +49,12 @@ size_t strspn( const char* s, const char* accept );
 size_t strcspn( const char* s, const char* reject );
 char* strtok_r( char* s, const char* delim, char** ptrptr );
 char* strtok( char* s, const char* delim );
+size_t strxfrm( char* dest, const char* src, size_t n );
 
 char* strdup( const char* s );
 char* strndup( const char* s, size_t n);
+
+float strtof(const char *nptr, char **endptr);
 
 char* strerror( int errnum );
 char* strsignal( int signum );

@@ -37,6 +37,9 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
         target = ( uint32_t* )( image->text_region->address + reloc->offset - image->info.virtual_address );
 
         switch ( ELF32_R_TYPE( reloc->info ) ) {
+            case R_386_NONE :
+                break;
+
             case R_386_32 : {
                 elf32_image_t* img;
                 my_elf_symbol_t* sym;

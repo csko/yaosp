@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -48,7 +48,11 @@
 
 #define P_tmpdir "/temp"
 
-typedef struct FILE {
+typedef struct {
+    off_t pos;
+} fpos_t;
+
+typedef struct {
     int fd;
     int flags;
     char* buffer;
@@ -83,6 +87,8 @@ size_t fread( void* ptr, size_t size, size_t nmemb, FILE* stream );
 size_t fwrite( const void* ptr, size_t size, size_t nmemb, FILE* stream );
 int fpurge( FILE* stream );
 void rewind( FILE* stream );
+int fgetpos( FILE* stream, fpos_t* pos );
+int fsetpos( FILE* stream, fpos_t* pos );
 
 int ungetc( int c, FILE* stream );
 void clearerr( FILE* stream );
@@ -109,8 +115,9 @@ int vfscanf( FILE* stream, const char* format, va_list ap );
 
 int fgetc( FILE* stream );
 int getc( FILE* stream );
+int getchar( void );
 char* fgets( char* s, int size, FILE* stream );
-#define getchar(c) getc(stdin)
+char* gets( char* s );
 
 int fputc( int c, FILE* stream );
 int putc( int c, FILE* stream );
@@ -118,7 +125,7 @@ int fputs( const char* s, FILE* stream );
 int puts( const char* s );
 int putchar( int c );
 
-#define setbuf(stream,buf) setvbuf(stream,buf,(buf!=NULL)?_IOFBF:_IONBF,BUFSIZ)
+void setbuf( FILE* stream, char* buf );
 #define setbuffer(stream,buf,size) setvbuf(stream,buf,(buf!=NULL)?_IOFBF:_IONBF,size)
 int setvbuf( FILE* stream, char* buf, int flags, size_t size );
 
@@ -126,5 +133,8 @@ int rename( const char* oldpath, const char* newpath );
 int remove( const char* path );
 
 void perror( const char* s );
+
+FILE* tmpfile( void );
+char* tmpnam( char* s );
 
 #endif /* _STDIO_H_ */

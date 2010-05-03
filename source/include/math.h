@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -27,10 +27,16 @@
 int finite( double x );
 
 double sin( double x );
+double asin( double x );
 double cos( double x );
+double acos( double x );
+double sinh( double x );
+double cosh( double x );
+double tanh( double x );
 double log( double x );
 double log10( double x );
 double exp( double x );
+long double expl( long double x );
 double floor( double x );
 double ceil( double x );
 double frexp( double x, int* exp );

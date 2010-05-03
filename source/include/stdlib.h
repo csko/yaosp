@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -44,13 +44,26 @@
 
 #define WIFEXITED(status)   (WTERMSIG(status) == 0)
 
+typedef struct {
+    int quot;
+    int rem;
+} div_t;
+
+typedef struct {
+    long int quot;
+    long int rem;
+} ldiv_t;
+
 int abs( int j );
 long labs( long j );
 long long llabs( long long j );
 
+div_t div( int num, int denom );
+ldiv_t ldiv( long num, long denom );
+
 int system( const char* command );
 
-void exit( int status ) __THROW __attribute__ ((__noreturn__));
+void exit( int status ) __THROW __attribute__(( __noreturn__ ));
 int atexit( void ( *function )( void ) );
 
 char* getenv( const char* name );
@@ -82,7 +95,7 @@ void srandom( unsigned int seed );
 int rand( void );
 void srand( unsigned int seed );
 
-char* mktemp( char* template );
-int mkstemp( char* template );
+char* mktemp( char* tmpl );
+int mkstemp( char* tmpl );
 
 #endif /* _STDLIB_H_ */

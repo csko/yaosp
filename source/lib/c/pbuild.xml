@@ -47,6 +47,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/math/s_tan.S</item>
         <item>arch/i386/math/s_atan.S</item>
         <item>arch/i386/math/e_sqrt.S</item>
+        <item>arch/i386/math/e_acos.S</item>
+        <item>arch/i386/math/e_asin.S</item>
+        <item>arch/i386/math/e_expl.c</item>
     </array>
 
     <array name="files">
@@ -107,6 +110,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strcspn.c</item>
         <item>src/string/strtok_r.c</item>
         <item>src/string/strtok.c</item>
+        <item>src/string/strxfrm.c</item>
+        <item>src/string/strtof.c</item>
         <item>src/unistd/sync.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
@@ -195,6 +200,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/stdio/rename.c</item>
         <item>src/stdio/remove.c</item>
         <item>src/stdio/fpurge.c</item>
+        <item>src/stdio/fgetpos.c</item>
+        <item>src/stdio/fsetpos.c</item>
+        <item>src/stdio/getchar.c</item>
+        <item>src/stdio/gets.c</item>
+        <item>src/stdio/setbuf.c</item>
+        <item>src/stdio/tmpfile.c</item>
+        <item>src/stdio/tmpnam.c</item>
         <item>src/time/tzset.c</item>
         <item>src/time/time_int.c</item>
         <item>src/time/strftime.c</item>
@@ -265,6 +277,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/ctype/isgraph.c</item>
         <item>src/ctype/ispunct.c</item>
         <item>src/ctype/isascii.c</item>
+        <item>src/ctype/ctype.c</item>
         <item>src/signal/signal.c</item>
         <item>src/signal/sigaction.c</item>
         <item>src/signal/kill.c</item>
@@ -288,6 +301,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/termios/tcsetpgrp.c</item>
         <item>src/math/s_ldexp.c</item>
         <item>src/math/s_modf.c</item>
+        <item>src/math/math_dummy.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/sysinfo.c</item>
         <item>src/yaosp/region.c</item>

@@ -1,6 +1,6 @@
 /* mkstemp function
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,10 +21,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-char* mktemp( char* template ) {
+char* mktemp( char* tmpl ) {
     int fd;
 
-    fd = mkstemp( template );
+    fd = mkstemp( tmpl );
 
     if ( fd < 0 ) {
         return NULL;
@@ -32,7 +32,7 @@ char* mktemp( char* template ) {
 
     close( fd );
 
-    unlink( template );
+    unlink( tmpl );
 
-    return template;
+    return tmpl;
 }
