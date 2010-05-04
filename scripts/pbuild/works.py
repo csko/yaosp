@@ -122,8 +122,8 @@ class EchoWork( Work ) :
         print context.replace_definitions( self.text )
 
 class GccWork( Work ) :
-
     GCC_COMMAND = "i686-pc-yaosp-gcc"
+    GPP_COMMAND = "i686-pc-yaosp-g++"
 
     def __init__( self ) :
         self.inputs = []
@@ -133,16 +133,16 @@ class GccWork( Work ) :
         self.defines = {}
 
     def add_input( self, input ) :
-        self.inputs.append( input )
+        self.inputs += [input]
 
     def set_output( self, output ) :
         self.output = output
 
     def add_flag( self, flag ) :
-        self.flags.append( flag )
+        self.flags += [flag]
 
     def add_include( self, include ) :
-        self.includes.append( include )
+        self.includes += [include]
 
     def add_define( self, key, value ) :
         self.defines[ key ] = value
@@ -152,12 +152,18 @@ class GccWork( Work ) :
         real_flags = None
         real_includes = []
         real_defines = []
+        need_cpp = False
 
         # Parse the input files
 
         for input in self.inputs :
             input = context.replace_definitions( input )
             real_inputs += context.replace_wildcards( input )
+
+        for input in real_inputs :
+            if input.endswith(".cpp") :
+                need_cpp = True
+                break
 
         # Parse flags
 
@@ -180,7 +186,12 @@ class GccWork( Work ) :
 
         # Build the command
 
-        command = [ GccWork.GCC_COMMAND ] + real_flags + real_inputs + real_includes
+        if need_cpp :
+            command = [GccWork.GPP_COMMAND]
+        else :
+            command = [GccWork.GCC_COMMAND]
+
+        command += real_flags + real_inputs + real_includes
         command += real_defines
         command += [ "-o", context.handle_everything( self.output ) ]
 

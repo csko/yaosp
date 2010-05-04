@@ -139,14 +139,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <cleandir>../build/crosscompiler/i686-pc-yaosp/sys-include</cleandir>
         <rmdir>../build/crosscompiler/i686-pc-yaosp/sys-include</rmdir>
+        <cleandir>../build/crosscompiler/i686-pc-yaosp/include</cleandir>
+        <rmdir>../build/crosscompiler/i686-pc-yaosp/include</rmdir>
 
-        <symlink from="../../../source/include" to="../build/crosscompiler/i686-pc-yaosp/sys-include"/>
+        <symlink from="../../../source/include" to="../build/crosscompiler/i686-pc-yaosp/include"/>
 
         <exec executable="tar">
             <arg>-xjf</arg>
             <arg>libstdc++-inc.tar.bz2</arg>
             <arg>-C</arg>
-            <arg>../build/crosscompiler/i686-pc-yaosp/</arg>
+            <arg>../source/include/</arg>
         </exec>
     </target>
 
