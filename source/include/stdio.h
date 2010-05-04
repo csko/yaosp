@@ -48,6 +48,10 @@
 
 #define P_tmpdir "/temp"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     off_t pos;
 } fpos_t;
@@ -136,5 +140,9 @@ void perror( const char* s );
 
 FILE* tmpfile( void );
 char* tmpnam( char* s );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _STDIO_H_ */

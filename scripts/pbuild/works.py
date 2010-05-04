@@ -125,12 +125,13 @@ class GccWork( Work ) :
     GCC_COMMAND = "i686-pc-yaosp-gcc"
     GPP_COMMAND = "i686-pc-yaosp-g++"
 
-    def __init__( self ) :
+    def __init__( self, need_gpp ) :
         self.inputs = []
         self.output = ""
         self.flags = []
         self.includes = []
         self.defines = {}
+        self.need_gpp = need_gpp
 
     def add_input( self, input ) :
         self.inputs += [input]
@@ -160,10 +161,11 @@ class GccWork( Work ) :
             input = context.replace_definitions( input )
             real_inputs += context.replace_wildcards( input )
 
-        for input in real_inputs :
-            if input.endswith(".cpp") :
-                need_cpp = True
-                break
+        if not self.need_gpp :
+            for input in real_inputs :
+                if input.endswith(".cpp") :
+                    self.need_gpp = True
+                    break
 
         # Parse flags
 
@@ -186,7 +188,7 @@ class GccWork( Work ) :
 
         # Build the command
 
-        if need_cpp :
+        if self.need_gpp :
             command = [GccWork.GPP_COMMAND]
         else :
             command = [GccWork.GCC_COMMAND]
@@ -198,7 +200,6 @@ class GccWork( Work ) :
         return self.exec_shell( command )
 
 class LdWork( Work ) :
-
     LD_COMMAND = "i686-pc-yaosp-ld"
 
     def __init__( self ) :

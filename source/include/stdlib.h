@@ -44,6 +44,10 @@
 
 #define WIFEXITED(status)   (WTERMSIG(status) == 0)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     int quot;
     int rem;
@@ -97,5 +101,9 @@ void srand( unsigned int seed );
 
 char* mktemp( char* tmpl );
 int mkstemp( char* tmpl );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _STDLIB_H_ */

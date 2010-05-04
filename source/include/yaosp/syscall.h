@@ -1,6 +1,6 @@
 /* System calls
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,10 @@
 
 #include <sys/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int syscall0( int number );
 int syscall1( int number, uint32_t p1 );
 int syscall2( int number, uint32_t p1, uint32_t p2 );
@@ -28,4 +32,8 @@ int syscall3( int number, uint32_t p1, uint32_t p2, uint32_t p3 );
 int syscall4( int number, uint32_t p1, uint32_t p2, uint32_t p3, uint32_t p4 );
 int syscall5( int number, uint32_t p1, uint32_t p2, uint32_t p3, uint32_t p4, uint32_t p5 );
 
-#endif // _YAOSP_SYSCALL_H_
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _YAOSP_SYSCALL_H_ */

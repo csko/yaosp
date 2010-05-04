@@ -19,6 +19,10 @@
 #ifndef _YAOSP_DEBUG_H_
 #define _YAOSP_DEBUG_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Writes a string to the kernel debug console.
  *
@@ -33,5 +37,9 @@ int dbprintf( const char* format, ... );
  * @return On success 0 is returned
  */
 int dbtrace( void );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YAOSP_DEBUG_H_ */

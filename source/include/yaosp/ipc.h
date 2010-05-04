@@ -1,6 +1,6 @@
 /* IPC functions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -23,6 +23,10 @@
 
 typedef int ipc_port_id;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 ipc_port_id create_ipc_port( void );
 int destroy_ipc_port( ipc_port_id port_id );
 
@@ -32,5 +36,9 @@ int peek_ipc_message( ipc_port_id port_id, uint32_t* code, size_t* size, uint64_
 
 int register_named_ipc_port( const char* name, ipc_port_id port_id );
 int get_named_ipc_port( const char* name, ipc_port_id* port_id );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YAOSP_IPC_H_ */
