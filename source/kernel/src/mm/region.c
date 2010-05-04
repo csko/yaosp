@@ -158,9 +158,9 @@ static int do_memory_region_put_times( memory_region_t* region, int times ) {
 
         mutex_lock( context->mutex, LOCK_IGNORE_SIGNAL );
         memory_context_remove_region( context, region );
+        arch_memory_region_unmap_pages( region, region->address, region->size );
         mutex_unlock( context->mutex );
 
-        arch_memory_region_unmap_pages( region, region->address, region->size );
         memory_region_destroy( region );
     }
 

@@ -178,6 +178,7 @@ int arch_memory_region_alloc_pages( memory_region_t* region, ptr_t virtual, uint
     return 0;
 
  error2:
+    /* todo */
 
  error1:
     return error;
