@@ -415,6 +415,22 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     kfree( user_argv );
     kfree( user_envv );
 
+    /* Put the global ctor informations to the stack. */
+
+    ptr_t ctor_list = 0;
+    ptr_t ctor_end;
+    uint32_t ctor_count = 0;
+
+    if ( ( loader->get_symbol( "__CTOR_LIST__", &ctor_list ) == 0 ) &&
+         ( loader->get_symbol( "__CTOR_END__", &ctor_end ) == 0 ) ) {
+        ctor_count = ( ctor_end - ctor_list ) / sizeof( ptr_t );
+    }
+
+    stack -= sizeof( void* );
+    *( ( void** )stack ) = ( void* )ctor_list;
+    stack -= sizeof( uint32_t );
+    *( ( uint32_t* )stack ) = ctor_count;
+
     /* Push argv and envp to the stack */
 
     stack -= sizeof( void* );
@@ -442,27 +458,27 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
 
     /* Cleanup process before the memory context is destroyed */
 
-_error3:
+ _error3:
     free_param_array( cloned_argv, argc );
 
-_error2:
+ _error2:
     sys_close( fd );
 
-_error1:
+ _error1:
     return error;
 
     /* Cleanup process after the memory context is destroyed */
 
-error4:
+ error4:
     kfree( user_argv );
 
-error3:
+ error3:
     memory_region_put( thread->user_stack_region );
 
-error2:
+ error2:
     /* TODO: destroy loaded stuff */
 
-error1:
+ error1:
     thread->user_stack_region = NULL;
 
     kprintf( ERROR, "Failed to execute %s.\n", thread->process->name );

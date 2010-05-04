@@ -26,7 +26,6 @@
 #include <mm/region.h>
 #include <linker/elf.h>
 #include <lock/mutex.h>
-#include <lib/hashtable.h>
 #include <lib/array.h>
 
 #define ELF32_R_SYM(i)  ((i)>>8)
@@ -114,8 +113,6 @@ typedef struct elf_hashtable {
 } elf_hashtable_t;
 
 typedef struct my_elf_symbol {
-    hashitem_t hash;
-
     char* name;
     uint32_t address;
     uint32_t size;
@@ -185,6 +182,7 @@ int elf32_free_section_headers( elf32_image_info_t* info );
 int elf32_free_reloc_table( elf32_image_info_t* info );
 
 my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name );
+elf_symbol_t* elf32_get_symbol2( elf32_image_info_t* info, const char* name );
 int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_t* symbol_info );
 
 int elf32_init_image_info( elf32_image_info_t* info, ptr_t virtual_address );
@@ -194,8 +192,8 @@ int elf32_image_load( elf32_image_t* image, binary_loader_t* loader, ptr_t virtu
 
 int elf32_context_init( elf32_context_t* context, elf32_relocate_t* relocate );
 int elf32_context_destroy( elf32_context_t* context );
-int elf32_context_get_symbol( elf32_context_t* context, const char* name, int skip_main,
-                              elf32_image_t** image, my_elf_symbol_t** symbol );
+int elf32_context_get_symbol( elf32_context_t* context, const char* name, int skip_main, int dynsym_only,
+                              elf32_image_t** image, void** symbol );
 
 void* sys_dlopen( const char* filename, int flag );
 int sys_dlclose( void* handle );

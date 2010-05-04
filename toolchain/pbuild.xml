@@ -1,3 +1,24 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2010 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
 <build default="all">
     <target name="prepare" type="private">
         <mkdir>../build/crosscompiler</mkdir>
@@ -120,6 +141,13 @@
         <rmdir>../build/crosscompiler/i686-pc-yaosp/sys-include</rmdir>
 
         <symlink from="../../../source/include" to="../build/crosscompiler/i686-pc-yaosp/sys-include"/>
+
+        <exec executable="tar">
+            <arg>-xjf</arg>
+            <arg>libstdc++-inc.tar.bz2</arg>
+            <arg>-C</arg>
+            <arg>../build/crosscompiler/i686-pc-yaosp/</arg>
+        </exec>
     </target>
 
     <target name="all">

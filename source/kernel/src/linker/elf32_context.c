@@ -328,15 +328,19 @@ int elf32_context_destroy( elf32_context_t* context ) {
     return 0;
 }
 
-static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* name,
-                                            elf32_image_t** img, my_elf_symbol_t** sym ) {
+static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* name, int dynsym_only,
+                                            elf32_image_t** img, void** sym ) {
     uint32_t i;
-    my_elf_symbol_t* symbol;
+    void* symbol;
     elf32_image_info_t* info;
 
     info = &image->info;
 
-    symbol = elf32_get_symbol( info, name );
+    if ( dynsym_only ) {
+        symbol = ( void* )elf32_get_symbol( info, name );
+    } else {
+        symbol = ( void* )elf32_get_symbol2( info, name );
+    }
 
     if ( symbol != NULL ) {
         *img = image;
@@ -346,7 +350,7 @@ static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* na
     }
 
     for ( i = 0; i < info->needed_count; i++ ) {
-        if ( elf32_context_get_symbol_helper( &image->subimages[i], name, img, sym ) == 0 ) {
+        if ( elf32_context_get_symbol_helper( &image->subimages[i], name, dynsym_only, img, sym ) == 0 ) {
             return 0;
         }
     }
@@ -354,8 +358,8 @@ static int elf32_context_get_symbol_helper( elf32_image_t* image, const char* na
     return -ENOENT;
 }
 
-int elf32_context_get_symbol( elf32_context_t* context, const char* name, int skip_main,
-                              elf32_image_t** image, my_elf_symbol_t** symbol ) {
+int elf32_context_get_symbol( elf32_context_t* context, const char* name, int skip_main, int dynsym_only,
+                              elf32_image_t** image, void** symbol ) {
     int i;
     int size;
     int error = -EINVAL;
@@ -367,14 +371,14 @@ int elf32_context_get_symbol( elf32_context_t* context, const char* name, int sk
         info = &context->main.info;
 
         for ( j = 0; j < info->needed_count; j++ ) {
-            error = elf32_context_get_symbol_helper( &context->main.subimages[j], name, image, symbol );
+            error = elf32_context_get_symbol_helper( &context->main.subimages[j], name, dynsym_only, image, symbol );
 
             if ( error == 0 ) {
                 return 0;
             }
         }
     } else {
-        error = elf32_context_get_symbol_helper( &context->main, name, image, symbol );
+        error = elf32_context_get_symbol_helper( &context->main, name, dynsym_only, image, symbol );
 
         if ( error == 0 ) {
             return 0;
@@ -388,7 +392,7 @@ int elf32_context_get_symbol( elf32_context_t* context, const char* name, int sk
 
         library = ( elf32_image_t* )array_get_item( &context->libraries, i );
 
-        error = elf32_context_get_symbol_helper( library, name, image, symbol );
+        error = elf32_context_get_symbol_helper( library, name, dynsym_only, image, symbol );
 
         if ( error == 0 ) {
             break;

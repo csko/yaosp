@@ -34,9 +34,25 @@ int* __errno_location( void ) {
 char** environ;
 int __environ_allocated;
 
-void __libc_start_main( char** argv, char** envp ) {
+typedef void ctor_t( void );
+
+void __libc_start_main( char** argv, char** envp, uint32_t ctor_count, uint32_t* ctor_list ) {
     int argc;
     int error;
+    uint32_t i;
+
+    /* Call global constructors. */
+
+    for ( i = 0; i < ctor_count; i++ ) {
+        ctor_t* ctor;
+
+        if ( ctor_list[i] == 0xFFFFFFFF ) {
+            continue;
+        }
+
+        ctor = ( ctor_t* )ctor_list[i];
+        ctor();
+    }
 
     /* Count the number of arguments */
 

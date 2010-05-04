@@ -113,6 +113,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
         <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
         <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
+        <copy from="toolchain/libstdc++-i386.so" to="build/image/system/lib/libstdc++.so"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>
@@ -135,6 +136,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
         <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
         <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
+        <copy from="toolchain/libstdc++-i386.so" to="build/image/system/lib/libstdc++.so"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>

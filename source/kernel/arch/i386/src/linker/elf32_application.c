@@ -118,6 +118,24 @@ int elf32_application_execute( void ) {
     return 0;
 }
 
+static int elf32_application_get_symbol( const char* name, ptr_t* address ) {
+    thread_t* thread;
+    elf_symbol_t* sym;
+    elf32_image_t* img;
+    elf32_context_t* app_context;
+
+    thread = current_thread();
+    app_context = ( elf32_context_t* )thread->process->loader_data;
+
+    if ( elf32_context_get_symbol( app_context, name, 0, 0, &img, ( void** )&sym ) != 0 ) {
+        return -ENOENT;
+    }
+
+    *address = img->text_region->address + sym->value - img->info.virtual_address;
+
+    return 0;
+}
+
 static int elf32_application_get_symbol_info( thread_t* thread, ptr_t address, symbol_info_t* info ) {
     elf32_context_t* app_context;
 
@@ -142,6 +160,7 @@ static application_loader_t elf32_application_loader = {
     .check = elf32_application_check,
     .load = elf32_application_load,
     .execute = elf32_application_execute,
+    .get_symbol = elf32_application_get_symbol,
     .get_symbol_info = elf32_application_get_symbol_info,
     .destroy = elf32_application_destroy
 };

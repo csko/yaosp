@@ -548,6 +548,21 @@ my_elf_symbol_t* elf32_get_symbol( elf32_image_info_t* info, const char* name ) 
     return NULL;
 }
 
+elf_symbol_t* elf32_get_symbol2( elf32_image_info_t* info, const char* name ) {
+    uint32_t i;
+    elf_symbol_t* symbol;
+
+    symbol = info->symbol_table;
+
+    for ( i = 0; i < info->symbol_count; i++, symbol++ ) {
+        if ( strcmp( info->string_table + symbol->name, name ) == 0 ) {
+            return symbol;
+        }
+    }
+
+    return NULL;
+}
+
 int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_t* symbol_info ) {
     uint32_t i;
     elf_symbol_t* symbol;
