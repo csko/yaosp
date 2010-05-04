@@ -21,11 +21,11 @@
 
 #include <string>
 
-#include <yutil++/ipcport.hpp>
+#include <yutil++/ipclistener.hpp>
 
 namespace yguipp {
 
-class Application {
+class Application : public yutilpp::IPCListener {
   private:
     Application( const std::string& name );
     ~Application( void );
@@ -34,12 +34,20 @@ class Application {
 
   public:
     yutilpp::IPCPort* getGuiServerPort( void );
+    yutilpp::IPCPort* getApplicationPort( void );
+
+    int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
 
     static bool createInstance( const std::string& name );
     static Application* getInstance( void );
 
   private:
+    bool registerApplication( void );
+
+  private:
     yutilpp::IPCPort* m_guiServerPort;
+    yutilpp::IPCPort* m_serverPort;
+    yutilpp::IPCPort* m_replyPort;
 
     static Application* m_instance;
 };

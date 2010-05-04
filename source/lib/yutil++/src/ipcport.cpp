@@ -42,6 +42,17 @@ bool IPCPort::createNew( void ) {
     return true;
 }
 
+bool IPCPort::createFromExisting( ipc_port_id id ) {
+    if ( id < 0 ) {
+        return false;
+    }
+
+    m_id = id;
+    m_canSend = true;
+
+    return true;
+}
+
 bool IPCPort::createFromNamed( const std::string& name ) {
     if ( get_named_ipc_port( name.c_str(), &m_id ) != 0 ) {
         return false;

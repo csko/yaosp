@@ -42,6 +42,7 @@ class Window : public Object, public yutilpp::IPCListener {
 
   private:
     std::string m_title;
+    yutilpp::IPCPort* m_serverPort;
     yutilpp::IPCPort* m_replyPort;
 }; /* class Window */
 

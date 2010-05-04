@@ -31,11 +31,12 @@ class IPCPort {
     ~IPCPort( void );
 
     bool createNew( void );
+    bool createFromExisting( ipc_port_id id );
     bool createFromNamed( const std::string& name );
 
     ipc_port_id getId( void );
 
-    int send( uint32_t code, void* data, size_t size );
+    int send( uint32_t code, void* data = NULL, size_t size = 0 );
     int receive( uint32_t& code, void* data, size_t maxSize, uint64_t timeOut = INFINITE_TIMEOUT );
 
   private:

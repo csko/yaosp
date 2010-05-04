@@ -33,6 +33,7 @@ Window::~Window( void ) {
 bool Window::init( void ) {
     IPCListener::init();
 
+    m_serverPort = new yutilpp::IPCPort();
     m_replyPort = new yutilpp::IPCPort();
     m_replyPort->createNew();
 
@@ -42,6 +43,7 @@ bool Window::init( void ) {
 }
 
 void Window::show( void ) {
+    m_serverPort->send( MSG_WINDOW_SHOW );
 }
 
 int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
@@ -50,8 +52,10 @@ int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
 
 bool Window::registerWindow( void ) {
     uint8_t* data;
+    uint32_t code;
     size_t dataSize;
     msg_create_win_t* request;
+    msg_create_win_reply_t reply;
 
     dataSize = sizeof(msg_create_win_t) + m_title.size() + 1;
     data = new uint8_t[dataSize];
@@ -68,7 +72,10 @@ bool Window::registerWindow( void ) {
 
     memcpy( reinterpret_cast<void*>(request + 1), m_title.c_str(), m_title.size() + 1 );
 
-    Application::getInstance()->getGuiServerPort()->send( MSG_WINDOW_CREATE, reinterpret_cast<void*>(data), dataSize );
+    Application::getInstance()->getApplicationPort()->send( MSG_WINDOW_CREATE, reinterpret_cast<void*>(data), dataSize );
+    m_replyPort->receive( code, reinterpret_cast<void*>(&reply), sizeof(msg_create_win_reply_t) );
+
+    m_serverPort->createFromExisting(reply.server_port);
 
     return true;
 }

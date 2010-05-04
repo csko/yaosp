@@ -49,7 +49,7 @@ void Thread::starter( void* arg ) {
     Thread* t;
 
     t = reinterpret_cast<Thread*>(arg);
-    t->start();
+    t->run();
 }
 
 bool Thread::uSleep( uint64_t usecs ) {

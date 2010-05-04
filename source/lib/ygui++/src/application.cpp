@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <ygui/protocol.h>
+
 #include <ygui++/application.hpp>
 #include <yutil++/thread.hpp>
 
@@ -23,13 +25,16 @@ namespace yguipp {
 
 Application* Application::m_instance = NULL;
 
-Application::Application( const std::string& name ) : m_guiServerPort(NULL) {
+Application::Application( const std::string& name ) : IPCListener("application"), m_guiServerPort(NULL),
+                                                      m_serverPort(NULL), m_replyPort(NULL) {
 }
 
 Application::~Application( void ) {
 }
 
 bool Application::init( void ) {
+    IPCListener::init();
+
     m_guiServerPort = new yutilpp::IPCPort();
 
     while (1) {
@@ -40,11 +45,23 @@ bool Application::init( void ) {
         yutilpp::Thread::uSleep( 100 * 1000 );
     }
 
-    return true;
+    m_serverPort = new yutilpp::IPCPort();
+    m_replyPort = new yutilpp::IPCPort();
+    m_replyPort->createNew();
+
+    return registerApplication();
 }
 
 yutilpp::IPCPort* Application::getGuiServerPort( void ) {
     return m_guiServerPort;
+}
+
+yutilpp::IPCPort* Application::getApplicationPort( void ) {
+    return m_serverPort;
+}
+
+int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
+    return 0;
 }
 
 bool Application::createInstance( const std::string& name ) {
@@ -64,6 +81,28 @@ bool Application::createInstance( const std::string& name ) {
 
 Application* Application::getInstance( void ) {
     return m_instance;
+}
+
+bool Application::registerApplication( void ) {
+    uint32_t code;
+    msg_create_app_t request;
+    msg_create_app_reply_t reply;
+
+    request.reply_port = m_replyPort->getId();
+    request.client_port = getPort()->getId();
+    request.flags = 0;
+
+    if ( m_guiServerPort->send( MSG_APPLICATION_CREATE, reinterpret_cast<void*>(&request), sizeof(msg_create_app_t) ) < 0 ) {
+        return false;
+    }
+
+    if ( m_replyPort->receive( code, reinterpret_cast<void*>(&reply), sizeof(msg_create_app_reply_t) ) < 0 ) {
+        return false;
+    }
+
+    m_serverPort->createFromExisting(reply.server_port);
+
+    return true;
 }
 
 } /* namespace yguipp */
