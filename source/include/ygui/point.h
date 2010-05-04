@@ -23,6 +23,10 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct point {
     int x;
     int y;
@@ -33,9 +37,9 @@ static inline void point_init( point_t* point, int x, int y ) {
     point->y = y;
 }
 
-static inline void point_copy( point_t* new, point_t* old ) {
-    new->x = old->x;
-    new->y = old->y;
+static inline void point_copy( point_t* n, point_t* old ) {
+    n->x = old->x;
+    n->y = old->y;
 }
 
 static inline void point_add( point_t* point1, point_t* point2 ) {
@@ -97,5 +101,9 @@ static inline void point_max_n( point_t* dest, point_t* point1, point_t* point2 
     dest->x = MAX( point1->x, point2->x );
     dest->y = MAX( point1->y, point2->y );
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YGUI_POINT_H_ */

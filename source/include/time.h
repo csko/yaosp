@@ -25,6 +25,10 @@
 #define time_t uint64_t
 #define suseconds_t int
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned int clock_t;
 
 typedef struct timeval {
@@ -81,5 +85,9 @@ char* ctime( const time_t* timep );
 char* ctime_r( const time_t* timep, char* buf );
 
 int nanosleep( const struct timespec* req, struct timespec* rem );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _TIME_H_ */

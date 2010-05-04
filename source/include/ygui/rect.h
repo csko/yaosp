@@ -25,6 +25,10 @@
 
 #include <ygui/point.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct rect {
     int left;
     int top;
@@ -39,8 +43,8 @@ static inline void rect_init( rect_t* rect, int left, int top, int right, int bo
     rect->bottom = bottom;
 }
 
-static inline void rect_copy( rect_t* new, rect_t* old ) {
-    memcpy( ( void* )new, ( void* )old, sizeof( rect_t ) );
+static inline void rect_copy( rect_t* n, rect_t* old ) {
+    memcpy( ( void* )n, ( void* )old, sizeof( rect_t ) );
 }
 
 static inline int rect_width( rect_t* rect ) {
@@ -159,5 +163,9 @@ static inline void rect_resize_n( rect_t* dest, rect_t* rect, int l, int t, int 
     dest->right = rect->right + r;
     dest->bottom = rect->bottom + b;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YGUI_RECT_H_ */

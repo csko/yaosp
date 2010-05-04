@@ -24,6 +24,10 @@
 #define __need_NULL
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void* memset( void* s, int c, size_t n );
 void* memcpy( void* d, const void* s, size_t n );
 int memcmp( const void* p1, const void* p2, size_t c );
@@ -58,5 +62,9 @@ float strtof(const char *nptr, char **endptr);
 
 char* strerror( int errnum );
 char* strsignal( int signum );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _STRING_H_ */

@@ -31,6 +31,10 @@
 #include <ygui/font.h>
 #include <ygui/yconstants.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum {
     /* Application related messages */
 
@@ -272,5 +276,9 @@ typedef struct msg_scr_set_mode {
 typedef struct msg_scr_res_changed {
     screen_mode_info_t mode_info;
 } msg_scr_res_changed_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YGUI_PROTOCOL_H_ */
