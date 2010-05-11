@@ -1,6 +1,6 @@
 /* Page fault handler
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -46,6 +46,9 @@ static void invalid_page_fault( thread_t* thread, registers_t* regs, uint32_t cr
 
     if ( __likely( thread != NULL ) ) {
         kprintf( ERROR, "Process: %s thread: %s\n", thread->process->name, thread->name );
+#ifdef ENABLE_SMP
+        kprintf( ERROR, "Processor: %d\n", get_processor_index() );
+#endif /* ENABLE_SMP */
         memory_context_dump( thread->process->memory_context );
 
         if ( regs->error_code & 0x4 ) {

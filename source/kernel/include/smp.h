@@ -1,6 +1,6 @@
 /* Symmetric multi-processing
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  * Copyright (c) 2009 Kornel Csernai
  *
  * This program is free software; you can redistribute it and/or modify
@@ -53,6 +53,7 @@ extern int processor_count;
 extern atomic_t active_processor_count;
 extern cpu_t processor_table[ MAX_CPU_COUNT ];
 
+int get_processor_index( void );
 cpu_t* get_processor( void );
 
 process_t* current_process( void );
