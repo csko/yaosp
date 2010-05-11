@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
+    <pinclude file="${toplevel}/config/paths.xml"/>
+
     <target name="crosscompiler">
         <mkdir>build</mkdir>
         <mkdir>build/crosscompiler</mkdir>
@@ -56,7 +58,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="create_iso" type="private">
-        <copy from="scripts/grub/stage2_eltorito" to="build/image/boot/grub/stage2_eltorito"/>
+        <copy from="build/grub/stage2_eltorito" to="${imagedir}/boot/grub/stage2_eltorito"/>
 
         <echo>Creating bootable iso9660 CD-ROM image</echo>
         <echo/>
@@ -79,10 +81,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="create_install_base">
-        <copy from="scripts/grub/stage1" to="build/image/boot/grub/stage1"/>
-        <copy from="scripts/grub/stage2" to="build/image/boot/grub/stage2"/>
-        <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
-        <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
+        <copy from="build/grub/stage1" to="${imagedir}/boot/grub/stage1"/>
+        <copy from="build/grub/stage2" to="${imagedir}/boot/grub/stage2"/>
+        <copy from="config/xterm" to="${imagedir}/system/terminfo/x/xterm"/>
+        <copy from="config/bashrc" to="${imagedir}/system/config/bashrc"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>
@@ -110,10 +112,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="create-livecd-iso">
-        <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
-        <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
-        <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
-        <copy from="toolchain/libstdc++-i386.so" to="build/image/system/lib/libstdc++.so"/>
+        <copy from="build/grub/menu.lst" to="${imagedir}/boot/grub/menu.lst"/>
+        <copy from="config/xterm" to="${imagedir}/system/terminfo/x/xterm"/>
+        <copy from="config/bashrc" to="${imagedir}/system/config/bashrc"/>
+        <copy from="toolchain/libstdc++-i386.so" to="${imagedir}/system/lib/libstdc++.so"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>
@@ -131,12 +133,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="create-installcd-iso">
-        <copy from="build/yaosp_base.tar.bz2" to="build/image/yaosp_base.tar.bz2"/>
+        <copy from="build/yaosp_base.tar.bz2" to="${imagedir}/yaosp_base.tar.bz2"/>
 
-        <copy from="scripts/grub/menu.lst" to="build/image/boot/grub/menu.lst"/>
-        <copy from="config/xterm" to="build/image/system/terminfo/x/xterm"/>
-        <copy from="config/bashrc" to="build/image/system/config/bashrc"/>
-        <copy from="toolchain/libstdc++-i386.so" to="build/image/system/lib/libstdc++.so"/>
+        <copy from="build/grub/menu.lst" to="${imagedir}/boot/grub/menu.lst"/>
+        <copy from="config/xterm" to="${imagedir}/system/terminfo/x/xterm"/>
+        <copy from="config/bashrc" to="${imagedir}/system/config/bashrc"/>
+        <copy from="toolchain/libstdc++-i386.so" to="${imagedir}/system/lib/libstdc++.so"/>
 
         <exec executable="python">
             <arg>scripts/config_converter.py</arg>
