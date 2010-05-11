@@ -56,7 +56,7 @@ int pit_read_timer( void ) {
 
     outb( 0, PIT_MODE );
     count = inb( PIT_CH0 );
-    count |= ( inb( PIT_CH0 ) << 8 );
+    count |= ( (int)inb( PIT_CH0 ) << 8 );
 
     return count;
 }

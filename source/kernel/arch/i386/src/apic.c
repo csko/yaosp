@@ -1,6 +1,6 @@
 /* Advanced programmable interrupt controller
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -119,9 +119,9 @@ __init void calibrate_apic_timer( void ) {
 
     /* Configure PIT to use for the calibration */
 
-    outb( PIT_MODE, 0x34 );
-    outb( PIT_CH0, 0xFF );
-    outb( PIT_CH0, 0xFF );
+    outb( 0x34, PIT_MODE );
+    outb( 0xFF, PIT_CH0 );
+    outb( 0xFF, PIT_CH0 );
 
     pit_wait_wrap();
 
@@ -193,17 +193,15 @@ __init int init_apic( void ) {
         return -ENOMEM;
     }
 
-#if 0
+    local_apic_address = lapic_region->address;
+
     /* Remap the created region */
 
-    error = do_remap_region( local_apic_region, ( ptr_t )local_apic_base, true );
-
-    if ( error < 0 ) {
+    if ( do_memory_region_remap_pages( lapic_region, ( ptr_t )local_apic_base ) != 0 ) {
         kprintf( ERROR, "Failed to remap the local APIC register memory region!\n" );
         /* TODO: delete region */
-        return error;
+        return -1;
     }
-#endif
 
     memory_context_insert_region( &kernel_memory_context, lapic_region );
 

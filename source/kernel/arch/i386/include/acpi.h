@@ -27,6 +27,15 @@
 #define PMTMR_TICKS_PER_SEC 3579545
 #define ACPI_PM_OVRRUN      ( 1 << 24 )
 
+enum {
+    ACPI_LAPIC = 0,
+    ACPI_IOAPIC
+};
+
+enum {
+    ACPI_LAPIC_CPU_USABLE = ( 1 << 0 )
+};
+
 typedef struct acpi_header {
     uint8_t signature[ 4 ];
     uint32_t length;
@@ -83,6 +92,24 @@ typedef struct acpi_hpet {
     uint16_t minimum_tick;
     uint8_t flags;
 } __PACKED acpi_hpet_t;
+
+typedef struct acpi_madt {
+    acpi_header_t header;
+    uint32_t lapic_addr;
+    uint32_t flags;
+} __PACKED acpi_madt_t;
+
+typedef struct acpi_madt_item {
+    uint8_t type;
+    uint8_t length;
+} __PACKED acpi_madt_item_t;
+
+typedef struct acpi_madt_lapic {
+    acpi_madt_item_t header;
+    uint8_t acpi_id;
+    uint8_t apic_id;
+    uint32_t flags;
+} __PACKED acpi_madt_lapic_t;
 
 uint32_t acpi_pmtimer_read( void );
 

@@ -1,6 +1,6 @@
 /* i386 specific SMP functions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -181,12 +181,19 @@ void ap_processor_entry( void ) {
 int arch_boot_processors( void ) {
     int i;
     size_t trampoline_size;
+    memory_region_t* region;
 
     trampoline_size = ( size_t )&__smp_trampoline_end - ( size_t )&__smp_trampoline_start;
+    ASSERT( trampoline_size <= PAGE_SIZE );
+
+    /* Create a memory region to be able to put the SMP trampoline code below 1Mb. */
+
+    region = memory_region_create( "SMP trampoline", PAGE_SIZE, REGION_READ | REGION_WRITE | REGION_KERNEL );
+    memory_region_remap_pages( region, 0x7000 );
 
     /* Copy the trampoline code to a known memory location below 1Mb */
 
-    memcpy( ( void* )0x7000, ( void* )&__smp_trampoline_start, trampoline_size );
+    memcpy( ( void* )region->address, ( void* )&__smp_trampoline_start, trampoline_size );
 
     for ( i = 1; i < processor_count; i++ ) {
         int j;
@@ -195,10 +202,9 @@ int arch_boot_processors( void ) {
 
         ap_stack_top = ( uint32_t )alloc_pages( 2, MEM_COMMON );
         ap_stack_top += 2 * PAGE_SIZE;
-        ap_stack_top -= sizeof( register_t );
         atomic_set( &ap_running, 0 );
 
-        DEBUG_LOG( "Booting CPU %d ...\n", i, ap_stack_top );
+        DEBUG_LOG( "Booting CPU %d ...\n", i );
 
         /* Send INIT to the AP */
 
@@ -264,9 +270,11 @@ int arch_boot_processors( void ) {
                 kprintf( ERROR, "CPU %d started but failed to finish booting!\n", i );
             }
         } else {
-            kprintf( ERROR, "Failed to start up CPU %d\n", i );
+            kprintf( ERROR, "Failed to start up CPU %d.\n", i );
         }
     }
+
+    memory_region_put( region );
 
     return 0;
 }

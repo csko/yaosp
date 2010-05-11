@@ -1,6 +1,6 @@
 /* Memory region handling
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -249,7 +249,7 @@ int arch_memory_region_unmap_pages( memory_region_t* region, ptr_t virtual, uint
 
     spinunlock_enable( &pages_lock );
 
-    flush_tlb();
+    flush_tlb_global();
 
     return 0;
 }
@@ -325,7 +325,7 @@ static int do_clone_allocated_region_pages( memory_region_t* old_region, memory_
        from the pages of the currently running process. */
 
     if ( remove_write ) {
-        flush_tlb();
+        flush_tlb_global();
     }
 
     return 0;

@@ -19,6 +19,8 @@
 #include <macros.h>
 #include <console.h>
 #include <errno.h>
+#include <smp.h>
+#include <config.h>
 #include <mm/region.h>
 #include <mm/context.h>
 #include <lib/string.h>
@@ -26,6 +28,9 @@
 #include <arch/acpi.h>
 #include <arch/io.h>
 #include <arch/hpet.h>
+#include <arch/apic.h>
+#include <arch/smp.h>
+#include <arch/cpu.h>
 
 int acpi_pmtmr_found = 0;
 uint32_t acpi_pmtmr_ioport;
@@ -41,6 +46,7 @@ static uint8_t ACPI_RSDP_SIGNATURE[] = { 'R', 'S', 'D', ' ', 'P', 'T', 'R', ' ' 
 static uint8_t ACPI_RSDT_SIGNATURE[] = { 'R', 'S', 'D', 'T' };
 static uint8_t ACPI_FADT_SIGNATURE[] = { 'F', 'A', 'C', 'P' };
 static uint8_t ACPI_HPET_SIGNATURE[] = { 'H', 'P', 'E', 'T' };
+static uint8_t ACPI_MADT_SIGNATURE[] = { 'A', 'P', 'I', 'C' };
 
 static inline int acpi_checksum( uint8_t* data, size_t size ) {
     int sum = 0;
@@ -120,6 +126,58 @@ static int acpi_parse_hpet( acpi_hpet_t* hpet ) {
     return 0;
 }
 
+static int acpi_parse_madt( acpi_madt_t* madt ) {
+    uint8_t* data;
+    uint32_t table_size;
+
+    table_size = madt->header.length - sizeof( acpi_madt_t );
+    data = ( uint8_t* )( madt + 1 );
+
+    /* Save the Local APIC base address. */
+
+    local_apic_base = madt->lapic_addr;
+
+#ifdef ENABLE_SMP
+    /* Parse the table at the end of the MADT. */
+
+    while ( table_size > 0 ) {
+        acpi_madt_item_t* item;
+
+        item = ( acpi_madt_item_t* )data;
+
+        switch ( item->type ) {
+            case ACPI_LAPIC : {
+                acpi_madt_lapic_t* lapic;
+
+                lapic = ( acpi_madt_lapic_t* )item;
+
+                if ( lapic->flags & ACPI_LAPIC_CPU_USABLE ) {
+                    /* Map the local APIC ID of the processor to our processor table */
+
+                    apic_to_logical_cpu_id[ lapic->apic_id ] = processor_count;
+
+                    /* Make the processor present and save its local APIC ID */
+
+                    processor_table[ processor_count ].present = true;
+                    arch_processor_table[ processor_count ].apic_id = lapic->apic_id;
+
+                    /* We have one more processor ;) */
+
+                    processor_count++;
+                }
+
+                break;
+            }
+        }
+
+        data += item->length;
+        table_size -= item->length;
+    }
+#endif /* ENABLE_SMP */
+
+    return 0;
+}
+
 static int acpi_parse_table_at( uint32_t table_address ) {
     uint32_t length;
     acpi_header_t* header;
@@ -153,6 +211,8 @@ static int acpi_parse_table_at( uint32_t table_address ) {
         acpi_parse_fadt( ( acpi_fadt_t* )header );
     } else if ( memcmp( header->signature, ACPI_HPET_SIGNATURE, 4 ) == 0 ) {
         acpi_parse_hpet( ( acpi_hpet_t* )header );
+    } else if ( memcmp( header->signature, ACPI_MADT_SIGNATURE, 4 ) == 0 ) {
+        acpi_parse_madt( ( acpi_madt_t* )header );
     }
 
  out:
