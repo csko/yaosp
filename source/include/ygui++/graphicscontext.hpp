@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,35 +16,40 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCPORT_H_
-#define _IPCPORT_H_
+#ifndef _GRAPHICSCONTEXT_HPP_
+#define _GRAPHICSCONTEXT_HPP_
 
-#include <string>
+#include <ygui++/rect.hpp>
+#include <ygui++/point.hpp>
+#include <ygui++/color.hpp>
 
-#include <yaosp/ipc.h>
+namespace yguipp {
 
-namespace yutilpp {
+class Window;
 
-class IPCPort {
+class GraphicsContext {
   public:
-    IPCPort( void );
-    ~IPCPort( void );
+    GraphicsContext( Window* window );
+    virtual ~GraphicsContext( void );
 
-    bool createNew( void );
-    bool createFromExisting( ipc_port_id id );
-    bool createFromNamed( const std::string& name );
+    void setPenColor( const Color& pen );
+    void setClipRect( const Rect& rect );
 
-    ipc_port_id getId( void );
+    void fillRect( const Rect& r );
 
-    int send( uint32_t code, void* data = NULL, size_t size = 0 );
-    int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
+    void flush( void );
 
   private:
-    bool m_canSend;
-    bool m_canReceive;
-    ipc_port_id m_id;
-}; /* class IPCPort */
+    Point m_leftTop;
+    Rect m_clipRect;
+    bool m_penValid;
+    Color m_penColor;
 
-} /* namespace yutilpp */
+    bool m_needToFlush;
 
-#endif /* _IPCPORT_H_ */
+    Window* m_window;
+}; /* class GraphicsContext */
+
+} /* namespace yguipp */
+
+#endif /* _GRAPHICSCONTEXT_HPP_ */

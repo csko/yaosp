@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,35 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCPORT_H_
-#define _IPCPORT_H_
+#ifndef _RECT_HPP_
+#define _RECT_HPP_
 
-#include <string>
+#include <ygui/rect.h>
 
-#include <yaosp/ipc.h>
+namespace yguipp {
 
-namespace yutilpp {
-
-class IPCPort {
+class Rect {
   public:
-    IPCPort( void );
-    ~IPCPort( void );
+    Rect( int left, int top, int right, int bottom );
 
-    bool createNew( void );
-    bool createFromExisting( ipc_port_id id );
-    bool createFromNamed( const std::string& name );
+    void toRectT( rect_t* r ) const;
 
-    ipc_port_id getId( void );
+  public:
+    int m_left;
+    int m_top;
+    int m_right;
+    int m_bottom;
+}; /* class Rect */
 
-    int send( uint32_t code, void* data = NULL, size_t size = 0 );
-    int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
+} /* namespace yguipp */
 
-  private:
-    bool m_canSend;
-    bool m_canReceive;
-    ipc_port_id m_id;
-}; /* class IPCPort */
-
-} /* namespace yutilpp */
-
-#endif /* _IPCPORT_H_ */
+#endif /* _RECT_HPP_ */

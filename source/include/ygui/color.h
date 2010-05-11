@@ -29,8 +29,8 @@ typedef struct color {
     uint8_t alpha;
 } color_t;
 
-static inline void color_copy( color_t* new, color_t* old ) {
-    memcpy( ( void* )new, ( void* )old, sizeof( color_t ) );
+static inline void color_copy( color_t* n, color_t* old ) {
+    memcpy( ( void* )n, ( void* )old, sizeof( color_t ) );
 }
 
 static inline uint32_t color_to_uint32( color_t* color ) {

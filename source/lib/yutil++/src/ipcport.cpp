@@ -37,6 +37,7 @@ bool IPCPort::createNew( void ) {
         return false;
     }
 
+    m_canSend = true;
     m_canReceive = true;
 
     return true;

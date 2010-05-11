@@ -35,8 +35,7 @@ static int set_pen_color( window_t* window, uint8_t* buffer ) {
     r_set_pen_color_t* cmd;
 
     cmd = ( r_set_pen_color_t* )buffer;
-
-    memcpy( &window->pen_color, &cmd->color, sizeof( color_t ) );
+    color_copy( &window->pen_color, &cmd->color );
 
     return sizeof( r_set_pen_color_t );
 }
@@ -45,7 +44,6 @@ static int set_font( window_t* window, uint8_t* buffer ) {
     r_set_font_t* cmd;
 
     cmd = ( r_set_font_t* )buffer;
-
     window->font = ( font_node_t* )cmd->font_handle;
 
     return sizeof( r_set_font_t );

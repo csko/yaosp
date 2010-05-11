@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,35 +16,26 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCPORT_H_
-#define _IPCPORT_H_
+#include <ygui++/color.hpp>
 
-#include <string>
+namespace yguipp {
 
-#include <yaosp/ipc.h>
+Color::Color( uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha ) : m_red(red), m_green(green),
+                                                                          m_blue(blue), m_alpha(alpha) {
+}
 
-namespace yutilpp {
+void Color::toColorT( color_t* c ) const {
+    c->red = m_red;
+    c->green = m_green;
+    c->blue = m_blue;
+    c->alpha = m_alpha;
+}
 
-class IPCPort {
-  public:
-    IPCPort( void );
-    ~IPCPort( void );
+bool Color::operator==( const Color& c ) {
+    return ( ( m_red == c.m_red ) &&
+             ( m_green == c.m_green ) &&
+             ( m_blue == c.m_blue ) &&
+             ( m_alpha == c.m_alpha ) );
+}
 
-    bool createNew( void );
-    bool createFromExisting( ipc_port_id id );
-    bool createFromNamed( const std::string& name );
-
-    ipc_port_id getId( void );
-
-    int send( uint32_t code, void* data = NULL, size_t size = 0 );
-    int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
-
-  private:
-    bool m_canSend;
-    bool m_canReceive;
-    ipc_port_id m_id;
-}; /* class IPCPort */
-
-} /* namespace yutilpp */
-
-#endif /* _IPCPORT_H_ */
+} /* namespace yguipp */

@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,35 +16,37 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCPORT_H_
-#define _IPCPORT_H_
+#ifndef _WIDGET_HPP_
+#define _WIDGET_HPP_
 
-#include <string>
+#include <vector>
+#include <ygui++/object.hpp>
+#include <ygui++/graphicscontext.hpp>
 
-#include <yaosp/ipc.h>
+namespace yguipp {
 
-namespace yutilpp {
+class Window;
 
-class IPCPort {
+class Widget : public Object {
   public:
-    IPCPort( void );
-    ~IPCPort( void );
+    friend class Window;
 
-    bool createNew( void );
-    bool createFromExisting( ipc_port_id id );
-    bool createFromNamed( const std::string& name );
+    Widget( void );
+    virtual ~Widget( void );
 
-    ipc_port_id getId( void );
+    void setWindow( Window* window );
 
-    int send( uint32_t code, void* data = NULL, size_t size = 0 );
-    int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
+    virtual int paint( GraphicsContext* g );
 
   private:
-    bool m_canSend;
-    bool m_canReceive;
-    ipc_port_id m_id;
-}; /* class IPCPort */
+    int doPaint( GraphicsContext* g );
 
-} /* namespace yutilpp */
+  private:
+    Window* m_window;
+    Widget* m_parent;
+    std::vector<Widget*> m_children;
+}; /* class Widget */
 
-#endif /* _IPCPORT_H_ */
+} /* namespace yguipp */
+
+#endif /* _WIDGET_HPP_ */

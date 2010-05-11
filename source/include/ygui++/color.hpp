@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,35 +16,29 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCPORT_H_
-#define _IPCPORT_H_
+#ifndef _COLOR_HPP_
+#define _COLOR_HPP_
 
-#include <string>
+#include <inttypes.h>
+#include <ygui/color.h>
 
-#include <yaosp/ipc.h>
+namespace yguipp {
 
-namespace yutilpp {
-
-class IPCPort {
+class Color {
   public:
-    IPCPort( void );
-    ~IPCPort( void );
+    Color( uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255 );
 
-    bool createNew( void );
-    bool createFromExisting( ipc_port_id id );
-    bool createFromNamed( const std::string& name );
+    void toColorT( color_t* c ) const;
 
-    ipc_port_id getId( void );
-
-    int send( uint32_t code, void* data = NULL, size_t size = 0 );
-    int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
+    bool operator==( const Color& c );
 
   private:
-    bool m_canSend;
-    bool m_canReceive;
-    ipc_port_id m_id;
-}; /* class IPCPort */
+    uint8_t m_red;
+    uint8_t m_green;
+    uint8_t m_blue;
+    uint8_t m_alpha;
+}; /* class Color */
 
-} /* namespace yutilpp */
+} /* namespace yguipp */
 
-#endif /* _IPCPORT_H_ */
+#endif /* _COLOR_HPP_ */

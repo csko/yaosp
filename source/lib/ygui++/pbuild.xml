@@ -25,6 +25,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="files">
         <item>src/application.cpp</item>
         <item>src/window.cpp</item>
+        <item>src/widget.cpp</item>
+        <item>src/panel.cpp</item>
+        <item>src/graphicscontext.cpp</item>
+        <item>src/rect.cpp</item>
+        <item>src/point.cpp</item>
+        <item>src/color.cpp</item>
+        <item>src/rendertable.cpp</item>
+        <item>src/ipcrendertable.cpp</item>
     </array>
 
     <target name="clean">

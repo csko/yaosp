@@ -21,17 +21,23 @@
 
 #include <string>
 
-#include <ygui++/object.hpp>
+#include <ygui++/widget.hpp>
+#include <ygui++/rendertable.hpp>
 #include <yutil++/ipclistener.hpp>
 
 namespace yguipp {
 
 class Window : public Object, public yutilpp::IPCListener {
   public:
-    Window( const std::string& title );
+    Window( const std::string& title, const Point& position, const Point& size );
     virtual ~Window( void );
 
     bool init( void );
+
+    Widget* getContainer( void );
+    RenderTable* getRenderTable( void );
+    yutilpp::IPCPort* getServerPort( void );
+    yutilpp::IPCPort* getReplyPort( void );
 
     void show( void );
 
@@ -42,8 +48,15 @@ class Window : public Object, public yutilpp::IPCListener {
 
   private:
     std::string m_title;
+    Point m_position;
+    Point m_size;
+
     yutilpp::IPCPort* m_serverPort;
     yutilpp::IPCPort* m_replyPort;
+
+    Widget* m_container;
+    RenderTable* m_renderTable;
+    GraphicsContext* m_graphicsContext;
 }; /* class Window */
 
 } /* namespace yguipp */

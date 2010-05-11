@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,35 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCPORT_H_
-#define _IPCPORT_H_
+#ifndef _RENDERTABLE_HPP_
+#define _RENDERTABLE_HPP_
 
-#include <string>
+#include <stddef.h>
 
-#include <yaosp/ipc.h>
+namespace yguipp {
 
-namespace yutilpp {
+class Window;
 
-class IPCPort {
+class RenderTable {
   public:
-    IPCPort( void );
-    ~IPCPort( void );
+    RenderTable( Window* window );
+    virtual ~RenderTable( void );
 
-    bool createNew( void );
-    bool createFromExisting( ipc_port_id id );
-    bool createFromNamed( const std::string& name );
+    virtual void* allocate( size_t size ) = 0;
+    virtual int reset( void ) = 0;
+    virtual int flush( void ) = 0;
 
-    ipc_port_id getId( void );
+  protected:
+    Window* m_window;
+}; /* class RenderTable */
 
-    int send( uint32_t code, void* data = NULL, size_t size = 0 );
-    int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
+} /* namespace yguipp */
 
-  private:
-    bool m_canSend;
-    bool m_canReceive;
-    ipc_port_id m_id;
-}; /* class IPCPort */
-
-} /* namespace yutilpp */
-
-#endif /* _IPCPORT_H_ */
+#endif /* _RENDERTABLE_HPP_ */

@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,35 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCPORT_H_
-#define _IPCPORT_H_
+#ifndef _PANEL_HPP_
+#define _PANEL_HPP_
 
-#include <string>
+#include <ygui++/widget.hpp>
 
-#include <yaosp/ipc.h>
+namespace yguipp {
 
-namespace yutilpp {
-
-class IPCPort {
+class Panel : public Widget {
   public:
-    IPCPort( void );
-    ~IPCPort( void );
+    Panel( void );
+    virtual ~Panel( void );
 
-    bool createNew( void );
-    bool createFromExisting( ipc_port_id id );
-    bool createFromNamed( const std::string& name );
+    int paint( GraphicsContext* g );
+}; /* class Panel */
 
-    ipc_port_id getId( void );
+} /* namespace yguipp */
 
-    int send( uint32_t code, void* data = NULL, size_t size = 0 );
-    int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
-
-  private:
-    bool m_canSend;
-    bool m_canReceive;
-    ipc_port_id m_id;
-}; /* class IPCPort */
-
-} /* namespace yutilpp */
-
-#endif /* _IPCPORT_H_ */
+#endif /* _PANEL_HPP_ */

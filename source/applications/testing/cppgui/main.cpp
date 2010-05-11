@@ -16,15 +16,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <iostream>
+
 #include <ygui++/application.hpp>
 #include <ygui++/window.hpp>
 
 int main( int argc, char** argv ) {
     yguipp::Application::createInstance("cppguitest");
 
-    yguipp::Window* win = new yguipp::Window("Test");
+    yguipp::Window* win = new yguipp::Window( "Test", yguipp::Point(50,50), yguipp::Point(100,100) );
     win->init();
     win->show();
+
+    yguipp::Application::getInstance()->run();
 
     return 0;
 }
