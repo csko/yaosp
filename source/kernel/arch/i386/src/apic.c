@@ -83,7 +83,6 @@ cpu_t* get_processor( void ) {
 
 void apic_timer_irq( registers_t* regs ) {
     apic_write( LAPIC_EOI, 0 );
-
     schedule( regs );
 }
 
@@ -183,9 +182,8 @@ __init int init_apic( void ) {
 
     lapic_region = do_create_memory_region(
         &kernel_memory_context,
-        "lapic registers",
-        REGION_READ | REGION_WRITE | REGION_KERNEL,
-        PAGE_SIZE
+        "lapic registers", PAGE_SIZE,
+        REGION_READ | REGION_WRITE | REGION_KERNEL
     );
 
     if ( lapic_region == NULL ) {

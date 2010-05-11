@@ -292,7 +292,7 @@ __init int arch_late_init( void ) {
     acpi_init();
     hpet_init();
     cpu_calibrate_speed();
-    //init_apic();
+    init_apic();
     init_pit();
     init_apic_timer();
     init_system_time();

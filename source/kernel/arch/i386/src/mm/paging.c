@@ -1,6 +1,6 @@
 /* i386 paging code
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -185,6 +185,19 @@ int paging_clone_table_entries( uint32_t* old_table, uint32_t* new_table,
     return 0;
 }
 
+int paging_copy_table_entries( uint32_t* old_table, uint32_t* new_table, uint32_t from, uint32_t to ) {
+    uint32_t i;
+
+    ASSERT( ( to >= 0 ) && ( to <= 1023 ) );
+    ASSERT( from <= to );
+
+    for ( i = from; i <= to; i++ ) {
+        new_table[ i ] = old_table[ i ];
+    }
+
+    return 0;
+}
+
 __init int init_paging( void ) {
     int error;
     uint32_t size;
@@ -229,10 +242,7 @@ __init int init_paging( void ) {
     /* Map the screen */
 
     region = do_create_memory_region_at(
-        context,
-        "screen",
-        0xB8000,
-        PAGE_SIZE,
+        context, "screen", 0xB8000, PAGE_SIZE,
         REGION_READ | REGION_WRITE | REGION_KERNEL
     );
 

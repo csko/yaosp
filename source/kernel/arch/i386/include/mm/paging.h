@@ -1,6 +1,6 @@
 /* i386 paging code
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -39,6 +39,7 @@ int paging_clear_table_entries( uint32_t* table, uint32_t from, uint32_t to );
 int paging_free_table_entries( uint32_t* table, uint32_t from, uint32_t to );
 int paging_clone_table_entries( uint32_t* old_table, uint32_t* new_table,
                                 uint32_t from, uint32_t to, int remove_write );
+int paging_copy_table_entries( uint32_t* old_table, uint32_t* new_table, uint32_t from, uint32_t to );
 
 int init_paging( void );
 
