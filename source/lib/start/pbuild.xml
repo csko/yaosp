@@ -44,9 +44,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
+                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
     </target>

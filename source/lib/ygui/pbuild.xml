@@ -130,7 +130,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="install">
-        <copy from="objs/libygui.so" to="../../../build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3/libygui.so"/>
+        <copy from="objs/libygui.so" to="${sharedlibdir}"/>
         <copy from="objs/libygui.so" to="${imagedir}/system/lib"/>
         <copy from="objs/png.so" to="${imagedir}/system/lib/imageloader"/>
         <copy from="objs/jpeg.so" to="${imagedir}/system/lib/imageloader"/>
