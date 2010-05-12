@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
+
 #include <ygui/render/render.h>
 
 #include <ygui++/graphicscontext.hpp>
@@ -28,6 +30,10 @@ GraphicsContext::GraphicsContext( Window* window ) : m_leftTop(0,0), m_clipRect(
 }
 
 GraphicsContext::~GraphicsContext( void ) {
+}
+
+const Point& GraphicsContext::getLeftTop( void ) {
+    return m_leftTop;
 }
 
 void GraphicsContext::setPenColor( const Color& pen ) {
@@ -54,18 +60,53 @@ void GraphicsContext::setClipRect( const Rect& rect ) {
     rect.toRectT( &cmd->clip_rect );
 }
 
+void GraphicsContext::setFont( Font* font ) {
+    r_set_font_t* cmd;
+
+    cmd = reinterpret_cast<r_set_font_t*>( m_window->getRenderTable()->allocate( sizeof(r_set_font_t) ) );
+    cmd->header.command = R_SET_FONT;
+    cmd->font_handle = font->getHandle();
+}
+
+void GraphicsContext::translate( const Point& p ) {
+    m_translateStack.push( TranslateItem(p) );
+    m_leftTop += p;
+}
+
 void GraphicsContext::fillRect( const Rect& r ) {
+    Rect visibleRect;
     r_fill_rect_t* cmd;
+
+    visibleRect = ( r + m_leftTop ) & m_clipRect;
+
+    if ( !visibleRect.isValid() ) {
+        return;
+    }
 
     cmd = reinterpret_cast<r_fill_rect_t*>( m_window->getRenderTable()->allocate( sizeof(r_fill_rect_t) ) );
     cmd->header.command = R_FILL_RECT;
-    r.toRectT( &cmd->rect );
+    visibleRect.toRectT( &cmd->rect );
+
+    m_needToFlush = true;
+}
+
+void GraphicsContext::drawText( const Point& p, const std::string& text ) {
+    Point realPoint;
+    r_draw_text_t* cmd;
+
+    realPoint = p + m_leftTop;
+
+    cmd = reinterpret_cast<r_draw_text_t*>( m_window->getRenderTable()->allocate( sizeof(r_draw_text_t) + text.size() ) );
+    cmd->header.command = R_DRAW_TEXT;
+    cmd->length = text.size();
+
+    realPoint.toPointT( &cmd->position );
+    memcpy( reinterpret_cast<void*>(cmd + 1), text.data(), text.size() );
 
     m_needToFlush = true;
 }
 
 void GraphicsContext::flush( void ) {
-
     if ( m_needToFlush ) {
         render_header_t* cmd;
 
@@ -75,6 +116,49 @@ void GraphicsContext::flush( void ) {
         m_window->getRenderTable()->flush();
     } else {
         m_window->getRenderTable()->reset();
+    }
+}
+
+void GraphicsContext::pushRestrictedArea( const Rect& rect ) {
+    r_set_clip_rect_t* cmd;
+
+    m_restrictedAreas.push(rect);
+    m_clipRect = rect;
+
+    cmd = reinterpret_cast<r_set_clip_rect_t*>( m_window->getRenderTable()->allocate( sizeof(r_set_clip_rect_t) ) );
+    cmd->header.command = R_SET_CLIP_RECT;
+    rect.toRectT( &cmd->clip_rect );
+}
+
+void GraphicsContext::popRestrictedArea( void ) {
+    m_restrictedAreas.pop();
+}
+
+const Rect& GraphicsContext::currentRestrictedArea( void ) {
+    assert( !m_restrictedAreas.empty() );
+    return m_restrictedAreas.top();
+}
+
+void GraphicsContext::translateCheckPoint( void ) {
+    m_translateStack.push( TranslateItem() );
+}
+
+void GraphicsContext::rollbackTranslate( void ) {
+    bool done = false;
+
+    while ( !done ) {
+        TranslateItem item = m_translateStack.top();
+        m_translateStack.pop();
+
+        switch ( item.m_type ) {
+            case TRANSLATE :
+                m_leftTop -= item.m_point;
+                break;
+
+            case CHECKPOINT :
+                done = true;
+                break;
+        }
     }
 }
 

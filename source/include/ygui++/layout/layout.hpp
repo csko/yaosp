@@ -16,34 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/point.hpp>
+#ifndef _LAYOUT_LAYOUT_HPP_
+#define _LAYOUT_LAYOUT_HPP_
+
+#include <ygui++/object.hpp>
 
 namespace yguipp {
 
-Point::Point( int x, int y ) : m_x(x), m_y(y) {
-}
+class Panel;
 
-void Point::toPointT( point_t* p ) const {
-    p->x = m_x;
-    p->y = m_y;
-}
+namespace layout {
 
-Point Point::operator+( const Point& p ) const {
-    return Point( m_x + p.m_x, m_y + p.m_y );
-}
+class LayoutData {
+}; /* class LayoutData */
 
-Point& Point::operator+=( const Point& p ) {
-    m_x += p.m_x;
-    m_y += p.m_y;
+class Layout : public Object {
+  public:
+    virtual ~Layout( void ) {}
 
-    return *this;
-}
+    virtual int doLayout( yguipp::Panel* panel ) = 0;
+}; /* class Layout */
 
-Point& Point::operator-=( const Point& p ) {
-    m_x -= p.m_x;
-    m_y -= p.m_y;
-
-    return *this;
-}
-
+} /* namespace layout */
 } /* namespace yguipp */
+
+#endif /* _LAYOUT_LAYOUT_HPP_ */

@@ -16,34 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/point.hpp>
+#include <ygui++/object.hpp>
 
 namespace yguipp {
 
-Point::Point( int x, int y ) : m_x(x), m_y(y) {
+void Object::incRef( void ) {
 }
 
-void Point::toPointT( point_t* p ) const {
-    p->x = m_x;
-    p->y = m_y;
-}
-
-Point Point::operator+( const Point& p ) const {
-    return Point( m_x + p.m_x, m_y + p.m_y );
-}
-
-Point& Point::operator+=( const Point& p ) {
-    m_x += p.m_x;
-    m_y += p.m_y;
-
-    return *this;
-}
-
-Point& Point::operator-=( const Point& p ) {
-    m_x -= p.m_x;
-    m_y -= p.m_y;
-
-    return *this;
+void Object::decRef( void ) {
 }
 
 } /* namespace yguipp */

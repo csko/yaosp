@@ -33,6 +33,8 @@ Window::Window( const std::string& title, const Point& position, const Point& si
                                                                                        m_replyPort(NULL) {
     m_container = new Panel();
     m_container->setWindow(this);
+    m_container->setPosition( Point(0,0) );
+    m_container->setSize(m_size);
 
     m_renderTable = new IPCRenderTable(this);
     m_graphicsContext = new GraphicsContext(this);
@@ -77,9 +79,12 @@ void Window::show( void ) {
 int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
     switch ( code ) {
         case MSG_WINDOW_DO_SHOW :
-            m_container->paint( m_graphicsContext );
+            m_graphicsContext->pushRestrictedArea( Rect(m_size) );
+            m_container->doPaint( m_graphicsContext );
             m_graphicsContext->flush();
+
             m_serverPort->send( MSG_WINDOW_SHOW );
+
             break;
     }
 
@@ -99,16 +104,16 @@ bool Window::registerWindow( void ) {
 
     request->reply_port = m_replyPort->getId();
     request->client_port = getPort()->getId();
-    request->position.x = m_position.getX();
-    request->position.y = m_position.getY();
-    request->size.x = m_size.getX();
-    request->size.y = m_size.getY();
+    request->position.x = m_position.m_x;
+    request->position.y = m_position.m_y;
+    request->size.x = m_size.m_x;
+    request->size.y = m_size.m_y;
     request->order = W_ORDER_NORMAL;
     request->flags = 0;
 
     memcpy( reinterpret_cast<void*>(request + 1), m_title.c_str(), m_title.size() + 1 );
 
-    Application::getInstance()->getApplicationPort()->send( MSG_WINDOW_CREATE, reinterpret_cast<void*>(data), dataSize );
+    Application::getInstance()->getServerPort()->send( MSG_WINDOW_CREATE, reinterpret_cast<void*>(data), dataSize );
     m_replyPort->receive( code, reinterpret_cast<void*>(&reply), sizeof(msg_create_win_reply_t) );
 
     m_serverPort->createFromExisting(reply.server_port);

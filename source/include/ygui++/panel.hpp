@@ -19,7 +19,9 @@
 #ifndef _PANEL_HPP_
 #define _PANEL_HPP_
 
+#include <ygui++/color.hpp>
 #include <ygui++/widget.hpp>
+#include <ygui++/layout/layout.hpp>
 
 namespace yguipp {
 
@@ -28,7 +30,15 @@ class Panel : public Widget {
     Panel( void );
     virtual ~Panel( void );
 
+    void setLayout( layout::Layout* layout );
+    void setBackgroundColor( const Color& c );
+
+    int validate( void );
     int paint( GraphicsContext* g );
+
+  private:
+    layout::Layout* m_layout;
+    Color m_backgroundColor;
 }; /* class Panel */
 
 } /* namespace yguipp */

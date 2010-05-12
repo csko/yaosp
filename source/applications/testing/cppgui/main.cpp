@@ -20,12 +20,21 @@
 
 #include <ygui++/application.hpp>
 #include <ygui++/window.hpp>
+#include <ygui++/label.hpp>
 
 int main( int argc, char** argv ) {
     yguipp::Application::createInstance("cppguitest");
 
     yguipp::Window* win = new yguipp::Window( "Test", yguipp::Point(50,50), yguipp::Point(100,100) );
     win->init();
+
+    yguipp::Widget* container = win->getContainer();
+
+    yguipp::Widget* child = new yguipp::Label("Hello World");
+    container->addChild(child);
+    child->setPosition( yguipp::Point(10,10) );
+    child->setSize( yguipp::Point(30,30) );
+
     win->show();
 
     yguipp::Application::getInstance()->run();

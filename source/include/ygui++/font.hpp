@@ -16,34 +16,40 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/point.hpp>
+#ifndef _FONT_HPP_
+#define _FONT_HPP_
+
+#include <string>
+
+#include <ygui++/object.hpp>
 
 namespace yguipp {
 
-Point::Point( int x, int y ) : m_x(x), m_y(y) {
-}
+class Font : public Object {
+  public:
+    Font( const std::string& name, const std::string& style, int size );
+    virtual ~Font( void );
 
-void Point::toPointT( point_t* p ) const {
-    p->x = m_x;
-    p->y = m_y;
-}
+    bool init( void );
 
-Point Point::operator+( const Point& p ) const {
-    return Point( m_x + p.m_x, m_y + p.m_y );
-}
+    int getHandle( void );
 
-Point& Point::operator+=( const Point& p ) {
-    m_x += p.m_x;
-    m_y += p.m_y;
+    int getHeight( void );
+    int getAscender( void );
+    int getDescender( void );
+    int getLineGap( void );
 
-    return *this;
-}
+  private:
+    int m_handle;
+    int m_ascender;
+    int m_descender;
+    int m_lineGap;
 
-Point& Point::operator-=( const Point& p ) {
-    m_x -= p.m_x;
-    m_y -= p.m_y;
-
-    return *this;
-}
+    std::string m_name;
+    std::string m_style;
+    int m_size;
+}; /* class Font */
 
 } /* namespace yguipp */
+
+#endif /* _FONT_HPP_ */

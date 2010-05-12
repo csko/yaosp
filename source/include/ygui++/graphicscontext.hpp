@@ -19,25 +19,60 @@
 #ifndef _GRAPHICSCONTEXT_HPP_
 #define _GRAPHICSCONTEXT_HPP_
 
+#include <stack>
+#include <string>
+
 #include <ygui++/rect.hpp>
 #include <ygui++/point.hpp>
 #include <ygui++/color.hpp>
+#include <ygui++/font.hpp>
 
 namespace yguipp {
 
 class Window;
+class Widget;
 
 class GraphicsContext {
   public:
+    friend class Window;
+    friend class Widget;
+
     GraphicsContext( Window* window );
     virtual ~GraphicsContext( void );
 
+    const Point& getLeftTop( void );
+
     void setPenColor( const Color& pen );
     void setClipRect( const Rect& rect );
+    void setFont( Font* font );
 
+    void translate( const Point& p );
     void fillRect( const Rect& r );
+    void drawText( const Point& p, const std::string& text );
 
     void flush( void );
+
+  private:
+    enum TranslateType {
+        CHECKPOINT,
+        TRANSLATE
+    };
+
+    struct TranslateItem {
+        TranslateItem( void ) : m_type(CHECKPOINT) {}
+        TranslateItem( const Point& p ) : m_type(TRANSLATE), m_point(p) {}
+
+        TranslateType m_type;
+        Point m_point;
+    };
+
+  private:
+    void pushRestrictedArea( const Rect& rect );
+    void popRestrictedArea( void );
+    const Rect& currentRestrictedArea( void );
+
+    void translateCheckPoint( void );
+    void rollbackTranslate( void );
 
   private:
     Point m_leftTop;
@@ -46,6 +81,9 @@ class GraphicsContext {
     Color m_penColor;
 
     bool m_needToFlush;
+
+    std::stack<Rect> m_restrictedAreas;
+    std::stack<TranslateItem> m_translateStack;
 
     Window* m_window;
 }; /* class GraphicsContext */

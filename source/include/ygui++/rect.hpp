@@ -21,13 +21,24 @@
 
 #include <ygui/rect.h>
 
+#include <ygui++/point.hpp>
+
 namespace yguipp {
 
 class Rect {
   public:
-    Rect( int left, int top, int right, int bottom );
+    Rect( const Point& size );
+    Rect( int left = 0, int top = 0, int right = 0, int bottom = 0 );
+
+    bool isValid( void ) const;
 
     void toRectT( rect_t* r ) const;
+
+    Rect operator+( const Point& p ) const;
+    Rect operator&( const Rect& r ) const;
+    Rect& operator=( const Point& p );
+    Rect& operator+=( const Point& p );
+    Rect& operator&=( const Rect& r );
 
   public:
     int m_left;

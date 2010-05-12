@@ -52,12 +52,24 @@ bool Application::init( void ) {
     return registerApplication();
 }
 
+void Application::lock( void ) {
+    // todo
+}
+
+void Application::unLock( void ) {
+    // todo
+}
+
 yutilpp::IPCPort* Application::getGuiServerPort( void ) {
     return m_guiServerPort;
 }
 
-yutilpp::IPCPort* Application::getApplicationPort( void ) {
+yutilpp::IPCPort* Application::getServerPort( void ) {
     return m_serverPort;
+}
+
+yutilpp::IPCPort* Application::getReplyPort( void ) {
+    return m_replyPort;
 }
 
 int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {

@@ -22,6 +22,7 @@
 #include <vector>
 #include <ygui++/object.hpp>
 #include <ygui++/graphicscontext.hpp>
+#include <ygui++/layout/layout.hpp>
 
 namespace yguipp {
 
@@ -31,11 +32,24 @@ class Widget : public Object {
   public:
     friend class Window;
 
+    typedef std::pair<Widget*,layout::LayoutData*> Child;
+    typedef std::vector<Child> ChildVector;
+    typedef ChildVector::const_iterator ChildVectorCIter;
+
     Widget( void );
     virtual ~Widget( void );
 
-    void setWindow( Window* window );
+    void addChild( Widget* child, layout::LayoutData* data = NULL );
 
+    const Point& getSize( void );
+    const Rect getBounds( void );
+    const ChildVector& getChildren( void );
+
+    void setWindow( Window* window );
+    void setPosition( const Point& p );
+    void setSize( const Point& p );
+
+    virtual int validate( void );
     virtual int paint( GraphicsContext* g );
 
   private:
@@ -44,7 +58,16 @@ class Widget : public Object {
   private:
     Window* m_window;
     Widget* m_parent;
-    std::vector<Widget*> m_children;
+
+    bool m_isValid;
+
+    Point m_position;
+    Point m_scrollOffset;
+    Point m_fullSize;
+    Point m_visibleSize;
+
+
+    ChildVector m_children;
 }; /* class Widget */
 
 } /* namespace yguipp */

@@ -20,15 +20,40 @@
 
 namespace yguipp {
 
-Panel::Panel( void ) {
+Panel::Panel( void ) : m_layout(NULL) {
+    m_backgroundColor = Color(216, 216, 216);
 }
 
 Panel::~Panel( void ) {
 }
 
+void Panel::setLayout( layout::Layout* layout ) {
+    if ( m_layout != NULL ) {
+        m_layout->decRef();
+    }
+
+    m_layout = layout;
+
+    if ( m_layout != NULL ) {
+        m_layout->incRef();
+    }
+}
+
+void Panel::setBackgroundColor( const Color& c ) {
+    m_backgroundColor = c;
+}
+
+int Panel::validate( void ) {
+    if ( m_layout != NULL ) {
+        m_layout->doLayout(this);
+    }
+
+    return 0;
+}
+
 int Panel::paint( GraphicsContext* g ) {
-    g->setPenColor( Color(127, 127, 127) );
-    g->fillRect( Rect(0, 0, 99, 99) );
+    g->setPenColor( m_backgroundColor );
+    g->fillRect( getBounds() );
 
     return 0;
 }

@@ -33,8 +33,12 @@ class Application : public yutilpp::IPCListener {
     bool init( void );
 
   public:
+    void lock( void );
+    void unLock( void );
+
     yutilpp::IPCPort* getGuiServerPort( void );
-    yutilpp::IPCPort* getApplicationPort( void );
+    yutilpp::IPCPort* getServerPort( void );
+    yutilpp::IPCPort* getReplyPort( void );
 
     int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
 

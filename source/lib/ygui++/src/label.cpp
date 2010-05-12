@@ -16,34 +16,43 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/point.hpp>
+#include <ygui++/label.hpp>
 
 namespace yguipp {
 
-Point::Point( int x, int y ) : m_x(x), m_y(y) {
+Label::Label( void ) {
+    initFont();
 }
 
-void Point::toPointT( point_t* p ) const {
-    p->x = m_x;
-    p->y = m_y;
+Label::Label( const std::string& text ) : m_text(text) {
+    initFont();
 }
 
-Point Point::operator+( const Point& p ) const {
-    return Point( m_x + p.m_x, m_y + p.m_y );
+Label::~Label( void ) {
+    if ( m_font != NULL ) {
+        m_font->decRef();
+    }
 }
 
-Point& Point::operator+=( const Point& p ) {
-    m_x += p.m_x;
-    m_y += p.m_y;
+int Label::paint( GraphicsContext* g ) {
+    Rect bounds = getBounds();
 
-    return *this;
+    g->setPenColor( Color(216, 216, 216) );
+    g->fillRect( bounds );
+
+    if ( !m_text.empty() ) {
+        g->setFont( m_font );
+        g->setPenColor( Color(0, 0, 0) );
+        g->drawText( Point(0, m_font->getAscender()), m_text );
+    }
+
+    return 0;
 }
 
-Point& Point::operator-=( const Point& p ) {
-    m_x -= p.m_x;
-    m_y -= p.m_y;
-
-    return *this;
+void Label::initFont( void ) {
+    m_font = new Font( "DejaVu Sans", "Book", 8 * 64 );
+    m_font->init();
+    m_font->incRef();
 }
 
 } /* namespace yguipp */

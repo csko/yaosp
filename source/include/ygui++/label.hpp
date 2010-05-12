@@ -16,34 +16,32 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/point.hpp>
+#ifndef _LABEL_HPP_
+#define _LABEL_HPP_
+
+#include <string>
+
+#include <ygui++/widget.hpp>
+#include <ygui++/font.hpp>
 
 namespace yguipp {
 
-Point::Point( int x, int y ) : m_x(x), m_y(y) {
-}
+class Label : public Widget {
+  public:
+    Label( void );
+    Label( const std::string& text );
+    virtual ~Label( void );
 
-void Point::toPointT( point_t* p ) const {
-    p->x = m_x;
-    p->y = m_y;
-}
+    int paint( GraphicsContext* g );
 
-Point Point::operator+( const Point& p ) const {
-    return Point( m_x + p.m_x, m_y + p.m_y );
-}
+  private:
+    void initFont( void );
 
-Point& Point::operator+=( const Point& p ) {
-    m_x += p.m_x;
-    m_y += p.m_y;
-
-    return *this;
-}
-
-Point& Point::operator-=( const Point& p ) {
-    m_x -= p.m_x;
-    m_y -= p.m_y;
-
-    return *this;
-}
+  private:
+    std::string m_text;
+    Font* m_font;
+}; /* class Label */
 
 } /* namespace yguipp */
+
+#endif /* _LABEL_HPP_ */

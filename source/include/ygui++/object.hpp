@@ -22,6 +22,9 @@
 namespace yguipp {
 
 class Object {
+  public:
+    void incRef( void );
+    void decRef( void );
 }; /* class Object */
 
 } /* namespace yguipp */
