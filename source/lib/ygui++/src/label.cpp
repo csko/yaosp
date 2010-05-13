@@ -20,11 +20,11 @@
 
 namespace yguipp {
 
-Label::Label( void ) {
+Label::Label( int hAlign, int vAlign ) : m_hAlign(hAlign), m_vAlign(vAlign) {
     initFont();
 }
 
-Label::Label( const std::string& text ) : m_text(text) {
+Label::Label( const std::string& text, int hAlign, int vAlign ) : m_text(text), m_hAlign(hAlign), m_vAlign(vAlign) {
     initFont();
 }
 
@@ -41,9 +41,41 @@ int Label::paint( GraphicsContext* g ) {
     g->fillRect( bounds );
 
     if ( !m_text.empty() ) {
+        Point position;
+
+        switch ( m_hAlign ) {
+            case H_ALIGN_LEFT :
+                position.m_x = 0;
+                break;
+
+            case H_ALIGN_CENTER :
+                position.m_x = ( bounds.width() - m_font->getStringWidth(m_text) ) / 2;
+                break;
+
+            case H_ALIGN_RIGHT :
+                position.m_x = bounds.m_right - m_font->getStringWidth(m_text) + 1;
+                break;
+        }
+
+        switch ( m_vAlign ) {
+            case V_ALIGN_TOP :
+                position.m_y = m_font->getAscender() - 1;
+                break;
+
+            case V_ALIGN_CENTER : {
+                int asc = m_font->getAscender();
+                position.m_y = ( bounds.height() - ( asc - m_font->getDescender() ) ) / 2 + asc;
+                break;
+            }
+
+            case V_ALIGN_BOTTOM :
+                position.m_y = bounds.m_bottom - m_font->getHeight() + 1;
+                break;
+        }
+
         g->setFont( m_font );
         g->setPenColor( Color(0, 0, 0) );
-        g->drawText( Point(0, m_font->getAscender()), m_text );
+        g->drawText( position, m_text );
     }
 
     return 0;

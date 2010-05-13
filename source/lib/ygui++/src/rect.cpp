@@ -30,6 +30,14 @@ Rect::Rect( int left, int top, int right, int bottom ) : m_left(left), m_top(top
                                                          m_right(right), m_bottom(bottom) {
 }
 
+int Rect::width( void ) const {
+    return ( m_right - m_left + 1 );
+}
+
+int Rect::height( void ) const {
+    return ( m_bottom - m_top + 1 );
+}
+
 bool Rect::isValid( void ) const {
     return ( ( m_left <= m_right ) &&
              ( m_top <= m_bottom ) );

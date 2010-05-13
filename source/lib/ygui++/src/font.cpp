@@ -95,4 +95,33 @@ int Font::getLineGap( void ) {
     return m_lineGap;
 }
 
+int Font::getStringWidth( const std::string& text ) {
+    size_t size;
+    uint8_t* data;
+    uint32_t code;
+    Application* app;
+    msg_get_str_width_t* request;
+    msg_get_str_width_reply_t reply;
+
+    size = sizeof(msg_get_str_width_t) + text.size();
+    data = new uint8_t[size];
+
+    app = Application::getInstance();
+
+    request = reinterpret_cast<msg_get_str_width_t*>(data);
+    request->reply_port = app->getReplyPort()->getId();
+    request->font_handle = m_handle;
+    request->length = text.size();
+    memcpy( reinterpret_cast<void*>(request + 1), text.data(), text.size() );
+
+    app->lock();
+
+    app->getServerPort()->send( MSG_FONT_GET_STR_WIDTH, data, size );
+    app->getReplyPort()->receive( code, &reply, sizeof(msg_get_str_width_reply_t) );
+
+    app->unLock();
+
+    return reply.width;
+}
+
 } /* namespace yguipp */

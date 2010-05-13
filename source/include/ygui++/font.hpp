@@ -39,6 +39,8 @@ class Font : public Object {
     int getDescender( void );
     int getLineGap( void );
 
+    int getStringWidth( const std::string& text );
+
   private:
     int m_handle;
     int m_ascender;

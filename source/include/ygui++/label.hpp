@@ -20,6 +20,7 @@
 #define _LABEL_HPP_
 
 #include <string>
+#include <ygui/yconstants.h>
 
 #include <ygui++/widget.hpp>
 #include <ygui++/font.hpp>
@@ -28,10 +29,15 @@ namespace yguipp {
 
 class Label : public Widget {
   public:
-    Label( void );
-    Label( const std::string& text );
+    Label( int hAlign = H_ALIGN_CENTER, int vAlign = V_ALIGN_CENTER );
+    Label( const std::string& text, int hAlign = H_ALIGN_CENTER, int vAlign = V_ALIGN_CENTER );
     virtual ~Label( void );
 
+  private:
+    Label( const Label& l );
+    Label& operator=( const Label& l );
+
+  public:
     int paint( GraphicsContext* g );
 
   private:
@@ -40,6 +46,9 @@ class Label : public Widget {
   private:
     std::string m_text;
     Font* m_font;
+
+    int m_hAlign;
+    int m_vAlign;
 }; /* class Label */
 
 } /* namespace yguipp */
