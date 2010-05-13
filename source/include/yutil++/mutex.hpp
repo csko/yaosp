@@ -1,6 +1,6 @@
-/* yaosp C library
+/* yaosp IPC port implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,15 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_YAOSP_H_
-#define _YAOSP_YAOSP_H_
+#ifndef _MUTEX_HPP_
+#define _MUTEX_HPP_
 
-enum mutex_flags {
-    MUTEX_NONE = 0,
-    MUTEX_RECURSIVE = ( 1 << 0 )
-};
+#include <string>
 
-void reboot( void );
-void halt( void );
+namespace yutilpp {
 
-#endif /* _YAOSP_YAOSP_H_ */
+class Mutex {
+  public:
+    Mutex( const std::string& name, bool recursive = false );
+    ~Mutex( void );
+
+    int lock( void );
+    int unLock( void );
+
+  private:
+    int m_id;
+}; /* class Mutex */
+
+} /* namespace yutilpp */
+
+#endif /* _MUTEX_HPP_ */

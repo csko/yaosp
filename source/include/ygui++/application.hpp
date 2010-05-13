@@ -22,6 +22,7 @@
 #include <string>
 
 #include <yutil++/ipclistener.hpp>
+#include <yutil++/mutex.hpp>
 
 namespace yguipp {
 
@@ -49,6 +50,8 @@ class Application : public yutilpp::IPCListener {
     bool registerApplication( void );
 
   private:
+    yutilpp::Mutex* m_lock;
+
     yutilpp::IPCPort* m_guiServerPort;
     yutilpp::IPCPort* m_serverPort;
     yutilpp::IPCPort* m_replyPort;

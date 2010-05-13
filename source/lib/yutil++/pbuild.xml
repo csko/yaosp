@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/thread.cpp</item>
         <item>src/ipcport.cpp</item>
         <item>src/ipclistener.cpp</item>
+        <item>src/mutex.cpp</item>
     </array>
 
     <target name="clean">

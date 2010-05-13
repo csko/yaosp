@@ -1,6 +1,6 @@
-/* yaosp C library
+/* yaosp IPC port implementation
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,15 +16,30 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_YAOSP_H_
-#define _YAOSP_YAOSP_H_
+#include <yaosp/yaosp.h>
+#include <yaosp/syscall.h>
+#include <yaosp/syscall_table.h>
 
-enum mutex_flags {
-    MUTEX_NONE = 0,
-    MUTEX_RECURSIVE = ( 1 << 0 )
-};
+#include <yutil++/mutex.hpp>
 
-void reboot( void );
-void halt( void );
+namespace yutilpp {
 
-#endif /* _YAOSP_YAOSP_H_ */
+Mutex::Mutex( const std::string& name, bool recursive ) {
+    m_id = syscall2(
+        SYS_mutex_create, reinterpret_cast<uint32_t>( name.c_str() ), recursive ? MUTEX_RECURSIVE : MUTEX_NONE
+    );
+}
+
+Mutex::~Mutex( void ) {
+    syscall1( SYS_mutex_destroy, m_id );
+}
+
+int Mutex::lock( void ) {
+    return syscall1( SYS_mutex_lock, m_id );
+}
+
+int Mutex::unLock( void ) {
+    return syscall1( SYS_mutex_unlock, m_id );
+}
+
+} /* namespace yutilpp */

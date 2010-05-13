@@ -45,6 +45,7 @@ bool Application::init( void ) {
         yutilpp::Thread::uSleep( 100 * 1000 );
     }
 
+    m_lock = new yutilpp::Mutex("app lock");
     m_serverPort = new yutilpp::IPCPort();
     m_replyPort = new yutilpp::IPCPort();
     m_replyPort->createNew();
@@ -53,11 +54,11 @@ bool Application::init( void ) {
 }
 
 void Application::lock( void ) {
-    // todo
+    m_lock->lock();
 }
 
 void Application::unLock( void ) {
-    // todo
+    m_lock->unLock();
 }
 
 yutilpp::IPCPort* Application::getGuiServerPort( void ) {
