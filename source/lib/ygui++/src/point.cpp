@@ -23,6 +23,12 @@ namespace yguipp {
 Point::Point( int x, int y ) : m_x(x), m_y(y) {
 }
 
+Point::Point( point_t* point ) : m_x(point->x), m_y(point->y) {
+}
+
+Point::~Point( void ) {
+}
+
 void Point::toPointT( point_t* p ) const {
     p->x = m_x;
     p->y = m_y;

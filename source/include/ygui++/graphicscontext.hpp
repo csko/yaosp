@@ -41,6 +41,7 @@ class GraphicsContext {
     virtual ~GraphicsContext( void );
 
     const Point& getLeftTop( void );
+    bool needToFlush( void );
 
     void setPenColor( const Color& pen );
     void setClipRect( const Rect& rect );
@@ -48,9 +49,10 @@ class GraphicsContext {
 
     void translate( const Point& p );
     void fillRect( const Rect& r );
+    void drawRect( const Rect& r );
     void drawText( const Point& p, const std::string& text );
 
-    void flush( void );
+    void finish( void );
 
   private:
     enum TranslateType {
@@ -73,6 +75,8 @@ class GraphicsContext {
 
     void translateCheckPoint( void );
     void rollbackTranslate( void );
+
+    void cleanUp( void );
 
   private:
     Point m_leftTop;

@@ -36,6 +36,7 @@ class Rect {
     Point leftTop( void ) const;
 
     bool isValid( void ) const;
+    bool hasPoint( const Point& p ) const;
 
     void toRectT( rect_t* r ) const;
 

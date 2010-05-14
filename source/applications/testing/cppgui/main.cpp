@@ -22,6 +22,7 @@
 #include <ygui++/window.hpp>
 #include <ygui++/label.hpp>
 #include <ygui++/panel.hpp>
+#include <ygui++/button.hpp>
 #include <ygui++/layout/borderlayout.hpp>
 
 using namespace yguipp;
@@ -41,7 +42,7 @@ int main( int argc, char** argv ) {
     container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
     container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
     container->addChild(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
-    //container->addChild(new Label("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
+    container->addChild(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
 
     win->show();
 

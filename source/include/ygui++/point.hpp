@@ -26,6 +26,8 @@ namespace yguipp {
 class Point {
   public:
     Point( int x = 0, int y = 0 );
+    Point( point_t* point );
+    ~Point( void );
 
     void toPointT( point_t* p ) const;
 

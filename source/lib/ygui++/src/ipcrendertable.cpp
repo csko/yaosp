@@ -37,6 +37,7 @@ void* IPCRenderTable::allocate( size_t size ) {
 
     if ( ( m_position + size ) > BUFFER_SIZE ) {
         flush();
+        waitForFlush();
     }
 
     assert( m_position + size < BUFFER_SIZE );
@@ -54,15 +55,20 @@ int IPCRenderTable::reset( void ) {
 }
 
 int IPCRenderTable::flush( void ) {
-    uint32_t code;
     ipc_port_id* id;
 
     id = reinterpret_cast<ipc_port_id*>(m_buffer);
     *id = m_window->getReplyPort()->getId();
 
     m_window->getServerPort()->send( MSG_RENDER_COMMANDS, m_buffer, m_position );
-    m_window->getReplyPort()->receive( code );
 
+    return 0;
+}
+
+int IPCRenderTable::waitForFlush( void ) {
+    uint32_t code;
+
+    m_window->getReplyPort()->receive( code );
     m_position = sizeof(ipc_port_id);
 
     return 0;

@@ -36,6 +36,10 @@ const Point& GraphicsContext::getLeftTop( void ) {
     return m_leftTop;
 }
 
+bool GraphicsContext::needToFlush( void ) {
+    return m_needToFlush;
+}
+
 void GraphicsContext::setPenColor( const Color& pen ) {
     r_set_pen_color_t* cmd;
 
@@ -90,6 +94,23 @@ void GraphicsContext::fillRect( const Rect& r ) {
     m_needToFlush = true;
 }
 
+void GraphicsContext::drawRect( const Rect& r ) {
+    Rect visibleRect;
+    r_draw_rect_t* cmd;
+
+    visibleRect = ( r + m_leftTop ) & m_clipRect;
+
+    if ( !visibleRect.isValid() ) {
+        return;
+    }
+
+    cmd = reinterpret_cast<r_draw_rect_t*>( m_window->getRenderTable()->allocate( sizeof(r_draw_rect_t) ) );
+    cmd->header.command = R_DRAW_RECT;
+    visibleRect.toRectT( &cmd->rect );
+
+    m_needToFlush = true;
+}
+
 void GraphicsContext::drawText( const Point& p, const std::string& text ) {
     Point realPoint;
     r_draw_text_t* cmd;
@@ -106,16 +127,12 @@ void GraphicsContext::drawText( const Point& p, const std::string& text ) {
     m_needToFlush = true;
 }
 
-void GraphicsContext::flush( void ) {
+void GraphicsContext::finish( void ) {
     if ( m_needToFlush ) {
         render_header_t* cmd;
 
         cmd = reinterpret_cast<render_header_t*>( m_window->getRenderTable()->allocate( sizeof(render_header_t) ) );
         cmd->command = R_DONE;
-
-        m_window->getRenderTable()->flush();
-    } else {
-        m_window->getRenderTable()->reset();
     }
 }
 
@@ -159,6 +176,16 @@ void GraphicsContext::rollbackTranslate( void ) {
                 done = true;
                 break;
         }
+    }
+}
+
+void GraphicsContext::cleanUp( void ) {
+    while ( !m_restrictedAreas.empty() ) {
+        m_restrictedAreas.pop();
+    }
+
+    while ( !m_translateStack.empty() ) {
+        m_translateStack.pop();
     }
 }
 

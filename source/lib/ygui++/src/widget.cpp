@@ -17,6 +17,7 @@
  */
 
 #include <ygui++/widget.hpp>
+#include <ygui++/window.hpp>
 
 namespace yguipp {
 
@@ -39,8 +40,20 @@ void Widget::addChild( Widget* child, layout::LayoutData* data ) {
     }
 }
 
+const Point& Widget::getPosition( void ) {
+    return m_position;
+}
+
+const Point& Widget::getScrollOffset( void ) {
+    return m_scrollOffset;
+}
+
 const Point& Widget::getSize( void ) {
     return m_fullSize;
+}
+
+const Point& Widget::getVisibleSize( void ) {
+    return m_visibleSize;
 }
 
 const Rect Widget::getBounds( void ) {
@@ -68,6 +81,10 @@ void Widget::setSize( const Point& p ) {
     m_visibleSize = p;
 }
 
+void Widget::invalidate( void ) {
+    doInvalidate(true);
+}
+
 Point Widget::getPreferredSize( void ) {
     return Point(0,0);
 }
@@ -81,6 +98,26 @@ int Widget::validate( void ) {
 }
 
 int Widget::paint( GraphicsContext* g ) {
+    return 0;
+}
+
+int Widget::mouseEntered( const Point& p ) {
+    return 0;
+}
+
+int Widget::mouseMoved( const Point& p ) {
+    return 0;
+}
+
+int Widget::mouseExited( void ) {
+    return 0;
+}
+
+int Widget::mousePressed( const Point& p ) {
+    return 0;
+}
+
+int Widget::mouseReleased( void ) {
     return 0;
 }
 
@@ -106,7 +143,7 @@ int Widget::doPaint( GraphicsContext* g ) {
     /* Paint the widget. */
 
     if ( !m_isValid ) {
-        //m_isValid = true;
+        m_isValid = true;
 
         // todo: call validate only if the size of the widget changed
         validate();
@@ -135,6 +172,21 @@ int Widget::doPaint( GraphicsContext* g ) {
     /* Remove the restricted area of this widget. */
 
     g->popRestrictedArea();
+
+    return 0;
+}
+
+int Widget::doInvalidate( bool notifyWindow ) {
+    m_isValid = false;
+
+    for ( ChildVectorCIter it = m_children.begin(); it != m_children.end(); ++it ) {
+        it->first->doInvalidate(false);
+    }
+
+    if ( ( notifyWindow ) &&
+         ( m_window != NULL ) ) {
+        m_window->getPort()->send( MSG_WIDGET_INVALIDATED );
+    }
 
     return 0;
 }

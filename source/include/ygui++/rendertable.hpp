@@ -33,6 +33,7 @@ class RenderTable {
     virtual void* allocate( size_t size ) = 0;
     virtual int reset( void ) = 0;
     virtual int flush( void ) = 0;
+    virtual int waitForFlush( void ) = 0;
 
   protected:
     Window* m_window;

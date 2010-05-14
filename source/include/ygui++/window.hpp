@@ -20,6 +20,7 @@
 #define _WINDOW_HPP_
 
 #include <string>
+#include <ygui/protocol.h>
 
 #include <ygui++/widget.hpp>
 #include <ygui++/rendertable.hpp>
@@ -46,6 +47,22 @@ class Window : public Object, public yutilpp::IPCListener {
   private:
     bool registerWindow( void );
 
+    void doRepaint( void );
+
+    void handleResized( msg_win_resized_t* cmd );
+    void handleKeyPressed( msg_key_pressed_t* cmd );
+    void handleKeyReleased( msg_key_released_t* cmd );
+    void handleMouseEntered( msg_mouse_entered_t* cmd );
+    void handleMouseMoved( msg_mouse_moved_t* cmd );
+    void handleMouseExited( void );
+    void handleMousePressed( msg_mouse_pressed_t* cmd );
+    void handleMouseReleased( msg_mouse_released_t* cmd );
+    void handleMouseScrolled( msg_mouse_scrolled_t* cmd );
+
+    Widget* findWidgetAt( const Point& p );
+    Widget* findWidgetAtHelper( Widget* widget, const Point& position,
+                                Point leftTop, const Rect& visibleRect );
+
   private:
     std::string m_title;
     Point m_position;
@@ -55,6 +72,9 @@ class Window : public Object, public yutilpp::IPCListener {
     yutilpp::IPCPort* m_replyPort;
 
     Widget* m_container;
+    Widget* m_mouseWidget;
+    Widget* m_mouseDownWidget;
+
     RenderTable* m_renderTable;
     GraphicsContext* m_graphicsContext;
 }; /* class Window */

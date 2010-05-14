@@ -41,7 +41,10 @@ class Widget : public Object {
 
     void addChild( Widget* child, layout::LayoutData* data = NULL );
 
+    const Point& getPosition( void );
+    const Point& getScrollOffset( void );
     const Point& getSize( void );
+    const Point& getVisibleSize( void );
     const Rect getBounds( void );
     const ChildVector& getChildren( void );
 
@@ -49,13 +52,23 @@ class Widget : public Object {
     void setPosition( const Point& p );
     void setSize( const Point& p );
 
+    void invalidate( void );
+
     virtual Point getPreferredSize( void );
     virtual Point getMaximumSize( void );
+
     virtual int validate( void );
     virtual int paint( GraphicsContext* g );
 
+    virtual int mouseEntered( const Point& p );
+    virtual int mouseMoved( const Point& p );
+    virtual int mouseExited( void );
+    virtual int mousePressed( const Point& p );
+    virtual int mouseReleased( void );
+
   private:
     int doPaint( GraphicsContext* g );
+    int doInvalidate( bool notifyWindow );
 
   private:
     Window* m_window;
@@ -67,7 +80,6 @@ class Widget : public Object {
     Point m_scrollOffset;
     Point m_fullSize;
     Point m_visibleSize;
-
 
     ChildVector m_children;
 }; /* class Widget */

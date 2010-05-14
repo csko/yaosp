@@ -16,34 +16,45 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IPCRENDERTABLE_HPP_
-#define _IPCRENDERTABLE_HPP_
+#ifndef _BUTTON_HPP_
+#define _BUTTON_HPP_
 
-#include <inttypes.h>
+#include <string>
+#include <ygui/yconstants.h>
 
-#include <ygui++/rendertable.hpp>
+#include <ygui++/widget.hpp>
+#include <ygui++/font.hpp>
 
 namespace yguipp {
 
-class Window;
-
-class IPCRenderTable : public RenderTable {
+class Button : public Widget {
   public:
-    IPCRenderTable( Window* window );
-    virtual ~IPCRenderTable( void );
-
-    void* allocate( size_t size );
-    int reset( void );
-    int flush( void );
-    int waitForFlush( void );
+    Button( int hAlign = H_ALIGN_CENTER, int vAlign = V_ALIGN_CENTER );
+    Button( const std::string& text, int hAlign = H_ALIGN_CENTER, int vAlign = V_ALIGN_CENTER );
+    virtual ~Button( void );
 
   private:
-    uint8_t* m_buffer;
-    size_t m_position;
+    Button( const Button& b );
+    Button& operator=( const Button& b );
 
-    static const size_t BUFFER_SIZE = 32768;
-}; /* class RenderTable */
+  public:
+    Point getPreferredSize( void );
+    int paint( GraphicsContext* g );
+    int mousePressed( const Point& p );
+    int mouseReleased( void );
+
+  private:
+    void initFont( void );
+
+  private:
+    std::string m_text;
+    Font* m_font;
+    bool m_pressed;
+
+    int m_hAlign;
+    int m_vAlign;
+}; /* class Button */
 
 } /* namespace yguipp */
 
-#endif /* _IPCRENDERTABLE_HPP_ */
+#endif /* _Button_HPP_ */

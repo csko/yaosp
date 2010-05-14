@@ -51,6 +51,13 @@ bool Rect::isValid( void ) const {
              ( m_top <= m_bottom ) );
 }
 
+bool Rect::hasPoint( const Point& p ) const {
+    return ( ( m_left <= p.m_x ) &&
+             ( p.m_x <= m_right ) &&
+             ( m_top <= p.m_y ) &&
+             ( p.m_y <= m_bottom ) );
+}
+
 void Rect::toRectT( rect_t* r ) const {
     r->left = m_left;
     r->top = m_top;

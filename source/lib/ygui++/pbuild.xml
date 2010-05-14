@@ -29,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/widget.cpp</item>
         <item>src/panel.cpp</item>
         <item>src/label.cpp</item>
+        <item>src/button.cpp</item>
         <item>src/graphicscontext.cpp</item>
         <item>src/rect.cpp</item>
         <item>src/point.cpp</item>
