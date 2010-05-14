@@ -184,11 +184,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo>Generating system call table</echo>
         <echo/>
 
-        <exec executable="python">
-            <arg>../../scripts/syscall_table_generator.py</arg>
-            <arg>src/syscall.c</arg>
-            <arg>include/syscall_table.h</arg>
-        </exec>
+        <python>
+            <args>${syscall_gen_py} src/syscall.c include/syscall_table.h</args>
+        </python>
 
         <echo>Compiling architecture specific assembly files</echo>
         <echo/>
@@ -321,7 +319,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="generate_syscall_table">
-        <copy from="include/syscall_table.h" to="../include/yaosp/syscall_table.h"/>
+        <copy from="include/syscall_table.h" to="${includedir}/yaosp/syscall_table.h"/>
     </target>
 
     <target name="install">

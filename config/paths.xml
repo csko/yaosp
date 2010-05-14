@@ -24,4 +24,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <string name="staticlibdir" value="${toplevel}/build/libs"/>
     <string name="sharedlibdir" value="${toplevel}/build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3"/>
     <string name="includedir" value="${toplevel}/source/include"/>
+
+    <!-- Path definitions to scripts -->
+
+    <string name="cfg_conv_py" value="${toplevel}/scripts/config_converter.py"/>
+    <string name="syscall_gen_py" value="${toplevel}/scripts/syscall_table_generator.py"/>
 </build>

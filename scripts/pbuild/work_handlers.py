@@ -363,6 +363,33 @@ class ExecHandler( handler.NodeHandler ) :
     def end_element( self, name ) :
         if name == "arg" :
             self.work.add_argument( self.data )
+        elif name == "args" :
+            self.work.add_arguments( self.data.split(" ") )
+
+    def element_data( self, data ) :
+        self.data = data
+
+class PythonHandler( handler.NodeHandler ) :
+    handled_node = "python"
+
+    def __init__( self, parent, context ) :
+        handler.NodeHandler.__init__( self, parent, context )
+
+        self.data = ""
+        self.work = None
+
+    def node_started( self, attrs ) :
+        self.work = works.ExecWork("python")
+
+    def node_finished( self ) :
+        if self.work != None :
+            self.get_parent().add_work( self.work )
+
+    def end_element( self, name ) :
+        if name == "arg" :
+            self.work.add_argument( self.data )
+        elif name == "args" :
+            self.work.add_arguments( self.data.split(" ") )
 
     def element_data( self, data ) :
         self.data = data
@@ -467,6 +494,7 @@ handlers = [
     MoveHandler,
     DeleteHandler,
     ExecHandler,
+    PythonHandler,
     SymlinkHandler,
     ChdirHandler,
     HTTPGetHandler,

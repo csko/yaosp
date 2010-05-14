@@ -506,7 +506,10 @@ class ExecWork( Work ) :
         self.executable = executable
 
     def add_argument( self, arg ) :
-        self.args.append( arg )
+        self.args += [arg]
+
+    def add_arguments( self, args ) :
+        self.args += args
 
     def execute( self, context ) :
         real_args = []

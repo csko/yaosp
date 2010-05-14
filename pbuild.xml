@@ -86,11 +86,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="config/xterm" to="${imagedir}/system/terminfo/x/xterm"/>
         <copy from="config/bashrc" to="${imagedir}/system/config/bashrc"/>
 
-        <exec executable="python">
-            <arg>scripts/config_converter.py</arg>
-            <arg>config/config_livecd.xml</arg>
-            <arg>build/image/system/config/cfgserver.bin</arg>
-        </exec>
+        <python>
+            <args>${cfg_conv_py} config/config_livecd.xml build/image/system/config/cfgserver.bin</args>
+        </python>
 
         <echo>Creating install base package</echo>
         <echo/>
@@ -117,11 +115,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="config/bashrc" to="${imagedir}/system/config/bashrc"/>
         <copy from="toolchain/libstdc++-i386.so" to="${imagedir}/system/lib/libstdc++.so"/>
 
-        <exec executable="python">
-            <arg>scripts/config_converter.py</arg>
-            <arg>config/config_livecd.xml</arg>
-            <arg>build/image/system/config/cfgserver.bin</arg>
-        </exec>
+        <python>
+            <args>${cfg_conv_py} config/config_livecd.xml build/image/system/config/cfgserver.bin</args>
+        </python>
 
         <call target="create_iso"/>
     </target>
@@ -140,11 +136,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <copy from="config/bashrc" to="${imagedir}/system/config/bashrc"/>
         <copy from="toolchain/libstdc++-i386.so" to="${imagedir}/system/lib/libstdc++.so"/>
 
-        <exec executable="python">
-            <arg>scripts/config_converter.py</arg>
-            <arg>config/config_installcd.xml</arg>
-            <arg>build/image/system/config/cfgserver.bin</arg>
-        </exec>
+        <python>
+            <args>${cfg_conv_py} config/config_installcd.xml build/image/system/config/cfgserver.bin</args>
+        </python>
 
         <call target="create_iso"/>
     </target>
