@@ -352,8 +352,8 @@ class CleanDirectory( Work ) :
                     logging.warning( 'Failed to remove directory ("%s") while cleaning: %s' % ( path, e ) )
 
 class CallTarget( Work ) :
-    def __init__( self, target, directory ) :
-        self.target = target
+    def __init__( self, targets, directory ) :
+        self.targets = targets
         self.directory = directory
 
     def execute( self, context ) :
@@ -385,10 +385,11 @@ class CallTarget( Work ) :
                 logging.critical( "Build stopped." )
                 sys.exit( 1 )
 
-        target = context.get_target( self.target, True )
+        for target in self.targets :
+            target = context.get_target(target, True)
 
-        if target != None :
-            target.execute( context )
+            if target != None :
+                target.execute(context)
 
         if self.directory != None :
             os.chdir( cached_cwd )

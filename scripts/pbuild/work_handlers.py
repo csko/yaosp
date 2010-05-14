@@ -271,7 +271,8 @@ class CallHandler( handler.NodeHandler ) :
         self.work = None
 
     def node_started( self, attrs ) :
-        if not "target" in attrs :
+        if not "target" in attrs and \
+                not "targets" in attrs :
             return
 
         if "directory" in attrs :
@@ -279,7 +280,10 @@ class CallHandler( handler.NodeHandler ) :
         else :
             directory = None
 
-        self.work = works.CallTarget( attrs[ "target" ], directory )
+        if "target" in attrs :
+            self.work = works.CallTarget( [ attrs["target"] ], directory )
+        elif "targets" in attrs :
+            self.work = works.CallTarget( attrs["targets"].split(","), directory )
 
     def node_finished( self ) :
         if self.work != None :
@@ -467,7 +471,7 @@ class IncludeHandler( handler.NodeHandler ) :
 
         if not os.path.isfile(filename) :
             logging.critical( "Unable to include %s because it is not a valid file." % filename )
-            sys.exit( 1 )
+            sys.exit(1)
 
         inc_context = context.BuildContext( self.get_context().get_project_context() )
         inc_handler = handler.BuildHandler(inc_context)
