@@ -32,6 +32,8 @@ class Rect {
 
     int width( void ) const;
     int height( void ) const;
+    Point bounds( void ) const;
+    Point leftTop( void ) const;
 
     bool isValid( void ) const;
 

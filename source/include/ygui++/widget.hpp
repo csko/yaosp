@@ -49,6 +49,8 @@ class Widget : public Object {
     void setPosition( const Point& p );
     void setSize( const Point& p );
 
+    virtual Point getPreferredSize( void );
+    virtual Point getMaximumSize( void );
     virtual int validate( void );
     virtual int paint( GraphicsContext* g );
 

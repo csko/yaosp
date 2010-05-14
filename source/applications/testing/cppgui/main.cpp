@@ -22,24 +22,30 @@
 #include <ygui++/window.hpp>
 #include <ygui++/label.hpp>
 #include <ygui++/panel.hpp>
+#include <ygui++/layout/borderlayout.hpp>
+
+using namespace yguipp;
+using namespace yguipp::layout;
 
 int main( int argc, char** argv ) {
-    yguipp::Application::createInstance("cppguitest");
+    Application::createInstance("cppguitest");
 
-    yguipp::Window* win = new yguipp::Window( "Test", yguipp::Point(50,50), yguipp::Point(300,300) );
+    Window* win = new Window( "Test", Point(50,50), Point(300,300) );
     win->init();
 
-    yguipp::Widget* container = win->getContainer();
-    dynamic_cast<yguipp::Panel*>(container)->setBackgroundColor( yguipp::Color(255,255,255) );
+    Panel* container = dynamic_cast<Panel*>(win->getContainer());
+    container->setLayout( new BorderLayout() );
+    container->setBackgroundColor( Color(255,255,255) );
 
-    yguipp::Widget* child = new yguipp::Label("Hello World");
-    container->addChild(child);
-    child->setPosition( yguipp::Point(50,50) );
-    child->setSize( yguipp::Point(200,200) );
+    container->addChild(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
+    container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
+    container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
+    container->addChild(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
+    //container->addChild(new Label("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
 
     win->show();
 
-    yguipp::Application::getInstance()->run();
+    Application::getInstance()->run();
 
     return 0;
 }

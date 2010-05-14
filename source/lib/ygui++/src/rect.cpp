@@ -38,6 +38,14 @@ int Rect::height( void ) const {
     return ( m_bottom - m_top + 1 );
 }
 
+Point Rect::bounds( void ) const {
+    return Point( m_right - m_left + 1, m_bottom - m_top + 1 );
+}
+
+Point Rect::leftTop( void ) const {
+    return Point(m_left, m_top);
+}
+
 bool Rect::isValid( void ) const {
     return ( ( m_left <= m_right ) &&
              ( m_top <= m_bottom ) );

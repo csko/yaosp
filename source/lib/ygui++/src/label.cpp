@@ -34,6 +34,13 @@ Label::~Label( void ) {
     }
 }
 
+Point Label::getPreferredSize( void ) {
+    return Point(
+        m_font->getStringWidth(m_text) + 2 * 3,
+        m_font->getHeight() + 2 * 3
+    );
+}
+
 int Label::paint( GraphicsContext* g ) {
     Rect bounds = getBounds();
 

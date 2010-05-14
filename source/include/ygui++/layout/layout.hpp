@@ -28,6 +28,8 @@ class Panel;
 namespace layout {
 
 class LayoutData {
+  public:
+    virtual ~LayoutData( void ) {}
 }; /* class LayoutData */
 
 class Layout : public Object {

@@ -16,42 +16,46 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LABEL_HPP_
-#define _LABEL_HPP_
+#ifndef _LAYOUT_BORDERLAYOUT_HPP_
+#define _LAYOUT_BORDERLAYOUT_HPP_
 
-#include <string>
-#include <ygui/yconstants.h>
+#include <map>
 
 #include <ygui++/widget.hpp>
-#include <ygui++/font.hpp>
+#include <ygui++/layout/layout.hpp>
 
 namespace yguipp {
+namespace layout {
 
-class Label : public Widget {
+class BorderLayoutData : public LayoutData {
   public:
-    Label( int hAlign = H_ALIGN_CENTER, int vAlign = V_ALIGN_CENTER );
-    Label( const std::string& text, int hAlign = H_ALIGN_CENTER, int vAlign = V_ALIGN_CENTER );
-    virtual ~Label( void );
+    enum Position {
+        PAGE_START,
+        PAGE_END,
+        LINE_START,
+        LINE_END,
+        CENTER
+    };
 
-  private:
-    Label( const Label& l );
-    Label& operator=( const Label& l );
+    BorderLayoutData( Position position ) : m_position(position) {}
+    virtual ~BorderLayoutData( void ) {}
 
   public:
-    Point getPreferredSize( void );
-    int paint( GraphicsContext* g );
+    Position m_position;
+}; /* class BorderLayoutData */
+
+class BorderLayout : public Layout {
+  public:
+    BorderLayout( void );
+    virtual ~BorderLayout( void );
+
+    int doLayout( yguipp::Panel* panel );
 
   private:
-    void initFont( void );
+    void buildWidgetMap( const yguipp::Widget::ChildVector& children, yguipp::Widget** widgetMap );
+}; /* class BorderLayout */
 
-  private:
-    std::string m_text;
-    Font* m_font;
-
-    int m_hAlign;
-    int m_vAlign;
-}; /* class Label */
-
+} /* namespace layout */
 } /* namespace yguipp */
 
-#endif /* _LABEL_HPP_ */
+#endif /* _LAYOUT_BORDERLAYOUT_HPP_ */

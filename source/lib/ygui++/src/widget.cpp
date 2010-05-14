@@ -68,6 +68,14 @@ void Widget::setSize( const Point& p ) {
     m_visibleSize = p;
 }
 
+Point Widget::getPreferredSize( void ) {
+    return Point(0,0);
+}
+
+Point Widget::getMaximumSize( void ) {
+    return Point(INT_MAX, INT_MAX);
+}
+
 int Widget::validate( void ) {
     return 0;
 }
@@ -99,6 +107,9 @@ int Widget::doPaint( GraphicsContext* g ) {
 
     if ( !m_isValid ) {
         //m_isValid = true;
+
+        // todo: call validate only if the size of the widget changed
+        validate();
 
         g->translateCheckPoint();
         g->translate(m_scrollOffset);
