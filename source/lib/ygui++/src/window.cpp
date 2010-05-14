@@ -188,26 +188,29 @@ void Window::handleKeyReleased( msg_key_released_t* cmd ) {
 }
 
 void Window::handleMouseEntered( msg_mouse_entered_t* cmd ) {
+    Point mousePosition(&cmd->mouse_position);
+
     assert( m_mouseWidget == NULL );
-    m_mouseWidget = findWidgetAt( Point(&cmd->mouse_position) );
+    m_mouseWidget = findWidgetAt(mousePosition);
 
     assert( m_mouseWidget != NULL );
-    m_mouseWidget->mouseEntered( Point() );
+    m_mouseWidget->mouseEntered( getWidgetPosition(m_mouseWidget, mousePosition) );
 }
 
 void Window::handleMouseMoved( msg_mouse_moved_t* cmd ) {
     Widget* newMouseWidget;
+    Point mousePosition(&cmd->mouse_position);
 
     assert( m_mouseWidget != NULL );
-    newMouseWidget = findWidgetAt( Point(&cmd->mouse_position) );
+    newMouseWidget = findWidgetAt(mousePosition);
     assert( newMouseWidget != NULL );
 
     if ( m_mouseWidget == newMouseWidget ) {
-        m_mouseWidget->mouseMoved( Point() );
+        m_mouseWidget->mouseMoved( getWidgetPosition(m_mouseWidget, mousePosition) );
     } else {
         m_mouseWidget->mouseExited();
         m_mouseWidget = newMouseWidget;
-        m_mouseWidget->mouseEntered( Point() );
+        m_mouseWidget->mouseEntered( getWidgetPosition(m_mouseWidget, mousePosition) );
     }
 }
 
@@ -222,7 +225,7 @@ void Window::handleMousePressed( msg_mouse_pressed_t* cmd ) {
     assert( m_mouseDownWidget == NULL );
 
     m_mouseDownWidget = m_mouseWidget;
-    m_mouseDownWidget->mousePressed( Point() );
+    m_mouseDownWidget->mousePressed( getWidgetPosition(m_mouseDownWidget, Point(&cmd->mouse_position)) );
 }
 
 void Window::handleMouseReleased( msg_mouse_released_t* cmd ) {
@@ -283,6 +286,15 @@ Widget* Window::findWidgetAtHelper( Widget* widget, const Point& position,
     }
 
     return widget;
+}
+
+Point Window::getWidgetPosition( Widget* widget, Point p ) {
+    while ( widget != NULL ) {
+        p -= widget->getPosition();
+        widget = widget->getParent();
+    }
+
+    return p;
 }
 
 } /* namespace yguipp */

@@ -63,6 +63,8 @@ class Window : public Object, public yutilpp::IPCListener {
     Widget* findWidgetAtHelper( Widget* widget, const Point& position,
                                 Point leftTop, const Rect& visibleRect );
 
+    Point getWidgetPosition( Widget* widget, Point p );
+
   private:
     std::string m_title;
     Point m_position;

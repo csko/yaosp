@@ -41,6 +41,7 @@ class Widget : public Object {
 
     void addChild( Widget* child, layout::LayoutData* data = NULL );
 
+    Widget* getParent( void );
     const Point& getPosition( void );
     const Point& getScrollOffset( void );
     const Point& getSize( void );

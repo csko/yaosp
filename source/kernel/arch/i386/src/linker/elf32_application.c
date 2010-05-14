@@ -136,12 +136,43 @@ static int elf32_application_get_symbol( const char* name, ptr_t* address ) {
     return 0;
 }
 
+static int elf32_application_get_image_symbol_info( elf32_image_t* image, ptr_t address,
+                                                    int* info_valid, symbol_info_t* info ) {
+    uint32_t i;
+    symbol_info_t tmp_info;
+
+    if ( address >= image->text_region->address ) {
+        if ( elf32_get_symbol_info( &image->info, address - image->text_region->address, &tmp_info ) == 0 ) {
+            tmp_info.address += image->text_region->address;
+
+            if ( ( !*info_valid ) ||
+                ( ( address - tmp_info.address ) < ( address - info->address ) ) ) {
+                *info_valid = 1;
+                memcpy( info, &tmp_info, sizeof(symbol_info_t) );
+            }
+        }
+    }
+
+    for ( i = 0; i < image->info.needed_count; i++ ) {
+        elf32_application_get_image_symbol_info( &image->subimages[i], address, info_valid, info );
+    }
+
+    return 0;
+}
+
 static int elf32_application_get_symbol_info( thread_t* thread, ptr_t address, symbol_info_t* info ) {
+    int info_valid;
     elf32_context_t* app_context;
 
     app_context = ( elf32_context_t* )thread->process->loader_data;
 
-    return elf32_get_symbol_info( &app_context->main.info, address, info );
+    elf32_application_get_image_symbol_info( &app_context->main, address, &info_valid, info );
+
+    if ( !info_valid ) {
+        return -ENOENT;
+    }
+
+    return 0;
 }
 
 static int elf32_application_destroy( void* data ) {

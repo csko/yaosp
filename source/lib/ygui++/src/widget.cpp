@@ -40,6 +40,10 @@ void Widget::addChild( Widget* child, layout::LayoutData* data ) {
     }
 }
 
+Widget* Widget::getParent( void ) {
+    return m_parent;
+}
+
 const Point& Widget::getPosition( void ) {
     return m_position;
 }
