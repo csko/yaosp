@@ -1,6 +1,6 @@
 /* Memory region functions
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -18,6 +18,8 @@
 
 #ifndef _YAOSP_REGION_H_
 #define _YAOSP_REGION_H_
+
+#include <inttypes.h>
 
 #define PAGE_SIZE 4096
 #define PAGE_ALIGN(s) (((s)+PAGE_SIZE-1)&~(PAGE_SIZE-1))
