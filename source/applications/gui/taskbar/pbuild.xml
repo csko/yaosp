@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
         <item>taskbar.c</item>
@@ -36,15 +37,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>unknown.png</item>
     </array>
 
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
-
     <target name="compile">
         <call target="prepare"/>
 
@@ -56,9 +48,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
+                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
 
@@ -70,8 +60,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <gcc>
             <input>objs/*.o</input>
             <output>objs/taskbar</output>
-            <flag>-lygui</flag>
-            <flag>-lyutil</flag>
+            <flags>-lygui -lyutil</flags>
         </gcc>
     </target>
 
@@ -83,9 +72,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <for var="i" array="${images}">
             <copy from="images/${i}" to="${imagedir}/application/taskbar/images/${i}"/>
         </for>
-    </target>
-
-    <target name="all">
-        <call targets="clean,compile,install"/>
     </target>
 </build>

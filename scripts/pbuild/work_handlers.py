@@ -481,7 +481,10 @@ class IncludeHandler( handler.NodeHandler ) :
         xml_parser.setContentHandler(inc_handler)
         xml_parser.parse(filename)
 
-        self.get_context().include(inc_context)
+        self.get_context().include_definitions(inc_context)
+
+        if "targets" in attrs :
+            self.get_context().include_targets(inc_context, attrs["targets"].split(","))
 
 handlers = [
     TargetHandler,

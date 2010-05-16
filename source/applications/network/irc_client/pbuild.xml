@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
         <item>main.c</item>
@@ -32,15 +33,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>network/irc.c</item>
         <item>network/chan.c</item>
     </array>
-
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
 
     <target name="compile">
         <call target="prepare"/>
@@ -58,7 +50,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking init application</echo>
+        <echo>Linking irc_client application</echo>
         <echo/>
         <echo>[GCC    ] source/applications/network/irc_client/objs/irc_client</echo>
 
@@ -71,11 +63,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <copy from="objs/irc_client" to="${imagedir}/application/irc_client"/>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
     </target>
 </build>

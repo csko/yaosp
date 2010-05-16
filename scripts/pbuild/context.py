@@ -72,6 +72,9 @@ class BuildContext :
 
         return None
 
+    def get_targets( self ) :
+        return self.targets
+
     def get_definition( self, name ) :
         # handle special definitions first
         if name == "toplevel" :
@@ -97,10 +100,19 @@ class BuildContext :
     def set_default_target( self, target ) :
         self.default_target = target
 
-    def include( self, context ) :
-        self.definition_manager.add_definitions(
-            context.get_definition_manager().get_definitions()
-        )
+    def include_definitions( self, context, defs = None ) :
+        if defs :
+            for d in context.get_definition_manager().get_definitions() :
+                if d.get_name() in defs :
+                    self.definition_manager.add_definition(d)
+        else :
+            for d in context.get_definition_manager().get_definitions() :
+                self.definition_manager.add_definition(d)
+
+    def include_targets( self, context, targets ) :
+        for t in context.get_targets() :
+            if t.get_name() in targets :
+                self.targets += [t]
 
     def replace_definitions( self, text ) :
         while True :

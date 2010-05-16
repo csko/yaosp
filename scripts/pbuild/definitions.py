@@ -63,10 +63,7 @@ class DefinitionManager :
         self.definitions = []
 
     def add_definition( self, definition ) :
-        self.definitions.append( definition )
-
-    def add_definitions( self, definitions ) :
-        self.definitions += definitions
+        self.definitions += [definition]
 
     def remove_definition( self, name ) :
         for definition in self.definitions :
