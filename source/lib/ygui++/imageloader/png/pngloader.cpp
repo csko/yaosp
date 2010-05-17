@@ -21,10 +21,13 @@
 namespace yguipp {
 namespace imageloader {
 
-PNGLoader::PNGLoader( void ) : m_pngStruct(NULL), m_pngInfo(NULL) {
+PNGLoader::PNGLoader( void ) : m_pngStruct(NULL), m_pngInfo(NULL), m_bytesPerRow(0) {
+    m_outputData = new yutilpp::Buffer();
 }
 
 PNGLoader::~PNGLoader( void ) {
+    png_destroy_read_struct( &m_pngStruct, NULL, NULL );
+    delete m_outputData;
 }
 
 bool PNGLoader::init( void ) {
@@ -43,7 +46,6 @@ bool PNGLoader::init( void ) {
 
     if ( setjmp( png_jmpbuf(m_pngStruct) ) ) {
         png_destroy_read_struct( &m_pngStruct, NULL, NULL );
-        /* todo */
         return false;
     }
 
@@ -69,11 +71,11 @@ int PNGLoader::addData( uint8_t* data, size_t size, bool final ) {
 }
 
 int PNGLoader::readData( uint8_t* data, size_t size ) {
-    return 0;
+    return m_outputData->read(data,size);
 }
 
 size_t PNGLoader::availableData( void ) {
-    return 0;
+    return m_outputData->getDataSize();
 }
 
 void PNGLoader::infoCallback( png_infop info ) {
@@ -83,6 +85,7 @@ void PNGLoader::infoCallback( png_infop info ) {
     png_uint_32 width;
     png_uint_32 height;
     double imageGamma;
+    ImageInfo imageInfo;
 
     png_get_IHDR(
         m_pngStruct, m_pngInfo,
@@ -107,9 +110,18 @@ void PNGLoader::infoCallback( png_infop info ) {
     png_set_gray_to_rgb( m_pngStruct );
     png_set_interlace_handling( m_pngStruct );
     png_read_update_info( m_pngStruct, m_pngInfo );
+
+    m_bytesPerRow = width * 4;
+
+    imageInfo.m_width = width;
+    imageInfo.m_height = height;
+    imageInfo.m_colorSpace = CS_RGB32;
+
+    m_outputData->write( reinterpret_cast<void*>(&imageInfo), sizeof(ImageInfo) );
 }
 
 void PNGLoader::rowCallback( png_bytep row, png_uint_32 num, int pass ) {
+    m_outputData->write( row, m_bytesPerRow );
 }
 
 void PNGLoader::pngInfoCallback( png_structp png, png_infop info ) {

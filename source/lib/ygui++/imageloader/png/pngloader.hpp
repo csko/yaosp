@@ -22,6 +22,7 @@
 #include <png.h>
 
 #include <ygui++/imageloader.hpp>
+#include <yutil++/buffer.hpp>
 
 namespace yguipp {
 namespace imageloader {
@@ -48,6 +49,8 @@ class PNGLoader : public ImageLoader {
   private:
     png_structp m_pngStruct;
     png_infop m_pngInfo;
+    int m_bytesPerRow;
+    yutilpp::Buffer* m_outputData;
 }; /* class PNGLoader */
 
 class PNGLoaderLibrary : public ImageLoaderLibrary {

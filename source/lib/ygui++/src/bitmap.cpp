@@ -56,6 +56,7 @@ bool Bitmap::init( void ) {
         return false;
     }
 
+    m_id = reply.id;
     m_region = memory_region_clone_pages( reply.bitmap_region, reinterpret_cast<void**>(&m_data) );
 
     if ( m_region < 0 ) {
@@ -81,6 +82,9 @@ const Point& Bitmap::getSize( void ) {
 Bitmap* Bitmap::loadFromFile( const std::string& path ) {
     int size;
     bool final;
+    int available;
+    Bitmap* bitmap = NULL;
+    uint8_t* bitmapData = NULL;
     ImageLoader* loader;
     yutilpp::storage::File* file;
     uint8_t buffer[LOAD_BUFFER_SIZE];
@@ -109,16 +113,51 @@ Bitmap* Bitmap::loadFromFile( const std::string& path ) {
 
     loader->addData(buffer, size, final);
 
+    if ( loader->availableData() >= sizeof(ImageInfo) ) {
+        ImageInfo info;
+
+        loader->readData(reinterpret_cast<uint8_t*>(&info), sizeof(ImageInfo));
+        bitmap = new Bitmap( Point(info.m_width, info.m_height) );
+        bitmap->init(); /* todo */
+        bitmapData = bitmap->getData();
+    }
+
     while ( !final ) {
         size = file->read(buffer,LOAD_BUFFER_SIZE);
         final = ( size != LOAD_BUFFER_SIZE );
 
         loader->addData(buffer, size, final);
+
+        if ( bitmap == NULL ) {
+            if ( loader->availableData() >= sizeof(ImageInfo) ) {
+                ImageInfo info;
+
+                loader->readData(reinterpret_cast<uint8_t*>(&info), sizeof(ImageInfo));
+                bitmap = new Bitmap( Point(info.m_width, info.m_height) );
+                bitmap->init(); /* todo */
+                bitmapData = bitmap->getData();
+            }
+        } else {
+            available = loader->availableData();
+
+            if ( available > 0 ) {
+                loader->readData(bitmapData, available);
+                bitmapData += available;
+            }
+        }
     }
 
     delete file;
 
-    return NULL;
+    available = loader->availableData();
+
+    if ( available > 0 ) {
+        loader->readData(bitmapData, available);
+    }
+
+    delete loader;
+
+    return bitmap;
 }
 
 } /* namespace yguipp */
