@@ -20,20 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
+    <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all"/>
+
     <array name="subdirs">
         <item>guiserver</item>
         <item>configserver</item>
     </array>
-
-    <target name="all">
-        <for var="i" array="${subdirs}">
-            <call target="all" directory="${i}"/>
-        </for>
-    </target>
-
-    <target name="clean">
-        <for var="i" array="${subdirs}">
-            <call target="clean" directory="${i}"/>
-        </for>
-    </target>
 </build>

@@ -37,6 +37,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/font.cpp</item>
         <item>src/bitmap.cpp</item>
         <item>src/rendertable.cpp</item>
+        <item>src/imageloader.cpp</item>
         <item>src/ipcrendertable.cpp</item>
         <item>src/layout/borderlayout.cpp</item>
     </array>

@@ -64,8 +64,16 @@ bool Bitmap::init( void ) {
     return true;
 }
 
+int Bitmap::getId( void ) {
+    return m_id;
+}
+
 uint8_t* Bitmap::getData( void ) {
     return m_data;
+}
+
+const Point& Bitmap::getSize( void ) {
+    return m_size;
 }
 
 } /* namespace yguipp */

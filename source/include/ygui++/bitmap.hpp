@@ -34,7 +34,9 @@ class Bitmap : public Object {
 
     bool init( void );
 
+    int getId( void );
     uint8_t* getData( void );
+    const Point& getSize( void );
 
   private:
     int m_id;

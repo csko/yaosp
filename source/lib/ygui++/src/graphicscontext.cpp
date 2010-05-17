@@ -111,6 +111,26 @@ void GraphicsContext::drawRect( const Rect& r ) {
     m_needToFlush = true;
 }
 
+void GraphicsContext::drawBitmap( const Point& p, Bitmap* bitmap ) {
+    Rect visibleRect;
+    Point bitmapLeftTop;
+    r_draw_bitmap_t* cmd;
+
+    bitmapLeftTop = m_leftTop + p;
+    visibleRect = ( Rect(bitmap->getSize()) + bitmapLeftTop ) & m_clipRect;
+
+    if ( !visibleRect.isValid() ) {
+        return;
+    }
+
+    cmd = reinterpret_cast<r_draw_bitmap_t*>( m_window->getRenderTable()->allocate( sizeof(r_draw_bitmap_t) ) );
+    cmd->header.command = R_DRAW_BITMAP;
+    cmd->bitmap_id = bitmap->getId();
+    bitmapLeftTop.toPointT( &cmd->position );
+
+    m_needToFlush = true;
+}
+
 void GraphicsContext::drawText( const Point& p, const std::string& text ) {
     Point realPoint;
     r_draw_text_t* cmd;

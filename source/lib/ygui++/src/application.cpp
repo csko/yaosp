@@ -19,6 +19,7 @@
 #include <ygui/protocol.h>
 
 #include <ygui++/application.hpp>
+#include <ygui++/imageloader.hpp>
 #include <yutil++/thread.hpp>
 
 namespace yguipp {
@@ -87,6 +88,8 @@ bool Application::createInstance( const std::string& name ) {
 
             return false;
         }
+
+        ImageLoaderManager::createInstance();
     }
 
     return true;

@@ -21,6 +21,7 @@
 
 #include <string>
 
+#include <ygui++/imageloader.hpp>
 #include <yutil++/ipclistener.hpp>
 #include <yutil++/mutex.hpp>
 
