@@ -23,6 +23,7 @@
 #include <ygui++/label.hpp>
 #include <ygui++/panel.hpp>
 #include <ygui++/button.hpp>
+#include <ygui++/imageloader.hpp>
 #include <ygui++/layout/borderlayout.hpp>
 
 using namespace yguipp;
@@ -30,6 +31,7 @@ using namespace yguipp::layout;
 
 int main( int argc, char** argv ) {
     Application::createInstance("cppguitest");
+    ImageLoaderManager::getInstance()->loadLibraries();
 
     Window* win = new Window( "Test", Point(50,50), Point(300,300) );
     win->init();

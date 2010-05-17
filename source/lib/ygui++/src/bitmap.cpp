@@ -20,6 +20,8 @@
 
 #include <ygui++/bitmap.hpp>
 #include <ygui++/application.hpp>
+#include <ygui++/imageloader.hpp>
+#include <yutil++/storage/file.hpp>
 
 namespace yguipp {
 
@@ -74,6 +76,49 @@ uint8_t* Bitmap::getData( void ) {
 
 const Point& Bitmap::getSize( void ) {
     return m_size;
+}
+
+Bitmap* Bitmap::loadFromFile( const std::string& path ) {
+    int size;
+    bool final;
+    ImageLoader* loader;
+    yutilpp::storage::File* file;
+    uint8_t buffer[LOAD_BUFFER_SIZE];
+
+    file = new yutilpp::storage::File(path);
+
+    if ( !file->init() ) {
+        delete file;
+        return NULL;
+    }
+
+    size = file->read(buffer,LOAD_BUFFER_SIZE);
+    final = ( size != LOAD_BUFFER_SIZE );
+
+    if ( size <= 0 ) {
+        delete file;
+        return NULL;
+    }
+
+    loader = ImageLoaderManager::getInstance()->getLoader(buffer,size);
+
+    if ( loader == NULL ) {
+        delete file;
+        return NULL;
+    }
+
+    loader->addData(buffer, size, final);
+
+    while ( !final ) {
+        size = file->read(buffer,LOAD_BUFFER_SIZE);
+        final = ( size != LOAD_BUFFER_SIZE );
+
+        loader->addData(buffer, size, final);
+    }
+
+    delete file;
+
+    return NULL;
 }
 
 } /* namespace yguipp */

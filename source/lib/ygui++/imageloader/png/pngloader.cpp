@@ -1,4 +1,4 @@
-/* yaosp C library
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,23 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DLFCN_H_
-#define _DLFCN_H_
+#include "pngloader.hpp"
 
-#define RTLD_LAZY 0x01
-#define RTLD_NOW  0x02
+namespace yguipp {
+namespace imageloader {
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void* dlopen( const char* filename, int flag );
-void* dlsym( void* handle, const char* symbol );
-int dlclose( void* handle );
-char* dlerror( void );
-
-#ifdef __cplusplus
+PNGLoaderLibrary::PNGLoaderLibrary( void ) {
 }
-#endif
 
-#endif /* _DLFCN_H_ */
+PNGLoaderLibrary::~PNGLoaderLibrary( void ) {
+}
+
+bool PNGLoaderLibrary::identify( uint8_t* data, size_t size ) {
+    return false;
+}
+
+yguipp::ImageLoader* PNGLoaderLibrary::create( void ) {
+    return NULL;
+}
+
+} /* namespace imageloader */
+} /* namespace yguipp */
+
+extern "C"
+int loader_get_count( void ) {
+    return 1;
+}
+
+extern "C"
+yguipp::ImageLoaderLibrary* loader_get_at( int index ) {
+    return new yguipp::imageloader::PNGLoaderLibrary();
+}

@@ -86,8 +86,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     </target>
 
     <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
+        <call targets="clean,compile,install"/>
+        <call target="all" directory="imageloader"/>
     </target>
 </build>

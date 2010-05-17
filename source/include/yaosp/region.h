@@ -24,6 +24,10 @@
 #define PAGE_SIZE 4096
 #define PAGE_ALIGN(s) (((s)+PAGE_SIZE-1)&~(PAGE_SIZE-1))
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef int region_id;
 
 typedef enum region_flags {
@@ -37,5 +41,9 @@ int memory_region_delete( region_id id );
 int memory_region_remap_pages( region_id id, void* address );
 int memory_region_alloc_pages( region_id id );
 region_id memory_region_clone_pages( region_id id, void** address );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YAOSP_REGION_H_ */

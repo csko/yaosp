@@ -1,4 +1,4 @@
-/* yaosp C library
+/* yutil++ directory implementation
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,23 +16,30 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DLFCN_H_
-#define _DLFCN_H_
+#include <unistd.h>
 
-#define RTLD_LAZY 0x01
-#define RTLD_NOW  0x02
+#include <yutil++/storage/file.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace yutilpp {
+namespace storage {
 
-void* dlopen( const char* filename, int flag );
-void* dlsym( void* handle, const char* symbol );
-int dlclose( void* handle );
-char* dlerror( void );
-
-#ifdef __cplusplus
+File::File( const std::string& path, int mode ) : m_file(-1), m_mode(mode), m_path(path) {
 }
-#endif
 
-#endif /* _DLFCN_H_ */
+File::~File( void ) {
+    if ( m_file >= 0 ) {
+        ::close(m_file);
+    }
+}
+
+bool File::init( void ) {
+    m_file = ::open( m_path.c_str(), m_mode );
+    return ( m_file >= 0 );
+}
+
+int File::read( void* buffer, int size ) {
+    return ::read( m_file, buffer, size );
+}
+
+} /* namespace storage */
+} /* namespace yutilpp */

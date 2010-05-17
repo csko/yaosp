@@ -19,6 +19,8 @@
 #ifndef _BITMAP_HPP_
 #define _BITMAP_HPP_
 
+#include <string>
+
 #include <yaosp/region.h>
 #include <ygui/yconstants.h>
 
@@ -38,6 +40,8 @@ class Bitmap : public Object {
     uint8_t* getData( void );
     const Point& getSize( void );
 
+    static Bitmap* loadFromFile( const std::string& path );
+
   private:
     int m_id;
     uint8_t* m_data;
@@ -45,6 +49,8 @@ class Bitmap : public Object {
 
     Point m_size;
     color_space_t m_colorSpace;
+
+    static const int LOAD_BUFFER_SIZE = 32768;
 }; /* class Bitmap */
 
 } /* namespace yguipp */

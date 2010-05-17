@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,10 @@
 
 #include <unistd.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct DIR {
     int fd;
     struct dirent entry;
@@ -33,5 +37,9 @@ struct dirent* readdir( DIR* dir );
 int readdir_r( DIR* dir, struct dirent* entry, struct dirent** result );
 
 void rewinddir( DIR* dir );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _DIRENT_H_ */

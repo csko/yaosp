@@ -36,6 +36,10 @@
 #define _D_EXACT_NAMLEN(d) (strlen((d)->d_name))
 #define _D_ALLOC_NAMLEN(d) (NAME_MAX+1)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum {
     _PC_LINK_MAX,
 #define _PC_LINK_MAX                    _PC_LINK_MAX
@@ -161,5 +165,9 @@ int setpgid( pid_t pid, pid_t pgid );
 
 pid_t getpgrp( void );
 int setpgrp( void );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _UNISTD_H_ */

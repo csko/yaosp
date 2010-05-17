@@ -21,34 +21,21 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
-        <item>src/thread.cpp</item>
-        <item>src/ipcport.cpp</item>
-        <item>src/ipclistener.cpp</item>
-        <item>src/mutex.cpp</item>
-        <item>src/storage/directory.cpp</item>
-        <item>src/storage/file.cpp</item>
+        <item>pngloader.cpp</item>
     </array>
-
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
 
     <target name="compile">
         <call target="prepare"/>
 
         <echo/>
-        <echo>Compiling yutil++ library</echo>
+        <echo>Compiling PNG loader library</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/lib/yutil++/${i}</echo>
+            <echo>[GCC    ] source/lib/ygui++/imageloader/png/${i}</echo>
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
@@ -57,26 +44,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
 
         <echo/>
-        <echo>Linking yutil++ library</echo>
+        <echo>Linking PNG loader library</echo>
         <echo/>
-        <echo>[LD     ] source/lib/yutil++/objs/libyutil++.so</echo>
+        <echo>[LD     ] source/lib/ygui++/imageloader/png/objs/png.so</echo>
 
         <ld>
             <flag>-shared</flag>
             <input>objs/*.o</input>
-            <output>objs/libyutil++.so</output>
+            <output>objs/png.so</output>
         </ld>
 
     </target>
 
     <target name="install">
-        <copy from="objs/libyutil++.so" to="${sharedlibdir}"/>
-        <copy from="objs/libyutil++.so" to="${imagedir}/system/lib"/>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
+        <copy from="objs/png.so" to="${imagedir}/system/lib/imageloader++"/>
     </target>
 </build>
