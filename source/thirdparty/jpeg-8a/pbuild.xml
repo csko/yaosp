@@ -20,36 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <target name="clean">
-        <cleandir>jpeg-8a</cleandir>
-        <rmdir>jpeg-8a</rmdir>
-    </target>
+    <string name="package" value="jpeg"/>
+    <string name="version" value="8a"/>
+    <string name="source_file" value="jpegsrc.v8a.tar.gz"/>
+    <string name="md5sum" value="5146e68be3633c597b0d14d3ed8fa2ea"/>
 
-    <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/jpeg/jpegsrc.v8a.tar.gz"
-                 to="jpegsrc.v8a.tar.gz"
-                 md5="5146e68be3633c597b0d14d3ed8fa2ea"/>
-
-        <echo>Extracting jpeg source</echo>
-
-        <exec executable="tar">
-            <arg>-zxf</arg>
-            <arg>jpegsrc.v8a.tar.gz</arg>
-        </exec>
-
-        <echo>Patching jpeg source</echo>
-
-        <exec executable="patch">
-            <arg>-t</arg>
-            <arg>-p0</arg>
-            <arg>-i</arg>
-            <arg>jpeg-8a.patch</arg>
-        </exec>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="get_source"/>
-        <call target="all" directory="jpeg-8a"/>
-    </target>
+    <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>

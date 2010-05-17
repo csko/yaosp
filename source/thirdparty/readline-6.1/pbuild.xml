@@ -20,36 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <target name="clean">
-        <cleandir>readline-6.1</cleandir>
-        <rmdir>readline-6.1</rmdir>
-    </target>
+    <string name="package" value="readline"/>
+    <string name="version" value="6.1"/>
+    <string name="source_file" value="readline-6.1.tar.gz"/>
+    <string name="md5sum" value="fc2f7e714fe792db1ce6ddc4c9fb4ef3"/>
 
-    <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/readline/readline-6.1.tar.gz"
-                 to="readline-6.1.tar.gz"
-                 md5="fc2f7e714fe792db1ce6ddc4c9fb4ef3"/>
-
-        <echo>Extracting readline source</echo>
-
-        <exec executable="tar">
-            <arg>-zxf</arg>
-            <arg>readline-6.1.tar.gz</arg>
-        </exec>
-
-        <echo>Patching readline source</echo>
-
-        <exec executable="patch">
-            <arg>-t</arg>
-            <arg>-p0</arg>
-            <arg>-i</arg>
-            <arg>readline-6.1.patch</arg>
-        </exec>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="get_source"/>
-        <call target="all" directory="readline-6.1"/>
-    </target>
+    <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>

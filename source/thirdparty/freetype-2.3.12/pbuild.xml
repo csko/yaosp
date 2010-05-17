@@ -20,36 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <target name="clean">
-        <cleandir>freetype-2.3.12</cleandir>
-        <rmdir>freetype-2.3.12</rmdir>
-    </target>
+    <string name="package" value="freetype"/>
+    <string name="version" value="2.3.12"/>
+    <string name="source_file" value="freetype-2.3.12.tar.bz2"/>
+    <string name="md5sum" value="e974a82e5939be8e05ee65f07275d7c5"/>
 
-    <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/freetype/freetype-2.3.12.tar.bz2"
-                 to="freetype-2.3.12.tar.bz2"
-                 md5="e974a82e5939be8e05ee65f07275d7c5"/>
-
-        <echo>Extracting freetype source</echo>
-
-        <exec executable="tar">
-            <arg>-jxf</arg>
-            <arg>freetype-2.3.12.tar.bz2</arg>
-        </exec>
-
-        <echo>Patching freetype source</echo>
-
-        <exec executable="patch">
-            <arg>-t</arg>
-            <arg>-p0</arg>
-            <arg>-i</arg>
-            <arg>freetype-2.3.12.patch</arg>
-        </exec>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="get_source"/>
-        <call target="all" directory="freetype-2.3.12"/>
-    </target>
+    <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>

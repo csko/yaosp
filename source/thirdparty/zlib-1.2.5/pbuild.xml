@@ -20,36 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <target name="clean">
-        <cleandir>zlib-1.2.5</cleandir>
-        <rmdir>zlib-1.2.5</rmdir>
-    </target>
+    <string name="package" value="zlib"/>
+    <string name="version" value="1.2.5"/>
+    <string name="source_file" value="zlib-1.2.5.tar.gz"/>
+    <string name="md5sum" value="c735eab2d659a96e5a594c9e8541ad63"/>
 
-    <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/zlib/zlib-1.2.5.tar.gz"
-                 to="zlib-1.2.5.tar.gz"
-                 md5="c735eab2d659a96e5a594c9e8541ad63"/>
-
-        <echo>Extracting zlib source</echo>
-
-        <exec executable="tar">
-            <arg>-zxf</arg>
-            <arg>zlib-1.2.5.tar.gz</arg>
-        </exec>
-
-        <echo>Patching zlib source</echo>
-
-        <exec executable="patch">
-            <arg>-t</arg>
-            <arg>-p0</arg>
-            <arg>-i</arg>
-            <arg>zlib-1.2.5.patch</arg>
-        </exec>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="get_source"/>
-        <call target="all" directory="zlib-1.2.5"/>
-    </target>
+    <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>

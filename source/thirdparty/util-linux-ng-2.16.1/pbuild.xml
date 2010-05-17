@@ -2,7 +2,7 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs
+Copyright (c) 2009, 2010 Zoltan Kovacs
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -20,36 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <target name="clean">
-        <cleandir>util-linux-ng-2.16.1</cleandir>
-        <rmdir>util-linux-ng-2.16.1</rmdir>
-    </target>
+    <string name="package" value="util-linux-ng"/>
+    <string name="version" value="2.16.1"/>
+    <string name="source_file" value="util-linux-ng-2.16.1.tar.bz2"/>
+    <string name="md5sum" value="8997a0a6ebf38159fa962a3b8d290f6e"/>
 
-    <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/util-linux-ng/util-linux-ng-2.16.1.tar.bz2"
-                 to="util-linux-ng-2.16.1.tar.bz2"
-                 md5="8997a0a6ebf38159fa962a3b8d290f6e"/>
-
-        <echo>Extracting util-linux-ng source</echo>
-
-        <exec executable="tar">
-            <arg>-jxf</arg>
-            <arg>util-linux-ng-2.16.1.tar.bz2</arg>
-        </exec>
-
-        <echo>Patching util-linux-ng source</echo>
-
-        <exec executable="patch">
-            <arg>-t</arg>
-            <arg>-p0</arg>
-            <arg>-i</arg>
-            <arg>util-linux-ng-2.16.1.patch</arg>
-        </exec>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="get_source"/>
-        <call target="all" directory="util-linux-ng-2.16.1"/>
-    </target>
+    <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>

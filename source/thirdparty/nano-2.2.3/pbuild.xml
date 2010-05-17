@@ -20,36 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <target name="clean">
-        <cleandir>nano-2.2.3</cleandir>
-        <rmdir>nano-2.2.3</rmdir>
-    </target>
+    <string name="package" value="nano"/>
+    <string name="version" value="2.2.3"/>
+    <string name="source_file" value="nano-2.2.3.tar.gz"/>
+    <string name="md5sum" value="91918a484f54f94fedaebe00dc393a50"/>
 
-    <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/nano/nano-2.2.3.tar.gz"
-                 to="nano-2.2.3.tar.gz"
-                 md5="91918a484f54f94fedaebe00dc393a50"/>
-
-        <echo>Extracting nano source</echo>
-
-        <exec executable="tar">
-            <arg>-zxf</arg>
-            <arg>nano-2.2.3.tar.gz</arg>
-        </exec>
-
-        <echo>Patching nano source</echo>
-
-        <exec executable="patch">
-            <arg>-t</arg>
-            <arg>-p0</arg>
-            <arg>-i</arg>
-            <arg>nano-2.2.3.patch</arg>
-        </exec>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="get_source"/>
-        <call target="all" directory="nano-2.2.3"/>
-    </target>
+    <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>
