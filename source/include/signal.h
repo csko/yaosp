@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,10 @@
 
 #include <time.h>
 #include <sys/types.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define SIGHUP    1       /* Hangup (POSIX).  */
 #define SIGINT    2       /* Interrupt (ANSI).  */
@@ -128,5 +132,9 @@ int kill( pid_t pid, int signal );
 int killpg( int pgrp, int signal );
 
 int raise( int signal );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _SIGNAL_H_ */

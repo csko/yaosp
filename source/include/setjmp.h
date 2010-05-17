@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,10 @@
 
 #include <signal.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned long jmp_buf[ 6 ];
 
 typedef struct _sigjmp_buf {
@@ -34,5 +38,9 @@ int sigsetjmp( sigjmp_buf env, int savemask );
 
 void longjmp( jmp_buf env, int val );
 void siglongjmp( sigjmp_buf env, int val );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _SETJMP_H_ */

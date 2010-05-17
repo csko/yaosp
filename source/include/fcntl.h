@@ -50,9 +50,16 @@
 #define F_TLOCK 2  /* Test and lock a region for exclusive use.  */
 #define F_TEST  3  /* Test a region for other processes locks.  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int open( const char* filename, int flags, ... ) __nonnull((1));
 int creat( const char* pathname, mode_t mode ) __nonnull((1));
 int fcntl( int fd, int cmd, ... );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _FCNTL_H_ */

@@ -33,6 +33,8 @@ int main( int argc, char** argv ) {
     Application::createInstance("cppguitest");
     ImageLoaderManager::getInstance()->loadLibraries();
 
+    Bitmap::loadFromFile("/system/images/file.png");
+
     Window* win = new Window( "Test", Point(50,50), Point(300,300) );
     win->init();
 
