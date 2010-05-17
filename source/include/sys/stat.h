@@ -58,6 +58,10 @@
 #define S_IWOTH 00002
 #define S_IXOTH 00001
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct stat {
     dev_t st_dev;
     ino_t st_ino;
@@ -84,5 +88,9 @@ int mknod( const char* pathname, mode_t mode, dev_t dev );
 mode_t umask( mode_t mask );
 
 int chmod( const char* path, mode_t mode );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _SYS_STAT_H_ */

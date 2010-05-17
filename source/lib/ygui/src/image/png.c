@@ -75,7 +75,7 @@ static int png_create( void** _private ) {
         goto error3;
     }
 
-    if ( setjmp( private->png_struct->jmpbuf ) ) {
+    if ( setjmp( png_jmpbuf(private->png_struct) ) ) {
         error = -1; /* todo */
         goto error3;
     }
@@ -119,7 +119,7 @@ static int png_add_data( void* _private, uint8_t* data, size_t size, int finaliz
 
     private = ( png_private_t* )_private;
 
-    if ( setjmp( private->png_struct->jmpbuf ) ) {
+    if ( setjmp( png_jmpbuf(private->png_struct) ) ) {
         return -1;
     }
 

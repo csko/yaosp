@@ -19,37 +19,32 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 -->
 
-<build default="all">
+<build>
     <target name="clean">
-        <cleandir>libpng-1.2.43</cleandir>
-        <rmdir>libpng-1.2.43</rmdir>
+        <cleandir>${package}-${version}</cleandir>
+        <rmdir>${package}-${version}</rmdir>
     </target>
 
     <target name="get_source">
-        <httpget address="http://files.yaosp.org/source/libpng/libpng-1.2.43.tar.gz"
-                 to="libpng-1.2.43.tar.gz"
-                 md5="00f3f6bfadbd4f83e351558ad6bb46b5"/>
+        <httpget address="http://files.yaosp.org/source/${package}/${source_file}"
+                 to="${source_file}"
+                 md5="${md5sum}"/>
 
-        <echo>Extracting libpng source</echo>
+        <echo>Extracting ${package} source</echo>
 
         <exec executable="tar">
-            <arg>-zxf</arg>
-            <arg>libpng-1.2.43.tar.gz</arg>
+            <args>-xf ${source_file}</args>
         </exec>
 
-        <echo>Patching libpng source</echo>
+        <echo>Patching ${package} source</echo>
 
         <exec executable="patch">
-            <arg>-t</arg>
-            <arg>-p0</arg>
-            <arg>-i</arg>
-            <arg>libpng-1.2.43.patch</arg>
+            <args>-t -p0 -i ${package}-${version}.patch</args>
         </exec>
     </target>
 
     <target name="all">
-        <call target="clean"/>
-        <call target="get_source"/>
-        <call target="all" directory="libpng-1.2.43"/>
+        <call targets="clean,get_source"/>
+        <call target="all" directory="${package}-${version}"/>
     </target>
 </build>

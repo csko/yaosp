@@ -134,7 +134,7 @@ bitmap_t* png_loader_load( int fd ) {
         goto error2;
     }
 
-    if ( setjmp( private.png_struct->jmpbuf ) ) {
+    if ( setjmp( png_jmpbuf(private.png_struct) ) ) {
         goto error2;
     }
 
@@ -152,7 +152,7 @@ bitmap_t* png_loader_load( int fd ) {
         if ( size < 0 ) {
             goto error3;
         } else if ( size > 0 ) {
-            if ( setjmp( private.png_struct->jmpbuf ) ) {
+            if ( setjmp( png_jmpbuf(private.png_struct) ) ) {
                 goto error3;
             }
 

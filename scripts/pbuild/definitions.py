@@ -72,11 +72,11 @@ class DefinitionManager :
 
     def get_definition( self, name ) :
         for definition in self.definitions :
-            if definition.get_name() == name : 
+            if definition.get_name() == name :
                 return definition
 
         return None
-    
+
     def get_definitions( self ) :
         return self.definitions
 

@@ -244,7 +244,6 @@ class LdWork( Work ) :
         return self.exec_shell( command )
 
 class ArWork( Work ) :
-
     AR_COMMAND = "i686-pc-yaosp-ar"
 
     def __init__( self ) :
@@ -303,8 +302,7 @@ class RemoveDirectory( Work ) :
 
     def execute( self, context ) :
         try :
-            # TODO: no replace definitions?
-            dirname = self.directory
+            dirname = context.replace_definitions(self.directory)
             os.rmdir( dirname )
         except OSError, e :
             logging.warning( 'Failed to remove directory ("%s"): %s' % ( dirname, e ) )
@@ -317,15 +315,15 @@ class CleanDirectory( Work ) :
         self.directory = directory
 
     def execute( self, context ) :
-        if os.path.islink( self.directory ) :
+        directory = context.replace_definitions(self.directory)
+
+        if os.path.islink(directory) :
             try :
-                # TODO: no replace definitions?
-                dirname = self.directory
-                os.remove( dirname )
+                os.remove(directory)
             except OSError, e :
-                logging.warning( 'Failed to remove directory ("%s") while cleaning: %s' % ( dirname, e ) )
-        elif os.path.isdir( self.directory ) :
-            self._clean_directory( self.directory )
+                logging.warning( 'Failed to remove directory ("%s") while cleaning: %s' % ( directory, e ) )
+        elif os.path.isdir(directory) :
+            self._clean_directory(directory)
 
     def _clean_directory( self, dir ) :
         entries = os.listdir( dir )
@@ -550,26 +548,30 @@ class HTTPGetWork( Work ) :
         self.md5sum = md5sum
 
     def execute( self, context ) :
-        if os.path.isfile( self.dest ) :
+        address = context.replace_definitions(self.address)
+        dest = context.replace_definitions(self.dest)
+        md5sum = context.replace_definitions(self.md5sum)
+
+        if os.path.isfile(dest) :
             m = hashlib.md5()
 
-            localfile = open( self.dest, "r" )
+            localfile = open(dest, "r")
             data = localfile.read( 4096 )
 
             while data :
                 m.update( data )
                 data = localfile.read( 4096 )
 
-            if m.hexdigest() == self.md5sum :
-                logging.info( "File %s already exists." % self.dest )
+            if m.hexdigest() == md5sum :
+                logging.info( "File %s already exists." % dest )
                 return
 
-        logging.info( "Downloading " + self.address )
+        logging.info( "Downloading " + address )
 
         try:
-            urlfile = urllib.urlopen( self.address )
+            urlfile = urllib.urlopen(address)
             urlfile_size = int( urlfile.headers.getheader( "Content-Length" ) )
-            localfile = open( self.dest, "w" )
+            localfile = open(dest, "w")
 
             size = 0
             data = urlfile.read( 4096 )
@@ -589,7 +591,7 @@ class HTTPGetWork( Work ) :
 
             sys.stdout.write( "\n" )
         except IOError, e:
-            logging.error( 'Failed to httpget "%s": %s' % ( self.address, e ) )
+            logging.error( 'Failed to httpget "%s": %s' % ( address, e ) )
             return False
 
     def format_size( self, size ) :
