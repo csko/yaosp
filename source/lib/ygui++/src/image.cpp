@@ -16,48 +16,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/point.hpp>
+#include <ygui++/image.hpp>
 
 namespace yguipp {
 
-Point::Point( int x, int y ) : m_x(x), m_y(y) {
+Image::Image( Bitmap* bitmap ) : m_bitmap(bitmap) {
+    if ( m_bitmap != NULL ) {
+        m_bitmap->incRef();
+    }
 }
 
-Point::Point( point_t* point ) : m_x(point->x), m_y(point->y) {
+Image::~Image( void ) {
+    if ( m_bitmap != NULL ) {
+        m_bitmap->decRef();
+    }
 }
 
-Point::~Point( void ) {
+Point Image::getPreferredSize( void ) {
+    if ( m_bitmap != NULL ) {
+        return m_bitmap->getSize();
+    }
+
+    return Point(0,0);
 }
 
-void Point::toPointT( point_t* p ) const {
-    p->x = m_x;
-    p->y = m_y;
-}
+int Image::paint( GraphicsContext* g ) {
+    if ( m_bitmap != NULL ) {
+        g->drawBitmap( ( getSize() - m_bitmap->getSize() ) / 2, m_bitmap );
+    }
 
-Point Point::operator+( const Point& p ) const {
-    return Point( m_x + p.m_x, m_y + p.m_y );
-}
-
-Point Point::operator-( const Point& p ) const {
-    return Point( m_x - p.m_x, m_y - p.m_y );
-}
-
-Point Point::operator/( int n ) const {
-    return Point(m_x / n, m_y / n);
-}
-
-Point& Point::operator+=( const Point& p ) {
-    m_x += p.m_x;
-    m_y += p.m_y;
-
-    return *this;
-}
-
-Point& Point::operator-=( const Point& p ) {
-    m_x -= p.m_x;
-    m_y -= p.m_y;
-
-    return *this;
+    return 0;
 }
 
 } /* namespace yguipp */

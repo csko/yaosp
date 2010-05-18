@@ -16,48 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/point.hpp>
+#ifndef _IMAGE_HPP_
+#define _IMAGE_HPP_
+
+#include <ygui++/bitmap.hpp>
+#include <ygui++/widget.hpp>
 
 namespace yguipp {
 
-Point::Point( int x, int y ) : m_x(x), m_y(y) {
-}
+class Image : public Widget {
+  public:
+    Image( Bitmap* bitmap = NULL );
+    virtual ~Image( void );
 
-Point::Point( point_t* point ) : m_x(point->x), m_y(point->y) {
-}
+    Point getPreferredSize( void );
 
-Point::~Point( void ) {
-}
+    int paint( GraphicsContext* g );
 
-void Point::toPointT( point_t* p ) const {
-    p->x = m_x;
-    p->y = m_y;
-}
-
-Point Point::operator+( const Point& p ) const {
-    return Point( m_x + p.m_x, m_y + p.m_y );
-}
-
-Point Point::operator-( const Point& p ) const {
-    return Point( m_x - p.m_x, m_y - p.m_y );
-}
-
-Point Point::operator/( int n ) const {
-    return Point(m_x / n, m_y / n);
-}
-
-Point& Point::operator+=( const Point& p ) {
-    m_x += p.m_x;
-    m_y += p.m_y;
-
-    return *this;
-}
-
-Point& Point::operator-=( const Point& p ) {
-    m_x -= p.m_x;
-    m_y -= p.m_y;
-
-    return *this;
-}
+  private:
+    Bitmap* m_bitmap;
+}; /* class Image */
 
 } /* namespace yguipp */
+
+#endif /* _IMAGE_HPP_ */

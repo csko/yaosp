@@ -32,6 +32,9 @@ class Point {
     void toPointT( point_t* p ) const;
 
     Point operator+( const Point& p ) const;
+    Point operator-( const Point& p ) const;
+    Point operator/( int n ) const;
+
     Point& operator+=( const Point& p );
     Point& operator-=( const Point& p );
 
