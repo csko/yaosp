@@ -27,6 +27,7 @@
 #include <ygui/point.h>
 #include <ygui/widget.h>
 #include <ygui/gc.h>
+#include <ygui/yconstants.h>
 #include <yutil/array.h>
 
 enum {
@@ -98,12 +99,6 @@ typedef struct window_callback_item {
     window_callback_t* callback;
     void* data;
 } window_callback_item_t;
-
-enum {
-    WINDOW_NONE = 0,
-    WINDOW_NO_BORDER = ( 1 << 0 ),
-    WINDOW_FIXED_SIZE = ( 1 << 1 )
-};
 
 widget_t* window_get_container( window_t* window );
 int window_get_position( window_t* window, point_t* position );

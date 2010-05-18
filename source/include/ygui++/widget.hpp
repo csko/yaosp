@@ -39,7 +39,7 @@ class Widget : public Object {
     Widget( void );
     virtual ~Widget( void );
 
-    void addChild( Widget* child, layout::LayoutData* data = NULL );
+    virtual void addChild( Widget* child, layout::LayoutData* data = NULL );
 
     Widget* getParent( void );
     const Point& getPosition( void );
@@ -82,6 +82,7 @@ class Widget : public Object {
     Point m_fullSize;
     Point m_visibleSize;
 
+  protected:
     ChildVector m_children;
 }; /* class Widget */
 

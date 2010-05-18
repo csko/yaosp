@@ -28,8 +28,8 @@
 namespace yguipp {
 
 Window::Window( const std::string& title, const Point& position,
-                const Point& size ) : IPCListener("window"), m_title(title), m_position(position), m_size(size),
-                                      m_replyPort(NULL), m_mouseWidget(NULL) {
+                const Point& size, int flags ) : IPCListener("window"), m_title(title), m_position(position),
+                                                 m_size(size), m_flags(flags), m_replyPort(NULL), m_mouseWidget(NULL) {
     m_container = new Panel();
     m_container->setWindow(this);
     m_container->setPosition( Point(0,0) );
@@ -74,6 +74,20 @@ yutilpp::IPCPort* Window::getReplyPort( void ) {
 
 void Window::show( void ) {
     getPort()->send( MSG_WINDOW_DO_SHOW );
+}
+
+void Window::resize( const Point& size ) {
+    msg_win_do_resize_t request;
+
+    size.toPointT(&request.size);
+    getPort()->send( MSG_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_resize_t));
+}
+
+void Window::moveTo( const Point& position ) {
+    msg_win_do_move_t request;
+
+    position.toPointT(&request.position);
+    getPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_move_t));
 }
 
 int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
@@ -124,6 +138,14 @@ int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
         case MSG_MOUSE_SCROLLED :
             handleMouseScrolled( reinterpret_cast<msg_mouse_scrolled_t*>(buffer) );
             break;
+
+        case MSG_WINDOW_DO_RESIZE :
+            handleDoResize( reinterpret_cast<msg_win_do_resize_t*>(buffer) );
+            break;
+
+        case MSG_WINDOW_DO_MOVE :
+            handleDoMove( reinterpret_cast<msg_win_do_move_t*>(buffer) );
+            break;
     }
 
     return 0;
@@ -147,7 +169,7 @@ bool Window::registerWindow( void ) {
     request->size.x = m_size.m_x;
     request->size.y = m_size.m_y;
     request->order = W_ORDER_NORMAL;
-    request->flags = 0;
+    request->flags = m_flags;
 
     memcpy( reinterpret_cast<void*>(request + 1), m_title.c_str(), m_title.size() + 1 );
 
@@ -236,6 +258,31 @@ void Window::handleMouseReleased( msg_mouse_released_t* cmd ) {
 }
 
 void Window::handleMouseScrolled( msg_mouse_scrolled_t* cmd ) {
+}
+
+void Window::handleDoResize( msg_win_do_resize_t* cmd ) {
+    uint32_t code;
+    msg_win_resized_t reply;
+
+    cmd->reply_port = getReplyPort()->getId();
+
+    getServerPort()->send( MSG_WINDOW_DO_RESIZE, reinterpret_cast<void*>(cmd), sizeof(msg_win_do_resize_t) );
+    getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(msg_win_resized_t));
+
+    m_size = Point(&reply.size);
+    m_container->setSize(m_size);
+}
+
+void Window::handleDoMove( msg_win_do_move_t* cmd ) {
+    uint32_t code;
+    msg_win_moved_t reply;
+
+    cmd->reply_port = getReplyPort()->getId();
+
+    getServerPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(cmd), sizeof(msg_win_do_move_t) );
+    getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(msg_win_moved_t));
+
+    m_position = Point(&reply.position);
 }
 
 Widget* Window::findWidgetAt( const Point& p ) {

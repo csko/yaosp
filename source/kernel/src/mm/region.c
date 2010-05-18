@@ -495,11 +495,8 @@ int sys_memory_region_clone_pages( region_id id, void** address ) {
 
 void memory_region_dump( memory_region_t* region, int index ) {
     kprintf(
-        INFO,
-        "  id: %2d region: %08p-%08p flags: ",
-        region->id,
-        region->address,
-        region->address + region->size - 1
+        INFO, "  %08p-%08p ",
+        region->address, region->address + region->size - 1
     );
 
     if ( region->flags & REGION_READ ) { kprintf( INFO, "r" ); } else { kprintf( INFO, "-" ); }

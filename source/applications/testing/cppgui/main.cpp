@@ -25,6 +25,8 @@
 #include <ygui++/button.hpp>
 #include <ygui++/image.hpp>
 #include <ygui++/imageloader.hpp>
+#include <ygui++/menu.hpp>
+#include <ygui++/menuitem.hpp>
 #include <ygui++/layout/borderlayout.hpp>
 
 using namespace yguipp;
@@ -43,7 +45,21 @@ int main( int argc, char** argv ) {
     container->setLayout( new BorderLayout() );
     container->setBackgroundColor( Color(255,255,255) );
 
-    container->addChild(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
+    //container->addChild(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
+    MenuBar* menuBar = new MenuBar();
+    container->addChild(menuBar, new BorderLayoutData(BorderLayoutData::PAGE_START));
+
+    MenuItem* file = new MenuItem("File");
+    menuBar->addChild(file);
+    MenuItem* help = new MenuItem("Help");
+    menuBar->addChild(help);
+
+    Menu* fileMenu = new Menu();
+    file->setSubMenu(fileMenu);
+    fileMenu->addItem(new MenuItem("Open"));
+    fileMenu->addItem(new MenuItem("Save"));
+    fileMenu->addItem(new MenuItem("Exit"));
+
     container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
     container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
     container->addChild(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));

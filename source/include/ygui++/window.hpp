@@ -21,6 +21,7 @@
 
 #include <string>
 #include <ygui/protocol.h>
+#include <ygui/yconstants.h>
 
 #include <ygui++/widget.hpp>
 #include <ygui++/rendertable.hpp>
@@ -30,7 +31,7 @@ namespace yguipp {
 
 class Window : public Object, public yutilpp::IPCListener {
   public:
-    Window( const std::string& title, const Point& position, const Point& size );
+    Window( const std::string& title, const Point& position, const Point& size, int flags = WINDOW_NONE );
     virtual ~Window( void );
 
     bool init( void );
@@ -41,6 +42,9 @@ class Window : public Object, public yutilpp::IPCListener {
     yutilpp::IPCPort* getReplyPort( void );
 
     void show( void );
+
+    void resize( const Point& size );
+    void moveTo( const Point& position );
 
     int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
 
@@ -58,6 +62,8 @@ class Window : public Object, public yutilpp::IPCListener {
     void handleMousePressed( msg_mouse_pressed_t* cmd );
     void handleMouseReleased( msg_mouse_released_t* cmd );
     void handleMouseScrolled( msg_mouse_scrolled_t* cmd );
+    void handleDoResize( msg_win_do_resize_t* cmd );
+    void handleDoMove( msg_win_do_move_t* cmd );
 
     Widget* findWidgetAt( const Point& p );
     Widget* findWidgetAtHelper( Widget* widget, const Point& position,
@@ -69,6 +75,7 @@ class Window : public Object, public yutilpp::IPCListener {
     std::string m_title;
     Point m_position;
     Point m_size;
+    int m_flags;
 
     yutilpp::IPCPort* m_serverPort;
     yutilpp::IPCPort* m_replyPort;

@@ -1,6 +1,6 @@
 /* yaosp GUI library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -63,6 +63,12 @@ typedef struct screen_mode_info {
     int height;
     color_space_t color_space;
 } screen_mode_info_t;
+
+enum {
+    WINDOW_NONE = 0,
+    WINDOW_NO_BORDER = ( 1 << 0 ),
+    WINDOW_FIXED_SIZE = ( 1 << 1 )
+};
 
 static inline int colorspace_to_bpp( color_space_t color_space ) {
     switch ( color_space ) {
