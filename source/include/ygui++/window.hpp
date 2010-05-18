@@ -37,6 +37,7 @@ class Window : public Object, public yutilpp::IPCListener {
     bool init( void );
 
     const Point& getSize( void );
+    const Point& getPosition( void );
     Widget* getContainer( void );
     RenderTable* getRenderTable( void );
     yutilpp::IPCPort* getServerPort( void );
@@ -65,6 +66,7 @@ class Window : public Object, public yutilpp::IPCListener {
     void handleMouseScrolled( msg_mouse_scrolled_t* cmd );
     void handleDoResize( msg_win_do_resize_t* cmd );
     void handleDoMove( msg_win_do_move_t* cmd );
+    void handleMoved( msg_win_moved_t* cmd );
 
     Widget* findWidgetAt( const Point& p );
     Widget* findWidgetAtHelper( Widget* widget, const Point& position,

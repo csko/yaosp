@@ -32,6 +32,7 @@ class MenuItemParent {
 
     virtual int itemActivated( MenuItem* item ) = 0;
     virtual int itemDeActivated( MenuItem* item ) = 0;
+    virtual int itemPressed( MenuItem* item ) = 0;
 }; /* class MenuItemParent */
 
 class MenuBar : public Widget, public MenuItemParent {
@@ -48,6 +49,7 @@ class MenuBar : public Widget, public MenuItemParent {
 
     int itemActivated( MenuItem* item );
     int itemDeActivated( MenuItem* item );
+    int itemPressed( MenuItem* item );
 
   private:
     MenuItem* m_activeItem;
@@ -64,6 +66,7 @@ class Menu : public Object, public MenuItemParent {
 
     int itemActivated( MenuItem* item );
     int itemDeActivated( MenuItem* item );
+    int itemPressed( MenuItem* item );
 
   private:
     Point getPreferredSize( void );

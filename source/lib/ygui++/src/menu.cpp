@@ -98,6 +98,21 @@ int MenuBar::itemDeActivated( MenuItem* item ) {
     return 0;
 }
 
+int MenuBar::itemPressed( MenuItem* item ) {
+    Menu* subMenu = item->getSubMenu();
+
+    if ( subMenu != NULL ) {
+        Point position = getWindow()->getPosition();
+        position += Point(3,21); // todo: window decorator size
+        position += getPosition();
+        position += Point(0,getSize().m_y);
+        subMenu->show(position);
+        subMenu->decRef();
+    }
+
+    return 0;
+}
+
 Menu::Menu( void ) : m_activeItem(NULL) {
     m_window = new Window("", Point(0,0), Point(0,0), WINDOW_NO_BORDER);
     m_window->init();
@@ -132,6 +147,10 @@ int Menu::itemDeActivated( MenuItem* item ) {
     m_activeItem->setActive(false);
     m_activeItem = NULL;
 
+    return 0;
+}
+
+int Menu::itemPressed( MenuItem* item ) {
     return 0;
 }
 

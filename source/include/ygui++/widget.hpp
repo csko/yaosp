@@ -48,6 +48,7 @@ class Widget : public Object {
     const Point& getVisibleSize( void );
     const Rect getBounds( void );
     const ChildVector& getChildren( void );
+    Window* getWindow( void );
 
     void setWindow( Window* window );
     void setPosition( const Point& p );

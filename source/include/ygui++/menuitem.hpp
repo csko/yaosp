@@ -34,6 +34,7 @@ class MenuItem : public Widget {
     virtual ~MenuItem( void );
 
     Point getPreferredSize( void );
+    Menu* getSubMenu( void );
 
     int setActive( bool active );
     int setSubMenu( Menu* menu );

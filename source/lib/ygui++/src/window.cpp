@@ -60,6 +60,10 @@ const Point& Window::getSize( void ) {
     return m_size;
 }
 
+const Point& Window::getPosition( void ) {
+    return m_position;
+}
+
 Widget* Window::getContainer( void ) {
     return m_container;
 }
@@ -149,6 +153,10 @@ int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
 
         case MSG_WINDOW_DO_MOVE :
             handleDoMove( reinterpret_cast<msg_win_do_move_t*>(buffer) );
+            break;
+
+        case MSG_WINDOW_MOVED :
+            handleMoved( reinterpret_cast<msg_win_moved_t*>(buffer) );
             break;
     }
 
@@ -287,6 +295,10 @@ void Window::handleDoMove( msg_win_do_move_t* cmd ) {
     getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(msg_win_moved_t));
 
     m_position = Point(&reply.position);
+}
+
+void Window::handleMoved( msg_win_moved_t* cmd ) {
+    m_position = Point(&cmd->position);
 }
 
 Widget* Window::findWidgetAt( const Point& p ) {

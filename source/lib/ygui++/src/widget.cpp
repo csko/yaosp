@@ -68,6 +68,10 @@ const Widget::ChildVector& Widget::getChildren( void ) {
     return m_children;
 }
 
+Window* Widget::getWindow( void ) {
+    return m_window;
+}
+
 void Widget::setWindow( Window* window ) {
     m_window = window;
 

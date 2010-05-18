@@ -41,6 +41,18 @@ Point MenuItem::getPreferredSize( void ) {
     return Point( m_font->getStringWidth(m_text) + 6, m_font->getHeight() + 6 );
 }
 
+Menu* MenuItem::getSubMenu( void ) {
+    Menu* subMenu;
+
+    subMenu = m_subMenu;
+
+    if ( subMenu != NULL ) {
+        subMenu->incRef();
+    }
+
+    return subMenu;
+}
+
 int MenuItem::setActive( bool active ) {
     m_active = active;
     invalidate();
@@ -69,10 +81,7 @@ int MenuItem::mouseExited( void ) {
 }
 
 int MenuItem::mousePressed( const Point& p ) {
-    if ( m_subMenu != NULL ) {
-        m_subMenu->show( Point(10,10) );
-    }
-
+    m_menuParent->itemPressed(this);
     return 0;
 }
 
