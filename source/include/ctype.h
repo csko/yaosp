@@ -29,6 +29,10 @@
 #define _B 64
 #define _C 128
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern char* _ctype_;
 
 int isupper( int c );
@@ -47,5 +51,9 @@ int isascii( int c );
 
 int tolower( int c );
 int toupper( int c );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _CTYPE_H_ */

@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,7 +21,15 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 intmax_t strtoimax( const char *nptr, char** endptr, int base );
 uintmax_t strtoumax( const char *nptr, char** endptr, int base );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _INTTYPES_H_ */

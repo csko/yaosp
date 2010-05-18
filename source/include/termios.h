@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -194,6 +194,10 @@
 #define cfsetispeed(tio, spd) ((tio)->c_ispeed = (spd))
 #define cfsetospeed(tio, spd) ((tio)->c_ospeed = (spd))
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef unsigned char cc_t;
 typedef unsigned int speed_t;
 typedef unsigned int tcflag_t;
@@ -219,4 +223,8 @@ int tcflush( int fd, int queue_selector );
 int tcgetattr( int fd, struct termios* tio );
 int tcsetattr( int fd, int optional_actions, const struct termios* tio );
 
-#endif // _TERMIOS_H_
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _TERMIOS_H_ */

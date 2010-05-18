@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,10 @@
 
 #include <time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct utimbuf {
     time_t actime; /* access time */
     time_t modtime; /* modification time */
@@ -29,4 +33,8 @@ struct utimbuf {
 int utime( const char* filename, const struct utimbuf* times );
 int utimes( const char* filename, const timeval_t times[2] );
 
-#endif // _UTIME_H_
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _UTIME_H_ */

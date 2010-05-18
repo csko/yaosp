@@ -24,6 +24,10 @@
    ((union { unsigned __l __attribute__((__mode__(__DI__))); double __d; })   \
     { __l: 0x7ff0000000000000ULL }).__d)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int finite( double x );
 
 double sin( double x );
@@ -51,5 +55,9 @@ double modf( double x, double* iptr );
 double tan( double x );
 double atan( double x );
 double sqrt( double x );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _MATH_H_ */

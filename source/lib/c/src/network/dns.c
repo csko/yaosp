@@ -30,6 +30,9 @@
 
 #include "dns.h"
 
+/* todo: move this to a better place ... */
+int h_errno;
+
 static int dns_socket = -1;
 static int dns_next_req_id = 0;
 static int dns_initialized = 0;

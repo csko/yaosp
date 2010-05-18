@@ -1,6 +1,6 @@
 /* yaosp C library
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,10 @@
 
 #include <sys/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct passwd {
     char* pw_name;
     char* pw_passwd;
@@ -37,5 +41,9 @@ struct passwd* getpwuid( uid_t uid );
 
 void setpwent( void );
 void endpwent( void );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _PWD_H_ */

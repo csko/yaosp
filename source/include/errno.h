@@ -68,6 +68,14 @@
 
 #define errno (*__errno_location())
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int* __errno_location( void );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _ERRNO_H_ */
