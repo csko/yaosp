@@ -56,6 +56,10 @@ bool Window::init( void ) {
     return registerWindow();
 }
 
+const Point& Window::getSize( void ) {
+    return m_size;
+}
+
 Widget* Window::getContainer( void ) {
     return m_container;
 }

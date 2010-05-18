@@ -164,7 +164,7 @@ void Menu::doLayout( void ) {
 
         childSize.m_x = menuSize.m_x;
         child->setPosition(position);
-        child->setSize();
+        child->setSize(childSize);
 
         position.m_y += childSize.m_y;
     }

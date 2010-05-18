@@ -36,6 +36,7 @@ class Window : public Object, public yutilpp::IPCListener {
 
     bool init( void );
 
+    const Point& getSize( void );
     Widget* getContainer( void );
     RenderTable* getRenderTable( void );
     yutilpp::IPCPort* getServerPort( void );
