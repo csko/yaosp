@@ -193,17 +193,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${arch_files_asm}">
             <echo>[GCC    ] source/kernel/${i}</echo>
-            <gcc>
+            <gcc profile="y-kernel-compile-asm">
                 <input>${i}</input>
                 <output>objs/arch/filename(${i}).o</output>
                 <include>./include</include>
                 <define key="__ASSEMBLER__"/>
-                <flag>-c</flag>
-                <flag>-Wall</flag>
-                <flag>-Werror</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-ffreestanding</flag>
             </gcc>
         </for>
 
@@ -213,36 +207,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${arch_files_c}">
             <echo>[GCC    ] source/kernel/${i}</echo>
-            <gcc>
+            <gcc profile="y-kernel-compile-c">
                 <input>${i}</input>
                 <output>objs/arch/filename(${i}).o</output>
                 <include>./include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
-                <flag>-Werror</flag>
-                <flag>-Wshadow</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-ffreestanding</flag>
-                <flag>-fno-strict-aliasing</flag>
             </gcc>
         </for>
 
         <for var="i" array="${arch_files_x86emu}">
             <echo>[GCC    ] source/kernel/${i}</echo>
-            <gcc>
+            <gcc profile="y-kernel-compile-c-3rdparty">
                 <input>${i}</input>
                 <output>objs/x86emu/filename(${i}).o</output>
                 <include>./include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
-                <flag>-Werror</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-ffreestanding</flag>
-                <flag>-fno-strict-aliasing</flag>
             </gcc>
         </for>
 
@@ -252,53 +229,28 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/kernel/${i}</echo>
-            <gcc>
+            <gcc profile="y-kernel-compile-c">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
                 <include>./include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
-                <flag>-Werror</flag>
-                <flag>-Wshadow</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-ffreestanding</flag>
-                <flag>-fno-strict-aliasing</flag>
             </gcc>
         </for>
 
         <for var="i" array="${files_lock}">
             <echo>[GCC    ] source/kernel/${i}</echo>
-            <gcc>
+            <gcc profile="y-kernel-compile-c">
                 <input>${i}</input>
                 <output>objs/lock/filename(${i}).o</output>
                 <include>./include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
-                <flag>-Werror</flag>
-                <flag>-Wshadow</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-ffreestanding</flag>
             </gcc>
         </for>
 
         <for var="i" array="${files_lib}">
             <echo>[GCC    ] source/kernel/${i}</echo>
-            <gcc>
+            <gcc profile="y-kernel-compile-c">
                 <input>${i}</input>
                 <output>objs/lib/filename(${i}).o</output>
                 <include>./include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
-                <flag>-Werror</flag>
-                <flag>-Wshadow</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-ffreestanding</flag>
             </gcc>
         </for>
 

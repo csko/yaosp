@@ -45,19 +45,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/drivers/bus/pci/${i}</echo>
-            <gcc>
+            <gcc profile="y-kmodule-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
                 <include>../../../kernel/include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
-                <flag>-Wshadow</flag>
-                <flag>-Werror</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-fno-builtin</flag>
-                <flag>-fPIC</flag>
             </gcc>
         </for>
 

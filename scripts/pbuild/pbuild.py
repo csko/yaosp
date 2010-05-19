@@ -29,7 +29,7 @@ import logging
 if __name__ == "__main__" :
     # Set up logging.
     logging.basicConfig(level=logging.INFO,
-#    logging.basicConfig(level=logging.DEBUG,
+    #logging.basicConfig(level=logging.DEBUG,
        format='%(asctime)s %(name)-6s %(levelname)-7s %(message)s',
        datefmt='%Y-%m-%d %H:%M')
 
@@ -39,6 +39,13 @@ if __name__ == "__main__" :
 
     pcontext = ctx.ProjectContext()
     pcontext.init()
+
+    if pcontext.get_toplevel() :
+        handler = hndlr.ProjectHandler(pcontext)
+        xml_parser = xml.sax.make_parser()
+        xml_parser.setContentHandler(handler)
+        xml_parser.parse(pcontext.get_toplevel()+"/pbuild.toplevel")
+
     context = ctx.BuildContext(pcontext)
     handler = hndlr.BuildHandler(context)
 

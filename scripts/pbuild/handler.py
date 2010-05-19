@@ -1,6 +1,6 @@
 # Python build system
 #
-# Copyright (c) 2008 Zoltan Kovacs
+# Copyright (c) 2008, 2010 Zoltan Kovacs
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License
@@ -45,6 +45,33 @@ class NodeHandler :
 
     def element_data( self, data ) :
         pass
+
+class ProjectHandler( xml.sax.handler.ContentHandler ) :
+    def __init__( self, context ) :
+        self.context = context
+        self.profile_name = None
+        self.profile_flags = None
+        self.data = ""
+
+    def startElement( self, name, attrs ) :
+        if name == "gccprofile" :
+            if "name" in attrs.keys() :
+                self.profile_name = attrs.getValue("name")
+        elif name == "flags" :
+            self.data = ""
+
+    def endElement( self, name ) :
+        if name == "gccprofile" :
+            if self.profile_name is None :
+                return
+
+            self.context.add_gcc_profile(self.profile_name,self.profile_flags)
+            self.profile_name = None
+        elif name == "flags" :
+            self.profile_flags = self.data
+
+    def characters( self, content ) :
+        self.data += content
 
 class BuildHandler( xml.sax.handler.ContentHandler ) :
     node_handlers = []

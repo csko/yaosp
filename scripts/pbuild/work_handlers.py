@@ -65,8 +65,10 @@ class GccHandler( handler.NodeHandler ) :
     def node_started( self, attrs ) :
         need_gpp = "use_gpp" in attrs and \
             attrs["use_gpp"] == "yes"
-
-        self.work = works.GccWork(need_gpp)
+        gcc_profile = None
+        if "profile" in attrs :
+            gcc_profile = attrs["profile"]
+        self.work = works.GccWork(need_gpp,gcc_profile)
 
     def node_finished( self ) :
         if self.work != None :

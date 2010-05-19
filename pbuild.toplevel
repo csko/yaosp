@@ -1,0 +1,35 @@
+<!-- -*- xml -*- -->
+
+<project>
+    <!-- GCC profiles for kernel part -->
+
+    <gccprofile name="y-kernel-compile-asm">
+        <flags>-c -Wall -Werror -nostdinc -nostdlib -ffreestanding</flags>
+    </gccprofile>
+
+    <gccprofile name="y-kernel-compile-c">
+        <flags>-c -O2 -Wall -Werror -Wshadow -nostdinc -nostdlib -ffreestanding -fno-strict-aliasing</flags>
+    </gccprofile>
+
+    <gccprofile name="y-kernel-compile-c-3rdparty">
+        <flags>-c -O2 -Wall -nostdinc -nostdlib -ffreestanding -fno-strict-aliasing</flags>
+    </gccprofile>
+
+    <gccprofile name="y-kmodule-compile">
+        <flags>-c -O2 -Wall -Wshadow -Werror -nostdinc -nostdlib -fno-builtin -fPIC</flags>
+    </gccprofile>
+
+    <!-- GCC profiles for user part -->
+
+    <gccprofile name="y-app-compile">
+        <flags>-c -O2 -Wall -Werror</flags>
+    </gccprofile>
+
+    <gccprofile name="y-lib-compile">
+        <flags>-c -O2 -Wall -Werror</flags>
+    </gccprofile>
+
+    <gccprofile name="y-gui-app-link">
+        <flags>-lygui -lyutil</flags>
+    </gccprofile>
+</project>

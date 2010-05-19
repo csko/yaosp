@@ -82,23 +82,20 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/lib/ygui/${i}</echo>
-            <gcc>
+            <gcc profile="y-lib-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
 
-        <gcc>
+        <gcc profile="y-lib-compile">
             <input>src/image/png.c</input>
             <output>objs/image/png.o</output>
-            <flags>-c -O2 -Wall</flags>
         </gcc>
 
-        <gcc>
+        <gcc profile="y-lib-compile">
             <input>src/image/jpeg.c</input>
             <output>objs/image/jpeg.o</output>
-            <flags>-c -O2 -Wall</flags>
         </gcc>
 
         <echo/>

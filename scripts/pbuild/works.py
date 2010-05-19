@@ -125,13 +125,14 @@ class GccWork( Work ) :
     GCC_COMMAND = "i686-pc-yaosp-gcc"
     GPP_COMMAND = "i686-pc-yaosp-g++"
 
-    def __init__( self, need_gpp ) :
+    def __init__( self, need_gpp, profile ) :
         self.inputs = []
         self.output = ""
         self.flags = []
         self.includes = []
         self.defines = {}
         self.need_gpp = need_gpp
+        self.profile = profile
 
     def add_input( self, input ) :
         self.inputs += [input]
@@ -154,6 +155,7 @@ class GccWork( Work ) :
         real_includes = []
         real_defines = []
         need_cpp = False
+        gcc_profile = context.get_project_context().get_gcc_profile(self.profile)
 
         # Parse the input files
 
@@ -170,6 +172,7 @@ class GccWork( Work ) :
         # Parse flags
 
         real_flags = context.replace_definitions_in_array( self.flags )
+        real_flags += [ x for x in gcc_profile["flags"].split(" ") if len(x) > 0 ]
 
         # Parse includes
 
@@ -371,7 +374,7 @@ class CallTarget( Work ) :
             if not os.path.isfile( "pbuild.xml" ) :
                 logging.critical( "pbuild.xml not found in " + os.getcwd() )
                 logging.critical( "Build stopped." )
-                sys.exit( 1 )
+                sys.exit(1)
 
             xml_parser = xml.sax.make_parser()
             xml_parser.setContentHandler( handler )
@@ -381,7 +384,7 @@ class CallTarget( Work ) :
             except :
                 logging.critical( "pbuild.xml is not valid at %s" % ( os.getcwd() ) )
                 logging.critical( "Build stopped." )
-                sys.exit( 1 )
+                sys.exit(1)
 
         for target in self.targets :
             target = context.get_target(target, True)

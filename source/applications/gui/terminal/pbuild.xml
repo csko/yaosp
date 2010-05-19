@@ -39,10 +39,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/applications/gui/terminal/${i}</echo>
-            <gcc>
+            <gcc profile="y-app-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
 
@@ -51,10 +50,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
         <echo>[GCC    ] source/applications/gui/terminal/objs/terminal</echo>
 
-        <gcc>
+        <gcc profile="y-gui-app-link">
             <input>objs/*.o</input>
             <output>objs/terminal</output>
-            <flags>-lygui -lyutil</flags>
         </gcc>
     </target>
 

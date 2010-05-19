@@ -27,6 +27,7 @@ class ProjectContext :
 
     def __init__( self ) :
         self.toplevel = None
+        self.gcc_profiles = {}
 
     def init( self ) :
         cwd = os.getcwd()
@@ -47,6 +48,20 @@ class ProjectContext :
 
     def get_toplevel( self ) :
         return self.toplevel
+
+    def add_gcc_profile( self, name, flags ) :
+        if name in self.gcc_profiles :
+            return
+
+        self.gcc_profiles[name] = {
+            "flags" : flags
+        }
+
+    def get_gcc_profile( self, name ) :
+        if name in self.gcc_profiles :
+            return self.gcc_profiles[name]
+
+        return { "flags" : "" }
 
 class BuildContext :
     def __init__( self, pctx ) :
