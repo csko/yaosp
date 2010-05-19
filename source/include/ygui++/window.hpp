@@ -44,6 +44,7 @@ class Window : public Object, public yutilpp::IPCListener {
     yutilpp::IPCPort* getReplyPort( void );
 
     void show( void );
+    void hide( void );
 
     void resize( const Point& size );
     void moveTo( const Point& position );
@@ -53,7 +54,7 @@ class Window : public Object, public yutilpp::IPCListener {
   private:
     bool registerWindow( void );
 
-    void doRepaint( void );
+    void doRepaint( bool forced = false );
 
     void handleResized( msg_win_resized_t* cmd );
     void handleKeyPressed( msg_key_pressed_t* cmd );

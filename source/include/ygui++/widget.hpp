@@ -69,7 +69,7 @@ class Widget : public Object {
     virtual int mouseReleased( void );
 
   private:
-    int doPaint( GraphicsContext* g );
+    int doPaint( GraphicsContext* g, bool forced );
     int doInvalidate( bool notifyWindow );
 
   private:

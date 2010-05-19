@@ -60,6 +60,10 @@ int main( int argc, char** argv ) {
     fileMenu->addItem(new MenuItem("Save"));
     fileMenu->addItem(new MenuItem("Exit"));
 
+    Menu* helpMenu = new Menu();
+    help->setSubMenu(helpMenu);
+    helpMenu->addItem(new MenuItem("About"));
+
     container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
     container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
     container->addChild(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));

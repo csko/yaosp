@@ -111,6 +111,13 @@ static void window_do_resize( window_t* window, msg_win_do_resize_t* request ) {
         );
     }
 
+    /* Don't resize the window if it already has this size. */
+
+    if ( ( request->size.x == rect_width(&window->client_rect) ) &&
+         ( request->size.y == rect_height(&window->client_rect) ) ) {
+        goto done;
+    }
+
     /* Lock the window manager if the window is visible */
 
     if ( window->is_visible ) {
@@ -153,13 +160,20 @@ static void window_do_resize( window_t* window, msg_win_do_resize_t* request ) {
         wm_unlock();
     }
 
+ done:
     point_copy( &reply.size, &request->size );
-
     send_ipc_message( request->reply_port, MSG_WINDOW_RESIZED, &reply, sizeof( msg_win_resized_t ) );
 }
 
 static void window_do_move( window_t* window, msg_win_do_move_t* request ) {
     msg_win_moved_t reply;
+
+    /* Don't move the window if it is already the this position. */
+
+    if ( ( request->position.x == window->screen_rect.left ) &&
+         ( request->position.y == window->screen_rect.top ) ) {
+        goto done;
+    }
 
     /* Lock the window manager if the window is visible */
 
@@ -188,8 +202,8 @@ static void window_do_move( window_t* window, msg_win_do_move_t* request ) {
         wm_unlock();
     }
 
+ done:
     point_copy( &reply.position, &request->position );
-
     send_ipc_message( request->reply_port, MSG_WINDOW_MOVED, &reply, sizeof( msg_win_moved_t ) );
 }
 

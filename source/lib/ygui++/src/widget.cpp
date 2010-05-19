@@ -129,7 +129,7 @@ int Widget::mouseReleased( void ) {
     return 0;
 }
 
-int Widget::doPaint( GraphicsContext* g ) {
+int Widget::doPaint( GraphicsContext* g, bool forced ) {
     Rect visibleRect;
 
     /* Calculate the visible rectangle of this widget. */
@@ -150,7 +150,8 @@ int Widget::doPaint( GraphicsContext* g ) {
 
     /* Paint the widget. */
 
-    if ( !m_isValid ) {
+    if ( ( forced ) ||
+         ( !m_isValid ) ) {
         m_isValid = true;
 
         // todo: call validate only if the size of the widget changed
@@ -172,7 +173,7 @@ int Widget::doPaint( GraphicsContext* g ) {
         g->translateCheckPoint();
         g->translate(widget->m_position);
 
-        widget->doPaint(g);
+        widget->doPaint(g, forced);
 
         g->rollbackTranslate();
     }

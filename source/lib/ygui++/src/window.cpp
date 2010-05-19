@@ -84,6 +84,10 @@ void Window::show( void ) {
     getPort()->send( MSG_WINDOW_DO_SHOW );
 }
 
+void Window::hide( void ) {
+    getPort()->send( MSG_WINDOW_DO_HIDE );
+}
+
 void Window::resize( const Point& size ) {
     msg_win_do_resize_t request;
 
@@ -107,8 +111,12 @@ int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
         case MSG_WINDOW_DO_SHOW :
             m_mouseWidget = NULL;
             m_mouseDownWidget = NULL;
-            doRepaint();
+            doRepaint(true);
             m_serverPort->send( MSG_WINDOW_SHOW );
+            break;
+
+        case MSG_WINDOW_DO_HIDE :
+            m_serverPort->send( MSG_WINDOW_HIDE );
             break;
 
         case MSG_WINDOW_RESIZED :
@@ -193,9 +201,9 @@ bool Window::registerWindow( void ) {
     return true;
 }
 
-void Window::doRepaint( void ) {
+void Window::doRepaint( bool forced ) {
     m_graphicsContext->pushRestrictedArea( Rect(m_size) );
-    m_container->doPaint( m_graphicsContext );
+    m_container->doPaint( m_graphicsContext, forced );
 
     if ( m_graphicsContext->needToFlush() ) {
         m_graphicsContext->finish();
