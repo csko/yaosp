@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <string name="staticlibdir" value="${toplevel}/build/libs"/>
     <string name="sharedlibdir" value="${toplevel}/build/crosscompiler/lib/gcc/i686-pc-yaosp/4.3.3"/>
     <string name="includedir" value="${toplevel}/source/include"/>
+    <string name="kernelincludedir" value="${toplevel}/source/kernel/include"/>
 
     <!-- Path definitions to scripts -->
 

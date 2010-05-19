@@ -21,19 +21,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
         <item>nvidia.c</item>
     </array>
-
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
 
     <target name="compile">
         <call target="prepare"/>
@@ -47,7 +39,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc>
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../../kernel/include</include>
+                <include>${kernelincludedir}</include>
                 <flag>-c</flag>
                 <flag>-O2</flag>
                 <flag>-Wall</flag>
@@ -74,11 +66,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <copy from="objs/nvidia" to="${imagedir}/system/module/network/nvidia"/>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
     </target>
 </build>

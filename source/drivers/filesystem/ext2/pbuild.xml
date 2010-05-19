@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
         <item>ext2.c</item>
@@ -29,15 +30,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>directory.c</item>
         <item>block.c</item>
     </array>
-
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
 
     <target name="compile">
         <call target="prepare"/>
@@ -48,19 +40,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/drivers/filesystem/ext2/${i}</echo>
-            <gcc>
+            <gcc profile="y-kmodule-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>../../../kernel/include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
-                <flag>-Wshadow</flag>
-                <flag>-Werror</flag>
-                <flag>-nostdinc</flag>
-                <flag>-nostdlib</flag>
-                <flag>-fno-builtin</flag>
-                <flag>-fPIC</flag>
+                <include>${kernelincludedir}</include>
             </gcc>
         </for>
 
@@ -78,11 +61,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <copy from="objs/ext2" to="${imagedir}/system/module/filesystem/ext2"/>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
     </target>
 </build>
