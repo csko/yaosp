@@ -2,7 +2,8 @@
 
 This file is part of the yaosp build system
 
-Copyright (c) 2009 Zoltan Kovacs, Kornel Csernai
+Copyright (c) 2009, 2010 Zoltan Kovacs
+Copyright (c) 2009 Kornel Csernai
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of version 2 of the GNU General Public License
@@ -20,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
+    <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all"/>
+
     <array name="subdirs">
         <item>list</item>
         <item>stat</item>
@@ -29,7 +32,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>mount</item>
         <item>makedir</item>
         <item>load_module</item>
-        <item>ramdiskctrl</item>
+        <!--item>ramdiskctrl</item-->
         <item>touch</item>
         <item>remdir</item>
         <item>remove</item>
@@ -42,16 +45,4 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>clear</item>
         <item>md5sum</item>
     </array>
-
-    <target name="all">
-        <for var="i" array="${subdirs}">
-            <call target="all" directory="${i}"/>
-        </for>
-    </target>
-
-    <target name="clean">
-        <for var="i" array="${subdirs}">
-            <call target="clean" directory="${i}"/>
-        </for>
-    </target>
 </build>
