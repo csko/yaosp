@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
         <item>src/guiserver.c</item>
@@ -41,15 +42,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>driver/decorator/default/default.c</item>
     </array>
 
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
-
     <target name="compile">
         <call target="prepare"/>
 
@@ -58,13 +50,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/servers/guiserver/${i}</echo>
-            <gcc>
+            <gcc profile="y-app-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
                 <include>./include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
                 <define key="USE_i386_ASM"/>
             </gcc>
         </for>
@@ -109,13 +98,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <arg>fonts</arg>
         </exec>
 
-        <mkdir>../../../build/image/system/fonts</mkdir>
         <copy from="fonts/dejavu-fonts-ttf-2.30/ttf/*.ttf" to="${imagedir}/system/fonts"/>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
     </target>
 </build>

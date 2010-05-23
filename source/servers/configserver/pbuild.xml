@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml"
+    targets="clean,prepare,all"/>
 
     <array name="files">
         <item>src/configserver.c</item>
@@ -28,15 +30,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/attribute.c</item>
         <item>src/binaryloader.c</item>
     </array>
-
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
 
     <target name="compile">
         <call target="prepare"/>
@@ -46,13 +39,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/servers/configserver/${i}</echo>
-            <gcc>
+            <gcc profile="y-app-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
                 <include>./include</include>
-                <flag>-c</flag>
-                <flag>-O2</flag>
-                <flag>-Wall</flag>
             </gcc>
         </for>
 
@@ -71,11 +61,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="install">
         <echo>Installing configserver</echo>
         <copy from="objs/configserver" to="${imagedir}/system/server/configserver"/>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
     </target>
 </build>
