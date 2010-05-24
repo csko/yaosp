@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,12 +16,32 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _GUISERVER_INPUT_H_
-#define _GUISERVER_INPUT_H_
+#ifndef _REGION_HPP_
+#define _REGION_HPP_
 
-int input_system_start( void );
+#include <ygui++/rect.hpp>
 
-int init_input_system( void );
+class ClipRect {
+  public:
+    ClipRect( const yguipp::Rect& rect ) : m_rect(rect) {}
 
-#endif /* _GUISERVER_INPUT_H_ */
+    yguipp::Rect m_rect;
+    ClipRect* m_next;
+}; /* class ClipRect */
 
+class Region {
+  public:
+    Region( void );
+    ~Region( void );
+
+    int clear( void );
+    int add( const yguipp::Rect& rect );
+    int exclude( const yguipp::Rect& rect );
+
+    inline ClipRect* getClipRects( void ) { return m_clipRects; }
+
+  private:
+    ClipRect* m_clipRects;
+}; /* class Region */
+
+#endif /* _REGION_HPP_ */

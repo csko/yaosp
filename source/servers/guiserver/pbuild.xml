@@ -24,24 +24,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
-        <item>src/guiserver.c</item>
-        <item>src/bitmap.c</item>
-        <item>src/graphicsdriver.c</item>
-        <item>src/fontmanager.c</item>
-        <item>src/input.c</item>
-        <item>src/mouse.c</item>
-        <item>src/application.c</item>
-        <item>src/app.cpp</item>
-        <item>src/window.c</item>
-        <item>src/win.cpp</item>
-        <item>src/windowmanager.c</item>
-        <item>src/region.c</item>
-        <item>src/render.c</item>
-        <item>src/splash.c</item>
-        <item>src/imgloader/png.c</item>
-        <item>src/arch/i386/graphicsdriver_i386.c</item>
-        <item>driver/video/vesa/vesa.c</item>
-        <item>driver/decorator/default/default.c</item>
+        <item>src/main.cpp</item>
+        <item>src/guiserver.cpp</item>
+        <item>src/application.cpp</item>
+        <item>src/window.cpp</item>
+        <item>src/windowmanager.cpp</item>
+        <item>src/region.cpp</item>
+        <item>src/bitmap.cpp</item>
+        <item>src/vesa.cpp</item>
     </array>
 
     <target name="compile">

@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _PROTOCOL_HPP_
-#define _PROTOCOL_HPP_
+#ifndef _YGUI_PROTOCOL_HPP_
+#define _YGUI_PROTOCOL_HPP_
 
 #include <yaosp/ipc.h>
 
@@ -61,4 +61,4 @@ struct WinShow {
     WinHeader m_header;
 };
 
-#endif /* _PROTOCOL_HPP_ */
+#endif /* _YGUI_PROTOCOL_HPP_ */

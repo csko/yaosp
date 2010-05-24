@@ -20,6 +20,10 @@
 #define _WINDOW_HPP_
 
 #include <ygui++/protocol.hpp>
+#include <ygui++/rect.hpp>
+
+#include <guiserver/region.hpp>
+#include <guiserver/bitmap.hpp>
 
 class Window {
   private:
@@ -29,9 +33,21 @@ class Window {
     bool init( WinCreate* request );
 
   public:
+    inline int getOrder( void ) { return m_order; }
+    inline const yguipp::Rect& getScreenRect( void ) { return m_screenRect; }
+    inline Region& getVisibleRegions( void ) { return m_visibleRegions; }
+    inline Bitmap* getBitmap( void ) { return m_bitmap; }
+
     int handleMessage( uint32_t code, void* data, size_t size );
 
     static Window* createFrom( WinCreate* request );
+
+  private:
+    int m_order;
+    yguipp::Rect m_screenRect;
+    yguipp::Rect m_clientRect;
+    Region m_visibleRegions;
+    Bitmap* m_bitmap;
 }; /* class Window */
 
 #endif /* _WINDOW_HPP_ */

@@ -66,7 +66,7 @@ int IPCRenderTable::flush( void ) {
 }
 
 int IPCRenderTable::waitForFlush( void ) {
-    uint32_t code;
+    //uint32_t code;
 
     //m_window->getReplyPort()->receive( code );
     m_position = sizeof(ipc_port_id);

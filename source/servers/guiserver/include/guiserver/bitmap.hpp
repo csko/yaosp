@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,9 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _GUISERVER_H_
-#define _GUISERVER_H_
+#ifndef _BITMAP_HPP_
+#define _BITMAP_HPP_
 
-int setup_graphics_mode( void );
+#include <ygui/yconstants.h>
+#include <ygui++/rect.hpp>
 
-#endif /* _GUISERVER_H_ */
+class Bitmap {
+  public:
+    Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace, void* buffer = NULL );
+
+    yguipp::Rect bounds( void );
+
+  private:
+    uint32_t m_width;
+    uint32_t m_height;
+    color_space_t m_colorSpace;
+    void* m_buffer;
+    uint32_t m_flags;
+}; /* class Bitmap */
+
+#endif /* _BITMAP_HPP_ */

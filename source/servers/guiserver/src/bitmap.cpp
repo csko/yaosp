@@ -1,6 +1,6 @@
-/* Image loader definitions
+/* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,17 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IMGLOADER_H_
-#define _IMGLOADER_H_
+#include <guiserver/bitmap.hpp>
 
-#include <bitmap.h>
-#include <inttypes.h>
+Bitmap::Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace, void* buffer ) : m_width(width), m_height(height), m_colorSpace(colorSpace) {
+}
 
-typedef struct image_loader {
-    int ( *identify )( int fd );
-    bitmap_t* ( *load )( int fd );
-} image_loader_t;
-
-extern image_loader_t png_loader;
-
-#endif /* _IMGLOADER_H_ */
+yguipp::Rect Bitmap::bounds( void ) {
+    return yguipp::Rect(0, 0, m_width - 1, m_height - 1);
+}

@@ -171,7 +171,7 @@ void Menu::hide( void ) {
 }
 
 int Menu::itemActivated( MenuItem* item ) {
-    Menu* subMenu;
+    //Menu* subMenu;
 
     assert(m_activeItem == NULL);
     m_activeItem = item;
@@ -192,7 +192,7 @@ int Menu::itemActivated( MenuItem* item ) {
 }
 
 int Menu::itemDeActivated( MenuItem* item ) {
-    Menu* subMenu;
+    //Menu* subMenu;
 
     assert(m_activeItem == item);
     m_activeItem->setActive(false);

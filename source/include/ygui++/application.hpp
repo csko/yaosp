@@ -77,7 +77,7 @@ class Application {
     WindowMap m_windowMap;
 
     static Application* m_instance;
-};
+}; /* class Application */
 
 } /* namespace yguipp */
 

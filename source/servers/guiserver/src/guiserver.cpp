@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,14 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SPLASH_H_
-#define _SPLASH_H_
+#include <guiserver/guiserver.hpp>
 
-extern int splash_count_current;
-extern int splash_count_total;
+GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
+}
 
-int splash_inc_progress( void );
+int GuiServer::run( void ) {
+    m_graphicsDriver = new VesaDriver();
+    m_graphicsDriver->detect();
 
-int init_splash( void );
+    ScreenMode mode(640,480,CS_RGB32);
+    m_graphicsDriver->setMode(mode);
 
-#endif /* _SPLASH_H_ */
+    return 0;
+}
