@@ -1,4 +1,4 @@
-/* Configuration handling functions
+/* GUI server
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,25 +16,29 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_CONFIG_H_
-#define _YAOSP_CONFIG_H_
+#include <guiserver/window.hpp>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int ycfg_get_ascii_value( const char* path, const char* attrib, char** value );
-int ycfg_get_numeric_value( const char* path, const char* attrib, uint64_t* value );
-int ycfg_get_binary_value( const char* path, const char* attrib, void** _data, size_t* _size );
-
-int ycfg_add_child( const char* path, const char* child );
-int ycfg_del_child( const char* path, const char* child );
-int ycfg_list_children( const char* path, char*** _children );
-
-int ycfg_init( void );
-
-#ifdef __cplusplus
+Window::Window( void ) {
 }
-#endif
 
-#endif /* _YAOSP_CONFIG_H_ */
+Window::~Window( void ) {
+}
+
+bool Window::init( WinCreate* request ) {
+    return true;
+}
+
+int Window::handleMessage( uint32_t code, void* data, size_t size ) {
+    switch ( code ) {
+        case Y_WINDOW_SHOW :
+            break;
+    }
+
+    return 0;
+}
+
+Window* Window::createFrom( WinCreate* request ) {
+    Window* win = new Window();
+    win->init(request);
+    return win;
+}

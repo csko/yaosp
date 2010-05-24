@@ -34,7 +34,7 @@ typedef struct screen_mode {
     uint32_t width;
     uint32_t height;
     color_space_t color_space;
-    void* private;
+    void* data;
 } screen_mode_t;
 
 typedef struct graphics_driver {

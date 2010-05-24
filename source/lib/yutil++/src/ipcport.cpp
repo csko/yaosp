@@ -86,4 +86,8 @@ int IPCPort::receive( uint32_t& code, void* data, size_t maxSize, uint64_t timeO
     return recv_ipc_message( m_id, &code, data, maxSize, timeOut );
 }
 
+int IPCPort::sendTo( ipc_port_id id, uint32_t code, void* data, size_t size ) {
+    return send_ipc_message( id, code, data, size );
+}
+
 } /* namespace yutilpp */

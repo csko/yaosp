@@ -61,8 +61,8 @@ static void* input_thread_entry( void* arg ) {
 
             case E_MOUSE_MOVED : {
                 point_t delta = {
-                    .x = event.param1,
-                    .y = event.param2
+                    event.param1,
+                    event.param2
                 };
 
                 wm_mouse_moved( &delta );
@@ -93,7 +93,7 @@ int input_system_start( void ) {
     pthread_attr_t attr;
 
     pthread_attr_init( &attr );
-    pthread_attr_setname( &attr, "input" );
+    pthread_attr_setname( &attr, (char*)"input" );
 
     pthread_create(
         &input_thread,

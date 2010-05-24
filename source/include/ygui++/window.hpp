@@ -25,11 +25,10 @@
 
 #include <ygui++/widget.hpp>
 #include <ygui++/rendertable.hpp>
-#include <yutil++/ipclistener.hpp>
 
 namespace yguipp {
 
-class Window : public Object, public yutilpp::IPCListener {
+class Window : public Object {
   public:
     Window( const std::string& title, const Point& position, const Point& size, int flags = WINDOW_NONE );
     virtual ~Window( void );
@@ -40,8 +39,6 @@ class Window : public Object, public yutilpp::IPCListener {
     const Point& getPosition( void );
     Widget* getContainer( void );
     RenderTable* getRenderTable( void );
-    yutilpp::IPCPort* getServerPort( void );
-    yutilpp::IPCPort* getReplyPort( void );
 
     void show( void );
     void hide( void );
@@ -49,7 +46,7 @@ class Window : public Object, public yutilpp::IPCListener {
     void resize( const Point& size );
     void moveTo( const Point& position );
 
-    int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
+    int handleMessage( uint32_t code, void* buffer, size_t size );
 
   private:
     bool registerWindow( void );
@@ -76,13 +73,12 @@ class Window : public Object, public yutilpp::IPCListener {
     Point getWidgetPosition( Widget* widget, Point p );
 
   private:
+    int m_id;
+
     std::string m_title;
     Point m_position;
     Point m_size;
     int m_flags;
-
-    yutilpp::IPCPort* m_serverPort;
-    yutilpp::IPCPort* m_replyPort;
 
     Widget* m_container;
     Widget* m_mouseWidget;

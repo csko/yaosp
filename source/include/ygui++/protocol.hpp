@@ -1,4 +1,4 @@
-/* Configuration handling functions
+/* yaosp GUI library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,25 +16,49 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_CONFIG_H_
-#define _YAOSP_CONFIG_H_
+#ifndef _PROTOCOL_HPP_
+#define _PROTOCOL_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <yaosp/ipc.h>
 
-int ycfg_get_ascii_value( const char* path, const char* attrib, char** value );
-int ycfg_get_numeric_value( const char* path, const char* attrib, uint64_t* value );
-int ycfg_get_binary_value( const char* path, const char* attrib, void** _data, size_t* _size );
+#include <ygui++/point.hpp>
 
-int ycfg_add_child( const char* path, const char* child );
-int ycfg_del_child( const char* path, const char* child );
-int ycfg_list_children( const char* path, char*** _children );
+enum {
+    Y_APPLICATION_CREATE = 1000000,
+    Y_WINDOW_CREATE,
+    Y_WINDOW_SHOW,
+    Y_WINDOW_HIDE
+};
 
-int ycfg_init( void );
+struct AppCreate {
+    ipc_port_id m_replyPort;
+    ipc_port_id m_clientPort;
+    int m_flags;
+};
 
-#ifdef __cplusplus
-}
-#endif
+struct AppCreateReply {
+    ipc_port_id m_serverPort;
+};
 
-#endif /* _YAOSP_CONFIG_H_ */
+struct WinCreate {
+    ipc_port_id m_replyPort;
+    yguipp::Point m_position;
+    yguipp::Point m_size;
+    int m_order;
+    int m_flags;
+    /* title */
+};
+
+struct WinCreateReply {
+    int m_windowId;
+};
+
+struct WinHeader {
+    int m_windowId;
+};
+
+struct WinShow {
+    WinHeader m_header;
+};
+
+#endif /* _PROTOCOL_HPP_ */

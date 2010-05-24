@@ -302,8 +302,8 @@ static int handle_set_screen_mode( application_t* app, msg_scr_set_mode_t* reque
     for ( i = 0; i < count; i++ ) {
         graphics_driver->get_screen_mode_info( i, &mode );
 
-        if ( ( mode.width == request->mode_info.width ) &&
-             ( mode.height == request->mode_info.height ) &&
+        if ( ( (int)mode.width == request->mode_info.width ) &&
+             ( (int)mode.height == request->mode_info.height ) &&
              ( mode.color_space == request->mode_info.color_space ) ) {
             found = 1;
             break;
@@ -498,7 +498,7 @@ int handle_create_application( msg_create_app_t* request ) {
     }
 
     pthread_attr_init( &attrib );
-    pthread_attr_setname( &attrib, "app_event" );
+    pthread_attr_setname( &attrib, (char*)"app_event" );
 
     error = pthread_create(
         &app_thread,

@@ -21,6 +21,10 @@
 
 #include <sys/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct hashitem {
     struct hashitem* next;
 } hashitem_t;
@@ -63,5 +67,9 @@ uint32_t hash_string( const void* key );
 
 int compare_int( const void* key1, const void* key2 );
 int compare_string( const void* key1, const void* key2 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YUTIL_HASHTABLE_H_ */

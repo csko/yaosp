@@ -31,7 +31,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/input.c</item>
         <item>src/mouse.c</item>
         <item>src/application.c</item>
+        <item>src/app.cpp</item>
         <item>src/window.c</item>
+        <item>src/win.cpp</item>
         <item>src/windowmanager.c</item>
         <item>src/region.c</item>
         <item>src/render.c</item>
@@ -50,7 +52,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/servers/guiserver/${i}</echo>
-            <gcc profile="y-app-compile">
+            <gcc profile="y-app-compile" use_gpp="yes">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
                 <include>./include</include>
@@ -63,13 +65,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <echo/>
         <echo>[GCC    ] source/servers/guiserver/objs/guiserver</echo>
 
-        <gcc>
+        <gcc use_gpp="yes">
             <input>objs/*.o</input>
             <input>${staticlibdir}/libfreetype.a</input>
             <input>${staticlibdir}/libpng.a</input>
             <input>${staticlibdir}/libz.a</input>
             <output>objs/guiserver</output>
-            <flag>-lyutil</flag>
+            <flags>-lyutil -lyutil++</flags>
         </gcc>
     </target>
 

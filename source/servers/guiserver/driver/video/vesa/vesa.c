@@ -108,7 +108,7 @@ static int vesa_detect( void ) {
     mode_table = ( vesa_screen_mode_t* )realloc( mode_table, sizeof( vesa_screen_mode_t ) * mode_count );
 
     for ( i = 0; i < mode_count; i++ ) {
-        mode_table[ i ].screen_mode.private = &mode_table[ i ];
+        mode_table[ i ].screen_mode.data = &mode_table[ i ];
     }
 
     dbprintf( "Found %d usable VESA video modes.\n", mode_count );
@@ -142,7 +142,7 @@ static int vesa_set_mode( screen_mode_t* screen_mode ) {
     vesa_screen_mode_t* vesa_mode;
     vesa_cmd_setmode_t setmode_cmd;
 
-    vesa_mode = ( vesa_screen_mode_t* )screen_mode->private;
+    vesa_mode = ( vesa_screen_mode_t* )screen_mode->data;
     setmode_cmd.mode_number = vesa_mode->vesa_mode_id | ( 1 << 14 );
 
     error = ioctl( vesa_device, IOCTL_VESA_SET_MODE, ( void* )&setmode_cmd );
@@ -184,13 +184,13 @@ static int vesa_get_framebuffer_info( void** address ) {
 }
 
 graphics_driver_t vesa_graphics_driver = {
-    .name = "VESA",
-    .detect = vesa_detect,
-    .get_screen_mode_count = vesa_get_mode_count,
-    .get_screen_mode_info = vesa_get_mode_info,
-    .set_screen_mode = vesa_set_mode,
-    .get_framebuffer_info = vesa_get_framebuffer_info,
-    .fill_rect = generic_fill_rect,
-    .draw_text = generic_draw_text,
-    .blit_bitmap = generic_blit_bitmap
+    "VESA",
+    vesa_detect,
+    vesa_get_mode_count,
+    vesa_get_mode_info,
+    vesa_set_mode,
+    vesa_get_framebuffer_info,
+    generic_fill_rect,
+    generic_draw_text,
+    generic_blit_bitmap
 };

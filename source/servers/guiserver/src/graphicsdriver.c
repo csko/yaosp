@@ -76,7 +76,7 @@ static void generic_fill_rect_rgb32_invert( bitmap_t* bitmap, rect_t* rect ) {
         return;
     }
 
-    assert( bitmap->width >= width );
+    assert( (int)bitmap->width >= width );
 
     data = ( uint32_t* )bitmap->buffer + ( rect->top * bitmap->width + rect->left );
     padding = bitmap->width - width;

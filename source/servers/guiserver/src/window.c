@@ -364,7 +364,7 @@ int handle_create_window( application_t* application, msg_create_win_t* request 
     }
 
     pthread_attr_init( &attrib );
-    pthread_attr_setname( &attrib, "win_event" );
+    pthread_attr_setname( &attrib, (char*)"win_event" );
 
     error = pthread_create(
         &thread,

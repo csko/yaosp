@@ -24,12 +24,13 @@
 #include <ygui++/application.hpp>
 #include <ygui++/panel.hpp>
 #include <ygui++/ipcrendertable.hpp>
+#include <ygui++/protocol.hpp>
 
 namespace yguipp {
 
 Window::Window( const std::string& title, const Point& position,
-                const Point& size, int flags ) : IPCListener("window"), m_title(title), m_position(position),
-                                                 m_size(size), m_flags(flags), m_replyPort(NULL), m_mouseWidget(NULL) {
+                const Point& size, int flags ) : m_title(title), m_position(position),
+                                                 m_size(size), m_flags(flags), m_mouseWidget(NULL) {
     m_container = new Panel();
     m_container->setWindow(this);
     m_container->setPosition( Point(0,0) );
@@ -45,14 +46,6 @@ Window::~Window( void ) {
 }
 
 bool Window::init( void ) {
-    IPCListener::init();
-
-    m_serverPort = new yutilpp::IPCPort();
-    m_replyPort = new yutilpp::IPCPort();
-    m_replyPort->createNew();
-
-    start();
-
     return registerWindow();
 }
 
@@ -72,37 +65,39 @@ RenderTable* Window::getRenderTable( void ) {
     return m_renderTable;
 }
 
-yutilpp::IPCPort* Window::getServerPort( void ) {
-    return m_serverPort;
-}
-
-yutilpp::IPCPort* Window::getReplyPort( void ) {
-    return m_replyPort;
-}
-
 void Window::show( void ) {
-    getPort()->send( MSG_WINDOW_DO_SHOW );
+    WinShow request;
+    request.m_header.m_windowId = m_id;
+
+    Application::getInstance()->getClientPort()->send(Y_WINDOW_SHOW, reinterpret_cast<void*>(&request), sizeof(request));
 }
 
 void Window::hide( void ) {
-    getPort()->send( MSG_WINDOW_DO_HIDE );
+    //getPort()->send( MSG_WINDOW_DO_HIDE );
 }
 
 void Window::resize( const Point& size ) {
     msg_win_do_resize_t request;
 
     size.toPointT(&request.size);
-    getPort()->send( MSG_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_resize_t));
+    //getPort()->send( MSG_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_resize_t));
 }
 
 void Window::moveTo( const Point& position ) {
     msg_win_do_move_t request;
 
     position.toPointT(&request.position);
-    getPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_move_t));
+    //getPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_move_t));
 }
 
-int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
+int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
+    switch ( code ) {
+        case Y_WINDOW_SHOW :
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_SHOW, buffer, size);
+            break;
+    }
+
+    /*
     switch ( code ) {
         case MSG_WIDGET_INVALIDATED :
             doRepaint();
@@ -167,6 +162,7 @@ int Window::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
             handleMoved( reinterpret_cast<msg_win_moved_t*>(buffer) );
             break;
     }
+    */
 
     return 0;
 }
@@ -175,28 +171,31 @@ bool Window::registerWindow( void ) {
     uint8_t* data;
     uint32_t code;
     size_t dataSize;
-    msg_create_win_t* request;
-    msg_create_win_reply_t reply;
+    Application* app;
+    WinCreate* request;
+    WinCreateReply reply;
 
-    dataSize = sizeof(msg_create_win_t) + m_title.size() + 1;
+    app = Application::getInstance();
+
+    dataSize = sizeof(WinCreate) + m_title.size() + 1;
     data = new uint8_t[dataSize];
-    request = reinterpret_cast<msg_create_win_t*>(data);
+    request = reinterpret_cast<WinCreate*>(data);
 
-    request->reply_port = m_replyPort->getId();
-    request->client_port = getPort()->getId();
-    request->position.x = m_position.m_x;
-    request->position.y = m_position.m_y;
-    request->size.x = m_size.m_x;
-    request->size.y = m_size.m_y;
-    request->order = W_ORDER_NORMAL;
-    request->flags = m_flags;
-
+    request->m_replyPort = app->getReplyPort()->getId();
+    request->m_position = m_position;
+    request->m_size = m_size;
+    request->m_order = W_ORDER_NORMAL;
+    request->m_flags = m_flags;
     memcpy( reinterpret_cast<void*>(request + 1), m_title.c_str(), m_title.size() + 1 );
 
-    Application::getInstance()->getServerPort()->send( MSG_WINDOW_CREATE, reinterpret_cast<void*>(data), dataSize );
-    m_replyPort->receive( code, reinterpret_cast<void*>(&reply), sizeof(msg_create_win_reply_t) );
+    app->lock();
+    app->getServerPort()->send( Y_WINDOW_CREATE, reinterpret_cast<void*>(data), dataSize );
+    app->getReplyPort()->receive( code, reinterpret_cast<void*>(&reply), sizeof(reply) );
+    app->unLock();
 
-    m_serverPort->createFromExisting(reply.server_port);
+    m_id = reply.m_windowId;
+
+    app->registerWindow(m_id, this);
 
     return true;
 }
@@ -281,7 +280,7 @@ void Window::handleMouseScrolled( msg_mouse_scrolled_t* cmd ) {
 }
 
 void Window::handleDoResize( msg_win_do_resize_t* cmd ) {
-    uint32_t code;
+    /*uint32_t code;
     msg_win_resized_t reply;
 
     cmd->reply_port = getReplyPort()->getId();
@@ -290,11 +289,11 @@ void Window::handleDoResize( msg_win_do_resize_t* cmd ) {
     getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(msg_win_resized_t));
 
     m_size = Point(&reply.size);
-    m_container->setSize(m_size);
+    m_container->setSize(m_size);*/
 }
 
 void Window::handleDoMove( msg_win_do_move_t* cmd ) {
-    uint32_t code;
+    /*uint32_t code;
     msg_win_moved_t reply;
 
     cmd->reply_port = getReplyPort()->getId();
@@ -302,7 +301,7 @@ void Window::handleDoMove( msg_win_do_move_t* cmd ) {
     getServerPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(cmd), sizeof(msg_win_do_move_t) );
     getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(msg_win_moved_t));
 
-    m_position = Point(&reply.position);
+    m_position = Point(&reply.position);*/
 }
 
 void Window::handleMoved( msg_win_moved_t* cmd ) {

@@ -25,6 +25,7 @@
 #include <yaosp/config.h>
 
 #include <ygui/protocol.h>
+#include <ygui++/protocol.hpp>
 #include <yutil/process.h>
 
 #include <graphicsdriver.h>
@@ -35,6 +36,8 @@
 #include <application.h>
 #include <windowmanager.h>
 #include <splash.h>
+
+#include <guiserver/application.hpp>
 
 #include "../driver/video/vesa/vesa.h"
 
@@ -95,7 +98,7 @@ static int choose_graphics_mode( void ) {
 
         if ( ( screen_mode.width == width ) &&
              ( screen_mode.height == height ) &&
-             ( ( colorspace_to_bpp( screen_mode.color_space ) * 8 ) == depth ) ) {
+             ( ( colorspace_to_bpp( screen_mode.color_space ) * 8 ) == (int)depth ) ) {
             memcpy( &active_screen_mode, &screen_mode, sizeof( screen_mode_t ) );
 
             return 0;
@@ -195,6 +198,12 @@ static int guiserver_mainloop( void ) {
             case MSG_APPLICATION_CREATE :
                 handle_create_application( ( msg_create_app_t* )buffer );
                 break;
+
+            case Y_APPLICATION_CREATE : {
+                Application* app = Application::createFrom( reinterpret_cast<AppCreate*>(buffer) );
+                app->start();
+                break;
+            }
 
             case MSG_TASKBAR_STARTED :
                 taskbar_running = 1;

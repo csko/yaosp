@@ -243,7 +243,7 @@ static int generate_visible_regions_by_index( int index ) {
     window_t* window;
     rect_t real_screen_rect;
 
-    window = array_get_item( &window_stack, index );
+    window = reinterpret_cast<window_t*>( array_get_item( &window_stack, index ) );
 
     assert( window != NULL );
 

@@ -163,7 +163,7 @@ int activate_mouse_pointer( mouse_pointer_t* pointer ) {
 
 int show_mouse_pointer( void ) {
     rect_t mouse_rect;
-    static point_t null_point = { .x = 0, .y = 0 };
+    static point_t null_point = { 0, 0 };
 
     assert( active_mouse_pointer != NULL );
 

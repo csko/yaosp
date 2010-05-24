@@ -69,11 +69,19 @@
 
 #define IOCTL_INPUT_CREATE_DEVICE 0x00000600
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct device_geometry {
     uint32_t bytes_per_sector;
     uint64_t sector_count;
 } device_geometry_t;
 
 int ioctl( int fd, int request, ... );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _SYS_IOCTL_H_ */

@@ -19,6 +19,10 @@
 #ifndef _YUTIL_ARRAY_H_
 #define _YUTIL_ARRAY_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct array {
     int item_count;
     int max_item_count;
@@ -45,5 +49,9 @@ int array_set_realloc_size( array_t* array, int realloc_size );
 
 int init_array( array_t* array );
 int destroy_array( array_t* array );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YUTIL_ARRAY_H_ */

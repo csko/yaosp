@@ -104,7 +104,7 @@ static int decorator_calculate_regions( window_t* window ) {
     decorator_data_t* data;
 
     assert( window->decorator_data != NULL );
-    data = window->decorator_data;
+    data = reinterpret_cast<decorator_data_t*>(window->decorator_data);
 
     screen_rect = &window->screen_rect;
 
@@ -379,22 +379,22 @@ int init_default_decorator( void ) {
 }
 
 window_decorator_t default_decorator = {
-    .border_size = {
-        .x = BORDER_LEFT + BORDER_RIGHT,
-        .y = BORDER_TOP + BORDER_BOTTOM
+    {
+        BORDER_LEFT + BORDER_RIGHT,
+        BORDER_TOP + BORDER_BOTTOM
     },
-    .lefttop_offset = {
-        .x = BORDER_LEFT,
-        .y = BORDER_TOP
+    {
+        BORDER_LEFT,
+        BORDER_TOP
     },
-    .initialize = decorator_initialize,
-    .destroy = decorator_destroy,
-    .calculate_regions = decorator_calculate_regions,
-    .update_border = decorator_update_border,
-    .border_has_position = decorator_border_has_position,
-    .mouse_entered = decorator_mouse_entered,
-    .mouse_exited = decorator_mouse_exited,
-    .mouse_moved = decorator_mouse_moved,
-    .mouse_pressed = decorator_mouse_pressed,
-    .mouse_released = decorator_mouse_released
+    decorator_initialize,
+    decorator_destroy,
+    decorator_calculate_regions,
+    decorator_update_border,
+    decorator_border_has_position,
+    decorator_mouse_entered,
+    decorator_mouse_exited,
+    decorator_mouse_moved,
+    decorator_mouse_pressed,
+    decorator_mouse_released
 };

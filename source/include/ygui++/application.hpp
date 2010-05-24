@@ -19,16 +19,21 @@
 #ifndef _APPLICATION_HPP_
 #define _APPLICATION_HPP_
 
+#include <map>
 #include <string>
 
 #include <ygui++/imageloader.hpp>
-#include <yutil++/ipclistener.hpp>
 #include <yutil++/mutex.hpp>
+#include <yutil++/ipcport.hpp>
 
 namespace yguipp {
 
-class Application : public yutilpp::IPCListener {
+class Window;
+
+class Application {
   private:
+    friend class Window;
+
     Application( const std::string& name );
     ~Application( void );
 
@@ -39,23 +44,37 @@ class Application : public yutilpp::IPCListener {
     void unLock( void );
 
     yutilpp::IPCPort* getGuiServerPort( void );
+    yutilpp::IPCPort* getClientPort( void );
     yutilpp::IPCPort* getServerPort( void );
     yutilpp::IPCPort* getReplyPort( void );
 
     int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
+
+    int mainLoop( void );
 
     static bool createInstance( const std::string& name );
     static Application* getInstance( void );
 
   private:
     bool registerApplication( void );
+    int registerWindow( int id, Window* window );
 
   private:
+    static const size_t IPC_BUF_SIZE = 512;
+
     yutilpp::Mutex* m_lock;
 
     yutilpp::IPCPort* m_guiServerPort;
+    yutilpp::IPCPort* m_clientPort;
     yutilpp::IPCPort* m_serverPort;
     yutilpp::IPCPort* m_replyPort;
+
+    uint8_t m_ipcBuffer[IPC_BUF_SIZE];
+
+    typedef std::map<int, Window*> WindowMap;
+    typedef WindowMap::const_iterator WindowMapCIter;
+
+    WindowMap m_windowMap;
 
     static Application* m_instance;
 };
