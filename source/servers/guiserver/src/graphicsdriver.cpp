@@ -16,24 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <guiserver/guiserver.hpp>
+#include <guiserver/graphicsdriver.hpp>
 
-#include "../driver/video/vesa/vesa.hpp"
-
-GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
+int GraphicsDriver::fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
+                              const yguipp::Color& color, drawing_mode_t mode ) {
+    return 0;
 }
 
-int GuiServer::run( void ) {
-    m_graphicsDriver = new VesaDriver();
-    m_graphicsDriver->detect();
-
-    ScreenMode mode(640, 480, CS_RGB32);
-    m_graphicsDriver->setMode(&mode);
-
-    m_screenBitmap = new Bitmap(
-        640, 480, CS_RGB32,
-        reinterpret_cast<uint8_t*>(m_graphicsDriver->getFrameBuffer())
-    );
-
+int GraphicsDriver::blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap* src,
+                                const yguipp::Rect& rect, drawing_mode_t mode ) {
     return 0;
 }

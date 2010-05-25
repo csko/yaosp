@@ -31,7 +31,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/windowmanager.cpp</item>
         <item>src/region.cpp</item>
         <item>src/bitmap.cpp</item>
-        <item>src/vesa.cpp</item>
+        <item>src/graphicsdriver.cpp</item>
+        <item>driver/video/vesa/vesa.cpp</item>
     </array>
 
     <target name="compile">

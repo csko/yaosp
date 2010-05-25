@@ -24,15 +24,21 @@
 
 class Bitmap {
   public:
-    Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace, void* buffer = NULL );
+    Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace, uint8_t* buffer = NULL );
+    ~Bitmap( void );
 
     yguipp::Rect bounds( void );
+
+  private:
+    enum {
+        FREE_BUFFER = (1<<0)
+    };
 
   private:
     uint32_t m_width;
     uint32_t m_height;
     color_space_t m_colorSpace;
-    void* m_buffer;
+    uint8_t* m_buffer;
     uint32_t m_flags;
 }; /* class Bitmap */
 

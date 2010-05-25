@@ -18,7 +18,20 @@
 
 #include <guiserver/bitmap.hpp>
 
-Bitmap::Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace, void* buffer ) : m_width(width), m_height(height), m_colorSpace(colorSpace) {
+Bitmap::Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace,
+    uint8_t* buffer ) : m_width(width), m_height(height), m_colorSpace(colorSpace), m_flags(0) {
+    if ( buffer == NULL ) {
+        m_buffer = new uint8_t[m_width * m_height * colorspace_to_bpp(m_colorSpace) * 8];
+        m_flags |= FREE_BUFFER;
+    } else {
+        m_buffer = buffer;
+    }
+}
+
+Bitmap::~Bitmap( void ) {
+    if ( m_flags & FREE_BUFFER ) {
+        delete[] m_buffer;
+    }
 }
 
 yguipp::Rect Bitmap::bounds( void ) {

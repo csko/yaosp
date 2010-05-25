@@ -1,6 +1,6 @@
 /* VESA graphics driver
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,9 +19,11 @@
 #ifndef _VESA_H_
 #define _VESA_H_
 
+#include <vector>
 #include <sys/types.h>
+#include <yaosp/region.h>
 
-#include <graphicsdriver.h>
+#include <guiserver/graphicsdriver.hpp>
 
 typedef struct vesa_info {
     char signature[ 4 ];
@@ -95,12 +97,31 @@ typedef struct vesa_cmd_setmode {
     uint16_t mode_number;
 } vesa_cmd_setmode_t;
 
-typedef struct vesa_screen_mode {
-    screen_mode_t screen_mode;
-    uint16_t vesa_mode_id;
-    void* phys_base_ptr;
-} vesa_screen_mode_t;
+struct VesaScreenMode : public ScreenMode {
+    VesaScreenMode( uint32_t width, uint32_t height, color_space_t colorSpace, uint16_t modeId, void* fbBase ) :
+        ScreenMode(width, height, colorSpace), m_modeId(modeId), m_frameBufferBase(fbBase) {}
 
-extern graphics_driver_t vesa_graphics_driver;
+    uint16_t m_modeId;
+    void* m_frameBufferBase;
+};
+
+class VesaDriver : public GraphicsDriver {
+  public:
+    VesaDriver( void );
+    virtual ~VesaDriver( void );
+
+    std::string getName( void );
+    bool detect( void );
+    size_t getModeCount( void );
+    ScreenMode* getModeInfo( size_t index );
+    bool setMode( ScreenMode* info );
+    void* getFrameBuffer( void );
+
+  private:
+    int m_device;
+    void* m_fbAddress;
+    region_id m_fbRegion;
+    std::vector<VesaScreenMode*> m_screenModes;
+}; /* class VesaDriver */
 
 #endif /* _VESA_H_ */
