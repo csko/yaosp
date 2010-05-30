@@ -56,6 +56,10 @@ class GraphicsDriver {
     //virtual int drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position, const yguipp::Color& color, FontNode* font, const char* text, int length );
     virtual int blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap* src,
                             const yguipp::Rect& rect, drawing_mode_t mode );
+
+  private:
+    int fillRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
+    int fillRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
 }; /* class GraphicsDriver */
 
 #endif /* _GRAPHICSDRIVER_HPP_ */

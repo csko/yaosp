@@ -35,5 +35,9 @@ int GuiServer::run( void ) {
         reinterpret_cast<uint8_t*>(m_graphicsDriver->getFrameBuffer())
     );
 
+    m_graphicsDriver->fillRect(
+        m_screenBitmap, m_screenBitmap->bounds(), yguipp::Rect(100,100,539,379), yguipp::Color(123,123,123), DM_COPY
+    );
+
     return 0;
 }
