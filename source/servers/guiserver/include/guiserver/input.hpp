@@ -16,28 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <guiserver/guiserver.hpp>
+#ifndef _INPUT_HPP_
+#define _INPUT_HPP_
 
-#include "../driver/video/vesa/vesa.hpp"
+#include <yutil++/thread.hpp>
 
-GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
-}
+class InputThread : public yutilpp::Thread {
+  public:
+    InputThread( void );
+    virtual ~InputThread( void ) {}
 
-int GuiServer::run( void ) {
-    m_graphicsDriver = new VesaDriver();
-    m_graphicsDriver->detect();
+    bool init( void );
 
-    ScreenMode mode(640, 480, CS_RGB32);
-    m_graphicsDriver->setMode(&mode);
+    int run( void );
 
-    m_screenBitmap = new Bitmap(
-        640, 480, CS_RGB32,
-        reinterpret_cast<uint8_t*>(m_graphicsDriver->getFrameBuffer())
-    );
+  private:
+    int m_device;
+}; /* class InputThread */
 
-    m_graphicsDriver->fillRect(
-        m_screenBitmap, m_screenBitmap->bounds(), yguipp::Rect(0, 0, 639, 479), yguipp::Color(0, 0, 0), DM_COPY
-    );
-
-    return 0;
-}
+#endif /* _INPUT_HPP_ */
