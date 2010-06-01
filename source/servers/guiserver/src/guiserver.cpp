@@ -38,6 +38,9 @@ int GuiServer::run( void ) {
     m_graphicsDriver->fillRect(
         m_screenBitmap, m_screenBitmap->bounds(), yguipp::Rect(100,100,539,379), yguipp::Color(123,123,123), DM_COPY
     );
+    m_graphicsDriver->blitBitmap(
+        m_screenBitmap, yguipp::Point(320,240), m_screenBitmap, yguipp::Rect(0,0,319,239), DM_COPY
+    );
 
     return 0;
 }

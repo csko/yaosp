@@ -60,6 +60,9 @@ class GraphicsDriver {
   private:
     int fillRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
     int fillRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
+
+    int blitBitmapCopy( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
+    int blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
 }; /* class GraphicsDriver */
 
 #endif /* _GRAPHICSDRIVER_HPP_ */
