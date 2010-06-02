@@ -51,7 +51,7 @@ int WindowManager::registerWindow( Window* window ) {
         generateVisibleRegions(i);
     }
 
-    updateWindowRegion(window,window->getScreenRect());
+    doUpdateWindowRegion(window,window->getScreenRect());
 
     unLock();
 
@@ -87,6 +87,14 @@ int WindowManager::mouseScrolled( int button ) {
     return 0;
 }
 
+int WindowManager::updateWindowRegion( Window* window, const yguipp::Rect& region ) {
+    lock();
+    doUpdateWindowRegion(window, region);
+    unLock();
+
+    return 0;
+}
+
 int WindowManager::generateVisibleRegions( int index ) {
     Window* window = m_windowStack[index];
     Region& visibleRegions = window->getVisibleRegions();
@@ -108,7 +116,7 @@ int WindowManager::generateVisibleRegions( int index ) {
     return 0;
 }
 
-int WindowManager::updateWindowRegion( Window* window, yguipp::Rect region ) {
+int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
     bool mouseHidden = false;
     yguipp::Rect mouseRect;// = mouse_get_rect_new();
     Region& visibleRegions = window->getVisibleRegions();

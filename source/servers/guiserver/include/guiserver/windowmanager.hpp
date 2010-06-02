@@ -49,9 +49,11 @@ class WindowManager {
     int mouseReleased( int button );
     int mouseScrolled( int button );
 
+    int updateWindowRegion( Window* window, const yguipp::Rect& region );
+
   private:
     int generateVisibleRegions( int index );
-    int updateWindowRegion( Window* window, yguipp::Rect region );
+    int doUpdateWindowRegion( Window* window, yguipp::Rect region );
 
   private:
     yutilpp::Mutex m_mutex;

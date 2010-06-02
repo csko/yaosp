@@ -86,6 +86,14 @@ int IPCPort::receive( uint32_t& code, void* data, size_t maxSize, uint64_t timeO
     return recv_ipc_message( m_id, &code, data, maxSize, timeOut );
 }
 
+bool IPCPort::registerAsNamed( const std::string& name ) {
+    if (m_id < 0) {
+        return false;
+    }
+
+    return ( register_named_ipc_port(name.c_str(), m_id) == 0 );
+}
+
 int IPCPort::sendTo( ipc_port_id id, uint32_t code, void* data, size_t size ) {
     return send_ipc_message( id, code, data, size );
 }

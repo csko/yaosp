@@ -21,13 +21,17 @@
 
 #include <ygui++/protocol.hpp>
 #include <ygui++/rect.hpp>
+#include <ygui++/color.hpp>
 
 #include <guiserver/region.hpp>
 #include <guiserver/bitmap.hpp>
 
+class GuiServer;
+class DecoratorData;
+
 class Window {
   private:
-    Window( void );
+    Window( GuiServer* guiServer );
     ~Window( void );
 
     bool init( WinCreate* request );
@@ -40,14 +44,25 @@ class Window {
 
     int handleMessage( uint32_t code, void* data, size_t size );
 
-    static Window* createFrom( WinCreate* request );
+    static Window* createFrom( GuiServer* guiServer, WinCreate* request );
+
+  private:
+    void handleRender( uint8_t* data, size_t size );
 
   private:
     int m_order;
+    int m_flags;
     yguipp::Rect m_screenRect;
     yguipp::Rect m_clientRect;
     Region m_visibleRegions;
     Bitmap* m_bitmap;
+    DecoratorData* m_decoratorData;
+
+    yguipp::Rect m_clipRect;
+    yguipp::Color m_penColor;
+    drawing_mode_t m_drawingMode;
+
+    GuiServer* m_guiServer;
 }; /* class Window */
 
 #endif /* _WINDOW_HPP_ */

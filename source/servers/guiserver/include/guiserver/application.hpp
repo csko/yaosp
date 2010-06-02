@@ -25,10 +25,11 @@
 #include <yutil++/ipclistener.hpp>
 
 class Window;
+class GuiServer;
 
 class Application : public yutilpp::IPCListener {
   private:
-    Application( void );
+    Application( GuiServer* guiServer );
     ~Application( void );
 
     bool init( AppCreate* request );
@@ -36,7 +37,7 @@ class Application : public yutilpp::IPCListener {
   public:
     int ipcDataAvailable( uint32_t code, void* data, size_t size );
 
-    static Application* createFrom( AppCreate* request );
+    static Application* createFrom( GuiServer* guiServer, AppCreate* request );
 
   private:
     int handleWindowCreate( WinCreate* request );
@@ -50,6 +51,8 @@ class Application : public yutilpp::IPCListener {
 
     int m_nextWinId;
     WindowMap m_windowMap;
+
+    GuiServer* m_guiServer;
 }; /* class Application */
 
 #endif /* _APPLICATION_HPP_ */

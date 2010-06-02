@@ -21,7 +21,8 @@
 #include <guiserver/application.hpp>
 #include <guiserver/window.hpp>
 
-Application::Application( void ) : IPCListener("app"), m_clientPort(NULL), m_nextWinId(0) {
+Application::Application( GuiServer* guiServer ) : IPCListener("app"), m_clientPort(NULL), m_nextWinId(0),
+                                                   m_guiServer(guiServer) {
 }
 
 Application::~Application( void ) {
@@ -42,15 +43,14 @@ bool Application::init( AppCreate* request ) {
 }
 
 int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
-    dbprintf( "Application::ipcDataAvailable(): %u\n", code );
-
-    switch ( code ) {
+    switch (code) {
         case Y_WINDOW_CREATE :
             handleWindowCreate( reinterpret_cast<WinCreate*>(data) );
             break;
 
         case Y_WINDOW_SHOW :
-        case Y_WINDOW_HIDE : {
+        case Y_WINDOW_HIDE :
+        case Y_WINDOW_RENDER : {
             WinHeader* header = reinterpret_cast<WinHeader*>(data);
             WindowMapCIter it = m_windowMap.find(header->m_windowId);
 
@@ -65,20 +65,20 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
     return 0;
 }
 
-Application* Application::createFrom( AppCreate* request ) {
-    Application* app = new Application();
+Application* Application::createFrom( GuiServer* guiServer, AppCreate* request ) {
+    Application* app = new Application(guiServer);
     app->init(request);
     return app;
 }
 
 int Application::handleWindowCreate( WinCreate* request ) {
     WinCreateReply reply;
-    Window* win = Window::createFrom(request);
+    Window* win = Window::createFrom(m_guiServer, request);
 
     reply.m_windowId = getWindowId();
     m_windowMap[reply.m_windowId] = win;
 
-    yutilpp::IPCPort::sendTo(0, request->m_replyPort, reinterpret_cast<void*>(&reply), sizeof(reply));
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
 
     return 0;
 }

@@ -72,9 +72,9 @@ int main( int argc, char** argv ) {
     container->addChild(
         new Image(Bitmap::loadFromFile("/system/images/yaosp.png")),
         new BorderLayoutData(BorderLayoutData::CENTER)
-    );
+        );*/
 
-    win->show();*/
+    win->show();
 
     Application::getInstance()->mainLoop();
 

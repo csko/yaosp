@@ -19,8 +19,6 @@
 #include <assert.h>
 #include <iostream>
 
-#include <ygui/protocol.h>
-
 #include <ygui++/application.hpp>
 #include <ygui++/imageloader.hpp>
 #include <ygui++/protocol.hpp>
@@ -73,10 +71,6 @@ yutilpp::IPCPort* Application::getGuiServerPort( void ) {
 
 yutilpp::IPCPort* Application::getClientPort( void ) {
     return m_clientPort;
-}
-
-yutilpp::IPCPort* Application::getServerPort( void ) {
-    return m_serverPort;
 }
 
 yutilpp::IPCPort* Application::getReplyPort( void ) {
@@ -133,10 +127,6 @@ bool Application::createInstance( const std::string& name ) {
     }
 
     return true;
-}
-
-Application* Application::getInstance( void ) {
-    return m_instance;
 }
 
 bool Application::registerApplication( void ) {

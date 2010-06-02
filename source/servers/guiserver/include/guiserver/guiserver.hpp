@@ -19,21 +19,31 @@
 #ifndef _GUISERVER_HPP_
 #define _GUISERVER_HPP_
 
+#include <yutil++/ipcport.hpp>
+
 #include <guiserver/graphicsdriver.hpp>
 #include <guiserver/windowmanager.hpp>
 #include <guiserver/input.hpp>
-
+#include <guiserver/decorator.hpp>
 class GuiServer {
   public:
     GuiServer( void );
 
     int run( void );
 
+    inline GraphicsDriver* getGraphicsDriver(void) { return m_graphicsDriver; }
+    inline Decorator* getDecorator(void) { return m_decorator; }
+    inline WindowManager* getWindowManager(void) { return m_windowManager; }
+
   private:
     GraphicsDriver* m_graphicsDriver;
     Bitmap* m_screenBitmap;
+    Decorator* m_decorator;
     WindowManager* m_windowManager;
     InputThread* m_inputThread;
+    yutilpp::IPCPort* m_serverPort;
+
+    static GuiServer* instance;
 }; /* class GuiServer */
 
 #endif /* _GUISERVER_HPP_ */

@@ -39,6 +39,7 @@ class Window : public Object {
     const Point& getPosition( void );
     Widget* getContainer( void );
     RenderTable* getRenderTable( void );
+    inline int getId(void) { return m_id; }
 
     void show( void );
     void hide( void );

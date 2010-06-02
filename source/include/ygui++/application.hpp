@@ -45,15 +45,15 @@ class Application {
 
     yutilpp::IPCPort* getGuiServerPort( void );
     yutilpp::IPCPort* getClientPort( void );
-    yutilpp::IPCPort* getServerPort( void );
     yutilpp::IPCPort* getReplyPort( void );
+    inline yutilpp::IPCPort* getServerPort( void ) { return m_serverPort; }
 
     int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
 
     int mainLoop( void );
 
     static bool createInstance( const std::string& name );
-    static Application* getInstance( void );
+    static inline Application* getInstance(void) { return m_instance; }
 
   private:
     bool registerApplication( void );

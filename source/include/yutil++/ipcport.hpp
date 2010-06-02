@@ -39,6 +39,8 @@ class IPCPort {
     int send( uint32_t code, void* data = NULL, size_t size = 0 );
     int receive( uint32_t& code, void* data = NULL, size_t maxSize = 0, uint64_t timeOut = INFINITE_TIMEOUT );
 
+    bool registerAsNamed( const std::string& name );
+
     static int sendTo( ipc_port_id id, uint32_t code, void* data = NULL, size_t size = 0 );
 
   private:

@@ -1,4 +1,4 @@
-/* yaosp GUI library
+/* GUI server
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,50 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUI_PROTOCOL_HPP_
-#define _YGUI_PROTOCOL_HPP_
-
-#include <yaosp/ipc.h>
+#ifndef _DECORATOR_HPP_
+#define _DECORATOR_HPP_
 
 #include <ygui++/point.hpp>
 
-enum {
-    Y_APPLICATION_CREATE = 1000000,
-    Y_WINDOW_CREATE,
-    Y_WINDOW_SHOW,
-    Y_WINDOW_HIDE,
-    Y_WINDOW_RENDER
+class DecoratorData {
 };
 
-struct AppCreate {
-    ipc_port_id m_replyPort;
-    ipc_port_id m_clientPort;
-    int m_flags;
+class Decorator {
+  public:
+    virtual ~Decorator(void) {}
+
+    virtual yguipp::Point leftTop(void) = 0;
+    virtual yguipp::Point getSize(void) = 0;
+
+    virtual DecoratorData* createWindowData(void) = 0;
 };
 
-struct AppCreateReply {
-    ipc_port_id m_serverPort;
-};
-
-struct WinCreate {
-    ipc_port_id m_replyPort;
-    yguipp::Point m_position;
-    yguipp::Point m_size;
-    int m_order;
-    int m_flags;
-    /* title */
-};
-
-struct WinCreateReply {
-    int m_windowId;
-};
-
-struct WinHeader {
-    int m_windowId;
-};
-
-struct WinShow {
-    WinHeader m_header;
-};
-
-#endif /* _YGUI_PROTOCOL_HPP_ */
+#endif /* _DECORATOR_HPP_ */

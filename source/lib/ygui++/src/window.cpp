@@ -93,6 +93,7 @@ void Window::moveTo( const Point& position ) {
 int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
     switch ( code ) {
         case Y_WINDOW_SHOW :
+            doRepaint(true);
             Application::getInstance()->getServerPort()->send(Y_WINDOW_SHOW, buffer, size);
             break;
     }

@@ -18,10 +18,9 @@
 
 #include <assert.h>
 
-#include <ygui/render/render.h>
-
 #include <ygui++/graphicscontext.hpp>
 #include <ygui++/window.hpp>
+#include <ygui++/render.hpp>
 
 namespace yguipp {
 
@@ -41,7 +40,7 @@ bool GraphicsContext::needToFlush( void ) {
 }
 
 void GraphicsContext::setPenColor( const Color& pen ) {
-    r_set_pen_color_t* cmd;
+    RSetPenColor* cmd;
 
     if ( ( m_penValid ) &&
          ( m_penColor == pen ) ) {
@@ -51,25 +50,25 @@ void GraphicsContext::setPenColor( const Color& pen ) {
     m_penColor = pen;
     m_penValid = true;
 
-    cmd = reinterpret_cast<r_set_pen_color_t*>( m_window->getRenderTable()->allocate( sizeof(r_set_pen_color_t) ) );
-    cmd->header.command = R_SET_PEN_COLOR;
-    m_penColor.toColorT( &cmd->color );
+    cmd = reinterpret_cast<RSetPenColor*>( m_window->getRenderTable()->allocate( sizeof(RSetPenColor) ) );
+    cmd->m_header.m_cmd = R_SET_PEN_COLOR;
+    cmd->m_penColor = pen;
 }
 
 void GraphicsContext::setClipRect( const Rect& rect ) {
-    r_set_clip_rect_t* cmd;
+    RSetClipRect* cmd;
 
-    cmd = reinterpret_cast<r_set_clip_rect_t*>( m_window->getRenderTable()->allocate( sizeof(r_set_clip_rect_t) ) );
-    cmd->header.command = R_SET_CLIP_RECT;
-    rect.toRectT( &cmd->clip_rect );
+    cmd = reinterpret_cast<RSetClipRect*>( m_window->getRenderTable()->allocate( sizeof(RSetClipRect) ) );
+    cmd->m_header.m_cmd = R_SET_CLIP_RECT;
+    cmd->m_clipRect = rect;
 }
 
 void GraphicsContext::setFont( Font* font ) {
-    r_set_font_t* cmd;
+    RSetFont* cmd;
 
-    cmd = reinterpret_cast<r_set_font_t*>( m_window->getRenderTable()->allocate( sizeof(r_set_font_t) ) );
-    cmd->header.command = R_SET_FONT;
-    cmd->font_handle = font->getHandle();
+    cmd = reinterpret_cast<RSetFont*>( m_window->getRenderTable()->allocate( sizeof(RSetFont) ) );
+    cmd->m_header.m_cmd = R_SET_FONT;
+    cmd->m_fontHandle = font->getHandle();
 }
 
 void GraphicsContext::translate( const Point& p ) {
@@ -78,8 +77,8 @@ void GraphicsContext::translate( const Point& p ) {
 }
 
 void GraphicsContext::fillRect( const Rect& r ) {
+    RFillRect* cmd;
     Rect visibleRect;
-    r_fill_rect_t* cmd;
 
     visibleRect = ( r + m_leftTop ) & m_clipRect;
 
@@ -87,16 +86,16 @@ void GraphicsContext::fillRect( const Rect& r ) {
         return;
     }
 
-    cmd = reinterpret_cast<r_fill_rect_t*>( m_window->getRenderTable()->allocate( sizeof(r_fill_rect_t) ) );
-    cmd->header.command = R_FILL_RECT;
-    visibleRect.toRectT( &cmd->rect );
+    cmd = reinterpret_cast<RFillRect*>( m_window->getRenderTable()->allocate( sizeof(RFillRect) ) );
+    cmd->m_header.m_cmd = R_FILL_RECT;
+    cmd->m_rect = visibleRect;
 
     m_needToFlush = true;
 }
 
 void GraphicsContext::drawRect( const Rect& r ) {
+    RDrawRect* cmd;
     Rect visibleRect;
-    r_draw_rect_t* cmd;
 
     visibleRect = ( r + m_leftTop ) & m_clipRect;
 
@@ -104,15 +103,15 @@ void GraphicsContext::drawRect( const Rect& r ) {
         return;
     }
 
-    cmd = reinterpret_cast<r_draw_rect_t*>( m_window->getRenderTable()->allocate( sizeof(r_draw_rect_t) ) );
-    cmd->header.command = R_DRAW_RECT;
-    visibleRect.toRectT( &cmd->rect );
+    cmd = reinterpret_cast<RDrawRect*>( m_window->getRenderTable()->allocate( sizeof(RDrawRect) ) );
+    cmd->m_header.m_cmd = R_DRAW_RECT;
+    cmd->m_rect = visibleRect;
 
     m_needToFlush = true;
 }
 
 void GraphicsContext::drawBitmap( const Point& p, Bitmap* bitmap ) {
-    Rect visibleRect;
+    /*Rect visibleRect;
     Point bitmapLeftTop;
     r_draw_bitmap_t* cmd;
 
@@ -126,13 +125,13 @@ void GraphicsContext::drawBitmap( const Point& p, Bitmap* bitmap ) {
     cmd = reinterpret_cast<r_draw_bitmap_t*>( m_window->getRenderTable()->allocate( sizeof(r_draw_bitmap_t) ) );
     cmd->header.command = R_DRAW_BITMAP;
     cmd->bitmap_id = bitmap->getId();
-    bitmapLeftTop.toPointT( &cmd->position );
+    bitmapLeftTop.toPointT( &cmd->position );*/
 
     m_needToFlush = true;
 }
 
 void GraphicsContext::drawText( const Point& p, const std::string& text ) {
-    Point realPoint;
+    /*Point realPoint;
     r_draw_text_t* cmd;
 
     realPoint = p + m_leftTop;
@@ -142,29 +141,29 @@ void GraphicsContext::drawText( const Point& p, const std::string& text ) {
     cmd->length = text.size();
 
     realPoint.toPointT( &cmd->position );
-    memcpy( reinterpret_cast<void*>(cmd + 1), text.data(), text.size() );
+    memcpy( reinterpret_cast<void*>(cmd + 1), text.data(), text.size() );*/
 
     m_needToFlush = true;
 }
 
 void GraphicsContext::finish( void ) {
     if ( m_needToFlush ) {
-        render_header_t* cmd;
+        RenderHeader* cmd;
 
-        cmd = reinterpret_cast<render_header_t*>( m_window->getRenderTable()->allocate( sizeof(render_header_t) ) );
-        cmd->command = R_DONE;
+        cmd = reinterpret_cast<RenderHeader*>( m_window->getRenderTable()->allocate( sizeof(RenderHeader) ) );
+        cmd->m_cmd = R_DONE;
     }
 }
 
 void GraphicsContext::pushRestrictedArea( const Rect& rect ) {
-    r_set_clip_rect_t* cmd;
+    RSetClipRect* cmd;
 
     m_restrictedAreas.push(rect);
     m_clipRect = rect;
 
-    cmd = reinterpret_cast<r_set_clip_rect_t*>( m_window->getRenderTable()->allocate( sizeof(r_set_clip_rect_t) ) );
-    cmd->header.command = R_SET_CLIP_RECT;
-    rect.toRectT( &cmd->clip_rect );
+    cmd = reinterpret_cast<RSetClipRect*>( m_window->getRenderTable()->allocate( sizeof(RSetClipRect) ) );
+    cmd->m_header.m_cmd = R_SET_CLIP_RECT;
+    cmd->m_clipRect = rect;
 }
 
 void GraphicsContext::popRestrictedArea( void ) {
