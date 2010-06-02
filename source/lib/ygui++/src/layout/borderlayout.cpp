@@ -108,7 +108,7 @@ int BorderLayout::doLayout( yguipp::Panel* panel ) {
     widget = widgetMap[BorderLayoutData::CENTER];
     if ( widget != NULL ) {
         widget->setPosition( centerRect.leftTop() );
-        widget->setSize( centerRect.bounds() );
+        widget->setSize( centerRect.size() );
     }
 
     return 0;

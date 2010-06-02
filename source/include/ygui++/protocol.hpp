@@ -16,22 +16,50 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/color.hpp>
+#ifndef _YGUI_PROTOCOL_HPP_
+#define _YGUI_PROTOCOL_HPP_
 
-namespace yguipp {
+#include <yaosp/ipc.h>
 
-void Color::toColorT( color_t* c ) const {
-    c->red = m_red;
-    c->green = m_green;
-    c->blue = m_blue;
-    c->alpha = m_alpha;
-}
+#include <ygui++/point.hpp>
 
-bool Color::operator==( const Color& c ) {
-    return ( ( m_red == c.m_red ) &&
-             ( m_green == c.m_green ) &&
-             ( m_blue == c.m_blue ) &&
-             ( m_alpha == c.m_alpha ) );
-}
+enum {
+    Y_APPLICATION_CREATE = 1000000,
+    Y_WINDOW_CREATE,
+    Y_WINDOW_SHOW,
+    Y_WINDOW_HIDE,
+    Y_WINDOW_RENDER
+};
 
-} /* namespace yguipp */
+struct AppCreate {
+    ipc_port_id m_replyPort;
+    ipc_port_id m_clientPort;
+    int m_flags;
+};
+
+struct AppCreateReply {
+    ipc_port_id m_serverPort;
+};
+
+struct WinCreate {
+    ipc_port_id m_replyPort;
+    yguipp::Point m_position;
+    yguipp::Point m_size;
+    int m_order;
+    int m_flags;
+    /* title */
+};
+
+struct WinCreateReply {
+    int m_windowId;
+};
+
+struct WinHeader {
+    int m_windowId;
+};
+
+struct WinShow {
+    WinHeader m_header;
+};
+
+#endif /* _YGUI_PROTOCOL_HPP_ */

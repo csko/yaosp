@@ -1,6 +1,6 @@
-/* GUI server
+/* Default window decorator
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,29 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _REGION_H_
-#define _REGION_H_
+#include "default.hpp"
 
-#include <ygui/rect.h>
+#define BORDER_LEFT    3
+#define BORDER_TOP    21
+#define BORDER_RIGHT   3
+#define BORDER_BOTTOM  3
 
-typedef struct clip_rect {
-    rect_t rect;
-    struct clip_rect* next;
-} clip_rect_t;
+yguipp::Point DefaultDecorator::leftTop(void) {
+    return yguipp::Point(BORDER_LEFT, BORDER_TOP);
+}
 
-typedef struct region {
-    clip_rect_t* rects;
-} region_t;
+yguipp::Point DefaultDecorator::getSize(void) {
+    return yguipp::Point(BORDER_LEFT + BORDER_RIGHT, BORDER_TOP + BORDER_BOTTOM);
+}
 
-int init_region( region_t* region );
-int destroy_region( region_t* region );
-
-int region_clear( region_t* region );
-int region_add( region_t* region, rect_t* rect );
-int region_exclude( region_t* region, rect_t* rect );
-
-int region_duplicate( region_t* old_region, region_t* new_region );
-
-int init_region_manager( void );
-
-#endif /* _REGION_H_ */
+DecoratorData* DefaultDecorator::createWindowData(void) {
+    return new DefaultDecoratorData();
+}

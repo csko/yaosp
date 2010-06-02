@@ -1,6 +1,6 @@
 /* Process utilities
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,7 +19,15 @@
 #ifndef _YUTIL_PROCESS_H_
 #define _YUTIL_PROCESS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int process_id_of( const char* process_name );
 int process_count_of( const char* process_name );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _YUTIL_PROCESS_H_ */

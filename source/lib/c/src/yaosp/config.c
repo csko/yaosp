@@ -30,7 +30,7 @@ ipc_port_id ycfg_reply_port = -1;
 
 pthread_mutex_t ycfg_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static int get_attribute_value( char* path, char* attrib, uint8_t** _reply ) {
+static int get_attribute_value( const char* path, const char* attrib, uint8_t** _reply ) {
     int error;
     size_t path_length;
     size_t attrib_length;
@@ -86,7 +86,7 @@ static int get_attribute_value( char* path, char* attrib, uint8_t** _reply ) {
     return error;
 }
 
-int ycfg_get_ascii_value( char* path, char* attrib, char** value ) {
+int ycfg_get_ascii_value( const char* path, const char* attrib, char** value ) {
     int error;
     msg_get_reply_t* reply;
 
@@ -114,7 +114,7 @@ int ycfg_get_ascii_value( char* path, char* attrib, char** value ) {
     return error;
 }
 
-int ycfg_get_numeric_value( char* path, char* attrib, uint64_t* value ) {
+int ycfg_get_numeric_value( const char* path, const char* attrib, uint64_t* value ) {
     int error;
     msg_get_reply_t* reply;
 
@@ -142,7 +142,7 @@ int ycfg_get_numeric_value( char* path, char* attrib, uint64_t* value ) {
     return error;
 }
 
-int ycfg_get_binary_value( char* path, char* attrib, void** _data, size_t* _size ) {
+int ycfg_get_binary_value( const char* path, const char* attrib, void** _data, size_t* _size ) {
     int error;
     msg_get_reply_t* reply;
 
@@ -181,7 +181,7 @@ int ycfg_get_binary_value( char* path, char* attrib, void** _data, size_t* _size
     return error;
 }
 
-int ycfg_add_child( char* path, char* child ) {
+int ycfg_add_child( const char* path, const char* child ) {
     int error;
     char* tmp;
     size_t path_length;
@@ -227,7 +227,7 @@ int ycfg_add_child( char* path, char* child ) {
     return error;
 }
 
-int ycfg_del_child( char* path, char* child ) {
+int ycfg_del_child( const char* path, const char* child ) {
     int error;
     char* tmp;
     size_t path_length;
@@ -273,7 +273,7 @@ int ycfg_del_child( char* path, char* child ) {
     return error;
 }
 
-int ycfg_list_children( char* path, char*** _children ) {
+int ycfg_list_children( const char* path, char*** _children ) {
     int error;
     size_t path_length;
     size_t request_length;

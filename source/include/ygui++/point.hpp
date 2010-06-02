@@ -25,18 +25,17 @@ namespace yguipp {
 
 class Point {
   public:
-    Point( int x = 0, int y = 0 );
-    Point( point_t* point );
-    ~Point( void );
+    Point( int x = 0, int y = 0 ) : m_x(x), m_y(y) {}
+    Point( point_t* point ) : m_x(point->x), m_y(point->y) {}
 
-    void toPointT( point_t* p ) const;
+    void toPointT( point_t* p ) const { p->x = m_x; p->y = m_y; }
 
-    Point operator+( const Point& p ) const;
-    Point operator-( const Point& p ) const;
-    Point operator/( int n ) const;
+    Point operator+( const Point& p ) const { return Point(m_x + p.m_x, m_y + p.m_y); }
+    Point operator-( const Point& p ) const { return Point(m_x - p.m_x, m_y - p.m_y); }
+    Point operator/( int n ) const { return Point(m_x / n, m_y / n); }
 
-    Point& operator+=( const Point& p );
-    Point& operator-=( const Point& p );
+    Point& operator+=( const Point& p ) { m_x += p.m_x; m_y += p.m_y; return *this; }
+    Point& operator-=( const Point& p ) { m_x -= p.m_x; m_y -= p.m_y; return *this; }
 
   public:
     int m_x;

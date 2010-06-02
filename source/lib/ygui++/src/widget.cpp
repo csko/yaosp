@@ -194,7 +194,7 @@ int Widget::doInvalidate( bool notifyWindow ) {
 
     if ( ( notifyWindow ) &&
          ( m_window != NULL ) ) {
-        m_window->getPort()->send( MSG_WIDGET_INVALIDATED );
+        // m_window->getPort()->send( MSG_WIDGET_INVALIDATED );
     }
 
     return 0;

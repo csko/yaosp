@@ -1,6 +1,6 @@
-/* Image loader definitions
+/* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,17 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IMGLOADER_H_
-#define _IMGLOADER_H_
+#ifndef _INPUT_HPP_
+#define _INPUT_HPP_
 
-#include <bitmap.h>
-#include <inttypes.h>
+#include <yutil++/thread.hpp>
 
-typedef struct image_loader {
-    int ( *identify )( int fd );
-    bitmap_t* ( *load )( int fd );
-} image_loader_t;
+#include <guiserver/windowmanager.hpp>
 
-extern image_loader_t png_loader;
+class InputThread : public yutilpp::Thread {
+  public:
+    InputThread( WindowManager* windowManager );
+    virtual ~InputThread( void ) {}
 
-#endif /* _IMGLOADER_H_ */
+    bool init( void );
+
+    int run( void );
+
+  private:
+    int m_device;
+    WindowManager* m_windowManager;
+}; /* class InputThread */
+
+#endif /* _INPUT_HPP_ */

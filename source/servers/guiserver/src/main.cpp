@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,14 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SPLASH_H_
-#define _SPLASH_H_
+#include <guiserver/guiserver.hpp>
 
-extern int splash_count_current;
-extern int splash_count_total;
-
-int splash_inc_progress( void );
-
-int init_splash( void );
-
-#endif /* _SPLASH_H_ */
+int main( int argc, char** argv ) {
+    GuiServer server;
+    return server.run();
+}

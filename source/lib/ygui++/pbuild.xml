@@ -34,8 +34,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/menu.cpp</item>
         <item>src/menuitem.cpp</item>
         <item>src/graphicscontext.cpp</item>
-        <item>src/rect.cpp</item>
-        <item>src/point.cpp</item>
         <item>src/color.cpp</item>
         <item>src/font.cpp</item>
         <item>src/bitmap.cpp</item>
@@ -63,10 +61,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/lib/ygui++/${i}</echo>
-            <gcc>
+            <gcc profile="y-lib-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
 

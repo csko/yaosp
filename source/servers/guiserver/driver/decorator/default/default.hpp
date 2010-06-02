@@ -1,4 +1,4 @@
-/* Configuration handling functions
+/* Default window decorator
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,25 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YAOSP_CONFIG_H_
-#define _YAOSP_CONFIG_H_
+#ifndef _DECORATOR_DEFAULT_HPP_
+#define _DECORATOR_DEFAULT_HPP_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <guiserver/decorator.hpp>
 
-int ycfg_get_ascii_value( const char* path, const char* attrib, char** value );
-int ycfg_get_numeric_value( const char* path, const char* attrib, uint64_t* value );
-int ycfg_get_binary_value( const char* path, const char* attrib, void** _data, size_t* _size );
+class DefaultDecoratorData : public DecoratorData {
+};
 
-int ycfg_add_child( const char* path, const char* child );
-int ycfg_del_child( const char* path, const char* child );
-int ycfg_list_children( const char* path, char*** _children );
+class DefaultDecorator : public Decorator {
+  public:
+    virtual ~DefaultDecorator(void) {}
 
-int ycfg_init( void );
+    yguipp::Point leftTop(void);
+    yguipp::Point getSize(void);
 
-#ifdef __cplusplus
-}
-#endif
+    DecoratorData* createWindowData(void);
+}; /* class DefaultDecorator */
 
-#endif /* _YAOSP_CONFIG_H_ */
+#endif /* _DECORATOR_DEFAULT_HPP_ */

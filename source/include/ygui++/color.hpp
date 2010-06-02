@@ -26,10 +26,13 @@ namespace yguipp {
 
 class Color {
   public:
-    Color( uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 255 );
+    Color( uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 255 ) : m_red(red), m_green(green),
+                                                                                         m_blue(blue), m_alpha(alpha) {}
 
     void toColorT( color_t* c ) const;
-
+    uint32_t toColor32( void ) const {
+        return ( ( m_alpha << 24 ) | ( m_red << 16 ) | ( m_green << 8 ) | ( m_blue ) );
+    }
     bool operator==( const Color& c );
 
   private:

@@ -1,6 +1,6 @@
 /* GUI server
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -16,9 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _GUISERVER_H_
-#define _GUISERVER_H_
+#ifndef _DECORATOR_HPP_
+#define _DECORATOR_HPP_
 
-int setup_graphics_mode( void );
+#include <ygui++/point.hpp>
 
-#endif /* _GUISERVER_H_ */
+class DecoratorData {
+};
+
+class Decorator {
+  public:
+    virtual ~Decorator(void) {}
+
+    virtual yguipp::Point leftTop(void) = 0;
+    virtual yguipp::Point getSize(void) = 0;
+
+    virtual DecoratorData* createWindowData(void) = 0;
+};
+
+#endif /* _DECORATOR_HPP_ */

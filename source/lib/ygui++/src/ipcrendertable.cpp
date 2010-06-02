@@ -17,10 +17,11 @@
  */
 
 #include <assert.h>
-#include <ygui/protocol.h>
 
 #include <ygui++/ipcrendertable.hpp>
 #include <ygui++/window.hpp>
+#include <ygui++/protocol.hpp>
+#include <ygui++/application.hpp>
 
 namespace yguipp {
 
@@ -49,27 +50,27 @@ void* IPCRenderTable::allocate( size_t size ) {
 }
 
 int IPCRenderTable::reset( void ) {
-    m_position = sizeof(ipc_port_id);
+    m_position = sizeof(WinHeader);
 
     return 0;
 }
 
 int IPCRenderTable::flush( void ) {
-    ipc_port_id* id;
+    WinHeader* header;
 
-    id = reinterpret_cast<ipc_port_id*>(m_buffer);
-    *id = m_window->getReplyPort()->getId();
+    header = reinterpret_cast<WinHeader*>(m_buffer);
+    header->m_windowId = m_window->getId();
 
-    m_window->getServerPort()->send( MSG_RENDER_COMMANDS, m_buffer, m_position );
+    Application::getInstance()->getServerPort()->send(Y_WINDOW_RENDER, m_buffer, m_position);
 
     return 0;
 }
 
 int IPCRenderTable::waitForFlush( void ) {
-    uint32_t code;
+    //uint32_t code;
 
-    m_window->getReplyPort()->receive( code );
-    m_position = sizeof(ipc_port_id);
+    //m_window->getReplyPort()->receive( code );
+    m_position = sizeof(WinHeader);
 
     return 0;
 }
