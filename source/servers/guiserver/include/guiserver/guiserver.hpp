@@ -21,6 +21,7 @@
 
 #include <guiserver/graphicsdriver.hpp>
 #include <guiserver/windowmanager.hpp>
+#include <guiserver/input.hpp>
 
 class GuiServer {
   public:
@@ -32,6 +33,7 @@ class GuiServer {
     GraphicsDriver* m_graphicsDriver;
     Bitmap* m_screenBitmap;
     WindowManager* m_windowManager;
+    InputThread* m_inputThread;
 }; /* class GuiServer */
 
 #endif /* _GUISERVER_HPP_ */

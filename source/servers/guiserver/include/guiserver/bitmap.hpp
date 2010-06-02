@@ -27,8 +27,10 @@ class Bitmap {
     Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace, uint8_t* buffer = NULL );
     ~Bitmap( void );
 
-    uint32_t width( void );
-    uint32_t height( void );
+    inline uint32_t width( void ) { return m_width; }
+    inline uint32_t height( void ) { return m_height; }
+
+    yguipp::Point size( void );
     yguipp::Rect bounds( void );
 
     uint8_t* getBuffer( void );

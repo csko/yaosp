@@ -18,14 +18,19 @@
 
 #include <guiserver/windowmanager.hpp>
 
-WindowManager::WindowManager( GraphicsDriver* graphicsDriver, Bitmap* screenBitmap ) : m_mutex("wm_lock"), m_graphicsDriver(graphicsDriver),
-                                                                                       m_screenBitmap(screenBitmap) {
+WindowManager::WindowManager( GraphicsDriver* graphicsDriver,
+                              Bitmap* screenBitmap ) : m_mutex("wm_lock"), m_graphicsDriver(graphicsDriver),
+                                                       m_screenBitmap(screenBitmap) {
+    m_mousePointer = new MousePointer();
+    m_mousePointer->init();
+    m_mousePointer->moveTo(NULL, NULL, screenBitmap->size() / 2);
 }
 
 WindowManager::~WindowManager( void ) {
 }
 
 int WindowManager::enable( void ) {
+    m_mousePointer->show(m_graphicsDriver, m_screenBitmap);
     return 0;
 }
 
@@ -66,6 +71,7 @@ int WindowManager::keyReleased( int key ) {
 }
 
 int WindowManager::mouseMoved( const yguipp::Point& delta ) {
+    m_mousePointer->moveBy(m_graphicsDriver, m_screenBitmap, delta);
     return 0;
 }
 

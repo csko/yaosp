@@ -32,10 +32,12 @@ class Rect {
     Rect( rect_t* r ) : m_left(r->left), m_top(r->top), m_right(r->right), m_bottom(r->bottom) {}
     Rect( int left = 0, int top = 0, int right = 0, int bottom = 0 ) : m_left(left), m_top(top), m_right(right), m_bottom(bottom) {}
 
-    int width( void ) const { return ( m_right - m_left + 1 ); }
-    int height( void ) const { return ( m_bottom - m_top + 1 ); }
-    Point bounds( void ) const { return Point(m_right - m_left + 1, m_bottom - m_top + 1); }
+    inline int width( void ) const { return ( m_right - m_left + 1 ); }
+    inline int height( void ) const { return ( m_bottom - m_top + 1 ); }
+
+    Point size( void ) const { return Point(m_right - m_left + 1, m_bottom - m_top + 1); }
     Point leftTop( void ) const { return Point(m_left, m_top); }
+    Rect bounds( void ) const { return Rect(0, 0, width() - 1, height() - 1); }
 
     bool isValid( void ) const { return ( ( m_left <= m_right ) && ( m_top <= m_bottom ) ); }
     bool hasPoint( const Point& p ) const {

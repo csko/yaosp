@@ -33,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/bitmap.cpp</item>
         <item>src/graphicsdriver.cpp</item>
         <item>src/input.cpp</item>
+        <item>src/mouse.cpp</item>
         <item>driver/video/vesa/vesa.cpp</item>
     </array>
 

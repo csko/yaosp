@@ -34,12 +34,8 @@ Bitmap::~Bitmap( void ) {
     }
 }
 
-uint32_t Bitmap::width( void ) {
-    return m_width;
-}
-
-uint32_t Bitmap::height( void ) {
-    return m_height;
+yguipp::Point Bitmap::size( void ) {
+    return yguipp::Point(m_width, m_height);
 }
 
 yguipp::Rect Bitmap::bounds( void ) {

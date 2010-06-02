@@ -50,7 +50,7 @@ int GraphicsDriver::blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap
     yguipp::Rect rectToBlit = rect;
 
     rectToBlit &= src->bounds();
-    // todo rectToBlit &= yguipp::Rect(point.m_x, point.m_y, dest->width() - 1, dest->height() - 1);
+    rectToBlit &= yguipp::Rect(point.m_x, point.m_y, dest->width() - 1, dest->height() - 1).bounds() + rect.leftTop();
 
     if ( !rectToBlit.isValid() ) {
         return 0;
@@ -62,6 +62,7 @@ int GraphicsDriver::blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap
             break;
 
         case DM_BLEND :
+            blitBitmapBlend(dest, point, src, rectToBlit);
             break;
 
         case DM_INVERT :
@@ -114,12 +115,74 @@ int GraphicsDriver::blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, 
 
     switch ( (int)src->getColorSpace() ) {
         case CS_RGB32 : {
-            uint32_t* src_buffer = reinterpret_cast<uint32_t*>(src->getBuffer()) + rect.m_top * src->width() + rect.m_left;
+            uint32_t* src_buffer = reinterpret_cast<uint32_t*>(src->getBuffer()) +
+                rect.m_top * src->width() + rect.m_left;
 
             for ( int y = 0; y < rect.height(); y++ ) {
                 memcpy(dst_buffer, src_buffer, rect.width() * 4);
                 dst_buffer += dest->width();
                 src_buffer += src->width();
+            }
+
+            break;
+        }
+    }
+
+    return 0;
+}
+
+int GraphicsDriver::blitBitmapBlend( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect ) {
+    switch ( (int)dest->getColorSpace() ) {
+        case CS_RGB32 :
+            blitBitmapBlend32(dest, point, src, rect);
+            break;
+    }
+
+    return 0;
+}
+
+int GraphicsDriver::blitBitmapBlend32( Bitmap* dest, const yguipp::Point& point,
+                                       Bitmap* src, const yguipp::Rect& rect ) {
+    int dst_modulo = dest->width() - rect.width();
+    uint32_t* dst_buffer = reinterpret_cast<uint32_t*>(dest->getBuffer()) + point.m_y * dest->width() + point.m_x;
+
+    switch ( (int)src->getColorSpace() ) {
+        case CS_RGB32 : {
+            int src_modulo = src->width() - rect.width();
+            uint32_t* src_buffer = reinterpret_cast<uint32_t*>(src->getBuffer()) +
+                rect.m_top * src->width() + rect.m_left;
+
+            for ( int y = 0; y < rect.height(); y++ ) {
+                for ( int x = 0; x < rect.width(); x++ ) {
+                    register uint32_t src_color = *src_buffer++;
+                    uint32_t src_alpha = src_color >> 24;
+
+                    if ( src_alpha == 0xFF ) {
+                        *dst_buffer = ( *dst_buffer & 0xFF000000 ) | ( src_color & 0x00FFFFFF );
+                    } else if ( src_alpha != 0x00 ) {
+                        uint32_t src1;
+                        uint32_t dst1;
+                        uint32_t dst_alpha;
+                        register uint32_t dst_color;
+
+                        dst_color = *dst_buffer;
+                        dst_alpha = dst_color & 0xFF000000;
+
+                        src1 = src_color & 0xFF00FF;
+                        dst1 = dst_color & 0xFF00FF;
+                        dst1 = ( dst1 + ( ( src1 - dst1 ) * src_alpha >> 8 ) ) & 0xFF00FF;
+                        src_color &= 0xFF00;
+                        dst_color &= 0xFF00;
+                        dst_color = ( dst_color + ( ( src_color - dst_color ) * src_alpha >> 8 ) ) & 0xFF00;
+
+                        *dst_buffer = dst1 | dst_color | dst_alpha;
+                    }
+
+                    dst_buffer++;
+                }
+
+                dst_buffer += dst_modulo;
+                src_buffer += src_modulo;
             }
 
             break;

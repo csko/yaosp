@@ -16,25 +16,38 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _INPUT_HPP_
-#define _INPUT_HPP_
+#ifndef _MOUSE_HPP_
+#define _MOUSE_HPP_
 
-#include <yutil++/thread.hpp>
+#include <ygui++/point.hpp>
 
-#include <guiserver/windowmanager.hpp>
+#include <guiserver/bitmap.hpp>
 
-class InputThread : public yutilpp::Thread {
+class GraphicsDriver;
+
+class MousePointer {
   public:
-    InputThread( WindowManager* windowManager );
-    virtual ~InputThread( void ) {}
+    MousePointer(void);
 
-    bool init( void );
+    bool init(void);
 
-    int run( void );
+    void show(GraphicsDriver* driver, Bitmap* screen);
+    bool hide(GraphicsDriver* driver, Bitmap* screen);
+
+    int moveTo(GraphicsDriver* driver, Bitmap* screen, const yguipp::Point& position);
+    int moveBy(GraphicsDriver* driver, Bitmap* screen, yguipp::Point offset);
 
   private:
-    int m_device;
-    WindowManager* m_windowManager;
-}; /* class InputThread */
 
-#endif /* _INPUT_HPP_ */
+  private:
+    Bitmap* m_pointer;
+    Bitmap* m_screenBuffer;
+
+    bool m_visible;
+    yguipp::Point m_position;
+    yguipp::Rect m_pointerRect;
+
+    static uint32_t pointerImage[16*16];
+}; /* class MousePointer */
+
+#endif /* _MOUSE_HPP_ */

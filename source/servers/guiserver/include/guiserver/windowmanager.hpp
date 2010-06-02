@@ -26,13 +26,13 @@
 
 #include <guiserver/window.hpp>
 #include <guiserver/graphicsdriver.hpp>
+#include <guiserver/mouse.hpp>
 
 class WindowManager {
-  private:
+  public:
     WindowManager( GraphicsDriver* graphicsDriver, Bitmap* screenBitmap );
     ~WindowManager( void );
 
-  public:
     inline int lock( void ) { return m_mutex.lock(); }
     inline int unLock( void ) { return m_mutex.unLock(); }
 
@@ -59,6 +59,7 @@ class WindowManager {
 
     GraphicsDriver* m_graphicsDriver;
     Bitmap* m_screenBitmap;
+    MousePointer* m_mousePointer;
 }; /* class WindowManager */
 
 #endif /* _WINDOWMANAGER_HPP_ */

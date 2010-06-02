@@ -24,6 +24,8 @@ GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_w
 }
 
 int GuiServer::run( void ) {
+    /* Setup screen mode. */
+
     m_graphicsDriver = new VesaDriver();
     m_graphicsDriver->detect();
 
@@ -35,9 +37,18 @@ int GuiServer::run( void ) {
         reinterpret_cast<uint8_t*>(m_graphicsDriver->getFrameBuffer())
     );
 
+    /* Initialize other stuffs. */
+
+    m_windowManager = new WindowManager(m_graphicsDriver, m_screenBitmap);
+    m_inputThread = new InputThread(m_windowManager);
+    m_inputThread->init();
+
     m_graphicsDriver->fillRect(
-        m_screenBitmap, m_screenBitmap->bounds(), yguipp::Rect(0, 0, 639, 479), yguipp::Color(0, 0, 0), DM_COPY
+        m_screenBitmap, m_screenBitmap->bounds(), yguipp::Rect(0, 0, 639, 479), yguipp::Color(75, 100, 125), DM_COPY
     );
+
+    m_windowManager->enable();
+    m_inputThread->start();
 
     return 0;
 }

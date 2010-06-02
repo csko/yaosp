@@ -63,6 +63,8 @@ class GraphicsDriver {
 
     int blitBitmapCopy( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
     int blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
+    int blitBitmapBlend( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
+    int blitBitmapBlend32( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
 }; /* class GraphicsDriver */
 
 #endif /* _GRAPHICSDRIVER_HPP_ */
