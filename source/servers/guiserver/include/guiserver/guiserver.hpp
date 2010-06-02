@@ -25,6 +25,8 @@
 #include <guiserver/windowmanager.hpp>
 #include <guiserver/input.hpp>
 #include <guiserver/decorator.hpp>
+#include <guiserver/font.hpp>
+
 class GuiServer {
   public:
     GuiServer( void );
@@ -41,6 +43,7 @@ class GuiServer {
     Decorator* m_decorator;
     WindowManager* m_windowManager;
     InputThread* m_inputThread;
+    FontStorage* m_fontStorage;
     yutilpp::IPCPort* m_serverPort;
 
     static GuiServer* instance;

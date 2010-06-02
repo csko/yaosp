@@ -25,6 +25,7 @@
 #include <ygui++/color.hpp>
 
 #include <guiserver/bitmap.hpp>
+#include <guiserver/font.hpp>
 
 struct ScreenMode {
     ScreenMode( uint32_t width, uint32_t height, color_space_t colorSpace ) : m_width(width), m_height(height),
@@ -51,15 +52,24 @@ class GraphicsDriver {
     virtual ScreenMode* getModeInfo( size_t index ) = 0;
     virtual bool setMode( ScreenMode* info ) = 0;
     virtual void* getFrameBuffer( void ) = 0;
+    virtual int drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
+                          const yguipp::Color& color, drawing_mode_t mode );
     virtual int fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
                           const yguipp::Color& color, drawing_mode_t mode );
-    //virtual int drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position, const yguipp::Color& color, FontNode* font, const char* text, int length );
+    virtual int drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
+                          const yguipp::Color& color, FontNode* font, const char* text, int length );
     virtual int blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap* src,
                             const yguipp::Rect& rect, drawing_mode_t mode );
 
   private:
+    int drawRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
+    int drawRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
+
     int fillRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
     int fillRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
+
+    int drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
+                    const yguipp::Color& color, FontNode* font, const char* text, int length );
 
     int blitBitmapCopy( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
     int blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
