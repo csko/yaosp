@@ -66,7 +66,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>${staticlibdir}/libpng.a</input>
             <input>${staticlibdir}/libz.a</input>
             <output>objs/guiserver</output>
-            <flags>-lyutil -lyutil++</flags>
+            <flags>-lyutil++</flags>
         </gcc>
     </target>
 
