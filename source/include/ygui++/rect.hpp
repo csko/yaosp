@@ -90,6 +90,15 @@ class Rect {
         return *this;
     }
 
+    Rect& operator-=( const Point& p ) {
+        m_left -= p.m_x;
+        m_top -= p.m_y;
+        m_right -= p.m_x;
+        m_bottom -= p.m_y;
+
+        return *this;
+    }
+
     Rect& operator&=( const Rect& r ) {
         m_left = std::max(m_left, r.m_left);
         m_top = std::max(m_top, r.m_top);

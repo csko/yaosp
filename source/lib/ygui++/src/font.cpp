@@ -16,12 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui/protocol.h>
-
 #include <ygui++/font.hpp>
 #include <ygui++/application.hpp>
-
-#include <yaosp/debug.h>
 
 namespace yguipp {
 
@@ -33,6 +29,7 @@ Font::~Font( void ) {
 }
 
 bool Font::init( void ) {
+#if 0
     size_t size;
     uint8_t* tmp;
     uint8_t* data;
@@ -71,6 +68,7 @@ bool Font::init( void ) {
     m_ascender = reply.ascender;
     m_descender = reply.descender;
     m_lineGap = reply.line_gap;
+#endif
 
     return true;
 }
@@ -96,6 +94,7 @@ int Font::getLineGap( void ) {
 }
 
 int Font::getStringWidth( const std::string& text ) {
+#if 0
     size_t size;
     uint8_t* data;
     uint32_t code;
@@ -122,6 +121,9 @@ int Font::getStringWidth( const std::string& text ) {
     app->unLock();
 
     return reply.width;
+#endif
+
+    return 0;
 }
 
 } /* namespace yguipp */

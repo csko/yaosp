@@ -30,12 +30,12 @@ class Color {
                                                                                          m_blue(blue), m_alpha(alpha) {}
 
     void toColorT( color_t* c ) const;
-    uint32_t toColor32( void ) const {
+    inline uint32_t toColor32( void ) const {
         return ( ( m_alpha << 24 ) | ( m_red << 16 ) | ( m_green << 8 ) | ( m_blue ) );
     }
     bool operator==( const Color& c );
 
-  private:
+  public:
     uint8_t m_red;
     uint8_t m_green;
     uint8_t m_blue;

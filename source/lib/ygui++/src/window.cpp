@@ -77,16 +77,16 @@ void Window::hide( void ) {
 }
 
 void Window::resize( const Point& size ) {
-    msg_win_do_resize_t request;
+    //msg_win_do_resize_t request;
 
-    size.toPointT(&request.size);
+    //size.toPointT(&request.size);
     //getPort()->send( MSG_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_resize_t));
 }
 
 void Window::moveTo( const Point& position ) {
-    msg_win_do_move_t request;
+    //msg_win_do_move_t request;
 
-    position.toPointT(&request.position);
+    //position.toPointT(&request.position);
     //getPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_move_t));
 }
 
@@ -185,7 +185,7 @@ bool Window::registerWindow( void ) {
     request->m_replyPort = app->getReplyPort()->getId();
     request->m_position = m_position;
     request->m_size = m_size;
-    request->m_order = W_ORDER_NORMAL;
+    request->m_order = WINDOW_ORDER_NORMAL;
     request->m_flags = m_flags;
     memcpy( reinterpret_cast<void*>(request + 1), m_title.c_str(), m_title.size() + 1 );
 
@@ -213,100 +213,6 @@ void Window::doRepaint( bool forced ) {
     } else {
         m_renderTable->reset();
     }
-}
-
-void Window::handleResized( msg_win_resized_t* cmd ) {
-    m_size = Point(&cmd->size);
-
-    m_container->setSize(m_size);
-    m_container->doInvalidate(false);
-    doRepaint();
-}
-
-void Window::handleKeyPressed( msg_key_pressed_t* cmd ) {
-}
-
-void Window::handleKeyReleased( msg_key_released_t* cmd ) {
-}
-
-void Window::handleMouseEntered( msg_mouse_entered_t* cmd ) {
-    Point mousePosition(&cmd->mouse_position);
-
-    assert( m_mouseWidget == NULL );
-    m_mouseWidget = findWidgetAt(mousePosition);
-
-    assert( m_mouseWidget != NULL );
-    m_mouseWidget->mouseEntered( getWidgetPosition(m_mouseWidget, mousePosition) );
-}
-
-void Window::handleMouseMoved( msg_mouse_moved_t* cmd ) {
-    Widget* newMouseWidget;
-    Point mousePosition(&cmd->mouse_position);
-
-    assert( m_mouseWidget != NULL );
-    newMouseWidget = findWidgetAt(mousePosition);
-    assert( newMouseWidget != NULL );
-
-    if ( m_mouseWidget == newMouseWidget ) {
-        m_mouseWidget->mouseMoved( getWidgetPosition(m_mouseWidget, mousePosition) );
-    } else {
-        m_mouseWidget->mouseExited();
-        m_mouseWidget = newMouseWidget;
-        m_mouseWidget->mouseEntered( getWidgetPosition(m_mouseWidget, mousePosition) );
-    }
-}
-
-void Window::handleMouseExited( void ) {
-    assert( m_mouseWidget != NULL );
-    m_mouseWidget->mouseExited();
-    m_mouseWidget = NULL;
-}
-
-void Window::handleMousePressed( msg_mouse_pressed_t* cmd ) {
-    assert( m_mouseWidget != NULL );
-    assert( m_mouseDownWidget == NULL );
-
-    m_mouseDownWidget = m_mouseWidget;
-    m_mouseDownWidget->mousePressed( getWidgetPosition(m_mouseDownWidget, Point(&cmd->mouse_position)) );
-}
-
-void Window::handleMouseReleased( msg_mouse_released_t* cmd ) {
-    assert( m_mouseDownWidget != NULL );
-
-    m_mouseDownWidget->mouseReleased();
-    m_mouseDownWidget = NULL;
-}
-
-void Window::handleMouseScrolled( msg_mouse_scrolled_t* cmd ) {
-}
-
-void Window::handleDoResize( msg_win_do_resize_t* cmd ) {
-    /*uint32_t code;
-    msg_win_resized_t reply;
-
-    cmd->reply_port = getReplyPort()->getId();
-
-    getServerPort()->send( MSG_WINDOW_DO_RESIZE, reinterpret_cast<void*>(cmd), sizeof(msg_win_do_resize_t) );
-    getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(msg_win_resized_t));
-
-    m_size = Point(&reply.size);
-    m_container->setSize(m_size);*/
-}
-
-void Window::handleDoMove( msg_win_do_move_t* cmd ) {
-    /*uint32_t code;
-    msg_win_moved_t reply;
-
-    cmd->reply_port = getReplyPort()->getId();
-
-    getServerPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(cmd), sizeof(msg_win_do_move_t) );
-    getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(msg_win_moved_t));
-
-    m_position = Point(&reply.position);*/
-}
-
-void Window::handleMoved( msg_win_moved_t* cmd ) {
-    m_position = Point(&cmd->position);
 }
 
 Widget* Window::findWidgetAt( const Point& p ) {

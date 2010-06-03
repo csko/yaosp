@@ -26,16 +26,35 @@
 #include FT_FREETYPE_H
 #include FT_SYNTHESIS_H
 
+#include <ygui++/yconstants.hpp>
+#include <ygui++/rect.hpp>
+#include <ygui++/point.hpp>
 #include <yutil++/mutex.hpp>
 
 class FontGlyph {
+  public:
+    FontGlyph(const yguipp::Rect& bounds, const yguipp::Point& advance, int rasterSize);
+    ~FontGlyph(void);
+
+    inline const yguipp::Rect& bounds(void) { return m_bounds; }
+    inline uint8_t* getRaster(void) { return m_raster; }
+    inline int getBytesPerLine(void) { return m_bytesPerLine; }
+    inline const yguipp::Point& getAdvance(void) { return m_advance; }
+
+    inline void setBytesPerLine(int bpl) { m_bytesPerLine = bpl; }
+
+  private:
+    yguipp::Rect m_bounds;
+    yguipp::Point m_advance;
+    uint8_t* m_raster;
+    int m_bytesPerLine;
 }; /* class FontGlyph */
 
 class FontStyle;
 
 class FontNode {
   public:
-    FontNode(FontStyle* style);
+    FontNode(FontStyle* style, const FontInfo& info);
 
     FontGlyph* getGlyph(int c);
     inline FontStyle* getStyle(void) { return m_style; }
@@ -65,19 +84,41 @@ class FontNode {
     }
 
   private:
+    FT_Size setFaceSize(void);
+
+  private:
     FontStyle* m_style;
+    FontInfo m_info;
+    FontGlyph** m_glyphTable;
+
+    int m_ascender;
+    int m_descender;
+    int m_lineGap;
+    int m_advance;
 }; /* class FontNode */
 
 class FontStyle {
   public:
     FontStyle(FT_Face face);
 
+    FontNode* getNode(const FontInfo& info);
+    inline int getGlyphCount(void) { return m_glyphCount; }
+    inline FT_Face getFace(void) { return m_face; }
+
+    inline bool isScalable(void) { return m_scalable; }
+    inline bool isFixedWidth(void) { return m_fixedWidth; }
+
     inline void lock(void) { m_mutex.lock(); }
     inline void unLock(void) { m_mutex.unLock(); }
 
   private:
     FT_Face m_face;
+    int m_glyphCount;
+    bool m_scalable;
+    bool m_fixedWidth;
+
     yutilpp::Mutex m_mutex;
+    std::map<FontInfo, FontNode*> m_nodes;
 }; /* class FontStyle */
 
 class FontFamily {
@@ -97,6 +138,8 @@ class FontStorage {
 
     bool init(void);
     bool loadFonts(void);
+
+    FontNode* getFontNode(const std::string& family, const std::string& style, const FontInfo& info);
 
   private:
     FontFamily* getFamily(const std::string& familyName);

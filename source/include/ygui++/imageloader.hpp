@@ -22,14 +22,14 @@
 #include <vector>
 #include <inttypes.h>
 
-#include <ygui/yconstants.h>
+#include <ygui++/yconstants.hpp>
 
 namespace yguipp {
 
 struct ImageInfo {
     int m_width;
     int m_height;
-    color_space_t m_colorSpace;
+    ColorSpace m_colorSpace;
 };
 
 class ImageLoader {

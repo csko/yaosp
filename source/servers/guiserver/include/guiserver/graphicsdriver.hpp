@@ -20,7 +20,6 @@
 #define _GRAPHICSDRIVER_HPP_
 
 #include <string>
-#include <ygui/yconstants.h>
 #include <ygui++/rect.hpp>
 #include <ygui++/color.hpp>
 
@@ -28,8 +27,8 @@
 #include <guiserver/font.hpp>
 
 struct ScreenMode {
-    ScreenMode( uint32_t width, uint32_t height, color_space_t colorSpace ) : m_width(width), m_height(height),
-                                                                              m_colorSpace(colorSpace) {}
+    ScreenMode( uint32_t width, uint32_t height, ColorSpace colorSpace ) : m_width(width), m_height(height),
+                                                                           m_colorSpace(colorSpace) {}
 
     bool operator==( const ScreenMode& mode ) {
         return ( ( m_width == mode.m_width ) &&
@@ -39,7 +38,7 @@ struct ScreenMode {
 
     uint32_t m_width;
     uint32_t m_height;
-    color_space_t m_colorSpace;
+    ColorSpace m_colorSpace;
 };
 
 class GraphicsDriver {
@@ -53,13 +52,13 @@ class GraphicsDriver {
     virtual bool setMode( ScreenMode* info ) = 0;
     virtual void* getFrameBuffer( void ) = 0;
     virtual int drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
-                          const yguipp::Color& color, drawing_mode_t mode );
+                          const yguipp::Color& color, DrawingMode mode );
     virtual int fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
-                          const yguipp::Color& color, drawing_mode_t mode );
+                          const yguipp::Color& color, DrawingMode mode );
     virtual int drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
                           const yguipp::Color& color, FontNode* font, const char* text, int length );
     virtual int blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap* src,
-                            const yguipp::Rect& rect, drawing_mode_t mode );
+                            const yguipp::Rect& rect, DrawingMode mode );
 
   private:
     int drawRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
@@ -68,8 +67,10 @@ class GraphicsDriver {
     int fillRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
     int fillRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
 
-    int drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
+    int drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, yguipp::Point position,
                     const yguipp::Color& color, FontNode* font, const char* text, int length );
+    int renderGlyph32( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
+                       const yguipp::Color& color, FontGlyph* glyph );
 
     int blitBitmapCopy( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
     int blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );

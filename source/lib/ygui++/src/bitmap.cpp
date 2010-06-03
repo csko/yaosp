@@ -16,8 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui/protocol.h>
-
 #include <ygui++/bitmap.hpp>
 #include <ygui++/application.hpp>
 #include <ygui++/imageloader.hpp>
@@ -25,14 +23,15 @@
 
 namespace yguipp {
 
-Bitmap::Bitmap( const Point& size, color_space_t colorSpace ) : m_id(-1), m_data(NULL), m_region(-1),
-                                                                m_size(size), m_colorSpace(colorSpace) {
+Bitmap::Bitmap( const Point& size, ColorSpace colorSpace ) : m_id(-1), m_data(NULL), m_region(-1),
+                                                             m_size(size), m_colorSpace(colorSpace) {
 }
 
 Bitmap::~Bitmap( void ) {
 }
 
 bool Bitmap::init( void ) {
+#if 0
     uint32_t code;
     Application* app;
     msg_create_bitmap_t request;
@@ -63,6 +62,7 @@ bool Bitmap::init( void ) {
         /* todo: delete bitmap from guiserver */
         return false;
     }
+#endif
 
     return true;
 }

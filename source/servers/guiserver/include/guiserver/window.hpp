@@ -60,7 +60,7 @@ class Window {
 
     yguipp::Rect m_clipRect;
     yguipp::Color m_penColor;
-    drawing_mode_t m_drawingMode;
+    DrawingMode m_drawingMode;
 
     GuiServer* m_guiServer;
 }; /* class Window */

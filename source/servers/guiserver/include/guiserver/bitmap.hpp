@@ -19,12 +19,12 @@
 #ifndef _BITMAP_HPP_
 #define _BITMAP_HPP_
 
-#include <ygui/yconstants.h>
 #include <ygui++/rect.hpp>
+#include <ygui++/yconstants.hpp>
 
 class Bitmap {
   public:
-    Bitmap( uint32_t width, uint32_t height, color_space_t colorSpace, uint8_t* buffer = NULL );
+    Bitmap( uint32_t width, uint32_t height, ColorSpace colorSpace, uint8_t* buffer = NULL );
     ~Bitmap( void );
 
     inline uint32_t width( void ) { return m_width; }
@@ -34,7 +34,7 @@ class Bitmap {
     yguipp::Rect bounds( void );
 
     uint8_t* getBuffer( void );
-    color_space_t getColorSpace( void );
+    ColorSpace getColorSpace( void );
 
   private:
     enum {
@@ -44,7 +44,7 @@ class Bitmap {
   private:
     uint32_t m_width;
     uint32_t m_height;
-    color_space_t m_colorSpace;
+    ColorSpace m_colorSpace;
     uint8_t* m_buffer;
     uint32_t m_flags;
 }; /* class Bitmap */

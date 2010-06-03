@@ -20,8 +20,8 @@
 #define _BUTTON_HPP_
 
 #include <string>
-#include <ygui/yconstants.h>
 
+#include <ygui++/yconstants.hpp>
 #include <ygui++/widget.hpp>
 #include <ygui++/font.hpp>
 

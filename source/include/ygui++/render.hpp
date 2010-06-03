@@ -1,10 +1,9 @@
 #ifndef _RENDER_HPP_
 #define _RENDER_HPP_
 
-#include <ygui/yconstants.h>
-
 #include <ygui++/color.hpp>
 #include <ygui++/rect.hpp>
+#include <ygui++/yconstants.hpp>
 
 namespace yguipp {
 
@@ -41,7 +40,7 @@ struct RSetClipRect {
 
 struct RSetDrawingMode {
     RenderHeader m_header;
-    drawing_mode_t m_drawingMode;
+    DrawingMode m_drawingMode;
 } __attribute__((packed));
 
 struct RDrawRect {

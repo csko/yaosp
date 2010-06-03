@@ -20,10 +20,9 @@
 #define _BITMAP_HPP_
 
 #include <string>
-
 #include <yaosp/region.h>
-#include <ygui/yconstants.h>
 
+#include <ygui++/yconstants.hpp>
 #include <ygui++/object.hpp>
 #include <ygui++/point.hpp>
 
@@ -31,7 +30,7 @@ namespace yguipp {
 
 class Bitmap : public Object {
   public:
-    Bitmap( const Point& size, color_space_t colorSpace = CS_RGB32 );
+    Bitmap( const Point& size, ColorSpace colorSpace = CS_RGB32 );
     virtual ~Bitmap( void );
 
     bool init( void );
@@ -48,7 +47,7 @@ class Bitmap : public Object {
     region_id m_region;
 
     Point m_size;
-    color_space_t m_colorSpace;
+    ColorSpace m_colorSpace;
 
     static const int LOAD_BUFFER_SIZE = 32768;
 }; /* class Bitmap */

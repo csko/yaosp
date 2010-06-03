@@ -20,6 +20,7 @@
 #define _WIDGET_HPP_
 
 #include <vector>
+
 #include <ygui++/object.hpp>
 #include <ygui++/graphicscontext.hpp>
 #include <ygui++/layout/layout.hpp>
