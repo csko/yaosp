@@ -21,6 +21,9 @@
 
 #include <ygui++/point.hpp>
 
+class Window;
+class GraphicsDriver;
+
 class DecoratorData {
 };
 
@@ -32,6 +35,8 @@ class Decorator {
     virtual yguipp::Point getSize(void) = 0;
 
     virtual DecoratorData* createWindowData(void) = 0;
+
+    virtual int update(GraphicsDriver* driver, Window* window) = 0;
 };
 
 #endif /* _DECORATOR_HPP_ */

@@ -73,7 +73,7 @@ Application* Application::createFrom( GuiServer* guiServer, AppCreate* request )
 
 int Application::handleWindowCreate( WinCreate* request ) {
     WinCreateReply reply;
-    Window* win = Window::createFrom(m_guiServer, request);
+    Window* win = Window::createFrom(m_guiServer, this, request);
 
     reply.m_windowId = getWindowId();
     m_windowMap[reply.m_windowId] = win;

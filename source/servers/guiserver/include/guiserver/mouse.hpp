@@ -31,6 +31,9 @@ class MousePointer {
 
     bool init(void);
 
+    inline const yguipp::Point& getPosition(void) { return m_position; }
+    inline const yguipp::Rect& getRect(void) { return m_pointerRect; }
+
     void show(GraphicsDriver* driver, Bitmap* screen);
     bool hide(GraphicsDriver* driver, Bitmap* screen);
 

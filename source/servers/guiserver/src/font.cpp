@@ -52,6 +52,31 @@ FontNode::FontNode(FontStyle* style, const FontInfo& info) : m_style(style), m_i
     m_advance = (size->metrics.max_advance + 63) / 64;
 }
 
+int FontNode::getWidth(const char* text, int length) {
+    int width = 0;
+
+    m_style->lock();
+
+    while (length > 0) {
+        int charLength = FontNode::utf8CharLength(*text);
+
+        if (charLength > length) {
+            break;
+        }
+
+        FontGlyph* glyph = getGlyph( FontNode::utf8ToUnicode(text) );
+
+        text += charLength;
+        length -= charLength;
+
+        width += glyph->getAdvance().m_x;
+    }
+
+    m_style->unLock();
+
+    return width;
+}
+
 FontGlyph* FontNode::getGlyph(int c) {
     int top;
     int left;

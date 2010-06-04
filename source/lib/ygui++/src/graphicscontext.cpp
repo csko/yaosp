@@ -131,17 +131,13 @@ void GraphicsContext::drawBitmap( const Point& p, Bitmap* bitmap ) {
 }
 
 void GraphicsContext::drawText( const Point& p, const std::string& text ) {
-    /*Point realPoint;
-    r_draw_text_t* cmd;
+    RDrawText* cmd;
 
-    realPoint = p + m_leftTop;
-
-    cmd = reinterpret_cast<r_draw_text_t*>( m_window->getRenderTable()->allocate( sizeof(r_draw_text_t) + text.size() ) );
-    cmd->header.command = R_DRAW_TEXT;
-    cmd->length = text.size();
-
-    realPoint.toPointT( &cmd->position );
-    memcpy( reinterpret_cast<void*>(cmd + 1), text.data(), text.size() );*/
+    cmd = reinterpret_cast<RDrawText*>( m_window->getRenderTable()->allocate( sizeof(RDrawText) + text.size() ) );
+    cmd->m_header.m_cmd = R_DRAW_TEXT;
+    cmd->m_position = p + m_leftTop;
+    cmd->m_length = text.size();
+    memcpy( reinterpret_cast<void*>(cmd + 1), text.data(), text.size() );
 
     m_needToFlush = true;
 }

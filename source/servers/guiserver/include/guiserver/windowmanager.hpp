@@ -27,11 +27,14 @@
 #include <guiserver/window.hpp>
 #include <guiserver/graphicsdriver.hpp>
 #include <guiserver/mouse.hpp>
+#include <guiserver/decorator.hpp>
 
 class WindowManager {
   public:
-    WindowManager( GraphicsDriver* graphicsDriver, Bitmap* screenBitmap );
+    WindowManager(GuiServer* guiServer);
     ~WindowManager( void );
+
+    Decorator* getDecorator( void ) { return m_windowDecorator; }
 
     inline int lock( void ) { return m_mutex.lock(); }
     inline int unLock( void ) { return m_mutex.unLock(); }
@@ -52,6 +55,8 @@ class WindowManager {
     int updateWindowRegion( Window* window, const yguipp::Rect& region );
 
   private:
+    Window* getWindowAt( const yguipp::Point& position );
+
     int generateVisibleRegions( int index );
     int doUpdateWindowRegion( Window* window, yguipp::Rect region );
 
@@ -62,6 +67,9 @@ class WindowManager {
     GraphicsDriver* m_graphicsDriver;
     Bitmap* m_screenBitmap;
     MousePointer* m_mousePointer;
+    Decorator* m_windowDecorator;
+
+    Window* m_mouseWindow;
 }; /* class WindowManager */
 
 #endif /* _WINDOWMANAGER_HPP_ */

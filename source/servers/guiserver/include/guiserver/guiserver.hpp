@@ -24,7 +24,6 @@
 #include <guiserver/graphicsdriver.hpp>
 #include <guiserver/windowmanager.hpp>
 #include <guiserver/input.hpp>
-#include <guiserver/decorator.hpp>
 #include <guiserver/font.hpp>
 
 class GuiServer {
@@ -34,13 +33,13 @@ class GuiServer {
     int run( void );
 
     inline GraphicsDriver* getGraphicsDriver(void) { return m_graphicsDriver; }
-    inline Decorator* getDecorator(void) { return m_decorator; }
+    inline Bitmap* getScreenBitmap(void) { return m_screenBitmap; }
     inline WindowManager* getWindowManager(void) { return m_windowManager; }
+    inline FontStorage* getFontStorage(void) { return m_fontStorage; }
 
   private:
     GraphicsDriver* m_graphicsDriver;
     Bitmap* m_screenBitmap;
-    Decorator* m_decorator;
     WindowManager* m_windowManager;
     InputThread* m_inputThread;
     FontStorage* m_fontStorage;

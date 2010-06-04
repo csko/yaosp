@@ -56,9 +56,15 @@ class FontNode {
   public:
     FontNode(FontStyle* style, const FontInfo& info);
 
+    int getWidth(const char* text, int length);
     FontGlyph* getGlyph(int c);
-    inline FontStyle* getStyle(void) { return m_style; }
 
+    inline FontStyle* getStyle(void) { return m_style; }
+    inline int getAscender(void) { return m_ascender; }
+    inline int getDescender(void) { return m_descender; }
+    inline int getLineGap(void) { return m_lineGap; }
+
+  public:
     static inline int utf8CharLength( uint8_t byte ) {
         return (((0xE5000000 >> ( (byte >> 3) & 0x1E) ) & 3) + 1);
     }

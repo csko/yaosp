@@ -22,17 +22,20 @@
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
 
-Window::Window( GuiServer* guiServer ) : m_drawingMode(DM_COPY), m_guiServer(guiServer) {
+Window::Window( GuiServer* guiServer, Application* application ) : m_mouseOnDecorator(false), m_drawingMode(DM_COPY),
+                                                                   m_font(NULL), m_guiServer(guiServer),
+                                                                   m_application(application) {
 }
 
 Window::~Window( void ) {
 }
 
 bool Window::init( WinCreate* request ) {
-    Decorator* decorator = m_guiServer->getDecorator();
+    Decorator* decorator = m_guiServer->getWindowManager()->getDecorator();
 
     m_order = request->m_order;
     m_flags = request->m_flags;
+    m_title = reinterpret_cast<char*>(request + 1);
 
     if (m_flags & WINDOW_NO_BORDER) {
         // todo
@@ -73,10 +76,28 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
     return 0;
 }
 
-Window* Window::createFrom( GuiServer* guiServer, WinCreate* request ) {
-    Window* win = new Window(guiServer);
-    win->init(request);
-    return win;
+int Window::mouseEntered(yguipp::Point position) {
+    m_mouseOnDecorator = !m_clientRect.hasPoint(position);
+
+    if (m_mouseOnDecorator) {
+    } else {
+    }
+
+    return 0;
+}
+
+int Window::mouseExited(void) {
+    if (m_mouseOnDecorator) {
+    } else {
+    }
+
+    return 0;
+}
+
+Window* Window::createFrom( GuiServer* guiServer, Application* application, WinCreate* request ) {
+    Window* window = new Window(guiServer, application);
+    window->init(request);
+    return window;
 }
 
 void Window::handleRender( uint8_t* data, size_t size ) {
@@ -102,7 +123,7 @@ void Window::handleRender( uint8_t* data, size_t size ) {
                 m_clipRect = reinterpret_cast<yguipp::RSetClipRect*>(header)->m_clipRect;
 
                 if ( (m_flags & WINDOW_NO_BORDER) == 0 ) {
-                    m_clipRect += m_guiServer->getDecorator()->leftTop();
+                    m_clipRect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
                 }
 
                 data += sizeof(yguipp::RSetClipRect);
@@ -122,7 +143,7 @@ void Window::handleRender( uint8_t* data, size_t size ) {
                 yguipp::Rect rect = reinterpret_cast<yguipp::RFillRect*>(data)->m_rect;
 
                 if ( (m_flags & WINDOW_NO_BORDER) == 0 ) {
-                    rect += m_guiServer->getDecorator()->leftTop();
+                    rect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
                 }
 
                 m_guiServer->getGraphicsDriver()->fillRect(
@@ -130,6 +151,28 @@ void Window::handleRender( uint8_t* data, size_t size ) {
                 );
 
                 data += sizeof(yguipp::RFillRect);
+                break;
+            }
+
+            case yguipp::R_DRAW_TEXT : {
+                yguipp::RDrawText* cmd = reinterpret_cast<yguipp::RDrawText*>(data);
+
+                if (m_font != NULL) {
+                    yguipp::Point position = cmd->m_position;
+
+                    if ( (m_flags & WINDOW_NO_BORDER) == 0 ) {
+                        position += m_guiServer->getWindowManager()->getDecorator()->leftTop();
+                    }
+
+                    m_guiServer->getGraphicsDriver()->drawText(
+                        m_bitmap, m_clipRect, position, m_penColor, m_font,
+                        reinterpret_cast<char*>(cmd + 1), cmd->m_length
+                    );
+
+                }
+
+                data += sizeof(yguipp::RDrawText);
+                data += cmd->m_length;
                 break;
             }
 

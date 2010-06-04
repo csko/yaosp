@@ -41,7 +41,7 @@ int main( int argc, char** argv ) {
     Window* win = new Window( "Test", Point(50,50), Point(300,300) );
     win->init();
 
-    /*Panel* container = dynamic_cast<Panel*>(win->getContainer());
+    Panel* container = dynamic_cast<Panel*>(win->getContainer());
     container->setLayout( new BorderLayout() );
     container->setBackgroundColor( Color(255,255,255) );
 
@@ -67,9 +67,9 @@ int main( int argc, char** argv ) {
     container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
     container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
     container->addChild(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
-    //container->addChild(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
+    container->addChild(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
 
-    container->addChild(
+    /*container->addChild(
         new Image(Bitmap::loadFromFile("/system/images/yaosp.png")),
         new BorderLayoutData(BorderLayoutData::CENTER)
         );*/

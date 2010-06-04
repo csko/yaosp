@@ -26,12 +26,26 @@ class DefaultDecoratorData : public DecoratorData {
 
 class DefaultDecorator : public Decorator {
   public:
+    DefaultDecorator(GuiServer* guiServer);
     virtual ~DefaultDecorator(void) {}
 
     yguipp::Point leftTop(void);
     yguipp::Point getSize(void);
 
     DecoratorData* createWindowData(void);
+
+    int update(GraphicsDriver* driver, Window* window);
+
+  private:
+    FontNode* m_titleFont;
+
+  private:
+    static const size_t BORDER_LEFT = 3;
+    static const size_t BORDER_TOP = 21;
+    static const size_t BORDER_RIGHT = 3;
+    static const size_t BORDER_BOTTOM = 3;
+
+    static const yguipp::Color TOP_BORDER_COLORS[BORDER_TOP];
 }; /* class DefaultDecorator */
 
 #endif /* _DECORATOR_DEFAULT_HPP_ */

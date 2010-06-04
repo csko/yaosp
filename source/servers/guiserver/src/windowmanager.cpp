@@ -17,13 +17,18 @@
  */
 
 #include <guiserver/windowmanager.hpp>
+#include <guiserver/guiserver.hpp>
 
-WindowManager::WindowManager( GraphicsDriver* graphicsDriver,
-                              Bitmap* screenBitmap ) : m_mutex("wm_lock"), m_graphicsDriver(graphicsDriver),
-                                                       m_screenBitmap(screenBitmap) {
+#include "../driver/decorator/default/default.hpp"
+
+WindowManager::WindowManager(GuiServer* guiServer) : m_mutex("wm_lock"),
+                                                     m_graphicsDriver(guiServer->getGraphicsDriver()),
+                                                     m_screenBitmap(guiServer->getScreenBitmap()),
+                                                     m_mouseWindow(NULL) {
     m_mousePointer = new MousePointer();
     m_mousePointer->init();
-    m_mousePointer->moveTo(NULL, NULL, screenBitmap->size() / 2);
+    m_mousePointer->moveTo(NULL, NULL, m_screenBitmap->size() / 2);
+    m_windowDecorator = new DefaultDecorator(guiServer);
 }
 
 WindowManager::~WindowManager( void ) {
@@ -36,6 +41,12 @@ int WindowManager::enable( void ) {
 
 int WindowManager::registerWindow( Window* window ) {
     size_t i;
+
+    window->setDecoratorData(m_windowDecorator->createWindowData());
+
+    if ((window->getFlags() & WINDOW_NO_BORDER) == 0) {
+        m_windowDecorator->update(m_graphicsDriver, window);
+    }
 
     lock();
 
@@ -53,12 +64,27 @@ int WindowManager::registerWindow( Window* window ) {
 
     doUpdateWindowRegion(window,window->getScreenRect());
 
+    /* Update mouse window if needed. */
+
+    const yguipp::Point& mousePosition = m_mousePointer->getPosition();
+    Window* tmp = getWindowAt(mousePosition);
+
+    if (tmp != m_mouseWindow){
+        if (m_mouseWindow != NULL){
+            m_mouseWindow->mouseExited();
+        }
+
+        m_mouseWindow = tmp;
+        m_mouseWindow->mouseEntered(mousePosition);
+    }
+
     unLock();
 
     return 0;
 }
 
 int WindowManager::unregisterWindow( Window* window ) {
+    // todo
     return 0;
 }
 
@@ -95,6 +121,20 @@ int WindowManager::updateWindowRegion( Window* window, const yguipp::Rect& regio
     return 0;
 }
 
+Window* WindowManager::getWindowAt( const yguipp::Point& position ) {
+    for ( std::vector<Window*>::const_iterator it = m_windowStack.begin();
+          it != m_windowStack.end();
+          ++it ) {
+        Window* window = *it;
+
+        if (window->getScreenRect().hasPoint(position)) {
+            return window;
+        }
+    }
+
+    return NULL;
+}
+
 int WindowManager::generateVisibleRegions( int index ) {
     Window* window = m_windowStack[index];
     Region& visibleRegions = window->getVisibleRegions();
@@ -118,7 +158,7 @@ int WindowManager::generateVisibleRegions( int index ) {
 
 int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
     bool mouseHidden = false;
-    yguipp::Rect mouseRect;// = mouse_get_rect_new();
+    const yguipp::Rect& mouseRect = m_mousePointer->getRect();
     Region& visibleRegions = window->getVisibleRegions();
     yguipp::Point winLeftTop = window->getScreenRect().leftTop();
 
@@ -131,11 +171,11 @@ int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
             continue;
         }
 
-        /*if ( ( !mouseHidden ) &&
+        if ( ( !mouseHidden ) &&
              ( visibleRect.doIntersect(mouseRect) ) ) {
-            hide_mouse_pointer();
+            m_mousePointer->hide(m_graphicsDriver, m_screenBitmap);
             mouseHidden = true;
-            }*/
+        }
 
         m_graphicsDriver->blitBitmap(
             m_screenBitmap, visibleRect.leftTop(),
@@ -145,7 +185,7 @@ int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
     }
 
     if ( mouseHidden ) {
-        //show_mouse_pointer();
+        m_mousePointer->show(m_graphicsDriver, m_screenBitmap);
     }
 
     return 0;

@@ -53,6 +53,12 @@ struct RFillRect {
     Rect m_rect;
 } __attribute__((packed));
 
+struct RDrawText {
+    RenderHeader m_header;
+    Point m_position;
+    int m_length;
+} __attribute__((packed));
+
 } /* namespace yguipp */
 
 #endif /* _RENDER_HPP_ */

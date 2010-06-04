@@ -19,32 +19,44 @@
 #ifndef _WINDOW_HPP_
 #define _WINDOW_HPP_
 
+#include <string>
+
 #include <ygui++/protocol.hpp>
 #include <ygui++/rect.hpp>
 #include <ygui++/color.hpp>
 
 #include <guiserver/region.hpp>
 #include <guiserver/bitmap.hpp>
+#include <guiserver/font.hpp>
 
+class Application;
 class GuiServer;
 class DecoratorData;
 
 class Window {
   private:
-    Window( GuiServer* guiServer );
+    Window( GuiServer* guiServer, Application* application );
     ~Window( void );
 
     bool init( WinCreate* request );
 
   public:
-    inline int getOrder( void ) { return m_order; }
-    inline const yguipp::Rect& getScreenRect( void ) { return m_screenRect; }
-    inline Region& getVisibleRegions( void ) { return m_visibleRegions; }
-    inline Bitmap* getBitmap( void ) { return m_bitmap; }
+    inline int getFlags(void) { return m_flags; }
+    inline int getOrder(void) { return m_order; }
+    inline const yguipp::Rect& getScreenRect(void) { return m_screenRect; }
+    inline Region& getVisibleRegions(void) { return m_visibleRegions; }
+    inline Bitmap* getBitmap(void) { return m_bitmap; }
+    inline DecoratorData* getDecoratorData(void) { return m_decoratorData; }
+    inline const std::string& getTitle(void) { return m_title; }
+
+    inline void setDecoratorData(DecoratorData* data) { m_decoratorData = data; }
 
     int handleMessage( uint32_t code, void* data, size_t size );
 
-    static Window* createFrom( GuiServer* guiServer, WinCreate* request );
+    int mouseEntered(yguipp::Point position);
+    int mouseExited(void);
+
+    static Window* createFrom( GuiServer* guiServer, Application* application, WinCreate* request );
 
   private:
     void handleRender( uint8_t* data, size_t size );
@@ -52,17 +64,21 @@ class Window {
   private:
     int m_order;
     int m_flags;
+    std::string m_title;
     yguipp::Rect m_screenRect;
     yguipp::Rect m_clientRect;
     Region m_visibleRegions;
     Bitmap* m_bitmap;
     DecoratorData* m_decoratorData;
+    bool m_mouseOnDecorator;
 
     yguipp::Rect m_clipRect;
     yguipp::Color m_penColor;
     DrawingMode m_drawingMode;
+    FontNode* m_font;
 
     GuiServer* m_guiServer;
+    Application* m_application;
 }; /* class Window */
 
 #endif /* _WINDOW_HPP_ */
