@@ -34,7 +34,6 @@ class Font : public Object {
     bool init( void );
 
     int getHandle( void );
-
     int getHeight( void );
     int getAscender( void );
     int getDescender( void );

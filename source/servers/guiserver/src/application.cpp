@@ -75,6 +75,10 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
         case Y_FONT_CREATE :
             handleFontCreate(reinterpret_cast<FontCreate*>(data));
             break;
+
+        case Y_FONT_STRING_WIDTH :
+            handleFontStringWidth(reinterpret_cast<FontStringWidth*>(data));
+            break;
     }
 
     return 0;
@@ -115,8 +119,26 @@ int Application::handleFontCreate( FontCreate* request ) {
     }
 
     reply.m_fontHandle = getFontId();
+    reply.m_ascender = fontNode->getAscender();
+    reply.m_descender = fontNode->getDescender();
+    reply.m_lineGap = fontNode->getLineGap();
     m_fontMap[reply.m_fontHandle] = fontNode;
 
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+
+    return 0;
+}
+
+int Application::handleFontStringWidth( FontStringWidth* request ) {
+    FontStringWidthReply reply;
+
+    FontMapCIter it = m_fontMap.find(request->m_fontHandle);
+    if (it == m_fontMap.end()) {
+        reply.m_width = 0;
+        yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+    }
+
+    reply.m_width = it->second->getWidth(reinterpret_cast<char*>(request + 1), request->m_length);
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
 
     return 0;

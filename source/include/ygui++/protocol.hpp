@@ -30,7 +30,8 @@ enum {
     Y_WINDOW_SHOW,
     Y_WINDOW_HIDE,
     Y_WINDOW_RENDER,
-    Y_FONT_CREATE
+    Y_FONT_CREATE,
+    Y_FONT_STRING_WIDTH
 };
 
 struct AppCreate {
@@ -76,6 +77,17 @@ struct FontCreateReply {
     int m_ascender;
     int m_descender;
     int m_lineGap;
+};
+
+struct FontStringWidth {
+    ipc_port_id m_replyPort;
+    int m_fontHandle;
+    int m_length;
+    /* text */
+};
+
+struct FontStringWidthReply {
+    int m_width;
 };
 
 #endif /* _YGUI_PROTOCOL_HPP_ */

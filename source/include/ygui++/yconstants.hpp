@@ -71,8 +71,8 @@ struct FontInfo {
     int m_flags;
 
     bool operator<(const FontInfo& info) const {
-        return ( (m_pointSize < info.m_pointSize) &&
-                 (m_flags < info.m_flags) );
+        return ( (m_pointSize < info.m_pointSize) ||
+                 ((m_pointSize == info.m_pointSize) && (m_flags < info.m_flags)) );
     }
 };
 

@@ -45,6 +45,7 @@ class Application : public yutilpp::IPCListener {
   private:
     int handleWindowCreate( WinCreate* request );
     int handleFontCreate( FontCreate* request );
+    int handleFontStringWidth( FontStringWidth* request );
 
     int getWindowId( void );
     int getFontId( void );
