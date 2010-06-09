@@ -98,7 +98,7 @@ typedef struct vesa_cmd_setmode {
 } vesa_cmd_setmode_t;
 
 struct VesaScreenMode : public ScreenMode {
-    VesaScreenMode( uint32_t width, uint32_t height, ColorSpace colorSpace, uint16_t modeId, void* fbBase ) :
+    VesaScreenMode( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace, uint16_t modeId, void* fbBase ) :
         ScreenMode(width, height, colorSpace), m_modeId(modeId), m_frameBufferBase(fbBase) {}
 
     uint16_t m_modeId;

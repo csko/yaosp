@@ -19,6 +19,8 @@
 #ifndef _YCONSTANTS_HPP_
 #define _YCONSTANTS_HPP_
 
+namespace yguipp {
+
 enum DrawingMode {
     DM_COPY,
     DM_BLEND,
@@ -63,7 +65,7 @@ enum FontFlags {
 };
 
 struct FontInfo {
-    FontInfo(int pointSize, int flags) : m_pointSize(pointSize * 64), m_flags(flags) {}
+    FontInfo(int pointSize, int flags = FONT_SMOOTHED) : m_pointSize(pointSize * 64), m_flags(flags) {}
 
     int m_pointSize;
     int m_flags;
@@ -93,5 +95,7 @@ static inline ColorSpace bpp_to_colorspace( int bitsPerPixel ) {
         default : return CS_UNKNOWN;
     }
 }
+
+} /* namespace yguipp */
 
 #endif /* _YCONSTANTS_HPP_ */

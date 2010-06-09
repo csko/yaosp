@@ -89,7 +89,7 @@ int Label::paint( GraphicsContext* g ) {
 }
 
 void Label::initFont( void ) {
-    m_font = new Font( "DejaVu Sans", "Book", 8 * 64 );
+    m_font = new Font( "DejaVu Sans", "Book", FontInfo(8) );
     m_font->init();
     m_font->incRef();
 }

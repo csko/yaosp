@@ -46,15 +46,15 @@ MousePointer::MousePointer(void) : m_pointer(NULL), m_screenBuffer(NULL), m_visi
 }
 
 bool MousePointer::init(void) {
-    m_pointer = new Bitmap(16, 16, CS_RGB32, reinterpret_cast<uint8_t*>(pointerImage) );
-    m_screenBuffer = new Bitmap(16, 16, CS_RGB32);
+    m_pointer = new Bitmap(16, 16, yguipp::CS_RGB32, reinterpret_cast<uint8_t*>(pointerImage) );
+    m_screenBuffer = new Bitmap(16, 16, yguipp::CS_RGB32);
 
     return true;
 }
 
 void MousePointer::show(GraphicsDriver* driver, Bitmap* screen) {
-    driver->blitBitmap(m_screenBuffer, yguipp::Point(0,0), screen, m_pointerRect, DM_COPY);
-    driver->blitBitmap(screen, m_position, m_pointer, m_pointer->bounds(), DM_BLEND);
+    driver->blitBitmap(m_screenBuffer, yguipp::Point(0,0), screen, m_pointerRect, yguipp::DM_COPY);
+    driver->blitBitmap(screen, m_position, m_pointer, m_pointer->bounds(), yguipp::DM_BLEND);
 
     m_visible = true;
 }
@@ -64,7 +64,7 @@ bool MousePointer::hide(GraphicsDriver* driver, Bitmap* screen) {
         return false;
     }
 
-    driver->blitBitmap(screen, m_position, m_screenBuffer, m_screenBuffer->bounds(), DM_COPY);
+    driver->blitBitmap(screen, m_position, m_screenBuffer, m_screenBuffer->bounds(), yguipp::DM_COPY);
 
     m_visible = false;
 

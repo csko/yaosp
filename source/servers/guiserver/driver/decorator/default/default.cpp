@@ -47,7 +47,7 @@ const yguipp::Color DefaultDecorator::TOP_BORDER_COLORS[DefaultDecorator::BORDER
 };
 
 DefaultDecorator::DefaultDecorator(GuiServer* guiServer) {
-    m_titleFont = guiServer->getFontStorage()->getFontNode("DejaVu Sans", "Bold", FontInfo(8, FONT_SMOOTHED));
+    m_titleFont = guiServer->getFontStorage()->getFontNode("DejaVu Sans", "Bold", yguipp::FontInfo(8));
 }
 
 yguipp::Point DefaultDecorator::leftTop(void) {
@@ -68,22 +68,23 @@ int DefaultDecorator::update(GraphicsDriver* driver, Window* window) {
     /* Border */
 
     for ( size_t i = 0; i < BORDER_TOP; i++ ) {
-        driver->fillRect(bitmap, bitmap->bounds(), yguipp::Rect(0,i,bitmap->width()-1,i), TOP_BORDER_COLORS[i], DM_COPY);
+        driver->fillRect(bitmap, bitmap->bounds(), yguipp::Rect(0,i,bitmap->width()-1,i),
+            TOP_BORDER_COLORS[i], yguipp::DM_COPY);
     }
 
     driver->fillRect(
         bitmap, bitmap->bounds(), yguipp::Rect(0,BORDER_TOP,BORDER_LEFT-1,bitmap->height()-1),
-        TOP_BORDER_COLORS[BORDER_TOP-1], DM_COPY
+        TOP_BORDER_COLORS[BORDER_TOP-1], yguipp::DM_COPY
     );
     driver->fillRect(
         bitmap, bitmap->bounds(),
         yguipp::Rect(bitmap->width()-BORDER_RIGHT+1,BORDER_TOP,bitmap->width()-1,bitmap->height()-1),
-        TOP_BORDER_COLORS[BORDER_TOP-1], DM_COPY
+        TOP_BORDER_COLORS[BORDER_TOP-1], yguipp::DM_COPY
     );
     driver->fillRect(
         bitmap, bitmap->bounds(),
         yguipp::Rect(BORDER_LEFT,bitmap->height()-BORDER_BOTTOM+1,bitmap->width()-BORDER_RIGHT,bitmap->height()-1),
-        TOP_BORDER_COLORS[BORDER_TOP-1], DM_COPY
+        TOP_BORDER_COLORS[BORDER_TOP-1], yguipp::DM_COPY
     );
 
     /* Title */

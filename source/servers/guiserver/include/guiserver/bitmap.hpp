@@ -24,7 +24,7 @@
 
 class Bitmap {
   public:
-    Bitmap( uint32_t width, uint32_t height, ColorSpace colorSpace, uint8_t* buffer = NULL );
+    Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace, uint8_t* buffer = NULL );
     ~Bitmap( void );
 
     inline uint32_t width( void ) { return m_width; }
@@ -34,7 +34,7 @@ class Bitmap {
     yguipp::Rect bounds( void );
 
     uint8_t* getBuffer( void );
-    ColorSpace getColorSpace( void );
+    yguipp::ColorSpace getColorSpace( void );
 
   private:
     enum {
@@ -44,7 +44,7 @@ class Bitmap {
   private:
     uint32_t m_width;
     uint32_t m_height;
-    ColorSpace m_colorSpace;
+    yguipp::ColorSpace m_colorSpace;
     uint8_t* m_buffer;
     uint32_t m_flags;
 }; /* class Bitmap */

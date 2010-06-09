@@ -18,7 +18,7 @@
 
 #include <guiserver/bitmap.hpp>
 
-Bitmap::Bitmap( uint32_t width, uint32_t height, ColorSpace colorSpace,
+Bitmap::Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace,
     uint8_t* buffer ) : m_width(width), m_height(height), m_colorSpace(colorSpace), m_flags(0) {
     if ( buffer == NULL ) {
         m_buffer = new uint8_t[m_width * m_height * colorspace_to_bpp(m_colorSpace) * 8];
@@ -46,6 +46,6 @@ uint8_t* Bitmap::getBuffer( void ) {
     return m_buffer;
 }
 
-ColorSpace Bitmap::getColorSpace( void ) {
+yguipp::ColorSpace Bitmap::getColorSpace( void ) {
     return m_colorSpace;
 }

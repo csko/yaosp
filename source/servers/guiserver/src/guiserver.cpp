@@ -33,11 +33,11 @@ int GuiServer::run( void ) {
     m_graphicsDriver = new VesaDriver();
     m_graphicsDriver->detect();
 
-    ScreenMode mode(640, 480, CS_RGB32);
+    ScreenMode mode(640, 480, yguipp::CS_RGB32);
     m_graphicsDriver->setMode(&mode);
 
     m_screenBitmap = new Bitmap(
-        640, 480, CS_RGB32,
+        640, 480, yguipp::CS_RGB32,
         reinterpret_cast<uint8_t*>(m_graphicsDriver->getFrameBuffer())
     );
 
@@ -51,10 +51,11 @@ int GuiServer::run( void ) {
     m_inputThread->init();
 
     m_graphicsDriver->fillRect(
-        m_screenBitmap, m_screenBitmap->bounds(), yguipp::Rect(0, 0, 639, 479), yguipp::Color(75, 100, 125), DM_COPY
+        m_screenBitmap, m_screenBitmap->bounds(), yguipp::Rect(0, 0, 639, 479),
+        yguipp::Color(75, 100, 125), yguipp::DM_COPY
     );
 
-    FontNode* font = m_fontStorage->getFontNode("DejaVu Sans", "Book", FontInfo(18,FONT_SMOOTHED));
+    FontNode* font = m_fontStorage->getFontNode("DejaVu Sans", "Book", yguipp::FontInfo(18));
     m_graphicsDriver->drawText(
         m_screenBitmap, m_screenBitmap->bounds(), yguipp::Point(50,400), yguipp::Color(255,255,255), font, "Hello", 5
     );

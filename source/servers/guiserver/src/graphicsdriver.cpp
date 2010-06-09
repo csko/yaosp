@@ -20,7 +20,7 @@
 #include <guiserver/graphicsdriver.hpp>
 
 int GraphicsDriver::drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
-                              const yguipp::Color& color, DrawingMode mode ) {
+                              const yguipp::Color& color, yguipp::DrawingMode mode ) {
     yguipp::Rect rectToDraw;
 
     rectToDraw &= clipRect;
@@ -31,14 +31,14 @@ int GraphicsDriver::drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
     }
 
     switch (mode) {
-        case DM_COPY :
+        case yguipp::DM_COPY :
             drawRectCopy(bitmap, rectToDraw, color);
             break;
 
-        case DM_BLEND :
+        case yguipp::DM_BLEND :
             break;
 
-        case DM_INVERT :
+        case yguipp::DM_INVERT :
             break;
     }
 
@@ -46,7 +46,7 @@ int GraphicsDriver::drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
 }
 
 int GraphicsDriver::fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
-                              const yguipp::Color& color, DrawingMode mode ) {
+                              const yguipp::Color& color, yguipp::DrawingMode mode ) {
     yguipp::Rect rectToFill = rect;
 
     rectToFill &= clipRect;
@@ -57,14 +57,14 @@ int GraphicsDriver::fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
     }
 
     switch (mode) {
-        case DM_COPY :
+        case yguipp::DM_COPY :
             fillRectCopy(bitmap, rectToFill, color);
             break;
 
-        case DM_BLEND :
+        case yguipp::DM_BLEND :
             break;
 
-        case DM_INVERT :
+        case yguipp::DM_INVERT :
             break;
     }
 
@@ -74,7 +74,7 @@ int GraphicsDriver::fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
 int GraphicsDriver::drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
                               const yguipp::Color& color, FontNode* font, const char* text, int length ) {
     switch ( (int)bitmap->getColorSpace() ) {
-        case CS_RGB32 :
+        case yguipp::CS_RGB32 :
             drawText32(bitmap, clipRect, position, color, font, text, length);
             break;
     }
@@ -83,7 +83,7 @@ int GraphicsDriver::drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
 }
 
 int GraphicsDriver::blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap* src,
-                                const yguipp::Rect& rect, DrawingMode mode ) {
+                                const yguipp::Rect& rect, yguipp::DrawingMode mode ) {
     yguipp::Rect rectToBlit = rect;
 
     rectToBlit &= src->bounds();
@@ -94,15 +94,15 @@ int GraphicsDriver::blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap
     }
 
     switch (mode) {
-        case DM_COPY :
+        case yguipp::DM_COPY :
             blitBitmapCopy(dest, point, src, rectToBlit);
             break;
 
-        case DM_BLEND :
+        case yguipp::DM_BLEND :
             blitBitmapBlend(dest, point, src, rectToBlit);
             break;
 
-        case DM_INVERT :
+        case yguipp::DM_INVERT :
             break;
     }
 
@@ -111,7 +111,7 @@ int GraphicsDriver::blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap
 
 int GraphicsDriver::drawRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color ) {
     switch ( (int)bitmap->getColorSpace() ) {
-        case CS_RGB32 :
+        case yguipp::CS_RGB32 :
             drawRectCopy32(bitmap, rect, color);
             break;
     }
@@ -130,7 +130,7 @@ int GraphicsDriver::drawRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, co
 
 int GraphicsDriver::fillRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color ) {
     switch ( (int)bitmap->getColorSpace() ) {
-        case CS_RGB32 :
+        case yguipp::CS_RGB32 :
             fillRectCopy32(bitmap, rect, color);
             break;
     }
@@ -235,7 +235,7 @@ int GraphicsDriver::renderGlyph32( Bitmap* bitmap, const yguipp::Rect& clipRect,
 
 int GraphicsDriver::blitBitmapCopy( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect ) {
     switch ( (int)dest->getColorSpace() ) {
-        case CS_RGB32 :
+        case yguipp::CS_RGB32 :
             blitBitmapCopy32(dest, point, src, rect);
             break;
     }
@@ -247,7 +247,7 @@ int GraphicsDriver::blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, 
     uint32_t* dst_buffer = reinterpret_cast<uint32_t*>(dest->getBuffer()) + point.m_y * dest->width() + point.m_x;
 
     switch ( (int)src->getColorSpace() ) {
-        case CS_RGB32 : {
+        case yguipp::CS_RGB32 : {
             uint32_t* src_buffer = reinterpret_cast<uint32_t*>(src->getBuffer()) +
                 rect.m_top * src->width() + rect.m_left;
 
@@ -266,7 +266,7 @@ int GraphicsDriver::blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, 
 
 int GraphicsDriver::blitBitmapBlend( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect ) {
     switch ( (int)dest->getColorSpace() ) {
-        case CS_RGB32 :
+        case yguipp::CS_RGB32 :
             blitBitmapBlend32(dest, point, src, rect);
             break;
     }
@@ -280,7 +280,7 @@ int GraphicsDriver::blitBitmapBlend32( Bitmap* dest, const yguipp::Point& point,
     uint32_t* dst_buffer = reinterpret_cast<uint32_t*>(dest->getBuffer()) + point.m_y * dest->width() + point.m_x;
 
     switch ( (int)src->getColorSpace() ) {
-        case CS_RGB32 : {
+        case yguipp::CS_RGB32 : {
             int src_modulo = src->width() - rect.width();
             uint32_t* src_buffer = reinterpret_cast<uint32_t*>(src->getBuffer()) +
                 rect.m_top * src->width() + rect.m_left;

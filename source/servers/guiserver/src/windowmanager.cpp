@@ -44,7 +44,7 @@ int WindowManager::registerWindow( Window* window ) {
 
     window->setDecoratorData(m_windowDecorator->createWindowData());
 
-    if ((window->getFlags() & WINDOW_NO_BORDER) == 0) {
+    if ((window->getFlags() & yguipp::WINDOW_NO_BORDER) == 0) {
         m_windowDecorator->update(m_graphicsDriver, window);
     }
 
@@ -180,7 +180,7 @@ int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
         m_graphicsDriver->blitBitmap(
             m_screenBitmap, visibleRect.leftTop(),
             window->getBitmap(), visibleRect - winLeftTop,
-            DM_COPY
+            yguipp::DM_COPY
         );
     }
 

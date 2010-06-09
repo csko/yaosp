@@ -20,9 +20,10 @@
 
 #include <guiserver/application.hpp>
 #include <guiserver/window.hpp>
+#include <guiserver/guiserver.hpp>
 
 Application::Application( GuiServer* guiServer ) : IPCListener("app"), m_clientPort(NULL), m_nextWinId(0),
-                                                   m_guiServer(guiServer) {
+                                                   m_nextFontId(0), m_guiServer(guiServer) {
 }
 
 Application::~Application( void ) {
@@ -42,10 +43,20 @@ bool Application::init( AppCreate* request ) {
     return true;
 }
 
+FontNode* Application::getFont(int fontHandle) {
+    FontMapCIter it = m_fontMap.find(fontHandle);
+
+    if (it == m_fontMap.end()) {
+        return NULL;
+    }
+
+    return it->second;
+}
+
 int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
     switch (code) {
         case Y_WINDOW_CREATE :
-            handleWindowCreate( reinterpret_cast<WinCreate*>(data) );
+            handleWindowCreate(reinterpret_cast<WinCreate*>(data));
             break;
 
         case Y_WINDOW_SHOW :
@@ -60,6 +71,10 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
 
             break;
         }
+
+        case Y_FONT_CREATE :
+            handleFontCreate(reinterpret_cast<FontCreate*>(data));
+            break;
     }
 
     return 0;
@@ -83,14 +98,50 @@ int Application::handleWindowCreate( WinCreate* request ) {
     return 0;
 }
 
+int Application::handleFontCreate( FontCreate* request ) {
+    char* family;
+    char* style;
+    FontNode* fontNode;
+    FontCreateReply reply;
+
+    family = reinterpret_cast<char*>(request + 1);
+    style = family + strlen(family) + 1;
+    fontNode = m_guiServer->getFontStorage()->getFontNode(family, style, request->m_fontInfo);
+
+    if (fontNode == NULL) {
+        reply.m_fontHandle = -1;
+        yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+        return 0;
+    }
+
+    reply.m_fontHandle = getFontId();
+    m_fontMap[reply.m_fontHandle] = fontNode;
+
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+
+    return 0;
+}
+
 int Application::getWindowId( void ) {
     while ( m_windowMap.find(m_nextWinId) != m_windowMap.end() ) {
         m_nextWinId++;
 
-        if ( m_nextWinId < 0 ) {
+        if (m_nextWinId < 0) {
             m_nextWinId = 0;
         }
     }
 
     return m_nextWinId;
+}
+
+int Application::getFontId( void ) {
+    while ( m_fontMap.find(m_nextFontId) != m_fontMap.end() ) {
+        m_nextFontId++;
+
+        if (m_nextFontId < 0) {
+            m_nextFontId = 0;
+        }
+    }
+
+    return m_nextFontId;
 }

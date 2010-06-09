@@ -74,7 +74,7 @@ class Window {
 
     yguipp::Rect m_clipRect;
     yguipp::Color m_penColor;
-    DrawingMode m_drawingMode;
+    yguipp::DrawingMode m_drawingMode;
     FontNode* m_font;
 
     GuiServer* m_guiServer;

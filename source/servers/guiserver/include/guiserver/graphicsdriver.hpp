@@ -27,8 +27,8 @@
 #include <guiserver/font.hpp>
 
 struct ScreenMode {
-    ScreenMode( uint32_t width, uint32_t height, ColorSpace colorSpace ) : m_width(width), m_height(height),
-                                                                           m_colorSpace(colorSpace) {}
+    ScreenMode( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace ) : m_width(width), m_height(height),
+                                                                                   m_colorSpace(colorSpace) {}
 
     bool operator==( const ScreenMode& mode ) {
         return ( ( m_width == mode.m_width ) &&
@@ -38,7 +38,7 @@ struct ScreenMode {
 
     uint32_t m_width;
     uint32_t m_height;
-    ColorSpace m_colorSpace;
+    yguipp::ColorSpace m_colorSpace;
 };
 
 class GraphicsDriver {
@@ -52,13 +52,13 @@ class GraphicsDriver {
     virtual bool setMode( ScreenMode* info ) = 0;
     virtual void* getFrameBuffer( void ) = 0;
     virtual int drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
-                          const yguipp::Color& color, DrawingMode mode );
+                          const yguipp::Color& color, yguipp::DrawingMode mode );
     virtual int fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
-                          const yguipp::Color& color, DrawingMode mode );
+                          const yguipp::Color& color, yguipp::DrawingMode mode );
     virtual int drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
                           const yguipp::Color& color, FontNode* font, const char* text, int length );
     virtual int blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap* src,
-                            const yguipp::Rect& rect, DrawingMode mode );
+                            const yguipp::Rect& rect, yguipp::DrawingMode mode );
 
   private:
     int drawRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );

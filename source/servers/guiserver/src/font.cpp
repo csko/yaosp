@@ -32,7 +32,7 @@ FontGlyph::~FontGlyph(void) {
     delete[] m_raster;
 }
 
-FontNode::FontNode(FontStyle* style, const FontInfo& info) : m_style(style), m_info(info) {
+FontNode::FontNode(FontStyle* style, const yguipp::FontInfo& info) : m_style(style), m_info(info) {
     m_glyphTable = new FontGlyph*[style->getGlyphCount()];
 
     for ( int i = 0; i < style->getGlyphCount(); i++ ) {
@@ -120,7 +120,7 @@ FontGlyph* FontNode::getGlyph(int c) {
     }
 
     if (m_style->isScalable()) {
-        if (m_info.m_flags & FONT_SMOOTHED) {
+        if (m_info.m_flags & yguipp::FONT_SMOOTHED) {
             error = FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
         } else {
             error = FT_Render_Glyph(glyph, FT_RENDER_MODE_MONO);
@@ -219,9 +219,9 @@ FontStyle::FontStyle(FT_Face face) : m_face(face), m_mutex("style_lock") {
     m_fixedWidth = ((face->face_flags & FT_FACE_FLAG_FIXED_WIDTH) != 0);
 }
 
-FontNode* FontStyle::getNode(const FontInfo& info) {
+FontNode* FontStyle::getNode(const yguipp::FontInfo& info) {
     FontNode* node;
-    std::map<FontInfo, FontNode*>::const_iterator it = m_nodes.find(info);
+    std::map<yguipp::FontInfo, FontNode*>::const_iterator it = m_nodes.find(info);
 
     if (it == m_nodes.end()) {
         node = new FontNode(this, info);
@@ -319,7 +319,7 @@ bool FontStorage::loadFonts(void) {
     return true;
 }
 
-FontNode* FontStorage::getFontNode(const std::string& family, const std::string& style, const FontInfo& info) {
+FontNode* FontStorage::getFontNode(const std::string& family, const std::string& style, const yguipp::FontInfo& info) {
     std::map<std::string, FontFamily*>::const_iterator it = m_families.find(family);
 
     if (it == m_families.end()) {

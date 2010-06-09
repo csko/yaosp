@@ -26,6 +26,7 @@
 
 class Window;
 class GuiServer;
+class FontNode;
 
 class Application : public yutilpp::IPCListener {
   private:
@@ -35,22 +36,31 @@ class Application : public yutilpp::IPCListener {
     bool init( AppCreate* request );
 
   public:
+    FontNode* getFont(int fontHandle);
+
     int ipcDataAvailable( uint32_t code, void* data, size_t size );
 
     static Application* createFrom( GuiServer* guiServer, AppCreate* request );
 
   private:
     int handleWindowCreate( WinCreate* request );
+    int handleFontCreate( FontCreate* request );
+
     int getWindowId( void );
+    int getFontId( void );
 
   private:
     yutilpp::IPCPort* m_clientPort;
 
     typedef std::map<int, Window*> WindowMap;
     typedef WindowMap::const_iterator WindowMapCIter;
+    typedef std::map<int, FontNode*> FontMap;
+    typedef FontMap::const_iterator FontMapCIter;
 
     int m_nextWinId;
     WindowMap m_windowMap;
+    int m_nextFontId;
+    FontMap m_fontMap;
 
     GuiServer* m_guiServer;
 }; /* class Application */

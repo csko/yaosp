@@ -22,13 +22,15 @@
 #include <yaosp/ipc.h>
 
 #include <ygui++/point.hpp>
+#include <ygui++/yconstants.hpp>
 
 enum {
     Y_APPLICATION_CREATE = 1000000,
     Y_WINDOW_CREATE,
     Y_WINDOW_SHOW,
     Y_WINDOW_HIDE,
-    Y_WINDOW_RENDER
+    Y_WINDOW_RENDER,
+    Y_FONT_CREATE
 };
 
 struct AppCreate {
@@ -60,6 +62,20 @@ struct WinHeader {
 
 struct WinShow {
     WinHeader m_header;
+};
+
+struct FontCreate {
+    ipc_port_id m_replyPort;
+    yguipp::FontInfo m_fontInfo;
+    /* family */
+    /* style */
+};
+
+struct FontCreateReply {
+    int m_fontHandle;
+    int m_ascender;
+    int m_descender;
+    int m_lineGap;
 };
 
 #endif /* _YGUI_PROTOCOL_HPP_ */

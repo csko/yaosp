@@ -81,7 +81,7 @@ bool VesaDriver::detect( void ) {
 
         m_screenModes.push_back(
             new VesaScreenMode(
-                modeInfo->width, modeInfo->height, bpp_to_colorspace(modeInfo->bits_per_pixel),
+                modeInfo->width, modeInfo->height, yguipp::bpp_to_colorspace(modeInfo->bits_per_pixel),
                 idTable[i], reinterpret_cast<void*>(modeInfo->phys_base_ptr)
             )
         );

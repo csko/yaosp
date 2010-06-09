@@ -57,10 +57,13 @@ void GraphicsContext::setPenColor( const Color& pen ) {
 
 void GraphicsContext::setClipRect( const Rect& rect ) {
     RSetClipRect* cmd;
+    const Rect& resArea = currentRestrictedArea();
+
+    m_clipRect = (rect + m_leftTop) & resArea;
 
     cmd = reinterpret_cast<RSetClipRect*>( m_window->getRenderTable()->allocate( sizeof(RSetClipRect) ) );
     cmd->m_header.m_cmd = R_SET_CLIP_RECT;
-    cmd->m_clipRect = rect;
+    cmd->m_clipRect = m_clipRect;
 }
 
 void GraphicsContext::setFont( Font* font ) {
@@ -80,7 +83,7 @@ void GraphicsContext::fillRect( const Rect& r ) {
     RFillRect* cmd;
     Rect visibleRect;
 
-    visibleRect = ( r + m_leftTop ) & m_clipRect;
+    visibleRect = (r + m_leftTop) & m_clipRect;
 
     if ( !visibleRect.isValid() ) {
         return;

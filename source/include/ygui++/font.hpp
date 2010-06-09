@@ -22,12 +22,13 @@
 #include <string>
 
 #include <ygui++/object.hpp>
+#include <ygui++/yconstants.hpp>
 
 namespace yguipp {
 
 class Font : public Object {
   public:
-    Font( const std::string& name, const std::string& style, int size );
+    Font( const std::string& name, const std::string& style, const FontInfo& fontInfo );
     virtual ~Font( void );
 
     bool init( void );
@@ -49,7 +50,7 @@ class Font : public Object {
 
     std::string m_name;
     std::string m_style;
-    int m_size;
+    FontInfo m_fontInfo;
 }; /* class Font */
 
 } /* namespace yguipp */
