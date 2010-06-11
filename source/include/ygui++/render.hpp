@@ -59,6 +59,12 @@ struct RDrawText {
     int m_length;
 } __attribute__((packed));
 
+struct RDrawBitmap {
+    RenderHeader m_header;
+    Point m_position;
+    int m_bitmapHandle;
+} __attribute__((packed));
+
 } /* namespace yguipp */
 
 #endif /* _RENDER_HPP_ */

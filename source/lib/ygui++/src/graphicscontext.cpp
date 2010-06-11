@@ -100,7 +100,7 @@ void GraphicsContext::drawRect( const Rect& r ) {
     RDrawRect* cmd;
     Rect visibleRect;
 
-    visibleRect = ( r + m_leftTop ) & m_clipRect;
+    visibleRect = (r + m_leftTop) & m_clipRect;
 
     if ( !visibleRect.isValid() ) {
         return;
@@ -114,21 +114,20 @@ void GraphicsContext::drawRect( const Rect& r ) {
 }
 
 void GraphicsContext::drawBitmap( const Point& p, Bitmap* bitmap ) {
-    /*Rect visibleRect;
-    Point bitmapLeftTop;
-    r_draw_bitmap_t* cmd;
+    RDrawBitmap* cmd;
+    Rect visibleRect;
+    Point bitmapLeftTop = m_leftTop + p;
 
-    bitmapLeftTop = m_leftTop + p;
-    visibleRect = ( Rect(bitmap->getSize()) + bitmapLeftTop ) & m_clipRect;
+    visibleRect = (bitmap->bounds() + bitmapLeftTop) & m_clipRect;
 
-    if ( !visibleRect.isValid() ) {
+    if (!visibleRect.isValid()) {
         return;
     }
 
-    cmd = reinterpret_cast<r_draw_bitmap_t*>( m_window->getRenderTable()->allocate( sizeof(r_draw_bitmap_t) ) );
-    cmd->header.command = R_DRAW_BITMAP;
-    cmd->bitmap_id = bitmap->getId();
-    bitmapLeftTop.toPointT( &cmd->position );*/
+    cmd = reinterpret_cast<RDrawBitmap*>( m_window->getRenderTable()->allocate( sizeof(RDrawBitmap) ) );
+    cmd->m_header.m_cmd = R_DRAW_BITMAP;
+    cmd->m_position = bitmapLeftTop;
+    cmd->m_bitmapHandle = bitmap->getHandle();
 
     m_needToFlush = true;
 }

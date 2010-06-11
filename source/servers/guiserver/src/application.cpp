@@ -21,9 +21,10 @@
 #include <guiserver/application.hpp>
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
+#include <guiserver/bitmap.hpp>
 
 Application::Application( GuiServer* guiServer ) : IPCListener("app"), m_clientPort(NULL), m_nextWinId(0),
-                                                   m_nextFontId(0), m_guiServer(guiServer) {
+                                                   m_nextFontId(0), m_nextBitmapId(0), m_guiServer(guiServer) {
 }
 
 Application::~Application( void ) {
@@ -47,6 +48,16 @@ FontNode* Application::getFont(int fontHandle) {
     FontMapCIter it = m_fontMap.find(fontHandle);
 
     if (it == m_fontMap.end()) {
+        return NULL;
+    }
+
+    return it->second;
+}
+
+Bitmap* Application::getBitmap(int bitmapHandle) {
+    BitmapMapCIter it = m_bitmapMap.find(bitmapHandle);
+
+    if (it == m_bitmapMap.end()) {
         return NULL;
     }
 
@@ -78,6 +89,10 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
 
         case Y_FONT_STRING_WIDTH :
             handleFontStringWidth(reinterpret_cast<FontStringWidth*>(data));
+            break;
+
+        case Y_BITMAP_CREATE :
+            handleBitmapCreate(reinterpret_cast<BitmapCreate*>(data));
             break;
     }
 
@@ -136,9 +151,43 @@ int Application::handleFontStringWidth( FontStringWidth* request ) {
     if (it == m_fontMap.end()) {
         reply.m_width = 0;
         yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+        return 0;
     }
 
     reply.m_width = it->second->getWidth(reinterpret_cast<char*>(request + 1), request->m_length);
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+
+    return 0;
+}
+
+int Application::handleBitmapCreate( BitmapCreate* request ) {
+    size_t size;
+    void* buffer;
+    Bitmap* bitmap;
+    region_id region;
+    BitmapCreateReply reply;
+
+    size = request->m_size.m_x * request->m_size.m_y * colorspace_to_bpp(request->m_colorSpace);
+    region = memory_region_create("bitmap", PAGE_ALIGN(size), REGION_READ | REGION_WRITE, &buffer);
+
+    if (region < 0) {
+        reply.m_bitmapHandle = -1;
+        yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+        return 0;
+    }
+
+    if (memory_region_alloc_pages(region) != 0) {
+        reply.m_bitmapHandle = -1;
+        yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+        return 0;
+    }
+
+    bitmap = new Bitmap(request->m_size.m_x, request->m_size.m_y, request->m_colorSpace,
+                        reinterpret_cast<uint8_t*>(buffer), region);
+    reply.m_bitmapHandle = getBitmapId();
+    reply.m_bitmapRegion = region;
+    m_bitmapMap[reply.m_bitmapHandle] = bitmap;
+
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
 
     return 0;
@@ -166,4 +215,16 @@ int Application::getFontId( void ) {
     }
 
     return m_nextFontId;
+}
+
+int Application::getBitmapId( void ) {
+    while ( m_bitmapMap.find(m_nextBitmapId) != m_bitmapMap.end() ) {
+        m_nextBitmapId++;
+
+        if (m_nextBitmapId < 0) {
+            m_nextBitmapId = 0;
+        }
+    }
+
+    return m_nextBitmapId;
 }

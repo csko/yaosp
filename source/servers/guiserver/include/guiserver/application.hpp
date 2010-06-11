@@ -27,6 +27,7 @@
 class Window;
 class GuiServer;
 class FontNode;
+class Bitmap;
 
 class Application : public yutilpp::IPCListener {
   private:
@@ -37,6 +38,7 @@ class Application : public yutilpp::IPCListener {
 
   public:
     FontNode* getFont(int fontHandle);
+    Bitmap* getBitmap(int bitmapHandle);
 
     int ipcDataAvailable( uint32_t code, void* data, size_t size );
 
@@ -46,9 +48,11 @@ class Application : public yutilpp::IPCListener {
     int handleWindowCreate( WinCreate* request );
     int handleFontCreate( FontCreate* request );
     int handleFontStringWidth( FontStringWidth* request );
+    int handleBitmapCreate( BitmapCreate* request );
 
     int getWindowId( void );
     int getFontId( void );
+    int getBitmapId( void );
 
   private:
     yutilpp::IPCPort* m_clientPort;
@@ -57,11 +61,15 @@ class Application : public yutilpp::IPCListener {
     typedef WindowMap::const_iterator WindowMapCIter;
     typedef std::map<int, FontNode*> FontMap;
     typedef FontMap::const_iterator FontMapCIter;
+    typedef std::map<int, Bitmap*> BitmapMap;
+    typedef BitmapMap::const_iterator BitmapMapCIter;
 
     int m_nextWinId;
     WindowMap m_windowMap;
     int m_nextFontId;
     FontMap m_fontMap;
+    int m_nextBitmapId;
+    BitmapMap m_bitmapMap;
 
     GuiServer* m_guiServer;
 }; /* class Application */

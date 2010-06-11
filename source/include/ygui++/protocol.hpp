@@ -20,6 +20,7 @@
 #define _YGUI_PROTOCOL_HPP_
 
 #include <yaosp/ipc.h>
+#include <yaosp/region.h>
 
 #include <ygui++/point.hpp>
 #include <ygui++/yconstants.hpp>
@@ -31,7 +32,8 @@ enum {
     Y_WINDOW_HIDE,
     Y_WINDOW_RENDER,
     Y_FONT_CREATE,
-    Y_FONT_STRING_WIDTH
+    Y_FONT_STRING_WIDTH,
+    Y_BITMAP_CREATE
 };
 
 struct AppCreate {
@@ -88,6 +90,17 @@ struct FontStringWidth {
 
 struct FontStringWidthReply {
     int m_width;
+};
+
+struct BitmapCreate {
+    ipc_port_id m_replyPort;
+    yguipp::Point m_size;
+    yguipp::ColorSpace m_colorSpace;
+};
+
+struct BitmapCreateReply {
+    int m_bitmapHandle;
+    region_id m_bitmapRegion;
 };
 
 #endif /* _YGUI_PROTOCOL_HPP_ */

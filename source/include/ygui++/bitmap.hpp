@@ -24,7 +24,7 @@
 
 #include <ygui++/yconstants.hpp>
 #include <ygui++/object.hpp>
-#include <ygui++/point.hpp>
+#include <ygui++/rect.hpp>
 
 namespace yguipp {
 
@@ -35,14 +35,15 @@ class Bitmap : public Object {
 
     bool init( void );
 
-    int getId( void );
+    Rect bounds(void);
+    int getHandle( void );
     uint8_t* getData( void );
     const Point& getSize( void );
 
     static Bitmap* loadFromFile( const std::string& path );
 
   private:
-    int m_id;
+    int m_handle;
     uint8_t* m_data;
     region_id m_region;
 

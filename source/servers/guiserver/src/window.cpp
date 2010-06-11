@@ -188,6 +188,33 @@ void Window::handleRender( uint8_t* data, size_t size ) {
                 break;
             }
 
+            case yguipp::R_DRAW_BITMAP : {
+                yguipp::RDrawBitmap* cmd = reinterpret_cast<yguipp::RDrawBitmap*>(data);
+                Bitmap* bitmap = m_application->getBitmap(cmd->m_bitmapHandle);
+
+                if (bitmap != NULL) {
+                    yguipp::Rect bmpRect;
+                    yguipp::Point position = cmd->m_position;
+
+                    if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
+                        position += m_guiServer->getWindowManager()->getDecorator()->leftTop();
+                    }
+
+                    bmpRect = (bitmap->bounds() + position) & m_clipRect;
+
+                    if (bmpRect.isValid()) {
+                        m_guiServer->getGraphicsDriver()->blitBitmap(
+                            m_bitmap, bmpRect.leftTop(),
+                            bitmap, bmpRect - position,
+                            m_drawingMode
+                        );
+                    }
+                }
+
+                data += sizeof(yguipp::RDrawBitmap);
+                break;
+            }
+
             case yguipp::R_DONE :
                 m_guiServer->getWindowManager()->updateWindowRegion(this, m_screenRect);
                 data += sizeof(yguipp::RenderHeader);

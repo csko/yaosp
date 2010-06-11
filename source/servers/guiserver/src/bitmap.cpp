@@ -19,7 +19,8 @@
 #include <guiserver/bitmap.hpp>
 
 Bitmap::Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace,
-    uint8_t* buffer ) : m_width(width), m_height(height), m_colorSpace(colorSpace), m_flags(0) {
+                uint8_t* buffer, region_id region ) : m_width(width), m_height(height), m_colorSpace(colorSpace),
+                                                      m_flags(0), m_region(region) {
     if ( buffer == NULL ) {
         m_buffer = new uint8_t[m_width * m_height * colorspace_to_bpp(m_colorSpace) * 8];
         m_flags |= FREE_BUFFER;
@@ -29,7 +30,9 @@ Bitmap::Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace,
 }
 
 Bitmap::~Bitmap( void ) {
-    if ( m_flags & FREE_BUFFER ) {
+    // todo: delete region
+
+    if (m_flags & FREE_BUFFER) {
         delete[] m_buffer;
     }
 }

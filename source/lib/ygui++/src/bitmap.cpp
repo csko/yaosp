@@ -19,11 +19,12 @@
 #include <ygui++/bitmap.hpp>
 #include <ygui++/application.hpp>
 #include <ygui++/imageloader.hpp>
+#include <ygui++/protocol.hpp>
 #include <yutil++/storage/file.hpp>
 
 namespace yguipp {
 
-Bitmap::Bitmap( const Point& size, ColorSpace colorSpace ) : m_id(-1), m_data(NULL), m_region(-1),
+Bitmap::Bitmap( const Point& size, ColorSpace colorSpace ) : m_handle(-1), m_data(NULL), m_region(-1),
                                                              m_size(size), m_colorSpace(colorSpace) {
 }
 
@@ -31,44 +32,39 @@ Bitmap::~Bitmap( void ) {
 }
 
 bool Bitmap::init( void ) {
-#if 0
     uint32_t code;
-    Application* app;
-    msg_create_bitmap_t request;
-    msg_create_bmp_reply_t reply;
+    BitmapCreate request;
+    BitmapCreateReply reply;
+    Application* app = Application::getInstance();
 
-    app = Application::getInstance();
+    request.m_replyPort = app->getReplyPort()->getId();
+    request.m_size = m_size;
+    request.m_colorSpace = m_colorSpace;
 
-    request.reply_port = app->getReplyPort()->getId();
-    request.width = m_size.m_x;
-    request.height = m_size.m_y;
-    request.color_space = m_colorSpace;
+    app->getServerPort()->send(Y_BITMAP_CREATE, reinterpret_cast<void*>(&request), sizeof(request));
+    app->getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(reply));
 
-    app->lock();
-
-    app->getServerPort()->send( MSG_BITMAP_CREATE, reinterpret_cast<void*>(&request), sizeof(msg_create_bitmap_t) );
-    app->getReplyPort()->receive( code, reinterpret_cast<void*>(&reply), sizeof(msg_create_bmp_reply_t) );
-
-    app->unLock();
-
-    if ( reply.id < 0 ) {
+    if (reply.m_bitmapHandle < 0) {
         return false;
     }
 
-    m_id = reply.id;
-    m_region = memory_region_clone_pages( reply.bitmap_region, reinterpret_cast<void**>(&m_data) );
+    m_handle = reply.m_bitmapHandle;
+    m_region = memory_region_clone_pages(reply.m_bitmapRegion, reinterpret_cast<void**>(&m_data));
 
-    if ( m_region < 0 ) {
-        /* todo: delete bitmap from guiserver */
+    if (m_region < 0) {
+        /* todo: delete from guiserver */
         return false;
     }
-#endif
 
     return true;
 }
 
-int Bitmap::getId( void ) {
-    return m_id;
+Rect Bitmap::bounds( void ) {
+    return Rect(m_size);
+}
+
+int Bitmap::getHandle( void ) {
+    return m_handle;
 }
 
 uint8_t* Bitmap::getData( void ) {

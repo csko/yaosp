@@ -19,12 +19,15 @@
 #ifndef _BITMAP_HPP_
 #define _BITMAP_HPP_
 
+#include <yaosp/region.h>
+
 #include <ygui++/rect.hpp>
 #include <ygui++/yconstants.hpp>
 
 class Bitmap {
   public:
-    Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace, uint8_t* buffer = NULL );
+    Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace,
+            uint8_t* buffer = NULL, region_id region = -1 );
     ~Bitmap( void );
 
     inline uint32_t width( void ) { return m_width; }
@@ -47,6 +50,7 @@ class Bitmap {
     yguipp::ColorSpace m_colorSpace;
     uint8_t* m_buffer;
     uint32_t m_flags;
+    region_id m_region;
 }; /* class Bitmap */
 
 #endif /* _BITMAP_HPP_ */
