@@ -31,6 +31,12 @@ enum {
     Y_WINDOW_SHOW,
     Y_WINDOW_HIDE,
     Y_WINDOW_RENDER,
+    Y_WINDOW_MOUSE_ENTERED,
+    Y_WINDOW_MOUSE_MOVED,
+    Y_WINDOW_MOUSE_EXITED,
+    Y_WINDOW_MOUSE_PRESSED,
+    Y_WINDOW_MOUSE_RELEASED,
+    Y_WINDOW_WIDGET_INVALIDATED,
     Y_FONT_CREATE,
     Y_FONT_STRING_WIDTH,
     Y_BITMAP_CREATE
@@ -65,6 +71,31 @@ struct WinHeader {
 
 struct WinShow {
     WinHeader m_header;
+};
+
+struct WinMouseEntered {
+    WinHeader m_header;
+    yguipp::Point m_position;
+};
+
+struct WinMouseMoved {
+    WinHeader m_header;
+    yguipp::Point m_position;
+};
+
+struct WinMouseExited {
+    WinHeader m_header;
+};
+
+struct WinMousePressed {
+    WinHeader m_header;
+    yguipp::Point m_position;
+    int m_button;
+};
+
+struct WinMouseReleased {
+    WinHeader m_header;
+    int m_button;
 };
 
 struct FontCreate {

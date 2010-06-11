@@ -40,8 +40,8 @@ class Button : public Widget {
   public:
     Point getPreferredSize( void );
     int paint( GraphicsContext* g );
-    int mousePressed( const Point& p );
-    int mouseReleased( void );
+    int mousePressed( const Point& p, int button );
+    int mouseReleased( int button );
 
   private:
     void initFont( void );

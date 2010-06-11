@@ -78,11 +78,15 @@ yutilpp::IPCPort* Application::getReplyPort( void ) {
 }
 
 int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
-    std::cout << "Application::ipcDataAvailable() " << code << std::endl;
-
     switch ( code ) {
         case Y_WINDOW_SHOW :
-        case Y_WINDOW_HIDE : {
+        case Y_WINDOW_HIDE :
+        case Y_WINDOW_MOUSE_ENTERED :
+        case Y_WINDOW_MOUSE_MOVED :
+        case Y_WINDOW_MOUSE_EXITED :
+        case Y_WINDOW_MOUSE_PRESSED :
+        case Y_WINDOW_MOUSE_RELEASED :
+        case Y_WINDOW_WIDGET_INVALIDATED : {
             WinHeader* header = reinterpret_cast<WinHeader*>(buffer);
             WindowMapCIter it = m_windowMap.find(header->m_windowId);
 

@@ -95,13 +95,13 @@ int Button::paint( GraphicsContext* g ) {
     return 0;
 }
 
-int Button::mousePressed( const Point& p ) {
+int Button::mousePressed( const Point& p, int button ) {
     m_pressed = true;
     invalidate();
     return 0;
 }
 
-int Button::mouseReleased( void ) {
+int Button::mouseReleased( int button ) {
     m_pressed = false;
     invalidate();
     return 0;

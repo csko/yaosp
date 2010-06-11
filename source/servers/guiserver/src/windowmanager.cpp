@@ -24,7 +24,7 @@
 WindowManager::WindowManager(GuiServer* guiServer) : m_mutex("wm_lock"),
                                                      m_graphicsDriver(guiServer->getGraphicsDriver()),
                                                      m_screenBitmap(guiServer->getScreenBitmap()),
-                                                     m_mouseWindow(NULL) {
+                                                     m_mouseWindow(NULL), m_mouseDownWindow(NULL) {
     m_mousePointer = new MousePointer();
     m_mousePointer->init();
     m_mousePointer->moveTo(NULL, NULL, m_screenBitmap->size() / 2);
@@ -97,15 +97,60 @@ int WindowManager::keyReleased( int key ) {
 }
 
 int WindowManager::mouseMoved( const yguipp::Point& delta ) {
+    lock();
+
+    /* Move the mouse pointer on the screen. */
     m_mousePointer->moveBy(m_graphicsDriver, m_screenBitmap, delta);
+
+    /* Update the current window under the mouse pointer. */
+    const yguipp::Point& mousePosition = m_mousePointer->getPosition();
+    Window* window = getWindowAt(mousePosition);
+
+    if (window != m_mouseWindow) {
+        if (m_mouseWindow != NULL) {
+            m_mouseWindow->mouseExited();
+        }
+
+        m_mouseWindow = window;
+
+        if (m_mouseWindow != NULL) {
+            m_mouseWindow->mouseEntered(mousePosition);
+        }
+    } else {
+        if (m_mouseWindow != NULL) {
+            m_mouseWindow->mouseMoved(mousePosition);
+        }
+    }
+
+    unLock();
+
     return 0;
 }
 
 int WindowManager::mousePressed( int button ) {
+    lock();
+
+    if (m_mouseWindow != NULL) {
+        m_mouseWindow->mousePressed(m_mousePointer->getPosition(), button);
+    }
+
+    m_mouseDownWindow = m_mouseWindow;
+
+    unLock();
+
     return 0;
 }
 
 int WindowManager::mouseReleased( int button ) {
+    lock();
+
+    if (m_mouseDownWindow != NULL) {
+        m_mouseDownWindow->mouseReleased(button);
+        m_mouseDownWindow = NULL;
+    }
+
+    unLock();
+
     return 0;
 }
 

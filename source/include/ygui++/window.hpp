@@ -59,6 +59,12 @@ class Window : public Object {
 
     Point getWidgetPosition( Widget* widget, Point p );
 
+    int handleMouseEntered(const yguipp::Point& position);
+    int handleMouseMoved(const yguipp::Point& position);
+    int handleMouseExited(void);
+    int handleMousePressed(const yguipp::Point& position, int button);
+    int handleMouseReleased(int button);
+
   private:
     int m_id;
 

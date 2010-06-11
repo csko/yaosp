@@ -49,12 +49,16 @@ class Window {
     inline DecoratorData* getDecoratorData(void) { return m_decoratorData; }
     inline const std::string& getTitle(void) { return m_title; }
 
+    inline void setId(int id) { m_id = id; }
     inline void setDecoratorData(DecoratorData* data) { m_decoratorData = data; }
 
     int handleMessage( uint32_t code, void* data, size_t size );
 
-    int mouseEntered(yguipp::Point position);
+    int mouseEntered(const yguipp::Point& position);
+    int mouseMoved(const yguipp::Point& position);
     int mouseExited(void);
+    int mousePressed(const yguipp::Point& position, int button);
+    int mouseReleased(int button);
 
     static Window* createFrom( GuiServer* guiServer, Application* application, WinCreate* request );
 
@@ -62,6 +66,7 @@ class Window {
     void handleRender( uint8_t* data, size_t size );
 
   private:
+    int m_id;
     int m_order;
     int m_flags;
     std::string m_title;

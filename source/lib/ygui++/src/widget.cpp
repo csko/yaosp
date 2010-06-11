@@ -18,6 +18,8 @@
 
 #include <ygui++/widget.hpp>
 #include <ygui++/window.hpp>
+#include <ygui++/protocol.hpp>
+#include <ygui++/application.hpp>
 
 namespace yguipp {
 
@@ -121,11 +123,11 @@ int Widget::mouseExited( void ) {
     return 0;
 }
 
-int Widget::mousePressed( const Point& p ) {
+int Widget::mousePressed( const Point& p, int button ) {
     return 0;
 }
 
-int Widget::mouseReleased( void ) {
+int Widget::mouseReleased( int button ) {
     return 0;
 }
 
@@ -194,7 +196,11 @@ int Widget::doInvalidate( bool notifyWindow ) {
 
     if ( ( notifyWindow ) &&
          ( m_window != NULL ) ) {
-        // m_window->getPort()->send( MSG_WIDGET_INVALIDATED );
+        WinHeader header;
+        header.m_windowId = m_window->getId();
+
+        Application::getInstance()->getClientPort()->send(Y_WINDOW_WIDGET_INVALIDATED,
+            reinterpret_cast<void*>(&header), sizeof(header));
     }
 
     return 0;

@@ -107,10 +107,11 @@ Application* Application::createFrom( GuiServer* guiServer, AppCreate* request )
 
 int Application::handleWindowCreate( WinCreate* request ) {
     WinCreateReply reply;
-    Window* win = Window::createFrom(m_guiServer, this, request);
+    Window* window = Window::createFrom(m_guiServer, this, request);
 
     reply.m_windowId = getWindowId();
-    m_windowMap[reply.m_windowId] = win;
+    m_windowMap[reply.m_windowId] = window;
+    window->setId(reply.m_windowId);
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
 

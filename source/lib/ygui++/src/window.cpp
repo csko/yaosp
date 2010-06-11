@@ -93,8 +93,36 @@ void Window::moveTo( const Point& position ) {
 int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
     switch ( code ) {
         case Y_WINDOW_SHOW :
+            m_mouseWidget = NULL;
+            m_mouseDownWidget = NULL;
             doRepaint(true);
             Application::getInstance()->getServerPort()->send(Y_WINDOW_SHOW, buffer, size);
+            break;
+
+        case Y_WINDOW_WIDGET_INVALIDATED :
+            doRepaint();
+            break;
+
+        case Y_WINDOW_MOUSE_ENTERED :
+            handleMouseEntered(reinterpret_cast<WinMouseEntered*>(buffer)->m_position);
+            break;
+
+        case Y_WINDOW_MOUSE_MOVED :
+            handleMouseMoved(reinterpret_cast<WinMouseEntered*>(buffer)->m_position);
+            break;
+
+        case Y_WINDOW_MOUSE_EXITED :
+            handleMouseExited();
+            break;
+
+        case Y_WINDOW_MOUSE_PRESSED : {
+            WinMousePressed* cmd = reinterpret_cast<WinMousePressed*>(buffer);
+            handleMousePressed(cmd->m_position, cmd->m_button);
+            break;
+        }
+
+        case Y_WINDOW_MOUSE_RELEASED :
+            handleMouseReleased(reinterpret_cast<WinMouseReleased*>(buffer)->m_button);
             break;
     }
 
@@ -125,26 +153,6 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
 
         case MSG_KEY_RELEASED :
             handleKeyReleased( reinterpret_cast<msg_key_released_t*>(buffer) );
-            break;
-
-        case MSG_MOUSE_ENTERED :
-            handleMouseEntered( reinterpret_cast<msg_mouse_entered_t*>(buffer) );
-            break;
-
-        case MSG_MOUSE_MOVED :
-            handleMouseMoved( reinterpret_cast<msg_mouse_moved_t*>(buffer) );
-            break;
-
-        case MSG_MOUSE_EXITED :
-            handleMouseExited();
-            break;
-
-        case MSG_MOUSE_PRESSED :
-            handleMousePressed( reinterpret_cast<msg_mouse_pressed_t*>(buffer) );
-            break;
-
-        case MSG_MOUSE_RELEASED :
-            handleMouseReleased( reinterpret_cast<msg_mouse_released_t*>(buffer) );
             break;
 
         case MSG_MOUSE_SCROLLED :
@@ -272,6 +280,60 @@ Point Window::getWidgetPosition( Widget* widget, Point p ) {
     }
 
     return p;
+}
+
+int Window::handleMouseEntered(const yguipp::Point& position) {
+    assert(m_mouseWidget == NULL);
+    m_mouseWidget = findWidgetAt(position);
+    assert(m_mouseWidget != NULL);
+
+    m_mouseWidget->mouseEntered(getWidgetPosition(m_mouseWidget, position));
+
+    return 0;
+}
+
+int Window::handleMouseMoved(const yguipp::Point& position) {
+    Widget* mouseWidget;
+
+    assert(m_mouseWidget != NULL);
+    mouseWidget = findWidgetAt(position);
+    assert(mouseWidget != NULL);
+
+    if (mouseWidget == m_mouseWidget) {
+        m_mouseWidget->mouseMoved(getWidgetPosition(m_mouseWidget, position));
+    } else {
+        m_mouseWidget->mouseExited();
+        m_mouseWidget = mouseWidget;
+        m_mouseWidget->mouseEntered(getWidgetPosition(m_mouseWidget, position));
+    }
+
+    return 0;
+}
+
+int Window::handleMouseExited(void) {
+    assert(m_mouseWidget != NULL);
+    m_mouseWidget->mouseExited();
+    m_mouseWidget = NULL;
+
+    return 0;
+}
+
+int Window::handleMousePressed(const yguipp::Point& position, int button) {
+    assert(m_mouseWidget != NULL);
+    assert(m_mouseDownWidget == NULL);
+
+    m_mouseDownWidget = m_mouseWidget;
+    m_mouseDownWidget->mousePressed(getWidgetPosition(m_mouseDownWidget,position), button);
+
+    return 0;
+}
+
+int Window::handleMouseReleased(int button) {
+    assert(m_mouseDownWidget != NULL);
+    m_mouseDownWidget->mouseReleased(button);
+    m_mouseDownWidget = NULL;
+
+    return 0;
 }
 
 } /* namespace yguipp */

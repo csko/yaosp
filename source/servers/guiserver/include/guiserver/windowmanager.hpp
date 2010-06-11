@@ -70,6 +70,7 @@ class WindowManager {
     Decorator* m_windowDecorator;
 
     Window* m_mouseWindow;
+    Window* m_mouseDownWindow;
 }; /* class WindowManager */
 
 #endif /* _WINDOWMANAGER_HPP_ */

@@ -23,7 +23,7 @@
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>
 
-Window::Window( GuiServer* guiServer, Application* application ) : m_mouseOnDecorator(false),
+Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_mouseOnDecorator(false),
                                                                    m_drawingMode(yguipp::DM_COPY),
                                                                    m_font(NULL), m_guiServer(guiServer),
                                                                    m_application(application) {
@@ -78,12 +78,54 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
     return 0;
 }
 
-int Window::mouseEntered(yguipp::Point position) {
+int Window::mouseEntered(const yguipp::Point& position) {
     m_mouseOnDecorator = !m_clientRect.hasPoint(position);
 
     if (m_mouseOnDecorator) {
     } else {
+        WinMouseEntered cmd;
+        cmd.m_header.m_windowId = m_id;
+        cmd.m_position = position - m_clientRect.leftTop();
+
+        m_application->getClientPort()->send(Y_WINDOW_MOUSE_ENTERED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
     }
+
+    return 0;
+}
+
+int Window::mouseMoved(const yguipp::Point& position) {
+    bool mouseOnDecorator = !m_clientRect.hasPoint(position);
+
+    if (m_mouseOnDecorator) {
+        if (mouseOnDecorator) {
+            // moved on decorator
+        } else {
+            // exited from decorator
+
+            WinMouseEntered cmd;
+            cmd.m_header.m_windowId = m_id;
+            cmd.m_position = position - m_clientRect.leftTop();
+
+            m_application->getClientPort()->send(Y_WINDOW_MOUSE_ENTERED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+        }
+    } else {
+        if (mouseOnDecorator) {
+            WinMouseExited cmd;
+            cmd.m_header.m_windowId = m_id;
+
+            m_application->getClientPort()->send(Y_WINDOW_MOUSE_EXITED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+
+            // entered to decorator
+        } else {
+            WinMouseMoved cmd;
+            cmd.m_header.m_windowId = m_id;
+            cmd.m_position = position - m_clientRect.leftTop();
+
+            m_application->getClientPort()->send(Y_WINDOW_MOUSE_MOVED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+        }
+    }
+
+    m_mouseOnDecorator = mouseOnDecorator;
 
     return 0;
 }
@@ -91,6 +133,39 @@ int Window::mouseEntered(yguipp::Point position) {
 int Window::mouseExited(void) {
     if (m_mouseOnDecorator) {
     } else {
+        WinMouseExited cmd;
+        cmd.m_header.m_windowId = m_id;
+
+        m_application->getClientPort()->send(Y_WINDOW_MOUSE_EXITED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+    }
+
+    return 0;
+}
+
+int Window::mousePressed(const yguipp::Point& position, int button) {
+    if (m_mouseOnDecorator) {
+        // todo
+    } else {
+        WinMousePressed cmd;
+        cmd.m_header.m_windowId = m_id;
+        cmd.m_position = position - m_clientRect.leftTop();
+        cmd.m_button = button;
+
+        m_application->getClientPort()->send(Y_WINDOW_MOUSE_PRESSED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+    }
+
+    return 0;
+}
+
+int Window::mouseReleased(int button) {
+    if (m_mouseOnDecorator) {
+        // todo
+    } else {
+        WinMouseReleased cmd;
+        cmd.m_header.m_windowId = m_id;
+        cmd.m_button = button;
+
+        m_application->getClientPort()->send(Y_WINDOW_MOUSE_RELEASED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
     }
 
     return 0;

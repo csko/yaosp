@@ -85,7 +85,7 @@ int InputThread::run( void ) {
                 break;
 
             case E_MOUSE_RELEASED :
-                m_windowManager->mousePressed(event.param1);
+                m_windowManager->mouseReleased(event.param1);
                 break;
 
             case E_MOUSE_SCROLLED :

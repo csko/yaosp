@@ -39,6 +39,7 @@ class Application : public yutilpp::IPCListener {
   public:
     FontNode* getFont(int fontHandle);
     Bitmap* getBitmap(int bitmapHandle);
+    inline yutilpp::IPCPort* getClientPort(void) { return m_clientPort; }
 
     int ipcDataAvailable( uint32_t code, void* data, size_t size );
 

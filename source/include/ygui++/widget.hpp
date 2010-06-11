@@ -66,8 +66,8 @@ class Widget : public Object {
     virtual int mouseEntered( const Point& p );
     virtual int mouseMoved( const Point& p );
     virtual int mouseExited( void );
-    virtual int mousePressed( const Point& p );
-    virtual int mouseReleased( void );
+    virtual int mousePressed( const Point& p, int button );
+    virtual int mouseReleased( int button );
 
   private:
     int doPaint( GraphicsContext* g, bool forced );
