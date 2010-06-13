@@ -42,7 +42,7 @@ class MenuItem : public Widget {
 
     int mouseEntered( const Point& p );
     int mouseExited( void );
-    int mousePressed( const Point& p );
+    int mousePressed( const Point& p, int button );
     int paint( GraphicsContext* g );
 
   private:

@@ -63,12 +63,17 @@ class Window {
     static Window* createFrom( GuiServer* guiServer, Application* application, WinCreate* request );
 
   private:
+    void handleDoResize( WinResize* request );
+    void handleDoMoveTo( WinMoveTo* request );
     void handleRender( uint8_t* data, size_t size );
-
+    
+    void calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,
+                               yguipp::Rect& screenRect, yguipp::Rect& clientRect );
   private:
     int m_id;
     int m_order;
     int m_flags;
+    bool m_visible;
     std::string m_title;
     yguipp::Rect m_screenRect;
     yguipp::Rect m_clientRect;

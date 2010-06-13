@@ -35,6 +35,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/input.cpp</item>
         <item>src/mouse.cpp</item>
         <item>src/font.cpp</item>
+        <item>src/render.cpp</item>
         <item>driver/video/vesa/vesa.cpp</item>
         <item>driver/decorator/default/default.cpp</item>
     </array>

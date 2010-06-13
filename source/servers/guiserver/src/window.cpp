@@ -17,13 +17,12 @@
  */
 
 #include <yaosp/debug.h>
-#include <ygui++/render.hpp>
 
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>
 
-Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_mouseOnDecorator(false),
+Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_visible(false), m_mouseOnDecorator(false),
                                                                    m_drawingMode(yguipp::DM_COPY),
                                                                    m_font(NULL), m_guiServer(guiServer),
                                                                    m_application(application) {
@@ -39,18 +38,13 @@ bool Window::init( WinCreate* request ) {
     m_flags = request->m_flags;
     m_title = reinterpret_cast<char*>(request + 1);
 
-    if (m_flags & yguipp::WINDOW_NO_BORDER) {
-        // todo
-    } else {
-        m_screenRect = yguipp::Rect(request->m_size + decorator->getSize());
-        m_screenRect += request->m_position;
+    calculateWindowRects(request->m_position, request->m_size, m_screenRect, m_clientRect);
 
-        m_clientRect = yguipp::Rect(request->m_size);
-        m_clientRect += request->m_position;
-        m_clientRect += decorator->leftTop();
+    if ((m_screenRect.width() != 0) &&
+        (m_screenRect.height() != 0)) {
+        m_bitmap = new Bitmap(m_screenRect.width(), m_screenRect.height(), yguipp::CS_RGB32);
     }
 
-    m_bitmap = new Bitmap(m_screenRect.width(), m_screenRect.height(), yguipp::CS_RGB32);
     m_decoratorData = decorator->createWindowData();
 
     return true;
@@ -59,11 +53,25 @@ bool Window::init( WinCreate* request ) {
 int Window::handleMessage( uint32_t code, void* data, size_t size ) {
     switch ( code ) {
         case Y_WINDOW_SHOW :
-            m_guiServer->getWindowManager()->registerWindow(this);
+            if (!m_visible) {
+                m_guiServer->getWindowManager()->registerWindow(this);
+                m_visible = true;
+            }
             break;
 
         case Y_WINDOW_HIDE :
-            m_guiServer->getWindowManager()->unregisterWindow(this);
+            if (m_visible) {
+                m_guiServer->getWindowManager()->unregisterWindow(this);
+                m_visible = false;
+            }
+            break;
+            
+        case Y_WINDOW_DO_RESIZE :
+            handleDoResize(reinterpret_cast<WinResize*>(data));
+            break;
+
+        case Y_WINDOW_DO_MOVETO :
+            handleDoMoveTo(reinterpret_cast<WinMoveTo*>(data));
             break;
 
         case Y_WINDOW_RENDER :
@@ -177,127 +185,33 @@ Window* Window::createFrom( GuiServer* guiServer, Application* application, WinC
     return window;
 }
 
-void Window::handleRender( uint8_t* data, size_t size ) {
-    uint8_t* dataEnd = data + size;
+void Window::handleDoResize( WinResize* request ) {
+    delete m_bitmap;
+    calculateWindowRects(m_screenRect.leftTop(), request->m_size, m_screenRect, m_clientRect);
+    m_bitmap = new Bitmap(m_screenRect.width(), m_screenRect.height(), yguipp::CS_RGB32);
 
-    while (data < dataEnd) {
-        yguipp::RenderHeader* header;
+    m_application->getClientPort()->send(Y_WINDOW_RESIZED, request, sizeof(WinResize));
+}
 
-        header = reinterpret_cast<yguipp::RenderHeader*>(data);
+void Window::handleDoMoveTo( WinMoveTo* request ) {
+    calculateWindowRects(request->m_position, m_clientRect.size(), m_screenRect, m_clientRect);
+    m_application->getClientPort()->send(Y_WINDOW_MOVEDTO, request, sizeof(WinMoveTo));
+}
 
-        switch (header->m_cmd) {
-            case yguipp::R_SET_PEN_COLOR :
-                m_penColor = reinterpret_cast<yguipp::RSetPenColor*>(header)->m_penColor;
-                data += sizeof(yguipp::RSetPenColor);
-                break;
+void Window::calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,
+                                   yguipp::Rect& screenRect, yguipp::Rect& clientRect ) {
+    if (m_flags & yguipp::WINDOW_NO_BORDER) {
+        m_screenRect = yguipp::Rect(size);
+        m_screenRect += position;
+        m_clientRect = m_screenRect;
+    } else {
+        Decorator* decorator = m_guiServer->getWindowManager()->getDecorator();
 
-            case yguipp::R_SET_FONT :
-                m_font = m_application->getFont(reinterpret_cast<yguipp::RSetFont*>(header)->m_fontHandle);
-                data += sizeof(yguipp::RSetFont);
-                break;
+        m_screenRect = yguipp::Rect(size + decorator->getSize());
+        m_screenRect += position;
 
-            case yguipp::R_SET_CLIP_RECT :
-                m_clipRect = reinterpret_cast<yguipp::RSetClipRect*>(header)->m_clipRect;
-
-                if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                    m_clipRect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                }
-
-                data += sizeof(yguipp::RSetClipRect);
-                break;
-
-            case yguipp::R_SET_DRAWING_MODE :
-                // todo
-                data += sizeof(yguipp::RSetDrawingMode);
-                break;
-
-            case yguipp::R_DRAW_RECT : {
-                yguipp::Rect rect = reinterpret_cast<yguipp::RFillRect*>(data)->m_rect;
-
-                if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                    rect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                }
-
-                m_guiServer->getGraphicsDriver()->drawRect(
-                    m_bitmap, m_clipRect, rect, m_penColor, yguipp::DM_COPY
-                );
-
-                data += sizeof(yguipp::RDrawRect);
-                break;
-            }
-
-            case yguipp::R_FILL_RECT : {
-                yguipp::Rect rect = reinterpret_cast<yguipp::RFillRect*>(data)->m_rect;
-
-                if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                    rect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                }
-
-                m_guiServer->getGraphicsDriver()->fillRect(
-                    m_bitmap, m_clipRect, rect, m_penColor, yguipp::DM_COPY
-                );
-
-                data += sizeof(yguipp::RFillRect);
-                break;
-            }
-
-            case yguipp::R_DRAW_TEXT : {
-                yguipp::RDrawText* cmd = reinterpret_cast<yguipp::RDrawText*>(data);
-
-                if (m_font != NULL) {
-                    yguipp::Point position = cmd->m_position;
-
-                    if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                        position += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                    }
-
-                    m_guiServer->getGraphicsDriver()->drawText(
-                        m_bitmap, m_clipRect, position, m_penColor, m_font,
-                        reinterpret_cast<char*>(cmd + 1), cmd->m_length
-                    );
-
-                }
-
-                data += sizeof(yguipp::RDrawText);
-                data += cmd->m_length;
-                break;
-            }
-
-            case yguipp::R_DRAW_BITMAP : {
-                yguipp::RDrawBitmap* cmd = reinterpret_cast<yguipp::RDrawBitmap*>(data);
-                Bitmap* bitmap = m_application->getBitmap(cmd->m_bitmapHandle);
-
-                if (bitmap != NULL) {
-                    yguipp::Rect bmpRect;
-                    yguipp::Point position = cmd->m_position;
-
-                    if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                        position += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                    }
-
-                    bmpRect = (bitmap->bounds() + position) & m_clipRect;
-
-                    if (bmpRect.isValid()) {
-                        m_guiServer->getGraphicsDriver()->blitBitmap(
-                            m_bitmap, bmpRect.leftTop(),
-                            bitmap, bmpRect - position,
-                            m_drawingMode
-                        );
-                    }
-                }
-
-                data += sizeof(yguipp::RDrawBitmap);
-                break;
-            }
-
-            case yguipp::R_DONE :
-                m_guiServer->getWindowManager()->updateWindowRegion(this, m_screenRect);
-                data += sizeof(yguipp::RenderHeader);
-                break;
-
-            default :
-                dbprintf( "Window::handleRender(): unknown command: %d\n", (int)header->m_cmd );
-                return;
-        }
+        m_clientRect = yguipp::Rect(size);
+        m_clientRect += position;
+        m_clientRect += decorator->leftTop();
     }
 }

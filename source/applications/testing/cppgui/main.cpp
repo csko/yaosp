@@ -45,8 +45,8 @@ int main( int argc, char** argv ) {
     container->setLayout( new BorderLayout() );
     container->setBackgroundColor( Color(255,255,255) );
 
-    container->addChild(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
-    /*MenuBar* menuBar = new MenuBar();
+    //container->addChild(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
+    MenuBar* menuBar = new MenuBar();
     container->addChild(menuBar, new BorderLayoutData(BorderLayoutData::PAGE_START));
 
     MenuItem* file = new MenuItem("File");
@@ -62,7 +62,7 @@ int main( int argc, char** argv ) {
 
     Menu* helpMenu = new Menu();
     help->setSubMenu(helpMenu);
-    helpMenu->addItem(new MenuItem("About"));*/
+    helpMenu->addItem(new MenuItem("About"));
 
     container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
     container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));

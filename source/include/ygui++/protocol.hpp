@@ -31,6 +31,10 @@ enum {
     Y_WINDOW_SHOW,
     Y_WINDOW_HIDE,
     Y_WINDOW_RENDER,
+    Y_WINDOW_DO_RESIZE,
+    Y_WINDOW_RESIZED,
+    Y_WINDOW_DO_MOVETO,
+    Y_WINDOW_MOVEDTO,
     Y_WINDOW_MOUSE_ENTERED,
     Y_WINDOW_MOUSE_MOVED,
     Y_WINDOW_MOUSE_EXITED,
@@ -69,8 +73,14 @@ struct WinHeader {
     int m_windowId;
 };
 
-struct WinShow {
+struct WinResize {
     WinHeader m_header;
+    yguipp::Point m_size;
+};
+
+struct WinMoveTo {
+    WinHeader m_header;
+    yguipp::Point m_position;
 };
 
 struct WinMouseEntered {

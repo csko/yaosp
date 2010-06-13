@@ -17,6 +17,7 @@
  */
 
 #include <iostream>
+#include <yaosp/debug.h>
 
 #include <ygui++/menu.hpp>
 #include <ygui++/menuitem.hpp>
@@ -80,7 +81,8 @@ int MenuItem::mouseExited( void ) {
     return 0;
 }
 
-int MenuItem::mousePressed( const Point& p ) {
+int MenuItem::mousePressed( const Point& p, int button ) {
+    dbprintf("MenuItem::mousePressed()\n");
     m_menuParent->itemPressed(this);
     return 0;
 }
@@ -109,7 +111,7 @@ int MenuItem::paint( GraphicsContext* g ) {
 }
 
 void MenuItem::initFont( void ) {
-    m_font = new Font( "DejaVu Sans", "Book", 8 * 64 );
+    m_font = new Font( "DejaVu Sans", "Book", FontInfo(8) );
     m_font->init();
     m_font->incRef();
 }

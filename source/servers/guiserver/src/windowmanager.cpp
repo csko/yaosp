@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
+
 #include <guiserver/windowmanager.hpp>
 #include <guiserver/guiserver.hpp>
 
@@ -65,7 +67,6 @@ int WindowManager::registerWindow( Window* window ) {
     doUpdateWindowRegion(window,window->getScreenRect());
 
     /* Update mouse window if needed. */
-
     const yguipp::Point& mousePosition = m_mousePointer->getPosition();
     Window* tmp = getWindowAt(mousePosition);
 
@@ -84,7 +85,22 @@ int WindowManager::registerWindow( Window* window ) {
 }
 
 int WindowManager::unregisterWindow( Window* window ) {
-    // todo
+    int index;
+
+    lock();
+
+    /* Make sure that the window is visible at the moment. */
+    index = getWindowIndex(window);
+
+    if (index == -1) {
+        unLock();
+        return 0;
+    }
+
+    doHideWindowRegion(window, window->getScreenRect());
+
+    unLock();
+
     return 0;
 }
 
@@ -166,6 +182,24 @@ int WindowManager::updateWindowRegion( Window* window, const yguipp::Rect& regio
     return 0;
 }
 
+int WindowManager::hideWindowRegion( Window* window, const yguipp::Rect& region ) {
+    lock();
+    doHideWindowRegion(window, region);
+    unLock();
+
+    return 0;
+}
+
+int WindowManager::getWindowIndex( Window* window ) {
+    for ( int i = 0; i < (int)m_windowStack.size(); i++ ) {
+        if (m_windowStack[i] == window) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 Window* WindowManager::getWindowAt( const yguipp::Point& position ) {
     for ( std::vector<Window*>::const_iterator it = m_windowStack.begin();
           it != m_windowStack.end();
@@ -236,3 +270,27 @@ int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
     return 0;
 }
 
+int WindowManager::doHideWindowRegion( Window* window, yguipp::Rect region ) {
+    int index;
+    bool mouseHidden = false;
+
+    index = getWindowIndex(window);
+    assert(index != -1);
+    
+    region &= m_screenBitmap->bounds();
+
+    if (region.doIntersect(m_mousePointer->getRect())) {
+        m_mousePointer->hide(m_graphicsDriver, m_screenBitmap);
+        mousehidden = true;
+    }
+
+    for (size_t i = index; i < m_windowStack.size(); i++) {
+        Window* tmp = m_windowStack[i];
+    }
+
+    if (mouseHidden) {
+        m_mousePointer->show(m_graphicsDriver, m_screenBitmap);
+    }
+
+    return 0;
+}

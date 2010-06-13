@@ -35,7 +35,7 @@ void MenuBar::addChild( Widget* child, layout::LayoutData* data ) {
     MenuItem* item;
 
     item = dynamic_cast<MenuItem*>(child);
-    std::cout << (void*)item << std::endl;
+    //std::cout << (void*)item << std::endl;
     if ( item == NULL ) {
         return;
     }

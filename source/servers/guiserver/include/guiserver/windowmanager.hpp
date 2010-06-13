@@ -53,12 +53,15 @@ class WindowManager {
     int mouseScrolled( int button );
 
     int updateWindowRegion( Window* window, const yguipp::Rect& region );
+    int hideWindowRegion( Window* window, const yguipp::Rect& region );
 
   private:
+    int getWindowIndex( Window* window );
     Window* getWindowAt( const yguipp::Point& position );
 
     int generateVisibleRegions( int index );
     int doUpdateWindowRegion( Window* window, yguipp::Rect region );
+    int doHideWindowRegion( Window* window, yguipp::Rect region );
 
   private:
     yutilpp::Mutex m_mutex;

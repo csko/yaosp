@@ -66,28 +66,33 @@ RenderTable* Window::getRenderTable( void ) {
 }
 
 void Window::show( void ) {
-    WinShow request;
-    request.m_header.m_windowId = m_id;
+    WinHeader request;
+    request.m_windowId = m_id;
 
     Application::getInstance()->getClientPort()->send(Y_WINDOW_SHOW, reinterpret_cast<void*>(&request), sizeof(request));
 }
 
 void Window::hide( void ) {
-    //getPort()->send( MSG_WINDOW_DO_HIDE );
+    WinHeader request;
+    request.m_windowId = m_id;
+
+    Application::getInstance()->getClientPort()->send(Y_WINDOW_HIDE, reinterpret_cast<void*>(&request), sizeof(request));
 }
 
 void Window::resize( const Point& size ) {
-    //msg_win_do_resize_t request;
+    WinResize request;
+    request.m_header.m_windowId = m_id;
+    request.m_size = size;
 
-    //size.toPointT(&request.size);
-    //getPort()->send( MSG_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_resize_t));
+    Application::getInstance()->getClientPort()->send(Y_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(request));
 }
 
 void Window::moveTo( const Point& position ) {
-    //msg_win_do_move_t request;
+    WinMoveTo request;
+    request.m_header.m_windowId = m_id;
+    request.m_position = position;
 
-    //position.toPointT(&request.position);
-    //getPort()->send( MSG_WINDOW_DO_MOVE, reinterpret_cast<void*>(&request), sizeof(msg_win_do_move_t));
+    Application::getInstance()->getClientPort()->send(Y_WINDOW_DO_MOVETO, reinterpret_cast<void*>(&request), sizeof(request));
 }
 
 int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
@@ -99,8 +104,32 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
             Application::getInstance()->getServerPort()->send(Y_WINDOW_SHOW, buffer, size);
             break;
 
+        case Y_WINDOW_HIDE :
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_HIDE, buffer, size);
+            m_mouseWidget = NULL;
+            m_mouseDownWidget = NULL;
+            break;
+
         case Y_WINDOW_WIDGET_INVALIDATED :
             doRepaint();
+            break;
+
+        case Y_WINDOW_DO_RESIZE :
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_RESIZE, buffer, size);
+            m_size = reinterpret_cast<WinResize*>(buffer)->m_size;
+            m_container->setSize(m_size);
+            break;
+
+        case Y_WINDOW_RESIZED :
+            // todo
+            break;
+
+        case Y_WINDOW_DO_MOVETO :
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_MOVETO, buffer, size);
+            break;
+
+        case Y_WINDOW_MOVEDTO :
+            // todo
             break;
 
         case Y_WINDOW_MOUSE_ENTERED :
@@ -125,53 +154,6 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
             handleMouseReleased(reinterpret_cast<WinMouseReleased*>(buffer)->m_button);
             break;
     }
-
-    /*
-    switch ( code ) {
-        case MSG_WIDGET_INVALIDATED :
-            doRepaint();
-            break;
-
-        case MSG_WINDOW_DO_SHOW :
-            m_mouseWidget = NULL;
-            m_mouseDownWidget = NULL;
-            doRepaint(true);
-            m_serverPort->send( MSG_WINDOW_SHOW );
-            break;
-
-        case MSG_WINDOW_DO_HIDE :
-            m_serverPort->send( MSG_WINDOW_HIDE );
-            break;
-
-        case MSG_WINDOW_RESIZED :
-            handleResized( reinterpret_cast<msg_win_resized_t*>(buffer) );
-            break;
-
-        case MSG_KEY_PRESSED :
-            handleKeyPressed( reinterpret_cast<msg_key_pressed_t*>(buffer) );
-            break;
-
-        case MSG_KEY_RELEASED :
-            handleKeyReleased( reinterpret_cast<msg_key_released_t*>(buffer) );
-            break;
-
-        case MSG_MOUSE_SCROLLED :
-            handleMouseScrolled( reinterpret_cast<msg_mouse_scrolled_t*>(buffer) );
-            break;
-
-        case MSG_WINDOW_DO_RESIZE :
-            handleDoResize( reinterpret_cast<msg_win_do_resize_t*>(buffer) );
-            break;
-
-        case MSG_WINDOW_DO_MOVE :
-            handleDoMove( reinterpret_cast<msg_win_do_move_t*>(buffer) );
-            break;
-
-        case MSG_WINDOW_MOVED :
-            handleMoved( reinterpret_cast<msg_win_moved_t*>(buffer) );
-            break;
-    }
-    */
 
     return 0;
 }

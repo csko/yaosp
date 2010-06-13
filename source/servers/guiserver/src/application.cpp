@@ -72,6 +72,8 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
 
         case Y_WINDOW_SHOW :
         case Y_WINDOW_HIDE :
+        case Y_WINDOW_DO_RESIZE :
+        case Y_WINDOW_DO_MOVETO :
         case Y_WINDOW_RENDER : {
             WinHeader* header = reinterpret_cast<WinHeader*>(data);
             WindowMapCIter it = m_windowMap.find(header->m_windowId);
