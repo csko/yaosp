@@ -21,6 +21,22 @@
 Region::Region( void ) : m_clipRects(NULL) {
 }
 
+Region::Region( const Region& r ) : m_clipRects(NULL) {
+    ClipRect* current = NULL;
+
+    for (ClipRect* clipRect = r.m_clipRects; clipRect != NULL; clipRect = clipRect->m_next) {
+        ClipRect* newClipRect = new ClipRect(clipRect);
+
+        if (m_clipRects == NULL) {
+            m_clipRects = newClipRect;
+        } else {
+            current->m_next = newClipRect;
+        }
+
+        current = newClipRect;
+    }
+}
+
 Region::~Region( void ) {
     clear();
 }

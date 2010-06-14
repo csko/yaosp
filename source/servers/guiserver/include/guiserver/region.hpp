@@ -23,7 +23,8 @@
 
 class ClipRect {
   public:
-    ClipRect( const yguipp::Rect& rect ) : m_rect(rect) {}
+    ClipRect( const yguipp::Rect& rect ) : m_rect(rect), m_next(NULL) {}
+    ClipRect( ClipRect* rect ) : m_rect(rect->m_rect), m_next(NULL) {}
 
     yguipp::Rect m_rect;
     ClipRect* m_next;
@@ -32,6 +33,7 @@ class ClipRect {
 class Region {
   public:
     Region( void );
+    Region( const Region& r );
     ~Region( void );
 
     int clear( void );
@@ -39,6 +41,9 @@ class Region {
     int exclude( const yguipp::Rect& rect );
 
     inline ClipRect* getClipRects( void ) { return m_clipRects; }
+
+  private:
+    Region& operator=( const Region& r );
 
   private:
     ClipRect* m_clipRects;

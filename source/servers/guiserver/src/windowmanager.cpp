@@ -44,9 +44,9 @@ int WindowManager::enable( void ) {
 int WindowManager::registerWindow( Window* window ) {
     size_t i;
 
-    window->setDecoratorData(m_windowDecorator->createWindowData());
-
+    /* Create decorator data if the window has border. */
     if ((window->getFlags() & yguipp::WINDOW_NO_BORDER) == 0) {
+        window->setDecoratorData(m_windowDecorator->createWindowData());
         m_windowDecorator->update(m_graphicsDriver, window);
     }
 
@@ -97,9 +97,33 @@ int WindowManager::unregisterWindow( Window* window ) {
         return 0;
     }
 
+    /* Hide the visible regions of the unregistered window. */
     doHideWindowRegion(window, window->getScreenRect());
 
+    /* Update window stack and the visible regions of other windows. */
+    m_windowStack.erase(m_windowStack.begin() + index);
+
+    for (size_t i = index; i < m_windowStack.size(); i++) {
+        generateVisibleRegions(i);
+    }
+
+    /* Update mouse window if it's required. */
+    if (m_mouseWindow == window) {
+        const yguipp::Point& mousePosition = m_mousePointer->getPosition();
+        m_mouseWindow = getWindowAt(mousePosition);
+
+        if (m_mouseWindow != NULL) {
+            m_mouseWindow->mouseEntered(mousePosition);
+        }
+    }
+
     unLock();
+
+    /* Destroy decorator data if the window has border. */
+    if ((window->getFlags() & yguipp::WINDOW_NO_BORDER) == 0) {
+        delete window->getDecoratorData();
+        window->setDecoratorData(NULL);
+    }
 
     return 0;
 }
@@ -273,19 +297,52 @@ int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
 int WindowManager::doHideWindowRegion( Window* window, yguipp::Rect region ) {
     int index;
     bool mouseHidden = false;
+    Region& visibleRegions = window->getVisibleRegions();
 
     index = getWindowIndex(window);
     assert(index != -1);
-    
+
     region &= m_screenBitmap->bounds();
 
     if (region.doIntersect(m_mousePointer->getRect())) {
         m_mousePointer->hide(m_graphicsDriver, m_screenBitmap);
-        mousehidden = true;
+        mouseHidden = true;
     }
 
-    for (size_t i = index; i < m_windowStack.size(); i++) {
+    for (size_t i = index + 1; i < m_windowStack.size(); i++) {
         Window* tmp = m_windowStack[i];
+        Region origVisibleRegions = window->getVisibleRegions();
+
+        for (ClipRect* clipRect = origVisibleRegions.getClipRects();
+             clipRect != NULL;
+             clipRect = clipRect->m_next) {
+
+            yguipp::Rect visibleRect = clipRect->m_rect & region & tmp->getScreenRect();
+
+            if (!visibleRect.isValid()) {
+                continue;
+            }
+
+            visibleRegions.exclude(visibleRect);
+
+            m_graphicsDriver->blitBitmap(
+                m_screenBitmap, visibleRect.leftTop(),
+                tmp->getBitmap(), visibleRect - tmp->getScreenRect().leftTop(),
+                yguipp::DM_COPY
+            );
+        }
+    }
+
+    for (ClipRect* clipRect = visibleRegions.getClipRects(); clipRect != NULL; clipRect = clipRect->m_next) {
+        yguipp::Rect visibleRect = clipRect->m_rect & region;
+
+        if (!visibleRect.isValid()) {
+            continue;
+        }
+
+        m_graphicsDriver->fillRect(
+            m_screenBitmap, m_screenBitmap->bounds(), visibleRect, yguipp::Color(75, 100, 125), yguipp::DM_COPY
+        );
     }
 
     if (mouseHidden) {
