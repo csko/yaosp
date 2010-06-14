@@ -82,7 +82,6 @@ int MenuItem::mouseExited( void ) {
 }
 
 int MenuItem::mousePressed( const Point& p, int button ) {
-    dbprintf("MenuItem::mousePressed()\n");
     m_menuParent->itemPressed(this);
     return 0;
 }

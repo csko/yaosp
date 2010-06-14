@@ -57,12 +57,18 @@ int main( int argc, char** argv ) {
     Menu* fileMenu = new Menu();
     file->setSubMenu(fileMenu);
     fileMenu->addItem(new MenuItem("Open"));
-    fileMenu->addItem(new MenuItem("Save"));
+    MenuItem* save = new MenuItem("Save");
+    fileMenu->addItem(save);
     fileMenu->addItem(new MenuItem("Exit"));
 
     Menu* helpMenu = new Menu();
     help->setSubMenu(helpMenu);
     helpMenu->addItem(new MenuItem("About"));
+
+    Menu* saveMenu = new Menu();
+    save->setSubMenu(saveMenu);
+    saveMenu->addItem(new MenuItem("As Image"));
+    saveMenu->addItem(new MenuItem("As Text"));
 
     container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
     container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));

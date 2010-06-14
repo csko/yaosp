@@ -25,122 +25,11 @@
 
 namespace yguipp {
 
-MenuBar::MenuBar( void ) : m_subMenuActive(false), m_activeItem(NULL) {
+MenuItemParent::MenuItemParent( void ) : m_parentLevel(NULL) {
 }
 
-MenuBar::~MenuBar( void ) {
-}
-
-void MenuBar::addChild( Widget* child, layout::LayoutData* data ) {
-    MenuItem* item;
-
-    item = dynamic_cast<MenuItem*>(child);
-    //std::cout << (void*)item << std::endl;
-    if ( item == NULL ) {
-        return;
-    }
-
-    Widget::addChild(child);
-    item->setMenuParent(this);
-}
-
-Point MenuBar::getPreferredSize( void ) {
-    Point size;
-
-    for ( ChildVectorCIter it = m_children.begin();
-          it != m_children.end();
-          ++it ) {
-        Widget* child = it->first;
-        Point childSize = child->getPreferredSize();
-
-        size.m_x += childSize.m_x;
-        size.m_y = std::max(size.m_y, childSize.m_y);
-    }
-
-    return size;
-}
-
-int MenuBar::validate( void ) {
-    Point position;
-
-    for ( ChildVectorCIter it = m_children.begin();
-          it != m_children.end();
-          ++it ) {
-        Widget* child = it->first;
-        Point childSize = child->getPreferredSize();
-
-        child->setPosition(position);
-        child->setSize(childSize);
-
-        position.m_x += childSize.m_x;
-    }
-
-    return 0;
-}
-
-int MenuBar::paint( GraphicsContext* g ) {
-    return 0;
-}
-
-int MenuBar::itemActivated( MenuItem* item ) {
-    assert(m_activeItem == NULL);
-    m_activeItem = item;
-    m_activeItem->setActive(true);
-
-    if ( m_subMenuActive ) {
-        Menu* subMenu = m_activeItem->getSubMenu();
-
-        if ( subMenu != NULL ) {
-            showSubMenu(m_activeItem, subMenu);
-        }
-    }
-
-    return 0;
-}
-
-int MenuBar::itemDeActivated( MenuItem* item ) {
-    assert(m_activeItem == item);
-    m_activeItem->setActive(false);
-
-    if ( m_subMenuActive ) {
-        Menu* subMenu = m_activeItem->getSubMenu();
-        assert(subMenu != NULL);
-        hideSubMenu(m_activeItem, subMenu);
-    }
-
-    m_activeItem = NULL;
-
-    return 0;
-}
-
-int MenuBar::itemPressed( MenuItem* item ) {
-    Menu* subMenu = item->getSubMenu();
-
-    if ( subMenu != NULL ) {
-        showSubMenu(item, subMenu);
-        m_subMenuActive = true;
-    }
-
-    return 0;
-}
-
-int MenuBar::showSubMenu( MenuItem* item, Menu* subMenu ) {
-    Point position = getWindow()->getPosition();
-    position += Point(3,21); // todo: window decorator size
-    position += getPosition();
-    position += item->getPosition();
-    position += Point(0,getSize().m_y);
-
-    subMenu->show(position);
-    subMenu->decRef();
-
-    return 0;
-}
-
-int MenuBar::hideSubMenu( MenuItem* item, Menu* subMenu ) {
-    subMenu->hide();
-    subMenu->decRef();
-
+int MenuItemParent::setParentLevel(MenuItemParent* parentLevel) {
+    m_parentLevel = parentLevel;
     return 0;
 }
 
@@ -168,48 +57,76 @@ void Menu::show( const Point& p ) {
 
 void Menu::hide( void ) {
     m_window->hide();
+
+    if (m_activeItem != NULL) {
+        Menu* subMenu = m_activeItem->getSubMenu();
+        if (subMenu != NULL) {
+            hideSubMenu(m_activeItem, subMenu);
+        }
+
+        m_activeItem->setActive(false);
+        m_activeItem = NULL;
+    }
 }
 
 int Menu::itemActivated( MenuItem* item ) {
-    //Menu* subMenu;
+    bool sameItem = (m_activeItem == item);
 
-    assert(m_activeItem == NULL);
+    if ( (!sameItem) &&
+         (m_activeItem != NULL)) {
+        Menu* subMenu = m_activeItem->getSubMenu();
+        if (subMenu != NULL) {
+            hideSubMenu(m_activeItem, subMenu);
+            m_activeItem->setActive(false);
+        }
+    }
+
     m_activeItem = item;
     m_activeItem->setActive(true);
 
-    /*subMenu = m_activeItem->getSubMenu();
-
-    if ( subMenu != NULL ) {
-        Point position = m_window->getPosition();
-        position += item->getPosition();
-        position += Point(m_window->getSize().m_x,0);
-
-        subMenu->show(position);
-        subMenu->decRef();
-        }*/
+    if (!sameItem) {
+        Menu* subMenu = m_activeItem->getSubMenu();
+        if (subMenu != NULL) {
+            showSubMenu(m_activeItem, subMenu);
+        }
+    }
 
     return 0;
 }
 
 int Menu::itemDeActivated( MenuItem* item ) {
-    //Menu* subMenu;
+    Menu* subMenu;
 
     assert(m_activeItem == item);
-    m_activeItem->setActive(false);
 
-    /*subMenu = m_activeItem->getSubMenu();
-
-    if ( subMenu != NULL ) {
-        subMenu->hide();
+    subMenu = m_activeItem->getSubMenu();
+    if (subMenu == NULL) {
+        m_activeItem->setActive(false);
+    } else {
         subMenu->decRef();
-        }*/
-
-    m_activeItem = NULL;
+    }
 
     return 0;
 }
 
 int Menu::itemPressed( MenuItem* item ) {
+    hideAllLevel();
+    return 0;
+}
+
+int Menu::hideAllLevel( void ) {
+    if (m_parentLevel == NULL) {
+        Menu* subMenu;
+
+        assert(m_activeItem != NULL);
+        subMenu = m_activeItem->getSubMenu();
+        if (subMenu != NULL) {
+            hideSubMenu(m_activeItem, subMenu);
+        }
+    } else {
+        m_parentLevel->hideAllLevel();
+    }
+
     return 0;
 }
 
@@ -245,6 +162,26 @@ void Menu::doLayout( const Point& menuSize ) {
 
         position.m_y += childSize.m_y;
     }
+}
+
+int Menu::showSubMenu( MenuItem* item, Menu* subMenu ) {
+    Point position = m_window->getPosition();
+    position += item->getPosition();
+    position += Point(item->getSize().m_x,0);
+
+    subMenu->setParentLevel(this);
+    subMenu->show(position);
+    subMenu->decRef();
+
+    return 0;
+}
+
+int Menu::hideSubMenu( MenuItem* item, Menu* subMenu ) {
+    subMenu->setParentLevel(this);
+    subMenu->hide();
+    subMenu->decRef();
+
+    return 0;
 }
 
 } /* namespace yguipp */

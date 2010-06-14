@@ -28,11 +28,18 @@ class MenuItem;
 
 class MenuItemParent {
   public:
+    MenuItemParent( void );
     virtual ~MenuItemParent( void ) {}
+
+    int setParentLevel(MenuItemParent* parentLevel);
 
     virtual int itemActivated( MenuItem* item ) = 0;
     virtual int itemDeActivated( MenuItem* item ) = 0;
     virtual int itemPressed( MenuItem* item ) = 0;
+    virtual int hideAllLevel( void ) = 0;
+
+  protected:
+    MenuItemParent* m_parentLevel;
 }; /* class MenuItemParent */
 
 class Menu;
@@ -52,6 +59,7 @@ class MenuBar : public Widget, public MenuItemParent {
     int itemActivated( MenuItem* item );
     int itemDeActivated( MenuItem* item );
     int itemPressed( MenuItem* item );
+    int hideAllLevel( void );
 
   private:
     int showSubMenu( MenuItem* item, Menu* subMenu );
@@ -75,10 +83,14 @@ class Menu : public Object, public MenuItemParent {
     int itemActivated( MenuItem* item );
     int itemDeActivated( MenuItem* item );
     int itemPressed( MenuItem* item );
+    int hideAllLevel( void );
 
   private:
     Point getPreferredSize( void );
     void doLayout( const Point& menuSize );
+
+    int showSubMenu( MenuItem* item, Menu* subMenu );
+    int hideSubMenu( MenuItem* item, Menu* subMenu );
 
   private:
     Window* m_window;

@@ -126,6 +126,7 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
 
         case Y_WINDOW_DO_MOVETO :
             Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_MOVETO, buffer, size);
+            m_position = reinterpret_cast<WinMoveTo*>(buffer)->m_position;
             break;
 
         case Y_WINDOW_MOVEDTO :
@@ -311,9 +312,10 @@ int Window::handleMousePressed(const yguipp::Point& position, int button) {
 }
 
 int Window::handleMouseReleased(int button) {
-    assert(m_mouseDownWidget != NULL);
-    m_mouseDownWidget->mouseReleased(button);
-    m_mouseDownWidget = NULL;
+    if (m_mouseDownWidget != NULL) {
+        m_mouseDownWidget->mouseReleased(button);
+        m_mouseDownWidget = NULL;
+    }
 
     return 0;
 }
