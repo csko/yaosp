@@ -179,6 +179,24 @@ int Window::mouseReleased(int button) {
     return 0;
 }
 
+int Window::activated(void) {
+    WinHeader cmd;
+    cmd.m_windowId = m_id;
+
+    m_application->getClientPort()->send(Y_WINDOW_ACTIVATED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+
+    return 0;
+}
+
+int Window::deactivated(void) {
+    WinHeader cmd;
+    cmd.m_windowId = m_id;
+
+    m_application->getClientPort()->send(Y_WINDOW_DEACTIVATED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+
+    return 0;
+}
+
 Window* Window::createFrom( GuiServer* guiServer, Application* application, WinCreate* request ) {
     Window* window = new Window(guiServer, application);
     window->init(request);

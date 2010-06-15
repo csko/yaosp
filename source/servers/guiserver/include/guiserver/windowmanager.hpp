@@ -74,6 +74,7 @@ class WindowManager {
 
     Window* m_mouseWindow;
     Window* m_mouseDownWindow;
+    Window* m_activeWindow;
 }; /* class WindowManager */
 
 #endif /* _WINDOWMANAGER_HPP_ */

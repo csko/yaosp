@@ -169,7 +169,6 @@ int MenuBar::showSubMenu( MenuItem* item, Menu* subMenu ) {
 }
 
 int MenuBar::hideSubMenu( MenuItem* item, Menu* subMenu ) {
-    subMenu->setParentLevel(NULL);
     subMenu->hide();
     subMenu->decRef();
 

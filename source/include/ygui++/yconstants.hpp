@@ -37,7 +37,8 @@ enum ColorSpace {
 enum {
     WINDOW_NONE = 0,
     WINDOW_NO_BORDER = (1 << 0),
-    WINDOW_FIXED_SIZE = (1 << 1)
+    WINDOW_FIXED_SIZE = (1 << 1),
+    WINDOW_MENU = (1 << 2)
 };
 
 enum WindowOrder {

@@ -26,7 +26,8 @@
 WindowManager::WindowManager(GuiServer* guiServer) : m_mutex("wm_lock"),
                                                      m_graphicsDriver(guiServer->getGraphicsDriver()),
                                                      m_screenBitmap(guiServer->getScreenBitmap()),
-                                                     m_mouseWindow(NULL), m_mouseDownWindow(NULL) {
+                                                     m_mouseWindow(NULL), m_mouseDownWindow(NULL),
+                                                     m_activeWindow(NULL) {
     m_mousePointer = new MousePointer();
     m_mousePointer->init();
     m_mousePointer->moveTo(NULL, NULL, m_screenBitmap->size() / 2);
@@ -79,6 +80,18 @@ int WindowManager::registerWindow( Window* window ) {
         m_mouseWindow->mouseEntered(mousePosition);
     }
 
+    /* Update the active window. */
+
+    if (m_activeWindow != NULL) {
+        if (!(m_activeWindow->getFlags() & yguipp::WINDOW_MENU) ||
+            !(window->getFlags() & yguipp::WINDOW_MENU)) {
+            m_activeWindow->deactivated();
+        }
+    }
+
+    m_activeWindow = window;
+    m_activeWindow->activated();
+
     unLock();
 
     return 0;
@@ -114,6 +127,16 @@ int WindowManager::unregisterWindow( Window* window ) {
 
         if (m_mouseWindow != NULL) {
             m_mouseWindow->mouseEntered(mousePosition);
+        }
+    }
+
+    /* Update active window. */
+    if (m_activeWindow == window) {
+        if (m_windowStack.empty()) {
+            m_activeWindow = NULL;
+        } else {
+            m_activeWindow = m_windowStack[0];
+            m_activeWindow->activated();
         }
     }
 
@@ -171,6 +194,15 @@ int WindowManager::mousePressed( int button ) {
     lock();
 
     if (m_mouseWindow != NULL) {
+        if (m_activeWindow != m_mouseWindow) {
+            if (m_activeWindow != NULL) {
+                m_activeWindow->deactivated();
+            }
+
+            m_activeWindow = m_mouseWindow;
+            m_activeWindow->activated();
+        }
+
         m_mouseWindow->mousePressed(m_mousePointer->getPosition(), button);
     }
 

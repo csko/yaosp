@@ -34,8 +34,9 @@ int MenuItemParent::setParentLevel(MenuItemParent* parentLevel) {
 }
 
 Menu::Menu( void ) : m_activeItem(NULL) {
-    m_window = new Window("", Point(0,0), Point(0,0), WINDOW_NO_BORDER);
+    m_window = new Window("", Point(0,0), Point(0,0), WINDOW_NO_BORDER|WINDOW_MENU);
     m_window->init();
+    m_window->addWindowListener(this);
 }
 
 Menu::~Menu( void ) {
@@ -127,6 +128,11 @@ int Menu::hideAllLevel( void ) {
         m_parentLevel->hideAllLevel();
     }
 
+    return 0;
+}
+
+int Menu::windowDeActivated( Window* window ) {
+    hideAllLevel();
     return 0;
 }
 

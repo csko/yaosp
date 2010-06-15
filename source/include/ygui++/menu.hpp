@@ -70,7 +70,7 @@ class MenuBar : public Widget, public MenuItemParent {
     MenuItem* m_activeItem;
 }; /* class MenuBar */
 
-class Menu : public Object, public MenuItemParent {
+class Menu : public Object, public MenuItemParent, public WindowListener {
   public:
     Menu( void );
     ~Menu( void );
@@ -84,6 +84,8 @@ class Menu : public Object, public MenuItemParent {
     int itemDeActivated( MenuItem* item );
     int itemPressed( MenuItem* item );
     int hideAllLevel( void );
+
+    int windowDeActivated( Window* window );
 
   private:
     Point getPreferredSize( void );

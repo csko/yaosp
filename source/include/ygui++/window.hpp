@@ -20,6 +20,7 @@
 #define _WINDOW_HPP_
 
 #include <string>
+#include <vector>
 
 #include <ygui++/yconstants.hpp>
 #include <ygui++/widget.hpp>
@@ -27,12 +28,27 @@
 
 namespace yguipp {
 
+class WindowListener {
+  public:
+    typedef std::vector<WindowListener*> List;
+    typedef List::iterator ListIter;
+    typedef List::const_iterator ListCIter;
+
+    virtual ~WindowListener(void) {}
+
+    virtual int windowActivated(Window* window) {}
+    virtual int windowDeActivated(Window* window) {}
+}; /* class WindowListener */
+
 class Window : public Object {
   public:
     Window( const std::string& title, const Point& position, const Point& size, int flags = WINDOW_NONE );
     virtual ~Window( void );
 
     bool init( void );
+
+    void addWindowListener(WindowListener* windowListener);
+    void removeWindowListener(WindowListener* windowListener);
 
     const Point& getSize( void );
     const Point& getPosition( void );
@@ -79,6 +95,8 @@ class Window : public Object {
 
     RenderTable* m_renderTable;
     GraphicsContext* m_graphicsContext;
+
+    WindowListener::List m_windowListeners;
 }; /* class Window */
 
 } /* namespace yguipp */

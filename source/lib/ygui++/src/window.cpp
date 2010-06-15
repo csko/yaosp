@@ -49,6 +49,29 @@ bool Window::init( void ) {
     return registerWindow();
 }
 
+void Window::addWindowListener(WindowListener* windowListener) {
+    for (WindowListener::ListCIter it = m_windowListeners.begin();
+         it != m_windowListeners.end();
+         ++it) {
+        if (*it == windowListener) {
+            return;
+        }
+    }
+
+    m_windowListeners.push_back(windowListener);
+}
+
+void Window::removeWindowListener(WindowListener* windowListener) {
+    for (WindowListener::ListIter it = m_windowListeners.begin();
+         it != m_windowListeners.end();
+         ++it) {
+        if (*it == windowListener) {
+            m_windowListeners.erase(it);
+            return;
+        }
+    }
+}
+
 const Point& Window::getSize( void ) {
     return m_size;
 }
@@ -154,6 +177,26 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
         case Y_WINDOW_MOUSE_RELEASED :
             handleMouseReleased(reinterpret_cast<WinMouseReleased*>(buffer)->m_button);
             break;
+
+        case Y_WINDOW_ACTIVATED : {
+            WindowListener::List tmpList = m_windowListeners;
+            for (WindowListener::ListCIter it = tmpList.begin();
+                 it != tmpList.end(); ++it) {
+                (*it)->windowActivated(this);
+            }
+
+            break;
+        }
+
+        case Y_WINDOW_DEACTIVATED : {
+            WindowListener::List tmpList = m_windowListeners;
+            for (WindowListener::ListCIter it = tmpList.begin();
+                 it != tmpList.end(); ++it) {
+                (*it)->windowDeActivated(this);
+            }
+
+            break;
+        }
     }
 
     return 0;

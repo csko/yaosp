@@ -90,6 +90,8 @@ int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
         case Y_WINDOW_MOUSE_EXITED :
         case Y_WINDOW_MOUSE_PRESSED :
         case Y_WINDOW_MOUSE_RELEASED :
+        case Y_WINDOW_ACTIVATED :
+        case Y_WINDOW_DEACTIVATED :
         case Y_WINDOW_WIDGET_INVALIDATED : {
             WinHeader* header = reinterpret_cast<WinHeader*>(buffer);
             WindowMapCIter it = m_windowMap.find(header->m_windowId);

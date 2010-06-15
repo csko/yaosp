@@ -60,6 +60,9 @@ class Window {
     int mousePressed(const yguipp::Point& position, int button);
     int mouseReleased(int button);
 
+    int activated(void);
+    int deactivated(void);
+
     static Window* createFrom( GuiServer* guiServer, Application* application, WinCreate* request );
 
   private:
