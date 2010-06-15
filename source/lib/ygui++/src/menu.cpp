@@ -22,6 +22,7 @@
 
 #include <ygui++/menu.hpp>
 #include <ygui++/menuitem.hpp>
+#include <ygui++/border/lineborder.hpp>
 
 namespace yguipp {
 
@@ -37,6 +38,7 @@ Menu::Menu( void ) : m_activeItem(NULL) {
     m_window = new Window("", Point(0,0), Point(0,0), WINDOW_NO_BORDER|WINDOW_MENU);
     m_window->init();
     m_window->addWindowListener(this);
+    //m_window->getContainer()->setBorder(new border::LineBorder());
 }
 
 Menu::~Menu( void ) {
@@ -148,6 +150,10 @@ Point Menu::getPreferredSize( void ) {
         size.m_x = std::max(size.m_x, childSize.m_x);
         size.m_y += childSize.m_y;
     }
+
+    /* todo: border size hack */
+    //size.m_x += 8;
+    //size.m_y += 8;
 
     return size;
 }

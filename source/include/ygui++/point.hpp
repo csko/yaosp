@@ -32,6 +32,7 @@ class Point {
 
     Point operator+( const Point& p ) const { return Point(m_x + p.m_x, m_y + p.m_y); }
     Point operator-( const Point& p ) const { return Point(m_x - p.m_x, m_y - p.m_y); }
+    Point operator*( int n ) const { return Point(m_x * n, m_y * n); }
     Point operator/( int n ) const { return Point(m_x / n, m_y / n); }
 
     Point& operator+=( const Point& p ) { m_x += p.m_x; m_y += p.m_y; return *this; }

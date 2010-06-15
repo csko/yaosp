@@ -24,6 +24,7 @@
 #include <ygui++/object.hpp>
 #include <ygui++/graphicscontext.hpp>
 #include <ygui++/layout/layout.hpp>
+#include <ygui++/border/border.hpp>
 
 namespace yguipp {
 
@@ -52,6 +53,7 @@ class Widget : public Object {
     Window* getWindow( void );
 
     void setWindow( Window* window );
+    void setBorder( border::Border* border );
     void setPosition( const Point& p );
     void setSize( const Point& p );
 
@@ -76,6 +78,7 @@ class Widget : public Object {
   private:
     Window* m_window;
     Widget* m_parent;
+    border::Border* m_border;
 
     bool m_isValid;
 

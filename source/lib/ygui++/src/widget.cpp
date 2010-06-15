@@ -23,8 +23,9 @@
 
 namespace yguipp {
 
-Widget::Widget( void ) : m_window(NULL), m_parent(NULL), m_isValid(false), m_position(0,0),
-                         m_scrollOffset(0,0), m_fullSize(0,0), m_visibleSize(0,0) {
+Widget::Widget( void ) : m_window(NULL), m_parent(NULL), m_border(NULL), m_isValid(false),
+                         m_position(0,0), m_scrollOffset(0,0), m_fullSize(0,0),
+                         m_visibleSize(0,0) {
 }
 
 Widget::~Widget( void ) {
@@ -63,7 +64,7 @@ const Point& Widget::getVisibleSize( void ) {
 }
 
 const Rect Widget::getBounds( void ) {
-    return Rect( 0, 0, m_fullSize.m_x - 1, m_fullSize.m_y - 1 );
+    return Rect(0, 0, m_fullSize.m_x - 1, m_fullSize.m_y - 1);
 }
 
 const Widget::ChildVector& Widget::getChildren( void ) {
@@ -79,6 +80,18 @@ void Widget::setWindow( Window* window ) {
 
     for ( ChildVectorCIter it = m_children.begin(); it != m_children.end(); ++it ) {
         it->first->setWindow(window);
+    }
+}
+
+void Widget::setBorder( border::Border* border ) {
+    if (m_border != NULL) {
+        m_border->decRef();
+    }
+
+    m_border = border;
+
+    if (m_border != NULL) {
+        m_border->incRef();
     }
 }
 
@@ -135,23 +148,30 @@ int Widget::doPaint( GraphicsContext* g, bool forced ) {
     Rect visibleRect;
 
     /* Calculate the visible rectangle of this widget. */
-
     visibleRect = m_visibleSize;
     visibleRect += g->getLeftTop();
     visibleRect &= g->currentRestrictedArea();
 
     /* If there is no visible part of the widget, we don't have to paint. */
-
     if ( !visibleRect.isValid() ) {
         return 0;
     }
 
     /* Update the restricted area according to this widget. */
-
     g->pushRestrictedArea(visibleRect);
 
-    /* Paint the widget. */
+    /* Paint the border. */
+    if (m_border != NULL) {
+        g->translateCheckPoint();
+        g->translate(m_scrollOffset);
+        
+        m_border->paint(this, g);
 
+        g->rollbackTranslate();
+        g->translate(m_border->leftTop());
+    }
+
+    /* Paint the widget. */
     if ( ( forced ) ||
          ( !m_isValid ) ) {
         m_isValid = true;
@@ -168,7 +188,6 @@ int Widget::doPaint( GraphicsContext* g, bool forced ) {
     }
 
     /* Paint the children of this widget as well. */
-
     for ( ChildVectorCIter it = m_children.begin(); it != m_children.end(); ++it ) {
         Widget* widget = it->first;
 
@@ -180,8 +199,11 @@ int Widget::doPaint( GraphicsContext* g, bool forced ) {
         g->rollbackTranslate();
     }
 
-    /* Remove the restricted area of this widget. */
+    if (m_border != NULL) {
+        g->translate(m_border->leftTop() * -1);
+    }
 
+    /* Remove the restricted area of this widget. */
     g->popRestrictedArea();
 
     return 0;
