@@ -164,7 +164,7 @@ int Widget::doPaint( GraphicsContext* g, bool forced ) {
     if (m_border != NULL) {
         g->translateCheckPoint();
         g->translate(m_scrollOffset);
-        
+
         m_border->paint(this, g);
 
         g->rollbackTranslate();

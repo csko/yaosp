@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <ygui++/widget.hpp>
+#include <ygui++/graphicscontext.hpp>
 #include <ygui++/border/lineborder.hpp>
 
 namespace yguipp {
@@ -33,6 +35,18 @@ yguipp::Point LineBorder::leftTop(void) {
 }
 
 int LineBorder::paint(Widget* widget, GraphicsContext* gc) {
+    const Point& size = widget->getSize();
+
+    gc->setPenColor(Color(0,0,0));
+    gc->fillRect(Rect(0,0,size.m_x - 1, m_lineSize - 1));
+    gc->fillRect(Rect(0,size.m_y - m_lineSize + 1, size.m_x - 1, size.m_y - 1));
+    gc->fillRect(Rect(0,0,m_lineSize - 1,size.m_y - 1));
+    gc->fillRect(Rect(size.m_x - m_lineSize + 1, 0, size.m_x - 1, size.m_y - 1));
+
+    gc->setPenColor(Color(255,255,255));
+    gc->fillRect(Rect(m_lineSize, m_lineSize, size.m_x - (m_lineSize + 1), m_lineSize + m_spacing - 1));
+    gc->fillRect(Rect(m_lineSize, m_lineSize, m_lineSize + m_spacing - 1, size.m_y - m_lineSize));
+
     return 0;
 }
 
