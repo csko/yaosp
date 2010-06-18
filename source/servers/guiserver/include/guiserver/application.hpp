@@ -50,6 +50,7 @@ class Application : public yutilpp::IPCListener {
     int handleFontCreate( FontCreate* request );
     int handleFontStringWidth( FontStringWidth* request );
     int handleBitmapCreate( BitmapCreate* request );
+    int handleDesktopGetSize( DesktopGetSize* request );
 
     int getWindowId( void );
     int getFontId( void );

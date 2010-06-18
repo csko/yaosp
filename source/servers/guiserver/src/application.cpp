@@ -96,6 +96,10 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
         case Y_BITMAP_CREATE :
             handleBitmapCreate(reinterpret_cast<BitmapCreate*>(data));
             break;
+
+        case Y_DESKTOP_GET_SIZE :
+            handleDesktopGetSize(reinterpret_cast<DesktopGetSize*>(data));
+            break;
     }
 
     return 0;
@@ -192,6 +196,14 @@ int Application::handleBitmapCreate( BitmapCreate* request ) {
     m_bitmapMap[reply.m_bitmapHandle] = bitmap;
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+
+    return 0;
+}
+
+int Application::handleDesktopGetSize( DesktopGetSize* request ) {
+    yguipp::Point size = m_guiServer->getScreenBitmap()->size();
+
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&size), sizeof(size));
 
     return 0;
 }

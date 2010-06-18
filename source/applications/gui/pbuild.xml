@@ -21,12 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build>
     <array name="subdirs">
-        <item>terminal</item>
-        <item>texteditor</item>
-        <item>desktop</item>
         <item>taskbar</item>
-        <item>iview</item>
-        <item>shutdown</item>
     </array>
 
     <target name="all">

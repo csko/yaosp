@@ -45,7 +45,8 @@ enum {
     Y_WINDOW_WIDGET_INVALIDATED,
     Y_FONT_CREATE,
     Y_FONT_STRING_WIDTH,
-    Y_BITMAP_CREATE
+    Y_BITMAP_CREATE,
+    Y_DESKTOP_GET_SIZE
 };
 
 struct AppCreate {
@@ -154,6 +155,11 @@ struct BitmapCreate {
 struct BitmapCreateReply {
     int m_bitmapHandle;
     region_id m_bitmapRegion;
+};
+
+struct DesktopGetSize {
+    ipc_port_id m_replyPort;
+    int m_desktopIndex;
 };
 
 #endif /* _YGUI_PROTOCOL_HPP_ */

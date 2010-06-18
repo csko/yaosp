@@ -65,6 +65,19 @@ void Application::unLock( void ) {
     m_lock->unLock();
 }
 
+Point Application::getDesktopSize(int desktopIndex) {
+    Point size;
+    uint32_t code;
+    DesktopGetSize request;
+    request.m_replyPort = m_replyPort->getId();
+    request.m_desktopIndex = desktopIndex;
+
+    m_serverPort->send(Y_DESKTOP_GET_SIZE, reinterpret_cast<void*>(&request), sizeof(request));
+    m_replyPort->receive(code, reinterpret_cast<void*>(&size), sizeof(size));
+
+    return size;
+}
+
 yutilpp::IPCPort* Application::getGuiServerPort( void ) {
     return m_guiServerPort;
 }

@@ -23,6 +23,7 @@
 #include <string>
 
 #include <ygui++/imageloader.hpp>
+#include <ygui++/point.hpp>
 #include <yutil++/mutex.hpp>
 #include <yutil++/ipcport.hpp>
 
@@ -42,6 +43,8 @@ class Application {
   public:
     void lock( void );
     void unLock( void );
+
+    Point getDesktopSize(int desktopIndex = 0);
 
     yutilpp::IPCPort* getGuiServerPort( void );
     yutilpp::IPCPort* getClientPort( void );

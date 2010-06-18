@@ -55,11 +55,6 @@ int GuiServer::run( void ) {
         yguipp::Color(75, 100, 125), yguipp::DM_COPY
     );
 
-    FontNode* font = m_fontStorage->getFontNode("DejaVu Sans", "Book", yguipp::FontInfo(18));
-    m_graphicsDriver->drawText(
-        m_screenBitmap, m_screenBitmap->bounds(), yguipp::Point(50,400), yguipp::Color(255,255,255), font, "Hello", 5
-    );
-
     m_windowManager->enable();
     m_inputThread->start();
 

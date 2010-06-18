@@ -131,7 +131,7 @@ static int start_gui( void ) {
         _exit( 0 );
     }
 
-    /*if ( fork() == 0 ) {
+    if ( fork() == 0 ) {
         char* const argv[] = { "taskbar", NULL };
         char* const envv[] = {
             "PATH=/yaosp/application:/yaosp/package/python-2.6.5",
@@ -145,7 +145,7 @@ static int start_gui( void ) {
         _exit( 0 );
     }
 
-    if ( fork() == 0 ) {
+    /*if ( fork() == 0 ) {
         char* const argv[] = { "desktop", NULL };
         char* const envv[] = {
             "PATH=/yaosp/application:/yaosp/package/python-2.6.5",

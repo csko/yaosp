@@ -30,6 +30,6 @@
     </gccprofile>
 
     <gccprofile name="y-gui-app-link">
-        <flags>-lygui -lyutil</flags>
+        <flags>-lygui++ -lyutil++</flags>
     </gccprofile>
 </project>
