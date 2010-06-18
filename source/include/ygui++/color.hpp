@@ -20,7 +20,6 @@
 #define _COLOR_HPP_
 
 #include <inttypes.h>
-#include <ygui/color.h>
 
 namespace yguipp {
 
@@ -29,7 +28,6 @@ class Color {
     Color( uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 255 ) : m_red(red), m_green(green),
                                                                                          m_blue(blue), m_alpha(alpha) {}
 
-    void toColorT( color_t* c ) const;
     inline uint32_t toColor32( void ) const {
         return ( ( m_alpha << 24 ) | ( m_red << 16 ) | ( m_green << 8 ) | ( m_blue ) );
     }

@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <limits.h>
+
 #include <ygui++/widget.hpp>
 #include <ygui++/window.hpp>
 #include <ygui++/protocol.hpp>

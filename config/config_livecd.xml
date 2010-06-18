@@ -4,7 +4,7 @@
     <node name="application">
         <node name="taskbar">
             <node name="menu">
-                <node name="terminal">
+                <!--node name="terminal">
                     <attrib type="ascii" name="name" value="Terminal"/>
                     <attrib type="numeric" name="position" value="0"/>
                     <attrib type="binary" name="image" value="source/applications/gui/terminal/images/terminal_32x32.png"/>
@@ -30,7 +30,7 @@
                     <attrib type="numeric" name="position" value="4"/>
                     <attrib type="binary" name="image" value="source/applications/gui/shutdown/images/shutdown_32x32.png"/>
                     <attrib type="ascii" name="executable" value="/application/shutdown/shutdown"/>
-                </node>
+                </node-->
             </node>
         </node>
 

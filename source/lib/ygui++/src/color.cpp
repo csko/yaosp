@@ -20,13 +20,6 @@
 
 namespace yguipp {
 
-void Color::toColorT( color_t* c ) const {
-    c->red = m_red;
-    c->green = m_green;
-    c->blue = m_blue;
-    c->alpha = m_alpha;
-}
-
 bool Color::operator==( const Color& c ) {
     return ( ( m_red == c.m_red ) &&
              ( m_green == c.m_green ) &&

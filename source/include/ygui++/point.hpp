@@ -19,16 +19,11 @@
 #ifndef _POINT_HPP_
 #define _POINT_HPP_
 
-#include <ygui/point.h>
-
 namespace yguipp {
 
 class Point {
   public:
     Point( int x = 0, int y = 0 ) : m_x(x), m_y(y) {}
-    Point( point_t* point ) : m_x(point->x), m_y(point->y) {}
-
-    void toPointT( point_t* p ) const { p->x = m_x; p->y = m_y; }
 
     Point operator+( const Point& p ) const { return Point(m_x + p.m_x, m_y + p.m_y); }
     Point operator-( const Point& p ) const { return Point(m_x - p.m_x, m_y - p.m_y); }

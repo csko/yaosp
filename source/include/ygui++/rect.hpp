@@ -20,7 +20,6 @@
 #define _RECT_HPP_
 
 #include <algorithm>
-#include <ygui/rect.h>
 
 #include <ygui++/point.hpp>
 
@@ -29,7 +28,6 @@ namespace yguipp {
 class Rect {
   public:
     Rect( const Point& size ) : m_left(0), m_top(0), m_right(size.m_x - 1), m_bottom(size.m_y - 1) {}
-    Rect( rect_t* r ) : m_left(r->left), m_top(r->top), m_right(r->right), m_bottom(r->bottom) {}
     Rect( int left = 0, int top = 0, int right = 0, int bottom = 0 ) : m_left(left), m_top(top), m_right(right), m_bottom(bottom) {}
 
     inline int width( void ) const { return ( m_right - m_left + 1 ); }
@@ -48,13 +46,6 @@ class Rect {
     }
     bool doIntersect( const Rect& r ) const {
         return !( r.m_right < m_left || r.m_left > m_right || r.m_bottom < m_top || r.m_top > m_bottom );
-    }
-
-    void toRectT( rect_t* r ) const {
-        r->left = m_left;
-        r->top = m_top;
-        r->right = m_right;
-        r->bottom = m_bottom;
     }
 
     Rect operator+( const Point& p ) const {

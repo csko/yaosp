@@ -17,6 +17,7 @@
  */
 
 #include <assert.h>
+#include <string.h>
 
 #include <ygui++/graphicscontext.hpp>
 #include <ygui++/window.hpp>
