@@ -53,7 +53,7 @@ void Window::handleRender( uint8_t* data, size_t size ) {
                 break;
 
             case yguipp::R_SET_DRAWING_MODE :
-                // todo
+                m_drawingMode = reinterpret_cast<yguipp::RSetDrawingMode*>(header)->m_drawingMode;
                 data += sizeof(yguipp::RSetDrawingMode);
                 break;
 
@@ -137,7 +137,9 @@ void Window::handleRender( uint8_t* data, size_t size ) {
             }
 
             case yguipp::R_DONE :
-                m_guiServer->getWindowManager()->updateWindowRegion(this, m_screenRect);
+                if (m_visible) {
+                    m_guiServer->getWindowManager()->updateWindowRegion(this, m_screenRect);
+                }
                 data += sizeof(yguipp::RenderHeader);
                 break;
 

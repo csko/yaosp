@@ -19,9 +19,33 @@
 #ifndef _TASKBAR_HPP_
 #define _TASKBAR_HPP_
 
-class TaskBar {
+#include <ygui++/widget.hpp>
+#include <ygui++/bitmap.hpp>
+#include <ygui++/menu.hpp>
+#include <ygui++/event/actionlistener.hpp>
+
+class MenuButton : public yguipp::Widget, public yguipp::event::ActionSpeaker {
+  public:
+    MenuButton(void);
+
+    yguipp::Point getPreferredSize(void);
+    int paint(yguipp::GraphicsContext* g);
+    int mousePressed(const yguipp::Point& p, int button);
+
+  private:
+    yguipp::Bitmap* m_image;
+}; /* class MenuButton */
+
+class TaskBar : public yguipp::event::ActionListener {
   public:
     int run(void);
-};
+
+    int actionPerformed(yguipp::Widget* widget);
+
+  private:
+    yguipp::Window* m_window;
+    MenuButton* m_menuButton;
+    yguipp::Menu* m_menu;
+}; /* class TaskBar */
 
 #endif /* _TASKBAR_HPP_ */

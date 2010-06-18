@@ -75,6 +75,14 @@ void GraphicsContext::setFont( Font* font ) {
     cmd->m_fontHandle = font->getHandle();
 }
 
+void GraphicsContext::setDrawingMode( DrawingMode mode ) {
+    RSetDrawingMode* cmd;
+
+    cmd = reinterpret_cast<RSetDrawingMode*>( m_window->getRenderTable()->allocate( sizeof(RSetDrawingMode) ));
+    cmd->m_header.m_cmd = R_SET_DRAWING_MODE;
+    cmd->m_drawingMode = mode;
+}
+
 void GraphicsContext::translate( const Point& p ) {
     m_translateStack.push( TranslateItem(p) );
     m_leftTop += p;

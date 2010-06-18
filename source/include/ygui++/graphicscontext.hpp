@@ -47,6 +47,7 @@ class GraphicsContext {
     void setPenColor( const Color& pen );
     void setClipRect( const Rect& rect );
     void setFont( Font* font );
+    void setDrawingMode( DrawingMode mode );
 
     void translate( const Point& p );
     void fillRect( const Rect& r );

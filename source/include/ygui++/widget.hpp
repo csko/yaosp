@@ -41,7 +41,7 @@ class Widget : public Object {
     Widget( void );
     virtual ~Widget( void );
 
-    virtual void addChild( Widget* child, layout::LayoutData* data = NULL );
+    virtual void add( Widget* child, layout::LayoutData* data = NULL );
 
     Widget* getParent( void );
     const Point& getPosition( void );

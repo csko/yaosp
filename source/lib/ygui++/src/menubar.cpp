@@ -29,7 +29,7 @@ MenuBar::MenuBar( void ) : m_subMenuActive(false), m_activeItem(NULL) {
 MenuBar::~MenuBar( void ) {
 }
 
-void MenuBar::addChild( Widget* child, layout::LayoutData* data ) {
+void MenuBar::add( Widget* child, layout::LayoutData* data ) {
     MenuItem* item;
 
     item = dynamic_cast<MenuItem*>(child);
@@ -38,7 +38,7 @@ void MenuBar::addChild( Widget* child, layout::LayoutData* data ) {
         return;
     }
 
-    Widget::addChild(child);
+    Widget::add(child);
     item->setMenuParent(this);
 }
 

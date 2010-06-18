@@ -26,7 +26,7 @@
 
 namespace yguipp {
 
-MenuItemParent::MenuItemParent( void ) : m_parentLevel(NULL) {
+MenuItemParent::MenuItemParent(void) : m_parentLevel(NULL) {
 }
 
 int MenuItemParent::setParentLevel(MenuItemParent* parentLevel) {
@@ -45,8 +45,8 @@ Menu::~Menu( void ) {
     delete m_window;
 }
 
-void Menu::addItem( MenuItem* item ) {
-    m_window->getContainer()->addChild(item);
+void Menu::add( MenuItem* item ) {
+    m_window->getContainer()->add(item);
     item->setMenuParent(this);
 }
 
@@ -119,13 +119,7 @@ int Menu::itemPressed( MenuItem* item ) {
 
 int Menu::hideAllLevel( void ) {
     if (m_parentLevel == NULL) {
-        Menu* subMenu;
-
-        assert(m_activeItem != NULL);
-        subMenu = m_activeItem->getSubMenu();
-        if (subMenu != NULL) {
-            hideSubMenu(m_activeItem, subMenu);
-        }
+        hide();
     } else {
         m_parentLevel->hideAllLevel();
     }

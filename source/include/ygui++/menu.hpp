@@ -49,7 +49,7 @@ class MenuBar : public Widget, public MenuItemParent {
     MenuBar( void );
     virtual ~MenuBar( void );
 
-    void addChild( Widget* child, layout::LayoutData* data = NULL );
+    void add( Widget* child, layout::LayoutData* data = NULL );
 
     Point getPreferredSize( void );
 
@@ -75,7 +75,9 @@ class Menu : public Object, public MenuItemParent, public WindowListener {
     Menu( void );
     ~Menu( void );
 
-    void addItem( MenuItem* item );
+    void add( MenuItem* item );
+
+    Point getPreferredSize( void );
 
     void show( const Point& p );
     void hide( void );
@@ -88,7 +90,6 @@ class Menu : public Object, public MenuItemParent, public WindowListener {
     int windowDeActivated( Window* window, DeActivationReason reason );
 
   private:
-    Point getPreferredSize( void );
     void doLayout( const Point& menuSize );
 
     int showSubMenu( MenuItem* item, Menu* subMenu );

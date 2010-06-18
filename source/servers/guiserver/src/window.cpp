@@ -51,7 +51,7 @@ bool Window::init( WinCreate* request ) {
 }
 
 int Window::handleMessage( uint32_t code, void* data, size_t size ) {
-    switch ( code ) {
+    switch (code) {
         case Y_WINDOW_SHOW :
             if (!m_visible) {
                 m_guiServer->getWindowManager()->registerWindow(this);
