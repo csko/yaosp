@@ -179,18 +179,20 @@ int Window::mouseReleased(int button) {
     return 0;
 }
 
-int Window::activated(void) {
-    WinHeader cmd;
-    cmd.m_windowId = m_id;
+int Window::activated(yguipp::ActivationReason reason) {
+    WinActivated cmd;
+    cmd.m_header.m_windowId = m_id;
+    cmd.m_reason = reason;
 
     m_application->getClientPort()->send(Y_WINDOW_ACTIVATED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
 
     return 0;
 }
 
-int Window::deactivated(void) {
-    WinHeader cmd;
-    cmd.m_windowId = m_id;
+int Window::deactivated(yguipp::DeActivationReason reason) {
+    WinDeActivated cmd;
+    cmd.m_header.m_windowId = m_id;
+    cmd.m_reason = reason;
 
     m_application->getClientPort()->send(Y_WINDOW_DEACTIVATED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
 

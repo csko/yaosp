@@ -36,8 +36,8 @@ class WindowListener {
 
     virtual ~WindowListener(void) {}
 
-    virtual int windowActivated(Window* window) {}
-    virtual int windowDeActivated(Window* window) {}
+    virtual int windowActivated(Window* window, ActivationReason reason) {}
+    virtual int windowDeActivated(Window* window, DeActivationReason reason) {}
 }; /* class WindowListener */
 
 class Window : public Object {

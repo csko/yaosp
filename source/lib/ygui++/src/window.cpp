@@ -180,9 +180,11 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
 
         case Y_WINDOW_ACTIVATED : {
             WindowListener::List tmpList = m_windowListeners;
+            ActivationReason reason = reinterpret_cast<WinActivated*>(buffer)->m_reason;
+
             for (WindowListener::ListCIter it = tmpList.begin();
                  it != tmpList.end(); ++it) {
-                (*it)->windowActivated(this);
+                (*it)->windowActivated(this, reason);
             }
 
             break;
@@ -190,9 +192,11 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
 
         case Y_WINDOW_DEACTIVATED : {
             WindowListener::List tmpList = m_windowListeners;
+            DeActivationReason reason = reinterpret_cast<WinDeActivated*>(buffer)->m_reason;
+
             for (WindowListener::ListCIter it = tmpList.begin();
                  it != tmpList.end(); ++it) {
-                (*it)->windowDeActivated(this);
+                (*it)->windowDeActivated(this, reason);
             }
 
             break;

@@ -85,6 +85,16 @@ struct WinMoveTo {
     yguipp::Point m_position;
 };
 
+struct WinActivated {
+    WinHeader m_header;
+    yguipp::ActivationReason m_reason;
+};
+
+struct WinDeActivated {
+    WinHeader m_header;
+    yguipp::DeActivationReason m_reason;
+};
+
 struct WinMouseEntered {
     WinHeader m_header;
     yguipp::Point m_position;

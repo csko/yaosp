@@ -133,8 +133,11 @@ int Menu::hideAllLevel( void ) {
     return 0;
 }
 
-int Menu::windowDeActivated( Window* window ) {
-    hideAllLevel();
+int Menu::windowDeActivated( Window* window, DeActivationReason reason ) {
+    if (reason == OTHER_WINDOW_CLICKED) {
+        hideAllLevel();
+    }
+
     return 0;
 }
 

@@ -60,8 +60,8 @@ class Window {
     int mousePressed(const yguipp::Point& position, int button);
     int mouseReleased(int button);
 
-    int activated(void);
-    int deactivated(void);
+    int activated(yguipp::ActivationReason reason);
+    int deactivated(yguipp::DeActivationReason reason);
 
     static Window* createFrom( GuiServer* guiServer, Application* application, WinCreate* request );
 
@@ -69,7 +69,7 @@ class Window {
     void handleDoResize( WinResize* request );
     void handleDoMoveTo( WinMoveTo* request );
     void handleRender( uint8_t* data, size_t size );
-    
+
     void calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,
                                yguipp::Rect& screenRect, yguipp::Rect& clientRect );
   private:

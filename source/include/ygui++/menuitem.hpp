@@ -22,6 +22,7 @@
 #include <string>
 
 #include <ygui++/widget.hpp>
+#include <ygui++/bitmap.hpp>
 
 namespace yguipp {
 
@@ -30,7 +31,7 @@ class Menu;
 
 class MenuItem : public Widget {
   public:
-    MenuItem( const std::string& text );
+    MenuItem( const std::string& text, Bitmap* image = NULL );
     virtual ~MenuItem( void );
 
     Point getPreferredSize( void );
@@ -51,6 +52,7 @@ class MenuItem : public Widget {
   private:
     Font* m_font;
     std::string m_text;
+    Bitmap* m_image;
 
     Menu* m_subMenu;
     MenuItemParent* m_menuParent;

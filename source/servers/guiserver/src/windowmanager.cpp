@@ -85,12 +85,12 @@ int WindowManager::registerWindow( Window* window ) {
     if (m_activeWindow != NULL) {
         if (!(m_activeWindow->getFlags() & yguipp::WINDOW_MENU) ||
             !(window->getFlags() & yguipp::WINDOW_MENU)) {
-            m_activeWindow->deactivated();
+            m_activeWindow->deactivated(yguipp::OTHER_WINDOW_OPENED);
         }
     }
 
     m_activeWindow = window;
-    m_activeWindow->activated();
+    m_activeWindow->activated(yguipp::WINDOW_OPENED);
 
     unLock();
 
@@ -132,11 +132,13 @@ int WindowManager::unregisterWindow( Window* window ) {
 
     /* Update active window. */
     if (m_activeWindow == window) {
+        m_activeWindow->deactivated(yguipp::WINDOW_CLOSED);
+
         if (m_windowStack.empty()) {
             m_activeWindow = NULL;
         } else {
             m_activeWindow = m_windowStack[0];
-            m_activeWindow->activated();
+            m_activeWindow->activated(yguipp::OTHER_WINDOW_CLOSED);
         }
     }
 
@@ -196,11 +198,11 @@ int WindowManager::mousePressed( int button ) {
     if (m_mouseWindow != NULL) {
         if (m_activeWindow != m_mouseWindow) {
             if (m_activeWindow != NULL) {
-                m_activeWindow->deactivated();
+                m_activeWindow->deactivated(yguipp::OTHER_WINDOW_CLICKED);
             }
 
             m_activeWindow = m_mouseWindow;
-            m_activeWindow->activated();
+            m_activeWindow->activated(yguipp::WINDOW_CLICKED);
         }
 
         m_mouseWindow->mousePressed(m_mousePointer->getPosition(), button);

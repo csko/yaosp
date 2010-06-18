@@ -65,6 +65,18 @@ enum FontFlags {
     FONT_SMOOTHED = (1 << 0)
 };
 
+enum ActivationReason {
+    WINDOW_OPENED,
+    WINDOW_CLICKED,
+    OTHER_WINDOW_CLOSED
+};
+
+enum DeActivationReason {
+    WINDOW_CLOSED,
+    OTHER_WINDOW_CLICKED,
+    OTHER_WINDOW_OPENED
+};
+
 struct FontInfo {
     FontInfo(int pointSize, int flags = FONT_SMOOTHED) : m_pointSize(pointSize * 64), m_flags(flags) {}
 

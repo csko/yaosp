@@ -85,7 +85,7 @@ class Menu : public Object, public MenuItemParent, public WindowListener {
     int itemPressed( MenuItem* item );
     int hideAllLevel( void );
 
-    int windowDeActivated( Window* window );
+    int windowDeActivated( Window* window, DeActivationReason reason );
 
   private:
     Point getPreferredSize( void );

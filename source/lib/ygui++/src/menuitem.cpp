@@ -24,11 +24,20 @@
 
 namespace yguipp {
 
-MenuItem::MenuItem( const std::string& text ) : m_text(text), m_subMenu(NULL), m_menuParent(NULL), m_active(false) {
+MenuItem::MenuItem( const std::string& text, Bitmap* image ) : m_text(text), m_image(image), m_subMenu(NULL),
+                                                               m_menuParent(NULL), m_active(false) {
     initFont();
+
+    if (m_image != NULL) {
+        m_image->incRef();
+    }
 }
 
 MenuItem::~MenuItem( void ) {
+    if (m_image) {
+        m_image->decRef();
+    }
+
     if ( m_font != NULL ) {
         m_font->decRef();
     }
