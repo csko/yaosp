@@ -23,7 +23,7 @@
 #include <pthread.h>
 #include <yaosp/ipc.h>
 
-#include <yconfig/protocol.h>
+#include <yconfig++/protocol.hpp>
 
 ipc_port_id ycfg_server_port = -1;
 ipc_port_id ycfg_reply_port = -1;

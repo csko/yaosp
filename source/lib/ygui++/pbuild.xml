@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare"/>
 
     <array name="files">
         <item>src/object.cpp</item>
@@ -45,15 +46,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/border/lineborder.cpp</item>
         <item>src/event/actionlistener.cpp</item>
     </array>
-
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
 
     <target name="compile">
         <call target="prepare"/>

@@ -24,46 +24,39 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
-        <item>src/thread.cpp</item>
-        <item>src/ipcport.cpp</item>
-        <item>src/ipclistener.cpp</item>
-        <item>src/mutex.cpp</item>
-        <item>src/buffer.cpp</item>
-        <item>src/storage/directory.cpp</item>
-        <item>src/storage/file.cpp</item>
+        <item>src/connection.cpp</item>
     </array>
 
     <target name="compile">
         <call target="prepare"/>
 
         <echo/>
-        <echo>Compiling yutil++ library</echo>
+        <echo>Compiling yconfig++ library</echo>
         <echo/>
 
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/lib/yutil++/${i}</echo>
-            <gcc>
+            <echo>[GCC    ] source/lib/yconfig++/${i}</echo>
+            <gcc profile="y-lib-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
 
         <echo/>
-        <echo>Linking yutil++ library</echo>
+        <echo>Linking yconfig++ library</echo>
         <echo/>
-        <echo>[LD     ] source/lib/yutil++/objs/libyutil++.so</echo>
+        <echo>[LD     ] source/lib/yconfig++/objs/libyconfig++.so</echo>
 
         <ld>
             <flag>-shared</flag>
             <input>objs/*.o</input>
-            <output>objs/libyutil++.so</output>
+            <output>objs/libyconfig++.so</output>
         </ld>
 
     </target>
 
     <target name="install">
-        <copy from="objs/libyutil++.so" to="${sharedlibdir}"/>
-        <copy from="objs/libyutil++.so" to="${imagedir}/system/lib"/>
+        <copy from="objs/libyconfig++.so" to="${sharedlibdir}"/>
+        <copy from="objs/libyconfig++.so" to="${imagedir}/system/lib"/>
     </target>
 </build>
