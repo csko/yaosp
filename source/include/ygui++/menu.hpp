@@ -66,6 +66,7 @@ class MenuBar : public Widget, public MenuItemParent {
     int hideSubMenu( MenuItem* item, Menu* subMenu );
 
   private:
+    bool m_mouseOnItem;
     bool m_subMenuActive;
     MenuItem* m_activeItem;
 }; /* class MenuBar */

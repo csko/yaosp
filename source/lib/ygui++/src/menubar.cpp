@@ -23,7 +23,7 @@
 
 namespace yguipp {
 
-MenuBar::MenuBar( void ) : m_subMenuActive(false), m_activeItem(NULL) {
+MenuBar::MenuBar( void ) : m_mouseOnItem(false), m_subMenuActive(false), m_activeItem(NULL) {
 }
 
 MenuBar::~MenuBar( void ) {
@@ -81,6 +81,8 @@ int MenuBar::paint( GraphicsContext* g ) {
 }
 
 int MenuBar::itemActivated( MenuItem* item ) {
+    m_mouseOnItem = true;
+
     if (m_subMenuActive) {
         Menu* subMenu;
 
@@ -111,6 +113,8 @@ int MenuBar::itemActivated( MenuItem* item ) {
 }
 
 int MenuBar::itemDeActivated( MenuItem* item ) {
+    m_mouseOnItem = false;
+
     if (!m_subMenuActive) {
         assert(m_activeItem == item);
         m_activeItem->setActive(false);
@@ -148,8 +152,10 @@ int MenuBar::hideAllLevel( void ) {
         assert(!m_subMenuActive);
     }
 
-    m_activeItem->setActive(false);
-    m_activeItem = NULL;
+    if (!m_mouseOnItem) {
+        m_activeItem->setActive(false);
+        m_activeItem = NULL;
+    }
 
     return 0;
 }

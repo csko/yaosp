@@ -45,37 +45,37 @@ int main( int argc, char** argv ) {
     container->setLayout( new BorderLayout() );
     container->setBackgroundColor( Color(255,255,255) );
 
-    //container->addChild(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
+    //container->add(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
     MenuBar* menuBar = new MenuBar();
-    container->addChild(menuBar, new BorderLayoutData(BorderLayoutData::PAGE_START));
+    container->add(menuBar, new BorderLayoutData(BorderLayoutData::PAGE_START));
 
     MenuItem* file = new MenuItem("File");
-    menuBar->addChild(file);
+    menuBar->add(file);
     MenuItem* help = new MenuItem("Help");
-    menuBar->addChild(help);
+    menuBar->add(help);
 
     Menu* fileMenu = new Menu();
     file->setSubMenu(fileMenu);
-    fileMenu->addItem(new MenuItem("Open"));
+    fileMenu->add(new MenuItem("Open"));
     MenuItem* save = new MenuItem("Save");
-    fileMenu->addItem(save);
-    fileMenu->addItem(new MenuItem("Exit"));
+    fileMenu->add(save);
+    fileMenu->add(new MenuItem("Exit"));
 
     Menu* helpMenu = new Menu();
     help->setSubMenu(helpMenu);
-    helpMenu->addItem(new MenuItem("About"));
+    helpMenu->add(new MenuItem("About"));
 
     Menu* saveMenu = new Menu();
     save->setSubMenu(saveMenu);
-    saveMenu->addItem(new MenuItem("As Image"));
-    saveMenu->addItem(new MenuItem("As Text"));
+    saveMenu->add(new MenuItem("As Image"));
+    saveMenu->add(new MenuItem("As Text"));
 
-    container->addChild(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
-    container->addChild(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
-    container->addChild(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
-    container->addChild(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
+    container->add(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
+    container->add(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
+    container->add(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
+    container->add(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
 
-    /*container->addChild(
+    /*container->add(
         new Image(Bitmap::loadFromFile("/system/images/yaosp.png")),
         new BorderLayoutData(BorderLayoutData::CENTER)
         );*/

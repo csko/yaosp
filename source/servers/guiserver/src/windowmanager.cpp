@@ -198,7 +198,10 @@ int WindowManager::mousePressed( int button ) {
     if (m_mouseWindow != NULL) {
         if (m_activeWindow != m_mouseWindow) {
             if (m_activeWindow != NULL) {
-                m_activeWindow->deactivated(yguipp::OTHER_WINDOW_CLICKED);
+                if (!(m_activeWindow->getFlags() & yguipp::WINDOW_MENU) ||
+                    !(m_mouseWindow->getFlags() & yguipp::WINDOW_MENU)) {
+                    m_activeWindow->deactivated(yguipp::OTHER_WINDOW_CLICKED);
+                }
             }
 
             m_activeWindow = m_mouseWindow;

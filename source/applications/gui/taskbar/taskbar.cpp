@@ -39,7 +39,7 @@ Point MenuButton::getPreferredSize(void) {
 
 int MenuButton::paint(GraphicsContext* g) {
     g->setDrawingMode(DM_BLEND);
-    g->drawBitmap(Point(0,0), m_image);
+    g->drawBitmap((getSize() - m_image->getSize()) / 2, m_image);
     g->setDrawingMode(DM_COPY);
 
     return 0;
