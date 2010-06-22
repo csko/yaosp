@@ -19,7 +19,11 @@
 #ifndef _YCONFIGPP_CONNECTION_HPP_
 #define _YCONFIGPP_CONNECTION_HPP_
 
+#include <vector>
+#include <string>
 #include <yutil++/ipcport.hpp>
+
+#include <yconfig++/protocol.hpp>
 
 namespace yconfigpp {
 
@@ -29,6 +33,13 @@ class Connection {
     ~Connection(void);
 
     bool init(void);
+
+    bool getNumericValue(const std::string& path, const std::string& attr, uint64_t& value);
+    bool getAsciiValue(const std::string& path, const std::string& attr, std::string& value);
+    bool listChildren(const std::string& path, std::vector<std::string>& children);
+
+  private:
+    bool getAttributeValue(const std::string& path, const std::string& attr, msg_get_reply_t*& reply, size_t& size);
 
   private:
     yutilpp::IPCPort* m_serverPort;

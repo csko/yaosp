@@ -77,6 +77,15 @@ int IPCPort::send( uint32_t code, void* data, size_t size ) {
     return send_ipc_message( m_id, code, data, size );
 }
 
+int IPCPort::peek( uint32_t& code, size_t& size, uint64_t timeOut ) {
+    if ((m_id < 0) ||
+        (!m_canReceive)) {
+        return -1;
+    }
+
+    return peek_ipc_message(m_id, &code, &size, timeOut);
+}
+
 int IPCPort::receive( uint32_t& code, void* data, size_t maxSize, uint64_t timeOut ) {
     if ( ( m_id < 0 ) ||
          ( !m_canReceive ) ) {

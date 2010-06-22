@@ -16,9 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yconfig++/protocol.hpp>
+
 #include <configserver/loader.hpp>
 
-Loader::Loader(void) : m_file(NULL) {
+Loader::Loader(yutilpp::storage::File* file) : m_file(file) {
     m_root = new Node();
 }
 
@@ -26,15 +28,8 @@ Loader::~Loader(void) {
     delete m_file;
 }
 
-bool Loader::loadFromFile(const std::string& fileName) {
-    m_file = new yutilpp::storage::File(fileName);
-
-    if (!m_file->init()) {
-        return false;
-    }
-
+bool Loader::load(void) {
     readItemsAt(m_root, 0);
-
     return true;
 }
 
@@ -137,10 +132,10 @@ bool Loader::readAttribute(Attribute*& attribute) {
     }
 
     switch (type) {
-        case Attribute::ATTR_NUMERIC : return readNumericAttribute(attribute);
-        case Attribute::ATTR_ASCII : return readAsciiAttribute(attribute);
-        case Attribute::ATTR_BOOL : return readBoolAttribute(attribute);
-        case Attribute::ATTR_BINARY : return readBinaryAttribute(attribute);
+        case ATTR_NUMERIC : return readNumericAttribute(attribute);
+        case ATTR_ASCII : return readAsciiAttribute(attribute);
+        case ATTR_BOOL : return readBoolAttribute(attribute);
+        case ATTR_BINARY : return readBinaryAttribute(attribute);
     }
 
     return false;

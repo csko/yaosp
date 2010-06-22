@@ -43,6 +43,9 @@ class TaskBar : public yguipp::event::ActionListener {
     int actionPerformed(yguipp::Widget* widget);
 
   private:
+    void createMenu(void);
+
+  private:
     yguipp::Window* m_window;
     MenuButton* m_menuButton;
     yguipp::Menu* m_menu;

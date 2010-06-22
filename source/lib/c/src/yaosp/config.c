@@ -126,7 +126,7 @@ int ycfg_get_numeric_value( const char* path, const char* attrib, uint64_t* valu
 
     if ( error >= 0 ) {
         if ( reply->error == 0 ) {
-            if ( reply->type == NUMERIC ) {
+            if ( reply->type == ATTR_NUMERIC ) {
                 *value = *( uint64_t* )( reply + 1 );
                 error = 0;
             } else {
@@ -154,7 +154,7 @@ int ycfg_get_binary_value( const char* path, const char* attrib, void** _data, s
 
     if ( error >= 0 ) {
         if ( reply->error == 0 ) {
-            if ( reply->type == BINARY ) {
+            if ( reply->type == ATTR_BINARY ) {
                 size_t size = error - sizeof( msg_get_reply_t );
                 void* data = malloc( size );
 

@@ -26,10 +26,10 @@
 
 class Loader {
   public:
-    Loader(void);
+    Loader(yutilpp::storage::File* file);
     ~Loader(void);
 
-    bool loadFromFile(const std::string& fileName);
+    bool load(void);
     Node* getRoot(void);
 
   private:

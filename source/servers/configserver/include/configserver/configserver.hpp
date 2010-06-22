@@ -20,6 +20,7 @@
 #define _CONFIGSERVER_CONFIGSERVER_HPP_
 
 #include <yutil++/ipcport.hpp>
+#include <yutil++/storage/file.hpp>
 #include <yconfig++/protocol.hpp>
 
 #include <configserver/node.hpp>
@@ -29,6 +30,7 @@ class ConfigServer {
     int run(int argc, char** argv);
 
   private:
+    int handleGetAttributeValue(msg_get_attr_t* msg);
     int handleListChildren(msg_list_children_t* msg);
 
     Node* findNodeByPath(const std::string& path);
@@ -37,6 +39,7 @@ class ConfigServer {
     Node* m_root;
     uint8_t m_recvBuffer[8192];
     yutilpp::IPCPort* m_serverPort;
+    yutilpp::storage::File* m_storageFile;
 }; /* class ConfigServer */
 
 #endif /* _CONFIGSERVER_CONFIGSERVER_HPP_ */

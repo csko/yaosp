@@ -22,19 +22,20 @@
 #include <map>
 #include <string>
 
+#include <yutil++/storage/file.hpp>
+
 class Attribute {
   public:
-    enum {
-        ATTR_NUMERIC = 0,
-        ATTR_ASCII,
-        ATTR_BOOL,
-        ATTR_BINARY
-    };
-
     Attribute(uint8_t type);
     virtual ~Attribute(void) {}
 
+    uint8_t getType(void);
+
+    virtual uint32_t getSize(void) = 0;
+    virtual bool getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size) = 0;
+
     typedef std::map<std::string, Attribute*> Map;
+    typedef Map::const_iterator MapCIter;
 
   private:
     uint8_t m_type;
@@ -44,6 +45,9 @@ class NumericAttribute : public Attribute {
   public:
     NumericAttribute(uint64_t value);
 
+    uint32_t getSize(void);
+    bool getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size);
+
   private:
     uint64_t m_value;
 }; /* class NumericAttribute */
@@ -51,6 +55,9 @@ class NumericAttribute : public Attribute {
 class AsciiAttribute : public Attribute {
   public:
     AsciiAttribute(off_t offset, uint32_t size);
+
+    uint32_t getSize(void);
+    bool getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size);
 
   private:
     off_t m_offset;
@@ -61,6 +68,9 @@ class BoolAttribute : public Attribute {
   public:
     BoolAttribute(bool value);
 
+    uint32_t getSize(void);
+    bool getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size);
+
   private:
     bool m_value;
 }; /* class BoolAttribute */
@@ -68,6 +78,9 @@ class BoolAttribute : public Attribute {
 class BinaryAttribute : public Attribute {
   public:
     BinaryAttribute(off_t offset, uint32_t size);
+
+    uint32_t getSize(void);
+    bool getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size);
 
   private:
     off_t m_offset;

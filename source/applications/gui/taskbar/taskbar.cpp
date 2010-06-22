@@ -24,6 +24,7 @@
 #include <ygui++/imageloader.hpp>
 #include <ygui++/menuitem.hpp>
 #include <ygui++/layout/borderlayout.hpp>
+#include <yconfig++/connection.hpp>
 
 #include "taskbar.hpp"
 
@@ -69,9 +70,7 @@ int TaskBar::run(void) {
     m_menuButton->addActionListener(this);
     container->add(m_menuButton, new layout::BorderLayoutData(layout::BorderLayoutData::LINE_START));
 
-    m_menu = new Menu();
-    m_menu->add(new MenuItem("Hello"));
-    m_menu->add(new MenuItem("World"));
+    createMenu();
 
     m_window->show();
     app->mainLoop();
@@ -84,4 +83,30 @@ int TaskBar::actionPerformed(yguipp::Widget* widget) {
     m_menu->show(m_window->getPosition() - Point(0,size.m_y));
 
     return 0;
+}
+
+void TaskBar::createMenu(void) {
+    yconfigpp::Connection config;
+    config.init();
+
+    std::vector<std::string> children;
+    config.listChildren("application/taskbar/menu", children);
+
+    dbprintf("size: %u\n", children.size());
+    for (std::vector<std::string>::const_iterator it = children.begin();
+         it != children.end();
+         ++it) {
+        std::string name;
+        uint64_t position;
+        std::string path = "application/taskbar/menu/" + *it;
+
+        config.getNumericValue(path, "position", position);
+        config.getAsciiValue(path, "name", name);
+
+        dbprintf("path=%s pos=%llu name=%s\n", (*it).c_str(), position, name.c_str());
+    }
+
+    m_menu = new Menu();
+    m_menu->add(new MenuItem("Hello"));
+    m_menu->add(new MenuItem("World"));
 }

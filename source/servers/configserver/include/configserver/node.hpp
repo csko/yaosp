@@ -33,7 +33,10 @@ class Node {
     void addAttribute(const std::string& name, Attribute* attribute);
 
     Node* getChild(const std::string& name);
+    Attribute* getAttribute(const std::string& name);
+
     void getChildren(std::vector<Node*>& children);
+    void getChildrenNames(std::vector<std::string>& childrenNames);
     uint64_t getFileOffset(void);
 
     typedef std::map<std::string, Node*> Map;

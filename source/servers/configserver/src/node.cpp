@@ -39,11 +39,29 @@ Node* Node::getChild(const std::string& name) {
     return it->second;
 }
 
+Attribute* Node::getAttribute(const std::string& name) {
+    Attribute::MapCIter it = m_attributes.find(name);
+
+    if (it == m_attributes.end()) {
+        return NULL;
+    }
+
+    return it->second;
+}
+
 void Node::getChildren(std::vector<Node*>& children) {
     for (MapCIter it = m_children.begin();
          it != m_children.end();
          ++it) {
         children.push_back(it->second);
+    }
+}
+
+void Node::getChildrenNames(std::vector<std::string>& childrenNames) {
+    for (MapCIter it = m_children.begin();
+         it != m_children.end();
+         ++it) {
+        childrenNames.push_back(it->first);
     }
 }
 

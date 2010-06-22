@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YCONFIG_PROTOCOL_H_
-#define _YCONFIG_PROTOCOL_H_
+#ifndef _YCONFIGPP_PROTOCOL_H_
+#define _YCONFIGPP_PROTOCOL_H_
 
 #include <yaosp/ipc.h>
 
@@ -29,10 +29,10 @@ enum {
 };
 
 typedef enum attr_type {
-    NUMERIC,
-    ASCII,
-    BOOL,
-    BINARY
+    ATTR_NUMERIC,
+    ATTR_ASCII,
+    ATTR_BOOL,
+    ATTR_BINARY
 } attr_type_t;
 
 typedef struct msg_get_attr {
@@ -41,7 +41,7 @@ typedef struct msg_get_attr {
 
 typedef struct msg_get_reply {
     int error;
-    attr_type_t type;
+    uint8_t type;
 } msg_get_reply_t;
 
 typedef struct msg_add_child {

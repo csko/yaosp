@@ -50,6 +50,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <gcc use_gpp="yes" profile="y-gui-app-link">
             <input>objs/*.o</input>
             <output>objs/taskbar</output>
+            <flag>-lyconfig++</flag>
         </gcc>
     </target>
 
