@@ -33,6 +33,7 @@ class File {
     bool init( void );
 
     int read( void* buffer, int size );
+    bool seek(off_t offset);
 
   private:
     int m_file;

@@ -17,6 +17,7 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 #include <yaosp/debug.h>
 
 #include <configserver/configserver.hpp>
@@ -28,15 +29,65 @@ int ConfigServer::run(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    Loader loader;
-    if (!loader.loadFromFile(argv[1])) {
-        dbprintf("%s: failed to load storage file: %s.", argv[0], argv[1]);
-        return EXIT_FAILURE;
+    {
+        Loader loader;
+        if (!loader.loadFromFile(argv[1])) {
+            dbprintf("%s: failed to load storage file: %s.", argv[0], argv[1]);
+            return EXIT_FAILURE;
+        }
+        m_root = loader.getRoot();
     }
 
     m_serverPort = new yutilpp::IPCPort();
     m_serverPort->createNew();
     m_serverPort->registerAsNamed("configserver");
 
+    while (1) {
+        int ret;
+        uint32_t code;
+
+        ret = m_serverPort->receive(code, m_recvBuffer, sizeof(m_recvBuffer), 1000000);
+
+        if (ret == -ETIME) {
+            continue;
+        } else if (ret < 0) {
+            dbprintf("%s: failed to receive message: %d.\n", argv[0], ret);
+            break;
+        }
+
+        switch (code) {
+            case MSG_NODE_LIST_CHILDREN :
+                handleListChildren(reinterpret_cast<msg_list_children_t*>(m_recvBuffer));
+                break;
+        }
+    }
+
     return EXIT_SUCCESS;
+}
+
+int ConfigServer::handleListChildren(msg_list_children_t* msg) {
+    Node* node = findNodeByPath(reinterpret_cast<char*>(msg + 1));
+    dbprintf("node=%p\n", node);
+    return 0;
+}
+
+Node* ConfigServer::findNodeByPath(const std::string& path) {
+    Node* current = m_root;
+    std::string::size_type pos;
+    std::string::size_type start = 0;
+
+    do {
+        pos = path.find('/', start);
+        std::string name = path.substr(start, pos - start);
+
+        current = current->getChild(name);
+
+        if (current == NULL) {
+            return NULL;
+        }
+
+        start = pos + 1;
+    } while (pos != std::string::npos);
+
+    return current;
 }

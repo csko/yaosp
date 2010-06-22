@@ -21,18 +21,29 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include <configserver/attribute.hpp>
 
 class Node {
   public:
-    Map(void);
+    Node(uint64_t fileOffset = 0);
+
+    void addChild(const std::string& name, Node* child);
+    void addAttribute(const std::string& name, Attribute* attribute);
+
+    Node* getChild(const std::string& name);
+    void getChildren(std::vector<Node*>& children);
+    uint64_t getFileOffset(void);
 
     typedef std::map<std::string, Node*> Map;
+    typedef Map::const_iterator MapCIter;
 
   private:
     Map m_children;
     Attribute::Map m_attributes;
+
+    uint64_t m_fileOffset;
 }; /* class Node */
 
 #endif /* _CONFIGSERVER_NODE_HPP_ */

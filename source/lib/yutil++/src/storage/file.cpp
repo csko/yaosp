@@ -38,7 +38,11 @@ bool File::init( void ) {
 }
 
 int File::read( void* buffer, int size ) {
-    return ::read( m_file, buffer, size );
+    return ::read(m_file, buffer, size);
+}
+
+bool File::seek(off_t offset) {
+    return ( ::lseek(m_file, offset, SEEK_SET) == offset );
 }
 
 } /* namespace storage */

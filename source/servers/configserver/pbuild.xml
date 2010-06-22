@@ -27,6 +27,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/main.cpp</item>
         <item>src/configserver.cpp</item>
         <item>src/loader.cpp</item>
+        <item>src/node.cpp</item>
+        <item>src/attribute.cpp</item>
     </array>
 
     <target name="compile">

@@ -20,12 +20,36 @@
 #define _CONFIGSERVER_LOADER_HPP_
 
 #include <string>
+#include <yutil++/storage/file.hpp>
+
+#include <configserver/node.hpp>
 
 class Loader {
   public:
     Loader(void);
+    ~Loader(void);
 
     bool loadFromFile(const std::string& fileName);
+    Node* getRoot(void);
+
+  private:
+    enum {
+        TYPE_NODE = 1,
+        TYPE_ATTRIBUTE = 2
+    };
+
+    bool readItemsAt(Node* parent, off_t offset);
+    bool readItem(Node* parent);
+    bool readNode(Node*& node);
+    bool readAttribute(Attribute*& attribute);
+    bool readNumericAttribute(Attribute*& attribute);
+    bool readAsciiAttribute(Attribute*& attribute);
+    bool readBoolAttribute(Attribute*& attribute);
+    bool readBinaryAttribute(Attribute*& attribute);
+
+  private:
+    Node* m_root;
+    yutilpp::storage::File* m_file;
 }; /* class Loader */
 
 #endif /* _CONFIGSERVER_LOADER_HPP_ */

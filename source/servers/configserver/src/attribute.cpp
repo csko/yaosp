@@ -16,27 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _CONFIGSERVER_CONFIGSERVER_HPP_
-#define _CONFIGSERVER_CONFIGSERVER_HPP_
+#include <configserver/attribute.hpp>
 
-#include <yutil++/ipcport.hpp>
-#include <yconfig++/protocol.hpp>
+Attribute::Attribute(uint8_t type) : m_type(type) {
+}
 
-#include <configserver/node.hpp>
+NumericAttribute::NumericAttribute(uint64_t value) : Attribute(Attribute::ATTR_NUMERIC), m_value(value) {
+}
 
-class ConfigServer {
-  public:
-    int run(int argc, char** argv);
+AsciiAttribute::AsciiAttribute(off_t offset, uint32_t size) : Attribute(Attribute::ATTR_ASCII),
+                                                              m_offset(offset), m_size(size) {
+}
 
-  private:
-    int handleListChildren(msg_list_children_t* msg);
+BoolAttribute::BoolAttribute(bool value) : Attribute(Attribute::ATTR_BOOL),
+                                           m_value(value) {
+}
 
-    Node* findNodeByPath(const std::string& path);
-
-  private:
-    Node* m_root;
-    uint8_t m_recvBuffer[8192];
-    yutilpp::IPCPort* m_serverPort;
-}; /* class ConfigServer */
-
-#endif /* _CONFIGSERVER_CONFIGSERVER_HPP_ */
+BinaryAttribute::BinaryAttribute(off_t offset, uint32_t size) : Attribute(Attribute::ATTR_BINARY),
+                                                                m_offset(offset), m_size(size) {
+}
