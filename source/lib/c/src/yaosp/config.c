@@ -98,7 +98,7 @@ int ycfg_get_ascii_value( const char* path, const char* attrib, char** value ) {
 
     if ( error >= 0 ) {
         if ( reply->error == 0 ) {
-            if ( reply->type == ASCII ) {
+            if ( reply->type == ATTR_ASCII ) {
                 *value = strdup( ( char* )( reply + 1 ) );
                 error = 0;
             } else {
