@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
 #include <yaosp/debug.h>
 
 #include <ygui++/application.hpp>
@@ -80,8 +81,15 @@ int TaskBar::run(void) {
 }
 
 int TaskBar::actionPerformed(yguipp::Widget* widget) {
-    Point size = m_menu->getPreferredSize();
-    m_menu->show(m_window->getPosition() - Point(0,size.m_y));
+    if (widget == m_menuButton) {
+        Point size = m_menu->getPreferredSize();
+        m_menu->show(m_window->getPosition() - Point(0,size.m_y));
+    } else {
+        TBMenuItem* menuItem = dynamic_cast<TBMenuItem*>(widget);
+        assert(menuItem != NULL);
+        const std::string& executable = menuItem->getExecutable();
+        dbprintf("Start '%s'\n", executable.c_str());
+    }
 
     return 0;
 }
@@ -121,6 +129,9 @@ void TaskBar::createMenu(void) {
     for (std::vector<TBMenuItemInfo>::const_iterator it = menuItems.begin();
          it != menuItems.end();
          ++it) {
-        m_menu->add(new TBMenuItem(*it));
+        MenuItem* menuItem = new TBMenuItem(*it);
+        menuItem->addActionListener(this);
+
+        m_menu->add(menuItem);
     }
 }

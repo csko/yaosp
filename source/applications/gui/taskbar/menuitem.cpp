@@ -26,5 +26,9 @@ bool TBMenuItemInfo::operator<(const TBMenuItemInfo& info) const {
     return (m_position < info.m_position);
 }
 
-TBMenuItem::TBMenuItem(const TBMenuItemInfo& itemInfo) : MenuItem(itemInfo.m_name) {
+TBMenuItem::TBMenuItem(const TBMenuItemInfo& itemInfo) : MenuItem(itemInfo.m_name), m_executable(itemInfo.m_executable) {
+}
+
+const std::string& TBMenuItem::getExecutable(void) {
+    return m_executable;
 }

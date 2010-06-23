@@ -35,6 +35,8 @@ class TBMenuItem : public yguipp::MenuItem {
   public:
     TBMenuItem(const TBMenuItemInfo& itemInfo);
 
+    const std::string& getExecutable(void);
+
   private:
     std::string m_executable;
 }; /* class TBMenuItem */

@@ -23,13 +23,14 @@
 
 #include <ygui++/widget.hpp>
 #include <ygui++/bitmap.hpp>
+#include <ygui++/event/actionlistener.hpp>
 
 namespace yguipp {
 
 class MenuItemParent;
 class Menu;
 
-class MenuItem : public Widget {
+class MenuItem : public Widget, public event::ActionSpeaker {
   public:
     MenuItem( const std::string& text, Bitmap* image = NULL );
     virtual ~MenuItem( void );

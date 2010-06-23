@@ -92,6 +92,11 @@ int MenuItem::mouseExited( void ) {
 
 int MenuItem::mousePressed( const Point& p, int button ) {
     m_menuParent->itemPressed(this);
+
+    if (m_subMenu == NULL) {
+        fireActionListeners(this);
+    }
+
     return 0;
 }
 
