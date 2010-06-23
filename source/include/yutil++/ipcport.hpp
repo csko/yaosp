@@ -47,6 +47,7 @@ class IPCPort {
   private:
     bool m_canSend;
     bool m_canReceive;
+    bool m_deletePort;
     ipc_port_id m_id;
 }; /* class IPCPort */
 

@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yaosp/debug.h>
 #include <yconfig++/protocol.hpp>
 
 #include <configserver/attribute.hpp>
@@ -53,12 +54,8 @@ uint32_t AsciiAttribute::getSize(void) {
 }
 
 bool AsciiAttribute::getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size) {
-    if ((!storageFile->seek(m_offset)) ||
-        (!storageFile->read(data, size))) {
-        return false;
-    }
-
-    return true;
+    return ((storageFile->seek(m_offset)) &&
+            (storageFile->read(data, size) == (int)size));
 }
 
 BoolAttribute::BoolAttribute(bool value) : Attribute(ATTR_BOOL),

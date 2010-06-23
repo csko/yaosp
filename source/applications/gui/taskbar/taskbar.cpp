@@ -27,6 +27,7 @@
 #include <yconfig++/connection.hpp>
 
 #include "taskbar.hpp"
+#include "menuitem.hpp"
 
 using namespace yguipp;
 
@@ -86,27 +87,40 @@ int TaskBar::actionPerformed(yguipp::Widget* widget) {
 }
 
 void TaskBar::createMenu(void) {
-    yconfigpp::Connection config;
-    config.init();
+    std::vector<TBMenuItemInfo> menuItems;
 
-    std::vector<std::string> children;
-    config.listChildren("application/taskbar/menu", children);
+    {
+        yconfigpp::Connection config;
+        config.init();
 
-    dbprintf("size: %u\n", children.size());
-    for (std::vector<std::string>::const_iterator it = children.begin();
-         it != children.end();
-         ++it) {
-        std::string name;
-        uint64_t position;
-        std::string path = "application/taskbar/menu/" + *it;
+        std::vector<std::string> children;
+        config.listChildren("application/taskbar/menu", children);
 
-        config.getNumericValue(path, "position", position);
-        config.getAsciiValue(path, "name", name);
+        for (std::vector<std::string>::const_iterator it = children.begin();
+             it != children.end();
+             ++it) {
+            std::string name;
+            uint64_t position;
+            std::string executable;
+            std::string path = "application/taskbar/menu/" + *it;
 
-        dbprintf("path=%s pos=%llu name=%s\n", (*it).c_str(), position, name.c_str());
+            if ((!config.getNumericValue(path, "position", position)) ||
+                (!config.getAsciiValue(path, "name", name)) ||
+                (!config.getAsciiValue(path, "executable", executable))) {
+                continue;
+            }
+
+            menuItems.push_back(TBMenuItemInfo(position, name, executable));
+        }
     }
 
+    std::sort(menuItems.begin(), menuItems.end());
+
     m_menu = new Menu();
-    m_menu->add(new MenuItem("Hello"));
-    m_menu->add(new MenuItem("World"));
+
+    for (std::vector<TBMenuItemInfo>::const_iterator it = menuItems.begin();
+         it != menuItems.end();
+         ++it) {
+        m_menu->add(new TBMenuItem(*it));
+    }
 }

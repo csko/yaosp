@@ -25,7 +25,6 @@ Loader::Loader(yutilpp::storage::File* file) : m_file(file) {
 }
 
 Loader::~Loader(void) {
-    delete m_file;
 }
 
 bool Loader::load(void) {

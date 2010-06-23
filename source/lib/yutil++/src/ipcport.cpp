@@ -20,10 +20,13 @@
 
 namespace yutilpp {
 
-IPCPort::IPCPort( void ) : m_canSend(false), m_canReceive(false), m_id(-1) {
+IPCPort::IPCPort( void ) : m_canSend(false), m_canReceive(false), m_deletePort(false), m_id(-1) {
 }
 
 IPCPort::~IPCPort( void ) {
+    if (m_deletePort) {
+        destroy_ipc_port(m_id);
+    }
 }
 
 bool IPCPort::createNew( void ) {
@@ -39,6 +42,7 @@ bool IPCPort::createNew( void ) {
 
     m_canSend = true;
     m_canReceive = true;
+    m_deletePort = true;
 
     return true;
 }
