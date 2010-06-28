@@ -65,7 +65,7 @@ int WindowManager::registerWindow( Window* window ) {
         generateVisibleRegions(i);
     }
 
-    doUpdateWindowRegion(window,window->getScreenRect());
+    doUpdateWindowRegion(window, window->getScreenRect());
 
     /* Update mouse window if needed. */
     const yguipp::Point& mousePosition = m_mousePointer->getPosition();
@@ -304,7 +304,7 @@ int WindowManager::doUpdateWindowRegion( Window* window, yguipp::Rect region ) {
 
     region &= m_screenBitmap->bounds();
 
-    for ( ClipRect* clipRect = visibleRegions.getClipRects(); clipRect != NULL; clipRect = clipRect->m_next ) {
+    for (ClipRect* clipRect = visibleRegions.getClipRects(); clipRect != NULL; clipRect = clipRect->m_next) {
         yguipp::Rect visibleRect = clipRect->m_rect & region;
 
         if ( !visibleRect.isValid() ) {

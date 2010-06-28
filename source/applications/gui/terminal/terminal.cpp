@@ -16,15 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yaosp/debug.h>
+
 #include <ygui++/application.hpp>
 #include <ygui++/window.hpp>
+#include <ygui++/panel.hpp>
+#include <ygui++/layout/borderlayout.hpp>
 
 #include "terminal.hpp"
+#include "terminalview.hpp"
 
 using namespace yguipp;
 
 int Terminal::run(void) {
     Application::createInstance("terminal");
+
+    TerminalView* termView = new TerminalView();
+
+    Window* window = new Window(
+        "Terminal", Point(50,50),
+        Point(termView->getFont()->getStringWidth("a") * 80, termView->getFont()->getHeight() * 25)
+    );
+    window->init();
+
+    Panel* container = dynamic_cast<Panel*>(window->getContainer());
+    container->setLayout(new layout::BorderLayout());
+    container->add(termView, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
+
+    window->show();
     Application::getInstance()->mainLoop();
 
     return 0;

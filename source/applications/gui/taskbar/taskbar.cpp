@@ -17,6 +17,7 @@
  */
 
 #include <assert.h>
+#include <unistd.h>
 #include <yaosp/debug.h>
 
 #include <ygui++/application.hpp>
@@ -88,7 +89,12 @@ int TaskBar::actionPerformed(yguipp::Widget* widget) {
         TBMenuItem* menuItem = dynamic_cast<TBMenuItem*>(widget);
         assert(menuItem != NULL);
         const std::string& executable = menuItem->getExecutable();
-        dbprintf("Start '%s'\n", executable.c_str());
+        dbprintf("Starting '%s'\n", executable.c_str());
+
+        if (fork() == 0) {
+            execlp(executable.c_str(), executable.c_str(), NULL);
+            exit(0);
+        }
     }
 
     return 0;

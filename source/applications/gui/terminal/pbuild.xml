@@ -26,6 +26,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <array name="files">
         <item>main.cpp</item>
         <item>terminal.cpp</item>
+        <item>terminalview.cpp</item>
+        <item>terminalbuffer.cpp</item>
     </array>
 
     <target name="compile">
