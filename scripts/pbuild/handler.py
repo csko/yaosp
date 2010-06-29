@@ -51,9 +51,13 @@ class ProjectHandler( xml.sax.handler.ContentHandler ) :
         self.context = context
         self.profile_name = None
         self.profile_flags = None
+        self.loglevel = "ERROR"
         self.data = ""
 
     def startElement( self, name, attrs ) :
+        if name == "project" :
+            if "loglevel" in attrs.keys() :
+                self.loglevel = attrs.getValue("loglevel").upper()
         if name == "gccprofile" :
             if "name" in attrs.keys() :
                 self.profile_name = attrs.getValue("name")

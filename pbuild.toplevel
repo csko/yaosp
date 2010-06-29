@@ -1,6 +1,6 @@
 <!-- -*- xml -*- -->
 
-<project>
+<project loglevel="ERROR">
     <!-- GCC profiles for kernel part -->
 
     <gccprofile name="y-kernel-compile-asm">

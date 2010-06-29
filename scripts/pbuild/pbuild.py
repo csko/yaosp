@@ -26,10 +26,23 @@ import work_handlers
 import definition_handlers
 import logging
 
+def set_loglevel(levelstr) :
+
+    levels = {"NOTSET"   : logging.NOTSET,
+              "DEBUG"    : logging.DEBUG,
+              "INFO"     : logging.INFO,
+              "WARNING"  : logging.WARNING,
+              "ERROR"    : logging.ERROR,
+              "CRITICAL" : logging.CRITICAL}
+
+    if levelstr in levels:
+        logging.getLogger('').setLevel(levels[levelstr])
+        logging.info("Logging level: " + levelstr)
+
 if __name__ == "__main__" :
-    # Set up logging.
+
+    # Set up default logging until we read the config file.
     logging.basicConfig(level=logging.INFO,
-    #logging.basicConfig(level=logging.DEBUG,
        format='%(asctime)s %(name)-6s %(levelname)-7s %(message)s',
        datefmt='%Y-%m-%d %H:%M')
 
@@ -38,13 +51,19 @@ if __name__ == "__main__" :
         sys.exit( 1 )
 
     pcontext = ctx.ProjectContext()
-    pcontext.init()
 
-    if pcontext.get_toplevel() :
-        handler = hndlr.ProjectHandler(pcontext)
-        xml_parser = xml.sax.make_parser()
-        xml_parser.setContentHandler(handler)
-        xml_parser.parse(pcontext.get_toplevel()+"/pbuild.toplevel")
+    if not pcontext.init() :
+        logging.critical( "Cannot compile without a toplevel config file! " \
+                          "Please make sure you have the \"pbuild.toplevel\" "\
+                          "config file in the root directory of the project." )
+        sys.exit( 1 )
+
+    handler = hndlr.ProjectHandler(pcontext)
+    xml_parser = xml.sax.make_parser()
+    xml_parser.setContentHandler(handler)
+    xml_parser.parse(pcontext.get_toplevel()+"/pbuild.toplevel")
+
+    set_loglevel(handler.loglevel)
 
     context = ctx.BuildContext(pcontext)
     handler = hndlr.BuildHandler(context)
