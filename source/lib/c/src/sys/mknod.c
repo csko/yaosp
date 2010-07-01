@@ -21,7 +21,11 @@
 #include <yaosp/debug.h>
 
 int mknod( const char* pathname, mode_t mode, dev_t dev ) {
-    dbprintf( "mknod() called!\n" );
+    /* TODO */
+
+    dbprintf( "TODO: mknod() not yet implemented!\n" );
+
     errno = ENOSYS;
+
     return -1;
 }

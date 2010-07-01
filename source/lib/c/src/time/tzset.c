@@ -17,4 +17,7 @@
  */
 
 void tzset( void ) {
+    /* TODO */
+
+    dbprintf( "TODO: tzset() not yet implemented!\n" );
 }

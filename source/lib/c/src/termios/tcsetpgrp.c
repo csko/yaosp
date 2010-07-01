@@ -19,5 +19,9 @@
 #include <unistd.h>
 
 int tcsetpgrp( int fd, pid_t pgrp ) {
+    /* TODO */
+
+    dbprintf( "TODO: tcsetpgrp() not yet implemented!\n" );
+
     return 0;
 }

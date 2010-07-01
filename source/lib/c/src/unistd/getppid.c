@@ -21,5 +21,7 @@
 pid_t getppid( void ) {
     /* TODO! */
 
+    dbprintf( "TODO: getppid() not yet implemented!\n" );
+
     return 0;
 }

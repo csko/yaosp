@@ -23,5 +23,8 @@ in_addr_t inet_addr( const char* cp ) {
     in_addr_t result;
 
     /* TODO */
+
+    dbprintf( "TODO: inet_addr() not yet implemented!\n" );
+
     return result;
 }

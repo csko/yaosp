@@ -21,6 +21,8 @@
 #include <yaosp/debug.h>
 
 int raise( int signal ) {
+    /* TODO */
+
     dbprintf( "raise(): Not yet implemented!\n" );
 
     return -1;

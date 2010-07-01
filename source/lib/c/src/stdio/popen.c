@@ -20,6 +20,9 @@
 #include <yaosp/debug.h>
 
 FILE* popen( const char* command, const char* type ) {
+    /* TODO */
+
+    dbprintf( "TODO: popen() not yet implemented!\n" );
     dbprintf( "popen(): command=%s, type=%s\n", command, type );
 
     return NULL;

@@ -24,51 +24,51 @@
 static int inet_pton4( const char* src, uint8_t* dst ) {
     int ch;
     int octets;
-	int saw_digit;
+    int saw_digit;
     uint8_t* tp;
-	uint8_t tmp[ 4 ];
+    uint8_t tmp[ 4 ];
 
-	saw_digit = 0;
-	octets = 0;
-	*(tp = tmp) = 0;
+    saw_digit = 0;
+    octets = 0;
+    *(tp = tmp) = 0;
 
-	while ( ( ch = *src++ ) != 0 ) {
+    while ( ( ch = *src++ ) != 0 ) {
         if ( isdigit(ch) ) {
-			unsigned int new = *tp * 10 + (ch - '0');
+            unsigned int new = *tp * 10 + (ch - '0');
 
-			if (new > 255) {
-				return 0;
+            if (new > 255) {
+                return 0;
             }
 
-			*tp = new;
+            *tp = new;
 
-			if ( !saw_digit ) {
-				if ( ++octets > 4 ) {
-					return 0;
+            if ( !saw_digit ) {
+                if ( ++octets > 4 ) {
+                    return 0;
                 }
 
-				saw_digit = 1;
-			}
-		} else if ( ( ch == '.' ) &&
+                saw_digit = 1;
+            }
+        } else if ( ( ch == '.' ) &&
                     ( saw_digit ) ) {
-			if ( octets == 4 ) {
-				return 0;
+            if ( octets == 4 ) {
+                return 0;
             }
 
-			*++tp = 0;
-			saw_digit = 0;
-		} else {
-			return 0;
+            *++tp = 0;
+            saw_digit = 0;
+        } else {
+            return 0;
         }
-	}
-
-	if (octets < 4) {
-		return 0;
     }
 
-	memcpy( dst, tmp, 4 );
+    if (octets < 4) {
+        return 0;
+    }
 
-	return 1;
+    memcpy( dst, tmp, 4 );
+
+    return 1;
 }
 
 int inet_pton( int af, const char* src, void* dst ) {
@@ -79,6 +79,7 @@ int inet_pton( int af, const char* src, void* dst ) {
         /* todo: add IPv6 support */
 
         default :
+            dbprintf( "TODO: IPv6 support for inet_pton not yet implemented!\n" );
             errno = EAFNOSUPPORT;
             return -1;
     }

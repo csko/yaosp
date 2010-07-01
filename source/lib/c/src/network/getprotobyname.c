@@ -21,5 +21,7 @@
 struct protoent* getprotobyname( const char* name ) {
     /* TODO */
 
+    dbprintf( "TODO: getprotobyname() not yet implemented!\n" );
+
     return NULL;
 }

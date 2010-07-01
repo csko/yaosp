@@ -21,5 +21,7 @@
 pid_t tcgetpgrp( int fd ) {
     /* NOTE: This is a temp. hack to get bash working :) */
 
+    dbprintf( "TODO: tcgetpgrp() uses getpid() as a temporary hack to get bash working!\n" );
+
     return getpid();
 }

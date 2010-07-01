@@ -40,14 +40,17 @@ int pthread_cond_init( pthread_cond_t* cond, const pthread_condattr_t* attr ) {
 }
 
 int pthread_cond_destroy( pthread_cond_t* cond ) {
-    /* todo */
+    /* TODO */
+
+    dbprintf( "TODO: pthread_cond_destroy() not yet implemented!\n" );
+
     return 0;
 }
 
 int pthread_cond_wait( pthread_cond_t* cond, pthread_mutex_t* mutex ) {
     int error;
 
-    /* todo */
+    /* TODO */
 
     error = syscall2( SYS_condition_wait, cond->cond_id, mutex->mutex_id );
 
@@ -62,7 +65,7 @@ int pthread_cond_timedwait( pthread_cond_t* cond, pthread_mutex_t* mutex, const 
     int error;
     time_t wakeup_time;
 
-    /* todo */
+    /* TODO */
 
     wakeup_time = (time_t)abstime->tv_sec * 1000000 + (time_t)abstime->tv_nsec / 1000;
 
@@ -78,7 +81,7 @@ int pthread_cond_timedwait( pthread_cond_t* cond, pthread_mutex_t* mutex, const 
 int pthread_cond_signal( pthread_cond_t* cond ) {
     int error;
 
-    /* todo */
+    /* TODO */
 
     error = syscall1( SYS_condition_signal, cond->cond_id );
 

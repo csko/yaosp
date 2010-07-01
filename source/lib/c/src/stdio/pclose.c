@@ -20,6 +20,10 @@
 #include <yaosp/debug.h>
 
 int pclose( FILE* stream ) {
+    /* TODO */
+
+    dbprintf( "TODO: pclose() not yet implemented!\n" );
     dbprintf( "pclose(): stream=%p\n", stream );
+
     return 0;
 }

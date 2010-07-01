@@ -19,7 +19,6 @@
 #include <netdb.h>
 
 struct hostent *gethostbyaddr( const void* addr, socklen_t len, int type ) {
-    /* TODO */
-
+    dbprintf( "TODO: gethostbyaddr() not yet implemented!\n" );
     return NULL;
 }

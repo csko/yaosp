@@ -20,6 +20,9 @@
 #include <yaosp/debug.h>
 
 FILE* tmpfile( void ) {
-    dbprintf( "tmpfile() called!" );
+    /* TODO */
+
+    dbprintf( "TODO: tmpfile() not yet implemented!\n" );
+
     return NULL;
 }

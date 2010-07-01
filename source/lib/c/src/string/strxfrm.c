@@ -20,6 +20,9 @@
 #include <yaosp/debug.h>
 
 size_t strxfrm( char* dest, const char* src, size_t n ) {
-    dbprintf( "strxfrm() called\n" );
+    /* TODO */
+
+    dbprintf( "TODO: strxfrm() not yet implemented!\n" );
+
     return 0;
 }

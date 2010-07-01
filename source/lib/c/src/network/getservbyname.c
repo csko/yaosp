@@ -21,5 +21,7 @@
 struct servent* getservbyname( const char* name, const char *proto ) {
     /* TODO */
 
+    dbprintf( "TODO: getservbyname() not yet implemented!\n" );
+
     return NULL;
 }

@@ -22,5 +22,7 @@
 char* setlocale( int category, const char* locale ) {
     /* TODO */
 
+    dbprintf( "TODO: setlocale() not yet implemented!\n" );
+
     return NULL;
 }

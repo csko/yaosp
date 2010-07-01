@@ -19,4 +19,7 @@
 #include <unistd.h>
 
 void sync( void ) {
+    /* TODO */
+
+    dbprintf( "TODO: sync() not yet implemented!\n" );
 }

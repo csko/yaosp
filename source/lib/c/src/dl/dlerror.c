@@ -20,5 +20,8 @@
 #include <stdlib.h>
 
 char* dlerror( void ) {
+    /* TODO */
+
+    dbprintf( "TODO: dlerror() not yet implemented!\n" );
     return NULL;
 }

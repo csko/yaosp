@@ -20,6 +20,9 @@
 #include <yaosp/debug.h>
 
 char* tmpnam( char* s ) {
-    dbprintf( "tmpnam() called!" );
+    /* TODO */
+
+    dbprintf( "TODO: tmpnam() not yet implemented!\n" );
+
     return NULL;
 }

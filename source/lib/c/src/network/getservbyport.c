@@ -21,5 +21,7 @@
 struct servent* getservbyport( int port, const char* proto ) {
     /* TODO */
 
+    dbprintf( "TODO: getservbyport() not yet implemented!\n" );
+
     return NULL;
 }

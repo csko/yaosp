@@ -20,6 +20,10 @@
 #include <yaosp/debug.h>
 
 int system( const char* command ) {
+    /* TODO */
+
+    dbprintf( "TODO: system() not yet implemented!\n" );
     dbprintf( "system(): command=%s\n", command );
+
     return -1;
 }

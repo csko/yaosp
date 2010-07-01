@@ -19,7 +19,9 @@
 #include <sys/socket.h>
 
 int shutdown( int sockfd, int how ) {
-
     /* TODO */
+
+    dbprintf( "TODO: shutdown() not yet implemented!\n" );
+
     return 0;
 }

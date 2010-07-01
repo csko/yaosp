@@ -22,5 +22,7 @@
 long fpathconf( int fd, int name ) {
     /* TODO */
 
+    dbprintf( "TODO: fpathconf() not yet implemented!\n" );
+
     return -1;
 }

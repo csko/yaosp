@@ -20,6 +20,9 @@
 #include <yaosp/debug.h>
 
 float strtof( const char* nptr, char** endptr ) {
-    dbprintf( "strtof() called\n" );
+    /* TODO */
+
+    dbprintf( "TODO: strtof() not yet implemented!\n" );
+
     return 0;
 }

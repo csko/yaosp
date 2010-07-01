@@ -19,14 +19,26 @@
 #include <math.h>
 
 double sinh( double x ) {
+    /* TODO */
+
+    dbprintf( "TODO: sinh() not yet implemented!\n" );
+
     return 0;
 }
 
 double cosh( double x ) {
+    /* TODO */
+
+    dbprintf( "TODO: cosh() not yet implemented!\n" );
+
     return 0;
 }
 
 double tanh( double x ) {
+    /* TODO */
+
+    dbprintf( "TODO: tanh() not yet implemented!\n" );
+
     return 0;
 }
 
