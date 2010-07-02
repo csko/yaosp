@@ -19,9 +19,28 @@
 #ifndef _TERMINAL_TERMINALBUFFER_HPP_
 #define _TERMINAL_TERMINALBUFFER_HPP_
 
+#include <string>
+#include <vector>
+
+struct TerminalAttribute {
+    uint8_t m_bgColor;
+    uint8_t m_fgColor;
+};
+
+class TerminalLine {
+  public:
+    std::string m_text;
+    std::vector<TerminalAttribute> m_attr;
+}; /* class TerminalLine */
+
 class TerminalBuffer {
   public:
     TerminalBuffer(int width, int height);
+    ~TerminalBuffer(void);
+
+    int getLineCount(void);
+
+    TerminalLine* lineAt(int index);
 
   private:
     int m_width;
@@ -31,6 +50,8 @@ class TerminalBuffer {
     int m_cursorY;
     int m_savedCursorX;
     int m_savedCursorY;
+
+    TerminalLine* m_lines;
 }; /* class TerminalBuffer */
 
 #endif /* _TERMINAL_TERMINALBUFFER_HPP_ */

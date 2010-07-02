@@ -16,7 +16,31 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
+
 #include "terminalbuffer.hpp"
 
 TerminalBuffer::TerminalBuffer(int width, int height) : m_width(width), m_height(height) {
+    m_lines = new TerminalLine[height];
+}
+
+TerminalBuffer::~TerminalBuffer(void) {
+    delete[] m_lines;
+}
+
+int TerminalBuffer::getLineCount(void) {
+    return m_height /* + history size */;
+}
+
+TerminalLine* TerminalBuffer::lineAt(int index) {
+    assert((index >= 0) && (index < getLineCount()));
+
+    int historySize = 0;
+
+    if (index < historySize) {
+        // todo
+        return NULL;
+    } else {
+        return &m_lines[index - historySize];
+    }
 }
