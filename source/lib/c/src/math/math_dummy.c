@@ -17,6 +17,7 @@
  */
 
 #include <math.h>
+#include <yaosp/debug.h>
 
 double sinh( double x ) {
     /* TODO */

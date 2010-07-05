@@ -17,6 +17,7 @@
  */
 
 #include <signal.h>
+#include <yaosp/debug.h>
 
 int killpg( int pgrp, int signal ) {
     /* TODO */

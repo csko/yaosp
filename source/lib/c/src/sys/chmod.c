@@ -17,6 +17,7 @@
  */
 
 #include <sys/stat.h>
+#include <yaosp/debug.h>
 
 int chmod( const char* path, mode_t mode ) {
     /* TODO */

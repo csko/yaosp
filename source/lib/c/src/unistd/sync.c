@@ -17,6 +17,7 @@
  */
 
 #include <unistd.h>
+#include <yaosp/debug.h>
 
 void sync( void ) {
     /* TODO */

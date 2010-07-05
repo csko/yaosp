@@ -344,6 +344,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/dl/dlsym.c</item>
         <item>src/dl/dlclose.c</item>
         <item>src/dl/dlerror.c</item>
+        <item>src/pty/openpty.c</item>
     </array>
 
     <target name="clean">

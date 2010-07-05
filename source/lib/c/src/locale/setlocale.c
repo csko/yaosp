@@ -18,6 +18,7 @@
 
 #include <locale.h>
 #include <stdlib.h>
+#include <yaosp/debug.h>
 
 char* setlocale( int category, const char* locale ) {
     /* TODO */

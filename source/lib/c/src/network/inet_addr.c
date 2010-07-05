@@ -18,6 +18,7 @@
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <yaosp/debug.h>
 
 in_addr_t inet_addr( const char* cp ) {
     in_addr_t result;

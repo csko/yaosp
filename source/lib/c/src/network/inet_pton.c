@@ -20,6 +20,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <arpa/inet.h>
+#include <yaosp/debug.h>
 
 static int inet_pton4( const char* src, uint8_t* dst ) {
     int ch;

@@ -17,6 +17,7 @@
  */
 
 #include <sys/socket.h>
+#include <yaosp/debug.h>
 
 int shutdown( int sockfd, int how ) {
     /* TODO */

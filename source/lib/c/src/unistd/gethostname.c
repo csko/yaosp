@@ -18,12 +18,12 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <yaosp/debug.h>
 
 int gethostname( char* name, size_t len ) {
     /* TODO */
 
     dbprintf( "TODO: gethostname() not yet fully implemented!\n" );
-
     snprintf( name, len, "localhost" );
 
     return 0;

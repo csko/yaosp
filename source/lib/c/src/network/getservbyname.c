@@ -17,6 +17,7 @@
  */
 
 #include <netdb.h>
+#include <yaosp/debug.h>
 
 struct servent* getservbyname( const char* name, const char *proto ) {
     /* TODO */

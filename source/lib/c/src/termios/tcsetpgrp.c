@@ -17,6 +17,7 @@
  */
 
 #include <unistd.h>
+#include <yaosp/debug.h>
 
 int tcsetpgrp( int fd, pid_t pgrp ) {
     /* TODO */

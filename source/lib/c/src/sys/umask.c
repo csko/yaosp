@@ -17,6 +17,7 @@
  */
 
 #include <sys/stat.h>
+#include <yaosp/debug.h>
 
 mode_t umask( mode_t mask ) {
     /* TODO */

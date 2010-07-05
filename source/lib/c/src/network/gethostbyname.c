@@ -22,7 +22,6 @@
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <arpa/inet.h>
-
 #include <yaosp/debug.h>
 
 #include "dns.h"

@@ -17,6 +17,7 @@
  */
 
 #include <netdb.h>
+#include <yaosp/debug.h>
 
 struct servent* getservbyport( int port, const char* proto ) {
     /* TODO */

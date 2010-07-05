@@ -17,8 +17,9 @@
  */
 
 #include <netdb.h>
+#include <yaosp/debug.h>
 
-struct hostent *gethostbyaddr( const void* addr, socklen_t len, int type ) {
+struct hostent* gethostbyaddr( const void* addr, socklen_t len, int type ) {
     dbprintf( "TODO: gethostbyaddr() not yet implemented!\n" );
     return NULL;
 }

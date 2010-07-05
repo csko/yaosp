@@ -18,10 +18,10 @@
 
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <yaosp/debug.h>
 
 char* dlerror( void ) {
     /* TODO */
-
     dbprintf( "TODO: dlerror() not yet implemented!\n" );
     return NULL;
 }

@@ -17,6 +17,7 @@
  */
 
 #include <termios.h>
+#include <yaosp/debug.h>
 
 int tcflow( int fd, int action ) {
     /* TODO */

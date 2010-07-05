@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <errno.h>
 #include <unistd.h>
+#include <yaosp/debug.h>
 
 long fpathconf( int fd, int name ) {
     /* TODO */
