@@ -19,5 +19,7 @@
 #include <unistd.h>
 
 int setuid( uid_t uid ) {
+    /* TODO: stub */
+
     return 0;
 }

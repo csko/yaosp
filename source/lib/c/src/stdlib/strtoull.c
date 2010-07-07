@@ -72,7 +72,7 @@ skip0x:
         c = ( c >= 'a' ? c - 'a' + 10 : c >= 'A' ? c - 'A' + 10 : c <= '9' ? c - '0' : 0xFF );
 
         if ( c >= base ) {
-            break;	/* out of base */
+            break;      /* out of base */
         }
 
         {
@@ -89,7 +89,7 @@ skip0x:
         ++nptr;
     }
 
-    if ( nptr == orig ) {		/* no conversion done */
+    if ( nptr == orig ) {               /* no conversion done */
         nptr = ptr;
         errno = EINVAL;
         v = 0;

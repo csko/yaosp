@@ -19,5 +19,9 @@
 #include <pty.h>
 
 int openpty(int* master, int* slave, char* name, struct termios* termp, struct winsize* winp) {
+    /* TODO */
+
+    dbprintf( "TODO: openpty() not yet implemented!\n" );
+
     return -1;
 }

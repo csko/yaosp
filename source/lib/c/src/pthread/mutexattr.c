@@ -26,38 +26,56 @@ int pthread_mutexattr_init( pthread_mutexattr_t* attr ) {
 }
 
 int pthread_mutexattr_destroy( pthread_mutexattr_t* attr ) {
+    /* TODO */
+
     return 0;
 }
 
 int pthread_mutexattr_getprioceiling( const pthread_mutexattr_t* attr, int* prioceiling ) {
+    /* TODO */
+
     return ENOSYS;
 }
 
 int pthread_mutexattr_getprotocol( const pthread_mutexattr_t* attr, int* protocol ) {
+    /* TODO */
+
     return ENOSYS;
 }
 
 int pthread_mutexattr_getpshared( const pthread_mutexattr_t* attr, int* shared ) {
+    /* TODO */
+
     return ENOSYS;
 }
 
 int pthread_mutexattr_gettype( const pthread_mutexattr_t* attr, int* type) {
+    /* TODO */
+
     return ENOSYS;
 }
 
 int pthread_mutexattr_setprioceiling( pthread_mutexattr_t* attr, int prioceiling ) {
+    /* TODO */
+
     return ENOSYS;
 }
 
 int pthread_mutexattr_setprotocol( pthread_mutexattr_t* attr, int protocol ) {
+    /* TODO */
+
     return ENOSYS;
 }
 
 int pthread_mutexattr_setpshared( pthread_mutexattr_t* attr, int shared ) {
+    /* TODO */
+
     return ENOSYS;
 }
 
 int pthread_mutexattr_settype( pthread_mutexattr_t* attr, int type ) {
+    /* TODO */
+
     return ENOSYS;
 }
 

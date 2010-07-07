@@ -25,7 +25,7 @@ struct passwd __tmp_passwd = {
     .pw_name = "password",
     .pw_uid = 0,
     .pw_gid = 0,
-    .pw_gecos = "r00t",
+    .pw_gecos = "Yaosp User",
     .pw_dir = "/",
     .pw_shell = "/yaosp/application/shell"
 };

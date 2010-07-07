@@ -19,5 +19,7 @@
 #include <unistd.h>
 
 gid_t getgid( void ) {
+    /* TODO: stub */
+
     return 0;
 }

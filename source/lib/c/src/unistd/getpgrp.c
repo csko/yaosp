@@ -19,5 +19,7 @@
 #include <unistd.h>
 
 pid_t getpgrp( void ) {
+    /* TODO: stub */
+
     return 0;
 }

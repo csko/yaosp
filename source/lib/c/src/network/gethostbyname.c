@@ -57,7 +57,7 @@ struct hostent* gethostbyname( const char* name ) {
     if ( inet_pton( AF_INET, name, &addr4[0] ) == 1 ) {
         build_hostent_result_v4(name, 1);
     } else if ( inet_pton( AF_INET6, name, &addr6[0] ) == 1 ) {
-        /* todo */
+        /* TODO: IPv6 */
     } else {
         size_t v4_count;
         struct in_addr* v4_table;

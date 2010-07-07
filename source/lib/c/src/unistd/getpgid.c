@@ -19,5 +19,7 @@
 #include <unistd.h>
 
 pid_t getpgid( pid_t pid ) {
+    /* TODO: stub */
+
     return 0;
 }
