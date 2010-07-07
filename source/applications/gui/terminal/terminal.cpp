@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <unistd.h>
+#include <pty.h>
 #include <yaosp/debug.h>
 
 #include <ygui++/application.hpp>
@@ -28,8 +30,18 @@
 
 using namespace yguipp;
 
+Terminal::Terminal(void) : m_masterPty(-1), m_slaveTty(-1), m_ptyReader(NULL) {
+    m_buffer = new TerminalBuffer(80, 25);
+    m_parser = new TerminalParser(m_buffer);
+    m_ptyReader = new PtyReader(m_masterPty, m_parser);
+}
+
 int Terminal::run(void) {
     Application::createInstance("terminal");
+
+    if (!startShell()) {
+        return EXIT_FAILURE;
+    }
 
     TerminalView* termView = new TerminalView();
 
@@ -44,7 +56,29 @@ int Terminal::run(void) {
     container->add(termView, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
 
     window->show();
+    m_ptyReader->start();
     Application::getInstance()->mainLoop();
 
-    return 0;
+    return EXIT_SUCCESS;
+}
+
+bool Terminal::startShell(void) {
+    if (openpty(&m_masterPty, &m_slaveTty, NULL, NULL, NULL) != 0) {
+        return false;
+    }
+
+    if (fork() == 0) {
+        dup2(m_slaveTty, 0);
+        dup2(m_slaveTty, 1);
+        dup2(m_slaveTty, 2);
+        close(m_slaveTty);
+
+        if (execl("/application/bash", "bash", NULL) != 0) {
+            dbprintf("Failed to execute shell!\n");
+        }
+
+        _exit(EXIT_FAILURE);
+    }
+
+    return true;
 }

@@ -16,28 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _TERMINAL_TERMINAL_H_
-#define _TERMINAL_TERMINAL_H_
-
-#include "ptyreader.hpp"
 #include "terminalparser.hpp"
 
-class Terminal {
-  public:
-    Terminal(void);
+TerminalParser::TerminalParser(TerminalBuffer* buffer) : m_buffer(buffer) {
+}
 
-    int run(void);
-
-  private:
-    bool startShell(void);
-
-  private:
-    int m_masterPty;
-    int m_slaveTty;
-
-    PtyReader* m_ptyReader;
-    TerminalBuffer* m_buffer;
-    TerminalParser* m_parser;
-}; /* class Terminal */
-
-#endif /* _TERMINAL_TERMINAL_H_ */
+bool TerminalParser::handleData(uint8_t* data, int length) {
+    return true;
+}

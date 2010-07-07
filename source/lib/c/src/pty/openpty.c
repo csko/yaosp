@@ -17,11 +17,44 @@
  */
 
 #include <pty.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 int openpty(int* master, int* slave, char* name, struct termios* termp, struct winsize* winp) {
-    /* TODO */
+    int i = 0;
+    int pty;
+    char path[64];
 
-    dbprintf( "TODO: openpty() not yet implemented!\n" );
+    if ((master == NULL) ||
+        (slave == NULL)) {
+        errno = -EINVAL;
+        return -1;
+    }
 
-    return -1;
+    while (1) {
+        struct stat st;
+
+        snprintf(path, sizeof(path), "/device/terminal/pty%d", i);
+
+        if (stat(path, &st) != 0) {
+            break;
+        }
+
+        i++;
+    }
+
+    pty = open(path, O_RDWR | O_CREAT);
+
+    if (pty < 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "/device/terminal/tty%d", i);
+
+    *master = pty;
+    *slave = open(path, O_RDWR);
+
+    return 0;
 }

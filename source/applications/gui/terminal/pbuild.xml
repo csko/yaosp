@@ -28,6 +28,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>terminal.cpp</item>
         <item>terminalview.cpp</item>
         <item>terminalbuffer.cpp</item>
+        <item>terminalparser.cpp</item>
+        <item>ptyreader.cpp</item>
     </array>
 
     <target name="compile">

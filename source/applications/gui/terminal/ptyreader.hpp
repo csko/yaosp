@@ -16,28 +16,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _TERMINAL_TERMINAL_H_
-#define _TERMINAL_TERMINAL_H_
+#ifndef _TERMINAL_PTYREADER_HPP_
+#define _TERMINAL_PTYREADER_HPP_
 
-#include "ptyreader.hpp"
+#include <yutil++/thread.hpp>
+
 #include "terminalparser.hpp"
 
-class Terminal {
+class PtyReader : public yutilpp::Thread {
   public:
-    Terminal(void);
+    PtyReader(int masterPty, TerminalParser* parser);
 
     int run(void);
 
   private:
-    bool startShell(void);
-
-  private:
     int m_masterPty;
-    int m_slaveTty;
-
-    PtyReader* m_ptyReader;
-    TerminalBuffer* m_buffer;
     TerminalParser* m_parser;
-}; /* class Terminal */
+}; /* class PtyReader */
 
-#endif /* _TERMINAL_TERMINAL_H_ */
+#endif /* _TERMINAL_PTYREADER_HPP_ */
