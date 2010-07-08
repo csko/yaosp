@@ -20,9 +20,25 @@
 
 #include "terminalbuffer.hpp"
 
-TerminalBuffer::TerminalBuffer(int width, int height) : m_width(width), m_height(height),
-                                                        m_cursorX(0), m_cursorY(0) {
-    m_lines = new TerminalLine[height];
+bool TerminalLine::setWidth(int width) {
+    int oldWidth = (int)m_text.size();
+
+    m_text.resize(width);
+    m_attr.resize(width);
+
+    for (int i = oldWidth; i < width; i++) {
+        m_text[i] = ' ';
+
+        TerminalAttribute& attr = m_attr[i];
+        attr.m_bgColor = 0;
+        attr.m_fgColor = 7;
+    }
+
+    return true;
+}
+
+TerminalBuffer::TerminalBuffer(int width, int height) : m_width(0), m_height(0), m_cursorX(0), m_cursorY(0) {
+    setSize(width, height);
 }
 
 TerminalBuffer::~TerminalBuffer(void) {
@@ -42,8 +58,40 @@ TerminalLine* TerminalBuffer::lineAt(int index) {
         // todo
         return NULL;
     } else {
-        return &m_lines[index - historySize];
+        return m_lines[index - historySize];
     }
+}
+
+bool TerminalBuffer::setSize(int width, int height) {
+    int linesToCopy = std::min(height, m_height);
+    TerminalLine** newLines = new TerminalLine*[height];
+
+    /* Copy possible lines from the old buffer. */
+    for (int i = 0; i < linesToCopy; i++) {
+        newLines[i] = m_lines[i];
+    }
+
+    /* Create new lines in the new buffer if it's bigger than the old one. */
+    for (int i = linesToCopy; i < height; i++) {
+        newLines[i] = new TerminalLine;
+    }
+
+    /* Delete lines from the old buffer if it's bigger than the new one. */
+    for (int i = linesToCopy; i < m_height; i++) {
+        delete m_lines[i];
+    }
+
+    m_width = width;
+    m_height = height;
+
+    delete[] m_lines;
+    m_lines = newLines;
+
+    for (int i = 0; i < m_height; i++) {
+        m_lines[i]->setWidth(width);
+    }
+
+    return true;
 }
 
 void TerminalBuffer::insertCr(void) {
@@ -59,5 +107,5 @@ void TerminalBuffer::insertCharacter(uint8_t c) {
     assert((m_cursorX >= 0) && (m_cursorX < m_width));
     assert((m_cursorY >= 0) && (m_cursorY < m_height));
 
-    //TerminalLine* line = &m_lines[m_cursorY];
+    //TerminalLine* line = m_lines[m_cursorY];
 }

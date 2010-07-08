@@ -29,6 +29,8 @@ struct TerminalAttribute {
 
 class TerminalLine {
   public:
+    bool setWidth(int width);
+
     std::string m_text;
     std::vector<TerminalAttribute> m_attr;
 }; /* class TerminalLine */
@@ -41,6 +43,8 @@ class TerminalBuffer {
     int getLineCount(void);
 
     TerminalLine* lineAt(int index);
+
+    bool setSize(int width, int height);
 
     void insertCr(void);
     void insertLf(void);
@@ -56,7 +60,7 @@ class TerminalBuffer {
     int m_savedCursorX;
     int m_savedCursorY;
 
-    TerminalLine* m_lines;
+    TerminalLine** m_lines;
 }; /* class TerminalBuffer */
 
 #endif /* _TERMINAL_TERMINALBUFFER_HPP_ */
