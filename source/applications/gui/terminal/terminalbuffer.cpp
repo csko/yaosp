@@ -20,7 +20,8 @@
 
 #include "terminalbuffer.hpp"
 
-TerminalBuffer::TerminalBuffer(int width, int height) : m_width(width), m_height(height) {
+TerminalBuffer::TerminalBuffer(int width, int height) : m_width(width), m_height(height),
+                                                        m_cursorX(0), m_cursorY(0) {
     m_lines = new TerminalLine[height];
 }
 
@@ -43,4 +44,20 @@ TerminalLine* TerminalBuffer::lineAt(int index) {
     } else {
         return &m_lines[index - historySize];
     }
+}
+
+void TerminalBuffer::insertCr(void) {
+}
+
+void TerminalBuffer::insertLf(void) {
+}
+
+void TerminalBuffer::insertBackSpace(void) {
+}
+
+void TerminalBuffer::insertCharacter(uint8_t c) {
+    assert((m_cursorX >= 0) && (m_cursorX < m_width));
+    assert((m_cursorY >= 0) && (m_cursorY < m_height));
+
+    //TerminalLine* line = &m_lines[m_cursorY];
 }

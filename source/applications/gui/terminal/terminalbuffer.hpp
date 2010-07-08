@@ -42,6 +42,11 @@ class TerminalBuffer {
 
     TerminalLine* lineAt(int index);
 
+    void insertCr(void);
+    void insertLf(void);
+    void insertBackSpace(void);
+    void insertCharacter(uint8_t c);
+
   private:
     int m_width;
     int m_height;

@@ -17,6 +17,7 @@
  */
 
 #include <unistd.h>
+#include <errno.h>
 #include <sys/select.h>
 #include <yaosp/debug.h>
 
@@ -41,7 +42,7 @@ int PtyReader::run(void) {
         int ret = select(m_masterPty + 1, &readSet, NULL, NULL, &timeOut);
 
         if (ret < 0) {
-            dbprintf("PtyReader::run(): select failed.\n");
+            dbprintf("PtyReader::run(): select failed: %d.\n", errno);
             break;
         } else if (ret > 0) {
             int s = read(m_masterPty, buffer, sizeof(buffer));

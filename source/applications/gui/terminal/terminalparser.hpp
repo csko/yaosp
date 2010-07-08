@@ -28,6 +28,22 @@ class TerminalParser {
     bool handleData(uint8_t* data, int length);
 
   private:
+    enum ParserState {
+        NONE,
+        ESCAPE,
+        BRACKET,
+        SQUARE_BRACKET,
+        QUESTION
+    };
+
+    void handleNone(uint8_t data);
+    void handleEscape(uint8_t data);
+    void handleBracket(uint8_t data);
+    void handleSquareBracket(uint8_t data);
+    void handleQuestion(uint8_t data);
+
+  private:
+    ParserState m_state;
     TerminalBuffer* m_buffer;
 }; /* class TerminalParser */
 
