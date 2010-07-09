@@ -25,12 +25,13 @@
 #include <ygui++/graphicscontext.hpp>
 #include <ygui++/layout/layout.hpp>
 #include <ygui++/border/border.hpp>
+#include <ygui++/event/keylistener.hpp>
 
 namespace yguipp {
 
 class Window;
 
-class Widget : public Object {
+class Widget : public Object, public event::KeySpeaker {
   public:
     friend class Window;
 
@@ -65,6 +66,8 @@ class Widget : public Object {
     virtual int validate( void );
     virtual int paint( GraphicsContext* g );
 
+    virtual int keyPressed(int key);
+    virtual int keyReleased(int key);
     virtual int mouseEntered( const Point& p );
     virtual int mouseMoved( const Point& p );
     virtual int mouseExited( void );

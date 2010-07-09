@@ -125,6 +125,16 @@ int Widget::paint( GraphicsContext* g ) {
     return 0;
 }
 
+int Widget::keyPressed(int key) {
+    fireKeyPressedListeners(this, key);
+    return 0;
+}
+
+int Widget::keyReleased(int key) {
+    fireKeyReleasedListeners(this, key);
+    return 0;
+}
+
 int Widget::mouseEntered( const Point& p ) {
     return 0;
 }

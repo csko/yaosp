@@ -35,6 +35,8 @@ enum {
     Y_WINDOW_RESIZED,
     Y_WINDOW_DO_MOVETO,
     Y_WINDOW_MOVEDTO,
+    Y_WINDOW_KEY_PRESSED,
+    Y_WINDOW_KEY_RELEASED,
     Y_WINDOW_MOUSE_ENTERED,
     Y_WINDOW_MOUSE_MOVED,
     Y_WINDOW_MOUSE_EXITED,
@@ -94,6 +96,16 @@ struct WinActivated {
 struct WinDeActivated {
     WinHeader m_header;
     yguipp::DeActivationReason m_reason;
+};
+
+struct WinKeyPressed {
+    WinHeader m_header;
+    int m_key;
+};
+
+struct WinKeyReleased {
+    WinHeader m_header;
+    int m_key;
 };
 
 struct WinMouseEntered {

@@ -75,6 +75,8 @@ class Window : public Object {
 
     Point getWidgetPosition( Widget* widget, Point p );
 
+    int handleKeyPressed(int key);
+    int handleKeyReleased(int key);
     int handleMouseEntered(const yguipp::Point& position);
     int handleMouseMoved(const yguipp::Point& position);
     int handleMouseExited(void);
@@ -92,6 +94,7 @@ class Window : public Object {
     Widget* m_container;
     Widget* m_mouseWidget;
     Widget* m_mouseDownWidget;
+    Widget* m_focusedWidget;
 
     RenderTable* m_renderTable;
     GraphicsContext* m_graphicsContext;

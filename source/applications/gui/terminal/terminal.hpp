@@ -19,7 +19,7 @@
 #ifndef _TERMINAL_TERMINAL_H_
 #define _TERMINAL_TERMINAL_H_
 
-#include "ptyreader.hpp"
+#include "ptyhandler.hpp"
 #include "terminalparser.hpp"
 
 class Terminal {
@@ -35,7 +35,7 @@ class Terminal {
     int m_masterPty;
     int m_slaveTty;
 
-    PtyReader* m_ptyReader;
+    PtyHandler* m_ptyHandler;
     TerminalBuffer* m_buffer;
     TerminalParser* m_parser;
 }; /* class Terminal */

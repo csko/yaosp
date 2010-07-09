@@ -30,7 +30,7 @@
 
 using namespace yguipp;
 
-Terminal::Terminal(void) : m_masterPty(-1), m_slaveTty(-1), m_ptyReader(NULL) {
+Terminal::Terminal(void) : m_masterPty(-1), m_slaveTty(-1), m_ptyHandler(NULL) {
     m_buffer = new TerminalBuffer(80, 25);
     m_parser = new TerminalParser(m_buffer);
 }
@@ -55,8 +55,8 @@ int Terminal::run(void) {
     container->add(termView, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
 
     window->show();
-    m_ptyReader = new PtyReader(m_masterPty, m_parser, termView);
-    m_ptyReader->start();
+    m_ptyHandler = new PtyHandler(m_masterPty, termView, m_parser);
+    m_ptyHandler->start();
     Application::getInstance()->mainLoop();
 
     return EXIT_SUCCESS;

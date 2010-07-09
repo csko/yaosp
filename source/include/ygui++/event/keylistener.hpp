@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _EVENT_ACTIONLISTENER_HPP_
-#define _EVENT_ACTIONLISTENER_HPP_
+#ifndef _EVENT_KEYLISTENER_HPP_
+#define _EVENT_KEYLISTENER_HPP_
 
 #include <vector>
 
@@ -27,28 +27,30 @@ class Widget;
 
 namespace event {
 
-class ActionListener {
+class KeyListener {
   public:
-    virtual ~ActionListener(void) {}
+    virtual ~KeyListener(void) {}
 
-    virtual int actionPerformed(Widget* widget) = 0;
-}; /* class ActionListener */
+    virtual int keyPressed(Widget* widget, int key) = 0;
+    virtual int keyReleased(Widget* widget, int key) = 0;
+}; /* class KeyListener */
 
-class ActionSpeaker {
+class KeySpeaker {
   public:
-    virtual ~ActionSpeaker(void) {}
+    virtual ~KeySpeaker(void) {}
 
-    void addActionListener(ActionListener* listener);
-    void removeActionListener(ActionListener* listener);
+    void addKeyListener(KeyListener* listener);
+    void removeKeyListener(KeyListener* listener);
 
   protected:
-    void fireActionListeners(Widget* widget);
+    void fireKeyPressedListeners(Widget* widget, int key);
+    void fireKeyReleasedListeners(Widget* widget, int key);
 
   private:
-    std::vector<ActionListener*> m_listeners;
-}; /* class ActionSpeaker */
+    std::vector<KeyListener*> m_listeners;
+}; /* class KeySpeaker */
 
 } /* namespace event */
 } /* namespace yguipp */
 
-#endif /* _ACTIONLISTENER_HPP_ */
+#endif /* _EVENT_KEYLISTENER_HPP_ */

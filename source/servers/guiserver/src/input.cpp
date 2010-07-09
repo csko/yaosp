@@ -66,9 +66,11 @@ int InputThread::run( void ) {
 
         switch (event.event) {
             case E_KEY_PRESSED :
+                m_windowManager->keyPressed(event.param1);
                 break;
 
             case E_KEY_RELEASED :
+                m_windowManager->keyReleased(event.param1);
                 break;
 
             case E_QUALIFIERS_CHANGED :

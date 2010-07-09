@@ -29,7 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>terminalview.cpp</item>
         <item>terminalbuffer.cpp</item>
         <item>terminalparser.cpp</item>
-        <item>ptyreader.cpp</item>
+        <item>ptyhandler.cpp</item>
     </array>
 
     <target name="compile">

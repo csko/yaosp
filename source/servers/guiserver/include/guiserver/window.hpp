@@ -54,6 +54,8 @@ class Window {
 
     int handleMessage( uint32_t code, void* data, size_t size );
 
+    int keyPressed(int key);
+    int keyReleased(int key);
     int mouseEntered(const yguipp::Point& position);
     int mouseMoved(const yguipp::Point& position);
     int mouseExited(void);

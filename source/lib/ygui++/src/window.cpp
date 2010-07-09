@@ -30,7 +30,8 @@ namespace yguipp {
 
 Window::Window( const std::string& title, const Point& position,
                 const Point& size, int flags ) : m_title(title), m_position(position),
-                                                 m_size(size), m_flags(flags), m_mouseWidget(NULL) {
+                                                 m_size(size), m_flags(flags), m_mouseWidget(NULL),
+                                                 m_mouseDownWidget(NULL), m_focusedWidget(NULL) {
     m_container = new Panel();
     m_container->setWindow(this);
     m_container->setPosition( Point(0,0) );
@@ -154,6 +155,14 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
 
         case Y_WINDOW_MOVEDTO :
             // todo
+            break;
+
+        case Y_WINDOW_KEY_PRESSED :
+            handleKeyPressed(reinterpret_cast<WinKeyPressed*>(buffer)->m_key);
+            break;
+
+        case Y_WINDOW_KEY_RELEASED :
+            handleKeyReleased(reinterpret_cast<WinKeyReleased*>(buffer)->m_key);
             break;
 
         case Y_WINDOW_MOUSE_ENTERED :
@@ -312,6 +321,22 @@ Point Window::getWidgetPosition( Widget* widget, Point p ) {
     return p;
 }
 
+int Window::handleKeyPressed(int key) {
+    if (m_focusedWidget != NULL) {
+        m_focusedWidget->keyPressed(key);
+    }
+
+    return 0;
+}
+
+int Window::handleKeyReleased(int key) {
+    if (m_focusedWidget != NULL) {
+        m_focusedWidget->keyReleased(key);
+    }
+
+    return 0;
+}
+
 int Window::handleMouseEntered(const yguipp::Point& position) {
     assert(m_mouseWidget == NULL);
     m_mouseWidget = findWidgetAt(position);
@@ -351,6 +376,12 @@ int Window::handleMouseExited(void) {
 int Window::handleMousePressed(const yguipp::Point& position, int button) {
     assert(m_mouseWidget != NULL);
     assert(m_mouseDownWidget == NULL);
+
+    if (m_focusedWidget != m_mouseWidget) {
+        // todo: m_focusedWidget lost focus
+        m_focusedWidget = m_mouseWidget;
+        // todo: m_focusedWidget received focus
+    }
 
     m_mouseDownWidget = m_mouseWidget;
     m_mouseDownWidget->mousePressed(getWidgetPosition(m_mouseDownWidget,position), button);

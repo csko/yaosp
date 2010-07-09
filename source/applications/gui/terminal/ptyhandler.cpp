@@ -21,15 +21,21 @@
 #include <sys/select.h>
 #include <yaosp/debug.h>
 
-#include "ptyreader.hpp"
+#include "ptyhandler.hpp"
 
-PtyReader::PtyReader(int masterPty, TerminalParser* parser, TerminalView* view) : Thread("pty_reader"),
-                                                                                  m_masterPty(masterPty),
-                                                                                  m_parser(parser),
-                                                                                  m_view(view) {
+PtyHandler::PtyHandler(int masterPty, yguipp::Widget* view, TerminalParser* parser) : Thread("pty_reader"),
+                                                                                      m_masterPty(masterPty),
+                                                                                      m_parser(parser),
+                                                                                      m_view(view) {
+    m_view->addKeyListener(this);
 }
 
-int PtyReader::run(void) {
+int PtyHandler::keyPressed(yguipp::Widget* widget, int key) {
+    write(m_masterPty, &key, 1);
+    return 0;
+}
+
+int PtyHandler::run(void) {
     fd_set readSet;
     uint8_t buffer[512];
     struct timeval timeOut;
@@ -53,7 +59,6 @@ int PtyReader::run(void) {
                 dbprintf("PtyReader::run(): failed to read from master pty!\n");
                 break;
             } else if (s > 0) {
-                dbprintf("%d bytes from master pty.\n", s);
                 m_parser->handleData(buffer, s);
                 m_view->invalidate();
             }

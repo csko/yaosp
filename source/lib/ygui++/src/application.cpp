@@ -98,6 +98,8 @@ int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
         case Y_WINDOW_RESIZED :
         case Y_WINDOW_DO_MOVETO :
         case Y_WINDOW_MOVEDTO :
+        case Y_WINDOW_KEY_PRESSED :
+        case Y_WINDOW_KEY_RELEASED :
         case Y_WINDOW_MOUSE_ENTERED :
         case Y_WINDOW_MOUSE_MOVED :
         case Y_WINDOW_MOUSE_EXITED :

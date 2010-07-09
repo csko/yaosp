@@ -65,7 +65,7 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
                 m_visible = false;
             }
             break;
-            
+
         case Y_WINDOW_DO_RESIZE :
             handleDoResize(reinterpret_cast<WinResize*>(data));
             break;
@@ -82,6 +82,26 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
 
             break;
     }
+
+    return 0;
+}
+
+int Window::keyPressed(int key) {
+    WinKeyPressed cmd;
+    cmd.m_header.m_windowId = m_id;
+    cmd.m_key = key;
+
+    m_application->getClientPort()->send(Y_WINDOW_KEY_PRESSED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+
+    return 0;
+}
+
+int Window::keyReleased(int key) {
+    WinKeyReleased cmd;
+    cmd.m_header.m_windowId = m_id;
+    cmd.m_key = key;
+
+    m_application->getClientPort()->send(Y_WINDOW_KEY_RELEASED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
 
     return 0;
 }

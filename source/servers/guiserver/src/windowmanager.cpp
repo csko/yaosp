@@ -154,10 +154,26 @@ int WindowManager::unregisterWindow( Window* window ) {
 }
 
 int WindowManager::keyPressed( int key ) {
+    lock();
+
+    if (m_activeWindow != NULL) {
+        m_activeWindow->keyPressed(key);
+    }
+
+    unLock();
+
     return 0;
 }
 
 int WindowManager::keyReleased( int key ) {
+    lock();
+
+    if (m_activeWindow != NULL) {
+        m_activeWindow->keyReleased(key);
+    }
+
+    unLock();
+
     return 0;
 }
 

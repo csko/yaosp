@@ -16,24 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _TERMINAL_PTYREADER_HPP_
-#define _TERMINAL_PTYREADER_HPP_
+#ifndef _TERMINAL_PTYHANDLER_HPP_
+#define _TERMINAL_PTYHANDLER_HPP_
 
+#include <ygui++/widget.hpp>
 #include <yutil++/thread.hpp>
 
 #include "terminalparser.hpp"
-#include "terminalview.hpp"
 
-class PtyReader : public yutilpp::Thread {
+class PtyHandler : public yutilpp::Thread, public yguipp::event::KeyListener {
   public:
-    PtyReader(int masterPty, TerminalParser* parser, TerminalView* view);
+    PtyHandler(int masterPty, yguipp::Widget* view, TerminalParser* parser);
+
+    int keyPressed(yguipp::Widget* widget, int key);
+    int keyReleased(yguipp::Widget* widget, int key) { return 0; }
 
     int run(void);
 
   private:
     int m_masterPty;
     TerminalParser* m_parser;
-    TerminalView* m_view;
+    yguipp::Widget* m_view;
 }; /* class PtyReader */
 
 #endif /* _TERMINAL_PTYREADER_HPP_ */
