@@ -41,6 +41,8 @@ void TerminalParser::handleNone(uint8_t data) {
     switch (data) {
         case 27 :
             m_state = ESCAPE;
+            m_params.clear();
+            m_firstNumber = true;
             break;
 
         case '\r' :
@@ -97,6 +99,31 @@ void TerminalParser::handleBracket(uint8_t data) {
 
 void TerminalParser::handleSquareBracket(uint8_t data) {
     switch (data) {
+        case '0' ... '9' :
+            if (m_firstNumber) {
+                m_params.push_back(data - '0');
+                m_firstNumber = false;
+            } else {
+                int& n = m_params[m_params.size() - 1];
+                n *= 10;
+                n += (data - '0');
+            }
+
+            break;
+
+        case ';' :
+            m_firstNumber = true;
+            break;
+
+        case 'm' :
+            updateMode();
+            m_state = NONE;
+            break;
+
+        case '?' :
+            m_state = QUESTION;
+            break;
+
         default :
             dbprintf("TerminalParser::handleSquareBracket(): invalid data: %d\n", (int)data);
             m_state = NONE;
@@ -106,9 +133,59 @@ void TerminalParser::handleSquareBracket(uint8_t data) {
 
 void TerminalParser::handleQuestion(uint8_t data) {
     switch (data) {
+        case '0' ... '9' :
+            if (m_firstNumber) {
+                m_params.push_back(data - '0');
+                m_firstNumber = false;
+            } else {
+                int& n = m_params[m_params.size() - 1];
+                n *= 10;
+                n += (data - '0');
+            }
+
+            break;
+
+        case 'h' :
+            // todo
+            m_state = NONE;
+            break;
+
         default :
             dbprintf("TerminalParser::handleQuestion(): invalid data: %d\n", (int)data);
             m_state = NONE;
             break;
+    }
+}
+
+void TerminalParser::updateMode(void) {
+    if (m_params.empty()) {
+        dbprintf("TerminalParser::updateMode(): no parameters.\n");
+        return;
+    }
+
+    for (std::vector<int>::const_iterator it = m_params.begin();
+         it != m_params.end();
+         ++it) {
+        switch (*it) {
+            case 0 :
+                // todo
+                break;
+
+            case 1 :
+                /* bold */
+                break;
+
+            case 30 ... 37 :
+                /* fg color */
+                break;
+
+            case 40 ... 47 :
+                /* bg color */
+                break;
+
+            default :
+                dbprintf("TerminalParser::updateMode(): unknown parameter: %d.\n", *it);
+                break;
+        }
     }
 }

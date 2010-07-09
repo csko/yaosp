@@ -42,7 +42,7 @@ int Terminal::run(void) {
         return EXIT_FAILURE;
     }
 
-    TerminalView* termView = new TerminalView();
+    TerminalView* termView = new TerminalView(m_buffer);
 
     Window* window = new Window(
         "Terminal", Point(50,50),
@@ -55,7 +55,7 @@ int Terminal::run(void) {
     container->add(termView, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
 
     window->show();
-    m_ptyReader = new PtyReader(m_masterPty, m_parser);
+    m_ptyReader = new PtyReader(m_masterPty, m_parser, termView);
     m_ptyReader->start();
     Application::getInstance()->mainLoop();
 

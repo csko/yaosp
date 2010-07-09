@@ -22,16 +22,18 @@
 #include <yutil++/thread.hpp>
 
 #include "terminalparser.hpp"
+#include "terminalview.hpp"
 
 class PtyReader : public yutilpp::Thread {
   public:
-    PtyReader(int masterPty, TerminalParser* parser);
+    PtyReader(int masterPty, TerminalParser* parser, TerminalView* view);
 
     int run(void);
 
   private:
     int m_masterPty;
     TerminalParser* m_parser;
+    TerminalView* m_view;
 }; /* class PtyReader */
 
 #endif /* _TERMINAL_PTYREADER_HPP_ */

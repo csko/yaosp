@@ -21,9 +21,11 @@
 
 #include <ygui++/widget.hpp>
 
+#include "terminalbuffer.hpp"
+
 class TerminalView : public yguipp::Widget {
   public:
-    TerminalView(void);
+    TerminalView(TerminalBuffer* buffer);
 
     yguipp::Font* getFont(void);
 
@@ -31,6 +33,7 @@ class TerminalView : public yguipp::Widget {
 
   private:
     yguipp::Font* m_font;
+    TerminalBuffer* m_buffer;
 }; /* class TerminalView */
 
 #endif /* _TERMINAL_TERMINALVIEW_HPP_ */

@@ -42,9 +42,13 @@ class TerminalParser {
     void handleSquareBracket(uint8_t data);
     void handleQuestion(uint8_t data);
 
+    void updateMode(void);
+
   private:
     ParserState m_state;
     TerminalBuffer* m_buffer;
+    std::vector<int> m_params;
+    bool m_firstNumber;
 }; /* class TerminalParser */
 
 #endif /* _TERMINAL_TERMINALPARSER_HPP_ */

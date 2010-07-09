@@ -141,14 +141,20 @@ void GraphicsContext::drawBitmap( const Point& p, Bitmap* bitmap ) {
     m_needToFlush = true;
 }
 
-void GraphicsContext::drawText( const Point& p, const std::string& text ) {
+void GraphicsContext::drawText( const Point& p, const std::string& text, int length ) {
     RDrawText* cmd;
 
-    cmd = reinterpret_cast<RDrawText*>( m_window->getRenderTable()->allocate( sizeof(RDrawText) + text.size() ) );
+    if (length == 0) {
+        return;
+    } else if (length == -1) {
+        length = (int)text.size();
+    }
+
+    cmd = reinterpret_cast<RDrawText*>( m_window->getRenderTable()->allocate( sizeof(RDrawText) + length ) );
     cmd->m_header.m_cmd = R_DRAW_TEXT;
     cmd->m_position = p + m_leftTop;
-    cmd->m_length = text.size();
-    memcpy( reinterpret_cast<void*>(cmd + 1), text.data(), text.size() );
+    cmd->m_length = length;
+    memcpy(reinterpret_cast<void*>(cmd + 1), text.data(), length);
 
     m_needToFlush = true;
 }

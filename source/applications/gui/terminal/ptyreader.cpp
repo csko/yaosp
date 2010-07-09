@@ -23,8 +23,10 @@
 
 #include "ptyreader.hpp"
 
-PtyReader::PtyReader(int masterPty, TerminalParser* parser) : Thread("pty_reader"), m_masterPty(masterPty),
-                                                              m_parser(parser) {
+PtyReader::PtyReader(int masterPty, TerminalParser* parser, TerminalView* view) : Thread("pty_reader"),
+                                                                                  m_masterPty(masterPty),
+                                                                                  m_parser(parser),
+                                                                                  m_view(view) {
 }
 
 int PtyReader::run(void) {
@@ -53,6 +55,7 @@ int PtyReader::run(void) {
             } else if (s > 0) {
                 dbprintf("%d bytes from master pty.\n", s);
                 m_parser->handleData(buffer, s);
+                m_view->invalidate();
             }
         }
     }

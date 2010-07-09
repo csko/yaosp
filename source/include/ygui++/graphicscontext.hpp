@@ -53,7 +53,7 @@ class GraphicsContext {
     void fillRect( const Rect& r );
     void drawRect( const Rect& r );
     void drawBitmap( const Point& p, Bitmap* bitmap );
-    void drawText( const Point& p, const std::string& text );
+    void drawText( const Point& p, const std::string& text, int length = -1 );
 
     void finish( void );
 

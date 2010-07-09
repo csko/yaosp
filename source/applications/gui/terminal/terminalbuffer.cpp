@@ -20,6 +20,9 @@
 
 #include "terminalbuffer.hpp"
 
+TerminalLine::TerminalLine(void) : m_dirtyWidth(0) {
+}
+
 bool TerminalLine::setWidth(int width) {
     int oldWidth = (int)m_text.size();
 
@@ -34,6 +37,8 @@ bool TerminalLine::setWidth(int width) {
         attr.m_fgColor = 7;
     }
 
+    m_dirtyWidth = std::min(m_dirtyWidth, width);
+
     return true;
 }
 
@@ -42,6 +47,10 @@ TerminalBuffer::TerminalBuffer(int width, int height) : m_width(0), m_height(0),
 }
 
 TerminalBuffer::~TerminalBuffer(void) {
+    for (int i = 0; i < m_height; i++) {
+        delete m_lines[i];
+    }
+
     delete[] m_lines;
 }
 
@@ -95,9 +104,12 @@ bool TerminalBuffer::setSize(int width, int height) {
 }
 
 void TerminalBuffer::insertCr(void) {
+    m_cursorX = 0;
 }
 
 void TerminalBuffer::insertLf(void) {
+    // todo: scrolling
+    m_cursorY++;
 }
 
 void TerminalBuffer::insertBackSpace(void) {
@@ -107,5 +119,10 @@ void TerminalBuffer::insertCharacter(uint8_t c) {
     assert((m_cursorX >= 0) && (m_cursorX < m_width));
     assert((m_cursorY >= 0) && (m_cursorY < m_height));
 
-    //TerminalLine* line = m_lines[m_cursorY];
+    TerminalLine* line = m_lines[m_cursorY];
+    line->m_text[m_cursorX] = c;
+    line->m_attr[m_cursorX] = m_attrib;
+    line->m_dirtyWidth = std::max(line->m_dirtyWidth, m_cursorX + 1);
+
+    m_cursorX++;
 }
