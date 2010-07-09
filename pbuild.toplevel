@@ -17,6 +17,7 @@
 
     <gccprofile name="y-kmodule-compile">
         <flags>-c -O2 -Wall -Wshadow -Werror -nostdinc -nostdlib -fno-builtin -fPIC</flags>
+        <include>${kernelincludedir}</include>
     </gccprofile>
 
     <!-- GCC profiles for user part -->

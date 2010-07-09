@@ -43,7 +43,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc profile="y-kmodule-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>${kernelincludedir}</include>
             </gcc>
         </for>
 

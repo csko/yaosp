@@ -49,19 +49,20 @@ class ProjectContext :
     def get_toplevel( self ) :
         return self.toplevel
 
-    def add_gcc_profile( self, name, flags ) :
+    def add_gcc_profile( self, name, flags, includes ) :
         if name in self.gcc_profiles :
             return
 
         self.gcc_profiles[name] = {
-            "flags" : flags
+            "flags" : flags,
+            "includes" : includes
         }
 
     def get_gcc_profile( self, name ) :
         if name in self.gcc_profiles :
             return self.gcc_profiles[name]
 
-        return { "flags" : "" }
+        return { "flags" : "", "includes" : [] }
 
 class BuildContext :
     def __init__( self, pctx ) :

@@ -32,7 +32,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>mount</item>
         <item>makedir</item>
         <item>load_module</item>
-        <!--item>ramdiskctrl</item-->
         <item>touch</item>
         <item>remdir</item>
         <item>remove</item>

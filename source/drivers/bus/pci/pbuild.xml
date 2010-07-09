@@ -22,20 +22,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
         <item>pci.c</item>
         <item>devices.c</item>
     </array>
-
-    <target name="clean">
-        <delete>objs/*</delete>
-        <rmdir>objs</rmdir>
-    </target>
-
-    <target name="prepare" type="private">
-        <mkdir>objs</mkdir>
-    </target>
 
     <target name="compile">
         <call target="prepare"/>
@@ -48,7 +40,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <gcc profile="y-kmodule-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <include>${kernelincludedir}</include>
             </gcc>
         </for>
 
@@ -66,11 +57,5 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <target name="install">
         <copy from="objs/pci" to="${imagedir}/system/module/bus/pci"/>
-    </target>
-
-    <target name="all">
-        <call target="clean"/>
-        <call target="compile"/>
-        <call target="install"/>
     </target>
 </build>

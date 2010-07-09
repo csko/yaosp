@@ -51,6 +51,7 @@ class ProjectHandler( xml.sax.handler.ContentHandler ) :
         self.context = context
         self.profile_name = None
         self.profile_flags = None
+        self.profile_include = []
         self.loglevel = "ERROR"
         self.data = ""
 
@@ -61,7 +62,10 @@ class ProjectHandler( xml.sax.handler.ContentHandler ) :
         if name == "gccprofile" :
             if "name" in attrs.keys() :
                 self.profile_name = attrs.getValue("name")
-        elif name == "flags" :
+                self.profile_flags = None
+                self.profile_include = []
+        elif name == "flags" or \
+                name == "include" :
             self.data = ""
 
     def endElement( self, name ) :
@@ -69,10 +73,14 @@ class ProjectHandler( xml.sax.handler.ContentHandler ) :
             if self.profile_name is None :
                 return
 
-            self.context.add_gcc_profile(self.profile_name,self.profile_flags)
+            self.context.add_gcc_profile(
+                self.profile_name, self.profile_flags, self.profile_include
+            )
             self.profile_name = None
         elif name == "flags" :
             self.profile_flags = self.data
+        elif name == "include" :
+            self.profile_include += [self.data]
 
     def characters( self, content ) :
         self.data += content

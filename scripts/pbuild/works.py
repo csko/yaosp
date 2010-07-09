@@ -177,7 +177,9 @@ class GccWork( Work ) :
         # Parse includes
 
         for include in self.includes :
-            real_includes.append( "-I" + context.replace_definitions(include) )
+            real_includes.append("-I" + context.replace_definitions(include))
+        for include in gcc_profile["includes"] :
+            real_includes.append("-I" + context.replace_definitions(include))
 
         # Add defines
 
