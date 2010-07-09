@@ -168,19 +168,33 @@ void TerminalParser::updateMode(void) {
          ++it) {
         switch (*it) {
             case 0 :
-                // todo
+                m_buffer->setBgColor(BLACK);
+                m_buffer->setFgColor(WHITE);
+                m_buffer->setBold(false);
                 break;
 
             case 1 :
-                /* bold */
+                m_buffer->setBold(true);
+                break;
+
+            case 2 :
+                m_buffer->setBold(false);
                 break;
 
             case 30 ... 37 :
-                /* fg color */
+                m_buffer->setFgColor(static_cast<TerminalColor>(*it - 30));
+                break;
+
+            case 39 :
+                m_buffer->setFgColor(WHITE);
                 break;
 
             case 40 ... 47 :
-                /* bg color */
+                m_buffer->setBgColor(static_cast<TerminalColor>(*it - 40));
+                break;
+
+            case 49 :
+                m_buffer->setBgColor(BLACK);
                 break;
 
             default :

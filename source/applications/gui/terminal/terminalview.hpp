@@ -32,8 +32,16 @@ class TerminalView : public yguipp::Widget {
     int paint(yguipp::GraphicsContext* g);
 
   private:
+    int paintLine(yguipp::GraphicsContext* g, int lineIndex, yguipp::Point position);
+    int paintLinePart(yguipp::GraphicsContext* g, TerminalLine* line, yguipp::Point& position,
+                      int start, int end, const TerminalAttribute& attr);
+
+  private:
     yguipp::Font* m_font;
     TerminalBuffer* m_buffer;
+
+    static yguipp::Color m_boldColors[COLOR_COUNT];
+    static yguipp::Color m_normalColors[COLOR_COUNT];
 }; /* class TerminalView */
 
 #endif /* _TERMINAL_TERMINALVIEW_HPP_ */

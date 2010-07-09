@@ -20,6 +20,17 @@
 
 #include "terminalbuffer.hpp"
 
+TerminalAttribute::TerminalAttribute(TerminalColor bgColor, TerminalColor fgColor, bool bold) : m_bgColor(bgColor),
+                                                                                                m_fgColor(fgColor),
+                                                                                                m_bold(bold) {
+}
+
+bool TerminalAttribute::operator==(const TerminalAttribute& attr) {
+    return ((m_bgColor == attr.m_bgColor) &&
+            (m_fgColor == attr.m_fgColor) &&
+            (m_bold == attr.m_bold));
+}
+
 TerminalLine::TerminalLine(void) : m_dirtyWidth(0) {
 }
 
@@ -33,8 +44,9 @@ bool TerminalLine::setWidth(int width) {
         m_text[i] = ' ';
 
         TerminalAttribute& attr = m_attr[i];
-        attr.m_bgColor = 0;
-        attr.m_fgColor = 7;
+        attr.m_bgColor = BLACK;
+        attr.m_fgColor = WHITE;
+        attr.m_bold = false;
     }
 
     m_dirtyWidth = std::min(m_dirtyWidth, width);
@@ -101,6 +113,18 @@ bool TerminalBuffer::setSize(int width, int height) {
     }
 
     return true;
+}
+
+void TerminalBuffer::setBgColor(TerminalColor color) {
+    m_attrib.m_bgColor = color;
+}
+
+void TerminalBuffer::setFgColor(TerminalColor color) {
+    m_attrib.m_fgColor = color;
+}
+
+void TerminalBuffer::setBold(bool bold) {
+    m_attrib.m_bold = bold;
 }
 
 void TerminalBuffer::insertCr(void) {

@@ -22,9 +22,26 @@
 #include <string>
 #include <vector>
 
+enum TerminalColor {
+    BLACK = 0,
+    RED,
+    GREEN,
+    YELLOW,
+    BLUE,
+    MAGENTA,
+    CYAN,
+    WHITE,
+    COLOR_COUNT
+};
+
 struct TerminalAttribute {
-    uint8_t m_bgColor;
-    uint8_t m_fgColor;
+    TerminalAttribute(TerminalColor bgColor = BLACK, TerminalColor fgColor = WHITE, bool bold = false);
+
+    bool operator==(const TerminalAttribute& attr);
+
+    TerminalColor m_bgColor;
+    TerminalColor m_fgColor;
+    bool m_bold;
 };
 
 class TerminalLine {
@@ -50,6 +67,9 @@ class TerminalBuffer {
     TerminalLine* lineAt(int index);
 
     bool setSize(int width, int height);
+    void setBgColor(TerminalColor color);
+    void setFgColor(TerminalColor color);
+    void setBold(bool bold);
 
     void insertCr(void);
     void insertLf(void);
