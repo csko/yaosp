@@ -26,7 +26,7 @@
 namespace yguipp {
 
 IPCRenderTable::IPCRenderTable( Window* window ) : RenderTable(window), m_position(sizeof(ipc_port_id)) {
-    m_buffer = new uint8_t[BUFFER_SIZE];
+    m_buffer = new uint8_t[MAX_PACKET_SIZE];
 }
 
 IPCRenderTable::~IPCRenderTable( void ) {
@@ -36,12 +36,12 @@ IPCRenderTable::~IPCRenderTable( void ) {
 void* IPCRenderTable::allocate( size_t size ) {
     void* p;
 
-    if ( ( m_position + size ) > BUFFER_SIZE ) {
+    if ((m_position + size) > MAX_PACKET_SIZE) {
         flush();
         waitForFlush();
     }
 
-    assert( m_position + size < BUFFER_SIZE );
+    assert((m_position + size) < MAX_PACKET_SIZE);
 
     p = reinterpret_cast<void*>( m_buffer + m_position );
     m_position += size;

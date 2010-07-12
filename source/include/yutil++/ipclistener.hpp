@@ -26,7 +26,7 @@ namespace yutilpp {
 
 class IPCListener : public Thread {
   public:
-    IPCListener( const std::string& name );
+    IPCListener( const std::string& name, size_t bufferSize = 1024 );
     virtual ~IPCListener( void );
 
     bool init( void );
@@ -39,8 +39,7 @@ class IPCListener : public Thread {
   private:
     IPCPort* m_port;
     uint8_t* m_buffer;
-
-    static const size_t BUFFER_SIZE = 1024;
+    size_t m_bufferSize;
 }; /* class IPCListener */
 
 } /* namespace yutilpp */

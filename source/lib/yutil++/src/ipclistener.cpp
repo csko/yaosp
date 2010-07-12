@@ -16,31 +16,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yaosp/debug.h>
+
 #include <yutil++/ipclistener.hpp>
 
 namespace yutilpp {
 
-IPCListener::IPCListener( const std::string& name ) : Thread(name), m_port(NULL) {
+IPCListener::IPCListener( const std::string& name, size_t bufferSize ) : Thread(name), m_port(NULL), m_buffer(NULL),
+                                                                         m_bufferSize(bufferSize) {
 }
 
 IPCListener::~IPCListener( void ) {
+    delete[] m_buffer;
 }
 
 bool IPCListener::init( void ) {
-    if ( m_port != NULL ) {
+    if (m_port != NULL) {
         return false;
     }
 
     m_port = new IPCPort();
 
-    if ( !m_port->createNew() ) {
+    if (!m_port->createNew()) {
         delete m_port;
         m_port = NULL;
 
         return false;
     }
 
-    m_buffer = new uint8_t[BUFFER_SIZE];
+    m_buffer = new uint8_t[m_bufferSize];
 
     return true;
 }
@@ -54,11 +58,14 @@ int IPCListener::run( void ) {
         int ret;
         uint32_t code;
 
-        ret = m_port->receive( code, m_buffer, BUFFER_SIZE );
+        ret = m_port->receive(code, m_buffer, m_bufferSize);
 
-        if ( ret >= 0 ) {
-            ipcDataAvailable( code, reinterpret_cast<void*>(m_buffer), ret );
+        if (ret < 0) {
+            dbprintf("IPCListener::run(): failed to receive message from %d: %d.\n", m_port->getId(), ret);
+            break;
         }
+
+        ipcDataAvailable(code, reinterpret_cast<void*>(m_buffer), ret);
     }
 
     return 0;

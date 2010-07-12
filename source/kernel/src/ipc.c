@@ -138,8 +138,6 @@ ipc_port_id sys_create_ipc_port( void ) {
 }
 
 static int do_destroy_ipc_port( ipc_port_t* port ) {
-    semaphore_destroy( port->queue_semaphore );
-
     while ( port->message_queue != NULL ) {
         ipc_message_t* msg = port->message_queue;
         port->message_queue = msg->next;
@@ -286,7 +284,7 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
         goto error2;
     }
 
-    if ( port->message_queue == NULL ) {
+    if (port->message_queue == NULL) {
         mutex_unlock( ipc_port_mutex );
 
         error = semaphore_timedlock( port->queue_semaphore, 1, LOCK_IGNORE_SIGNAL, timeout );
@@ -306,13 +304,17 @@ int sys_recv_ipc_message( ipc_port_id port_id, uint32_t* code, void* buffer, siz
     } else {
         error = semaphore_timedlock( port->queue_semaphore, 1, LOCK_IGNORE_SIGNAL, 0 );
 
-        if ( error != 0 ) {
-            kprintf( ERROR,
-                "sys_recv_ipc_message(): Failed to lock queue semaphore while the message queue was not empty!\n" );
+        if (error != 0) {
+            kprintf(
+                ERROR,
+                "sys_recv_ipc_message(): Failed to lock semaphore (%d) while the queue was not empty: %d!\n",
+                port->queue_semaphore,
+                error
+            );
         }
     }
 
-    if ( port->message_queue == NULL ) {
+    if (port->message_queue == NULL) {
         error = -ENOENT;
         goto error2;
     }

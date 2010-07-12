@@ -22,7 +22,8 @@
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>
 
-Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_visible(false), m_mouseOnDecorator(false),
+Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_visible(false), m_bitmap(NULL),
+                                                                   m_mouseOnDecorator(false),
                                                                    m_drawingMode(yguipp::DM_COPY),
                                                                    m_font(NULL), m_guiServer(guiServer),
                                                                    m_application(application) {

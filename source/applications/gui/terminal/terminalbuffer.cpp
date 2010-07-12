@@ -34,19 +34,25 @@ bool TerminalAttribute::operator==(const TerminalAttribute& attr) {
 TerminalLine::TerminalLine(void) : m_dirtyWidth(0) {
 }
 
+void TerminalLine::clear(char c, TerminalAttribute attr, int start, int end) {
+    if (end == -1) {
+        end = (int)m_text.size() - 1;
+    }
+
+    for (int i = start; i <= end; i++) {
+        m_text[i] = ' ';
+        m_attr[i] = attr;
+    }
+}
+
 bool TerminalLine::setWidth(int width) {
     int oldWidth = (int)m_text.size();
 
     m_text.resize(width);
     m_attr.resize(width);
 
-    for (int i = oldWidth; i < width; i++) {
-        m_text[i] = ' ';
-
-        TerminalAttribute& attr = m_attr[i];
-        attr.m_bgColor = BLACK;
-        attr.m_fgColor = WHITE;
-        attr.m_bold = false;
+    if (width > oldWidth) {
+        clear(' ', TerminalAttribute(), oldWidth, width - 1);
     }
 
     m_dirtyWidth = std::min(m_dirtyWidth, width);
@@ -56,6 +62,9 @@ bool TerminalLine::setWidth(int width) {
 
 TerminalBuffer::TerminalBuffer(int width, int height) : m_width(0), m_height(0), m_cursorX(0), m_cursorY(0) {
     setSize(width, height);
+
+    m_scrollTop = 0;
+    m_scrollBottom = height - 1;
 }
 
 TerminalBuffer::~TerminalBuffer(void) {
@@ -132,8 +141,11 @@ void TerminalBuffer::insertCr(void) {
 }
 
 void TerminalBuffer::insertLf(void) {
-    // todo: scrolling
-    m_cursorY++;
+    if (m_cursorY == m_scrollBottom) {
+        //doScroll(1);
+    } else {
+        m_cursorY++;
+    }
 }
 
 void TerminalBuffer::insertBackSpace(void) {
@@ -149,4 +161,40 @@ void TerminalBuffer::insertCharacter(uint8_t c) {
     line->m_dirtyWidth = std::max(line->m_dirtyWidth, m_cursorX + 1);
 
     m_cursorX++;
+}
+
+void TerminalBuffer::doScroll(int count) {
+    assert(m_scrollTop >= 0);
+    assert(m_scrollBottom < m_height);
+    assert(m_scrollTop <= m_scrollBottom);
+    assert(count != 0);
+
+    int scrollHeight = m_scrollBottom - m_scrollTop + 1;
+
+    if (abs(count) >= scrollHeight) {
+        for (int i = m_scrollTop; i <= m_scrollBottom; i++) {
+            TerminalLine* line = m_lines[i];
+
+            line->clear(' ', TerminalAttribute());
+            line->m_dirtyWidth = 0;
+        }
+    } else if (count > 0) {
+        std::vector<TerminalLine*> tmp;
+
+        for (int i = 0; i < count; i++) {
+            tmp.push_back(m_lines[m_scrollTop + i]);
+        }
+
+        for (int i = 0; i < (scrollHeight - count); i++) {
+            m_lines[m_scrollTop + i] = m_lines[m_scrollTop + i + count];
+        }
+
+        for (int i = 0; i < count; i++) {
+            TerminalLine* line = tmp[i];
+            m_lines[m_scrollTop + scrollHeight - count + i] = line;
+            line->clear(' ', TerminalAttribute());
+            line->m_dirtyWidth = 0;
+        }
+    } else {
+    }
 }

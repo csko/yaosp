@@ -48,6 +48,7 @@ class TerminalLine {
   public:
     TerminalLine(void);
 
+    void clear(char c, TerminalAttribute attr, int start = 0, int end = -1);
     bool setWidth(int width);
 
     std::string m_text;
@@ -77,8 +78,13 @@ class TerminalBuffer {
     void insertCharacter(uint8_t c);
 
   private:
+    void doScroll(int count);
+
+  private:
     int m_width;
     int m_height;
+    int m_scrollTop;
+    int m_scrollBottom;
 
     int m_cursorX;
     int m_cursorY;

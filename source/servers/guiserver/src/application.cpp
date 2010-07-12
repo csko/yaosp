@@ -17,14 +17,16 @@
  */
 
 #include <yaosp/debug.h>
+#include <ygui++/ipcrendertable.hpp>
 
 #include <guiserver/application.hpp>
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
 #include <guiserver/bitmap.hpp>
 
-Application::Application( GuiServer* guiServer ) : IPCListener("app"), m_clientPort(NULL), m_nextWinId(0),
-                                                   m_nextFontId(0), m_nextBitmapId(0), m_guiServer(guiServer) {
+Application::Application( GuiServer* guiServer ) : IPCListener("app", MAX_PACKET_SIZE), m_clientPort(NULL),
+                                                   m_nextWinId(0), m_nextFontId(0), m_nextBitmapId(0),
+                                                   m_guiServer(guiServer) {
 }
 
 Application::~Application( void ) {

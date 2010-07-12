@@ -23,6 +23,8 @@
 
 #include <ygui++/rendertable.hpp>
 
+#define MAX_PACKET_SIZE 32768
+
 namespace yguipp {
 
 class Window;
@@ -40,8 +42,6 @@ class IPCRenderTable : public RenderTable {
   private:
     uint8_t* m_buffer;
     size_t m_position;
-
-    static const size_t BUFFER_SIZE = 32768;
 }; /* class RenderTable */
 
 } /* namespace yguipp */
