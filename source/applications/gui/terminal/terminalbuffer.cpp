@@ -142,13 +142,21 @@ void TerminalBuffer::insertCr(void) {
 
 void TerminalBuffer::insertLf(void) {
     if (m_cursorY == m_scrollBottom) {
-        //doScroll(1);
+        doScroll(1);
     } else {
         m_cursorY++;
     }
 }
 
 void TerminalBuffer::insertBackSpace(void) {
+    if (m_cursorX == 0) {
+        if (m_cursorY > 0) {
+            m_cursorY--;
+            m_cursorX = m_width - 1;
+        }
+    } else {
+        m_cursorX--;
+    }
 }
 
 void TerminalBuffer::insertCharacter(uint8_t c) {
@@ -160,7 +168,31 @@ void TerminalBuffer::insertCharacter(uint8_t c) {
     line->m_attr[m_cursorX] = m_attrib;
     line->m_dirtyWidth = std::max(line->m_dirtyWidth, m_cursorX + 1);
 
-    m_cursorX++;
+    if (++m_cursorX == m_width) {
+        if (m_cursorY == m_scrollBottom) {
+            doScroll(1);
+        } else {
+            m_cursorY++;
+        }
+
+        m_cursorX = 0;
+    }
+}
+
+void TerminalBuffer::moveCursor(int dx, int dy) {
+    m_cursorX += dx;
+    m_cursorY += dy;
+
+    assert((m_cursorX >= 0) && (m_cursorX < m_width));
+    assert((m_cursorY >= 0) && (m_cursorY < m_height));
+}
+
+void TerminalBuffer::eraseBefore(void) {
+    m_lines[m_cursorY]->clear(' ', m_attrib, 0, m_cursorX);
+}
+
+void TerminalBuffer::eraseAfter(void) {
+    m_lines[m_cursorY]->clear(' ', m_attrib, m_cursorX);
 }
 
 void TerminalBuffer::doScroll(int count) {

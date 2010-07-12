@@ -76,6 +76,9 @@ class TerminalBuffer {
     void insertLf(void);
     void insertBackSpace(void);
     void insertCharacter(uint8_t c);
+    void moveCursor(int dx, int dy);
+    void eraseBefore(void);
+    void eraseAfter(void);
 
   private:
     void doScroll(int count);

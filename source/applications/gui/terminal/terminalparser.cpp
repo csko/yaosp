@@ -61,11 +61,9 @@ void TerminalParser::handleNone(uint8_t data) {
             break;
 
         default :
-            if (data < 32) {
-                break;
+            if (data >= 32) {
+                m_buffer->insertCharacter(data);
             }
-
-            m_buffer->insertCharacter(data);
 
             break;
     }
@@ -113,6 +111,33 @@ void TerminalParser::handleSquareBracket(uint8_t data) {
 
         case ';' :
             m_firstNumber = true;
+            break;
+
+        case 'A' :
+            if (m_params.empty()) {
+                m_buffer->moveCursor(0, -1);
+            } else {
+                m_buffer->moveCursor(0, -m_params[0]);
+            }
+            m_state = NONE;
+            break;
+
+        case 'K' :
+            if (m_params.empty()) {
+                m_buffer->eraseAfter();
+            } else {
+                switch (m_params[0]) {
+                    case 1 :
+                        m_buffer->eraseBefore();
+                        break;
+
+                    case 2 :
+                        m_buffer->eraseBefore();
+                        m_buffer->eraseAfter();
+                        break;
+                }
+            }
+            m_state = NONE;
             break;
 
         case 'm' :
