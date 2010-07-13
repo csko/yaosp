@@ -62,6 +62,7 @@ class TerminalBuffer {
     ~TerminalBuffer(void);
 
     int getLineCount(void);
+    void getCursorPosition(int& x, int& y);
     inline int getWidth(void) { return m_width; }
     inline int getHeight(void) { return m_height; }
 

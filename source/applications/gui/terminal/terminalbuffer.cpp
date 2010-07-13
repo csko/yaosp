@@ -79,6 +79,11 @@ int TerminalBuffer::getLineCount(void) {
     return m_height /* + history size */;
 }
 
+void TerminalBuffer::getCursorPosition(int& x, int& y) {
+    x = m_cursorX;
+    y = m_cursorY;
+}
+
 TerminalLine* TerminalBuffer::lineAt(int index) {
     assert((index >= 0) && (index < getLineCount()));
 

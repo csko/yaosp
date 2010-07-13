@@ -36,7 +36,7 @@ Label::~Label( void ) {
 
 Point Label::getPreferredSize( void ) {
     return Point(
-        m_font->getStringWidth(m_text) + 2 * 3,
+        m_font->getWidth(m_text) + 2 * 3,
         m_font->getHeight() + 2 * 3
     );
 }
@@ -56,11 +56,11 @@ int Label::paint( GraphicsContext* g ) {
                 break;
 
             case H_ALIGN_CENTER :
-                position.m_x = ( bounds.width() - m_font->getStringWidth(m_text) ) / 2;
+                position.m_x = ( bounds.width() - m_font->getWidth(m_text) ) / 2;
                 break;
 
             case H_ALIGN_RIGHT :
-                position.m_x = bounds.m_right - m_font->getStringWidth(m_text) + 1;
+                position.m_x = bounds.m_right - m_font->getWidth(m_text) + 1;
                 break;
         }
 

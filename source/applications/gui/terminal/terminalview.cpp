@@ -65,6 +65,12 @@ int TerminalView::paint(yguipp::GraphicsContext* g) {
         pos.m_y += m_font->getHeight();
     }
 
+    int cursorX;
+    int cursorY;
+
+    m_buffer->getCursorPosition(cursorX, cursorY);
+    paintCursor(g, cursorX, cursorY, m_buffer->lineAt(cursorY));
+
     return 0;
 }
 
@@ -92,11 +98,51 @@ int TerminalView::paintLine(yguipp::GraphicsContext* g, int lineIndex, yguipp::P
 int TerminalView::paintLinePart(yguipp::GraphicsContext* g, TerminalLine* line, yguipp::Point& position,
                                 int start, int end, const TerminalAttribute& attr) {
     std::string text = line->m_text.substr(start, end - start + 1);
+    int textWidth = m_font->getWidth(text);
+
+    if (attr.m_bgColor != BLACK) {
+        yguipp::Rect rect;
+
+        rect.m_left = position.m_x;
+        rect.m_right = position.m_x + textWidth - 1;
+        rect.m_top = position.m_y - m_font->getAscender() + 1;
+        rect.m_bottom = position.m_y - m_font->getDescender() + m_font->getLineGap() - 1;
+
+        g->setPenColor(m_normalColors[attr.m_bgColor]);
+        g->fillRect(rect);
+    }
 
     g->setPenColor(attr.m_bold ? m_boldColors[attr.m_fgColor] : m_normalColors[attr.m_fgColor]);
     g->drawText(position, text);
 
-    position.m_x += m_font->getStringWidth(text);
+    position.m_x += textWidth;
+
+    return 0;
+}
+
+int TerminalView::paintCursor(yguipp::GraphicsContext* g, int cursorX, int cursorY, TerminalLine* line) {
+    int charWidth;
+    yguipp::Rect rect;
+    yguipp::Point p;
+
+    charWidth = m_font->getWidth("a");
+    p.m_x = charWidth * cursorX;
+    p.m_y = m_font->getHeight() * cursorY;
+
+    rect.m_left = p.m_x;
+    rect.m_right = p.m_x + charWidth - 1;
+    rect.m_top = p.m_y;
+    rect.m_bottom = p.m_y + m_font->getHeight() - 1;
+
+    p.m_y += m_font->getAscender();
+
+    const TerminalAttribute& attr = line->m_attr[cursorX];
+
+    g->setPenColor(m_normalColors[attr.m_fgColor]);
+    g->fillRect(rect);
+
+    g->setPenColor(attr.m_bold ? m_boldColors[attr.m_bgColor] : m_normalColors[attr.m_fgColor]);
+    g->drawText(p, line->m_text.substr(cursorX, 1));
 
     return 0;
 }

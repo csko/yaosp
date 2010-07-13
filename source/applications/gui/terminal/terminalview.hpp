@@ -35,6 +35,7 @@ class TerminalView : public yguipp::Widget {
     int paintLine(yguipp::GraphicsContext* g, int lineIndex, yguipp::Point position);
     int paintLinePart(yguipp::GraphicsContext* g, TerminalLine* line, yguipp::Point& position,
                       int start, int end, const TerminalAttribute& attr);
+    int paintCursor(yguipp::GraphicsContext* g, int cursorX, int cursorY, TerminalLine* line);
 
   private:
     yguipp::Font* m_font;

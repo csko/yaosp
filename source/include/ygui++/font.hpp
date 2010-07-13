@@ -28,24 +28,27 @@ namespace yguipp {
 
 class Font : public Object {
   public:
-    Font( const std::string& name, const std::string& style, const FontInfo& fontInfo );
-    virtual ~Font( void );
+    Font(const std::string& name, const std::string& style, const FontInfo& fontInfo);
+    virtual ~Font(void);
 
-    bool init( void );
+    bool init(void);
 
-    int getHandle( void );
-    int getHeight( void );
-    int getAscender( void );
-    int getDescender( void );
-    int getLineGap( void );
+    int getHandle(void);
+    int getAscender(void);
+    int getDescender(void);
+    int getLineGap(void);
+    int getHeight(void);
+    int getWidth(const std::string& text);
 
-    int getStringWidth( const std::string& text );
+  private:
+    int getWidthFromServer(const std::string& text);
 
   private:
     int m_handle;
     int m_ascender;
     int m_descender;
     int m_lineGap;
+    int m_charWidth;
 
     std::string m_name;
     std::string m_style;

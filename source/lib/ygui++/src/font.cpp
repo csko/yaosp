@@ -29,10 +29,10 @@ Font::Font( const std::string& name, const std::string& style, const FontInfo& f
                                                                                             m_fontInfo(fontInfo) {
 }
 
-Font::~Font( void ) {
+Font::~Font(void) {
 }
 
-bool Font::init( void ) {
+bool Font::init(void) {
     size_t size;
     uint8_t* tmp;
     uint8_t* data;
@@ -64,11 +64,40 @@ bool Font::init( void ) {
     m_ascender = reply.m_ascender;
     m_descender = reply.m_descender;
     m_lineGap = reply.m_lineGap;
+    m_charWidth = reply.m_charWidth;
 
     return true;
 }
 
-int Font::getStringWidth( const std::string& text ) {
+int Font::getHandle(void) {
+    return m_handle;
+}
+
+int Font::getAscender(void) {
+    return m_ascender;
+}
+
+int Font::getDescender(void) {
+    return m_descender;
+}
+
+int Font::getLineGap(void) {
+    return m_lineGap;
+}
+
+int Font::getHeight(void) {
+    return ( m_ascender - m_descender + m_lineGap );
+}
+
+int Font::getWidth(const std::string& text) {
+    if (m_charWidth == -1) {
+        return getWidthFromServer(text);
+    } else {
+        return (text.size() * m_charWidth);
+    }
+}
+
+int Font::getWidthFromServer(const std::string& text) {
     size_t size;
     uint8_t* data;
     uint32_t code;
@@ -90,11 +119,5 @@ int Font::getStringWidth( const std::string& text ) {
 
     return reply.m_width;
 }
-
-int Font::getHandle( void ) { return m_handle; }
-int Font::getHeight( void ) { return ( m_ascender - m_descender + m_lineGap ); }
-int Font::getAscender( void ) { return m_ascender; }
-int Font::getDescender( void ) { return m_descender; }
-int Font::getLineGap( void ) { return m_lineGap; }
 
 } /* namespace yguipp */

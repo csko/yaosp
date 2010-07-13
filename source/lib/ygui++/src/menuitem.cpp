@@ -48,7 +48,7 @@ MenuItem::~MenuItem( void ) {
 }
 
 Point MenuItem::getPreferredSize( void ) {
-    return Point( m_font->getStringWidth(m_text) + 6, m_font->getHeight() + 6 );
+    return Point( m_font->getWidth(m_text) + 6, m_font->getHeight() + 6 );
 }
 
 Menu* MenuItem::getSubMenu( void ) {

@@ -145,6 +145,7 @@ struct FontCreateReply {
     int m_ascender;
     int m_descender;
     int m_lineGap;
+    int m_charWidth;
 };
 
 struct FontStringWidth {

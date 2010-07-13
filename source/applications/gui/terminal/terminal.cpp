@@ -46,7 +46,7 @@ int Terminal::run(void) {
 
     Window* window = new Window(
         "Terminal", Point(50,50),
-        Point(termView->getFont()->getStringWidth("a") * 80, termView->getFont()->getHeight() * 25)
+        Point(termView->getFont()->getWidth("a") * 80, termView->getFont()->getHeight() * 25)
     );
     window->init();
 

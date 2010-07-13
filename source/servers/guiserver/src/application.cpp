@@ -146,6 +146,13 @@ int Application::handleFontCreate( FontCreate* request ) {
     reply.m_ascender = fontNode->getAscender();
     reply.m_descender = fontNode->getDescender();
     reply.m_lineGap = fontNode->getLineGap();
+
+    if (fontNode->getStyle()->isFixedWidth()) {
+        reply.m_charWidth = fontNode->getWidth("a", 1);
+    } else {
+        reply.m_charWidth = -1;
+    }
+
     m_fontMap[reply.m_fontHandle] = fontNode;
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
