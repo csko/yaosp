@@ -122,9 +122,6 @@ class EchoWork( Work ) :
         print context.replace_definitions( self.text )
 
 class GccWork( Work ) :
-    GCC_COMMAND = "i686-pc-yaosp-gcc"
-    GPP_COMMAND = "i686-pc-yaosp-g++"
-
     def __init__( self, need_gpp, profile ) :
         self.inputs = []
         self.output = ""
@@ -194,9 +191,9 @@ class GccWork( Work ) :
         # Build the command
 
         if self.need_gpp :
-            command = [GccWork.GPP_COMMAND]
+            command = [context.get_project_context().get_executable("g++")]
         else :
-            command = [GccWork.GCC_COMMAND]
+            command = [context.get_project_context().get_executable("gcc")]
 
         command += real_flags + real_inputs + real_includes
         command += real_defines
@@ -205,8 +202,6 @@ class GccWork( Work ) :
         return self.exec_shell( command )
 
 class LdWork( Work ) :
-    LD_COMMAND = "i686-pc-yaosp-ld"
-
     def __init__( self ) :
         self.linker_script = None
         self.inputs = []
@@ -236,7 +231,7 @@ class LdWork( Work ) :
 
         # Build the command
 
-        command = [ LdWork.LD_COMMAND ] + self.flags
+        command = [context.get_project_context().get_executable("ld")] + self.flags
 
         if self.linker_script != None :
             command += [ "-T" + self.linker_script ]
@@ -249,8 +244,6 @@ class LdWork( Work ) :
         return self.exec_shell( command )
 
 class ArWork( Work ) :
-    AR_COMMAND = "i686-pc-yaosp-ar"
-
     def __init__( self ) :
         self.inputs = []
         self.flags = []
@@ -276,7 +269,7 @@ class ArWork( Work ) :
 
         # Build the command
 
-        command = [ ArWork.AR_COMMAND ] + self.flags
+        command = [context.get_project_context().get_executable("ar")] + self.flags
         command += [ context.handle_everything( self.output ) ]
         command += real_inputs
 

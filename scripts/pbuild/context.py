@@ -28,6 +28,12 @@ class ProjectContext :
     def __init__( self ) :
         self.toplevel = None
         self.gcc_profiles = {}
+        self.executables = {
+            "gcc" : "gcc",
+            "g++" : "g++",
+            "ld" : "ld",
+            "ar" : "ar"
+        }
 
     def init( self ) :
         cwd = os.getcwd()
@@ -63,6 +69,15 @@ class ProjectContext :
             return self.gcc_profiles[name]
 
         return { "flags" : "", "includes" : [] }
+
+    def get_executable(self, name) :
+        if name in self.executables :
+            return self.executables[name]
+
+        return ""
+
+    def set_executable(self, name, e) :
+        self.executables[name] = e
 
 class BuildContext :
     def __init__( self, pctx ) :

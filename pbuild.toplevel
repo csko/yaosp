@@ -1,6 +1,13 @@
 <!-- -*- xml -*- -->
 
 <project loglevel="ERROR">
+    <!-- yaOSp specific executables -->
+
+    <executable name="gcc">i686-pc-yaosp-gcc</executable>
+    <executable name="g++">i686-pc-yaosp-g++</executable>
+    <executable name="ld">i686-pc-yaosp-ld</executable>
+    <executable name="ar">i686-pc-yaosp-ar</executable>
+
     <!-- GCC profiles for kernel part -->
 
     <gccprofile name="y-kernel-compile-asm">
