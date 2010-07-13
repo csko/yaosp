@@ -24,6 +24,8 @@ TerminalParser::TerminalParser(TerminalBuffer* buffer) : m_state(NONE), m_buffer
 }
 
 bool TerminalParser::handleData(uint8_t* data, int length) {
+    m_buffer->lock();
+
     for (int i = 0; i < length; i++) {
         switch (m_state) {
             case NONE : handleNone(data[i]); break;
@@ -33,6 +35,8 @@ bool TerminalParser::handleData(uint8_t* data, int length) {
             case QUESTION : handleQuestion(data[i]); break;
         }
     }
+
+    m_buffer->unLock();
 
     return true;
 }

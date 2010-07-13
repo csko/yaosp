@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include <yutil++/mutex.hpp>
+
 enum TerminalColor {
     BLACK = 0,
     RED,
@@ -81,6 +83,9 @@ class TerminalBuffer {
     void eraseBefore(void);
     void eraseAfter(void);
 
+    inline void lock(void) { m_mutex.lock(); }
+    inline void unLock(void) { m_mutex.unLock(); }
+
   private:
     void doScroll(int count);
 
@@ -99,6 +104,8 @@ class TerminalBuffer {
     TerminalAttribute m_savedAttrib;
 
     TerminalLine** m_lines;
+
+    yutilpp::Mutex m_mutex;
 }; /* class TerminalBuffer */
 
 #endif /* _TERMINAL_TERMINALBUFFER_HPP_ */

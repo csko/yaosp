@@ -52,24 +52,29 @@ yguipp::Font* TerminalView::getFont(void) {
 }
 
 int TerminalView::paint(yguipp::GraphicsContext* g) {
+    int cursorX;
+    int cursorY;
+    yguipp::Point p;
+
     g->setPenColor(yguipp::Color(0, 0, 0));
     g->fillRect(yguipp::Rect(getVisibleSize()));
 
     g->setPenColor(yguipp::Color(255, 255, 255));
     g->setFont(m_font);
 
-    yguipp::Point pos(0, m_font->getAscender());
+    p.m_y = m_font->getAscender();
+
+    m_buffer->lock();
 
     for (int i = 0; i < m_buffer->getHeight(); i++) {
-        paintLine(g, i, pos);
-        pos.m_y += m_font->getHeight();
+        paintLine(g, i, p);
+        p.m_y += m_font->getHeight();
     }
-
-    int cursorX;
-    int cursorY;
 
     m_buffer->getCursorPosition(cursorX, cursorY);
     paintCursor(g, cursorX, cursorY, m_buffer->lineAt(cursorY));
+
+    m_buffer->unLock();
 
     return 0;
 }

@@ -60,7 +60,8 @@ bool TerminalLine::setWidth(int width) {
     return true;
 }
 
-TerminalBuffer::TerminalBuffer(int width, int height) : m_width(0), m_height(0), m_cursorX(0), m_cursorY(0) {
+TerminalBuffer::TerminalBuffer(int width, int height) : m_width(0), m_height(0), m_cursorX(0), m_cursorY(0),
+                                                        m_mutex("term_buffer") {
     setSize(width, height);
 
     m_scrollTop = 0;
