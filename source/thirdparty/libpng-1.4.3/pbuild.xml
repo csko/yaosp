@@ -21,9 +21,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <string name="package" value="libpng"/>
-    <string name="version" value="1.4.2"/>
-    <string name="source_file" value="libpng-1.4.2.tar.gz"/>
-    <string name="md5sum" value="89fd334dc5fc84ff146b9269c4fa452f"/>
+    <string name="version" value="1.4.3"/>
+    <string name="source_file" value="libpng-1.4.3.tar.gz"/>
+    <string name="md5sum" value="df3521f61a1b8b69489d297c0ca8c1f8"/>
 
     <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>
