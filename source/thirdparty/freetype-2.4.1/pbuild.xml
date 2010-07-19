@@ -21,9 +21,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <string name="package" value="freetype"/>
-    <string name="version" value="2.3.12"/>
-    <string name="source_file" value="freetype-2.3.12.tar.bz2"/>
-    <string name="md5sum" value="e974a82e5939be8e05ee65f07275d7c5"/>
+    <string name="version" value="2.4.1"/>
+    <string name="source_file" value="freetype-2.4.1.tar.gz"/>
+    <string name="md5sum" value="2c4f33ee9242be7ec5e876952ae99755"/>
 
     <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>
