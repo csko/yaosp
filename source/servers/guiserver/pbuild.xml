@@ -21,7 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
-    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="prepare"/>
 
     <array name="files">
         <item>src/main.cpp</item>
@@ -36,8 +36,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/mouse.cpp</item>
         <item>src/font.cpp</item>
         <item>src/render.cpp</item>
+        <item>src/decoratorloader.cpp</item>
         <item>driver/video/vesa/vesa.cpp</item>
-        <item>driver/decorator/default/default.cpp</item>
     </array>
 
     <target name="compile">
@@ -67,7 +67,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>${staticlibdir}/libpng.a</input>
             <input>${staticlibdir}/libz.a</input>
             <output>objs/guiserver</output>
-            <flags>-lyutil++</flags>
+            <flags>-Wl,-export-dynamic -lyutil++</flags>
         </gcc>
     </target>
 
@@ -97,5 +97,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </exec>
 
         <copy from="fonts/dejavu-fonts-ttf-2.30/ttf/*.ttf" to="${imagedir}/system/fonts"/>
+    </target>
+
+    <target name="clean">
+        <delete>objs/*</delete>
+        <rmdir>objs</rmdir>
+        <call target="clean" directory="driver"/>
+    </target>
+
+    <target name="all">
+        <call targets="clean,compile,install"/>
+        <call target="all" directory="driver"/>
     </target>
 </build>

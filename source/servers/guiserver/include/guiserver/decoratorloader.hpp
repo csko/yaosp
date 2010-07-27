@@ -16,27 +16,19 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _DECORATOR_HPP_
-#define _DECORATOR_HPP_
+#ifndef _DECORATORLOADER_HPP_
+#define _DECORATORLOADER_HPP_
 
-#include <ygui++/point.hpp>
+#include <string>
 
-class Window;
-class GraphicsDriver;
+#include <guiserver/decorator.hpp>
 
-class DecoratorData {
-}; /* class DecoratorData */
-
-class Decorator {
+class DecoratorLoader {
   public:
-    virtual ~Decorator(void) {}
+    static Decorator* loadDecorator(const std::string& name);
 
-    virtual yguipp::Point leftTop(void) = 0;
-    virtual yguipp::Point getSize(void) = 0;
+  private:
+    typedef Decorator* CreateFunction(void);
+}; /* class DecoratorLoader */
 
-    virtual DecoratorData* createWindowData(void) = 0;
-
-    virtual int update(GraphicsDriver* driver, Window* window) = 0;
-}; /* class Decorator */
-
-#endif /* _DECORATOR_HPP_ */
+#endif /* _DECORATORLOADER_HPP_ */

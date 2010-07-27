@@ -21,44 +21,36 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 <build default="all">
     <pinclude file="${toplevel}/config/paths.xml"/>
-    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare"/>
 
     <array name="files">
-        <item>pngloader.cpp</item>
+        <item>black.cpp</item>
     </array>
 
     <target name="compile">
         <call target="prepare"/>
 
-        <echo/>
-        <echo>Compiling PNG loader library</echo>
-        <echo/>
-
         <for var="i" array="${files}">
-            <echo>[GCC    ] source/lib/ygui++/imageloader/png/${i}</echo>
-            <gcc>
+            <gcc profile="y-lib-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flags>-c -O2 -Wall</flags>
+                <include>../../../include</include>
             </gcc>
         </for>
-
-        <echo/>
-        <echo>Linking PNG loader library</echo>
-        <echo/>
-        <echo>[LD     ] source/lib/ygui++/imageloader/png/objs/png.so</echo>
 
         <ld>
             <flag>-shared</flag>
             <input>objs/*.o</input>
-            <input>${staticlibdir}/libpng.a</input>
-            <input>${staticlibdir}/libz.a</input>
-            <output>objs/png.so</output>
+            <output>objs/black.so</output>
         </ld>
 
     </target>
 
     <target name="install">
-        <copy from="objs/png.so" to="${imagedir}/system/lib/imageloader"/>
+        <copy from="objs/black.so" to="${imagedir}/system/lib/decorator"/>
+    </target>
+
+    <target name="all">
+        <call targets="clean,compile,install"/>
     </target>
 </build>

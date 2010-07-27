@@ -57,7 +57,7 @@ bool ImageLoaderManager::loadLibraries( void ) {
     yutilpp::storage::Directory* dir;
     std::string entry;
 
-    dir = new yutilpp::storage::Directory("/system/lib/imageloader++");
+    dir = new yutilpp::storage::Directory("/system/lib/imageloader");
     dir->init();
 
     while ( dir->nextEntry(entry) ) {
@@ -66,7 +66,7 @@ bool ImageLoaderManager::loadLibraries( void ) {
             continue;
         }
 
-        std::string fullPath = "/system/lib/imageloader++/" + entry;
+        std::string fullPath = "/system/lib/imageloader/" + entry;
         void* h = dlopen( fullPath.c_str(), RTLD_NOW );
 
         if ( h == NULL ) {

@@ -31,7 +31,7 @@
 
 class WindowManager {
   public:
-    WindowManager(GuiServer* guiServer);
+    WindowManager(GuiServer* guiServer, Decorator* decorator);
     ~WindowManager( void );
 
     Decorator* getDecorator( void ) { return m_windowDecorator; }

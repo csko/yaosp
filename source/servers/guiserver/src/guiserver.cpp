@@ -20,9 +20,9 @@
 
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>
+#include <guiserver/decoratorloader.hpp>
 
 #include "../driver/video/vesa/vesa.hpp"
-#include "../driver/decorator/default/default.hpp"
 
 GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
 }
@@ -46,7 +46,7 @@ int GuiServer::run( void ) {
     m_fontStorage = new FontStorage();
     m_fontStorage->init();
     m_fontStorage->loadFonts();
-    m_windowManager = new WindowManager(this);
+    m_windowManager = new WindowManager(this, DecoratorLoader::loadDecorator("black"));
     m_inputThread = new InputThread(m_windowManager);
     m_inputThread->init();
 

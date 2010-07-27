@@ -21,17 +21,14 @@
 #include <guiserver/windowmanager.hpp>
 #include <guiserver/guiserver.hpp>
 
-#include "../driver/decorator/default/default.hpp"
-
-WindowManager::WindowManager(GuiServer* guiServer) : m_mutex("wm_lock"),
-                                                     m_graphicsDriver(guiServer->getGraphicsDriver()),
-                                                     m_screenBitmap(guiServer->getScreenBitmap()),
-                                                     m_mouseWindow(NULL), m_mouseDownWindow(NULL),
-                                                     m_activeWindow(NULL) {
+WindowManager::WindowManager(GuiServer* guiServer, Decorator* decorator) : m_mutex("wm_lock"),
+                                                                           m_graphicsDriver(guiServer->getGraphicsDriver()),
+                                                                           m_screenBitmap(guiServer->getScreenBitmap()),
+                                                                           m_windowDecorator(decorator), m_mouseWindow(NULL),
+                                                                           m_mouseDownWindow(NULL), m_activeWindow(NULL) {
     m_mousePointer = new MousePointer();
     m_mousePointer->init();
     m_mousePointer->moveTo(NULL, NULL, m_screenBitmap->size() / 2);
-    m_windowDecorator = new DefaultDecorator(guiServer);
 }
 
 WindowManager::~WindowManager( void ) {
