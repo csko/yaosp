@@ -19,12 +19,18 @@
 #ifndef _DECORATOR_HPP_
 #define _DECORATOR_HPP_
 
-#include <ygui++/point.hpp>
+#include <ygui++/rect.hpp>
 
 class Window;
 class GraphicsDriver;
 
+class Decorator;
+
 class DecoratorData {
+  public:
+    yguipp::Rect m_minimizeRect;
+    yguipp::Rect m_maximizeRect;
+    yguipp::Rect m_closeRect;
 }; /* class DecoratorData */
 
 class Decorator {
@@ -36,7 +42,9 @@ class Decorator {
 
     virtual DecoratorData* createWindowData(void) = 0;
 
-    virtual int update(GraphicsDriver* driver, Window* window) = 0;
+    virtual bool calculateItemPositions(Window* window) = 0;
+
+    virtual bool update(GraphicsDriver* driver, Window* window) = 0;
 }; /* class Decorator */
 
 #endif /* _DECORATOR_HPP_ */

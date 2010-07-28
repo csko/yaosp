@@ -39,10 +39,8 @@ class Rect {
 
     bool isValid( void ) const { return ( ( m_left <= m_right ) && ( m_top <= m_bottom ) ); }
     bool hasPoint( const Point& p ) const {
-        return ( ( m_left <= p.m_x ) &&
-                 ( p.m_x <= m_right ) &&
-                 ( m_top <= p.m_y ) &&
-                 ( p.m_y <= m_bottom ) );
+        return ((m_left <= p.m_x) && (p.m_x <= m_right) &&
+                (m_top <= p.m_y) && (p.m_y <= m_bottom));
     }
     bool doIntersect( const Rect& r ) const {
         return !( r.m_right < m_left || r.m_left > m_right || r.m_bottom < m_top || r.m_top > m_bottom );

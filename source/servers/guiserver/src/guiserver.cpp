@@ -46,7 +46,7 @@ int GuiServer::run( void ) {
     m_fontStorage = new FontStorage();
     m_fontStorage->init();
     m_fontStorage->loadFonts();
-    m_windowManager = new WindowManager(this, DecoratorLoader::loadDecorator("black"));
+    m_windowManager = new WindowManager(this, DecoratorLoader::loadDecorator(this, "black"));
     m_inputThread = new InputThread(m_windowManager);
     m_inputThread->init();
 

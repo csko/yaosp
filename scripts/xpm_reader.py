@@ -9,17 +9,23 @@ class Color :
     def toColor(self) :
         return "yguipp::Color(%d, %d, %d)" % (self.r, self.g, self.b)
 
+    def toArray(self, addAlpha = True) :
+        a = [self.r, self.g, self.b]
+        if addAlpha :
+            a += [255]
+        return a
+
 def extractHeaderData(header) :
     s = header.split(" ")
     return ( int(s[0]), int(s[1]),
              int(s[2]), int(s[3]) )
 
-if len(sys.argv) < 2 :
+if len(sys.argv) < 3 :
     sys.exit(1)
 
 # Read the whole XPM data from the file
 
-f = open(sys.argv[1], "r")
+f = open(sys.argv[2], "r")
 data = f.readlines()
 f.close()
 
@@ -53,7 +59,28 @@ for l in lines[1:1+cc] :
 
     colorMap[key] = Color(value)
 
-print len(data)
-for d in data :
-    c = d[0]
-    print colorMap[c].toColor()
+mode = sys.argv[1]
+
+if mode == "column" :
+    print len(data)
+    for d in data :
+        c = d[0]
+        print colorMap[c].toColor()
+elif mode == "image" :
+    a = []
+    for d in data :
+        for c in d :
+            a += colorMap[c].toArray()
+
+    i = 0
+    s = "    "
+    for c in a :
+        s += "%3d, " % c
+        i += 1
+        if i == 25 :
+            s += "\n    "
+            i = 0
+    while s[-1] in ["\n", ",", " "] :
+        s = s[:-1]
+
+    print s

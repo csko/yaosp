@@ -23,12 +23,14 @@
 
 #include <guiserver/decorator.hpp>
 
+class GuiServer;
+
 class DecoratorLoader {
   public:
-    static Decorator* loadDecorator(const std::string& name);
+    static Decorator* loadDecorator(GuiServer* guiServer, const std::string& name);
 
   private:
-    typedef Decorator* CreateFunction(void);
+    typedef Decorator* CreateFunction(GuiServer* guiServer);
 }; /* class DecoratorLoader */
 
 #endif /* _DECORATORLOADER_HPP_ */

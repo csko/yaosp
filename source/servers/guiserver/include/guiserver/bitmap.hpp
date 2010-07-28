@@ -30,6 +30,7 @@ class Bitmap {
             uint8_t* buffer = NULL, region_id region = -1 );
     ~Bitmap( void );
 
+  public:
     inline uint32_t width( void ) { return m_width; }
     inline uint32_t height( void ) { return m_height; }
 
@@ -43,6 +44,9 @@ class Bitmap {
     enum {
         FREE_BUFFER = (1<<0)
     };
+
+    Bitmap(const Bitmap& b);
+    void operator=(const Bitmap& b);
 
   private:
     uint32_t m_width;

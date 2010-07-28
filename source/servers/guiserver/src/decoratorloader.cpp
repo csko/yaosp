@@ -20,7 +20,7 @@
 
 #include <guiserver/decoratorloader.hpp>
 
-Decorator* DecoratorLoader::loadDecorator(const std::string& name) {
+Decorator* DecoratorLoader::loadDecorator(GuiServer* guiServer, const std::string& name) {
     void* p;
     CreateFunction* create;
 
@@ -37,5 +37,5 @@ Decorator* DecoratorLoader::loadDecorator(const std::string& name) {
         return NULL;
     }
 
-    return create();
+    return create(guiServer);
 }
