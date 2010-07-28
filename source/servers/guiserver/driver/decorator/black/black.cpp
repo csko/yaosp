@@ -51,10 +51,6 @@ yguipp::Point Black::getSize(void) {
     return yguipp::Point(0,SIZE_HEADER);
 }
 
-DecoratorData* Black::createWindowData(void) {
-    return 0;
-}
-
 bool Black::calculateItemPositions(Window* window) {
     DecoratorData* data = window->getDecoratorData();
 

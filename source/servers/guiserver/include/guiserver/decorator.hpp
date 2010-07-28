@@ -33,16 +33,30 @@ class DecoratorData {
     yguipp::Rect m_closeRect;
 }; /* class DecoratorData */
 
+enum DecoratorItem {
+    ITEM_NONE,
+    ITEM_MINIMIZE,
+    ITEM_MAXIMIZE,
+    ITEM_CLOSE
+};
+
 class Decorator {
   public:
     virtual ~Decorator(void) {}
 
+    virtual DecoratorData* createWindowData(void);
+
+    virtual int mouseEntered(Window* window, const yguipp::Point& position);
+    virtual int mouseMoved(Window* window, const yguipp::Point& position);
+    virtual int mouseExited(Window* window);
+    virtual int mousePressed(Window* window, const yguipp::Point& position, int button);
+    virtual int mouseReleased(Window* window, int button);
+
     virtual yguipp::Point leftTop(void) = 0;
     virtual yguipp::Point getSize(void) = 0;
 
-    virtual DecoratorData* createWindowData(void) = 0;
-
     virtual bool calculateItemPositions(Window* window) = 0;
+    virtual DecoratorItem checkHit(Window* window, const yguipp::Point& position);
 
     virtual bool update(GraphicsDriver* driver, Window* window) = 0;
 }; /* class Decorator */

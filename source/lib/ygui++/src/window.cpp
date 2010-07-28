@@ -42,6 +42,9 @@ Window::Window( const std::string& title, const Point& position,
 }
 
 Window::~Window( void ) {
+    dbprintf("yguipp::Window::~Window()\n");
+
+    // todo: release m_container
     delete m_renderTable;
     delete m_graphicsContext;
 }
@@ -120,7 +123,7 @@ void Window::moveTo( const Point& position ) {
 }
 
 int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
-    switch ( code ) {
+    switch (code) {
         case Y_WINDOW_SHOW :
             m_mouseWidget = NULL;
             m_mouseDownWidget = NULL;
@@ -137,6 +140,17 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
         case Y_WINDOW_WIDGET_INVALIDATED :
             doRepaint();
             break;
+
+        case Y_WINDOW_CLOSE_REQUEST : {
+            Application* app;
+
+            app = Application::getInstance();
+            app->getServerPort()->send(Y_WINDOW_DESTROY, buffer, size);
+            app->unregisterWindow(m_id);
+            decRef();
+
+            break;
+        }
 
         case Y_WINDOW_DO_RESIZE :
             Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_RESIZE, buffer, size);

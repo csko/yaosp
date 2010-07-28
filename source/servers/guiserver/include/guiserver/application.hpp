@@ -46,7 +46,9 @@ class Application : public yutilpp::IPCListener {
     static Application* createFrom( GuiServer* guiServer, AppCreate* request );
 
   private:
-    int handleWindowCreate( WinCreate* request );
+    int handleWindowCreate(WinCreate* request);
+    int handleWindowDestroy(Window* window);
+
     int handleFontCreate( FontCreate* request );
     int handleFontStringWidth( FontStringWidth* request );
     int handleBitmapCreate( BitmapCreate* request );
@@ -60,6 +62,7 @@ class Application : public yutilpp::IPCListener {
     yutilpp::IPCPort* m_clientPort;
 
     typedef std::map<int, Window*> WindowMap;
+    typedef WindowMap::iterator WindowMapIter;
     typedef WindowMap::const_iterator WindowMapCIter;
     typedef std::map<int, FontNode*> FontMap;
     typedef FontMap::const_iterator FontMapCIter;

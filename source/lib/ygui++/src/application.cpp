@@ -91,7 +91,7 @@ yutilpp::IPCPort* Application::getReplyPort( void ) {
 }
 
 int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
-    switch ( code ) {
+    switch (code) {
         case Y_WINDOW_SHOW :
         case Y_WINDOW_HIDE :
         case Y_WINDOW_DO_RESIZE :
@@ -107,12 +107,14 @@ int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
         case Y_WINDOW_MOUSE_RELEASED :
         case Y_WINDOW_ACTIVATED :
         case Y_WINDOW_DEACTIVATED :
-        case Y_WINDOW_WIDGET_INVALIDATED : {
+        case Y_WINDOW_WIDGET_INVALIDATED :
+        case Y_WINDOW_CLOSE_REQUEST : {
             WinHeader* header = reinterpret_cast<WinHeader*>(buffer);
             WindowMapCIter it = m_windowMap.find(header->m_windowId);
 
             if ( it != m_windowMap.end() ) {
-                it->second->handleMessage(code, buffer, size);
+                Window* window = it->second;
+                window->handleMessage(code, buffer, size);
             }
 
             break;
@@ -122,8 +124,8 @@ int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
     return 0;
 }
 
-int Application::mainLoop( void ) {
-    while ( 1 ) {
+int Application::mainLoop(void) {
+    while (!m_windowMap.empty()) {
         int ret;
         uint32_t code;
 
@@ -133,6 +135,8 @@ int Application::mainLoop( void ) {
             ipcDataAvailable(code, m_ipcBuffer, ret);
         }
     }
+
+    // todo: destroy guiserver part of the application
 
     return 0;
 }
@@ -176,9 +180,18 @@ bool Application::registerApplication( void ) {
     return true;
 }
 
-int Application::registerWindow( int id, Window* window ) {
-    assert( m_windowMap.find(id) == m_windowMap.end() );
+int Application::registerWindow(int id, Window* window) {
+    assert(m_windowMap.find(id) == m_windowMap.end());
     m_windowMap[id] = window;
+
+    return 0;
+}
+
+int Application::unregisterWindow(int id) {
+    WindowMapIter it = m_windowMap.find(id);
+    assert(it != m_windowMap.end());
+
+    m_windowMap.erase(it);
 
     return 0;
 }

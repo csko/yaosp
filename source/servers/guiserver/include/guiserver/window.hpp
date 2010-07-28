@@ -36,11 +36,13 @@ class DecoratorData;
 class Window {
   private:
     Window( GuiServer* guiServer, Application* application );
-    ~Window( void );
 
     bool init( WinCreate* request );
 
   public:
+    ~Window(void);
+
+    inline int getId(void) { return m_id; }
     inline int getFlags(void) { return m_flags; }
     inline int getOrder(void) { return m_order; }
     inline const yguipp::Rect& getScreenRect(void) { return m_screenRect; }
@@ -53,6 +55,9 @@ class Window {
     inline void setDecoratorData(DecoratorData* data) { m_decoratorData = data; }
 
     int handleMessage( uint32_t code, void* data, size_t size );
+
+    int closeRequest(void);
+    int close(void);
 
     int keyPressed(int key);
     int keyReleased(int key);
@@ -68,6 +73,9 @@ class Window {
     static Window* createFrom( GuiServer* guiServer, Application* application, WinCreate* request );
 
   private:
+    void registerWindow(void);
+    void unregisterWindow(void);
+
     void handleDoResize( WinResize* request );
     void handleDoMoveTo( WinMoveTo* request );
     void handleRender( uint8_t* data, size_t size );

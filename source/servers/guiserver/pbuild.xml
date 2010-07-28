@@ -37,6 +37,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/font.cpp</item>
         <item>src/render.cpp</item>
         <item>src/decoratorloader.cpp</item>
+        <item>src/decorator.cpp</item>
         <item>driver/video/vesa/vesa.cpp</item>
     </array>
 

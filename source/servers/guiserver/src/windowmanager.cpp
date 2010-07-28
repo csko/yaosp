@@ -45,6 +45,8 @@ int WindowManager::registerWindow( Window* window ) {
     /* Create decorator data if the window has border. */
     if ((window->getFlags() & yguipp::WINDOW_NO_BORDER) == 0) {
         window->setDecoratorData(m_windowDecorator->createWindowData());
+
+        m_windowDecorator->calculateItemPositions(window);
         m_windowDecorator->update(m_graphicsDriver, window);
     }
 

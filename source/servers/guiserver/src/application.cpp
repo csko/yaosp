@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
 #include <yaosp/debug.h>
 #include <ygui++/ipcrendertable.hpp>
 
@@ -72,6 +73,18 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
             handleWindowCreate(reinterpret_cast<WinCreate*>(data));
             break;
 
+        case Y_WINDOW_DESTROY : {
+            WinHeader* header = reinterpret_cast<WinHeader*>(data);
+            WindowMapCIter it = m_windowMap.find(header->m_windowId);
+
+            if (it != m_windowMap.end()) {
+                Window* window = it->second;
+                handleWindowDestroy(window);
+            }
+
+            break;
+        }
+
         case Y_WINDOW_SHOW :
         case Y_WINDOW_HIDE :
         case Y_WINDOW_DO_RESIZE :
@@ -80,7 +93,7 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
             WinHeader* header = reinterpret_cast<WinHeader*>(data);
             WindowMapCIter it = m_windowMap.find(header->m_windowId);
 
-            if ( it != m_windowMap.end() ) {
+            if (it != m_windowMap.end()) {
                 it->second->handleMessage(code, data, size);
             }
 
@@ -113,7 +126,7 @@ Application* Application::createFrom( GuiServer* guiServer, AppCreate* request )
     return app;
 }
 
-int Application::handleWindowCreate( WinCreate* request ) {
+int Application::handleWindowCreate(WinCreate* request) {
     WinCreateReply reply;
     Window* window = Window::createFrom(m_guiServer, this, request);
 
@@ -122,6 +135,18 @@ int Application::handleWindowCreate( WinCreate* request ) {
     window->setId(reply.m_windowId);
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
+
+    return 0;
+}
+
+int Application::handleWindowDestroy(Window* window) {
+    window->close();
+
+    WindowMapIter it = m_windowMap.find(window->getId());
+    assert(it != m_windowMap.end());
+    m_windowMap.erase(it);
+
+    delete window;
 
     return 0;
 }

@@ -15,8 +15,6 @@ class Black : public Decorator {
     yguipp::Point leftTop(void);
     yguipp::Point getSize(void);
 
-    DecoratorData* createWindowData(void);
-
     bool calculateItemPositions(Window* window);
 
     bool update(GraphicsDriver* driver, Window* window);

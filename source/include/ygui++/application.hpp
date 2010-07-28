@@ -53,14 +53,15 @@ class Application {
 
     int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
 
-    int mainLoop( void );
+    int mainLoop(void);
 
     static bool createInstance( const std::string& name );
     static inline Application* getInstance(void) { return m_instance; }
 
   private:
     bool registerApplication( void );
-    int registerWindow( int id, Window* window );
+    int registerWindow(int id, Window* window);
+    int unregisterWindow(int id);
 
   private:
     static const size_t IPC_BUF_SIZE = 512;
@@ -75,6 +76,7 @@ class Application {
     uint8_t m_ipcBuffer[IPC_BUF_SIZE];
 
     typedef std::map<int, Window*> WindowMap;
+    typedef WindowMap::iterator WindowMapIter;
     typedef WindowMap::const_iterator WindowMapCIter;
 
     WindowMap m_windowMap;

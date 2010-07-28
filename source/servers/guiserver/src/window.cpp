@@ -54,17 +54,11 @@ bool Window::init( WinCreate* request ) {
 int Window::handleMessage( uint32_t code, void* data, size_t size ) {
     switch (code) {
         case Y_WINDOW_SHOW :
-            if (!m_visible) {
-                m_guiServer->getWindowManager()->registerWindow(this);
-                m_visible = true;
-            }
+            registerWindow();
             break;
 
         case Y_WINDOW_HIDE :
-            if (m_visible) {
-                m_guiServer->getWindowManager()->unregisterWindow(this);
-                m_visible = false;
-            }
+            unregisterWindow();
             break;
 
         case Y_WINDOW_DO_RESIZE :
@@ -84,6 +78,20 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
             break;
     }
 
+    return 0;
+}
+
+int Window::closeRequest(void) {
+    WinHeader cmd;
+    cmd.m_windowId = m_id;
+
+    m_application->getClientPort()->send(Y_WINDOW_CLOSE_REQUEST, reinterpret_cast<void*>(&cmd), sizeof(cmd));
+
+    return 0;
+}
+
+int Window::close(void) {
+    unregisterWindow();
     return 0;
 }
 
@@ -111,6 +119,7 @@ int Window::mouseEntered(const yguipp::Point& position) {
     m_mouseOnDecorator = !m_clientRect.hasPoint(position);
 
     if (m_mouseOnDecorator) {
+        m_guiServer->getWindowManager()->getDecorator()->mouseEntered(this, position);
     } else {
         WinMouseEntered cmd;
         cmd.m_header.m_windowId = m_id;
@@ -127,9 +136,9 @@ int Window::mouseMoved(const yguipp::Point& position) {
 
     if (m_mouseOnDecorator) {
         if (mouseOnDecorator) {
-            // moved on decorator
+            m_guiServer->getWindowManager()->getDecorator()->mouseMoved(this, position);
         } else {
-            // exited from decorator
+            m_guiServer->getWindowManager()->getDecorator()->mouseExited(this);
 
             WinMouseEntered cmd;
             cmd.m_header.m_windowId = m_id;
@@ -144,7 +153,7 @@ int Window::mouseMoved(const yguipp::Point& position) {
 
             m_application->getClientPort()->send(Y_WINDOW_MOUSE_EXITED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
 
-            // entered to decorator
+            m_guiServer->getWindowManager()->getDecorator()->mouseEntered(this, position);
         } else {
             WinMouseMoved cmd;
             cmd.m_header.m_windowId = m_id;
@@ -161,6 +170,7 @@ int Window::mouseMoved(const yguipp::Point& position) {
 
 int Window::mouseExited(void) {
     if (m_mouseOnDecorator) {
+        m_guiServer->getWindowManager()->getDecorator()->mouseExited(this);
     } else {
         WinMouseExited cmd;
         cmd.m_header.m_windowId = m_id;
@@ -173,7 +183,7 @@ int Window::mouseExited(void) {
 
 int Window::mousePressed(const yguipp::Point& position, int button) {
     if (m_mouseOnDecorator) {
-        // todo
+        m_guiServer->getWindowManager()->getDecorator()->mousePressed(this, position, button);
     } else {
         WinMousePressed cmd;
         cmd.m_header.m_windowId = m_id;
@@ -188,7 +198,7 @@ int Window::mousePressed(const yguipp::Point& position, int button) {
 
 int Window::mouseReleased(int button) {
     if (m_mouseOnDecorator) {
-        // todo
+        m_guiServer->getWindowManager()->getDecorator()->mouseReleased(this, button);
     } else {
         WinMouseReleased cmd;
         cmd.m_header.m_windowId = m_id;
@@ -224,6 +234,24 @@ Window* Window::createFrom( GuiServer* guiServer, Application* application, WinC
     Window* window = new Window(guiServer, application);
     window->init(request);
     return window;
+}
+
+void Window::registerWindow(void) {
+    if (m_visible) {
+        return;
+    }
+
+    m_guiServer->getWindowManager()->registerWindow(this);
+    m_visible = true;
+}
+
+void Window::unregisterWindow(void) {
+    if (!m_visible) {
+        return;
+    }
+
+    m_guiServer->getWindowManager()->unregisterWindow(this);
+    m_visible = false;
 }
 
 void Window::handleDoResize( WinResize* request ) {
