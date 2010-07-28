@@ -536,3 +536,43 @@ void* sys_dlsym( void* handle, const char* symname ) {
 
     return ptr;
 }
+
+int sys_dlgetglobalinit(void* handle, uint32_t* table, int size) {
+    int ret;
+    uint32_t i;
+    elf32_image_t* image;
+    elf32_context_t* context;
+
+    if (size == 0) {
+        return 0;
+    }
+
+    context = (elf32_context_t*)current_process()->loader_data;
+
+    mutex_lock(context->lock, LOCK_IGNORE_SIGNAL);
+
+    if (array_index_of(&context->libraries, handle) < 0) {
+        ret = -EINVAL;
+        goto out;
+    }
+
+    ret = 0;
+    image = (elf32_image_t*)handle;
+
+    for (i = 0; i < image->info.symbol_count; i++) {
+        elf_symbol_t* symbol = &image->info.symbol_table[i];
+
+        if (strncmp(image->info.string_table + symbol->name, "_GLOBAL__I__", 12) == 0) {
+            table[ret] = image->text_region->address + symbol->value - image->info.virtual_address;
+
+            if (++ret == size) {
+                break;
+            }
+        }
+    }
+
+out:
+    mutex_unlock(context->lock);
+
+    return ret;
+}

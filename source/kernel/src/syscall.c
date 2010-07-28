@@ -143,7 +143,8 @@ static system_call_entry_t system_call_table[] = {
     { "getsockname", sys_getsockname, 0, PARAM_COUNT(0) },
     { "dlopen", sys_dlopen, 0, PARAM_COUNT(2) },
     { "dlclose", sys_dlclose, 0, PARAM_COUNT(1) },
-    { "dlsym", sys_dlsym, 0, PARAM_COUNT(2) }
+    { "dlsym", sys_dlsym, 0, PARAM_COUNT(2) },
+    { "dlgetglobalinit", sys_dlgetglobalinit, 0, PARAM_COUNT(3) }
 };
 
 #ifdef ENABLE_SYSCALL_TRACE
