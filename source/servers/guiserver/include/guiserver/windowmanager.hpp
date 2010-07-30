@@ -52,6 +52,8 @@ class WindowManager {
     int mouseReleased( int button );
     int mouseScrolled( int button );
 
+    int setMovingWindow(Window* window);
+
     int updateWindowRegion( Window* window, const yguipp::Rect& region );
     int hideWindowRegion( Window* window, const yguipp::Rect& region );
 
@@ -75,6 +77,7 @@ class WindowManager {
     Window* m_mouseWindow;
     Window* m_mouseDownWindow;
     Window* m_activeWindow;
+    Window* m_movingWindow;
 }; /* class WindowManager */
 
 #endif /* _WINDOWMANAGER_HPP_ */

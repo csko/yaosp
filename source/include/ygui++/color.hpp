@@ -31,7 +31,16 @@ class Color {
     inline uint32_t toColor32( void ) const {
         return ( ( m_alpha << 24 ) | ( m_red << 16 ) | ( m_green << 8 ) | ( m_blue ) );
     }
+
     bool operator==( const Color& c );
+
+    static void invertRgb32(uint32_t* p) {
+        uint8_t* data = reinterpret_cast<uint8_t*>(p);
+
+        data[0] = 255 - data[0];
+        data[1] = 255 - data[1];
+        data[2] = 255 - data[2];
+    }
 
   public:
     uint8_t m_red;

@@ -23,6 +23,7 @@
 
 class Window;
 class GraphicsDriver;
+class GuiServer;
 
 class Decorator;
 
@@ -31,17 +32,20 @@ class DecoratorData {
     yguipp::Rect m_minimizeRect;
     yguipp::Rect m_maximizeRect;
     yguipp::Rect m_closeRect;
+    yguipp::Rect m_dragRect;
 }; /* class DecoratorData */
 
 enum DecoratorItem {
     ITEM_NONE,
     ITEM_MINIMIZE,
     ITEM_MAXIMIZE,
-    ITEM_CLOSE
+    ITEM_CLOSE,
+    ITEM_DRAG
 };
 
 class Decorator {
   public:
+    Decorator(GuiServer* guiServer);
     virtual ~Decorator(void) {}
 
     virtual DecoratorData* createWindowData(void);
@@ -59,6 +63,9 @@ class Decorator {
     virtual DecoratorItem checkHit(Window* window, const yguipp::Point& position);
 
     virtual bool update(GraphicsDriver* driver, Window* window) = 0;
+
+  protected:
+    GuiServer* m_guiServer;
 }; /* class Decorator */
 
 #endif /* _DECORATOR_HPP_ */

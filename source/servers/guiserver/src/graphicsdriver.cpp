@@ -26,7 +26,7 @@ int GraphicsDriver::drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
     rectToDraw &= clipRect;
     rectToDraw &= bitmap->bounds();
 
-    if ( !rectToDraw.isValid() ) {
+    if (!rectToDraw.isValid()) {
         return 0;
     }
 
@@ -39,6 +39,7 @@ int GraphicsDriver::drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
             break;
 
         case yguipp::DM_INVERT :
+            drawRectInvert(bitmap, rectToDraw);
             break;
     }
 
@@ -128,6 +129,25 @@ int GraphicsDriver::drawRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, co
     return 0;
 }
 
+int GraphicsDriver::drawRectInvert( Bitmap* bitmap, const yguipp::Rect& rect ) {
+    switch ((int)bitmap->getColorSpace()) {
+        case yguipp::CS_RGB32 :
+            drawRectInvert32(bitmap, rect);
+            break;
+    }
+
+    return 0;
+}
+
+int GraphicsDriver::drawRectInvert32( Bitmap* bitmap, const yguipp::Rect& rect ) {
+    fillRectInvert32(bitmap, yguipp::Rect(rect.m_left, rect.m_top, rect.m_right, rect.m_top));
+    fillRectInvert32(bitmap, yguipp::Rect(rect.m_left, rect.m_top, rect.m_left, rect.m_bottom));
+    fillRectInvert32(bitmap, yguipp::Rect(rect.m_left, rect.m_bottom, rect.m_right, rect.m_bottom));
+    fillRectInvert32(bitmap, yguipp::Rect(rect.m_right, rect.m_top, rect.m_right, rect.m_bottom));
+
+    return 0;
+}
+
 int GraphicsDriver::fillRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color ) {
     switch ( (int)bitmap->getColorSpace() ) {
         case yguipp::CS_RGB32 :
@@ -154,6 +174,24 @@ int GraphicsDriver::fillRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, co
     }
 
     return 0;
+}
+
+int GraphicsDriver::fillRectInvert32( Bitmap* bitmap, const yguipp::Rect& rect ) {
+    register uint32_t* data;
+    uint32_t padding = bitmap->width() - rect.width();
+
+    data = reinterpret_cast<uint32_t*>(bitmap->getBuffer()) + (rect.m_top * bitmap->width() + rect.m_left);
+
+    for ( int y = 0; y < rect.height(); y++ ) {
+        for ( int x = 0; x < rect.width(); x++ ) {
+            yguipp::Color::invertRgb32(data++);
+        }
+
+        data += padding;
+    }
+
+    return 0;
+
 }
 
 int GraphicsDriver::drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, yguipp::Point position,

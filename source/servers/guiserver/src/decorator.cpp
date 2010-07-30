@@ -20,6 +20,10 @@
 
 #include <guiserver/decorator.hpp>
 #include <guiserver/window.hpp>
+#include <guiserver/guiserver.hpp>
+
+Decorator::Decorator(GuiServer* guiServer) : m_guiServer(guiServer) {
+}
 
 DecoratorData* Decorator::createWindowData(void) {
     return new DecoratorData();
@@ -40,8 +44,14 @@ int Decorator::mouseExited(Window* window) {
 int Decorator::mousePressed(Window* window, const yguipp::Point& position, int button) {
     DecoratorItem item = checkHit(window, position);
 
-    if (item == ITEM_CLOSE) {
-        window->closeRequest();
+    switch ((int)item) {
+        case ITEM_CLOSE :
+            window->closeRequest();
+            break;
+
+        case ITEM_DRAG :
+            m_guiServer->getWindowManager()->setMovingWindow(window);
+            break;
     }
 
     return 0;
@@ -56,6 +66,8 @@ DecoratorItem Decorator::checkHit(Window* window, const yguipp::Point& position)
 
     if (data->m_closeRect.hasPoint(position)) {
         return ITEM_CLOSE;
+    } else if (data->m_dragRect.hasPoint(position)) {
+        return ITEM_DRAG;
     }
 
     return ITEM_NONE;

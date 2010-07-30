@@ -25,13 +25,15 @@ WindowManager::WindowManager(GuiServer* guiServer, Decorator* decorator) : m_mut
                                                                            m_graphicsDriver(guiServer->getGraphicsDriver()),
                                                                            m_screenBitmap(guiServer->getScreenBitmap()),
                                                                            m_windowDecorator(decorator), m_mouseWindow(NULL),
-                                                                           m_mouseDownWindow(NULL), m_activeWindow(NULL) {
+                                                                           m_mouseDownWindow(NULL), m_activeWindow(NULL),
+                                                                           m_movingWindow(NULL) {
     m_mousePointer = new MousePointer();
     m_mousePointer->init();
     m_mousePointer->moveTo(NULL, NULL, m_screenBitmap->size() / 2);
 }
 
 WindowManager::~WindowManager( void ) {
+    delete m_mousePointer;
 }
 
 int WindowManager::enable( void ) {
@@ -247,6 +249,20 @@ int WindowManager::mouseReleased( int button ) {
 }
 
 int WindowManager::mouseScrolled( int button ) {
+    return 0;
+}
+
+int WindowManager::setMovingWindow(Window* window) {
+    // NOTE: We assume here that the WindowManager lock is owned by the thread.
+
+    if (m_movingWindow == NULL) {
+        assert(window != NULL);
+
+        m_graphicsDriver->drawRect(m_screenBitmap, m_screenBitmap->bounds(), window->getScreenRect(), yguipp::Color(), yguipp::DM_INVERT);
+    } else {
+        assert(window == NULL);
+    }
+
     return 0;
 }
 

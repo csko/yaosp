@@ -29,7 +29,7 @@ yguipp::Color Black::m_headerColors[SIZE_HEADER] = {
     yguipp::Color(46, 46, 46)
 };
 
-Black::Black(GuiServer* guiServer) {
+Black::Black(GuiServer* guiServer) : Decorator(guiServer) {
     m_minimizeImage = new Bitmap(23, 23, yguipp::CS_RGB32, m_minimizeButton);
     m_maximizeImage = new Bitmap(23, 23, yguipp::CS_RGB32, m_maximizeButton);
     m_closeImage = new Bitmap(23, 23, yguipp::CS_RGB32, m_closeButton);
@@ -53,15 +53,17 @@ yguipp::Point Black::getSize(void) {
 
 bool Black::calculateItemPositions(Window* window) {
     DecoratorData* data = window->getDecoratorData();
+    const yguipp::Rect& screenRect = window->getScreenRect();
 
     yguipp::Rect r = m_closeImage->bounds();
-    r += window->getScreenRect().leftTop() + yguipp::Point(window->getBitmap()->width() - m_closeImage->width(), 0);
+    r += screenRect.leftTop() + yguipp::Point(window->getBitmap()->width() - m_closeImage->width(), 0);
 
     data->m_closeRect = r;
     r -= yguipp::Point(m_closeImage->width(), 0);
     data->m_maximizeRect = r;
     r -= yguipp::Point(m_maximizeImage->width(), 0);
     data->m_minimizeRect = r;
+    data->m_dragRect = yguipp::Rect(screenRect.m_left, screenRect.m_top, data->m_closeRect.m_left - 1, screenRect.m_top + SIZE_HEADER - 1);
 
     return true;
 }

@@ -64,8 +64,13 @@ class GraphicsDriver {
     int drawRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
     int drawRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
 
+    int drawRectInvert( Bitmap* bitmap, const yguipp::Rect& rect );
+    int drawRectInvert32( Bitmap* bitmap, const yguipp::Rect& rect );
+
     int fillRectCopy( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
     int fillRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
+
+    int fillRectInvert32( Bitmap* bitmap, const yguipp::Rect& rect );
 
     int drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, yguipp::Point position,
                     const yguipp::Color& color, FontNode* font, const char* text, int length );
