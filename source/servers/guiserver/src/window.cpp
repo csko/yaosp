@@ -23,8 +23,9 @@
 #include <guiserver/application.hpp>
 
 Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_visible(false), m_bitmap(NULL),
-                                                                   m_mouseOnDecorator(false),
-                                                                   m_drawingMode(yguipp::DM_COPY),
+                                                                   m_mouseOnDecorator(false), 
+                                                                   m_mousePressedOnDecorator(false), m_moving(false),
+                                                                   m_resizing(false), m_drawingMode(yguipp::DM_COPY),
                                                                    m_font(NULL), m_guiServer(guiServer),
                                                                    m_application(application) {
 }
@@ -66,7 +67,7 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
             break;
 
         case Y_WINDOW_DO_MOVETO :
-            handleDoMoveTo(reinterpret_cast<WinMoveTo*>(data));
+            moveTo(reinterpret_cast<WinMoveTo*>(data)->m_position);
             break;
 
         case Y_WINDOW_RENDER :
@@ -77,6 +78,17 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
 
             break;
     }
+
+    return 0;
+}
+
+int Window::moveTo(const yguipp::Point& p) {
+    WinMoveTo reply;
+    reply.m_header.m_windowId = m_id;
+    reply.m_position = p;
+
+    calculateWindowRects(p, m_clientRect.size(), m_screenRect, m_clientRect);
+    m_application->getClientPort()->send(Y_WINDOW_MOVEDTO, reinterpret_cast<void*>(&reply), sizeof(reply));
 
     return 0;
 }
@@ -193,11 +205,12 @@ int Window::mousePressed(const yguipp::Point& position, int button) {
         m_application->getClientPort()->send(Y_WINDOW_MOUSE_PRESSED, reinterpret_cast<void*>(&cmd), sizeof(cmd));
     }
 
+    m_mousePressedOnDecorator = m_mouseOnDecorator;
     return 0;
 }
 
 int Window::mouseReleased(int button) {
-    if (m_mouseOnDecorator) {
+    if (m_mousePressedOnDecorator) {
         m_guiServer->getWindowManager()->getDecorator()->mouseReleased(this, button);
     } else {
         WinMouseReleased cmd;
@@ -260,11 +273,6 @@ void Window::handleDoResize( WinResize* request ) {
     m_bitmap = new Bitmap(m_screenRect.width(), m_screenRect.height(), yguipp::CS_RGB32);
 
     m_application->getClientPort()->send(Y_WINDOW_RESIZED, request, sizeof(WinResize));
-}
-
-void Window::handleDoMoveTo( WinMoveTo* request ) {
-    calculateWindowRects(request->m_position, m_clientRect.size(), m_screenRect, m_clientRect);
-    m_application->getClientPort()->send(Y_WINDOW_MOVEDTO, request, sizeof(WinMoveTo));
 }
 
 void Window::calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,

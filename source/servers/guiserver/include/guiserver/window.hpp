@@ -50,12 +50,17 @@ class Window {
     inline Bitmap* getBitmap(void) { return m_bitmap; }
     inline DecoratorData* getDecoratorData(void) { return m_decoratorData; }
     inline const std::string& getTitle(void) { return m_title; }
+    inline bool isMoving(void) { return m_moving; }
+    inline bool isResizing(void) { return m_resizing; }
 
     inline void setId(int id) { m_id = id; }
     inline void setDecoratorData(DecoratorData* data) { m_decoratorData = data; }
+    inline void setMoving(bool moving) { m_moving = moving; }
+    inline void setResizing(bool resizing) { m_resizing = resizing; }
 
     int handleMessage( uint32_t code, void* data, size_t size );
 
+    int moveTo(const yguipp::Point& p);
     int closeRequest(void);
     int close(void);
 
@@ -77,7 +82,6 @@ class Window {
     void unregisterWindow(void);
 
     void handleDoResize( WinResize* request );
-    void handleDoMoveTo( WinMoveTo* request );
     void handleRender( uint8_t* data, size_t size );
 
     void calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,
@@ -94,6 +98,9 @@ class Window {
     Bitmap* m_bitmap;
     DecoratorData* m_decoratorData;
     bool m_mouseOnDecorator;
+    bool m_mousePressedOnDecorator;
+    bool m_moving;
+    bool m_resizing;
 
     yguipp::Rect m_clipRect;
     yguipp::Color m_penColor;

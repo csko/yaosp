@@ -58,6 +58,10 @@ int Decorator::mousePressed(Window* window, const yguipp::Point& position, int b
 }
 
 int Decorator::mouseReleased(Window* window, int button) {
+    if (window->isMoving()) {
+        m_guiServer->getWindowManager()->setMovingWindow(NULL);
+    }
+
     return 0;
 }
 

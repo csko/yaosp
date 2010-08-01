@@ -181,6 +181,8 @@ int WindowManager::keyReleased( int key ) {
 int WindowManager::mouseMoved( const yguipp::Point& delta ) {
     lock();
 
+    yguipp::Point realDelta = m_mousePointer->getPosition();
+
     /* Move the mouse pointer on the screen. */
     m_mousePointer->moveBy(m_graphicsDriver, m_screenBitmap, delta);
 
@@ -188,19 +190,28 @@ int WindowManager::mouseMoved( const yguipp::Point& delta ) {
     const yguipp::Point& mousePosition = m_mousePointer->getPosition();
     Window* window = getWindowAt(mousePosition);
 
-    if (window != m_mouseWindow) {
-        if (m_mouseWindow != NULL) {
-            m_mouseWindow->mouseExited();
-        }
+    /* Calculate the real mouse movement delta. */
+    realDelta = mousePosition - realDelta;
 
-        m_mouseWindow = window;
-
-        if (m_mouseWindow != NULL) {
-            m_mouseWindow->mouseEntered(mousePosition);
-        }
+    if (m_movingWindow != NULL) {
+        invertWindowRect();
+        m_windowRect += realDelta;
+        invertWindowRect();
     } else {
-        if (m_mouseWindow != NULL) {
-            m_mouseWindow->mouseMoved(mousePosition);
+        if (window != m_mouseWindow) {
+            if (m_mouseWindow != NULL) {
+                m_mouseWindow->mouseExited();
+            }
+
+            m_mouseWindow = window;
+
+            if (m_mouseWindow != NULL) {
+                m_mouseWindow->mouseEntered(mousePosition);
+            }
+        } else {
+            if (m_mouseWindow != NULL) {
+                m_mouseWindow->mouseMoved(mousePosition);
+            }
         }
     }
 
@@ -255,13 +266,40 @@ int WindowManager::mouseScrolled( int button ) {
 int WindowManager::setMovingWindow(Window* window) {
     // NOTE: We assume here that the WindowManager lock is owned by the thread.
 
-    if (m_movingWindow == NULL) {
-        assert(window != NULL);
+    if (window != NULL) {
+        assert(m_movingWindow == NULL);
+        assert(!window->isMoving() && !window->isResizing());
 
-        m_graphicsDriver->drawRect(m_screenBitmap, m_screenBitmap->bounds(), window->getScreenRect(), yguipp::Color(), yguipp::DM_INVERT);
+        window->setMoving(true);
+        m_windowRect = window->getScreenRect();       
+
+        invertWindowRect();
     } else {
-        assert(window == NULL);
+        assert(m_movingWindow != NULL);
+        assert(m_movingWindow->isMoving() && !m_movingWindow->isResizing());
+
+        m_movingWindow->setMoving(false);
+        invertWindowRect();
+
+        /* Update the required parts only if the window really moved. */
+        if (m_movingWindow->getScreenRect() != m_windowRect) {
+            doHideWindowRegion(m_movingWindow, m_movingWindow->getScreenRect());
+
+            m_movingWindow->moveTo(m_windowRect.leftTop());
+            m_windowDecorator->calculateItemPositions(m_movingWindow);
+
+            int index = getWindowIndex(m_movingWindow);
+            assert(index != -1);
+
+            for (; index < (int)m_windowStack.size(); index++) {
+                generateVisibleRegions(index);
+            }
+
+            doUpdateWindowRegion(m_movingWindow, m_movingWindow->getScreenRect());
+        }
     }
+
+    m_movingWindow = window;
 
     return 0;
 }
@@ -417,5 +455,10 @@ int WindowManager::doHideWindowRegion( Window* window, yguipp::Rect region ) {
         m_mousePointer->show(m_graphicsDriver, m_screenBitmap);
     }
 
+    return 0;
+}
+
+int WindowManager::invertWindowRect(void) {
+    m_graphicsDriver->drawRect(m_screenBitmap, m_screenBitmap->bounds(), m_windowRect, yguipp::Color(), yguipp::DM_INVERT);
     return 0;
 }

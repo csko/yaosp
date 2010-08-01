@@ -97,6 +97,20 @@ class Rect {
         return *this;
     }
 
+    bool operator==( const Rect& r ) const {
+        return ((m_left == r.m_left) &&
+                (m_top == r.m_top) &&
+                (m_right == r.m_right) &&
+                (m_bottom == r.m_bottom));
+    }
+
+    bool operator!=( const Rect& r ) const {
+        return ((m_left != r.m_left) ||
+                (m_top != r.m_top) ||
+                (m_right != r.m_right) ||
+                (m_bottom != r.m_bottom));
+    }
+
   public:
     int m_left;
     int m_top;

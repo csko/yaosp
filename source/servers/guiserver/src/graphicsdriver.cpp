@@ -16,12 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <yaosp/debug.h>
 #include <guiserver/graphicsdriver.hpp>
 
 int GraphicsDriver::drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
                               const yguipp::Color& color, yguipp::DrawingMode mode ) {
-    yguipp::Rect rectToDraw;
+    yguipp::Rect rectToDraw = rect;
 
     rectToDraw &= clipRect;
     rectToDraw &= bitmap->bounds();

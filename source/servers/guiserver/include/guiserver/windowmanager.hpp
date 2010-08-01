@@ -65,6 +65,8 @@ class WindowManager {
     int doUpdateWindowRegion( Window* window, yguipp::Rect region );
     int doHideWindowRegion( Window* window, yguipp::Rect region );
 
+    int invertWindowRect(void);
+
   private:
     yutilpp::Mutex m_mutex;
     std::vector<Window*> m_windowStack;
@@ -77,7 +79,9 @@ class WindowManager {
     Window* m_mouseWindow;
     Window* m_mouseDownWindow;
     Window* m_activeWindow;
+
     Window* m_movingWindow;
+    yguipp::Rect m_windowRect;
 }; /* class WindowManager */
 
 #endif /* _WINDOWMANAGER_HPP_ */
