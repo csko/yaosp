@@ -49,7 +49,6 @@ typedef struct kmalloc_block {
     uint32_t pages;
     uint32_t biggest_free;
     struct kmalloc_block* next;
-    struct kmalloc_chunk* first_chunk;
 } kmalloc_block_t;
 
 typedef struct kmalloc_chunk {

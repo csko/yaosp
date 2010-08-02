@@ -54,9 +54,9 @@ static kmalloc_block_t* kmalloc_block_create(uint32_t pages) {
     kmalloc_block_t* block;
     kmalloc_chunk_t* chunk;
 
-    block = ( kmalloc_block_t* )alloc_pages( pages, MEM_COMMON );
+    block = (kmalloc_block_t*)alloc_pages(pages, MEM_COMMON);
 
-    if ( __unlikely( block == NULL ) ) {
+    if (__unlikely(block == NULL)) {
         return NULL;
     }
 
@@ -65,9 +65,8 @@ static kmalloc_block_t* kmalloc_block_create(uint32_t pages) {
     block->magic = KMALLOC_BLOCK_MAGIC;
     block->pages = pages;
     block->next = NULL;
-    block->first_chunk = (kmalloc_chunk_t*)(block + 1);
 
-    chunk = block->first_chunk;
+    chunk = (kmalloc_chunk_t*)(block + 1);
 
     chunk->magic = KMALLOC_CHUNK_MAGIC;
     kmalloc_chunk_set_free(chunk, 1);
@@ -85,7 +84,7 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
     void* p;
     kmalloc_chunk_t* chunk;
 
-    chunk = block->first_chunk;
+    chunk = (kmalloc_chunk_t*)(block + 1);
 
     while ((chunk != NULL) &&
            ((!kmalloc_chunk_is_free(chunk)) ||
@@ -133,7 +132,7 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
     /* Recalculate the biggest free chunk in this block. */
     block->biggest_free = 0;
 
-    chunk = block->first_chunk;
+    chunk = (kmalloc_chunk_t*)(block + 1);
 
     while (chunk != NULL) {
         ASSERT(kmalloc_chunk_validate(chunk));
@@ -154,17 +153,23 @@ void* kmalloc( uint32_t size ) {
     uint32_t min_size;
     kmalloc_block_t* block;
 
-    if ( __unlikely( size == 0 ) ) {
+    /* Is this an invalid request? */
+    if (__unlikely(size == 0)) {
         kprintf( WARNING, "kmalloc(): Called with 0 size!\n" );
         return NULL;
     }
 
-    spinlock_disable( &kmalloc_lock );
+    /* Ensure the minimum allocation. */
+    if (size < sizeof(ptr_t)) {
+        size = sizeof(ptr_t);
+    }
+
+    spinlock_disable(&kmalloc_lock);
 
     block = root;
 
-    while ( block != NULL ) {
-        if ( block->biggest_free >= size ) {
+    while (block != NULL) {
+        if (block->biggest_free >= size) {
             goto block_found;
         }
 
@@ -173,17 +178,16 @@ void* kmalloc( uint32_t size ) {
 
     /* create a new block */
 
-    min_size = PAGE_ALIGN( size + sizeof( kmalloc_block_t ) + sizeof( kmalloc_chunk_t ) );
+    min_size = PAGE_ALIGN(size + sizeof(kmalloc_block_t) + sizeof(kmalloc_chunk_t));
 
-    if ( min_size < KMALLOC_BLOCK_SIZE ) {
+    if (min_size < KMALLOC_BLOCK_SIZE) {
         min_size = KMALLOC_BLOCK_SIZE;
     }
 
     block = kmalloc_block_create(min_size / PAGE_SIZE);
 
-    if ( __unlikely( block == NULL ) ) {
-        spinunlock_enable( &kmalloc_lock );
-
+    if (__unlikely(block == NULL)) {
+        spinunlock_enable(&kmalloc_lock);
         return NULL;
     }
 
@@ -195,16 +199,16 @@ void* kmalloc( uint32_t size ) {
     /* allocate the required memory from the new block */
 
 block_found:
-    p = __kmalloc_from_block( block, size );
+    p = __kmalloc_from_block(block, size);
 
 #ifdef ENABLE_KMALLOC_DEBUG
-    kmalloc_debug( size, p );
+    kmalloc_debug(size, p);
 #endif
 
-    spinunlock_enable( &kmalloc_lock );
+    spinunlock_enable(&kmalloc_lock);
 
-    if ( __likely( p != NULL ) ) {
-        memset( p, 0xAA, size );
+    if (__likely(p != NULL)) {
+        memset(p, 0xAA, size);
     }
 
     return p;
