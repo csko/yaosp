@@ -29,21 +29,18 @@
 static ramfs_inode_t* ramfs_create_inode( ramfs_cookie_t* cookie, ramfs_inode_t* parent, const char* name, int name_length, bool is_directory ) {
     ramfs_inode_t* inode;
 
-    inode = ( ramfs_inode_t* )kmalloc( sizeof( ramfs_inode_t ) );
+    if (name_length == -1) {
+        name_length = strlen(name);
+    }
+
+    inode = ( ramfs_inode_t* )kmalloc(sizeof(ramfs_inode_t) + name_length + 1);
 
     if ( inode == NULL ) {
         goto error1;
     }
 
-    if ( name_length == -1 ) {
-        inode->name = strdup( name );
-    } else {
-        inode->name = strndup( name, name_length );
-    }
-
-    if ( inode->name == NULL ) {
-        goto error2;
-    }
+    inode->name = (char*)(inode + 1);
+    strncpy(inode->name, name, name_length);
 
     inode->data = NULL;
     inode->size = 0;
@@ -79,9 +76,6 @@ static ramfs_inode_t* ramfs_create_inode( ramfs_cookie_t* cookie, ramfs_inode_t*
     hashtable_add( &cookie->inode_table, ( hashitem_t* )inode );
 
     return inode;
-
-error2:
-    kfree( inode );
 
 error1:
     return NULL;
