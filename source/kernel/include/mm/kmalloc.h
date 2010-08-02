@@ -35,12 +35,11 @@
  */
 #define KMALLOC_ROOT_SIZE       524288
 
-#define KMALLOC_BLOCK_MAGIC 0xCAFEBABE
-#define KMALLOC_CHUNK_MAGIC 0xDEADBEEF
+#define KMALLOC_BLOCK_MAGIC 0xCAFEBAB0
+#define KMALLOC_CHUNK_MAGIC 0xDEADBEE0
 
-enum kmalloc_chunk_type {
-    CHUNK_FREE = 1,
-    CHUNK_ALLOCATED
+enum {
+    CHUNK_FREE = 1
 };
 
 struct kmalloc_chunk;
@@ -55,9 +54,7 @@ typedef struct kmalloc_block {
 
 typedef struct kmalloc_chunk {
     uint32_t magic;
-    uint32_t type;
     uint32_t size;
-    uint32_t real_size;
     struct kmalloc_block* block;
     struct kmalloc_chunk* prev;
     struct kmalloc_chunk* next;
