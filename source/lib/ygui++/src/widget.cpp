@@ -100,9 +100,14 @@ void Widget::setPosition( const Point& p ) {
     m_position = p;
 }
 
-void Widget::setSize( const Point& p ) {
-    m_fullSize = p;
-    m_visibleSize = p;
+void Widget::setSize( const Point& s ) {
+    m_fullSize = s;
+    m_visibleSize = s;
+}
+
+void Widget::setSizes(const Point& visibleSize, const Point& fullSize) {
+    m_fullSize = fullSize;
+    m_visibleSize = visibleSize;
 }
 
 void Widget::invalidate( void ) {

@@ -27,6 +27,7 @@
 #include <ygui++/imageloader.hpp>
 #include <ygui++/menu.hpp>
 #include <ygui++/menuitem.hpp>
+#include <ygui++/scrollpanel.hpp>
 #include <ygui++/layout/borderlayout.hpp>
 
 using namespace yguipp;
@@ -73,12 +74,13 @@ int main( int argc, char** argv ) {
     container->add(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
     container->add(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
     container->add(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
-    container->add(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
 
+    //container->add(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
     /*container->add(
         new Image(Bitmap::loadFromFile("/system/images/yaosp.png")),
         new BorderLayoutData(BorderLayoutData::CENTER)
         );*/
+    container->add(new ScrollPanel(), new BorderLayoutData(BorderLayoutData::CENTER));
 
     win->show();
 

@@ -77,6 +77,11 @@ enum DeActivationReason {
     OTHER_WINDOW_OPENED
 };
 
+enum Orientation {
+    HORIZONTAL,
+    VERTICAL
+};
+
 struct FontInfo {
     FontInfo(int pointSize, int flags = FONT_SMOOTHED) : m_pointSize(pointSize * 64), m_flags(flags) {}
 

@@ -56,7 +56,8 @@ class Widget : public Object, public event::KeySpeaker {
     void setWindow( Window* window );
     void setBorder( border::Border* border );
     void setPosition( const Point& p );
-    void setSize( const Point& p );
+    void setSize(const Point& s);
+    void setSizes(const Point& visibleSize, const Point& fullSize);
 
     void invalidate( void );
 
