@@ -24,8 +24,8 @@ ScrollPanel::ScrollPanel(void) : m_scrolledWidget(NULL) {
     m_verticalBar = new ScrollBar(VERTICAL);
     m_horizontalBar = new ScrollBar(HORIZONTAL);
 
-    add(m_verticalBar);
-    add(m_horizontalBar);
+    Widget::add(m_verticalBar);
+    Widget::add(m_horizontalBar);
 }
 
 ScrollPanel::~ScrollPanel(void) {
@@ -39,7 +39,7 @@ void ScrollPanel::add(Widget* child, layout::LayoutData* data) {
     }
 
     m_scrolledWidget = child;
-    add(m_scrolledWidget);
+    Widget::add(m_scrolledWidget);
 }
 
 int ScrollPanel::validate(void) {
@@ -57,11 +57,15 @@ int ScrollPanel::validate(void) {
 
     /* The scrolled widget. */
     if (m_scrolledWidget != NULL) {
+        Point fullSize;
+        Point visibleSize = size - Point(verticalSize.m_x, horizontalSize.m_y);
+        Point preferredSize = m_scrolledWidget->getPreferredSize();
+
+        fullSize.m_x = std::max(preferredSize.m_x, visibleSize.m_x);
+        fullSize.m_y = std::max(preferredSize.m_y, visibleSize.m_y);
+
         m_scrolledWidget->setPosition(Point(0, 0));
-        m_scrolledWidget->setSizes(
-            size - Point(verticalSize.m_x, horizontalSize.m_y),
-            m_scrolledWidget->getPreferredSize()
-        );
+        m_scrolledWidget->setSizes(visibleSize, fullSize);
     }
 
     return 0;

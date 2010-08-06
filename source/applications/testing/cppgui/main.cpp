@@ -33,6 +33,11 @@
 using namespace yguipp;
 using namespace yguipp::layout;
 
+class MyButton : public Button {
+  public:
+    Point getPreferredSize(void) { return Point(500, 500); }
+};
+
 int main( int argc, char** argv ) {
     Application::createInstance("cppguitest");
     ImageLoaderManager::getInstance()->loadLibraries();
@@ -80,7 +85,9 @@ int main( int argc, char** argv ) {
         new Image(Bitmap::loadFromFile("/system/images/yaosp.png")),
         new BorderLayoutData(BorderLayoutData::CENTER)
         );*/
-    container->add(new ScrollPanel(), new BorderLayoutData(BorderLayoutData::CENTER));
+    ScrollPanel* scrollPanel = new ScrollPanel();
+    scrollPanel->add(new MyButton());
+    container->add(scrollPanel, new BorderLayoutData(BorderLayoutData::CENTER));
 
     win->show();
 

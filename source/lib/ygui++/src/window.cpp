@@ -42,8 +42,6 @@ Window::Window( const std::string& title, const Point& position,
 }
 
 Window::~Window( void ) {
-    dbprintf("yguipp::Window::~Window()\n");
-
     // todo: release m_container
     delete m_renderTable;
     delete m_graphicsContext;
@@ -168,7 +166,7 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
             break;
 
         case Y_WINDOW_MOVEDTO :
-            // todo
+            m_position = reinterpret_cast<WinMoveTo*>(buffer)->m_position;
             break;
 
         case Y_WINDOW_KEY_PRESSED :

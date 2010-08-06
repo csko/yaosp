@@ -162,7 +162,7 @@ int MenuBar::hideAllLevel( void ) {
 
 int MenuBar::showSubMenu( MenuItem* item, Menu* subMenu ) {
     Point position = getWindow()->getPosition();
-    position += Point(3,21); // todo: window decorator size
+    position += Point(0,23); // todo: window decorator size
     position += getPosition();
     position += item->getPosition();
     position += Point(0,getSize().m_y);

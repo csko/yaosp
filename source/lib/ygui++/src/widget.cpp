@@ -65,7 +65,7 @@ const Point& Widget::getVisibleSize( void ) {
 }
 
 const Rect Widget::getBounds( void ) {
-    return Rect(0, 0, m_fullSize.m_x - 1, m_fullSize.m_y - 1);
+    return Rect(m_fullSize);
 }
 
 const Widget::ChildVector& Widget::getChildren( void ) {

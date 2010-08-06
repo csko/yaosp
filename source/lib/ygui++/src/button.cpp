@@ -30,7 +30,7 @@ Button::Button( const std::string& text, int hAlign, int vAlign ) : m_text(text)
 }
 
 Button::~Button( void ) {
-    if ( m_font != NULL ) {
+    if (m_font != NULL) {
         m_font->decRef();
     }
 }
@@ -45,15 +45,15 @@ Point Button::getPreferredSize( void ) {
 int Button::paint( GraphicsContext* g ) {
     Rect bounds = getBounds();
 
-    if ( m_pressed ) {
+    if (m_pressed) {
         g->setPenColor( Color(156, 156, 156) );
     } else {
         g->setPenColor( Color(216, 216, 216) );
     }
 
-    g->fillRect( bounds );
-    g->setPenColor( Color(0, 0, 0) );
-    g->drawRect( bounds );
+    g->fillRect(bounds);
+    g->setPenColor(Color(0, 0, 0));
+    g->drawRect(bounds);
 
     if ( !m_text.empty() ) {
         Point position;
