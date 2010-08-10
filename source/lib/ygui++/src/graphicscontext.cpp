@@ -117,7 +117,7 @@ void GraphicsContext::drawRect( const Rect& r ) {
 
     cmd = reinterpret_cast<RDrawRect*>( m_window->getRenderTable()->allocate( sizeof(RDrawRect) ) );
     cmd->m_header.m_cmd = R_DRAW_RECT;
-    cmd->m_rect = r;
+    cmd->m_rect = r + m_leftTop;
 
     m_needToFlush = true;
 }
