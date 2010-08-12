@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _VESA_H_
-#define _VESA_H_
+#ifndef _VESA_HPP_
+#define _VESA_HPP_
 
 #include <vector>
 #include <sys/types.h>
@@ -124,4 +124,4 @@ class VesaDriver : public GraphicsDriver {
     std::vector<VesaScreenMode*> m_screenModes;
 }; /* class VesaDriver */
 
-#endif /* _VESA_H_ */
+#endif /* _VESA_HPP_ */

@@ -1,4 +1,4 @@
-/* GUI server
+/* VESA graphics driver
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *

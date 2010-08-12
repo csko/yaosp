@@ -45,12 +45,15 @@ class GraphicsDriver {
   public:
     virtual ~GraphicsDriver( void ) {}
 
-    virtual std::string getName( void ) = 0;
     virtual bool detect( void ) = 0;
+
+    virtual std::string getName( void ) = 0;
     virtual size_t getModeCount( void ) = 0;
     virtual ScreenMode* getModeInfo( size_t index ) = 0;
-    virtual bool setMode( ScreenMode* info ) = 0;
     virtual void* getFrameBuffer( void ) = 0;
+
+    virtual bool setMode( ScreenMode* info ) = 0;
+
     virtual int drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
                           const yguipp::Color& color, yguipp::DrawingMode mode );
     virtual int fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,

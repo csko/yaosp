@@ -24,5 +24,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
     <array name="subdirs">
         <item>vesa</item>
+        <item>vmware</item>
     </array>
 </build>
