@@ -122,7 +122,8 @@ static int start_services( void ) {
 }
 
 static int start_gui( void ) {
-    load_module( "vesa" );
+    //load_module( "vesa" );
+    load_module("vmware");
 
     if ( fork() == 0 ) {
         char* const argv[] = { "guiserver", NULL };

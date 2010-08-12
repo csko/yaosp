@@ -28,7 +28,7 @@ VesaDriver::VesaDriver( void ) : m_device(-1), m_fbAddress(NULL), m_fbRegion(-1)
 }
 
 VesaDriver::~VesaDriver( void ) {
-    if ( m_device >= 0 ) {
+    if (m_device >= 0) {
         close(m_device);
     }
 }
@@ -43,7 +43,7 @@ bool VesaDriver::detect( void ) {
 
     m_device = open( "/device/video/vesa", O_RDONLY );
 
-    if ( m_device < 0 ) {
+    if (m_device < 0) {
         return false;
     }
 
