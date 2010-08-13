@@ -31,8 +31,8 @@ extern "C" {
 typedef int region_id;
 
 typedef enum region_flags {
-    REGION_READ = ( 1 << 0 ),
-    REGION_WRITE = ( 1 << 1 )
+    REGION_READ = (1 << 0),
+    REGION_WRITE = (1 << 1)
 } region_flags_t;
 
 region_id memory_region_create( const char* name, uint64_t size, uint32_t flags, void** address );

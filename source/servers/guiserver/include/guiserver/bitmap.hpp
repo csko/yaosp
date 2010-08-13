@@ -26,11 +26,21 @@
 
 class Bitmap {
   public:
-    Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace,
-            uint8_t* buffer = NULL, region_id region = -1 );
-    ~Bitmap( void );
+    enum {
+        FREE_BUFFER = (1 << 0),
+        SCREEN = (1 << 1),
+        VIDEO_MEMORY = (1 << 2)
+    };
+
+    Bitmap(uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace,
+            uint8_t* buffer = NULL, region_id region = -1);
+    ~Bitmap(void);
 
   public:
+    inline bool hasFlag(uint32_t flag) { return ((m_flags & flag) != 0); }
+    inline void addFlag(uint32_t flag) { m_flags |= flag; }
+    inline void removeFlag(uint32_t flag) { m_flags &= ~flag; }
+
     inline uint32_t width( void ) { return m_width; }
     inline uint32_t height( void ) { return m_height; }
 
@@ -41,10 +51,6 @@ class Bitmap {
     yguipp::ColorSpace getColorSpace( void );
 
   private:
-    enum {
-        FREE_BUFFER = (1<<0)
-    };
-
     Bitmap(const Bitmap& b);
     void operator=(const Bitmap& b);
 

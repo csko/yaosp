@@ -73,7 +73,7 @@ static device_calls_t vmware_calls = {
     .remove_select_request = NULL
 };
 
-static int vmware_create_node(pci_device_t* dev) {
+static int vmware_create_node(pci_bus_t* bus, pci_device_t* dev) {
     char path[64];
     void* data;
 
@@ -85,6 +85,12 @@ static int vmware_create_node(pci_device_t* dev) {
 
     memcpy(data, dev, sizeof(pci_device_t));
     snprintf(path, sizeof(path), "video/vmware%d", vmware_card_count++);
+
+    uint32_t tmp;
+    bus->read_config(dev, PCI_COMMAND, 2, &tmp);
+    tmp |= PCI_COMMAND_IO;
+    tmp |= PCI_COMMAND_MEMORY;
+    bus->write_config(dev, PCI_COMMAND, 2, tmp);
 
     return create_device_node(path, &vmware_calls, data);
 }
@@ -115,7 +121,7 @@ int init_module(void) {
             if ((pci_device->vendor_id == vmware_dev->vendor_id) &&
                 (pci_device->device_id == vmware_dev->device_id)) {
                 kprintf(INFO, "Found graphics card: %s.\n", vmware_dev->name);
-                vmware_create_node(pci_device);
+                vmware_create_node(pci_bus, pci_device);
 
                 break;
             }

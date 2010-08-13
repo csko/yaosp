@@ -33,9 +33,11 @@ int GuiServer::run( void ) {
 
     //m_graphicsDriver = new VesaDriver();
     m_graphicsDriver = new VMwareDriver();
-    m_graphicsDriver->detect();
 
-    return 0;
+    if (!m_graphicsDriver->detect()) {
+        dbprintf("Failed to initialize graphics driver.\n");
+        return 0;
+    }
 
     ScreenMode mode(640, 480, yguipp::CS_RGB32);
     m_graphicsDriver->setMode(&mode);
@@ -44,6 +46,7 @@ int GuiServer::run( void ) {
         640, 480, yguipp::CS_RGB32,
         reinterpret_cast<uint8_t*>(m_graphicsDriver->getFrameBuffer())
     );
+    m_screenBitmap->addFlag(Bitmap::SCREEN | Bitmap::VIDEO_MEMORY);
 
     /* Initialize other stuffs. */
 
