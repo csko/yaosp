@@ -33,6 +33,7 @@ class VMwareDriver : public GraphicsDriver {
     virtual ~VMwareDriver(void);
 
     bool detect(void);
+    bool initialize(void);
 
     std::string getName(void);
     size_t getModeCount(void);

@@ -35,8 +35,6 @@ enum VMwareIoctls {
     VMWARE_GET_IO_BASE = 0x00100000
 };
 
-static int vmware_card_count = 0;
-
 static pci_entry_t vmware_pci_table[] = {
     { 0x15AD, 0x0405, "VMware SVGA2" }
 };
@@ -74,7 +72,6 @@ static device_calls_t vmware_calls = {
 };
 
 static int vmware_create_node(pci_bus_t* bus, pci_device_t* dev) {
-    char path[64];
     void* data;
 
     data = kmalloc(sizeof(pci_device_t));
@@ -84,7 +81,6 @@ static int vmware_create_node(pci_bus_t* bus, pci_device_t* dev) {
     }
 
     memcpy(data, dev, sizeof(pci_device_t));
-    snprintf(path, sizeof(path), "video/vmware%d", vmware_card_count++);
 
     uint32_t tmp;
     bus->read_config(dev, PCI_COMMAND, 2, &tmp);
@@ -92,7 +88,7 @@ static int vmware_create_node(pci_bus_t* bus, pci_device_t* dev) {
     tmp |= PCI_COMMAND_MEMORY;
     bus->write_config(dev, PCI_COMMAND, 2, tmp);
 
-    return create_device_node(path, &vmware_calls, data);
+    return create_device_node("video/vmware", &vmware_calls, data);
 }
 
 int init_module(void) {
@@ -122,7 +118,6 @@ int init_module(void) {
                 (pci_device->device_id == vmware_dev->device_id)) {
                 kprintf(INFO, "Found graphics card: %s.\n", vmware_dev->name);
                 vmware_create_node(pci_bus, pci_device);
-
                 break;
             }
         }

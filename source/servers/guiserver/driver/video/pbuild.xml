@@ -23,7 +23,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all"/>
 
     <array name="subdirs">
-        <item>video</item>
-        <item>decorator</item>
+        <item>vmware</item>
     </array>
 </build>

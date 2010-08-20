@@ -107,11 +107,13 @@ struct VesaScreenMode : public ScreenMode {
 
 class VesaDriver : public GraphicsDriver {
   public:
-    VesaDriver( void );
-    virtual ~VesaDriver( void );
+    VesaDriver(void);
+    virtual ~VesaDriver(void);
+
+    bool detect(void );
+    bool initialize(void);
 
     std::string getName( void );
-    bool detect( void );
     size_t getModeCount( void );
     ScreenMode* getModeInfo( size_t index );
     bool setMode( ScreenMode* info );

@@ -19,25 +19,27 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 
 #include <guiserver/graphicsdriver.hpp>
 
 #include "vesa.hpp"
 
-VesaDriver::VesaDriver( void ) : m_device(-1), m_fbAddress(NULL), m_fbRegion(-1) {
+VesaDriver::VesaDriver(void) : m_device(-1), m_fbAddress(NULL), m_fbRegion(-1) {
 }
 
-VesaDriver::~VesaDriver( void ) {
+VesaDriver::~VesaDriver(void) {
     if (m_device >= 0) {
         close(m_device);
     }
 }
 
-std::string VesaDriver::getName( void ) {
-    return "VESA";
+bool VesaDriver::detect(void) {
+    struct stat st;
+    return (stat("/device/video/vesa", &st) == 0);
 }
 
-bool VesaDriver::detect( void ) {
+bool VesaDriver::initialize(void) {
     uint16_t idTable[128];
     vesa_cmd_modelist_t modeListCmd;
 
@@ -88,6 +90,10 @@ bool VesaDriver::detect( void ) {
     }
 
     return true;
+}
+
+std::string VesaDriver::getName(void) {
+    return "VESA";
 }
 
 size_t VesaDriver::getModeCount( void ) {

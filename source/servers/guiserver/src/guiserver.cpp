@@ -21,9 +21,7 @@
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>
 #include <guiserver/decoratorloader.hpp>
-
-//#include "../driver/video/vesa/vesa.hpp"
-#include "../driver/video/vmware/vmware.hpp"
+#include <guiserver/graphicsdriverloader.hpp>
 
 GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
 }
@@ -31,13 +29,16 @@ GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_w
 int GuiServer::run( void ) {
     /* Setup screen mode. */
 
-    //m_graphicsDriver = new VesaDriver();
-    m_graphicsDriver = new VMwareDriver();
+    m_graphicsDriver = GraphicsDriverLoader::detectDriver();
 
-    if (!m_graphicsDriver->detect()) {
-        dbprintf("Failed to initialize graphics driver.\n");
+    if (m_graphicsDriver == NULL) {
+        dbprintf("Failed to detect graphics driver.\n");
         return 0;
     }
+
+    m_graphicsDriver->initialize();
+
+    dbprintf("Using %s graphics driver.\n", m_graphicsDriver->getName().c_str());
 
     ScreenMode mode(640, 480, yguipp::CS_RGB32);
     m_graphicsDriver->setMode(&mode);

@@ -31,21 +31,22 @@ struct ScreenMode {
                                                                                    m_colorSpace(colorSpace) {}
 
     bool operator==( const ScreenMode& mode ) {
-        return ( ( m_width == mode.m_width ) &&
-                 ( m_height == mode.m_height ) &&
-                 ( m_colorSpace == mode.m_colorSpace ) );
+        return ((m_width == mode.m_width) &&
+                (m_height == mode.m_height) &&
+                (m_colorSpace == mode.m_colorSpace));
     }
 
     uint32_t m_width;
     uint32_t m_height;
     yguipp::ColorSpace m_colorSpace;
-};
+}; /* struct ScreenMode */
 
 class GraphicsDriver {
   public:
-    virtual ~GraphicsDriver( void ) {}
+    virtual ~GraphicsDriver(void) {}
 
-    virtual bool detect( void ) = 0;
+    virtual bool detect(void) = 0;
+    virtual bool initialize(void) = 0;
 
     virtual std::string getName( void ) = 0;
     virtual size_t getModeCount( void ) = 0;

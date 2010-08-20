@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <yaosp/debug.h>
 #include <yaosp/io.h>
 
@@ -36,9 +37,14 @@ VMwareDriver::~VMwareDriver(void) {
 }
 
 bool VMwareDriver::detect(void) {
+    struct stat st;
+    return (stat("/device/video/vmware", &st) == 0);
+}
+
+bool VMwareDriver::initialize(void) {
     int ioBase;
 
-    m_device = open("/device/video/vmware0", O_RDONLY);
+    m_device = open("/device/video/vmware", O_RDONLY);
 
     if (m_device < 0) {
         return false;
@@ -237,4 +243,8 @@ uint32_t VMwareDriver::readRegister(uint32_t index) {
 void VMwareDriver::writeRegister(uint32_t index, uint32_t value) {
     outl(index, m_indexPort);
     outl(value, m_valuePort);
+}
+
+extern "C" GraphicsDriver* get_graphics_driver(void) {
+    return new VMwareDriver();
 }

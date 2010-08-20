@@ -1,0 +1,56 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2010 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare"/>
+
+    <array name="files">
+        <item>vmware.cpp</item>
+    </array>
+
+    <target name="compile">
+        <call target="prepare"/>
+
+        <for var="i" array="${files}">
+            <gcc profile="y-lib-compile">
+                <input>${i}</input>
+                <output>objs/filename(${i}).o</output>
+                <include>../../../include</include>
+            </gcc>
+        </for>
+
+        <ld>
+            <flag>-shared</flag>
+            <input>objs/*.o</input>
+            <output>objs/vmware.so</output>
+        </ld>
+
+    </target>
+
+    <target name="install">
+        <copy from="objs/vmware.so" to="${imagedir}/system/lib/graphicsdriver"/>
+    </target>
+
+    <target name="all">
+        <call targets="clean,compile,install"/>
+    </target>
+</build>
