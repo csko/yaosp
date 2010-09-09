@@ -34,10 +34,17 @@ class ScrollBar : public Widget {
     int paint(GraphicsContext* g);
 
   private:
+    int paintVertical(GraphicsContext* g, const Point& size);
+    int paintHorizontal(GraphicsContext* g, const Point& size);
+
+  private:
     Orientation m_orientation;
     int m_min;
     int m_max;
     int m_value;
+
+    static const int m_scrollBarSize = 15;
+    static const int m_scrollButtonSize = 15;
 }; /* class ScrollBar */
 
 } /* namespace yguipp */

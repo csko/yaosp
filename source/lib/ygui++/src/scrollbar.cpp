@@ -28,8 +28,8 @@ ScrollBar::~ScrollBar(void) {
 
 Point ScrollBar::getPreferredSize(void) {
     switch (m_orientation) {
-        case VERTICAL : return Point(15, 0);
-        case HORIZONTAL : return Point(0, 15);
+        case VERTICAL : return Point(m_scrollBarSize, 0);
+        case HORIZONTAL : return Point(0, m_scrollBarSize);
         default : return Point();
     }
 }
@@ -39,6 +39,60 @@ int ScrollBar::paint(GraphicsContext* g) {
 
     g->setPenColor(Color(0, 0, 0));
     g->drawRect(Rect(size));
+
+    switch (m_orientation) {
+        case VERTICAL :
+            paintVertical(g, size);
+            break;
+
+        case HORIZONTAL :
+            paintHorizontal(g, size);
+            break;
+    }
+
+    return 0;
+}
+
+int ScrollBar::paintVertical(GraphicsContext* g, const Point& size) {
+    Rect r;
+
+    /* Top button */
+    r = Rect(0, 0, m_scrollBarSize - 1, m_scrollButtonSize - 1);
+    g->setPenColor(Color(0, 0, 0));
+    g->drawRect(r);
+    r.resize(1, 1, -1, -1);
+    g->setPenColor(Color(216, 216, 216));
+    g->fillRect(r);
+
+    /* Bottom button */
+    r = Rect(0, size.m_y - m_scrollButtonSize, m_scrollBarSize - 1, size.m_y - 1);
+    g->setPenColor(Color(0, 0, 0));
+    g->drawRect(r);
+    r.resize(1, 1, -1, -1);
+    g->setPenColor(Color(216, 216, 216));
+    g->fillRect(r);
+
+    return 0;
+}
+
+int ScrollBar::paintHorizontal(GraphicsContext* g, const Point& size) {
+    Rect r;
+
+    /* Left button */
+    r = Rect(0, 0, m_scrollButtonSize - 1, m_scrollBarSize - 1);
+    g->setPenColor(Color(0, 0, 0));
+    g->drawRect(r);
+    r.resize(1, 1, -1, -1);
+    g->setPenColor(Color(216, 216, 216));
+    g->fillRect(r);
+
+    /* Right button */
+    r = Rect(size.m_x - m_scrollButtonSize, 0, size.m_x - 1, m_scrollBarSize - 1);
+    g->setPenColor(Color(0, 0, 0));
+    g->drawRect(r);
+    r.resize(1, 1, -1, -1);
+    g->setPenColor(Color(216, 216, 216));
+    g->fillRect(r);
 
     return 0;
 }

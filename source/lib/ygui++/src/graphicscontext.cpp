@@ -43,8 +43,8 @@ bool GraphicsContext::needToFlush( void ) {
 void GraphicsContext::setPenColor( const Color& pen ) {
     RSetPenColor* cmd;
 
-    if ( ( m_penValid ) &&
-         ( m_penColor == pen ) ) {
+    if ((m_penValid) &&
+         (m_penColor == pen)) {
         return;
     }
 
@@ -211,12 +211,12 @@ void GraphicsContext::rollbackTranslate( void ) {
     }
 }
 
-void GraphicsContext::cleanUp( void ) {
-    while ( !m_restrictedAreas.empty() ) {
+void GraphicsContext::cleanUp(void) {
+    while (!m_restrictedAreas.empty()) {
         m_restrictedAreas.pop();
     }
 
-    while ( !m_translateStack.empty() ) {
+    while (!m_translateStack.empty()) {
         m_translateStack.pop();
     }
 }

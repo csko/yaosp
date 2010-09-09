@@ -27,41 +27,61 @@ namespace yguipp {
 
 class Rect {
   public:
-    Rect( const Point& size ) : m_left(0), m_top(0), m_right(size.m_x - 1), m_bottom(size.m_y - 1) {}
-    Rect( int left = 0, int top = 0, int right = 0, int bottom = 0 ) : m_left(left), m_top(top), m_right(right), m_bottom(bottom) {}
+    Rect(const Point& size) : m_left(0), m_top(0), m_right(size.m_x - 1), m_bottom(size.m_y - 1) {}
+    Rect(int left = 0, int top = 0, int right = 0, int bottom = 0) : m_left(left), m_top(top), m_right(right), m_bottom(bottom) {}
 
-    inline int width( void ) const { return ( m_right - m_left + 1 ); }
-    inline int height( void ) const { return ( m_bottom - m_top + 1 ); }
+    inline int width(void) const {
+        return ( m_right - m_left + 1 );
+    }
+    inline int height(void) const {
+        return ( m_bottom - m_top + 1 );
+    }
 
-    Point size( void ) const { return Point(m_right - m_left + 1, m_bottom - m_top + 1); }
-    Point leftTop( void ) const { return Point(m_left, m_top); }
-    Rect bounds( void ) const { return Rect(0, 0, width() - 1, height() - 1); }
+    Point size(void) const {
+        return Point(m_right - m_left + 1, m_bottom - m_top + 1);
+    }
+    Point leftTop(void) const {
+        return Point(m_left, m_top);
+    }
+    Rect bounds(void) const {
+        return Rect(0, 0, width() - 1, height() - 1);
+    }
 
-    bool isValid( void ) const { return ( ( m_left <= m_right ) && ( m_top <= m_bottom ) ); }
-    bool hasPoint( const Point& p ) const {
+    bool isValid(void) const {
+        return ((m_left <= m_right) &&
+                (m_top <= m_bottom));
+    }
+    bool hasPoint(const Point& p) const {
         return ((m_left <= p.m_x) && (p.m_x <= m_right) &&
                 (m_top <= p.m_y) && (p.m_y <= m_bottom));
     }
-    bool doIntersect( const Rect& r ) const {
+    bool doIntersect(const Rect& r) const {
         return !( r.m_right < m_left || r.m_left > m_right || r.m_bottom < m_top || r.m_top > m_bottom );
     }
 
-    Rect operator+( const Point& p ) const {
+    void resize(int left, int top, int right, int bottom) {
+        m_left += left;
+        m_top += top;
+        m_right += right;
+        m_bottom += bottom;
+    }
+
+    Rect operator+(const Point& p) const {
         return Rect( m_left + p.m_x, m_top + p.m_y,
                      m_right + p.m_x, m_bottom + p.m_y );
     }
 
-    Rect operator-( const Point& p ) const {
+    Rect operator-(const Point& p) const {
         return Rect( m_left - p.m_x, m_top - p.m_y,
                      m_right - p.m_x, m_bottom - p.m_y );
     }
 
-    Rect operator&( const Rect& r ) const {
+    Rect operator&(const Rect& r) const {
         return Rect( std::max(m_left, r.m_left), std::max(m_top, r.m_top),
                      std::min(m_right, r.m_right), std::min(m_bottom, r.m_bottom) );
     }
 
-    Rect& operator=( const Point& p ) {
+    Rect& operator=(const Point& p) {
         m_left = 0;
         m_top = 0;
         m_right = p.m_x - 1;
@@ -70,7 +90,7 @@ class Rect {
         return *this;
     }
 
-    Rect& operator+=( const Point& p ) {
+    Rect& operator+=(const Point& p) {
         m_left += p.m_x;
         m_top += p.m_y;
         m_right += p.m_x;
@@ -79,7 +99,7 @@ class Rect {
         return *this;
     }
 
-    Rect& operator-=( const Point& p ) {
+    Rect& operator-=(const Point& p) {
         m_left -= p.m_x;
         m_top -= p.m_y;
         m_right -= p.m_x;
@@ -88,7 +108,7 @@ class Rect {
         return *this;
     }
 
-    Rect& operator&=( const Rect& r ) {
+    Rect& operator&=(const Rect& r) {
         m_left = std::max(m_left, r.m_left);
         m_top = std::max(m_top, r.m_top);
         m_right = std::min(m_right, r.m_right);
@@ -97,14 +117,14 @@ class Rect {
         return *this;
     }
 
-    bool operator==( const Rect& r ) const {
+    bool operator==(const Rect& r) const {
         return ((m_left == r.m_left) &&
                 (m_top == r.m_top) &&
                 (m_right == r.m_right) &&
                 (m_bottom == r.m_bottom));
     }
 
-    bool operator!=( const Rect& r ) const {
+    bool operator!=(const Rect& r) const {
         return ((m_left != r.m_left) ||
                 (m_top != r.m_top) ||
                 (m_right != r.m_right) ||
