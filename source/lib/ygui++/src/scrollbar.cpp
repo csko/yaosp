@@ -20,7 +20,8 @@
 
 namespace yguipp {
 
-ScrollBar::ScrollBar(Orientation orientation, int min, int max, int value) : m_orientation(orientation), m_min(min), m_max(max), m_value(value) {
+ScrollBar::ScrollBar(Orientation orientation, int min, int max, int value, int extent)
+    : m_orientation(orientation), m_min(min), m_max(max), m_value(value), m_extent(extent) {
 }
 
 ScrollBar::~ScrollBar(void) {
@@ -36,9 +37,6 @@ Point ScrollBar::getPreferredSize(void) {
 
 int ScrollBar::paint(GraphicsContext* g) {
     Point size = getSize();
-
-    g->setPenColor(Color(0, 0, 0));
-    g->drawRect(Rect(size));
 
     switch (m_orientation) {
         case VERTICAL :
@@ -72,6 +70,11 @@ int ScrollBar::paintVertical(GraphicsContext* g, const Point& size) {
     g->setPenColor(Color(216, 216, 216));
     g->fillRect(r);
 
+    /* Scrollbar lines */
+    g->setPenColor(Color(0, 0, 0));
+    g->fillRect(Rect(0, m_scrollButtonSize, 0, size.m_y - (m_scrollButtonSize + 1)));
+    g->fillRect(Rect(m_scrollBarSize - 1, 0, m_scrollBarSize - 1, size.m_y - (m_scrollButtonSize + 1)));
+
     return 0;
 }
 
@@ -93,6 +96,11 @@ int ScrollBar::paintHorizontal(GraphicsContext* g, const Point& size) {
     r.resize(1, 1, -1, -1);
     g->setPenColor(Color(216, 216, 216));
     g->fillRect(r);
+
+    /* Scrollbar lines */
+    g->setPenColor(Color(0, 0, 0));
+    g->fillRect(Rect(m_scrollButtonSize, 0, size.m_x - (m_scrollButtonSize + 1), 0));
+    g->fillRect(Rect(m_scrollButtonSize, m_scrollBarSize - 1, size.m_x - (m_scrollButtonSize + 1), m_scrollBarSize - 1));
 
     return 0;
 }

@@ -26,7 +26,7 @@ namespace yguipp {
 
 class ScrollBar : public Widget {
   public:
-    ScrollBar(Orientation orientation, int min = 0, int max = 100, int value = 0);
+    ScrollBar(Orientation orientation, int min = 0, int max = 100, int value = 0, int extent = 10);
     virtual ~ScrollBar(void);
 
     Point getPreferredSize(void);
@@ -42,6 +42,7 @@ class ScrollBar : public Widget {
     int m_min;
     int m_max;
     int m_value;
+    int m_extent;
 
     static const int m_scrollBarSize = 15;
     static const int m_scrollButtonSize = 15;
