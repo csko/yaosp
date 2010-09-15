@@ -215,9 +215,14 @@ if len( sys.argv ) != 3 :
 root = Node( "root" )
 
 parser = xml.sax.make_parser()
-handler = ConfigHandler( root )
+handler = ConfigHandler(root)
 parser.setContentHandler(handler)
-parser.parse( sys.argv[1] )
+
+try :
+    parser.parse(sys.argv[1])
+except xml.sax._exceptions.SAXParseException, e :
+    print "Failed to parse input XML file: " + str(e)
+    sys.exit(1)
 
 writer = BinaryWriter( root.getChildren()[0] )
 writer.writeFile( sys.argv[2] )

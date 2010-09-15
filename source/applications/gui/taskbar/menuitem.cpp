@@ -18,15 +18,15 @@
 
 #include "menuitem.hpp"
 
-TBMenuItemInfo::TBMenuItemInfo(uint64_t position, const std::string& name, const std::string& executable) :
-    m_position(position), m_name(name), m_executable(executable) {
+TBMenuItemInfo::TBMenuItemInfo(uint64_t position, const std::string& name, const std::string& executable, yguipp::Bitmap* image)
+    : m_position(position), m_name(name), m_executable(executable), m_image(image) {
 }
 
 bool TBMenuItemInfo::operator<(const TBMenuItemInfo& info) const {
     return (m_position < info.m_position);
 }
 
-TBMenuItem::TBMenuItem(const TBMenuItemInfo& itemInfo) : MenuItem(itemInfo.m_name), m_executable(itemInfo.m_executable) {
+TBMenuItem::TBMenuItem(const TBMenuItemInfo& itemInfo) : MenuItem(itemInfo.m_name, itemInfo.m_image), m_executable(itemInfo.m_executable) {
 }
 
 const std::string& TBMenuItem::getExecutable(void) {

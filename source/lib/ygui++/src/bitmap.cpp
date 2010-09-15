@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <memory>
+
 #include <ygui++/bitmap.hpp>
 #include <ygui++/application.hpp>
 #include <ygui++/imageloader.hpp>
@@ -63,6 +65,14 @@ Rect Bitmap::bounds( void ) {
     return Rect(m_size);
 }
 
+int Bitmap::width(void) {
+    return m_size.m_x;
+}
+
+int Bitmap::height(void) {
+    return m_size.m_y;
+}
+
 int Bitmap::getHandle( void ) {
     return m_handle;
 }
@@ -75,41 +85,35 @@ const Point& Bitmap::getSize( void ) {
     return m_size;
 }
 
-Bitmap* Bitmap::loadFromFile( const std::string& path ) {
+Bitmap* Bitmap::loadFromFile(const std::string& path) {
     int size;
     bool final;
     int available;
     Bitmap* bitmap = NULL;
     uint8_t* bitmapData = NULL;
-    ImageLoader* loader;
-    yutilpp::storage::File* file;
     uint8_t buffer[LOAD_BUFFER_SIZE];
 
-    file = new yutilpp::storage::File(path);
+    std::auto_ptr<ImageLoader> loader;
+    std::auto_ptr<yutilpp::storage::File> file(new yutilpp::storage::File(path));
 
-    if ( !file->init() ) {
-        delete file;
+    if (!file->init()) {
         return NULL;
     }
 
     size = file->read(buffer,LOAD_BUFFER_SIZE);
-    final = ( size != LOAD_BUFFER_SIZE );
+    final = (size != LOAD_BUFFER_SIZE);
 
-    if ( size <= 0 ) {
-        delete file;
+    if (size <= 0) {
         return NULL;
     }
 
-    loader = ImageLoaderManager::getInstance()->getLoader(buffer,size);
+    loader.reset(ImageLoaderManager::getInstance()->getLoader(buffer, size));
 
-    if ( loader == NULL ) {
-        delete file;
+    if (loader.get() == NULL) {
         return NULL;
     }
 
-    loader->addData(buffer, size, final);
-
-    if ( loader->availableData() >= sizeof(ImageInfo) ) {
+    if (loader->availableData() >= sizeof(ImageInfo)) {
         ImageInfo info;
 
         loader->readData(reinterpret_cast<uint8_t*>(&info), sizeof(ImageInfo));
@@ -118,7 +122,7 @@ Bitmap* Bitmap::loadFromFile( const std::string& path ) {
         bitmapData = bitmap->getData();
     }
 
-    while ( !final ) {
+    while (!final) {
         size = file->read(buffer,LOAD_BUFFER_SIZE);
         final = ( size != LOAD_BUFFER_SIZE );
 
@@ -136,22 +140,45 @@ Bitmap* Bitmap::loadFromFile( const std::string& path ) {
         } else {
             available = loader->availableData();
 
-            if ( available > 0 ) {
+            if (available > 0) {
                 loader->readData(bitmapData, available);
                 bitmapData += available;
             }
         }
     }
 
-    delete file;
-
     available = loader->availableData();
 
-    if ( available > 0 ) {
+    if (available > 0) {
         loader->readData(bitmapData, available);
     }
 
-    delete loader;
+    return bitmap;
+}
+
+Bitmap* Bitmap::loadFromBuffer(uint8_t* data, size_t length) {
+    ImageInfo info;
+    Bitmap* bitmap;
+    uint8_t* bitmapData;
+    std::auto_ptr<ImageLoader> loader(ImageLoaderManager::getInstance()->getLoader(data, length));
+
+    if (loader.get() == NULL) {
+        return NULL;
+    }
+
+    loader->addData(data, length, true);
+
+    if (loader->availableData() < sizeof(ImageInfo)) {
+        return NULL;
+    }
+
+    loader->readData(reinterpret_cast<uint8_t*>(&info), sizeof(ImageInfo));
+
+    bitmap = new Bitmap(Point(info.m_width, info.m_height));
+    bitmap->init();
+    bitmapData = bitmap->getData();
+
+    loader->readData(bitmapData, loader->availableData());
 
     return bitmap;
 }

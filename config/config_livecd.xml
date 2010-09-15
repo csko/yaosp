@@ -5,10 +5,10 @@
         <node name="taskbar">
             <node name="menu">
                 <node name="terminal">
-                    <attrib type="ascii" name="name" value="Terminal"/>
-                    <attrib type="numeric" name="position" value="0"/>
-                    <!--attrib type="binary" name="image" value="source/applications/gui/terminal/images/terminal_32x32.png"/-->
-                    <attrib type="ascii" name="executable" value="/application/terminal/terminal"/>
+                    <attrib type="ascii"   name="name"       value="Terminal"/>
+                    <attrib type="numeric" name="position"   value="0"/>
+                    <attrib type="binary"  name="image"      value="source/applications/gui/terminal/images/terminal_32x32.png"/>
+                    <attrib type="ascii"   name="executable" value="/application/terminal/terminal"/>
                 </node>
                 <!--node name="texteditor">
                     <attrib type="ascii" name="name" value="Text editor"/>
@@ -42,9 +42,9 @@
 
         <node name="guiserver">
             <node name="screen">
-                <attrib type="numeric" name="width" value="800"/>
+                <attrib type="numeric" name="width"  value="800"/>
                 <attrib type="numeric" name="height" value="600"/>
-                <attrib type="numeric" name="depth" value="32"/>
+                <attrib type="numeric" name="depth"  value="32"/>
             </node>
         </node>
     </node>

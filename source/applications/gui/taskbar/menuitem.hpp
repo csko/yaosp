@@ -22,13 +22,14 @@
 #include <ygui++/menuitem.hpp>
 
 struct TBMenuItemInfo {
-    TBMenuItemInfo(uint64_t position, const std::string& name, const std::string& executable);
+    TBMenuItemInfo(uint64_t position, const std::string& name, const std::string& executable, yguipp::Bitmap* image);
 
     bool operator<(const TBMenuItemInfo& info) const;
 
     uint64_t m_position;
     std::string m_name;
     std::string m_executable;
+    yguipp::Bitmap* m_image;
 };
 
 class TBMenuItem : public yguipp::MenuItem {

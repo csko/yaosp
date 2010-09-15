@@ -48,7 +48,14 @@ MenuItem::~MenuItem( void ) {
 }
 
 Point MenuItem::getPreferredSize( void ) {
-    return Point( m_font->getWidth(m_text) + 6, m_font->getHeight() + 6 );
+    Point p(m_font->getWidth(m_text) + 6, m_font->getHeight() + 6);
+
+    if (m_image != NULL) {
+        p.m_x += m_image->width() + 3;
+        p.m_y = std::max(p.m_y, m_image->height() + 6);
+    }
+
+    return p;
 }
 
 Menu* MenuItem::getSubMenu( void ) {

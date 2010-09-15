@@ -36,6 +36,8 @@ class Connection {
 
     bool getNumericValue(const std::string& path, const std::string& attr, uint64_t& value);
     bool getAsciiValue(const std::string& path, const std::string& attr, std::string& value);
+    bool getBinaryValue(const std::string& path, const std::string& attr, uint8_t*& data, size_t& len);
+
     bool listChildren(const std::string& path, std::vector<std::string>& children);
 
   private:

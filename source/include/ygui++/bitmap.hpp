@@ -36,11 +36,15 @@ class Bitmap : public Object {
     bool init( void );
 
     Rect bounds(void);
+    int width(void);
+    int height(void);
+
     int getHandle( void );
     uint8_t* getData( void );
     const Point& getSize( void );
 
-    static Bitmap* loadFromFile( const std::string& path );
+    static Bitmap* loadFromFile(const std::string& path);
+    static Bitmap* loadFromBuffer(uint8_t* data, size_t length);
 
   private:
     int m_handle;

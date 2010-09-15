@@ -85,16 +85,18 @@ int TaskBar::actionPerformed(yguipp::Widget* widget) {
     if (widget == m_menuButton) {
         Point size = m_menu->getPreferredSize();
         m_menu->show(m_window->getPosition() - Point(0,size.m_y));
-    } else {
-        TBMenuItem* menuItem = dynamic_cast<TBMenuItem*>(widget);
-        assert(menuItem != NULL);
-        const std::string& executable = menuItem->getExecutable();
-        dbprintf("Starting '%s'\n", executable.c_str());
+        return 0;
+    }
 
-        if (fork() == 0) {
-            execlp(executable.c_str(), executable.c_str(), NULL);
-            exit(0);
-        }
+    TBMenuItem* menuItem = dynamic_cast<TBMenuItem*>(widget);
+    assert(menuItem != NULL);
+
+    const std::string& executable = menuItem->getExecutable();
+    dbprintf("Starting '%s'\n", executable.c_str());
+
+    if (fork() == 0) {
+        execlp(executable.c_str(), executable.c_str(), NULL);
+        exit(0);
     }
 
     return 0;
@@ -117,6 +119,7 @@ void TaskBar::createMenu(void) {
             uint64_t position;
             std::string executable;
             std::string path = "application/taskbar/menu/" + *it;
+            Bitmap* image = NULL;
 
             if ((!config.getNumericValue(path, "position", position)) ||
                 (!config.getAsciiValue(path, "name", name)) ||
@@ -124,7 +127,15 @@ void TaskBar::createMenu(void) {
                 continue;
             }
 
-            menuItems.push_back(TBMenuItemInfo(position, name, executable));
+            uint8_t* data;
+            size_t length;
+
+            if (config.getBinaryValue(path, "image", data, length)) {
+                image = Bitmap::loadFromBuffer(data, length);
+                delete[] data;
+            }
+
+            menuItems.push_back(TBMenuItemInfo(position, name, executable, image));
         }
     }
 

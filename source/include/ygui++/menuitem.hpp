@@ -32,7 +32,7 @@ class Menu;
 
 class MenuItem : public Widget, public event::ActionSpeaker {
   public:
-    MenuItem( const std::string& text, Bitmap* image = NULL );
+    MenuItem(const std::string& text, Bitmap* image = NULL);
     virtual ~MenuItem( void );
 
     Point getPreferredSize( void );

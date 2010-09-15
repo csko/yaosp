@@ -90,6 +90,31 @@ bool Connection::getAsciiValue(const std::string& path, const std::string& attr,
     return true;
 }
 
+bool Connection::getBinaryValue(const std::string& path, const std::string& attr, uint8_t*& data, size_t& len) {
+    size_t size;
+    msg_get_reply_t* reply;
+
+    data = NULL;
+    len = 0;
+
+    if (!getAttributeValue(path, attr, reply, size)) {
+        return false;
+    }
+
+    if ((reply->error != 0) ||
+        (reply->type != ATTR_BINARY)) {
+        delete reply;
+        return false;
+    }
+
+    len = size - sizeof(msg_get_reply_t);
+    data = new uint8_t[len];
+
+    memcpy(data, reinterpret_cast<void*>(reply + 1), len);
+
+    return true;
+}
+
 bool Connection::listChildren(const std::string& path, std::vector<std::string>& children) {
     size_t size;
     uint8_t* data;
