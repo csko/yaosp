@@ -54,6 +54,10 @@ uint32_t AsciiAttribute::getSize(void) {
 }
 
 bool AsciiAttribute::getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size) {
+    if (size > m_size) {
+        return false;
+    }
+
     return ((storageFile->seek(m_offset)) &&
             (storageFile->read(data, size) == (int)size));
 }
@@ -85,6 +89,10 @@ uint32_t BinaryAttribute::getSize(void) {
 }
 
 bool BinaryAttribute::getData(yutilpp::storage::File* storageFile, uint8_t* data, size_t size) {
-    // todo
-    return false;
+    if (size > m_size) {
+        return false;
+    }
+
+    return ((storageFile->seek(m_offset)) &&
+            (storageFile->read(data, size) == (int)size));
 }
