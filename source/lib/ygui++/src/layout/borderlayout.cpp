@@ -40,7 +40,6 @@ int BorderLayout::doLayout( yguipp::Panel* panel ) {
     buildWidgetMap(children, widgetMap);
 
     /* Page start widget */
-
     widget = widgetMap[BorderLayoutData::PAGE_START];
     if ( widget != NULL ) {
         Point size(
@@ -55,7 +54,6 @@ int BorderLayout::doLayout( yguipp::Panel* panel ) {
     }
 
     /* Page end widget */
-
     widget = widgetMap[BorderLayoutData::PAGE_END];
     if ( widget != NULL ) {
         Point size(
@@ -70,7 +68,6 @@ int BorderLayout::doLayout( yguipp::Panel* panel ) {
     }
 
     /* Line start widget */
-
     widget = widgetMap[BorderLayoutData::LINE_START];
     if ( widget != NULL ) {
         Point size(
@@ -87,7 +84,6 @@ int BorderLayout::doLayout( yguipp::Panel* panel ) {
     }
 
     /* Line end widget */
-
     widget = widgetMap[BorderLayoutData::LINE_END];
     if ( widget != NULL ) {
         Point size(
@@ -104,7 +100,6 @@ int BorderLayout::doLayout( yguipp::Panel* panel ) {
     }
 
     /* Center widget */
-
     widget = widgetMap[BorderLayoutData::CENTER];
     if ( widget != NULL ) {
         widget->setPosition( centerRect.leftTop() );

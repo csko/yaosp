@@ -20,30 +20,32 @@
 
 namespace yguipp {
 
-Image::Image( Bitmap* bitmap ) : m_bitmap(bitmap) {
-    if ( m_bitmap != NULL ) {
+Image::Image(Bitmap* bitmap) : m_bitmap(bitmap) {
+    if (m_bitmap != NULL) {
         m_bitmap->incRef();
     }
 }
 
-Image::~Image( void ) {
-    if ( m_bitmap != NULL ) {
+Image::~Image(void) {
+    if (m_bitmap != NULL) {
         m_bitmap->decRef();
     }
 }
 
-Point Image::getPreferredSize( void ) {
-    if ( m_bitmap != NULL ) {
-        return m_bitmap->getSize();
+Point Image::getPreferredSize(void) {
+    if (m_bitmap == NULL) {
+        return Point(0, 0);
     }
 
-    return Point(0,0);
+    return m_bitmap->getSize();
 }
 
-int Image::paint( GraphicsContext* g ) {
-    if ( m_bitmap != NULL ) {
-        g->drawBitmap( ( getSize() - m_bitmap->getSize() ) / 2, m_bitmap );
+int Image::paint(GraphicsContext* g) {
+    if (m_bitmap == NULL) {
+        return 0;
     }
+
+    g->drawBitmap((getSize() - m_bitmap->getSize()) / 2, m_bitmap);
 
     return 0;
 }

@@ -100,8 +100,8 @@ Bitmap* Bitmap::loadFromFile(const std::string& path) {
         return NULL;
     }
 
-    size = file->read(buffer,LOAD_BUFFER_SIZE);
-    final = (size != LOAD_BUFFER_SIZE);
+    size = file->read(buffer, sizeof(buffer));
+    final = (size != sizeof(buffer));
 
     if (size <= 0) {
         return NULL;
@@ -113,6 +113,8 @@ Bitmap* Bitmap::loadFromFile(const std::string& path) {
         return NULL;
     }
 
+    loader->addData(buffer, size, final);
+
     if (loader->availableData() >= sizeof(ImageInfo)) {
         ImageInfo info;
 
@@ -123,12 +125,12 @@ Bitmap* Bitmap::loadFromFile(const std::string& path) {
     }
 
     while (!final) {
-        size = file->read(buffer,LOAD_BUFFER_SIZE);
-        final = ( size != LOAD_BUFFER_SIZE );
+        size = file->read(buffer, sizeof(buffer));
+        final = (size != sizeof(buffer));
 
         loader->addData(buffer, size, final);
 
-        if ( bitmap == NULL ) {
+        if (bitmap == NULL) {
             if ( loader->availableData() >= sizeof(ImageInfo) ) {
                 ImageInfo info;
 

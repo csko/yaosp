@@ -38,10 +38,18 @@ MenuButton::MenuButton(void) {
 }
 
 Point MenuButton::getPreferredSize(void) {
+    if (m_image == NULL) {
+        return Point(0, 0);
+    }
+
     return m_image->getSize();
 }
 
 int MenuButton::paint(GraphicsContext* g) {
+    if (m_image == NULL) {
+        return 0;
+    }
+
     g->setDrawingMode(DM_BLEND);
     g->drawBitmap((getSize() - m_image->getSize()) / 2, m_image);
     g->setDrawingMode(DM_COPY);
