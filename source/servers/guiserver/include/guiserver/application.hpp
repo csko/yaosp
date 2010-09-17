@@ -53,6 +53,7 @@ class Application : public yutilpp::IPCListener {
     int handleFontStringWidth( FontStringWidth* request );
     int handleBitmapCreate( BitmapCreate* request );
     int handleDesktopGetSize( DesktopGetSize* request );
+    int handleScreenModeGetList(ScreenModeGetList* request);
 
     int getWindowId( void );
     int getFontId( void );

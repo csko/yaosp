@@ -57,11 +57,11 @@ bool Application::init( void ) {
     return registerApplication();
 }
 
-void Application::lock( void ) {
+void Application::lock(void) {
     m_lock->lock();
 }
 
-void Application::unLock( void ) {
+void Application::unLock(void) {
     m_lock->unLock();
 }
 
@@ -69,6 +69,7 @@ Point Application::getDesktopSize(int desktopIndex) {
     Point size;
     uint32_t code;
     DesktopGetSize request;
+
     request.m_replyPort = m_replyPort->getId();
     request.m_desktopIndex = desktopIndex;
 
@@ -76,6 +77,30 @@ Point Application::getDesktopSize(int desktopIndex) {
     m_replyPort->receive(code, reinterpret_cast<void*>(&size), sizeof(size));
 
     return size;
+}
+
+int Application::getScreenModeList(std::vector<ScreenModeInfo>& modeList) {
+    uint32_t code;
+    size_t size;
+    uint8_t* data;
+    ScreenModeInfo* modeInfo;
+    ScreenModeGetList request;
+
+    request.m_replyPort = m_replyPort->getId();
+
+    m_serverPort->send(Y_SCREEN_MODE_GET_LIST, reinterpret_cast<void*>(&request), sizeof(request));
+    m_replyPort->peek(code, size);
+
+    data = new uint8_t[size];
+    modeInfo = reinterpret_cast<ScreenModeInfo*>(data);
+
+    m_replyPort->receive(code, data, size);
+
+    for (size_t i = 0; i < (size / sizeof(ScreenModeInfo)); i++, modeInfo++) {
+        modeList.push_back(*modeInfo);
+    }
+
+    return 0;
 }
 
 yutilpp::IPCPort* Application::getGuiServerPort( void ) {

@@ -115,6 +115,10 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
         case Y_DESKTOP_GET_SIZE :
             handleDesktopGetSize(reinterpret_cast<DesktopGetSize*>(data));
             break;
+
+        case Y_SCREEN_MODE_GET_LIST :
+            handleScreenModeGetList(reinterpret_cast<ScreenModeGetList*>(data));
+            break;
     }
 
     return 0;
@@ -238,6 +242,31 @@ int Application::handleDesktopGetSize( DesktopGetSize* request ) {
     yguipp::Point size = m_guiServer->getScreenBitmap()->size();
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&size), sizeof(size));
+
+    return 0;
+}
+
+int Application::handleScreenModeGetList(ScreenModeGetList* request) {
+    GraphicsDriver* driver = m_guiServer->getGraphicsDriver();
+    size_t modeCount = driver->getModeCount();
+
+    if (modeCount == 0) {
+        yutilpp::IPCPort::sendTo(request->m_replyPort, 0, NULL, 0);
+        return 0;
+    }
+
+    yguipp::ScreenModeInfo* infoTable = new yguipp::ScreenModeInfo[modeCount];
+
+    for (size_t i = 0; i < modeCount; i++) {
+        ScreenMode* mode = driver->getModeInfo(i);
+
+        infoTable[i].m_width = mode->m_width;
+        infoTable[i].m_height = mode->m_height;
+        infoTable[i].m_colorSpace = mode->m_colorSpace;
+    }
+
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(infoTable), sizeof(yguipp::ScreenModeInfo) * modeCount);
+    delete[] infoTable;
 
     return 0;
 }

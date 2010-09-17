@@ -21,9 +21,11 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include <ygui++/imageloader.hpp>
 #include <ygui++/point.hpp>
+#include <ygui++/yconstants.hpp>
 #include <yutil++/mutex.hpp>
 #include <yutil++/ipcport.hpp>
 
@@ -45,6 +47,7 @@ class Application {
     void unLock( void );
 
     Point getDesktopSize(int desktopIndex = 0);
+    int getScreenModeList(std::vector<ScreenModeInfo>& modeList);
 
     yutilpp::IPCPort* getGuiServerPort( void );
     yutilpp::IPCPort* getClientPort( void );

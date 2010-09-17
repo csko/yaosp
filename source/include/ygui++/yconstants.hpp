@@ -94,6 +94,12 @@ struct FontInfo {
     }
 };
 
+struct ScreenModeInfo {
+    int m_width;
+    int m_height;
+    ColorSpace m_colorSpace;
+};
+
 static inline int colorspace_to_bpp( ColorSpace colorSpace ) {
     switch (colorSpace) {
         case CS_RGB16 : return 2;

@@ -50,7 +50,8 @@ enum {
     Y_FONT_CREATE,
     Y_FONT_STRING_WIDTH,
     Y_BITMAP_CREATE,
-    Y_DESKTOP_GET_SIZE
+    Y_DESKTOP_GET_SIZE,
+    Y_SCREEN_MODE_GET_LIST
 };
 
 struct AppCreate {
@@ -175,6 +176,10 @@ struct BitmapCreateReply {
 struct DesktopGetSize {
     ipc_port_id m_replyPort;
     int m_desktopIndex;
+};
+
+struct ScreenModeGetList {
+    ipc_port_id m_replyPort;
 };
 
 #endif /* _YGUI_PROTOCOL_HPP_ */
