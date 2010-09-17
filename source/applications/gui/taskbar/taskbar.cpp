@@ -67,10 +67,10 @@ int TaskBar::run(void) {
     ImageLoaderManager::getInstance()->loadLibraries();
 
     Application* app = Application::getInstance();
+    ScreenModeInfo modeInfo = app->getCurrentScreenMode();
 
-    Point size = app->getDesktopSize();
-    Point position(0, size.m_y - 22);
-    size.m_y = 22;
+    Point size(modeInfo.m_width, 22);
+    Point position(0, modeInfo.m_height - 22);
 
     m_window = new Window("taskbar", position, size, WINDOW_NO_BORDER);
     m_window->init();

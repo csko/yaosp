@@ -98,6 +98,12 @@ struct ScreenModeInfo {
     int m_width;
     int m_height;
     ColorSpace m_colorSpace;
+
+    bool operator==(const ScreenModeInfo& info) const {
+        return ((m_width == info.m_width) &&
+                (m_height == info.m_height) &&
+                (m_colorSpace == info.m_colorSpace));
+    }
 };
 
 static inline int colorspace_to_bpp( ColorSpace colorSpace ) {

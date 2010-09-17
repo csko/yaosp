@@ -40,13 +40,13 @@ class Application {
     Application( const std::string& name );
     ~Application( void );
 
-    bool init( void );
+    bool init(void);
 
   public:
-    void lock( void );
-    void unLock( void );
+    void lock(void );
+    void unLock(void);
 
-    Point getDesktopSize(int desktopIndex = 0);
+    ScreenModeInfo getCurrentScreenMode(int desktopIndex = 0);
     int getScreenModeList(std::vector<ScreenModeInfo>& modeList);
 
     yutilpp::IPCPort* getGuiServerPort( void );

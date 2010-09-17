@@ -19,8 +19,11 @@ int ScreenMode::handleCommand(int argc, char** argv) {
 }
 
 int ScreenMode::list(void) {
+    yguipp::ScreenModeInfo currentMode;
     std::vector<yguipp::ScreenModeInfo> modeList;
+
     yguipp::Application::getInstance()->getScreenModeList(modeList);
+    currentMode = yguipp::Application::getInstance()->getCurrentScreenMode();
 
     if (modeList.empty()) {
         std::cerr << "There are no available screen modes." << std::endl;
@@ -37,7 +40,13 @@ int ScreenMode::list(void) {
                 continue;
             }
 
-            std::cout << "    " << info.m_width << "x" << info.m_height << " @ " << colorspace_to_bpp(info.m_colorSpace) * 8 << "bpp" << std::endl;
+            std::cout << "    " << info.m_width << "x" << info.m_height << " @ " << colorspace_to_bpp(info.m_colorSpace) * 8 << "bpp";
+
+            if (info == currentMode) {
+                std::cout << " (active)";
+            }
+
+            std::cout << std::endl;
         }
     }
 

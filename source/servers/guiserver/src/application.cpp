@@ -239,9 +239,15 @@ int Application::handleBitmapCreate( BitmapCreate* request ) {
 }
 
 int Application::handleDesktopGetSize( DesktopGetSize* request ) {
-    yguipp::Point size = m_guiServer->getScreenBitmap()->size();
+    Bitmap* screen;
+    yguipp::ScreenModeInfo modeInfo;
 
-    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&size), sizeof(size));
+    screen = m_guiServer->getScreenBitmap();
+    modeInfo.m_width = screen->width();
+    modeInfo.m_height = screen->height();
+    modeInfo.m_colorSpace = screen->getColorSpace();
+
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&modeInfo), sizeof(modeInfo));
 
     return 0;
 }

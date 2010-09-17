@@ -65,18 +65,18 @@ void Application::unLock(void) {
     m_lock->unLock();
 }
 
-Point Application::getDesktopSize(int desktopIndex) {
-    Point size;
+ScreenModeInfo Application::getCurrentScreenMode(int desktopIndex) {
     uint32_t code;
+    ScreenModeInfo info;
     DesktopGetSize request;
 
     request.m_replyPort = m_replyPort->getId();
     request.m_desktopIndex = desktopIndex;
 
     m_serverPort->send(Y_DESKTOP_GET_SIZE, reinterpret_cast<void*>(&request), sizeof(request));
-    m_replyPort->receive(code, reinterpret_cast<void*>(&size), sizeof(size));
+    m_replyPort->receive(code, reinterpret_cast<void*>(&info), sizeof(info));
 
-    return size;
+    return info;
 }
 
 int Application::getScreenModeList(std::vector<ScreenModeInfo>& modeList) {
