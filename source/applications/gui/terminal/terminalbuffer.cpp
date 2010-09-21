@@ -185,12 +185,42 @@ void TerminalBuffer::insertCharacter(uint8_t c) {
     }
 }
 
-void TerminalBuffer::moveCursor(int dx, int dy) {
+void TerminalBuffer::moveCursorBy(int dx, int dy) {
     m_cursorX += dx;
     m_cursorY += dy;
 
     assert((m_cursorX >= 0) && (m_cursorX < m_width));
     assert((m_cursorY >= 0) && (m_cursorY < m_height));
+}
+
+void TerminalBuffer::moveCursorTo(int x, int y) {
+    m_cursorX = x;
+    m_cursorY = y;
+
+    assert((m_cursorX >= 0) && (m_cursorX < m_width));
+    assert((m_cursorY >= 0) && (m_cursorY < m_height));
+}
+
+void TerminalBuffer::erase(void) {
+    for (int i = 0; i < m_height; i++) {
+        m_lines[i]->clear(' ', m_attrib);
+    }
+}
+
+void TerminalBuffer::eraseLine(void) {
+    m_lines[m_cursorY]->clear(' ', m_attrib);
+}
+
+void TerminalBuffer::eraseAbove(void) {
+    for (int i = 0; i <= m_cursorY; i++) {
+        m_lines[i]->clear(' ', m_attrib);
+    }
+}
+
+void TerminalBuffer::eraseBelow(void) {
+    for (int i = m_cursorY; i < m_height; i++) {
+        m_lines[i]->clear(' ', m_attrib);
+    }
 }
 
 void TerminalBuffer::eraseBefore(void) {

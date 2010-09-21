@@ -79,7 +79,14 @@ class TerminalBuffer {
     void insertLf(void);
     void insertBackSpace(void);
     void insertCharacter(uint8_t c);
-    void moveCursor(int dx, int dy);
+    void moveCursorBy(int dx, int dy);
+    void moveCursorTo(int x, int y);
+
+    void erase(void);
+    void eraseLine(void);
+
+    void eraseAbove(void);
+    void eraseBelow(void);
     void eraseBefore(void);
     void eraseAfter(void);
 

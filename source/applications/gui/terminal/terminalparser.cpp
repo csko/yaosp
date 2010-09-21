@@ -119,9 +119,27 @@ void TerminalParser::handleSquareBracket(uint8_t data) {
 
         case 'A' :
             if (m_params.empty()) {
-                m_buffer->moveCursor(0, -1);
+                m_buffer->moveCursorBy(0, -1);
             } else {
-                m_buffer->moveCursor(0, -m_params[0]);
+                m_buffer->moveCursorBy(0, -m_params[0]);
+            }
+            m_state = NONE;
+            break;
+
+        case 'J' :
+            if (m_params.empty()) {
+                m_buffer->eraseBelow();
+            } else {
+                switch (m_params[0]) {
+                    case 1 :
+                        m_buffer->eraseAbove();
+                        break;
+
+                    case 2 :
+                        m_buffer->erase();
+                        m_buffer->moveCursorTo(0, 0);
+                        break;
+                }
             }
             m_state = NONE;
             break;
@@ -136,8 +154,7 @@ void TerminalParser::handleSquareBracket(uint8_t data) {
                         break;
 
                     case 2 :
-                        m_buffer->eraseBefore();
-                        m_buffer->eraseAfter();
+                        m_buffer->eraseLine();
                         break;
                 }
             }
