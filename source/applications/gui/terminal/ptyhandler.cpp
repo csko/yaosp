@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/select.h>
 #include <yaosp/debug.h>
+#include <yaosp/input.h>
 
 #include "ptyhandler.hpp"
 
@@ -31,7 +32,66 @@ PtyHandler::PtyHandler(int masterPty, yguipp::Widget* view, TerminalParser* pars
 }
 
 int PtyHandler::keyPressed(yguipp::Widget* widget, int key) {
-    write(m_masterPty, &key, 1);
+    switch (key) {
+        case KEY_UP :
+            if (m_parser->useAlternateCursorKeys()) {
+                write(m_masterPty, "\x1bOA", 3);
+            } else {
+                write(m_masterPty, "\x1b[A", 3);
+            }
+            break;
+
+        case KEY_DOWN :
+            if (m_parser->useAlternateCursorKeys()) {
+                write(m_masterPty, "\x1bOB", 3);
+            } else {
+                write(m_masterPty, "\x1b[B", 3);
+            }
+            break;
+
+        case KEY_LEFT :
+            if (m_parser->useAlternateCursorKeys()) {
+                write(m_masterPty, "\x1bOD", 3);
+            } else {
+                write(m_masterPty, "\x1b[D", 3);
+            }
+            break;
+
+        case KEY_RIGHT :
+            if (m_parser->useAlternateCursorKeys()) {
+                write(m_masterPty, "\x1bOC", 3);
+            } else {
+                write(m_masterPty, "\x1b[C", 3);
+            }
+            break;
+
+        case KEY_HOME :
+            write(m_masterPty, "\x1b[H", 3);
+            break;
+
+        case KEY_END :
+            write(m_masterPty, "\x1b[F", 3);
+            break;
+
+        case KEY_DELETE :
+            write(m_masterPty, "\x1b[3~", 4);
+            break;
+
+        case KEY_PAGE_UP :
+            write(m_masterPty, "\x1b[5~", 4);
+            break;
+
+        case KEY_PAGE_DOWN :
+            write(m_masterPty, "\x1b[6~", 4);
+            break;
+
+        default :
+            if (key < 256) {
+                write(m_masterPty, &key, 1);
+            }
+            break;
+    }
+
     return 0;
 }
 

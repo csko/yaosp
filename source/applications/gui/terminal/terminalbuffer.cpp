@@ -142,13 +142,21 @@ void TerminalBuffer::setBold(bool bold) {
     m_attrib.m_bold = bold;
 }
 
+void TerminalBuffer::setScrollRegion(int top, int bottom) {
+    assert((bottom >= 0) && (bottom < m_height));
+    assert((top >= 0) && (top <= bottom));
+
+    m_scrollTop = top;
+    m_scrollBottom = bottom;
+}
+
 void TerminalBuffer::insertCr(void) {
     m_cursorX = 0;
 }
 
 void TerminalBuffer::insertLf(void) {
     if (m_cursorY == m_scrollBottom) {
-        doScroll(1);
+        scrollBy(1);
     } else {
         m_cursorY++;
     }
@@ -176,7 +184,7 @@ void TerminalBuffer::insertCharacter(uint8_t c) {
 
     if (++m_cursorX == m_width) {
         if (m_cursorY == m_scrollBottom) {
-            doScroll(1);
+            scrollBy(1);
         } else {
             m_cursorY++;
         }
@@ -194,44 +202,44 @@ void TerminalBuffer::moveCursorBy(int dx, int dy) {
 }
 
 void TerminalBuffer::moveCursorTo(int x, int y) {
-    m_cursorX = x;
-    m_cursorY = y;
+    if (x != -1) {
+        m_cursorX = x;
+        assert((m_cursorX >= 0) && (m_cursorX < m_width));
+    }
 
-    assert((m_cursorX >= 0) && (m_cursorX < m_width));
-    assert((m_cursorY >= 0) && (m_cursorY < m_height));
-}
-
-void TerminalBuffer::erase(void) {
-    for (int i = 0; i < m_height; i++) {
-        m_lines[i]->clear(' ', m_attrib);
+    if (y != -1) {
+        m_cursorY = y;
+        assert((m_cursorY >= 0) && (m_cursorY < m_height));
     }
 }
 
-void TerminalBuffer::eraseLine(void) {
-    m_lines[m_cursorY]->clear(' ', m_attrib);
+void TerminalBuffer::swapFgBgColor(void) {
+    TerminalColor tmp;
+
+    tmp = m_attrib.m_bgColor;
+    m_attrib.m_bgColor = m_attrib.m_fgColor;
+    m_attrib.m_fgColor = tmp;
 }
 
-void TerminalBuffer::eraseAbove(void) {
-    for (int i = 0; i <= m_cursorY; i++) {
-        m_lines[i]->clear(' ', m_attrib);
-    }
+void TerminalBuffer::saveCursor(void) {
+    m_savedCursorX = m_cursorX;
+    m_savedCursorY = m_cursorY;
 }
 
-void TerminalBuffer::eraseBelow(void) {
-    for (int i = m_cursorY; i < m_height; i++) {
-        m_lines[i]->clear(' ', m_attrib);
-    }
+void TerminalBuffer::restoreCursor(void) {
+    m_cursorX = m_savedCursorX;
+    m_cursorY = m_savedCursorY;
 }
 
-void TerminalBuffer::eraseBefore(void) {
-    m_lines[m_cursorY]->clear(' ', m_attrib, 0, m_cursorX);
+void TerminalBuffer::saveAttribute(void) {
+    m_savedAttrib = m_attrib;
 }
 
-void TerminalBuffer::eraseAfter(void) {
-    m_lines[m_cursorY]->clear(' ', m_attrib, m_cursorX);
+void TerminalBuffer::restoreAttribute(void) {
+    m_attrib = m_savedAttrib;
 }
 
-void TerminalBuffer::doScroll(int count) {
+void TerminalBuffer::scrollBy(int count) {
     assert(m_scrollTop >= 0);
     assert(m_scrollBottom < m_height);
     assert(m_scrollTop <= m_scrollBottom);
@@ -264,5 +272,36 @@ void TerminalBuffer::doScroll(int count) {
             line->m_dirtyWidth = 0;
         }
     } else {
+        /* todo */
     }
+}
+
+void TerminalBuffer::erase(void) {
+    for (int i = 0; i < m_height; i++) {
+        m_lines[i]->clear(' ', m_attrib);
+    }
+}
+
+void TerminalBuffer::eraseLine(void) {
+    m_lines[m_cursorY]->clear(' ', m_attrib);
+}
+
+void TerminalBuffer::eraseAbove(void) {
+    for (int i = 0; i <= m_cursorY; i++) {
+        m_lines[i]->clear(' ', m_attrib);
+    }
+}
+
+void TerminalBuffer::eraseBelow(void) {
+    for (int i = m_cursorY; i < m_height; i++) {
+        m_lines[i]->clear(' ', m_attrib);
+    }
+}
+
+void TerminalBuffer::eraseBefore(void) {
+    m_lines[m_cursorY]->clear(' ', m_attrib, 0, m_cursorX);
+}
+
+void TerminalBuffer::eraseAfter(void) {
+    m_lines[m_cursorY]->clear(' ', m_attrib, m_cursorX);
 }

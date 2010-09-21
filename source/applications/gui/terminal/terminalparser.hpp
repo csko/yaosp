@@ -27,6 +27,8 @@ class TerminalParser {
 
     bool handleData(uint8_t* data, int length);
 
+    bool useAlternateCursorKeys(void);
+
   private:
     enum ParserState {
         NONE,
@@ -49,6 +51,7 @@ class TerminalParser {
     TerminalBuffer* m_buffer;
     std::vector<int> m_params;
     bool m_firstNumber;
+    bool m_useAlternateCursorKeys;
 }; /* class TerminalParser */
 
 #endif /* _TERMINAL_TERMINALPARSER_HPP_ */

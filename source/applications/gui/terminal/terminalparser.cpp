@@ -16,11 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
 #include <yaosp/debug.h>
 
 #include "terminalparser.hpp"
 
-TerminalParser::TerminalParser(TerminalBuffer* buffer) : m_state(NONE), m_buffer(buffer) {
+TerminalParser::TerminalParser(TerminalBuffer* buffer) : m_state(NONE), m_buffer(buffer), m_useAlternateCursorKeys(false) {
 }
 
 bool TerminalParser::handleData(uint8_t* data, int length) {
@@ -39,6 +40,10 @@ bool TerminalParser::handleData(uint8_t* data, int length) {
     m_buffer->unLock();
 
     return true;
+}
+
+bool TerminalParser::useAlternateCursorKeys(void) {
+    return m_useAlternateCursorKeys;
 }
 
 void TerminalParser::handleNone(uint8_t data) {
@@ -83,6 +88,24 @@ void TerminalParser::handleEscape(uint8_t data) {
             m_state = SQUARE_BRACKET;
             break;
 
+        case '>' :
+        case '=' :
+            /* todo: what the hell is this? */
+            m_state = NONE;
+            break;
+
+        case '7' :
+            m_buffer->saveCursor();
+            m_buffer->saveAttribute();
+            m_state = NONE;
+            break;
+
+        case '8' :
+            m_buffer->restoreCursor();
+            m_buffer->restoreAttribute();
+            m_state = NONE;
+            break;
+
         default :
             dbprintf("TerminalParser::handleEscape(): invalid data: %d\n", (int)data);
             m_state = NONE;
@@ -92,6 +115,11 @@ void TerminalParser::handleEscape(uint8_t data) {
 
 void TerminalParser::handleBracket(uint8_t data) {
     switch (data) {
+        case 'B' :
+            /* North American ASCII set */
+            m_state = NONE;
+            break;
+
         default :
             dbprintf("TerminalParser::handleBracket(): invalid data: %d\n", (int)data);
             m_state = NONE;
@@ -127,6 +155,9 @@ void TerminalParser::handleSquareBracket(uint8_t data) {
             break;
 
         case 'J' :
+            assert((m_params.empty()) ||
+                   (m_params.size() == 1));
+
             if (m_params.empty()) {
                 m_buffer->eraseBelow();
             } else {
@@ -145,6 +176,9 @@ void TerminalParser::handleSquareBracket(uint8_t data) {
             break;
 
         case 'K' :
+            assert((m_params.empty()) ||
+                   (m_params.size() == 1));
+
             if (m_params.empty()) {
                 m_buffer->eraseAfter();
             } else {
@@ -161,8 +195,51 @@ void TerminalParser::handleSquareBracket(uint8_t data) {
             m_state = NONE;
             break;
 
+        case 'S' :
+            assert(m_params.size() == 1);
+            m_buffer->scrollBy(m_params[0]);
+            m_state = NONE;
+            break;
+
+        case 'f' :
+        case 'H' :
+            assert((m_params.empty()) ||
+                   (m_params.size() == 2));
+
+            if (m_params.empty()) {
+                m_buffer->moveCursorTo(0, 0);
+            } else {
+                m_buffer->moveCursorTo(m_params[1] - 1, m_params[0] - 1);
+            }
+
+            m_state = NONE;
+            break;
+
+        case 'd' :
+            assert(m_params.size() == 1);
+            m_buffer->moveCursorTo(-1, m_params[0] - 1);
+            m_state = NONE;
+            break;
+
+        case 'G' :
+            assert(m_params.size() == 1);
+            m_buffer->moveCursorTo(m_params[0] - 1, -1);
+            m_state = NONE;
+            break;
+
+        case 'r' :
+            assert(m_params.size() == 2);
+            m_buffer->setScrollRegion(m_params[0] - 1, m_params[1] - 1);
+            m_state = NONE;
+            break;
+
         case 'm' :
             updateMode();
+            m_state = NONE;
+            break;
+
+        case 'l' :
+            /* todo */
             m_state = NONE;
             break;
 
@@ -191,8 +268,28 @@ void TerminalParser::handleQuestion(uint8_t data) {
 
             break;
 
+
         case 'h' :
-            // todo
+            assert(m_params.size() == 1);
+
+            switch (m_params[0]) {
+                case 1 :
+                    m_useAlternateCursorKeys = true;
+                    break;
+            }
+
+            m_state = NONE;
+            break;
+
+        case 'l' :
+            assert(m_params.size() == 1);
+
+            switch (m_params[0]) {
+                case 1 :
+                    m_useAlternateCursorKeys = false;
+                    break;
+            }
+
             m_state = NONE;
             break;
 
@@ -205,7 +302,9 @@ void TerminalParser::handleQuestion(uint8_t data) {
 
 void TerminalParser::updateMode(void) {
     if (m_params.empty()) {
-        dbprintf("TerminalParser::updateMode(): no parameters.\n");
+        m_buffer->setBgColor(BLACK);
+        m_buffer->setFgColor(WHITE);
+        m_buffer->setBold(false);
         return;
     }
 
@@ -225,6 +324,10 @@ void TerminalParser::updateMode(void) {
 
             case 2 :
                 m_buffer->setBold(false);
+                break;
+
+            case 7 :
+                m_buffer->swapFgBgColor();
                 break;
 
             case 30 ... 37 :

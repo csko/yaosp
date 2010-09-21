@@ -74,6 +74,7 @@ class TerminalBuffer {
     void setBgColor(TerminalColor color);
     void setFgColor(TerminalColor color);
     void setBold(bool bold);
+    void setScrollRegion(int top, int bottom);
 
     void insertCr(void);
     void insertLf(void);
@@ -81,6 +82,14 @@ class TerminalBuffer {
     void insertCharacter(uint8_t c);
     void moveCursorBy(int dx, int dy);
     void moveCursorTo(int x, int y);
+    void swapFgBgColor(void);
+
+    void saveCursor(void);
+    void restoreCursor(void);
+    void saveAttribute(void);
+    void restoreAttribute(void);
+
+    void scrollBy(int count);
 
     void erase(void);
     void eraseLine(void);
@@ -92,9 +101,6 @@ class TerminalBuffer {
 
     inline void lock(void) { m_mutex.lock(); }
     inline void unLock(void) { m_mutex.unLock(); }
-
-  private:
-    void doScroll(int count);
 
   private:
     int m_width;
