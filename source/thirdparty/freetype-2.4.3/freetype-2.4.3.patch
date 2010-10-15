@@ -1,6 +1,6 @@
-diff -Nru freetype-2.4.1-orig//include/freetype/config/ftmodule.h freetype-2.4.1/include/freetype/config/ftmodule.h
---- freetype-2.4.1-orig//include/freetype/config/ftmodule.h	2009-03-14 14:45:26.000000000 +0100
-+++ freetype-2.4.1/include/freetype/config/ftmodule.h	2010-07-19 09:02:21.000000000 +0200
+diff -Nru freetype-2.4.3-orig//include/freetype/config/ftmodule.h freetype-2.4.3/include/freetype/config/ftmodule.h
+--- freetype-2.4.3-orig//include/freetype/config/ftmodule.h	2009-03-14 14:45:26.000000000 +0100
++++ freetype-2.4.3/include/freetype/config/ftmodule.h	2010-10-15 09:21:01.000000000 +0200
 @@ -12,7 +12,7 @@
  
  FT_USE_MODULE( FT_Module_Class, autofit_module_class )
@@ -24,9 +24,9 @@ diff -Nru freetype-2.4.1-orig//include/freetype/config/ftmodule.h freetype-2.4.1
 +//FT_USE_MODULE( FT_Driver_ClassRec, bdf_driver_class )
  
  /* EOF */
-diff -Nru freetype-2.4.1-orig//pbuild.xml freetype-2.4.1/pbuild.xml
---- freetype-2.4.1-orig//pbuild.xml	1970-01-01 01:00:00.000000000 +0100
-+++ freetype-2.4.1/pbuild.xml	2010-07-19 09:01:28.000000000 +0200
+diff -Nru freetype-2.4.3-orig//pbuild.xml freetype-2.4.3/pbuild.xml
+--- freetype-2.4.3-orig//pbuild.xml	1970-01-01 01:00:00.000000000 +0100
++++ freetype-2.4.3/pbuild.xml	2010-10-15 09:18:49.000000000 +0200
 @@ -0,0 +1,76 @@
 +<!--
 +
