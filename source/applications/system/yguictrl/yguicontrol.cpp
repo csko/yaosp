@@ -18,8 +18,23 @@ YGuiControl::~YGuiControl(void) {
 }
 
 int YGuiControl::run(int argc, char** argv) {
-    if (argc < 2) {
-        std::cerr << argv[0] << " command [ARG] ..." << std::endl;
+    std::string cmd;
+
+    if (argc >= 2) {
+        cmd = argv[1];
+    }
+
+    if ((cmd.empty()) ||
+        (cmd == "help")) {
+        std::cerr << argv[0] << " command [ARG] ..." << std::endl << std::endl;;
+        std::cerr << "Available commands:" << std::endl;
+
+        for (std::map<std::string, CommandHandler*>::const_iterator it = m_handlers.begin();
+             it != m_handlers.end();
+             ++it) {
+            std::cerr << "    " << it->first << std::endl;
+        }
+
         return 0;
     }
 

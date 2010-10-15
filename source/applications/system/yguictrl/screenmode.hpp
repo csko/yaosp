@@ -9,6 +9,7 @@ class ScreenMode : public CommandHandler {
 
   private:
     int list(void);
+    int help(void);
 }; /* class ScreenMode */
 
 #endif /* _YGUICTRL_SCREENMODE_HPP_ */

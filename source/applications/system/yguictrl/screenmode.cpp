@@ -5,13 +5,16 @@
 #include "screenmode.hpp"
 
 int ScreenMode::handleCommand(int argc, char** argv) {
-    if (argc < 1) {
-        return -1;
+    std::string cmd;
+
+    if (argc > 0) {
+        cmd = argv[0];
     }
 
-    std::string cmd = argv[0];
-
-    if (cmd == "list") {
+    if ((cmd.empty()) ||
+        (cmd == "help")) {
+        return help();
+    } else if (cmd == "list") {
         return list();
     }
 
@@ -49,6 +52,13 @@ int ScreenMode::list(void) {
             std::cout << std::endl;
         }
     }
+
+    return 0;
+}
+
+int ScreenMode::help(void) {
+    std::cerr << "Available commands related to screenmode:" << std::endl;
+    std::cerr << "    list - lists available screen modes" << std::endl;
 
     return 0;
 }
