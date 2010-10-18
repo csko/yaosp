@@ -67,8 +67,9 @@ int TaskBar::run(void) {
     ImageLoaderManager::getInstance()->loadLibraries();
 
     Application* app = Application::getInstance();
-    ScreenModeInfo modeInfo = app->getCurrentScreenMode();
+    app->addListener(this);
 
+    ScreenModeInfo modeInfo = app->getCurrentScreenMode();
     Point size(modeInfo.m_width, 22);
     Point position(0, modeInfo.m_height - 22);
 
@@ -108,6 +109,10 @@ int TaskBar::actionPerformed(yguipp::Widget* widget) {
     }
 
     return 0;
+}
+
+void TaskBar::onScreenModeChanged(const ScreenModeInfo& modeInfo) {
+    dbprintf("New screen size: %dx%d\n", modeInfo.m_width, modeInfo.m_height);
 }
 
 void TaskBar::createMenu(void) {

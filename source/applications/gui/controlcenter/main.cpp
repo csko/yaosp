@@ -1,4 +1,4 @@
-/* yaOSp mutex implementation
+/* Control Center application
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,36 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _MUTEX_HPP_
-#define _MUTEX_HPP_
-
-#include <string>
-
-namespace yutilpp {
-
-class Mutex;
-
-class ScopedMutex {
-  public:
-    ScopedMutex(Mutex* mutex);
-    ~ScopedMutex(void);
-
-  private:
-    Mutex* m_mutex;
-}; /* class ScopedMutex */
-
-class Mutex {
-  public:
-    Mutex( const std::string& name, bool recursive = false );
-    ~Mutex( void );
-
-    int lock( void );
-    int unLock( void );
-
-  private:
-    int m_id;
-}; /* class Mutex */
-
-} /* namespace yutilpp */
-
-#endif /* _MUTEX_HPP_ */
+int main(int argc, char** argv) {
+    return 0;
+}

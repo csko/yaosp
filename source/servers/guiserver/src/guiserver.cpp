@@ -24,7 +24,9 @@
 #include <guiserver/graphicsdriverloader.hpp>
 #include <guiserver/windowmanager.hpp>
 
-GuiServer::GuiServer(void) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
+GuiServer::GuiServer(void) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL),
+                             m_inputThread(NULL), m_fontStorage(NULL), m_serverPort(NULL),
+                             m_applicationListLock("app_list_lock") {
 }
 
 void GuiServer::addListener(GuiServerListener* listener) {
@@ -39,7 +41,7 @@ void GuiServer::addListener(GuiServerListener* listener) {
     m_listeners.push_back(listener);
 }
 
-int GuiServer::changeScreenMode(yguipp::ScreenModeInfo& modeInfo) {
+int GuiServer::changeScreenMode(const yguipp::ScreenModeInfo& modeInfo) {
     ScreenMode* mode = NULL;
 
     for (size_t i = 0; i < m_graphicsDriver->getModeCount(); i++) {
@@ -70,12 +72,36 @@ int GuiServer::changeScreenMode(yguipp::ScreenModeInfo& modeInfo) {
     for (std::vector<GuiServerListener*>::const_iterator it = m_listeners.begin();
          it != m_listeners.end();
          ++it) {
-        (*it)->onScreenModeChanged(this);
+        (*it)->onScreenModeChanged(this, modeInfo);
     }
 
     m_windowManager->unLock();
 
+    {
+        yutilpp::ScopedMutex lock(&m_applicationListLock);
+
+        for (std::vector<Application*>::const_iterator it = m_applicationList.begin();
+             it != m_applicationList.end();
+             ++it) {
+            Application* application = *it;
+            application->screenModeChanged(modeInfo);
+        }
+    }
+
     return 0;
+}
+
+void GuiServer::removeApplication(Application* application) {
+    yutilpp::ScopedMutex lock(&m_applicationListLock);
+
+    for (std::vector<Application*>::iterator it = m_applicationList.begin();
+         it != m_applicationList.end();
+         ++it) {
+        if (*it == application) {
+            m_applicationList.erase(it);
+            break;
+        }
+    }
 }
 
 int GuiServer::run(void) {
@@ -138,8 +164,16 @@ int GuiServer::run(void) {
 
         switch (code) {
             case Y_APPLICATION_CREATE : {
-                Application* app = Application::createFrom( this, reinterpret_cast<AppCreate*>(buffer) );
-                app->start();
+                Application* application;
+
+                application = Application::createFrom( this, reinterpret_cast<AppCreate*>(buffer) );
+                application->start();
+
+                {
+                    yutilpp::ScopedMutex lock(&m_applicationListLock);
+                    m_applicationList.push_back(application);
+                }
+
                 break;
             }
         }

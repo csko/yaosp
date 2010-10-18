@@ -23,14 +23,14 @@
 namespace yutilpp {
 
 IPCListener::IPCListener( const std::string& name, size_t bufferSize ) : Thread(name), m_port(NULL), m_buffer(NULL),
-                                                                         m_bufferSize(bufferSize) {
+                                                                         m_bufferSize(bufferSize), m_running(true) {
 }
 
 IPCListener::~IPCListener( void ) {
     delete[] m_buffer;
 }
 
-bool IPCListener::init( void ) {
+bool IPCListener::init(void) {
     if (m_port != NULL) {
         return false;
     }
@@ -49,12 +49,16 @@ bool IPCListener::init( void ) {
     return true;
 }
 
+void IPCListener::stopListener(void) {
+    m_running = false;
+}
+
 IPCPort* IPCListener::getPort( void ) {
     return m_port;
 }
 
 int IPCListener::run( void ) {
-    while (1) {
+    while (m_running) {
         int ret;
         uint32_t code;
 

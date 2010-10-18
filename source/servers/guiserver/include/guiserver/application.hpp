@@ -41,6 +41,8 @@ class Application : public yutilpp::IPCListener {
     Bitmap* getBitmap(int bitmapHandle);
     inline yutilpp::IPCPort* getClientPort(void) { return m_clientPort; }
 
+    void screenModeChanged(const yguipp::ScreenModeInfo& modeInfo);
+
     int ipcDataAvailable( uint32_t code, void* data, size_t size );
 
     static Application* createFrom( GuiServer* guiServer, AppCreate* request );

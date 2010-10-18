@@ -322,7 +322,7 @@ int WindowManager::hideWindowRegion( Window* window, const yguipp::Rect& region 
     return 0;
 }
 
-int WindowManager::onScreenModeChanged(GuiServer* guiServer) {
+int WindowManager::onScreenModeChanged(GuiServer* guiServer, const yguipp::ScreenModeInfo& modeInfo) {
     /* Update our pointer to the screen bitmap. */
     m_screenBitmap = guiServer->getScreenBitmap();
 

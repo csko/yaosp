@@ -33,6 +33,13 @@ namespace yguipp {
 
 class Window;
 
+class ApplicationListener {
+  public:
+    virtual ~ApplicationListener(void) {}
+
+    virtual void onScreenModeChanged(const ScreenModeInfo& modeInfo) = 0;
+}; /* class ApplicationListener */
+
 class Application {
   private:
     friend class Window;
@@ -43,6 +50,8 @@ class Application {
     bool init(void);
 
   public:
+    void addListener(ApplicationListener* listener);
+
     void lock(void );
     void unLock(void);
 
@@ -67,6 +76,8 @@ class Application {
     int registerWindow(int id, Window* window);
     int unregisterWindow(int id);
 
+    void handleScreenModeChanged(void* buffer);
+
   private:
     static const size_t IPC_BUF_SIZE = 512;
 
@@ -84,6 +95,7 @@ class Application {
     typedef WindowMap::const_iterator WindowMapCIter;
 
     WindowMap m_windowMap;
+    std::vector<ApplicationListener*> m_listeners;
 
     static Application* m_instance;
 }; /* class Application */

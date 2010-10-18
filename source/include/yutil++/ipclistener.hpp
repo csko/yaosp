@@ -29,8 +29,10 @@ class IPCListener : public Thread {
     IPCListener( const std::string& name, size_t bufferSize = 1024 );
     virtual ~IPCListener( void );
 
-    bool init( void );
-    IPCPort* getPort( void );
+    bool init(void);
+    void stopListener(void);
+
+    IPCPort* getPort(void);
 
     int run( void );
 
@@ -40,6 +42,7 @@ class IPCListener : public Thread {
     IPCPort* m_port;
     uint8_t* m_buffer;
     size_t m_bufferSize;
+    volatile bool m_running;
 }; /* class IPCListener */
 
 } /* namespace yutilpp */

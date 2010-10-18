@@ -68,8 +68,17 @@ Bitmap* Application::getBitmap(int bitmapHandle) {
     return it->second;
 }
 
-int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
+void Application::screenModeChanged(const yguipp::ScreenModeInfo& modeInfo) {
+    m_clientPort->send(Y_SCREEN_MODE_CHANGED, &modeInfo, sizeof(modeInfo));
+}
+
+int Application::ipcDataAvailable(uint32_t code, void* data, size_t size) {
     switch (code) {
+        case Y_APPLICATION_DESTROY :
+            m_guiServer->removeApplication(this);
+            stopListener();
+            break;
+
         case Y_WINDOW_CREATE :
             handleWindowCreate(reinterpret_cast<WinCreate*>(data));
             break;

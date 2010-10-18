@@ -34,7 +34,7 @@ int destroy_ipc_port( ipc_port_id port_id ) {
     );
 }
 
-int send_ipc_message( ipc_port_id port_id, uint32_t code, void* data, size_t size ) {
+int send_ipc_message( ipc_port_id port_id, uint32_t code, const void* data, size_t size ) {
     return syscall4(
         SYS_send_ipc_message,
         port_id,

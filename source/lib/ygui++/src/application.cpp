@@ -57,6 +57,18 @@ bool Application::init( void ) {
     return registerApplication();
 }
 
+void Application::addListener(ApplicationListener* listener) {
+    for (std::vector<ApplicationListener*>::const_iterator it = m_listeners.begin();
+         it != m_listeners.end();
+         ++it) {
+        if (*it == listener) {
+            return;
+        }
+    }
+
+    m_listeners.push_back(listener);
+}
+
 void Application::lock(void) {
     m_lock->lock();
 }
@@ -131,6 +143,10 @@ yutilpp::IPCPort* Application::getReplyPort( void ) {
 
 int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
     switch (code) {
+        case Y_SCREEN_MODE_CHANGED :
+            handleScreenModeChanged(buffer);
+            break;
+
         case Y_WINDOW_SHOW :
         case Y_WINDOW_HIDE :
         case Y_WINDOW_DO_RESIZE :
@@ -170,12 +186,12 @@ int Application::mainLoop(void) {
 
         ret = m_clientPort->receive(code, m_ipcBuffer, IPC_BUF_SIZE);
 
-        if ( ret >= 0 ) {
+        if (ret >= 0) {
             ipcDataAvailable(code, m_ipcBuffer, ret);
         }
     }
 
-    // todo: destroy guiserver part of the application
+    m_serverPort->send(Y_APPLICATION_DESTROY, NULL, 0);
 
     return 0;
 }
@@ -233,6 +249,17 @@ int Application::unregisterWindow(int id) {
     m_windowMap.erase(it);
 
     return 0;
+}
+
+void Application::handleScreenModeChanged(void* buffer) {
+    ScreenModeInfo* modeInfo = reinterpret_cast<ScreenModeInfo*>(buffer);
+
+    for (std::vector<ApplicationListener*>::const_iterator it = m_listeners.begin();
+         it != m_listeners.end();
+         ++it) {
+        ApplicationListener* listener = *it;
+        listener->onScreenModeChanged(*modeInfo);
+    }
 }
 
 } /* namespace yguipp */

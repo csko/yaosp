@@ -21,7 +21,9 @@
 
 #include <vector>
 
+#include <ygui++/yconstants.hpp>
 #include <yutil++/ipcport.hpp>
+#include <yutil++/mutex.hpp>
 
 #include <guiserver/graphicsdriver.hpp>
 #include <guiserver/input.hpp>
@@ -29,12 +31,13 @@
 
 class GuiServer;
 class WindowManager;
+class Application;
 
 class GuiServerListener {
   public:
     virtual ~GuiServerListener(void) {}
 
-    virtual int onScreenModeChanged(GuiServer* guiServer) = 0;
+    virtual int onScreenModeChanged(GuiServer* guiServer, const yguipp::ScreenModeInfo& modeInfo) = 0;
 }; /* class GuiServerListener */
 
 class GuiServer {
@@ -43,7 +46,9 @@ class GuiServer {
 
     void addListener(GuiServerListener* listener);
 
-    int changeScreenMode(yguipp::ScreenModeInfo& modeInfo);
+    int changeScreenMode(const yguipp::ScreenModeInfo& modeInfo);
+
+    void removeApplication(Application* application);
 
     int run(void);
 
@@ -59,6 +64,9 @@ class GuiServer {
     InputThread* m_inputThread;
     FontStorage* m_fontStorage;
     yutilpp::IPCPort* m_serverPort;
+
+    yutilpp::Mutex m_applicationListLock;
+    std::vector<Application*> m_applicationList;
 
     std::vector<GuiServerListener*> m_listeners;
 

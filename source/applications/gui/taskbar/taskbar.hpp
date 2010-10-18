@@ -22,6 +22,7 @@
 #include <ygui++/widget.hpp>
 #include <ygui++/bitmap.hpp>
 #include <ygui++/menu.hpp>
+#include <ygui++/application.hpp>
 #include <ygui++/event/actionlistener.hpp>
 
 class MenuButton : public yguipp::Widget, public yguipp::event::ActionSpeaker {
@@ -36,11 +37,14 @@ class MenuButton : public yguipp::Widget, public yguipp::event::ActionSpeaker {
     yguipp::Bitmap* m_image;
 }; /* class MenuButton */
 
-class TaskBar : public yguipp::event::ActionListener {
+class TaskBar : public yguipp::event::ActionListener,
+                public yguipp::ApplicationListener {
   public:
     int run(void);
 
     int actionPerformed(yguipp::Widget* widget);
+
+    void onScreenModeChanged(const yguipp::ScreenModeInfo& modeInfo);
 
   private:
     void createMenu(void);

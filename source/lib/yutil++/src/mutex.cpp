@@ -24,6 +24,14 @@
 
 namespace yutilpp {
 
+ScopedMutex::ScopedMutex(Mutex* mutex) : m_mutex(mutex) {
+    m_mutex->lock();
+}
+
+ScopedMutex::~ScopedMutex(void) {
+    m_mutex->unLock();
+}
+
 Mutex::Mutex( const std::string& name, bool recursive ) {
     m_id = syscall2(
         SYS_mutex_create, reinterpret_cast<uint32_t>( name.c_str() ), recursive ? MUTEX_RECURSIVE : MUTEX_NONE

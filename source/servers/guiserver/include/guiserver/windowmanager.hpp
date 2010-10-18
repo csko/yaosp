@@ -58,7 +58,7 @@ class WindowManager : public GuiServerListener {
     int updateWindowRegion( Window* window, const yguipp::Rect& region );
     int hideWindowRegion( Window* window, const yguipp::Rect& region );
 
-    int onScreenModeChanged(GuiServer* guiServer);
+    int onScreenModeChanged(GuiServer* guiServer, const yguipp::ScreenModeInfo& modeInfo);
 
   private:
     int getWindowIndex( Window* window );

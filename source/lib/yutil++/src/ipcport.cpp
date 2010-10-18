@@ -72,7 +72,7 @@ ipc_port_id IPCPort::getId( void ) {
     return m_id;
 }
 
-int IPCPort::send( uint32_t code, void* data, size_t size ) {
+int IPCPort::send( uint32_t code, const void* data, size_t size ) {
     if ( ( m_id < 0 ) ||
          ( !m_canSend ) ) {
         return -1;
