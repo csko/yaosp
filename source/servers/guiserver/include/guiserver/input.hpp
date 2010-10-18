@@ -21,7 +21,7 @@
 
 #include <yutil++/thread.hpp>
 
-#include <guiserver/windowmanager.hpp>
+class WindowManager;
 
 class InputThread : public yutilpp::Thread {
   public:

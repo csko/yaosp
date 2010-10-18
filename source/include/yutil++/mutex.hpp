@@ -1,4 +1,4 @@
-/* yaosp IPC port implementation
+/* yaOSp mutex implementation
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *

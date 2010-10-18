@@ -21,9 +21,10 @@
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>
+#include <guiserver/windowmanager.hpp>
 
 Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_visible(false), m_bitmap(NULL),
-                                                                   m_mouseOnDecorator(false), 
+                                                                   m_mouseOnDecorator(false),
                                                                    m_mousePressedOnDecorator(false), m_moving(false),
                                                                    m_resizing(false), m_drawingMode(yguipp::DM_COPY),
                                                                    m_font(NULL), m_guiServer(guiServer),

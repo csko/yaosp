@@ -21,6 +21,7 @@
 #include <guiserver/decorator.hpp>
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
+#include <guiserver/windowmanager.hpp>
 
 Decorator::Decorator(GuiServer* guiServer) : m_guiServer(guiServer) {
 }

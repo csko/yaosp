@@ -28,8 +28,9 @@
 #include <guiserver/graphicsdriver.hpp>
 #include <guiserver/mouse.hpp>
 #include <guiserver/decorator.hpp>
+#include <guiserver/guiserver.hpp>
 
-class WindowManager {
+class WindowManager : public GuiServerListener {
   public:
     WindowManager(GuiServer* guiServer, Decorator* decorator);
     ~WindowManager( void );
@@ -56,6 +57,8 @@ class WindowManager {
 
     int updateWindowRegion( Window* window, const yguipp::Rect& region );
     int hideWindowRegion( Window* window, const yguipp::Rect& region );
+
+    int onScreenModeChanged(GuiServer* guiServer);
 
   private:
     int getWindowIndex( Window* window );

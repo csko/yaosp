@@ -27,6 +27,8 @@ WindowManager::WindowManager(GuiServer* guiServer, Decorator* decorator) : m_mut
                                                                            m_windowDecorator(decorator), m_mouseWindow(NULL),
                                                                            m_mouseDownWindow(NULL), m_activeWindow(NULL),
                                                                            m_movingWindow(NULL) {
+    guiServer->addListener(this);
+
     m_mousePointer = new MousePointer();
     m_mousePointer->init();
     m_mousePointer->moveTo(NULL, NULL, m_screenBitmap->size() / 2);
@@ -271,7 +273,7 @@ int WindowManager::setMovingWindow(Window* window) {
         assert(!window->isMoving() && !window->isResizing());
 
         window->setMoving(true);
-        m_windowRect = window->getScreenRect();       
+        m_windowRect = window->getScreenRect();
 
         invertWindowRect();
     } else {
@@ -316,6 +318,29 @@ int WindowManager::hideWindowRegion( Window* window, const yguipp::Rect& region 
     lock();
     doHideWindowRegion(window, region);
     unLock();
+
+    return 0;
+}
+
+int WindowManager::onScreenModeChanged(GuiServer* guiServer) {
+    /* Update our pointer to the screen bitmap. */
+    m_screenBitmap = guiServer->getScreenBitmap();
+
+    /* Regenerate visible regions of all window according to the new screen size. */
+    for (size_t i = 0; i < m_windowStack.size(); i++) {
+        generateVisibleRegions(i);
+    }
+
+    /* Fill the background. */
+    m_graphicsDriver->fillRect(
+        m_screenBitmap, m_screenBitmap->bounds(), m_screenBitmap->bounds(), yguipp::Color(75, 100, 125), yguipp::DM_COPY
+    );
+
+    /* Redraw all the windows. */
+    for (size_t i = 0; i < m_windowStack.size(); i++) {
+        Window* window = m_windowStack[i];
+        doUpdateWindowRegion(window, window->getScreenRect());
+    }
 
     return 0;
 }

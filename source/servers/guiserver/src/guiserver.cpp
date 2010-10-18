@@ -22,11 +22,63 @@
 #include <guiserver/application.hpp>
 #include <guiserver/decoratorloader.hpp>
 #include <guiserver/graphicsdriverloader.hpp>
+#include <guiserver/windowmanager.hpp>
 
-GuiServer::GuiServer( void ) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
+GuiServer::GuiServer(void) : m_graphicsDriver(NULL), m_screenBitmap(NULL), m_windowManager(NULL) {
 }
 
-int GuiServer::run( void ) {
+void GuiServer::addListener(GuiServerListener* listener) {
+    for (std::vector<GuiServerListener*>::const_iterator it = m_listeners.begin();
+         it != m_listeners.end();
+         ++it) {
+        if (*it == listener) {
+            return;
+        }
+    }
+
+    m_listeners.push_back(listener);
+}
+
+int GuiServer::changeScreenMode(yguipp::ScreenModeInfo& modeInfo) {
+    ScreenMode* mode = NULL;
+
+    for (size_t i = 0; i < m_graphicsDriver->getModeCount(); i++) {
+        ScreenMode* tmpMode = m_graphicsDriver->getModeInfo(i);
+
+        if (((int)tmpMode->m_width == modeInfo.m_width) &&
+            ((int)tmpMode->m_height == modeInfo.m_height) &&
+            (tmpMode->m_colorSpace == modeInfo.m_colorSpace)) {
+            mode = tmpMode;
+            break;
+        }
+    }
+
+    if (mode == NULL) {
+        return -1;
+    }
+
+    m_windowManager->lock();
+
+    delete m_screenBitmap;
+    m_graphicsDriver->setMode(mode);
+    m_screenBitmap = new Bitmap(
+        mode->m_width, mode->m_height, mode->m_colorSpace,
+        reinterpret_cast<uint8_t*>(m_graphicsDriver->getFrameBuffer())
+    );
+    m_screenBitmap->addFlag(Bitmap::SCREEN | Bitmap::VIDEO_MEMORY);
+
+    for (std::vector<GuiServerListener*>::const_iterator it = m_listeners.begin();
+         it != m_listeners.end();
+         ++it) {
+        (*it)->onScreenModeChanged(this);
+    }
+
+    m_windowManager->unLock();
+
+    return 0;
+}
+
+int GuiServer::run(void) {
     /* Setup screen mode. */
 
     m_graphicsDriver = GraphicsDriverLoader::detectDriver();

@@ -22,6 +22,7 @@
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>
+#include <guiserver/windowmanager.hpp>
 
 void Window::handleRender( uint8_t* data, size_t size ) {
     uint8_t* dataEnd = data + size;

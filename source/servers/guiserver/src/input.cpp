@@ -23,6 +23,7 @@
 #include <yaosp/debug.h>
 
 #include <guiserver/input.hpp>
+#include <guiserver/windowmanager.hpp>
 
 InputThread::InputThread( WindowManager* windowManager ) : Thread("input"), m_device(-1),
                                                            m_windowManager(windowManager) {

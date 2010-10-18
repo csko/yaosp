@@ -54,6 +54,7 @@ class Application : public yutilpp::IPCListener {
     int handleBitmapCreate( BitmapCreate* request );
     int handleDesktopGetSize( DesktopGetSize* request );
     int handleScreenModeGetList(ScreenModeGetList* request);
+    int handleScreenModeSet(ScreenModeSet* request);
 
     int getWindowId( void );
     int getFontId( void );

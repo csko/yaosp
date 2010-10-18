@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <ygui++/application.hpp>
+#include <yutil++/stringutils.hpp>
 
 #include "screenmode.hpp"
 
@@ -16,6 +17,8 @@ int ScreenMode::handleCommand(int argc, char** argv) {
         return help();
     } else if (cmd == "list") {
         return list();
+    } else if (cmd == "set") {
+        return set(argc, argv);
     }
 
     return 0;
@@ -58,7 +61,53 @@ int ScreenMode::list(void) {
 
 int ScreenMode::help(void) {
     std::cerr << "Available commands related to screenmode:" << std::endl;
+    std::cerr << "    set  - sets the active screen mode" << std::endl;
     std::cerr << "    list - lists available screen modes" << std::endl;
+
+    return 0;
+}
+
+int ScreenMode::set(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "Not enough parameters at screenmode set." << std::endl;
+        std::cerr << "Proper command syntax:" << std::endl;
+        std::cerr << "    yguictrl screenmode set newmode" << std::endl;
+        std::cerr << std::endl;
+        std::cerr << "Screen mode format:" << std::endl;
+        std::cerr << "    [width]x[height]@[depth]" << std::endl;
+        return -1;
+    }
+
+    int depth;
+    std::string mode = argv[1];
+    yguipp::ScreenModeInfo modeInfo;
+
+    std::vector<std::string> tokens;
+    yutilpp::StringUtils::tokenize(mode, tokens, "x");
+
+    if (tokens.size() != 2) {
+        // invalid screen mode
+        return -1;
+    }
+
+    std::string tmp = tokens[1];
+    yutilpp::StringUtils::tokenize(tmp, tokens, "@");
+
+    if (tokens.size() != 4) {
+        // invalid screen mode
+        return -1;
+    }
+
+    if ((!yutilpp::StringUtils::toInt(tokens[0], modeInfo.m_width)) ||
+        (!yutilpp::StringUtils::toInt(tokens[2], modeInfo.m_height)) ||
+        (!yutilpp::StringUtils::toInt(tokens[3], depth))) {
+        // invalid screen mode
+        return -1;
+    }
+
+    modeInfo.m_colorSpace = yguipp::bpp_to_colorspace(depth);
+
+    yguipp::Application::getInstance()->setScreenMode(modeInfo);
 
     return 0;
 }

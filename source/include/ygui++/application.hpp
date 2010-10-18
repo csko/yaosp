@@ -48,6 +48,7 @@ class Application {
 
     ScreenModeInfo getCurrentScreenMode(int desktopIndex = 0);
     int getScreenModeList(std::vector<ScreenModeInfo>& modeList);
+    bool setScreenMode(const ScreenModeInfo& modeInfo);
 
     yutilpp::IPCPort* getGuiServerPort( void );
     yutilpp::IPCPort* getClientPort( void );

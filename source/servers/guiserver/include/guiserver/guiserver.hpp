@@ -19,18 +19,33 @@
 #ifndef _GUISERVER_HPP_
 #define _GUISERVER_HPP_
 
+#include <vector>
+
 #include <yutil++/ipcport.hpp>
 
 #include <guiserver/graphicsdriver.hpp>
-#include <guiserver/windowmanager.hpp>
 #include <guiserver/input.hpp>
 #include <guiserver/font.hpp>
 
+class GuiServer;
+class WindowManager;
+
+class GuiServerListener {
+  public:
+    virtual ~GuiServerListener(void) {}
+
+    virtual int onScreenModeChanged(GuiServer* guiServer) = 0;
+}; /* class GuiServerListener */
+
 class GuiServer {
   public:
-    GuiServer( void );
+    GuiServer(void);
 
-    int run( void );
+    void addListener(GuiServerListener* listener);
+
+    int changeScreenMode(yguipp::ScreenModeInfo& modeInfo);
+
+    int run(void);
 
     inline GraphicsDriver* getGraphicsDriver(void) { return m_graphicsDriver; }
     inline Bitmap* getScreenBitmap(void) { return m_screenBitmap; }
@@ -44,6 +59,8 @@ class GuiServer {
     InputThread* m_inputThread;
     FontStorage* m_fontStorage;
     yutilpp::IPCPort* m_serverPort;
+
+    std::vector<GuiServerListener*> m_listeners;
 
     static GuiServer* instance;
 }; /* class GuiServer */

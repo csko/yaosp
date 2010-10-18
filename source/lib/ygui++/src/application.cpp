@@ -103,6 +103,20 @@ int Application::getScreenModeList(std::vector<ScreenModeInfo>& modeList) {
     return 0;
 }
 
+bool Application::setScreenMode(const ScreenModeInfo& modeInfo) {
+    int result;
+    uint32_t code;
+    ScreenModeSet request;
+
+    request.m_replyPort = m_replyPort->getId();
+    request.m_modeInfo = modeInfo;
+
+    m_serverPort->send(Y_SCREEN_MODE_SET, reinterpret_cast<void*>(&request), sizeof(request));
+    m_replyPort->receive(code, &result, sizeof(result));
+
+    return (result == 0);
+}
+
 yutilpp::IPCPort* Application::getGuiServerPort( void ) {
     return m_guiServerPort;
 }

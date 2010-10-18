@@ -24,6 +24,7 @@
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
 #include <guiserver/bitmap.hpp>
+#include <guiserver/windowmanager.hpp>
 
 Application::Application( GuiServer* guiServer ) : IPCListener("app", MAX_PACKET_SIZE), m_clientPort(NULL),
                                                    m_nextWinId(0), m_nextFontId(0), m_nextBitmapId(0),
@@ -118,6 +119,10 @@ int Application::ipcDataAvailable( uint32_t code, void* data, size_t size ) {
 
         case Y_SCREEN_MODE_GET_LIST :
             handleScreenModeGetList(reinterpret_cast<ScreenModeGetList*>(data));
+            break;
+
+        case Y_SCREEN_MODE_SET :
+            handleScreenModeSet(reinterpret_cast<ScreenModeSet*>(data));
             break;
     }
 
@@ -273,6 +278,15 @@ int Application::handleScreenModeGetList(ScreenModeGetList* request) {
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(infoTable), sizeof(yguipp::ScreenModeInfo) * modeCount);
     delete[] infoTable;
+
+    return 0;
+}
+
+int Application::handleScreenModeSet(ScreenModeSet* request) {
+    int result;
+
+    result = m_guiServer->changeScreenMode(request->m_modeInfo);
+    yutilpp::IPCPort::sendTo(request->m_replyPort, 0, &result, sizeof(result));
 
     return 0;
 }
