@@ -113,13 +113,13 @@ void BorderLayout::buildWidgetMap( const yguipp::Widget::ChildVector& children, 
     for ( yguipp::Widget::ChildVectorCIter it = children.begin();
           it != children.end();
           ++it ) {
-        BorderLayoutData* layoutData;
+        const BorderLayoutData* layoutData;
 
-        if ( it->second == NULL ) {
+        if (it->second == NULL) {
             continue;
         }
 
-        layoutData = dynamic_cast<BorderLayoutData*>(it->second);
+        layoutData = dynamic_cast<const BorderLayoutData*>(it->second);
         widgetMap[layoutData->m_position] = it->first;
     }
 }

@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _APPLICATION_HPP_
-#define _APPLICATION_HPP_
+#ifndef _YGUIPP_APPLICATION_HPP_
+#define _YGUIPP_APPLICATION_HPP_
 
 #include <map>
 #include <string>
@@ -28,6 +28,7 @@
 #include <ygui++/yconstants.hpp>
 #include <yutil++/mutex.hpp>
 #include <yutil++/ipcport.hpp>
+#include <yutil++/thread.hpp>
 
 namespace yguipp {
 
@@ -64,31 +65,39 @@ class Application {
     yutilpp::IPCPort* getReplyPort( void );
     inline yutilpp::IPCPort* getServerPort( void ) { return m_serverPort; }
 
-    int ipcDataAvailable( uint32_t code, void* buffer, size_t size );
-
     int mainLoop(void);
+
+    bool isEventDispatchThread(void);
 
     static bool createInstance( const std::string& name );
     static inline Application* getInstance(void) { return m_instance; }
+
+  public:
+    struct Message {
+        static const size_t BUFFER_SIZE = 512;
+
+        uint32_t m_code;
+        int m_size;
+        uint8_t m_buffer[BUFFER_SIZE];
+    }; /* struct Message */
+
+    bool receiveMessage(Message& msg);
+    bool handleMessage(const Message& msg);
 
   private:
     bool registerApplication( void );
     int registerWindow(int id, Window* window);
     int unregisterWindow(int id);
 
-    void handleScreenModeChanged(void* buffer);
+    void handleScreenModeChanged(const void* buffer);
 
   private:
-    static const size_t IPC_BUF_SIZE = 512;
-
     yutilpp::Mutex* m_lock;
 
     yutilpp::IPCPort* m_guiServerPort;
     yutilpp::IPCPort* m_clientPort;
     yutilpp::IPCPort* m_serverPort;
     yutilpp::IPCPort* m_replyPort;
-
-    uint8_t m_ipcBuffer[IPC_BUF_SIZE];
 
     typedef std::map<int, Window*> WindowMap;
     typedef WindowMap::iterator WindowMapIter;
@@ -97,9 +106,11 @@ class Application {
     WindowMap m_windowMap;
     std::vector<ApplicationListener*> m_listeners;
 
+    yutilpp::Thread::Id m_mainLoopThread;
+
     static Application* m_instance;
 }; /* class Application */
 
 } /* namespace yguipp */
 
-#endif /* _APPLICATION_HPP_ */
+#endif /* _YGUIPP_APPLICATION_HPP_ */

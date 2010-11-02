@@ -25,6 +25,7 @@
 #include <ygui++/yconstants.hpp>
 #include <ygui++/widget.hpp>
 #include <ygui++/rendertable.hpp>
+#include <ygui++/application.hpp>
 
 namespace yguipp {
 
@@ -62,7 +63,7 @@ class Window : public Object {
     void resize( const Point& size );
     void moveTo( const Point& position );
 
-    int handleMessage( uint32_t code, void* buffer, size_t size );
+    int handleMessage(const Application::Message& msg);
 
   private:
     bool registerWindow( void );
@@ -82,6 +83,8 @@ class Window : public Object {
     int handleMouseExited(void);
     int handleMousePressed(const yguipp::Point& position, int button);
     int handleMouseReleased(int button);
+    int handleWindowActivated(yguipp::ActivationReason reason);
+    int handleWindowDeActivated(yguipp::DeActivationReason reason);
 
   private:
     int m_id;
@@ -90,6 +93,7 @@ class Window : public Object {
     Point m_position;
     Point m_size;
     int m_flags;
+    bool m_visible;
 
     Widget* m_container;
     Widget* m_mouseWidget;

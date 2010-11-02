@@ -159,9 +159,9 @@ void Menu::doLayout( const Point& menuSize ) {
     Point position;
     const Widget::ChildVector& children = m_window->getContainer()->getChildren();
 
-    for ( Widget::ChildVectorCIter it = children.begin();
-          it != children.end();
-          ++it ) {
+    for (Widget::ChildVectorCIter it = children.begin();
+         it != children.end();
+         ++it) {
         Widget* child = it->first;
         Point childSize = child->getPreferredSize();
 

@@ -30,8 +30,9 @@ namespace yguipp {
 
 Window::Window( const std::string& title, const Point& position,
                 const Point& size, int flags ) : m_title(title), m_position(position),
-                                                 m_size(size), m_flags(flags), m_mouseWidget(NULL),
-                                                 m_mouseDownWidget(NULL), m_focusedWidget(NULL) {
+                                                 m_size(size), m_flags(flags), m_visible(false),
+                                                 m_mouseWidget(NULL), m_mouseDownWidget(NULL),
+                                                 m_focusedWidget(NULL) {
     m_container = new Panel();
     m_container->setWindow(this);
     m_container->setPosition( Point(0,0) );
@@ -109,7 +110,20 @@ void Window::resize( const Point& size ) {
     request.m_header.m_windowId = m_id;
     request.m_size = size;
 
-    Application::getInstance()->getClientPort()->send(Y_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(request));
+    Application* app = Application::getInstance();
+    app->getClientPort()->send(Y_WINDOW_DO_RESIZE, reinterpret_cast<void*>(&request), sizeof(request));
+
+    /* If this is the event dispatcher thread then wait until we receive the acknowledgement message to
+       our resize request, so the internal structures of the Window class will be updated properly. */
+    if (app->isEventDispatchThread()) {
+        Application::Message msg;
+
+        do {
+            if (app->receiveMessage(msg)) {
+                app->handleMessage(msg);
+            }
+        } while (msg.m_code != Y_WINDOW_RESIZED);
+    }
 }
 
 void Window::moveTo( const Point& position ) {
@@ -117,22 +131,49 @@ void Window::moveTo( const Point& position ) {
     request.m_header.m_windowId = m_id;
     request.m_position = position;
 
-    Application::getInstance()->getClientPort()->send(Y_WINDOW_DO_MOVETO, reinterpret_cast<void*>(&request), sizeof(request));
+    Application* app = Application::getInstance();
+    app->getClientPort()->send(Y_WINDOW_DO_MOVETO, reinterpret_cast<void*>(&request), sizeof(request));
+
+    /* If this is the event dispatcher thread then wait until we receive the acknowledgement message to
+       our moveTo request, so the internal structures of the Window class will be updated properly. */
+    if (app->isEventDispatchThread()) {
+        Application::Message msg;
+
+        do {
+            if (app->receiveMessage(msg)) {
+                app->handleMessage(msg);
+            }
+        } while (msg.m_code != Y_WINDOW_MOVEDTO);
+    }
 }
 
-int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
-    switch (code) {
+int Window::handleMessage(const Application::Message& msg) {
+    switch (msg.m_code) {
         case Y_WINDOW_SHOW :
+            if (m_visible) {
+                break;
+            }
+
             m_mouseWidget = NULL;
             m_mouseDownWidget = NULL;
             doRepaint(true);
-            Application::getInstance()->getServerPort()->send(Y_WINDOW_SHOW, buffer, size);
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_SHOW, msg.m_buffer, msg.m_size);
+
+            m_visible = true;
+
             break;
 
         case Y_WINDOW_HIDE :
-            Application::getInstance()->getServerPort()->send(Y_WINDOW_HIDE, buffer, size);
+            if (!m_visible) {
+                break;
+            }
+
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_HIDE, msg.m_buffer, msg.m_size);
             m_mouseWidget = NULL;
             m_mouseDownWidget = NULL;
+
+            m_visible = false;
+
             break;
 
         case Y_WINDOW_WIDGET_INVALIDATED :
@@ -143,7 +184,7 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
             Application* app;
 
             app = Application::getInstance();
-            app->getServerPort()->send(Y_WINDOW_DESTROY, buffer, size);
+            app->getServerPort()->send(Y_WINDOW_DESTROY, msg.m_buffer, msg.m_size);
             app->unregisterWindow(m_id);
             decRef();
 
@@ -151,38 +192,38 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
         }
 
         case Y_WINDOW_DO_RESIZE :
-            Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_RESIZE, buffer, size);
-            m_size = reinterpret_cast<WinResize*>(buffer)->m_size;
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_RESIZE, msg.m_buffer, msg.m_size);
+            break;
+
+        case Y_WINDOW_RESIZED : {
+            const WinResize* reply = reinterpret_cast<const WinResize*>(msg.m_buffer);
+            m_size = reply->m_size;
             m_container->setSize(m_size);
             break;
-
-        case Y_WINDOW_RESIZED :
-            // todo
-            break;
+        }
 
         case Y_WINDOW_DO_MOVETO :
-            Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_MOVETO, buffer, size);
-            m_position = reinterpret_cast<WinMoveTo*>(buffer)->m_position;
+            Application::getInstance()->getServerPort()->send(Y_WINDOW_DO_MOVETO, msg.m_buffer, msg.m_size);
             break;
 
         case Y_WINDOW_MOVEDTO :
-            m_position = reinterpret_cast<WinMoveTo*>(buffer)->m_position;
+            m_position = reinterpret_cast<const WinMoveTo*>(msg.m_buffer)->m_position;
             break;
 
         case Y_WINDOW_KEY_PRESSED :
-            handleKeyPressed(reinterpret_cast<WinKeyPressed*>(buffer)->m_key);
+            handleKeyPressed(reinterpret_cast<const WinKeyPressed*>(msg.m_buffer)->m_key);
             break;
 
         case Y_WINDOW_KEY_RELEASED :
-            handleKeyReleased(reinterpret_cast<WinKeyReleased*>(buffer)->m_key);
+            handleKeyReleased(reinterpret_cast<const WinKeyReleased*>(msg.m_buffer)->m_key);
             break;
 
         case Y_WINDOW_MOUSE_ENTERED :
-            handleMouseEntered(reinterpret_cast<WinMouseEntered*>(buffer)->m_position);
+            handleMouseEntered(reinterpret_cast<const WinMouseEntered*>(msg.m_buffer)->m_position);
             break;
 
         case Y_WINDOW_MOUSE_MOVED :
-            handleMouseMoved(reinterpret_cast<WinMouseEntered*>(buffer)->m_position);
+            handleMouseMoved(reinterpret_cast<const WinMouseEntered*>(msg.m_buffer)->m_position);
             break;
 
         case Y_WINDOW_MOUSE_EXITED :
@@ -190,38 +231,22 @@ int Window::handleMessage( uint32_t code, void* buffer, size_t size ) {
             break;
 
         case Y_WINDOW_MOUSE_PRESSED : {
-            WinMousePressed* cmd = reinterpret_cast<WinMousePressed*>(buffer);
+            const WinMousePressed* cmd = reinterpret_cast<const WinMousePressed*>(msg.m_buffer);
             handleMousePressed(cmd->m_position, cmd->m_button);
             break;
         }
 
         case Y_WINDOW_MOUSE_RELEASED :
-            handleMouseReleased(reinterpret_cast<WinMouseReleased*>(buffer)->m_button);
+            handleMouseReleased(reinterpret_cast<const WinMouseReleased*>(msg.m_buffer)->m_button);
             break;
 
-        case Y_WINDOW_ACTIVATED : {
-            WindowListener::List tmpList = m_windowListeners;
-            ActivationReason reason = reinterpret_cast<WinActivated*>(buffer)->m_reason;
-
-            for (WindowListener::ListCIter it = tmpList.begin();
-                 it != tmpList.end(); ++it) {
-                (*it)->windowActivated(this, reason);
-            }
-
+        case Y_WINDOW_ACTIVATED :
+            handleWindowActivated(reinterpret_cast<const WinActivated*>(msg.m_buffer)->m_reason);
             break;
-        }
 
-        case Y_WINDOW_DEACTIVATED : {
-            WindowListener::List tmpList = m_windowListeners;
-            DeActivationReason reason = reinterpret_cast<WinDeActivated*>(buffer)->m_reason;
-
-            for (WindowListener::ListCIter it = tmpList.begin();
-                 it != tmpList.end(); ++it) {
-                (*it)->windowDeActivated(this, reason);
-            }
-
+        case Y_WINDOW_DEACTIVATED :
+            handleWindowDeActivated(reinterpret_cast<const WinDeActivated*>(msg.m_buffer)->m_reason);
             break;
-        }
     }
 
     return 0;
@@ -325,7 +350,7 @@ Widget* Window::findWidgetAtHelper( Widget* widget, const Point& position,
 }
 
 Point Window::getWidgetPosition( Widget* widget, Point p ) {
-    while ( widget != NULL ) {
+    while (widget != NULL) {
         p -= widget->getPosition();
         widget = widget->getParent();
     }
@@ -335,7 +360,7 @@ Point Window::getWidgetPosition( Widget* widget, Point p ) {
 
 int Window::handleKeyPressed(int key) {
     if (m_focusedWidget != NULL) {
-        m_focusedWidget->keyPressed(key);
+         m_focusedWidget->keyPressed(key);
     }
 
     return 0;
@@ -396,7 +421,7 @@ int Window::handleMousePressed(const yguipp::Point& position, int button) {
     }
 
     m_mouseDownWidget = m_mouseWidget;
-    m_mouseDownWidget->mousePressed(getWidgetPosition(m_mouseDownWidget,position), button);
+    m_mouseDownWidget->mousePressed(getWidgetPosition(m_mouseDownWidget, position), button);
 
     return 0;
 }
@@ -405,6 +430,30 @@ int Window::handleMouseReleased(int button) {
     if (m_mouseDownWidget != NULL) {
         m_mouseDownWidget->mouseReleased(button);
         m_mouseDownWidget = NULL;
+    }
+
+    return 0;
+}
+
+int Window::handleWindowActivated(yguipp::ActivationReason reason) {
+    WindowListener::List tmpList = m_windowListeners;
+
+    for (WindowListener::ListCIter it = tmpList.begin();
+         it != tmpList.end();
+         ++it) {
+        (*it)->windowActivated(this, reason);
+    }
+
+    return 0;
+}
+
+int Window::handleWindowDeActivated(yguipp::DeActivationReason reason) {
+    WindowListener::List tmpList = m_windowListeners;
+
+    for (WindowListener::ListCIter it = tmpList.begin();
+         it != tmpList.end();
+         ++it) {
+        (*it)->windowDeActivated(this, reason);
     }
 
     return 0;

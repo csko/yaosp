@@ -207,6 +207,7 @@ int Window::mousePressed(const yguipp::Point& position, int button) {
     }
 
     m_mousePressedOnDecorator = m_mouseOnDecorator;
+
     return 0;
 }
 

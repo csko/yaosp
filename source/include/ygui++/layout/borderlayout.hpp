@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LAYOUT_BORDERLAYOUT_HPP_
-#define _LAYOUT_BORDERLAYOUT_HPP_
+#ifndef _YGUIPP_LAYOUT_BORDERLAYOUT_HPP_
+#define _YGUIPP_LAYOUT_BORDERLAYOUT_HPP_
 
 #include <map>
 
@@ -58,4 +58,4 @@ class BorderLayout : public Layout {
 } /* namespace layout */
 } /* namespace yguipp */
 
-#endif /* _LAYOUT_BORDERLAYOUT_HPP_ */
+#endif /* _YGUIPP_LAYOUT_BORDERLAYOUT_HPP_ */

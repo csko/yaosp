@@ -35,14 +35,14 @@ class Widget : public Object, public event::KeySpeaker {
   public:
     friend class Window;
 
-    typedef std::pair<Widget*,layout::LayoutData*> Child;
+    typedef std::pair<Widget*, const layout::LayoutData*> Child;
     typedef std::vector<Child> ChildVector;
     typedef ChildVector::const_iterator ChildVectorCIter;
 
     Widget( void );
     virtual ~Widget( void );
 
-    virtual void add( Widget* child, layout::LayoutData* data = NULL );
+    virtual void add( Widget* child, const layout::LayoutData* data = NULL );
 
     Widget* getParent( void );
     const Point& getPosition( void );

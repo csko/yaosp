@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _IMAGE_HPP_
-#define _IMAGE_HPP_
+#ifndef _YGUIPP_IMAGE_HPP_
+#define _YGUIPP_IMAGE_HPP_
 
 #include <ygui++/bitmap.hpp>
 #include <ygui++/widget.hpp>
@@ -29,6 +29,11 @@ class Image : public Widget {
     Image( Bitmap* bitmap = NULL );
     virtual ~Image( void );
 
+  private:
+    Image(const Image& i);
+    Image& operator=(const Image& i);
+
+  public:
     Point getPreferredSize( void );
 
     int paint( GraphicsContext* g );
@@ -39,4 +44,4 @@ class Image : public Widget {
 
 } /* namespace yguipp */
 
-#endif /* _IMAGE_HPP_ */
+#endif /* _YGUIPP_IMAGE_HPP_ */

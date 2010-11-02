@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _EVENT_KEYLISTENER_HPP_
-#define _EVENT_KEYLISTENER_HPP_
+#ifndef _YGUIPP_EVENT_KEYLISTENER_HPP_
+#define _YGUIPP_EVENT_KEYLISTENER_HPP_
 
 #include <vector>
 
@@ -53,4 +53,4 @@ class KeySpeaker {
 } /* namespace event */
 } /* namespace yguipp */
 
-#endif /* _EVENT_KEYLISTENER_HPP_ */
+#endif /* _YGUIPP_EVENT_KEYLISTENER_HPP_ */

@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _EVENT_ACTIONLISTENER_HPP_
-#define _EVENT_ACTIONLISTENER_HPP_
+#ifndef _YGUIPP_EVENT_ACTIONLISTENER_HPP_
+#define _YGUIPP_EVENT_ACTIONLISTENER_HPP_
 
 #include <vector>
 
@@ -51,4 +51,4 @@ class ActionSpeaker {
 } /* namespace event */
 } /* namespace yguipp */
 
-#endif /* _ACTIONLISTENER_HPP_ */
+#endif /* _YGUIPP_EVENT_ACTIONLISTENER_HPP_ */

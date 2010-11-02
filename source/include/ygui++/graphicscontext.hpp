@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _GRAPHICSCONTEXT_HPP_
-#define _GRAPHICSCONTEXT_HPP_
+#ifndef _YGUIPP_GRAPHICSCONTEXT_HPP_
+#define _YGUIPP_GRAPHICSCONTEXT_HPP_
 
 #include <stack>
 #include <string>
@@ -41,6 +41,11 @@ class GraphicsContext {
     GraphicsContext( Window* window );
     virtual ~GraphicsContext( void );
 
+  private:
+    GraphicsContext(const GraphicsContext& gc);
+    GraphicsContext& operator=(const GraphicsContext& gc);
+
+  public:
     const Point& getLeftTop( void );
     bool needToFlush( void );
 
@@ -61,7 +66,7 @@ class GraphicsContext {
     enum TranslateType {
         CHECKPOINT,
         TRANSLATE
-    };
+    }; /* enum TranslateType */
 
     struct TranslateItem {
         TranslateItem( void ) : m_type(CHECKPOINT) {}
@@ -69,7 +74,7 @@ class GraphicsContext {
 
         TranslateType m_type;
         Point m_point;
-    };
+    }; /* struct TranslateItem */
 
   private:
     void pushRestrictedArea( const Rect& rect );
@@ -97,4 +102,4 @@ class GraphicsContext {
 
 } /* namespace yguipp */
 
-#endif /* _GRAPHICSCONTEXT_HPP_ */
+#endif /* _YGUIPP_GRAPHICSCONTEXT_HPP_ */

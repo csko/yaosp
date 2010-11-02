@@ -58,6 +58,8 @@ enum {
 };
 
 struct AppCreate {
+    AppCreate(ipc_port_id replyPort, ipc_port_id clientPort, int flags);
+
     ipc_port_id m_replyPort;
     ipc_port_id m_clientPort;
     int m_flags;

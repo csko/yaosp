@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _BITMAP_HPP_
-#define _BITMAP_HPP_
+#ifndef _YGUIPP_BITMAP_HPP_
+#define _YGUIPP_BITMAP_HPP_
 
 #include <string>
 #include <yaosp/region.h>
@@ -33,6 +33,11 @@ class Bitmap : public Object {
     Bitmap( const Point& size, ColorSpace colorSpace = CS_RGB32 );
     virtual ~Bitmap( void );
 
+  private:
+    Bitmap(const Bitmap& b);
+    Bitmap& operator=(const Bitmap& b);
+
+  public:
     bool init( void );
 
     Rect bounds(void);
@@ -59,4 +64,4 @@ class Bitmap : public Object {
 
 } /* namespace yguipp */
 
-#endif /* _BITMAP_HPP_ */
+#endif /* _YGUIPP_BITMAP_HPP_ */

@@ -33,11 +33,11 @@ Widget::Widget( void ) : m_window(NULL), m_parent(NULL), m_border(NULL), m_isVal
 Widget::~Widget( void ) {
 }
 
-void Widget::add( Widget* child, layout::LayoutData* data ) {
+void Widget::add( Widget* child, const layout::LayoutData* data ) {
     child->incRef();
     child->m_parent = this;
 
-    m_children.push_back( std::make_pair<Widget*,layout::LayoutData*>(child,data) );
+    m_children.push_back(std::make_pair<Widget*, const layout::LayoutData*>(child, data));
 
     if ( m_window != NULL ) {
         child->setWindow(m_window);
@@ -169,7 +169,7 @@ int Widget::doPaint( GraphicsContext* g, bool forced ) {
     visibleRect &= g->currentRestrictedArea();
 
     /* If there is no visible part of the widget, we don't have to paint. */
-    if ( !visibleRect.isValid() ) {
+    if (!visibleRect.isValid()) {
         return 0;
     }
 

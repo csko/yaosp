@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LINEBORDER_HPP_
-#define _LINEBORDER_HPP_
+#ifndef _YGUIPP_BORDER_LINEBORDER_HPP_
+#define _YGUIPP_BORDER_LINEBORDER_HPP_
 
 #include <ygui++/border/border.hpp>
 
@@ -41,4 +41,4 @@ class LineBorder : public Border {
 } /* namespace border */
 } /* namespace yguipp */
 
-#endif /* _LINEBORDER_HPP_ */
+#endif /* _YGUIPP_BORDER_LINEBORDER_HPP_ */

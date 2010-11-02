@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _COLOR_HPP_
-#define _COLOR_HPP_
+#ifndef _YGUIPP_COLOR_HPP_
+#define _YGUIPP_COLOR_HPP_
 
 #include <inttypes.h>
 
@@ -51,4 +51,4 @@ class Color {
 
 } /* namespace yguipp */
 
-#endif /* _COLOR_HPP_ */
+#endif /* _YGUIPP_COLOR_HPP_ */

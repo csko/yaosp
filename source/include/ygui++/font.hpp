@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _FONT_HPP_
-#define _FONT_HPP_
+#ifndef _YGUIPP_FONT_HPP_
+#define _YGUIPP_FONT_HPP_
 
 #include <string>
 
@@ -31,6 +31,11 @@ class Font : public Object {
     Font(const std::string& name, const std::string& style, const FontInfo& fontInfo);
     virtual ~Font(void);
 
+  private:
+    Font(const Font& f);
+    Font& operator=(const Font& f);
+
+  public:
     bool init(void);
 
     int getHandle(void);
@@ -57,4 +62,4 @@ class Font : public Object {
 
 } /* namespace yguipp */
 
-#endif /* _FONT_HPP_ */
+#endif /* _YGUIPP_FONT_HPP_ */

@@ -52,13 +52,17 @@ void Thread::starter( void* arg ) {
     t->run();
 }
 
-bool Thread::uSleep( uint64_t usecs ) {
+bool Thread::uSleep(uint64_t usecs) {
     struct timespec req;
 
     req.tv_sec = usecs / 1000000;
     req.tv_nsec = ( usecs % 1000000 ) * 1000;
 
     return ( nanosleep(&req, NULL) == 0 );
+}
+
+Thread::Id Thread::currentThread(void) {
+    return syscall0(SYS_gettid);
 }
 
 } /* namespace yutilpp */

@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _BUTTON_HPP_
-#define _BUTTON_HPP_
+#ifndef _YGUIPP_BUTTON_HPP_
+#define _YGUIPP_BUTTON_HPP_
 
 #include <string>
 
@@ -57,4 +57,4 @@ class Button : public Widget {
 
 } /* namespace yguipp */
 
-#endif /* _Button_HPP_ */
+#endif /* _YGUIPP_BUTTON_HPP_ */

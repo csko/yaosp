@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _LAYOUT_LAYOUT_HPP_
-#define _LAYOUT_LAYOUT_HPP_
+#ifndef _YGUIPP_LAYOUT_LAYOUT_HPP_
+#define _YGUIPP_LAYOUT_LAYOUT_HPP_
 
 #include <ygui++/object.hpp>
 
@@ -42,4 +42,4 @@ class Layout : public Object {
 } /* namespace layout */
 } /* namespace yguipp */
 
-#endif /* _LAYOUT_LAYOUT_HPP_ */
+#endif /* _YGUIPP_LAYOUT_LAYOUT_HPP_ */

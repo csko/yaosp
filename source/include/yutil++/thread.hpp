@@ -25,6 +25,8 @@ namespace yutilpp {
 
 class Thread {
   public:
+    typedef int Id;
+
     Thread( const std::string& name );
     virtual ~Thread( void );
 
@@ -32,7 +34,8 @@ class Thread {
 
     virtual int run( void ) = 0;
 
-    static bool uSleep( uint64_t usecs );
+    static bool uSleep(uint64_t usecs);
+    static Id currentThread(void);
 
   private:
     enum {
@@ -46,7 +49,7 @@ class Thread {
     static void starter( void* arg );
 
   private:
-    int m_id;
+    Id m_id;
     std::string m_name;
 }; /* class Thread */
 

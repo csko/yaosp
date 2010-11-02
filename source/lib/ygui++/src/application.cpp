@@ -30,7 +30,8 @@ namespace yguipp {
 Application* Application::m_instance = NULL;
 
 Application::Application( const std::string& name ) : m_guiServerPort(NULL), m_clientPort(NULL),
-                                                      m_serverPort(NULL), m_replyPort(NULL) {
+                                                      m_serverPort(NULL), m_replyPort(NULL),
+                                                      m_mainLoopThread(-1) {
 }
 
 Application::~Application( void ) {
@@ -141,59 +142,29 @@ yutilpp::IPCPort* Application::getReplyPort( void ) {
     return m_replyPort;
 }
 
-int Application::ipcDataAvailable( uint32_t code, void* buffer, size_t size ) {
-    switch (code) {
-        case Y_SCREEN_MODE_CHANGED :
-            handleScreenModeChanged(buffer);
-            break;
-
-        case Y_WINDOW_SHOW :
-        case Y_WINDOW_HIDE :
-        case Y_WINDOW_DO_RESIZE :
-        case Y_WINDOW_RESIZED :
-        case Y_WINDOW_DO_MOVETO :
-        case Y_WINDOW_MOVEDTO :
-        case Y_WINDOW_KEY_PRESSED :
-        case Y_WINDOW_KEY_RELEASED :
-        case Y_WINDOW_MOUSE_ENTERED :
-        case Y_WINDOW_MOUSE_MOVED :
-        case Y_WINDOW_MOUSE_EXITED :
-        case Y_WINDOW_MOUSE_PRESSED :
-        case Y_WINDOW_MOUSE_RELEASED :
-        case Y_WINDOW_ACTIVATED :
-        case Y_WINDOW_DEACTIVATED :
-        case Y_WINDOW_WIDGET_INVALIDATED :
-        case Y_WINDOW_CLOSE_REQUEST : {
-            WinHeader* header = reinterpret_cast<WinHeader*>(buffer);
-            WindowMapCIter it = m_windowMap.find(header->m_windowId);
-
-            if ( it != m_windowMap.end() ) {
-                Window* window = it->second;
-                window->handleMessage(code, buffer, size);
-            }
-
-            break;
-        }
-    }
-
-    return 0;
-}
-
 int Application::mainLoop(void) {
+    Message msg;
+
+    m_mainLoopThread = yutilpp::Thread::currentThread();
+
     while (!m_windowMap.empty()) {
-        int ret;
-        uint32_t code;
-
-        ret = m_clientPort->receive(code, m_ipcBuffer, IPC_BUF_SIZE);
-
-        if (ret >= 0) {
-            ipcDataAvailable(code, m_ipcBuffer, ret);
+        if (receiveMessage(msg)) {
+            handleMessage(msg);
         }
     }
 
     m_serverPort->send(Y_APPLICATION_DESTROY, NULL, 0);
 
     return 0;
+}
+
+bool Application::isEventDispatchThread(void) {
+    if (m_mainLoopThread == -1) {
+        dbprintf("Application: mainLoop not yet started.\n");
+        return false;
+    }
+
+    return (yutilpp::Thread::currentThread() == m_mainLoopThread);
 }
 
 bool Application::createInstance( const std::string& name ) {
@@ -213,20 +184,68 @@ bool Application::createInstance( const std::string& name ) {
     return true;
 }
 
-bool Application::registerApplication( void ) {
-    uint32_t code;
-    AppCreate request;
-    AppCreateReply reply;
+bool Application::receiveMessage(Message& msg) {
+    int ret = m_clientPort->receive(msg.m_code, msg.m_buffer, sizeof(msg.m_buffer));
 
-    request.m_replyPort = m_replyPort->getId();
-    request.m_clientPort = m_clientPort->getId();
-    request.m_flags = 0;
-
-    if ( m_guiServerPort->send( Y_APPLICATION_CREATE, reinterpret_cast<void*>(&request), sizeof(request) ) < 0 ) {
+    if (ret < 0) {
+        msg.m_size = -1;
         return false;
     }
 
-    if ( m_replyPort->receive( code, reinterpret_cast<void*>(&reply), sizeof(reply) ) < 0 ) {
+    msg.m_size = ret;
+
+    return true;
+}
+
+bool Application::handleMessage(const Message& msg) {
+    switch (msg.m_code) {
+        case Y_SCREEN_MODE_CHANGED :
+            handleScreenModeChanged(msg.m_buffer);
+            break;
+
+        case Y_WINDOW_SHOW :
+        case Y_WINDOW_HIDE :
+        case Y_WINDOW_DO_RESIZE :
+        case Y_WINDOW_RESIZED :
+        case Y_WINDOW_DO_MOVETO :
+        case Y_WINDOW_MOVEDTO :
+        case Y_WINDOW_KEY_PRESSED :
+        case Y_WINDOW_KEY_RELEASED :
+        case Y_WINDOW_MOUSE_ENTERED :
+        case Y_WINDOW_MOUSE_MOVED :
+        case Y_WINDOW_MOUSE_EXITED :
+        case Y_WINDOW_MOUSE_PRESSED :
+        case Y_WINDOW_MOUSE_RELEASED :
+        case Y_WINDOW_ACTIVATED :
+        case Y_WINDOW_DEACTIVATED :
+        case Y_WINDOW_WIDGET_INVALIDATED :
+        case Y_WINDOW_CLOSE_REQUEST : {
+            const WinHeader* header = reinterpret_cast<const WinHeader*>(msg.m_buffer);
+            WindowMapCIter it = m_windowMap.find(header->m_windowId);
+
+            if ( it != m_windowMap.end() ) {
+                Window* window = it->second;
+                window->handleMessage(msg);
+            }
+
+            break;
+        }
+    }
+
+    return true;
+}
+
+bool Application::registerApplication( void ) {
+    AppCreate request(m_replyPort->getId(), m_clientPort->getId(), 0);
+
+    if (m_guiServerPort->send(Y_APPLICATION_CREATE, reinterpret_cast<void*>(&request), sizeof(request)) < 0) {
+        return false;
+    }
+
+    uint32_t code;
+    AppCreateReply reply;
+
+    if (m_replyPort->receive(code, reinterpret_cast<void*>(&reply), sizeof(reply)) < 0) {
         return false;
     }
 
@@ -251,8 +270,8 @@ int Application::unregisterWindow(int id) {
     return 0;
 }
 
-void Application::handleScreenModeChanged(void* buffer) {
-    ScreenModeInfo* modeInfo = reinterpret_cast<ScreenModeInfo*>(buffer);
+void Application::handleScreenModeChanged(const void* buffer) {
+    const ScreenModeInfo* modeInfo = reinterpret_cast<const ScreenModeInfo*>(buffer);
 
     for (std::vector<ApplicationListener*>::const_iterator it = m_listeners.begin();
          it != m_listeners.end();
