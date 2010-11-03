@@ -113,6 +113,9 @@ int TaskBar::actionPerformed(yguipp::Widget* widget) {
 
 void TaskBar::onScreenModeChanged(const ScreenModeInfo& modeInfo) {
     dbprintf("New screen size: %dx%d\n", modeInfo.m_width, modeInfo.m_height);
+
+    m_window->moveTo(Point(0, modeInfo.m_height - 22));
+    m_window->resize(Point(modeInfo.m_width, 22));
 }
 
 void TaskBar::createMenu(void) {

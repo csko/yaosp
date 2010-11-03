@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <assert.h>
 #include <yaosp/debug.h>
 
 #include <guiserver/window.hpp>
@@ -64,7 +65,7 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
             break;
 
         case Y_WINDOW_DO_RESIZE :
-            handleDoResize(reinterpret_cast<WinResize*>(data));
+            resize(reinterpret_cast<WinResize*>(data)->m_size);
             break;
 
         case Y_WINDOW_DO_MOVETO :
@@ -84,12 +85,97 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
 }
 
 int Window::moveTo(const yguipp::Point& p) {
+    WindowManager* windowManager = m_guiServer->getWindowManager();
+
+    if (m_visible) {
+        windowManager->lock();
+    }
+
+    doMoveTo(p);
+
+    if (m_visible) {
+        windowManager->unLock();
+    }
+
+    return 0;
+}
+
+int Window::doMoveTo(const yguipp::Point& p) {
+    WindowManager* windowManager = m_guiServer->getWindowManager();
+
+    if (m_visible) {
+        windowManager->doHideWindowRegion(this, m_screenRect);
+    }
+
+    calculateWindowRects(p, m_clientRect.size(), m_screenRect, m_clientRect);
+
+    if (m_visible) {
+        windowManager->getDecorator()->calculateItemPositions(this);
+
+        int index = windowManager->getWindowIndex(this);
+        assert(index != -1);
+
+        for (; index < (int)windowManager->m_windowStack.size(); index++) {
+            windowManager->generateVisibleRegions(index);
+        }
+
+        windowManager->doUpdateWindowRegion(this, m_screenRect);
+    }
+
     WinMoveTo reply;
     reply.m_header.m_windowId = m_id;
     reply.m_position = p;
 
-    calculateWindowRects(p, m_clientRect.size(), m_screenRect, m_clientRect);
     m_application->getClientPort()->send(Y_WINDOW_MOVEDTO, reinterpret_cast<void*>(&reply), sizeof(reply));
+
+    return 0;
+}
+
+int Window::resize(const yguipp::Point& p) {
+    WindowManager* windowManager = m_guiServer->getWindowManager();
+
+    if (m_visible) {
+        windowManager->lock();
+    }
+
+    doResize(p);
+
+    if (m_visible) {
+        windowManager->unLock();
+    }
+
+    return 0;
+}
+
+int Window::doResize(const yguipp::Point& p) {
+    WindowManager* windowManager = m_guiServer->getWindowManager();
+
+    if (m_visible) {
+        windowManager->doHideWindowRegion(this, m_screenRect);
+    }
+
+    delete m_bitmap;
+    calculateWindowRects(m_screenRect.leftTop(), p, m_screenRect, m_clientRect);
+    m_bitmap = new Bitmap(m_screenRect.width(), m_screenRect.height(), yguipp::CS_RGB32);
+
+    if (m_visible) {
+        windowManager->getDecorator()->calculateItemPositions(this);
+
+        int index = windowManager->getWindowIndex(this);
+        assert(index != -1);
+
+        for (; index < (int)windowManager->m_windowStack.size(); index++) {
+            windowManager->generateVisibleRegions(index);
+        }
+
+        windowManager->doUpdateWindowRegion(this, m_screenRect);
+    }
+
+    WinResize reply;
+    reply.m_header.m_windowId = m_id;
+    reply.m_size = p;
+
+    m_application->getClientPort()->send(Y_WINDOW_RESIZED, reinterpret_cast<void*>(&reply), sizeof(reply));
 
     return 0;
 }
@@ -267,14 +353,6 @@ void Window::unregisterWindow(void) {
 
     m_guiServer->getWindowManager()->unregisterWindow(this);
     m_visible = false;
-}
-
-void Window::handleDoResize( WinResize* request ) {
-    delete m_bitmap;
-    calculateWindowRects(m_screenRect.leftTop(), request->m_size, m_screenRect, m_clientRect);
-    m_bitmap = new Bitmap(m_screenRect.width(), m_screenRect.height(), yguipp::CS_RGB32);
-
-    m_application->getClientPort()->send(Y_WINDOW_RESIZED, request, sizeof(WinResize));
 }
 
 void Window::calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,

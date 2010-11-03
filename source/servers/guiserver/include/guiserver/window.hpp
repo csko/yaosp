@@ -61,6 +61,11 @@ class Window {
     int handleMessage( uint32_t code, void* data, size_t size );
 
     int moveTo(const yguipp::Point& p);
+    int doMoveTo(const yguipp::Point& p);
+
+    int resize(const yguipp::Point& p);
+    int doResize(const yguipp::Point& p);
+
     int closeRequest(void);
     int close(void);
 
@@ -81,7 +86,6 @@ class Window {
     void registerWindow(void);
     void unregisterWindow(void);
 
-    void handleDoResize( WinResize* request );
     void handleRender( uint8_t* data, size_t size );
 
     void calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,

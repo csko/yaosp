@@ -32,6 +32,8 @@
 
 class WindowManager : public GuiServerListener {
   public:
+    friend class Window;
+
     WindowManager(GuiServer* guiServer, Decorator* decorator);
     ~WindowManager( void );
 

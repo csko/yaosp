@@ -199,6 +199,11 @@ int Window::handleMessage(const Application::Message& msg) {
             const WinResize* reply = reinterpret_cast<const WinResize*>(msg.m_buffer);
             m_size = reply->m_size;
             m_container->setSize(m_size);
+
+            if (m_visible) {
+                doRepaint(true);
+            }
+
             break;
         }
 

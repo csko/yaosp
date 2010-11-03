@@ -285,19 +285,7 @@ int WindowManager::setMovingWindow(Window* window) {
 
         /* Update the required parts only if the window really moved. */
         if (m_movingWindow->getScreenRect() != m_windowRect) {
-            doHideWindowRegion(m_movingWindow, m_movingWindow->getScreenRect());
-
-            m_movingWindow->moveTo(m_windowRect.leftTop());
-            m_windowDecorator->calculateItemPositions(m_movingWindow);
-
-            int index = getWindowIndex(m_movingWindow);
-            assert(index != -1);
-
-            for (; index < (int)m_windowStack.size(); index++) {
-                generateVisibleRegions(index);
-            }
-
-            doUpdateWindowRegion(m_movingWindow, m_movingWindow->getScreenRect());
+            m_movingWindow->doMoveTo(m_windowRect.leftTop());
         }
     }
 
