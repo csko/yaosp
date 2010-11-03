@@ -31,8 +31,8 @@ class KeyListener {
   public:
     virtual ~KeyListener(void) {}
 
-    virtual int keyPressed(Widget* widget, int key) = 0;
-    virtual int keyReleased(Widget* widget, int key) = 0;
+    virtual int onKeyPressed(Widget* widget, int key) = 0;
+    virtual int onKeyReleased(Widget* widget, int key) = 0;
 }; /* class KeyListener */
 
 class KeySpeaker {

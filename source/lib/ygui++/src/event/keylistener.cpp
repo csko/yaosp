@@ -50,7 +50,7 @@ void KeySpeaker::fireKeyPressedListeners(Widget* widget, int key) {
     for (std::vector<KeyListener*>::const_iterator it = tmpList.begin();
          it != tmpList.end();
          ++it) {
-        (*it)->keyPressed(widget, key);
+        (*it)->onKeyPressed(widget, key);
     }
 }
 
@@ -60,7 +60,7 @@ void KeySpeaker::fireKeyReleasedListeners(Widget* widget, int key) {
     for (std::vector<KeyListener*>::const_iterator it = tmpList.begin();
          it != tmpList.end();
          ++it) {
-        (*it)->keyReleased(widget, key);
+        (*it)->onKeyReleased(widget, key);
     }
 }
 

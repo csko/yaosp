@@ -42,7 +42,7 @@ class TaskBar : public yguipp::event::ActionListener,
   public:
     int run(void);
 
-    int actionPerformed(yguipp::Widget* widget);
+    int onActionPerformed(yguipp::Widget* widget);
 
     void onScreenModeChanged(const yguipp::ScreenModeInfo& modeInfo);
 

@@ -90,7 +90,7 @@ int TaskBar::run(void) {
     return 0;
 }
 
-int TaskBar::actionPerformed(yguipp::Widget* widget) {
+int TaskBar::onActionPerformed(yguipp::Widget* widget) {
     if (widget == m_menuButton) {
         Point size = m_menu->getPreferredSize();
         m_menu->show(m_window->getPosition() - Point(0,size.m_y));

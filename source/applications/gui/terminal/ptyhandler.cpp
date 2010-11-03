@@ -31,7 +31,7 @@ PtyHandler::PtyHandler(int masterPty, yguipp::Widget* view, TerminalParser* pars
     m_view->addKeyListener(this);
 }
 
-int PtyHandler::keyPressed(yguipp::Widget* widget, int key) {
+int PtyHandler::onKeyPressed(yguipp::Widget* widget, int key) {
     switch (key) {
         case KEY_UP :
             if (m_parser->useAlternateCursorKeys()) {

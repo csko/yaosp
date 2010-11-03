@@ -31,7 +31,7 @@ class ActionListener {
   public:
     virtual ~ActionListener(void) {}
 
-    virtual int actionPerformed(Widget* widget) = 0;
+    virtual int onActionPerformed(Widget* widget) = 0;
 }; /* class ActionListener */
 
 class ActionSpeaker {

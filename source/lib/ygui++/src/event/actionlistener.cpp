@@ -50,7 +50,7 @@ void ActionSpeaker::fireActionListeners(Widget* widget) {
     for (std::vector<ActionListener*>::const_iterator it = tmpList.begin();
          it != tmpList.end();
          ++it) {
-        (*it)->actionPerformed(widget);
+        (*it)->onActionPerformed(widget);
     }
 }
 

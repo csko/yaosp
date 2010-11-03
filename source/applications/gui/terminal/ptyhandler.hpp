@@ -28,8 +28,8 @@ class PtyHandler : public yutilpp::Thread, public yguipp::event::KeyListener {
   public:
     PtyHandler(int masterPty, yguipp::Widget* view, TerminalParser* parser);
 
-    int keyPressed(yguipp::Widget* widget, int key);
-    int keyReleased(yguipp::Widget* widget, int key) { return 0; }
+    int onKeyPressed(yguipp::Widget* widget, int key);
+    int onKeyReleased(yguipp::Widget* widget, int key) { return 0; }
 
     int run(void);
 
