@@ -236,6 +236,30 @@ int WindowManager::mousePressed( int button ) {
 
             m_activeWindow = m_mouseWindow;
             m_activeWindow->activated(yguipp::WINDOW_CLICKED);
+
+            /* Update order of windows in the window stack if needed. */
+            int oldIndex = getWindowIndex(m_activeWindow);
+            assert(oldIndex != -1);
+
+            int newIndex = oldIndex - 1;
+
+            while ((newIndex >= 0) &&
+                   (m_windowStack[newIndex]->getOrder() >= m_activeWindow->getOrder())) {
+                    newIndex--;
+            }
+
+            newIndex++;
+
+            if (newIndex < oldIndex) {
+                m_windowStack.erase(m_windowStack.begin() + oldIndex);
+                m_windowStack.insert(m_windowStack.begin() + newIndex, m_activeWindow);
+
+                for (int i = newIndex; i <= oldIndex; i++) {
+                    generateVisibleRegions(i);
+                }
+
+                doUpdateWindowRegion(m_activeWindow, m_activeWindow->getScreenRect());
+            }
         }
 
         m_mouseWindow->mousePressed(m_mousePointer->getPosition(), button);
