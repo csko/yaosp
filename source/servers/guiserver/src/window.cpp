@@ -101,25 +101,12 @@ int Window::moveTo(const yguipp::Point& p) {
 }
 
 int Window::doMoveTo(const yguipp::Point& p) {
-    WindowManager* windowManager = m_guiServer->getWindowManager();
-
-    if (m_visible) {
-        windowManager->doHideWindowRegion(this, m_screenRect);
-    }
+    yguipp::Rect oldScreenRect = m_screenRect;
 
     calculateWindowRects(p, m_clientRect.size(), m_screenRect, m_clientRect);
 
     if (m_visible) {
-        windowManager->getDecorator()->calculateItemPositions(this);
-
-        int index = windowManager->getWindowIndex(this);
-        assert(index != -1);
-
-        for (; index < (int)windowManager->m_windowStack.size(); index++) {
-            windowManager->generateVisibleRegions(index);
-        }
-
-        windowManager->doUpdateWindowRegion(this, m_screenRect);
+        m_guiServer->getWindowManager()->windowRectChanged(this, oldScreenRect, m_screenRect);
     }
 
     WinMoveTo reply;
@@ -148,27 +135,14 @@ int Window::resize(const yguipp::Point& p) {
 }
 
 int Window::doResize(const yguipp::Point& p) {
-    WindowManager* windowManager = m_guiServer->getWindowManager();
-
-    if (m_visible) {
-        windowManager->doHideWindowRegion(this, m_screenRect);
-    }
+    yguipp::Rect oldScreenRect = m_screenRect;
+    calculateWindowRects(m_screenRect.leftTop(), p, m_screenRect, m_clientRect);
 
     delete m_bitmap;
-    calculateWindowRects(m_screenRect.leftTop(), p, m_screenRect, m_clientRect);
     m_bitmap = new Bitmap(m_screenRect.width(), m_screenRect.height(), yguipp::CS_RGB32);
 
     if (m_visible) {
-        windowManager->getDecorator()->calculateItemPositions(this);
-
-        int index = windowManager->getWindowIndex(this);
-        assert(index != -1);
-
-        for (; index < (int)windowManager->m_windowStack.size(); index++) {
-            windowManager->generateVisibleRegions(index);
-        }
-
-        windowManager->doUpdateWindowRegion(this, m_screenRect);
+        m_guiServer->getWindowManager()->windowRectChanged(this, oldScreenRect, m_screenRect);
     }
 
     WinResize reply;

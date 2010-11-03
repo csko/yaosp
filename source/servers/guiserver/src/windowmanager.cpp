@@ -310,6 +310,31 @@ int WindowManager::hideWindowRegion( Window* window, const yguipp::Rect& region 
     return 0;
 }
 
+int WindowManager::windowRectChanged(Window* window, const yguipp::Rect& oldRect, const yguipp::Rect& newRect) {
+    bool sizeChanged = (oldRect.size() != newRect.size());
+
+    assert(window->isVisible());
+
+    doHideWindowRegion(window, oldRect);
+
+    int index = getWindowIndex(window);
+    assert(index != -1);
+
+    while (index < (int)m_windowStack.size()) {
+        generateVisibleRegions(index++);
+    }
+
+    m_windowDecorator->calculateItemPositions(window);
+
+    if (sizeChanged) {
+        m_windowDecorator->update(m_graphicsDriver, window);
+    }
+
+    doUpdateWindowRegion(window, newRect);
+
+    return 0;
+}
+
 int WindowManager::onScreenModeChanged(GuiServer* guiServer, const yguipp::ScreenModeInfo& modeInfo) {
     /* Update our pointer to the screen bitmap. */
     m_screenBitmap = guiServer->getScreenBitmap();

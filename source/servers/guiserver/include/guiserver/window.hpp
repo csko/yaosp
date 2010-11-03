@@ -52,6 +52,7 @@ class Window {
     inline const std::string& getTitle(void) { return m_title; }
     inline bool isMoving(void) { return m_moving; }
     inline bool isResizing(void) { return m_resizing; }
+    inline bool isVisible(void) { return m_visible; }
 
     inline void setId(int id) { m_id = id; }
     inline void setDecoratorData(DecoratorData* data) { m_decoratorData = data; }
