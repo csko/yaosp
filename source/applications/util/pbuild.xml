@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
+    <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all,compile"/>
+
     <array name="subdirs">
         <item>systeminfo</item>
         <item>listpci</item>
@@ -29,21 +31,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>fstools</item>
     </array>
 
-    <target name="all">
-        <for var="i" array="${subdirs}">
-            <call target="all" directory="${i}"/>
-        </for>
-    </target>
-
     <target name="all-installer">
         <for var="i" array="${subdirs_for_installer}">
             <call target="all" directory="${i}"/>
-        </for>
-    </target>
-
-    <target name="clean">
-        <for var="i" array="${subdirs}">
-            <call target="clean" directory="${i}"/>
         </for>
     </target>
 </build>

@@ -21,7 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
-    <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all"/>
+    <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all,compile"/>
 
     <array name="subdirs">
         <item>system</item>

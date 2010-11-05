@@ -26,6 +26,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </for>
     </target>
 
+    <target name="compile">
+        <for var="i" array="${subdirs}">
+            <call target="compile" directory="${i}"/>
+        </for>
+    </target>
+
     <target name="all">
         <for var="i" array="${subdirs}">
             <call target="all" directory="${i}"/>
