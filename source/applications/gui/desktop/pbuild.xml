@@ -1,0 +1,61 @@
+<!--
+
+This file is part of the yaosp build system
+
+Copyright (c) 2010 Zoltan Kovacs
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of version 2 of the GNU General Public License
+as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+<build default="all">
+    <pinclude file="${toplevel}/config/paths.xml"/>
+    <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
+
+    <array name="files">
+        <item>main.cpp</item>
+        <item>desktop.cpp</item>
+    </array>
+
+    <target name="compile">
+        <call target="prepare"/>
+
+        <echo>Compiling desktop</echo>
+        <echo/>
+
+        <for var="i" array="${files}">
+            <echo>[GCC    ] source/applications/gui/desktop/${i}</echo>
+            <gcc profile="y-app-compile">
+                <input>${i}</input>
+                <output>objs/filename(${i}).o</output>
+            </gcc>
+        </for>
+
+        <echo/>
+        <echo>Linking desktop</echo>
+        <echo/>
+        <echo>[GCC    ] source/applications/gui/desktop/objs/desktop</echo>
+
+        <gcc use_gpp="yes" profile="y-gui-app-link">
+            <input>objs/*.o</input>
+            <output>objs/desktop</output>
+            <flag>-lyconfig++</flag>
+        </gcc>
+    </target>
+
+    <target name="install">
+        <mkdir>${imagedir}/application/desktop</mkdir>
+        <copy from="objs/desktop" to="${imagedir}/application/desktop/desktop"/>
+    </target>
+</build>
