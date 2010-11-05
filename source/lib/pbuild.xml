@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build>
+    <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all,compile"/>
+
     <array name="subdirs">
         <item>start</item>
         <item>c</item>
@@ -27,16 +29,4 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>ygui++</item>
         <item>yconfig++</item>
     </array>
-
-    <target name="all">
-        <for var="i" array="${subdirs}">
-            <call target="all" directory="${i}"/>
-        </for>
-    </target>
-
-    <target name="clean">
-        <for var="i" array="${subdirs}">
-            <call target="clean" directory="${i}"/>
-        </for>
-    </target>
 </build>

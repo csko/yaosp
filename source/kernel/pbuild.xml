@@ -270,10 +270,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         </ld>
     </target>
 
-    <target name="generate_syscall_table">
-        <copy from="include/syscall_table.h" to="${includedir}/yaosp/syscall_table.h"/>
-    </target>
-
     <target name="install">
         <copy from="objs/kernel" to="${imagedir}/system/kernel"/>
     </target>
@@ -281,7 +277,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <target name="all">
         <call target="clean"/>
         <call target="compile"/>
-        <call target="generate_syscall_table"/>
         <call target="install"/>
         <!--call target="test" directory="tst"/-->
     </target>

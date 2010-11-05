@@ -363,6 +363,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <call target="prepare"/>
 
         <echo/>
+        <echo>Generating system call table for C library</echo>
+        <echo/>
+
+        <python>
+            <args>${syscall_gen_py} ${kernelsrcdir}/syscall.c ${includedir}/yaosp/syscall_table.h</args>
+        </python>
+
         <echo>Compiling C library</echo>
         <echo/>
 
