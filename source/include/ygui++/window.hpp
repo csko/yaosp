@@ -43,7 +43,7 @@ class WindowListener {
 
 class Window : public Object {
   public:
-    Window( const std::string& title, const Point& position, const Point& size, int flags = WINDOW_NONE );
+    Window( const std::string& title, const Point& position, const Point& size, int flags = WINDOW_NONE, WindowOrder order = WINDOW_ORDER_NORMAL );
     virtual ~Window( void );
 
     bool init( void );
@@ -93,6 +93,7 @@ class Window : public Object {
     Point m_position;
     Point m_size;
     int m_flags;
+    WindowOrder m_order;
     bool m_visible;
 
     Widget* m_container;

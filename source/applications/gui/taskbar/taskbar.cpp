@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <yaosp/debug.h>
 
-#include <ygui++/application.hpp>
 #include <ygui++/window.hpp>
 #include <ygui++/panel.hpp>
 #include <ygui++/imageloader.hpp>
@@ -60,6 +59,9 @@ int MenuButton::paint(GraphicsContext* g) {
 int MenuButton::mousePressed(const Point& p, int button) {
     fireActionListeners(this);
     return 0;
+}
+
+TaskBar::TaskBar(void) : m_window(NULL), m_menuButton(NULL), m_menu(NULL) {
 }
 
 int TaskBar::run(void) {
@@ -112,8 +114,6 @@ int TaskBar::onActionPerformed(yguipp::Widget* widget) {
 }
 
 void TaskBar::onScreenModeChanged(const ScreenModeInfo& modeInfo) {
-    dbprintf("New screen size: %dx%d\n", modeInfo.m_width, modeInfo.m_height);
-
     m_window->moveTo(Point(0, modeInfo.m_height - 22));
     m_window->resize(Point(modeInfo.m_width, 22));
 }

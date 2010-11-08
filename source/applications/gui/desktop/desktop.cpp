@@ -18,9 +18,36 @@
 
 #include <yaosp/debug.h>
 
+#include <ygui++/panel.hpp>
+
 #include "desktop.hpp"
 
+using namespace yguipp;
+
+Desktop::Desktop(void) : m_window(NULL) {
+}
+
 int Desktop::run(void) {
-    dbprintf("Desktop started ...\n");
+    Application::createInstance("desktop");
+
+    Application* app = Application::getInstance();
+    app->addListener(this);
+
+    ScreenModeInfo modeInfo = app->getCurrentScreenMode();
+    m_window = new Window(
+        "desktop", Point(0, 0), Point(modeInfo.m_width, modeInfo.m_height), WINDOW_NO_BORDER, WINDOW_ORDER_ALWAYS_ON_BOTTOM
+    );
+    m_window->init();
+
+    Panel* panel = dynamic_cast<Panel*>(m_window->getContainer());
+    panel->setBackgroundColor(Color(75, 100, 125));
+
+    m_window->show();
+    app->mainLoop();
+
     return 0;
+}
+
+void Desktop::onScreenModeChanged(const yguipp::ScreenModeInfo& modeInfo) {
+    m_window->resize(Point(modeInfo.m_width, modeInfo.m_height));
 }

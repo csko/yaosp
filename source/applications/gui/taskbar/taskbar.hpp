@@ -40,6 +40,8 @@ class MenuButton : public yguipp::Widget, public yguipp::event::ActionSpeaker {
 class TaskBar : public yguipp::event::ActionListener,
                 public yguipp::ApplicationListener {
   public:
+    TaskBar(void);
+
     int run(void);
 
     int onActionPerformed(yguipp::Widget* widget);

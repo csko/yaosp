@@ -19,9 +19,19 @@
 #ifndef _DESKTOP_HPP_
 #define _DESKTOP_HPP_
 
-class Desktop {
+#include <ygui++/application.hpp>
+#include <ygui++/window.hpp>
+
+class Desktop : public yguipp::ApplicationListener {
   public:
+    Desktop(void);
+
     int run(void);
+
+    void onScreenModeChanged(const yguipp::ScreenModeInfo& modeInfo);
+
+  private:
+    yguipp::Window* m_window;
 }; /* class Desktop */
 
 #endif /* _DESKTOP_HPP_ */

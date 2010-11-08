@@ -28,11 +28,9 @@
 
 namespace yguipp {
 
-Window::Window( const std::string& title, const Point& position,
-                const Point& size, int flags ) : m_title(title), m_position(position),
-                                                 m_size(size), m_flags(flags), m_visible(false),
-                                                 m_mouseWidget(NULL), m_mouseDownWidget(NULL),
-                                                 m_focusedWidget(NULL) {
+Window::Window(const std::string& title, const Point& position, const Point& size, int flags, WindowOrder order)
+    : m_title(title), m_position(position), m_size(size), m_flags(flags), m_order(order),
+      m_visible(false), m_mouseWidget(NULL), m_mouseDownWidget(NULL), m_focusedWidget(NULL) {
     m_container = new Panel();
     m_container->setWindow(this);
     m_container->setPosition( Point(0,0) );
@@ -274,7 +272,7 @@ bool Window::registerWindow( void ) {
     request->m_replyPort = app->getReplyPort()->getId();
     request->m_position = m_position;
     request->m_size = m_size;
-    request->m_order = WINDOW_ORDER_NORMAL;
+    request->m_order = m_order;
     request->m_flags = m_flags;
     memcpy( reinterpret_cast<void*>(request + 1), m_title.c_str(), m_title.size() + 1 );
 
