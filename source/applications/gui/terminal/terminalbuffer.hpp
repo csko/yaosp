@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include <yutil++/mutex.hpp>
+#include <yutil++/thread/mutex.hpp>
 
 enum TerminalColor {
     BLACK = 0,
@@ -118,7 +118,7 @@ class TerminalBuffer {
 
     TerminalLine** m_lines;
 
-    yutilpp::Mutex m_mutex;
+    yutilpp::thread::Mutex m_mutex;
 }; /* class TerminalBuffer */
 
 #endif /* _TERMINAL_TERMINALBUFFER_HPP_ */

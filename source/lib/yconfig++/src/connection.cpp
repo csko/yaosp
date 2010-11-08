@@ -17,7 +17,7 @@
  */
 
 #include <string.h>
-#include <yutil++/thread.hpp>
+#include <yutil++/thread/thread.hpp>
 
 #include <yconfig++/connection.hpp>
 #include <yconfig++/protocol.hpp>
@@ -40,7 +40,7 @@ bool Connection::init(void) {
             break;
         }
 
-        yutilpp::Thread::uSleep(100 * 1000);
+        yutilpp::thread::Thread::uSleep(100 * 1000);
     }
 
     if (!m_replyPort->createNew()) {

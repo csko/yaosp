@@ -19,11 +19,11 @@
 #ifndef _INPUT_HPP_
 #define _INPUT_HPP_
 
-#include <yutil++/thread.hpp>
+#include <yutil++/thread/thread.hpp>
 
 class WindowManager;
 
-class InputThread : public yutilpp::Thread {
+class InputThread : public yutilpp::thread::Thread {
   public:
     InputThread( WindowManager* windowManager );
     virtual ~InputThread( void ) {}

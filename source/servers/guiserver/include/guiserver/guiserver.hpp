@@ -23,7 +23,7 @@
 
 #include <ygui++/yconstants.hpp>
 #include <yutil++/ipcport.hpp>
-#include <yutil++/mutex.hpp>
+#include <yutil++/thread/mutex.hpp>
 
 #include <guiserver/graphicsdriver.hpp>
 #include <guiserver/input.hpp>
@@ -65,7 +65,7 @@ class GuiServer {
     FontStorage* m_fontStorage;
     yutilpp::IPCPort* m_serverPort;
 
-    yutilpp::Mutex m_applicationListLock;
+    yutilpp::thread::Mutex m_applicationListLock;
     std::vector<Application*> m_applicationList;
 
     std::vector<GuiServerListener*> m_listeners;

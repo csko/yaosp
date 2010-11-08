@@ -26,9 +26,9 @@
 #include <ygui++/imageloader.hpp>
 #include <ygui++/point.hpp>
 #include <ygui++/yconstants.hpp>
-#include <yutil++/mutex.hpp>
 #include <yutil++/ipcport.hpp>
-#include <yutil++/thread.hpp>
+#include <yutil++/thread/thread.hpp>
+#include <yutil++/thread/mutex.hpp>
 
 namespace yguipp {
 
@@ -92,7 +92,7 @@ class Application {
     void handleScreenModeChanged(const void* buffer);
 
   private:
-    yutilpp::Mutex* m_lock;
+    yutilpp::thread::Mutex* m_lock;
 
     yutilpp::IPCPort* m_guiServerPort;
     yutilpp::IPCPort* m_clientPort;
@@ -106,7 +106,7 @@ class Application {
     WindowMap m_windowMap;
     std::vector<ApplicationListener*> m_listeners;
 
-    yutilpp::Thread::Id m_mainLoopThread;
+    yutilpp::thread::Thread::Id m_mainLoopThread;
 
     static Application* m_instance;
 }; /* class Application */

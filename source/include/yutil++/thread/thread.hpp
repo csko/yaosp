@@ -22,6 +22,7 @@
 #include <string>
 
 namespace yutilpp {
+namespace thread {
 
 class Thread {
   public:
@@ -53,6 +54,7 @@ class Thread {
     std::string m_name;
 }; /* class Thread */
 
+} /* namespace thread */
 } /* namespace yutilpp */
 
 #endif /* _THREAD_HPP_ */

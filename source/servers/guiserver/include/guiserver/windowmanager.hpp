@@ -22,7 +22,7 @@
 #include <vector>
 
 #include <ygui++/point.hpp>
-#include <yutil++/mutex.hpp>
+#include <yutil++/thread/mutex.hpp>
 
 #include <guiserver/window.hpp>
 #include <guiserver/graphicsdriver.hpp>
@@ -73,7 +73,7 @@ class WindowManager : public GuiServerListener {
     int invertWindowRect(void);
 
   private:
-    yutilpp::Mutex m_mutex;
+    yutilpp::thread::Mutex m_mutex;
     std::vector<Window*> m_windowStack;
 
     GraphicsDriver* m_graphicsDriver;

@@ -22,6 +22,7 @@
 #include <string>
 
 namespace yutilpp {
+namespace thread {
 
 class Mutex;
 
@@ -46,6 +47,7 @@ class Mutex {
     int m_id;
 }; /* class Mutex */
 
+} /* namespace thread */
 } /* namespace yutilpp */
 
 #endif /* _MUTEX_HPP_ */

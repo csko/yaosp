@@ -1,4 +1,4 @@
-/* yaosp thread implementation
+/* yaosp IPC port implementation
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,53 +16,40 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <time.h>
+#include <yaosp/yaosp.h>
 #include <yaosp/syscall.h>
 #include <yaosp/syscall_table.h>
 
-#include <yutil++/thread.hpp>
+#include <yutil++/thread/mutex.hpp>
 
 namespace yutilpp {
+namespace thread {
 
-Thread::Thread( const std::string& name ) : m_id(-1), m_name(name) {
+ScopedMutex::ScopedMutex(Mutex* mutex) : m_mutex(mutex) {
+    m_mutex->lock();
 }
 
-Thread::~Thread( void ) {
+ScopedMutex::~ScopedMutex(void) {
+    m_mutex->unLock();
 }
 
-bool Thread::start( void ) {
-    m_id = syscall5(
-        SYS_create_thread, ( int )m_name.c_str(), PRIORITY_NORMAL,
-        ( int )starter, ( int )this, 0
+Mutex::Mutex( const std::string& name, bool recursive ) {
+    m_id = syscall2(
+        SYS_mutex_create, reinterpret_cast<uint32_t>( name.c_str() ), recursive ? MUTEX_RECURSIVE : MUTEX_NONE
     );
-
-    if ( m_id < 0 ) {
-        return false;
-    }
-
-    syscall1( SYS_wake_up_thread, m_id );
-
-    return true;
 }
 
-void Thread::starter( void* arg ) {
-    Thread* t;
-
-    t = reinterpret_cast<Thread*>(arg);
-    t->run();
+Mutex::~Mutex( void ) {
+    syscall1( SYS_mutex_destroy, m_id );
 }
 
-bool Thread::uSleep(uint64_t usecs) {
-    struct timespec req;
-
-    req.tv_sec = usecs / 1000000;
-    req.tv_nsec = ( usecs % 1000000 ) * 1000;
-
-    return ( nanosleep(&req, NULL) == 0 );
+int Mutex::lock( void ) {
+    return syscall1( SYS_mutex_lock, m_id );
 }
 
-Thread::Id Thread::currentThread(void) {
-    return syscall0(SYS_gettid);
+int Mutex::unLock( void ) {
+    return syscall1( SYS_mutex_unlock, m_id );
 }
 
+} /* namespace thread */
 } /* namespace yutilpp */

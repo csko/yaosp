@@ -78,7 +78,7 @@ int GuiServer::changeScreenMode(const yguipp::ScreenModeInfo& modeInfo) {
     m_windowManager->unLock();
 
     {
-        yutilpp::ScopedMutex lock(&m_applicationListLock);
+        yutilpp::thread::ScopedMutex lock(&m_applicationListLock);
 
         for (std::vector<Application*>::const_iterator it = m_applicationList.begin();
              it != m_applicationList.end();
@@ -92,7 +92,7 @@ int GuiServer::changeScreenMode(const yguipp::ScreenModeInfo& modeInfo) {
 }
 
 void GuiServer::removeApplication(Application* application) {
-    yutilpp::ScopedMutex lock(&m_applicationListLock);
+    yutilpp::thread::ScopedMutex lock(&m_applicationListLock);
 
     for (std::vector<Application*>::iterator it = m_applicationList.begin();
          it != m_applicationList.end();
@@ -170,7 +170,7 @@ int GuiServer::run(void) {
                 application->start();
 
                 {
-                    yutilpp::ScopedMutex lock(&m_applicationListLock);
+                    yutilpp::thread::ScopedMutex lock(&m_applicationListLock);
                     m_applicationList.push_back(application);
                 }
 

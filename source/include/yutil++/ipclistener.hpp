@@ -19,24 +19,24 @@
 #ifndef _IPCLISTENER_HPP_
 #define _IPCLISTENER_HPP_
 
-#include <yutil++/thread.hpp>
 #include <yutil++/ipcport.hpp>
+#include <yutil++/thread/thread.hpp>
 
 namespace yutilpp {
 
-class IPCListener : public Thread {
+class IPCListener : public thread::Thread {
   public:
-    IPCListener( const std::string& name, size_t bufferSize = 1024 );
-    virtual ~IPCListener( void );
+    IPCListener(const std::string& name, size_t bufferSize = 1024);
+    virtual ~IPCListener(void);
 
     bool init(void);
     void stopListener(void);
 
     IPCPort* getPort(void);
 
-    int run( void );
+    int run(void);
 
-    virtual int ipcDataAvailable( uint32_t code, void* data, size_t size ) = 0;
+    virtual int ipcDataAvailable(uint32_t code, void* data, size_t size) = 0;
 
   private:
     IPCPort* m_port;

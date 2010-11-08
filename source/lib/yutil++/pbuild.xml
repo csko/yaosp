@@ -24,12 +24,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <pinclude file="${toplevel}/config/targets.xml" targets="clean,prepare,all"/>
 
     <array name="files">
-        <item>src/thread.cpp</item>
         <item>src/ipcport.cpp</item>
         <item>src/ipclistener.cpp</item>
-        <item>src/mutex.cpp</item>
         <item>src/buffer.cpp</item>
         <item>src/stringutils.cpp</item>
+        <item>src/thread/thread.cpp</item>
+        <item>src/thread/mutex.cpp</item>
         <item>src/storage/directory.cpp</item>
         <item>src/storage/file.cpp</item>
     </array>

@@ -20,11 +20,11 @@
 #define _TERMINAL_PTYHANDLER_HPP_
 
 #include <ygui++/widget.hpp>
-#include <yutil++/thread.hpp>
+#include <yutil++/thread/thread.hpp>
 
 #include "terminalparser.hpp"
 
-class PtyHandler : public yutilpp::Thread, public yguipp::event::KeyListener {
+class PtyHandler : public yutilpp::thread::Thread, public yguipp::event::KeyListener {
   public:
     PtyHandler(int masterPty, yguipp::Widget* view, TerminalParser* parser);
 

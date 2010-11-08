@@ -29,7 +29,7 @@
 #include <ygui++/yconstants.hpp>
 #include <ygui++/rect.hpp>
 #include <ygui++/point.hpp>
-#include <yutil++/mutex.hpp>
+#include <yutil++/thread/mutex.hpp>
 
 class FontGlyph {
   public:
@@ -123,7 +123,7 @@ class FontStyle {
     bool m_scalable;
     bool m_fixedWidth;
 
-    yutilpp::Mutex m_mutex;
+    yutilpp::thread::Mutex m_mutex;
     std::map<yguipp::FontInfo, FontNode*> m_nodes;
 }; /* class FontStyle */
 

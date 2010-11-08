@@ -17,13 +17,11 @@
  */
 
 #include <assert.h>
-#include <iostream>
 
 #include <ygui++/application.hpp>
 #include <ygui++/imageloader.hpp>
 #include <ygui++/protocol.hpp>
 #include <ygui++/window.hpp>
-#include <yutil++/thread.hpp>
 
 namespace yguipp {
 
@@ -45,10 +43,10 @@ bool Application::init( void ) {
             break;
         }
 
-        yutilpp::Thread::uSleep( 100 * 1000 );
+        yutilpp::thread::Thread::uSleep( 100 * 1000 );
     }
 
-    m_lock = new yutilpp::Mutex("app lock");
+    m_lock = new yutilpp::thread::Mutex("app lock");
     m_serverPort = new yutilpp::IPCPort();
     m_clientPort = new yutilpp::IPCPort();
     m_clientPort->createNew();
@@ -145,7 +143,7 @@ yutilpp::IPCPort* Application::getReplyPort( void ) {
 int Application::mainLoop(void) {
     Message msg;
 
-    m_mainLoopThread = yutilpp::Thread::currentThread();
+    m_mainLoopThread = yutilpp::thread::Thread::currentThread();
 
     while (!m_windowMap.empty()) {
         if (receiveMessage(msg)) {
@@ -164,7 +162,7 @@ bool Application::isEventDispatchThread(void) {
         return false;
     }
 
-    return (yutilpp::Thread::currentThread() == m_mainLoopThread);
+    return (yutilpp::thread::Thread::currentThread() == m_mainLoopThread);
 }
 
 bool Application::createInstance( const std::string& name ) {
