@@ -14,10 +14,18 @@ fi
 
 # Unpack and patch the sources
 
+if [ -d binutils-2.17 ] ; then
+    rm -rf binutils-2.17
+fi
+
 echo "Unpacking binutils ..."
 tar -jxf binutils-2.17.tar.bz2
 echo "Patching binutils ..."
 patch -p0 < binutils-2.17.patch
+
+if [ -d gcc-4.1.2 ] ; then
+    rm -rf gcc-4.1.2
+fi
 
 echo "Unpacking gcc ..."
 tar -jxf gcc-4.1.2.tar.bz2
@@ -26,13 +34,13 @@ patch -p0 < gcc-4.1.2.patch
 
 # Compile binutils
 
-if [ -f binutils-build ] ; then
+if [ -d binutils-build ] ; then
     rm -rf binutils-build
 fi
 
 mkdir binutils-build
 
-if [ -f binutils-bin ] ; then
+if [ -d binutils-bin ] ; then
     rm -rf binutils-bin
 fi
 
@@ -46,13 +54,13 @@ cd ..
 
 # Compile gcc
 
-if [ -f gcc-build ] ; then
+if [ -d gcc-build ] ; then
     rm -rf gcc-build
 fi
 
 mkdir gcc-build
 
-if [ -f gcc-bin ] ; then
+if [ -d gcc-bin ] ; then
     rm -rf gcc-bin
 fi
 

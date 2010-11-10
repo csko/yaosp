@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-typedef unsigned int clock_t;
+typedef long clock_t;
 
 typedef struct timeval {
     time_t      tv_sec;  /* Seconds */
