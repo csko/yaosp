@@ -53,10 +53,10 @@ static uint8_t dbg_keymap[ 128 ] = {
 #endif /* ENABLE_DEBUGGER */
 
 static int info_trace_printer( ptr_t ip, ptr_t symbol_address, const char* symbol_name, void* data ) {
-    kprintf( INFO, "  0x%08x", ip );
+    kprintf( INFO, "    0x%08x", ip );
 
-    if ( ( symbol_address != 0 ) &&
-         ( symbol_name != NULL ) ) {
+    if ((symbol_address != 0) &&
+        (symbol_name != NULL)) {
         kprintf( INFO, " (%s+0x%x)", symbol_name, ip - symbol_address );
     }
 

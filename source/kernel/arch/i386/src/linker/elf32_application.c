@@ -139,38 +139,49 @@ static int elf32_application_get_symbol( const char* name, ptr_t* address ) {
 static int elf32_application_get_image_symbol_info( elf32_image_t* image, ptr_t address,
                                                     int* info_valid, symbol_info_t* info ) {
     uint32_t i;
-    symbol_info_t tmp_info;
+    memory_region_t* text_region;
 
-    if ( address >= image->text_region->address ) {
-        if ( elf32_get_symbol_info( &image->info, address - image->text_region->address, &tmp_info ) == 0 ) {
-            tmp_info.address += image->text_region->address;
+    text_region = image->text_region;
 
-            if ( ( !*info_valid ) ||
-                ( ( address - tmp_info.address ) < ( address - info->address ) ) ) {
-                *info_valid = 1;
-                memcpy( info, &tmp_info, sizeof(symbol_info_t) );
-            }
+    if ((address >= text_region->address) &&
+        (address <= (text_region->address + text_region->size - 1))) {
+        int ret;
+
+        ret = elf32_get_symbol_info(&image->info, address - text_region->address + image->info.virtual_address, info);
+
+        if (ret != 0) {
+            return ret;
         }
+
+        info->address -= text_region->address;
+        info->address += image->info.virtual_address;
+
+        return 0;
     }
 
     for ( i = 0; i < image->info.needed_count; i++ ) {
-        elf32_application_get_image_symbol_info( &image->subimages[i], address, info_valid, info );
+        if (elf32_application_get_image_symbol_info(&image->subimages[i], address, info_valid, info) == 0) {
+            return 0;
+        }
     }
 
-    return 0;
+    return -ENOENT;
 }
 
 static int elf32_application_get_symbol_info( thread_t* thread, ptr_t address, symbol_info_t* info ) {
+    int ret;
     int info_valid;
     elf32_context_t* app_context;
 
     app_context = ( elf32_context_t* )thread->process->loader_data;
 
-    elf32_application_get_image_symbol_info( &app_context->main, address, &info_valid, info );
+    ret = elf32_application_get_image_symbol_info(&app_context->main, address, &info_valid, info);
 
-    if ( !info_valid ) {
-        return -ENOENT;
+    if (ret != 0) {
+        return ret;
     }
+
+    ASSERT(info_valid);
 
     return 0;
 }

@@ -568,12 +568,9 @@ int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_
     elf_symbol_t* symbol;
 
     /* Image without symbols?! */
-
-    if ( info->symbol_count == 0 ) {
+    if (info->symbol_count == 0) {
         return -ENOENT;
     }
-
-    /* Make sure that the specified address is inside of this module */
 
     symbol_info->name = NULL;
     symbol_info->address = 0;
@@ -599,7 +596,7 @@ int elf32_get_symbol_info( elf32_image_info_t* info, ptr_t address, symbol_info_
             last_diff = address - symbol_info->address;
             curr_diff = address - symbol->value;
 
-            if ( curr_diff < last_diff ) {
+            if ( curr_diff <= last_diff ) {
                 symbol_info->name = name;
                 symbol_info->address = symbol->value;
             }
