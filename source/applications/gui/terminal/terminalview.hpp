@@ -23,13 +23,16 @@
 
 #include "terminalbuffer.hpp"
 
-class TerminalView : public yguipp::Widget {
+class TerminalView : public yguipp::Widget, public TerminalBufferListener {
   public:
     TerminalView(TerminalBuffer* buffer);
 
     yguipp::Font* getFont(void);
+    yguipp::Point getPreferredSize(void);
 
     int paint(yguipp::GraphicsContext* g);
+
+    int onHistoryChanged(TerminalBuffer* buffer);
 
   private:
     int paintLine(yguipp::GraphicsContext* g, int lineIndex, yguipp::Point position);

@@ -20,11 +20,12 @@
 #define _SCROLLPANEL_HPP_
 
 #include <ygui++/scrollbar.hpp>
+#include <ygui++/event/widgetlistener.hpp>
 #include <ygui++/event/adjustmentlistener.hpp>
 
 namespace yguipp {
 
-class ScrollPanel : public Widget, event::AdjustmentListener {
+class ScrollPanel : public Widget, public event::WidgetListener, public event::AdjustmentListener {
   public:
     ScrollPanel(void);
     virtual ~ScrollPanel(void);
@@ -33,11 +34,15 @@ class ScrollPanel : public Widget, event::AdjustmentListener {
 
     int validate(void);
 
+    int onWidgetResized(Widget* widget);
     int onAdjustmentValueChanged(Widget* widget);
 
   private:
     int verticalValueChanged(void);
     int horizontalValueChanged(void);
+
+    int updateScrolledWidgetSizes(const Point& visibleSize, const Point& preferredSize);
+    int updateScrollBarValues(const Point& visibleSize, const Point& preferredSize);
 
   private:
     ScrollBar* m_verticalBar;

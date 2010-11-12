@@ -50,6 +50,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/event/actionlistener.cpp</item>
         <item>src/event/keylistener.cpp</item>
         <item>src/event/adjustmentlistener.cpp</item>
+        <item>src/event/widgetlistener.cpp</item>
     </array>
 
     <target name="compile">

@@ -314,16 +314,17 @@ Widget* Window::findWidgetAtHelper( Widget* widget, const Point& position,
     widgetRect += leftTop;
     widgetRect &= visibleRect;
 
-    if ( ( !widgetRect.isValid() ) ||
-         ( !widgetRect.hasPoint(position) ) ) {
+    if ((!widgetRect.isValid()) ||
+         (!widgetRect.hasPoint(position))) {
         return NULL;
     }
 
+
     const Widget::ChildVector& children = widget->getChildren();
 
-    for ( Widget::ChildVectorCIter it = children.begin();
-          it != children.end();
-          ++it ) {
+    for (Widget::ChildVectorCIter it = children.begin();
+         it != children.end();
+         ++it) {
         Rect newVisibleRect;
         Widget* result;
         Widget* child = it->first;
@@ -341,7 +342,7 @@ Widget* Window::findWidgetAtHelper( Widget* widget, const Point& position,
 
         result = findWidgetAtHelper( child, position, leftTop, newVisibleRect );
 
-        if ( result != NULL ) {
+        if (result != NULL) {
             return result;
         }
 

@@ -19,6 +19,7 @@
 #ifndef _TERMINAL_TERMINALBUFFER_HPP_
 #define _TERMINAL_TERMINALBUFFER_HPP_
 
+#include <deque>
 #include <string>
 #include <vector>
 
@@ -49,6 +50,7 @@ struct TerminalAttribute {
 class TerminalLine {
   public:
     TerminalLine(void);
+    TerminalLine(TerminalLine* line);
 
     void clear(char c, TerminalAttribute attr, int start = 0, int end = -1);
     bool setWidth(int width);
@@ -58,12 +60,24 @@ class TerminalLine {
     int m_dirtyWidth;
 }; /* class TerminalLine */
 
+class TerminalBuffer;
+
+class TerminalBufferListener {
+  public:
+    virtual ~TerminalBufferListener(void) {}
+
+    virtual int onHistoryChanged(TerminalBuffer* buffer) = 0;
+}; /* class TerminalBufferListener */
+
 class TerminalBuffer {
   public:
     TerminalBuffer(int width, int height);
     ~TerminalBuffer(void);
 
+    void addListener(TerminalBufferListener* listener);
+
     int getLineCount(void);
+    int getHistorySize(void);
     void getCursorPosition(int& x, int& y);
     inline int getWidth(void) { return m_width; }
     inline int getHeight(void) { return m_height; }
@@ -103,6 +117,9 @@ class TerminalBuffer {
     inline void unLock(void) { m_mutex.unLock(); }
 
   private:
+    void fireHistoryChangedListeners(void);
+
+  private:
     int m_width;
     int m_height;
     int m_scrollTop;
@@ -117,6 +134,9 @@ class TerminalBuffer {
     TerminalAttribute m_savedAttrib;
 
     TerminalLine** m_lines;
+    std::deque<TerminalLine*> m_history;
+
+    std::vector<TerminalBufferListener*> m_listeners;
 
     yutilpp::thread::Mutex m_mutex;
 }; /* class TerminalBuffer */

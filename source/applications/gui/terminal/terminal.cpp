@@ -23,6 +23,7 @@
 #include <ygui++/application.hpp>
 #include <ygui++/window.hpp>
 #include <ygui++/panel.hpp>
+#include <ygui++/scrollpanel.hpp>
 #include <ygui++/layout/borderlayout.hpp>
 
 #include "terminal.hpp"
@@ -52,7 +53,11 @@ int Terminal::run(void) {
 
     Panel* container = dynamic_cast<Panel*>(window->getContainer());
     container->setLayout(new layout::BorderLayout());
-    container->add(termView, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
+
+    ScrollPanel* scrollPanel = new ScrollPanel();
+    scrollPanel->add(termView);
+
+    container->add(scrollPanel, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
 
     window->show();
     m_ptyHandler = new PtyHandler(m_masterPty, termView, m_parser);

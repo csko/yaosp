@@ -25,13 +25,14 @@
 #include <ygui++/graphicscontext.hpp>
 #include <ygui++/layout/layout.hpp>
 #include <ygui++/border/border.hpp>
+#include <ygui++/event/widgetlistener.hpp>
 #include <ygui++/event/keylistener.hpp>
 
 namespace yguipp {
 
 class Window;
 
-class Widget : public Object, public event::KeySpeaker {
+class Widget : public Object, public event::WidgetSpeaker, public event::KeySpeaker {
   public:
     friend class Window;
 

@@ -45,6 +45,8 @@ void ScrollPanel::add(Widget* child, layout::LayoutData* data) {
 
     m_scrolledWidget = child;
     Widget::add(m_scrolledWidget);
+
+    m_scrolledWidget->addWidgetListener(this);
 }
 
 int ScrollPanel::validate(void) {
@@ -65,20 +67,27 @@ int ScrollPanel::validate(void) {
 
     /* The scrolled widget. */
     if (m_scrolledWidget != NULL) {
-        Point fullSize;
+        m_scrolledWidget->setPosition(Point(0, 0));
 
         preferredSize = m_scrolledWidget->getPreferredSize();
-
-        fullSize.m_x = std::max(preferredSize.m_x, visibleSize.m_x);
-        fullSize.m_y = std::max(preferredSize.m_y, visibleSize.m_y);
-
-        m_scrolledWidget->setPosition(Point(0, 0));
-        m_scrolledWidget->setSizes(visibleSize, fullSize);
+        updateScrolledWidgetSizes(visibleSize, preferredSize);
     }
 
     /* Update scrollbar values. */
-    m_verticalBar->setValues(0, visibleSize.m_y, 0, preferredSize.m_y);
-    m_horizontalBar->setValues(0, visibleSize.m_x, 0, preferredSize.m_x);
+    updateScrollBarValues(visibleSize, preferredSize);
+
+    return 0;
+}
+
+int ScrollPanel::onWidgetResized(Widget* widget) {
+    Point size = getSize();
+    Point verticalSize = m_verticalBar->getPreferredSize();
+    Point horizontalSize = m_horizontalBar->getPreferredSize();
+    Point preferredSize = m_scrolledWidget->getPreferredSize();
+    Point visibleSize = size - Point(verticalSize.m_x, horizontalSize.m_y);
+
+    updateScrolledWidgetSizes(visibleSize, preferredSize);
+    updateScrollBarValues(visibleSize, preferredSize);
 
     return 0;
 }
@@ -117,6 +126,41 @@ int ScrollPanel::horizontalValueChanged(void) {
     m_scrolledWidget->setScrollOffset(scrollOffset);
 
     m_scrolledWidget->invalidate();
+
+    return 0;
+}
+
+int ScrollPanel::updateScrolledWidgetSizes(const Point& visibleSize, const Point& preferredSize) {
+    Point fullSize;
+
+    fullSize.m_x = std::max(preferredSize.m_x, visibleSize.m_x);
+    fullSize.m_y = std::max(preferredSize.m_y, visibleSize.m_y);
+
+    m_scrolledWidget->setSizes(visibleSize, fullSize);
+
+    return 0;
+}
+
+int ScrollPanel::updateScrollBarValues(const Point& visibleSize, const Point& preferredSize) {
+    int value;
+
+    /* Update the vertical bar. */
+    value = m_verticalBar->getValue();
+
+    if (value > (preferredSize.m_y - visibleSize.m_y)) {
+        value = preferredSize.m_y - visibleSize.m_y;
+    }
+
+    m_verticalBar->setValues(value, visibleSize.m_y, 0, preferredSize.m_y);
+
+    /* Update the horizontal bar. */
+    value = m_horizontalBar->getValue();
+
+    if (value > (preferredSize.m_x - visibleSize.m_x)) {
+        value = preferredSize.m_x - visibleSize.m_x;
+    }
+
+    m_horizontalBar->setValues(value, visibleSize.m_x, 0, preferredSize.m_x);
 
     return 0;
 }

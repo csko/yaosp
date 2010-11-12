@@ -43,6 +43,8 @@ yguipp::Color TerminalView::m_normalColors[COLOR_COUNT] = {
 };
 
 TerminalView::TerminalView(TerminalBuffer* buffer) : m_buffer(buffer) {
+    buffer->addListener(this);
+
     m_font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(8));
     m_font->init();
 }
@@ -51,13 +53,20 @@ yguipp::Font* TerminalView::getFont(void) {
     return m_font;
 }
 
+yguipp::Point TerminalView::getPreferredSize(void) {
+    return yguipp::Point(
+        80 * m_font->getWidth("a"),
+        std::max(25, m_buffer->getLineCount()) * m_font->getHeight()
+    );
+}
+
 int TerminalView::paint(yguipp::GraphicsContext* g) {
     int cursorX;
     int cursorY;
     yguipp::Point p;
 
     g->setPenColor(yguipp::Color(0, 0, 0));
-    g->fillRect(yguipp::Rect(getVisibleSize()));
+    g->fillRect(yguipp::Rect(getVisibleSize()) - getScrollOffset());
 
     g->setPenColor(yguipp::Color(255, 255, 255));
     g->setFont(m_font);
@@ -66,16 +75,22 @@ int TerminalView::paint(yguipp::GraphicsContext* g) {
 
     m_buffer->lock();
 
-    for (int i = 0; i < m_buffer->getHeight(); i++) {
+    for (int i = 0; i < m_buffer->getLineCount(); i++) {
         paintLine(g, i, p);
         p.m_y += m_font->getHeight();
     }
 
     m_buffer->getCursorPosition(cursorX, cursorY);
+    cursorY += m_buffer->getHistorySize();
     paintCursor(g, cursorX, cursorY, m_buffer->lineAt(cursorY));
 
     m_buffer->unLock();
 
+    return 0;
+}
+
+int TerminalView::onHistoryChanged(TerminalBuffer* buffer) {
+    fireWidgetResizedListeners(this);
     return 0;
 }
 

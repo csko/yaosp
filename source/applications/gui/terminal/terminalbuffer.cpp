@@ -34,6 +34,12 @@ bool TerminalAttribute::operator==(const TerminalAttribute& attr) {
 TerminalLine::TerminalLine(void) : m_dirtyWidth(0) {
 }
 
+TerminalLine::TerminalLine(TerminalLine* line) {
+    m_text = line->m_text;
+    m_attr = line->m_attr;
+    m_dirtyWidth = line->m_dirtyWidth;
+}
+
 void TerminalLine::clear(char c, TerminalAttribute attr, int start, int end) {
     if (end == -1) {
         end = (int)m_text.size() - 1;
@@ -76,8 +82,16 @@ TerminalBuffer::~TerminalBuffer(void) {
     delete[] m_lines;
 }
 
+void TerminalBuffer::addListener(TerminalBufferListener* listener) {
+    m_listeners.push_back(listener);
+}
+
 int TerminalBuffer::getLineCount(void) {
-    return m_height /* + history size */;
+    return m_history.size() + m_height;
+}
+
+int TerminalBuffer::getHistorySize(void) {
+    return m_history.size();
 }
 
 void TerminalBuffer::getCursorPosition(int& x, int& y) {
@@ -88,11 +102,10 @@ void TerminalBuffer::getCursorPosition(int& x, int& y) {
 TerminalLine* TerminalBuffer::lineAt(int index) {
     assert((index >= 0) && (index < getLineCount()));
 
-    int historySize = 0;
+    int historySize = (int)m_history.size();
 
     if (index < historySize) {
-        // todo
-        return NULL;
+        return m_history[index];
     } else {
         return m_lines[index - historySize];
     }
@@ -109,7 +122,7 @@ bool TerminalBuffer::setSize(int width, int height) {
 
     /* Create new lines in the new buffer if it's bigger than the old one. */
     for (int i = linesToCopy; i < height; i++) {
-        newLines[i] = new TerminalLine;
+        newLines[i] = new TerminalLine();
     }
 
     /* Delete lines from the old buffer if it's bigger than the new one. */
@@ -245,6 +258,19 @@ void TerminalBuffer::scrollBy(int count) {
     assert(m_scrollTop <= m_scrollBottom);
     assert(count != 0);
 
+    /* Save scrolled lines to the history. */
+    if ((m_scrollTop == 0) &&
+        (count > 0)) {
+        int linesToSave = std::min(count, m_height);
+
+        for (int i = 0; i < linesToSave; i++) {
+            m_history.push_back(new TerminalLine(m_lines[i]));
+        }
+
+        fireHistoryChangedListeners();
+    }
+
+    /* Scroll the requested region. */
     int scrollHeight = m_scrollBottom - m_scrollTop + 1;
 
     if (abs(count) >= scrollHeight) {
@@ -305,3 +331,12 @@ void TerminalBuffer::eraseBefore(void) {
 void TerminalBuffer::eraseAfter(void) {
     m_lines[m_cursorY]->clear(' ', m_attrib, m_cursorX);
 }
+
+void TerminalBuffer::fireHistoryChangedListeners(void) {
+    for (std::vector<TerminalBufferListener*>::const_iterator it = m_listeners.begin();
+         it != m_listeners.end();
+         ++it) {
+        (*it)->onHistoryChanged(this);
+    }
+}
+
