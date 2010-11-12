@@ -159,6 +159,17 @@ void GraphicsContext::drawText( const Point& p, const std::string& text, int len
     m_needToFlush = true;
 }
 
+void GraphicsContext::drawLine( const Point& p1, const Point& p2 ) {
+    RDrawLine* cmd;
+
+    cmd = reinterpret_cast<RDrawLine*>(m_window->getRenderTable()->allocate(sizeof(RDrawLine)));
+    cmd->m_header.m_cmd = R_DRAW_LINE;
+    cmd->m_p1 = p1 + m_leftTop;
+    cmd->m_p2 = p2 + m_leftTop;
+
+    m_needToFlush = true;
+}
+
 void GraphicsContext::finish( void ) {
     if ( m_needToFlush ) {
         RenderHeader* cmd;

@@ -16,6 +16,7 @@ enum {
     R_FILL_RECT,
     R_DRAW_TEXT,
     R_DRAW_BITMAP,
+    R_DRAW_LINE,
     R_DONE
 };
 
@@ -63,6 +64,12 @@ struct RDrawBitmap {
     RenderHeader m_header;
     Point m_position;
     int m_bitmapHandle;
+} __attribute__((packed));
+
+struct RDrawLine {
+    RenderHeader m_header;
+    Point m_p1;
+    Point m_p2;
 } __attribute__((packed));
 
 } /* namespace yguipp */

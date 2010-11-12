@@ -137,6 +137,26 @@ void Window::handleRender( uint8_t* data, size_t size ) {
                 break;
             }
 
+            case yguipp::R_DRAW_LINE : {
+                yguipp::RDrawLine* cmd = reinterpret_cast<yguipp::RDrawLine*>(data);
+                yguipp::Point p1 = cmd->m_p1;
+                yguipp::Point p2 = cmd->m_p2;
+
+                if ((m_flags & yguipp::WINDOW_NO_BORDER) == 0) {
+                    yguipp::Point leftTop = m_guiServer->getWindowManager()->getDecorator()->leftTop();
+
+                    p1 += leftTop;
+                    p2 += leftTop;
+                }
+
+                m_guiServer->getGraphicsDriver()->drawLine(
+                    m_bitmap, m_clipRect, p1, p2, m_penColor, yguipp::DM_COPY
+                );
+
+                data += sizeof(yguipp::RDrawLine);
+                break;
+            }
+
             case yguipp::R_DONE :
                 if (m_visible) {
                     m_guiServer->getWindowManager()->updateWindowRegion(this, m_screenRect);

@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yaosp/debug.h>
+
 #include <guiserver/graphicsdriver.hpp>
 
 int GraphicsDriver::drawRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
@@ -76,6 +78,18 @@ int GraphicsDriver::drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
     switch ( (int)bitmap->getColorSpace() ) {
         case yguipp::CS_RGB32 :
             drawText32(bitmap, clipRect, position, color, font, text, length);
+            break;
+    }
+
+    return 0;
+}
+
+
+int GraphicsDriver::drawLine( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& p1,
+                              const yguipp::Point& p2, const yguipp::Color& color, yguipp::DrawingMode mode ) {
+    switch ((int)bitmap->getColorSpace()) {
+        case yguipp::CS_RGB32 :
+            drawLine32(bitmap, clipRect, p1, p2, color, mode);
             break;
     }
 
@@ -358,6 +372,20 @@ int GraphicsDriver::blitBitmapBlend32( Bitmap* dest, const yguipp::Point& point,
             break;
         }
     }
+
+    return 0;
+}
+
+int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yguipp::Point p1,
+                                yguipp::Point p2, const yguipp::Color& color, yguipp::DrawingMode mode ) {
+    if ((!clipRect.hasPoint(p1)) ||
+        (!clipRect.hasPoint(p2))) {
+        dbprintf("drawLine32(): advanced line clipping not yet supported!\n");
+        /* todo */
+        return 0;
+    }
+
+    // todo
 
     return 0;
 }
