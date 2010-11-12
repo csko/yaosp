@@ -21,21 +21,35 @@
 
 #include <ygui++/widget.hpp>
 #include <ygui++/yconstants.hpp>
+#include <ygui++/event/adjustmentlistener.hpp>
 
 namespace yguipp {
 
-class ScrollBar : public Widget {
+class ScrollBar : public Widget, public event::AdjustmentSpeaker {
   public:
     ScrollBar(Orientation orientation, int min = 0, int max = 100, int value = 0, int extent = 10);
     virtual ~ScrollBar(void);
 
+    int getValue(void);
+    int setValues(int value, int extent, int min, int max);
+    int setIncrement(int increment);
+
     Point getPreferredSize(void);
 
+    int validate(void);
     int paint(GraphicsContext* g);
 
+    int mousePressed(const Point& p, int button);
+
   private:
+    int validateVertical(void);
+    int validateHorizontal(void);
+
     int paintVertical(GraphicsContext* g, const Point& size);
     int paintHorizontal(GraphicsContext* g, const Point& size);
+
+    int decreaseValue(void);
+    int increaseValue(void);
 
   private:
     Orientation m_orientation;
@@ -43,6 +57,10 @@ class ScrollBar : public Widget {
     int m_max;
     int m_value;
     int m_extent;
+    int m_increment;
+
+    Rect m_decRect;
+    Rect m_incRect;
 
     static const int m_scrollBarSize = 15;
     static const int m_scrollButtonSize = 15;

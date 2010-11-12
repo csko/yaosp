@@ -22,7 +22,12 @@ namespace yguipp {
 
 ScrollPanel::ScrollPanel(void) : m_scrolledWidget(NULL) {
     m_verticalBar = new ScrollBar(VERTICAL);
+    m_verticalBar->addAdjustmentListener(this);
+    m_verticalBar->setIncrement(10);
+
     m_horizontalBar = new ScrollBar(HORIZONTAL);
+    m_horizontalBar->addAdjustmentListener(this);
+    m_horizontalBar->setIncrement(10);
 
     Widget::add(m_verticalBar);
     Widget::add(m_horizontalBar);
@@ -55,11 +60,14 @@ int ScrollPanel::validate(void) {
     m_horizontalBar->setSize(Point(size.m_x - verticalSize.m_x, horizontalSize.m_y));
     m_horizontalBar->setPosition(Point(0, size.m_y - horizontalSize.m_y));
 
+    Point preferredSize;
+    Point visibleSize = size - Point(verticalSize.m_x, horizontalSize.m_y);
+
     /* The scrolled widget. */
     if (m_scrolledWidget != NULL) {
         Point fullSize;
-        Point visibleSize = size - Point(verticalSize.m_x, horizontalSize.m_y);
-        Point preferredSize = m_scrolledWidget->getPreferredSize();
+
+        preferredSize = m_scrolledWidget->getPreferredSize();
 
         fullSize.m_x = std::max(preferredSize.m_x, visibleSize.m_x);
         fullSize.m_y = std::max(preferredSize.m_y, visibleSize.m_y);
@@ -67,6 +75,48 @@ int ScrollPanel::validate(void) {
         m_scrolledWidget->setPosition(Point(0, 0));
         m_scrolledWidget->setSizes(visibleSize, fullSize);
     }
+
+    /* Update scrollbar values. */
+    m_verticalBar->setValues(0, visibleSize.m_y, 0, preferredSize.m_y);
+    m_horizontalBar->setValues(0, visibleSize.m_x, 0, preferredSize.m_x);
+
+    return 0;
+}
+
+int ScrollPanel::onAdjustmentValueChanged(Widget* widget) {
+    if (widget == m_verticalBar) {
+        verticalValueChanged();
+    } else if (widget == m_horizontalBar) {
+        horizontalValueChanged();
+    }
+
+    return 0;
+}
+
+int ScrollPanel::verticalValueChanged(void) {
+    if (m_scrolledWidget == NULL) {
+        return 0;
+    }
+
+    Point scrollOffset = m_scrolledWidget->getScrollOffset();
+    scrollOffset.m_y = -m_verticalBar->getValue();
+    m_scrolledWidget->setScrollOffset(scrollOffset);
+
+    m_scrolledWidget->invalidate();
+
+    return 0;
+}
+
+int ScrollPanel::horizontalValueChanged(void) {
+    if (m_scrolledWidget == NULL) {
+        return 0;
+    }
+
+    Point scrollOffset = m_scrolledWidget->getScrollOffset();
+    scrollOffset.m_x = -m_horizontalBar->getValue();
+    m_scrolledWidget->setScrollOffset(scrollOffset);
+
+    m_scrolledWidget->invalidate();
 
     return 0;
 }

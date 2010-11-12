@@ -100,6 +100,10 @@ void Widget::setPosition( const Point& p ) {
     m_position = p;
 }
 
+void Widget::setScrollOffset(const Point& p) {
+    m_scrollOffset = p;
+}
+
 void Widget::setSize( const Point& s ) {
     m_fullSize = s;
     m_visibleSize = s;

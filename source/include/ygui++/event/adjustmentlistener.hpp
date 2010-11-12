@@ -16,35 +16,39 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _SCROLLPANEL_HPP_
-#define _SCROLLPANEL_HPP_
+#ifndef _YGUIPP_EVENT_ADJUSTMENTLISTENER_HPP_
+#define _YGUIPP_EVENT_ADJUSTMENTLISTENER_HPP_
 
-#include <ygui++/scrollbar.hpp>
-#include <ygui++/event/adjustmentlistener.hpp>
+#include <vector>
 
 namespace yguipp {
 
-class ScrollPanel : public Widget, event::AdjustmentListener {
+class Widget;
+
+namespace event {
+
+class AdjustmentListener {
   public:
-    ScrollPanel(void);
-    virtual ~ScrollPanel(void);
+    virtual ~AdjustmentListener(void) {}
 
-    void add(Widget* child, layout::LayoutData* data = NULL);
+    virtual int onAdjustmentValueChanged(Widget* widget) = 0;
+}; /* class AdjustmentListener */
 
-    int validate(void);
+class AdjustmentSpeaker {
+  public:
+    virtual ~AdjustmentSpeaker(void) {}
 
-    int onAdjustmentValueChanged(Widget* widget);
+    void addAdjustmentListener(AdjustmentListener* listener);
+    void removeAdjustmentListener(AdjustmentListener* listener);
+
+  protected:
+    void fireAdjustmentListeners(Widget* widget);
 
   private:
-    int verticalValueChanged(void);
-    int horizontalValueChanged(void);
+    std::vector<AdjustmentListener*> m_listeners;
+}; /* class AdjustmentSpeaker */
 
-  private:
-    ScrollBar* m_verticalBar;
-    ScrollBar* m_horizontalBar;
-    Widget* m_scrolledWidget;
-}; /* class ScrollPanel */
-
+} /* namespace event */
 } /* namespace yguipp */
 
-#endif /* _SCROLLPANEL_HPP_ */
+#endif /* _YGUIPP_EVENT_ADJUSTMENTLISTENER_HPP_ */

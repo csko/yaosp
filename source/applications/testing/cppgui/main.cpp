@@ -35,7 +35,8 @@ using namespace yguipp::layout;
 
 class MyButton : public Button {
   public:
-    Point getPreferredSize(void) { return Point(500, 500); }
+    MyButton(void) : Button("My button") {}
+    Point getPreferredSize(void) { return Point(350, 350); }
 };
 
 int main( int argc, char** argv ) {

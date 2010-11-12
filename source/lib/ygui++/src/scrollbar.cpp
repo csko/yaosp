@@ -21,10 +21,36 @@
 namespace yguipp {
 
 ScrollBar::ScrollBar(Orientation orientation, int min, int max, int value, int extent)
-    : m_orientation(orientation), m_min(min), m_max(max), m_value(value), m_extent(extent) {
+    : m_orientation(orientation), m_min(min), m_max(max),
+      m_value(value), m_extent(extent), m_increment(1) {
 }
 
 ScrollBar::~ScrollBar(void) {
+}
+
+int ScrollBar::getValue(void) {
+    return m_value;
+}
+
+int ScrollBar::setValues(int value, int extent, int min, int max) {
+    // todo: validate!
+
+    m_min = min;
+    m_max = max;
+    m_value = value;
+    m_extent = extent;
+
+    return 0;
+}
+
+int ScrollBar::setIncrement(int increment) {
+    if (increment == 0) {
+        return -1;
+    }
+
+    m_increment = increment;
+
+    return 0;
 }
 
 Point ScrollBar::getPreferredSize(void) {
@@ -33,6 +59,20 @@ Point ScrollBar::getPreferredSize(void) {
         case HORIZONTAL : return Point(0, m_scrollBarSize);
         default : return Point();
     }
+}
+
+int ScrollBar::validate(void) {
+    switch (m_orientation) {
+        case VERTICAL :
+            validateVertical();
+            break;
+
+        case HORIZONTAL :
+            validateHorizontal();
+            break;
+    }
+
+    return 0;
 }
 
 int ScrollBar::paint(GraphicsContext* g) {
@@ -51,11 +91,39 @@ int ScrollBar::paint(GraphicsContext* g) {
     return 0;
 }
 
+int ScrollBar::mousePressed(const Point& p, int button) {
+    if (m_decRect.hasPoint(p)) {
+        decreaseValue();
+    } else if (m_incRect.hasPoint(p)) {
+        increaseValue();
+    }
+
+    return 0;
+}
+
+int ScrollBar::validateVertical(void) {
+    Point size = getSize();
+
+    m_decRect = Rect(0, 0, m_scrollBarSize - 1, m_scrollButtonSize - 1);
+    m_incRect = Rect(0, size.m_y - m_scrollButtonSize, m_scrollBarSize - 1, size.m_y - 1);
+
+    return 0;
+}
+
+int ScrollBar::validateHorizontal(void) {
+    Point size = getSize();
+
+    m_decRect = Rect(0, 0, m_scrollBarSize - 1, m_scrollButtonSize - 1);
+    m_incRect = Rect(size.m_x - m_scrollButtonSize, 0, size.m_x - 1, m_scrollBarSize - 1);
+
+    return 0;
+}
+
 int ScrollBar::paintVertical(GraphicsContext* g, const Point& size) {
     Rect r;
 
     /* Top button */
-    r = Rect(0, 0, m_scrollBarSize - 1, m_scrollButtonSize - 1);
+    r = m_decRect;
     g->setPenColor(Color(0, 0, 0));
     g->drawRect(r);
     r.resize(1, 1, -1, -1);
@@ -63,7 +131,7 @@ int ScrollBar::paintVertical(GraphicsContext* g, const Point& size) {
     g->fillRect(r);
 
     /* Bottom button */
-    r = Rect(0, size.m_y - m_scrollButtonSize, m_scrollBarSize - 1, size.m_y - 1);
+    r = m_incRect;
     g->setPenColor(Color(0, 0, 0));
     g->drawRect(r);
     r.resize(1, 1, -1, -1);
@@ -82,7 +150,7 @@ int ScrollBar::paintHorizontal(GraphicsContext* g, const Point& size) {
     Rect r;
 
     /* Left button */
-    r = Rect(0, 0, m_scrollButtonSize - 1, m_scrollBarSize - 1);
+    r = m_decRect;
     g->setPenColor(Color(0, 0, 0));
     g->drawRect(r);
     r.resize(1, 1, -1, -1);
@@ -90,7 +158,7 @@ int ScrollBar::paintHorizontal(GraphicsContext* g, const Point& size) {
     g->fillRect(r);
 
     /* Right button */
-    r = Rect(size.m_x - m_scrollButtonSize, 0, size.m_x - 1, m_scrollBarSize - 1);
+    r = m_incRect;
     g->setPenColor(Color(0, 0, 0));
     g->drawRect(r);
     r.resize(1, 1, -1, -1);
@@ -101,6 +169,38 @@ int ScrollBar::paintHorizontal(GraphicsContext* g, const Point& size) {
     g->setPenColor(Color(0, 0, 0));
     g->fillRect(Rect(m_scrollButtonSize, 0, size.m_x - (m_scrollButtonSize + 1), 0));
     g->fillRect(Rect(m_scrollButtonSize, m_scrollBarSize - 1, size.m_x - (m_scrollButtonSize + 1), m_scrollBarSize - 1));
+
+    return 0;
+}
+
+int ScrollBar::decreaseValue(void) {
+    if (m_value == m_min) {
+        return 0;
+    }
+
+    m_value -= m_increment;
+
+    if (m_value < m_min) {
+        m_value = m_min;
+    }
+
+    fireAdjustmentListeners(this);
+
+    return 0;
+}
+
+int ScrollBar::increaseValue(void) {
+    if (m_value == m_max) {
+        return 0;
+    }
+
+    m_value += m_increment;
+
+    if (m_value > m_max) {
+        m_value = m_max;
+    }
+
+    fireAdjustmentListeners(this);
 
     return 0;
 }
