@@ -23,9 +23,11 @@
 
 #include "terminalbuffer.hpp"
 
+class Terminal;
+
 class TerminalView : public yguipp::Widget, public TerminalBufferListener {
   public:
-    TerminalView(TerminalBuffer* buffer);
+    TerminalView(Terminal* terminal, TerminalBuffer* buffer);
 
     yguipp::Font* getFont(void);
     yguipp::Point getPreferredSize(void);
@@ -41,6 +43,8 @@ class TerminalView : public yguipp::Widget, public TerminalBufferListener {
     int paintCursor(yguipp::GraphicsContext* g, int cursorX, int cursorY, TerminalLine* line);
 
   private:
+    Terminal* m_terminal;
+
     yguipp::Font* m_font;
     TerminalBuffer* m_buffer;
 

@@ -23,7 +23,6 @@
 #include <ygui++/application.hpp>
 #include <ygui++/window.hpp>
 #include <ygui++/panel.hpp>
-#include <ygui++/scrollpanel.hpp>
 #include <ygui++/layout/borderlayout.hpp>
 
 #include "terminal.hpp"
@@ -43,28 +42,35 @@ int Terminal::run(void) {
         return EXIT_FAILURE;
     }
 
-    TerminalView* termView = new TerminalView(m_buffer);
+    TerminalView* termView = new TerminalView(this, m_buffer);
+    m_scrollPanel = new ScrollPanel(ScrollPanel::SCROLLBAR_ALWAYS, ScrollPanel::SCROLLBAR_NEVER);
+    m_scrollPanel->add(termView);
 
     Window* window = new Window(
         "Terminal", Point(50,50),
-        Point(termView->getFont()->getWidth("a") * 80, termView->getFont()->getHeight() * 25)
+        m_scrollPanel->getPreferredSize()
     );
     window->init();
 
     Panel* container = dynamic_cast<Panel*>(window->getContainer());
     container->setLayout(new layout::BorderLayout());
 
-    ScrollPanel* scrollPanel = new ScrollPanel();
-    scrollPanel->add(termView);
-
-    container->add(scrollPanel, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
+    container->add(m_scrollPanel, new layout::BorderLayoutData(layout::BorderLayoutData::CENTER));
 
     window->show();
     m_ptyHandler = new PtyHandler(m_masterPty, termView, m_parser);
     m_ptyHandler->start();
+
     Application::getInstance()->mainLoop();
 
     return EXIT_SUCCESS;
+}
+
+int Terminal::scrollToBottom(void) {
+    ScrollBar* scrollBar = m_scrollPanel->getVerticalScrollBar();
+    scrollBar->setValue(scrollBar->getMaximum() - scrollBar->getVisibleAmount());
+
+    return 0;
 }
 
 bool Terminal::startShell(void) {

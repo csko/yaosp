@@ -27,10 +27,20 @@ namespace yguipp {
 
 class ScrollPanel : public Widget, public event::WidgetListener, public event::AdjustmentListener {
   public:
-    ScrollPanel(void);
+    enum ScrollBarPolicy {
+        SCROLLBAR_NEVER,
+        SCROLLBAR_ALWAYS
+    }; /* enum ScrollBarPolicy */
+
+    ScrollPanel(ScrollBarPolicy vertPolicy = SCROLLBAR_ALWAYS, ScrollBarPolicy horizPolicy = SCROLLBAR_ALWAYS);
     virtual ~ScrollPanel(void);
 
+    ScrollBar* getVerticalScrollBar(void);
+    ScrollBar* getHorizontalScrollBar(void);
+
     void add(Widget* child, layout::LayoutData* data = NULL);
+
+    Point getPreferredSize(void);
 
     int validate(void);
 
@@ -38,6 +48,9 @@ class ScrollPanel : public Widget, public event::WidgetListener, public event::A
     int onAdjustmentValueChanged(Widget* widget);
 
   private:
+    Point getVerticalSize(void);
+    Point getHorizontalSize(void);
+
     int verticalValueChanged(void);
     int horizontalValueChanged(void);
 
@@ -45,6 +58,9 @@ class ScrollPanel : public Widget, public event::WidgetListener, public event::A
     int updateScrollBarValues(const Point& visibleSize, const Point& preferredSize);
 
   private:
+    ScrollBarPolicy m_verticalPolicy;
+    ScrollBarPolicy m_horizontalPolicy;
+
     ScrollBar* m_verticalBar;
     ScrollBar* m_horizontalBar;
     Widget* m_scrolledWidget;

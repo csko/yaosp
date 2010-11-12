@@ -19,6 +19,7 @@
 #include <yaosp/debug.h>
 
 #include "terminalview.hpp"
+#include "terminal.hpp"
 
 yguipp::Color TerminalView::m_boldColors[COLOR_COUNT] = {
     yguipp::Color(0x55, 0x55, 0x55),
@@ -42,7 +43,7 @@ yguipp::Color TerminalView::m_normalColors[COLOR_COUNT] = {
     yguipp::Color(0xAA, 0xAA, 0xAA)
 };
 
-TerminalView::TerminalView(TerminalBuffer* buffer) : m_buffer(buffer) {
+TerminalView::TerminalView(Terminal* terminal, TerminalBuffer* buffer) : m_terminal(terminal), m_buffer(buffer) {
     buffer->addListener(this);
 
     m_font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(8));
@@ -91,6 +92,8 @@ int TerminalView::paint(yguipp::GraphicsContext* g) {
 
 int TerminalView::onHistoryChanged(TerminalBuffer* buffer) {
     fireWidgetResizedListeners(this);
+    m_terminal->scrollToBottom();
+
     return 0;
 }
 

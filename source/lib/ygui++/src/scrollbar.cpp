@@ -32,6 +32,18 @@ int ScrollBar::getValue(void) {
     return m_value;
 }
 
+int ScrollBar::getMinimum(void) {
+    return m_min;
+}
+
+int ScrollBar::getMaximum(void) {
+    return m_max;
+}
+
+int ScrollBar::getVisibleAmount(void) {
+    return m_extent;
+}
+
 int ScrollBar::setValues(int value, int extent, int min, int max) {
     if ((value < min) ||
         (extent < 0) ||
@@ -53,6 +65,18 @@ int ScrollBar::setIncrement(int increment) {
     }
 
     m_increment = increment;
+
+    return 0;
+}
+
+int ScrollBar::setValue(int value) {
+    if ((value < m_min) ||
+        ((value + m_extent) > m_max)) {
+        return -1;
+    }
+
+    m_value = value;
+    fireAdjustmentListeners(this);
 
     return 0;
 }

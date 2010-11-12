@@ -20,22 +20,40 @@
 
 namespace yguipp {
 
-ScrollPanel::ScrollPanel(void) : m_scrolledWidget(NULL) {
-    m_verticalBar = new ScrollBar(VERTICAL);
-    m_verticalBar->addAdjustmentListener(this);
-    m_verticalBar->setIncrement(10);
+ScrollPanel::ScrollPanel(ScrollBarPolicy vertPolicy, ScrollBarPolicy horizPolicy)
+    : m_verticalPolicy(vertPolicy), m_horizontalPolicy(horizPolicy), m_scrolledWidget(NULL) {
+    if (m_verticalPolicy == SCROLLBAR_NEVER) {
+        m_verticalBar = NULL;
+    } else {
+        m_verticalBar = new ScrollBar(VERTICAL);
+        m_verticalBar->addAdjustmentListener(this);
+        m_verticalBar->setIncrement(10);
 
-    m_horizontalBar = new ScrollBar(HORIZONTAL);
-    m_horizontalBar->addAdjustmentListener(this);
-    m_horizontalBar->setIncrement(10);
+        Widget::add(m_verticalBar);
+    }
 
-    Widget::add(m_verticalBar);
-    Widget::add(m_horizontalBar);
+    if (m_horizontalPolicy == SCROLLBAR_NEVER) {
+        m_horizontalBar = NULL;
+    } else {
+        m_horizontalBar = new ScrollBar(HORIZONTAL);
+        m_horizontalBar->addAdjustmentListener(this);
+        m_horizontalBar->setIncrement(10);
+
+        Widget::add(m_horizontalBar);
+    }
 }
 
 ScrollPanel::~ScrollPanel(void) {
     delete m_verticalBar;
     delete m_horizontalBar;
+}
+
+ScrollBar* ScrollPanel::getVerticalScrollBar(void) {
+    return m_verticalBar;
+}
+
+ScrollBar* ScrollPanel::getHorizontalScrollBar(void) {
+    return m_horizontalBar;
 }
 
 void ScrollPanel::add(Widget* child, layout::LayoutData* data) {
@@ -49,18 +67,40 @@ void ScrollPanel::add(Widget* child, layout::LayoutData* data) {
     m_scrolledWidget->addWidgetListener(this);
 }
 
+Point ScrollPanel::getPreferredSize(void) {
+    Point size;
+
+    if (m_scrolledWidget != NULL) {
+        size = m_scrolledWidget->getPreferredSize();
+    }
+
+    if (m_verticalBar != NULL) {
+        size.m_x += m_verticalBar->getPreferredSize().m_x;
+    }
+
+    if (m_horizontalBar != NULL) {
+        size.m_y += m_horizontalBar->getPreferredSize().m_y;
+    }
+
+    return size;
+}
+
 int ScrollPanel::validate(void) {
     Point size = getSize();
-    Point verticalSize = m_verticalBar->getPreferredSize();
-    Point horizontalSize = m_horizontalBar->getPreferredSize();
+    Point verticalSize = getVerticalSize();
+    Point horizontalSize = getHorizontalSize();
 
     /* Vertical bar. */
-    m_verticalBar->setSize(Point(verticalSize.m_x, size.m_y - horizontalSize.m_y));
-    m_verticalBar->setPosition(Point(size.m_x - verticalSize.m_x, 0));
+    if (m_verticalBar != NULL) {
+        m_verticalBar->setSize(Point(verticalSize.m_x, size.m_y - horizontalSize.m_y));
+        m_verticalBar->setPosition(Point(size.m_x - verticalSize.m_x, 0));
+    }
 
     /* Horizontal bar. */
-    m_horizontalBar->setSize(Point(size.m_x - verticalSize.m_x, horizontalSize.m_y));
-    m_horizontalBar->setPosition(Point(0, size.m_y - horizontalSize.m_y));
+    if (m_horizontalBar != NULL) {
+        m_horizontalBar->setSize(Point(size.m_x - verticalSize.m_x, horizontalSize.m_y));
+        m_horizontalBar->setPosition(Point(0, size.m_y - horizontalSize.m_y));
+    }
 
     Point preferredSize;
     Point visibleSize = size - Point(verticalSize.m_x, horizontalSize.m_y);
@@ -81,8 +121,8 @@ int ScrollPanel::validate(void) {
 
 int ScrollPanel::onWidgetResized(Widget* widget) {
     Point size = getSize();
-    Point verticalSize = m_verticalBar->getPreferredSize();
-    Point horizontalSize = m_horizontalBar->getPreferredSize();
+    Point verticalSize = getVerticalSize();
+    Point horizontalSize = getHorizontalSize();
     Point preferredSize = m_scrolledWidget->getPreferredSize();
     Point visibleSize = size - Point(verticalSize.m_x, horizontalSize.m_y);
 
@@ -100,6 +140,22 @@ int ScrollPanel::onAdjustmentValueChanged(Widget* widget) {
     }
 
     return 0;
+}
+
+Point ScrollPanel::getVerticalSize(void) {
+    if (m_verticalBar == NULL) {
+        return Point();
+    }
+
+    return m_verticalBar->getPreferredSize();
+}
+
+Point ScrollPanel::getHorizontalSize(void) {
+    if (m_horizontalBar == NULL) {
+        return Point();
+    }
+
+    return m_horizontalBar->getPreferredSize();
 }
 
 int ScrollPanel::verticalValueChanged(void) {
@@ -145,22 +201,26 @@ int ScrollPanel::updateScrollBarValues(const Point& visibleSize, const Point& pr
     int value;
 
     /* Update the vertical bar. */
-    value = m_verticalBar->getValue();
+    if (m_verticalBar != NULL) {
+        value = m_verticalBar->getValue();
 
-    if (value > (preferredSize.m_y - visibleSize.m_y)) {
-        value = preferredSize.m_y - visibleSize.m_y;
+        if (value > (preferredSize.m_y - visibleSize.m_y)) {
+            value = preferredSize.m_y - visibleSize.m_y;
+        }
+
+        m_verticalBar->setValues(value, visibleSize.m_y, 0, preferredSize.m_y);
     }
-
-    m_verticalBar->setValues(value, visibleSize.m_y, 0, preferredSize.m_y);
 
     /* Update the horizontal bar. */
-    value = m_horizontalBar->getValue();
+    if (m_horizontalBar != NULL) {
+        value = m_horizontalBar->getValue();
 
-    if (value > (preferredSize.m_x - visibleSize.m_x)) {
-        value = preferredSize.m_x - visibleSize.m_x;
+        if (value > (preferredSize.m_x - visibleSize.m_x)) {
+            value = preferredSize.m_x - visibleSize.m_x;
+        }
+
+        m_horizontalBar->setValues(value, visibleSize.m_x, 0, preferredSize.m_x);
     }
-
-    m_horizontalBar->setValues(value, visibleSize.m_x, 0, preferredSize.m_x);
 
     return 0;
 }

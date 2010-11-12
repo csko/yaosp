@@ -31,8 +31,13 @@ class ScrollBar : public Widget, public event::AdjustmentSpeaker {
     virtual ~ScrollBar(void);
 
     int getValue(void);
+    int getMinimum(void);
+    int getMaximum(void);
+    int getVisibleAmount(void);
+
     int setValues(int value, int extent, int min, int max);
     int setIncrement(int increment);
+    int setValue(int value);
 
     Point getPreferredSize(void);
 

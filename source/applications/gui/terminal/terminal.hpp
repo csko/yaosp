@@ -19,6 +19,8 @@
 #ifndef _TERMINAL_TERMINAL_H_
 #define _TERMINAL_TERMINAL_H_
 
+#include <ygui++/scrollpanel.hpp>
+
 #include "ptyhandler.hpp"
 #include "terminalparser.hpp"
 
@@ -27,6 +29,8 @@ class Terminal {
     Terminal(void);
 
     int run(void);
+
+    int scrollToBottom(void);
 
   private:
     bool startShell(void);
@@ -38,6 +42,8 @@ class Terminal {
     PtyHandler* m_ptyHandler;
     TerminalBuffer* m_buffer;
     TerminalParser* m_parser;
+
+    yguipp::ScrollPanel* m_scrollPanel;
 }; /* class Terminal */
 
 #endif /* _TERMINAL_TERMINAL_H_ */
