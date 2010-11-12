@@ -33,7 +33,11 @@ int ScrollBar::getValue(void) {
 }
 
 int ScrollBar::setValues(int value, int extent, int min, int max) {
-    // todo: validate!
+    if ((value < min) ||
+        (extent < 0) ||
+        ((value + extent) > max)) {
+        return -1;
+    }
 
     m_min = min;
     m_max = max;
@@ -196,8 +200,8 @@ int ScrollBar::increaseValue(void) {
 
     m_value += m_increment;
 
-    if (m_value > m_max) {
-        m_value = m_max;
+    if ((m_value + m_extent) > m_max) {
+        m_value = m_max - m_extent;
     }
 
     fireAdjustmentListeners(this);
