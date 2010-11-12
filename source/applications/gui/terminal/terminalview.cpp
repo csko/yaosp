@@ -64,26 +64,38 @@ yguipp::Point TerminalView::getPreferredSize(void) {
 int TerminalView::paint(yguipp::GraphicsContext* g) {
     int cursorX;
     int cursorY;
+    int firstLine;
+    int lastLine;
     yguipp::Point p;
+    yguipp::Point visibleSize = getVisibleSize();
+    yguipp::Point scrollOffset = getScrollOffset();
 
     g->setPenColor(yguipp::Color(0, 0, 0));
-    g->fillRect(yguipp::Rect(getVisibleSize()) - getScrollOffset());
+    g->fillRect(yguipp::Rect(visibleSize) - scrollOffset);
 
     g->setPenColor(yguipp::Color(255, 255, 255));
     g->setFont(m_font);
 
-    p.m_y = m_font->getAscender();
-
     m_buffer->lock();
 
-    for (int i = 0; i < m_buffer->getLineCount(); i++) {
+    firstLine = -scrollOffset.m_y / m_font->getHeight();
+    lastLine = firstLine + (visibleSize.m_y + m_font->getHeight() - 1) / m_font->getHeight();
+    lastLine = std::min(lastLine, m_buffer->getLineCount() - 1);
+
+    p.m_y = firstLine * m_font->getHeight() + m_font->getAscender();
+
+    for (int i = firstLine; i <= lastLine; i++) {
         paintLine(g, i, p);
         p.m_y += m_font->getHeight();
     }
 
     m_buffer->getCursorPosition(cursorX, cursorY);
     cursorY += m_buffer->getHistorySize();
-    paintCursor(g, cursorX, cursorY, m_buffer->lineAt(cursorY));
+
+    if ((cursorY >= firstLine) &&
+        (cursorY <= lastLine)) {
+        paintCursor(g, cursorX, cursorY, m_buffer->lineAt(cursorY));
+    }
 
     m_buffer->unLock();
 
