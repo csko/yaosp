@@ -16,9 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <assert.h>
-#include <yaosp/debug.h>
-
 #include <guiserver/window.hpp>
 #include <guiserver/guiserver.hpp>
 #include <guiserver/application.hpp>

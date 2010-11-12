@@ -57,7 +57,7 @@ int WindowManager::registerWindow( Window* window ) {
     lock();
 
     for ( i = 0; i < m_windowStack.size(); i++ ) {
-        if ( window->getOrder() >= m_windowStack[i]->getOrder() ) {
+        if ( window->getOrder() <= m_windowStack[i]->getOrder() ) {
             break;
         }
     }
