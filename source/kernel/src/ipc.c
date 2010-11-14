@@ -173,11 +173,11 @@ int ipc_destroy_process_ports( process_t* process ) {
 
 int sys_destroy_ipc_port( ipc_port_id port_id ) {
     int error;
-    ipc_port_t* port;
+    ipc_port_t* port = NULL;
 
     mutex_lock( ipc_port_mutex, LOCK_IGNORE_SIGNAL );
 
-    /* Remove the port from the global table */
+    /* Remove the port from the global table. */
 
     error = ipc_port_remove( port_id, &port );
 

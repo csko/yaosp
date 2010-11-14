@@ -284,9 +284,9 @@ uint32_t acpi_pmtimer_read( void ) {
 }
 
 int acpi_init( void ) {
-    uint32_t rsdt_address;
+    uint32_t rsdt_address = 0;
 
-    if ( acpi_find_rsdp( &rsdt_address ) != 0 ) {
+    if ( acpi_find_rsdp(&rsdt_address) != 0 ) {
         return -ENOENT;
     }
 
