@@ -28,8 +28,15 @@ class Color {
     Color( uint8_t red = 0, uint8_t green = 0, uint8_t blue = 0, uint8_t alpha = 255 ) : m_red(red), m_green(green),
                                                                                          m_blue(blue), m_alpha(alpha) {}
 
-    inline uint32_t toColor32( void ) const {
+    inline uint32_t toColor32(void) const {
         return ( ( m_alpha << 24 ) | ( m_red << 16 ) | ( m_green << 8 ) | ( m_blue ) );
+    }
+
+    inline void fromColor32(uint32_t value) {
+        m_blue = value & 0xff;
+        m_green = (value >> 8) & 0xff;
+        m_red = (value >> 16) & 0xff;
+        m_alpha = (value >> 24) & 0xff;
     }
 
     bool operator==( const Color& c );

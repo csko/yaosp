@@ -149,6 +149,8 @@ int ScrollBar::validateHorizontal(void) {
 
 int ScrollBar::paintVertical(GraphicsContext* g, const Point& size) {
     Rect r;
+    Point p1;
+    Point p2;
 
     /* Top button */
     r = m_decRect;
@@ -158,16 +160,30 @@ int ScrollBar::paintVertical(GraphicsContext* g, const Point& size) {
     g->setPenColor(Color(216, 216, 216));
     g->fillRect(r);
 
+    /* Top ^ */
+    g->setPenColor(Color(0, 0, 0));
+    p1 = Point((r.m_left + r.m_right) / 2, r.m_top + 4);
+    p2 = Point(r.m_left + 3, r.m_bottom - 4);
+    g->drawLine(p1, p2);
+    p2 = Point(r.m_right - 3, r.m_bottom - 4);
+    g->drawLine(p1, p2);
+
     /* Bottom button */
     r = m_incRect;
-    g->setPenColor(Color(0, 0, 0));
     g->drawRect(r);
     r.resize(1, 1, -1, -1);
     g->setPenColor(Color(216, 216, 216));
     g->fillRect(r);
 
-    /* Scrollbar lines */
+    /* Bottom V */
     g->setPenColor(Color(0, 0, 0));
+    p1 = Point((r.m_left + r.m_right) / 2, r.m_bottom - 4);
+    p2 = Point(r.m_left + 3, r.m_top + 4);
+    g->drawLine(p1, p2);
+    p2 = Point(r.m_right - 3, r.m_top + 4);
+    g->drawLine(p1, p2);
+
+    /* Scrollbar lines */
     g->fillRect(Rect(0, m_scrollButtonSize, 0, size.m_y - (m_scrollButtonSize + 1)));
     g->fillRect(Rect(m_scrollBarSize - 1, 0, m_scrollBarSize - 1, size.m_y - (m_scrollButtonSize + 1)));
 
