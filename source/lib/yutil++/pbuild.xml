@@ -32,6 +32,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/thread/mutex.cpp</item>
         <item>src/storage/directory.cpp</item>
         <item>src/storage/file.cpp</item>
+        <item>src/buffer/gapbuffer.cpp</item>
     </array>
 
     <target name="compile">
