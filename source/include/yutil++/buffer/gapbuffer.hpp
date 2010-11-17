@@ -20,8 +20,10 @@
 #define _YUTILPP_BUFFER_GAPBUFFER_HPP_
 
 #include <inttypes.h>
+#include <string>
 
 namespace yutilpp {
+namespace buffer {
 
 class GapBuffer {
   public:
@@ -29,17 +31,23 @@ class GapBuffer {
     ~GapBuffer(void);
 
     bool insert(int position, const char* data, int size);
+    bool remove(int position, int size);
+
+    std::string asString(int start = 0, int size = -1);
 
   private:
-    bool moveGapTo(int position);
+    void moveGapTo(int position);
+    bool ensureGapSize(int size);
 
   private:
     int m_gapStart;
     int m_gapEnd;
     int m_gapSize;
     char* m_buffer;
+    int m_bufferSize;
 }; /* class GapBuffer */
 
+} /* namespace buffer */
 } /* namespace yutilpp */
 
 #endif /* _YUTILPP_BUFFER_GAPBUFFER_HPP_ */
