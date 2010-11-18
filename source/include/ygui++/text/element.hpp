@@ -16,30 +16,32 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUIPP_TEXT_DOCUMENT_HPP_
-#define _YGUIPP_TEXT_DOCUMENT_HPP_
+#ifndef _YGUIPP_TEXT_ELEMENT_HPP_
+#define _YGUIPP_TEXT_ELEMENT_HPP_
 
-#include <string>
-
-#include <ygui++/text/element.hpp>
+#include <vector>
 
 namespace yguipp {
 namespace text {
 
-class Document {
+class Element {
   public:
-    virtual ~Document(void) {}
+    Element(int startOffset, int endOffset);
 
-    virtual int getLength(void) = 0;
-    virtual std::string getText(int offset, int length) = 0;
+    int getStartOffset(void);
+    int getEndOffset(void);
 
-    virtual Element* getRootElement(void) = 0;
+    Element* getElement(size_t index);
+    size_t getElementCount(void);
 
-    virtual bool insert(int offset, const std::string& text) = 0;
-    virtual bool remove(int offset, int length) = 0;
-}; /* class Document */
+  private:
+    int m_startOffset;
+    int m_endOffset;
+
+    std::vector<Element*> m_children;
+}; /* class Element */
 
 } /* namespace text */
 } /* namespace yguipp */
 
-#endif /* _YGUIPP_TEXT_DOCUMENT_HPP_ */
+#endif /* _YGUIPP_TEXT_ELEMENT_HPP_ */

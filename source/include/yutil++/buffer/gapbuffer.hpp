@@ -30,6 +30,8 @@ class GapBuffer {
     GapBuffer(int initialSize = 10);
     ~GapBuffer(void);
 
+    int getSize(void);
+
     bool insert(int position, const char* data, int size);
     bool remove(int position, int size);
 

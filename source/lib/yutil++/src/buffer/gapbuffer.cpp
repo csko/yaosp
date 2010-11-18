@@ -38,6 +38,10 @@ GapBuffer::~GapBuffer(void) {
     delete[] m_buffer;
 }
 
+int GapBuffer::getSize(void) {
+    return (m_bufferSize - m_gapSize);
+}
+
 bool GapBuffer::insert(int position, const char* data, int size) {
     moveGapTo(position);
 

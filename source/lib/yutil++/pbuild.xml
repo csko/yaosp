@@ -44,10 +44,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
         <for var="i" array="${files}">
             <echo>[GCC    ] source/lib/yutil++/${i}</echo>
-            <gcc>
+            <gcc profile="y-lib-compile">
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
-                <flags>-c -O2 -Wall</flags>
             </gcc>
         </for>
 

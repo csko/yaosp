@@ -16,15 +16,29 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/text/document.hpp>
+#include <ygui++/text/element.hpp>
 
 namespace yguipp {
 namespace text {
 
-Document::Document(void) {
+Element::Element(int startOffset, int endOffset)
+    : m_startOffset(startOffset), m_endOffset(endOffset) {
 }
 
-Document::~Document(void) {
+int Element::getStartOffset(void) {
+    return m_startOffset;
+}
+
+int Element::getEndOffset(void) {
+    return m_endOffset;
+}
+
+Element* Element::getElement(size_t index) {
+    return m_children[index];
+}
+
+size_t Element::getElementCount(void) {
+    return m_children.size();
 }
 
 } /* namespace text */

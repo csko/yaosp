@@ -16,30 +16,35 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _YGUIPP_TEXT_DOCUMENT_HPP_
-#define _YGUIPP_TEXT_DOCUMENT_HPP_
+#ifndef _YGUIPP_TEXT_PLAINDOCUMENT_HPP_
+#define _YGUIPP_TEXT_PLAINDOCUMENT_HPP_
 
-#include <string>
+#include <ygui++/text/document.hpp>
 
-#include <ygui++/text/element.hpp>
+#include <yutil++/buffer/gapbuffer.hpp>
 
 namespace yguipp {
 namespace text {
 
-class Document {
+class PlainDocument : public Document {
   public:
-    virtual ~Document(void) {}
+    PlainDocument(void);
+    ~PlainDocument(void);
 
-    virtual int getLength(void) = 0;
-    virtual std::string getText(int offset, int length) = 0;
+    int getLength(void);
+    std::string getText(int offset, int length);
 
-    virtual Element* getRootElement(void) = 0;
+    Element* getRootElement(void);
 
-    virtual bool insert(int offset, const std::string& text) = 0;
-    virtual bool remove(int offset, int length) = 0;
-}; /* class Document */
+    bool insert(int offset, const std::string& text);
+    bool remove(int offset, int length);
+
+  private:
+    Element* m_rootElement;
+    yutilpp::buffer::GapBuffer* m_buffer;
+}; /* class PlainDocument */
 
 } /* namespace text */
 } /* namespace yguipp */
 
-#endif /* _YGUIPP_TEXT_DOCUMENT_HPP_ */
+#endif /* _YGUIPP_TEXT_PLAINDOCUMENT_HPP_ */
