@@ -26,17 +26,22 @@ namespace text {
 
 class Element {
   public:
-    Element(int startOffset, int endOffset);
+    Element(int offset, int length);
+    virtual ~Element(void);
 
-    int getStartOffset(void);
-    int getEndOffset(void);
+    void addChild(Element* element);
+
+    void incLength(int amount);
+
+    int getOffset(void);
+    int getLength(void);
 
     Element* getElement(size_t index);
     size_t getElementCount(void);
 
-  private:
-    int m_startOffset;
-    int m_endOffset;
+  protected:
+    int m_offset;
+    int m_length;
 
     std::vector<Element*> m_children;
 }; /* class Element */

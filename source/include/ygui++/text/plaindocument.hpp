@@ -40,6 +40,18 @@ class PlainDocument : public Document {
     bool remove(int offset, int length);
 
   private:
+    void tokenize(const std::string& text, std::vector< std::pair<int, bool> >& tokens, const std::string& delim = "\n");
+
+    class PlainElement : public Element {
+      public:
+        friend class PlainDocument;
+
+        PlainElement(int startOffset, int endOffset, bool lineEnd);
+
+      private:
+        bool m_lineEnd;
+    }; /* class PlainElement */
+
     Element* m_rootElement;
     yutilpp::buffer::GapBuffer* m_buffer;
 }; /* class PlainDocument */

@@ -29,6 +29,7 @@
 #include <ygui++/menuitem.hpp>
 #include <ygui++/scrollpanel.hpp>
 #include <ygui++/layout/borderlayout.hpp>
+#include <ygui++/text/plaindocument.hpp>
 
 using namespace yguipp;
 using namespace yguipp::layout;
@@ -39,7 +40,7 @@ class MyButton : public Button {
     Point getPreferredSize(void) { return Point(350, 350); }
 };
 
-int main( int argc, char** argv ) {
+int main2( int argc, char** argv ) {
     Application::createInstance("cppguitest");
     ImageLoaderManager::getInstance()->loadLibraries();
 
@@ -93,6 +94,23 @@ int main( int argc, char** argv ) {
     win->show();
 
     Application::getInstance()->mainLoop();
+
+    return 0;
+}
+
+void dumpElementTree(yguipp::text::Document* doc) {
+    yguipp::text::Element* root = doc->getRootElement();
+
+    for (size_t i = 0; i < root->getElementCount(); i++) {
+        yguipp::text::Element* e = root->getElement(i);
+        std::cout << "offset=" << e->getOffset() << " length=" << e->getLength() << std::endl;
+    }
+}
+
+int main(int argc, char** argv) {
+    yguipp::text::PlainDocument* doc = new yguipp::text::PlainDocument();
+    doc->insert(0, "Hello\nWorld\n");
+    dumpElementTree(doc);
 
     return 0;
 }

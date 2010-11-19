@@ -21,16 +21,32 @@
 namespace yguipp {
 namespace text {
 
-Element::Element(int startOffset, int endOffset)
-    : m_startOffset(startOffset), m_endOffset(endOffset) {
+Element::Element(int offset, int length)
+    : m_offset(offset), m_length(length) {
 }
 
-int Element::getStartOffset(void) {
-    return m_startOffset;
+Element::~Element(void) {
+    for (std::vector<Element*>::const_iterator it = m_children.begin();
+         it != m_children.end();
+         ++it) {
+        delete (*it);
+    }
 }
 
-int Element::getEndOffset(void) {
-    return m_endOffset;
+void Element::addChild(Element* element) {
+    m_children.push_back(element);
+}
+
+void Element::incLength(int amount) {
+    m_length += amount;
+}
+
+int Element::getOffset(void) {
+    return m_offset;
+}
+
+int Element::getLength(void) {
+    return m_length;
 }
 
 Element* Element::getElement(size_t index) {

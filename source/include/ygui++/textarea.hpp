@@ -20,14 +20,21 @@
 #define _YGUIPP_TEXTAREA_HPP_
 
 #include <ygui++/widget.hpp>
+#include <ygui++/text/document.hpp>
 
 namespace yguipp {
 
 class TextArea : public Widget {
   public:
     TextArea(void);
+    ~TextArea(void);
 
     int paint(GraphicsContext* g);
+
+  private:
+    yguipp::Font* m_font;
+
+    yguipp::text::Document* m_document;
 }; /* class TextArea */
 
 } /* namespace yguipp */
