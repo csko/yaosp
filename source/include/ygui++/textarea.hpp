@@ -24,12 +24,19 @@
 
 namespace yguipp {
 
-class TextArea : public Widget {
+class TextArea : public Widget, public yguipp::event::DocumentListener {
   public:
     TextArea(void);
     ~TextArea(void);
 
+    yguipp::text::Document* getDocument(void);
+
     int paint(GraphicsContext* g);
+
+    int keyPressed(int key);
+
+    int onTextInserted(yguipp::text::Document* document);
+    int onTextRemoved(yguipp::text::Document* document);
 
   private:
     yguipp::Font* m_font;

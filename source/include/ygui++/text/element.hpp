@@ -30,8 +30,11 @@ class Element {
     virtual ~Element(void);
 
     void addChild(Element* element);
+    void insertChild(size_t index, Element* element);
 
+    void incOffset(int amount);
     void incLength(int amount);
+    void decLength(int amount);
 
     int getOffset(void);
     int getLength(void);

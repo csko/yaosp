@@ -23,6 +23,7 @@ namespace yguipp {
 
 TextArea::TextArea(void) {
     m_document = new yguipp::text::PlainDocument();
+    m_document->addDocumentListener(this);
 
     m_font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(8));
     m_font->init();
@@ -31,6 +32,10 @@ TextArea::TextArea(void) {
 TextArea::~TextArea(void) {
     delete m_document;
     delete m_font;
+}
+
+yguipp::text::Document* TextArea::getDocument(void) {
+    return m_document;
 }
 
 int TextArea::paint(GraphicsContext* g) {
@@ -50,13 +55,31 @@ int TextArea::paint(GraphicsContext* g) {
 
     for (size_t i = 0; i < root->getElementCount(); i++) {
         yguipp::text::Element* e = root->getElement(i);
-        std::string line = m_document->getText(e->getOffset(), e->getLength());
+        std::string line = m_document->getText(e->getOffset(), e->getLength() - 1);
 
         g->drawText(p, line);
 
         p.m_y += m_font->getHeight();
     }
 
+    return 0;
+}
+
+int TextArea::keyPressed(int key) {
+    std::string s;
+    s.append(reinterpret_cast<char*>(&key), 1);
+
+    m_document->insert(0, s);
+
+    return 0;
+}
+
+int TextArea::onTextInserted(yguipp::text::Document* document) {
+    invalidate();
+    return 0;
+}
+
+int TextArea::onTextRemoved(yguipp::text::Document* document) {
     return 0;
 }
 

@@ -22,11 +22,12 @@
 #include <string>
 
 #include <ygui++/text/element.hpp>
+#include <ygui++/event/documentlistener.hpp>
 
 namespace yguipp {
 namespace text {
 
-class Document {
+class Document : public yguipp::event::DocumentSpeaker {
   public:
     virtual ~Document(void) {}
 

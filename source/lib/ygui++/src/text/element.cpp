@@ -37,8 +37,20 @@ void Element::addChild(Element* element) {
     m_children.push_back(element);
 }
 
+void Element::insertChild(size_t index, Element* element) {
+    m_children.insert(m_children.begin() + index, element);
+}
+
+void Element::incOffset(int amount) {
+    m_offset += amount;
+}
+
 void Element::incLength(int amount) {
     m_length += amount;
+}
+
+void Element::decLength(int amount) {
+    m_length -= amount;
 }
 
 int Element::getOffset(void) {

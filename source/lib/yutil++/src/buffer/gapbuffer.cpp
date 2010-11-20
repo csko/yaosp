@@ -74,7 +74,7 @@ std::string GapBuffer::asString(int start, int size) {
 
     if ((start >= m_gapStart) &&
         (start < m_gapEnd)) {
-        start = m_gapEnd;
+        start = m_gapEnd + (start - m_gapStart);
     } else if (m_gapStart >= start) {
         int toCopy = std::min(size, m_gapStart - start);
 
