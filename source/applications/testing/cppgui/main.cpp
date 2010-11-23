@@ -94,7 +94,14 @@ int main(int argc, char** argv) {
     //scrollPanel->add(new MyButton());
     //container->add(scrollPanel, new BorderLayoutData(BorderLayoutData::CENTER));
     TextArea* textArea = new TextArea();
-    container->add(textArea, new BorderLayoutData(BorderLayoutData::CENTER));
+    Font* font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(8));
+    font->init();
+    textArea->setFont(font);
+
+    ScrollPanel* scrollPanel = new ScrollPanel();
+    scrollPanel->add(textArea);
+
+    container->add(scrollPanel, new BorderLayoutData(BorderLayoutData::CENTER));
     textArea->getDocument()->insert(0, "Hello\nWorld!\nThis is the third line with a few characters\n...\n");
 
     win->show();

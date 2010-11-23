@@ -31,6 +31,9 @@ class TextArea : public Widget, public yguipp::event::DocumentListener {
 
     yguipp::text::Document* getDocument(void);
 
+    Point getPreferredSize(void);
+    void setFont(yguipp::Font* font);
+
     int paint(GraphicsContext* g);
 
     int keyPressed(int key);

@@ -175,7 +175,9 @@ int Window::handleMessage(const Application::Message& msg) {
             break;
 
         case Y_WINDOW_WIDGET_INVALIDATED :
-            doRepaint();
+            if (m_visible) {
+                doRepaint();
+            }
             break;
 
         case Y_WINDOW_CLOSE_REQUEST : {

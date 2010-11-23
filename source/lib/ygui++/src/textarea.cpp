@@ -25,7 +25,7 @@ TextArea::TextArea(void) {
     m_document = new yguipp::text::PlainDocument();
     m_document->addDocumentListener(this);
 
-    m_font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(8));
+    m_font = new yguipp::Font("DejaVu Sans", "Book", yguipp::FontInfo(8));
     m_font->init();
 }
 
@@ -36,6 +36,27 @@ TextArea::~TextArea(void) {
 
 yguipp::text::Document* TextArea::getDocument(void) {
     return m_document;
+}
+
+Point TextArea::getPreferredSize(void) {
+    yguipp::text::Element* rootElement = m_document->getRootElement();
+
+    return Point(
+        400, /* todo */
+        rootElement->getElementCount() * m_font->getHeight()
+    );
+}
+
+void TextArea::setFont(yguipp::Font* font) {
+    if (font == NULL) {
+        return;
+    }
+
+    m_font->decRef();
+    m_font = font;
+    m_font->incRef();
+
+    invalidate();
 }
 
 int TextArea::paint(GraphicsContext* g) {
