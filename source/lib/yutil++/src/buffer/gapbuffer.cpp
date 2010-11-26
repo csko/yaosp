@@ -88,6 +88,8 @@ std::string GapBuffer::asString(int start, int size) {
         if (start == m_gapStart) {
             start = m_gapEnd;
         }
+    } else if (start >= m_gapEnd) {
+        start += m_gapSize;
     }
 
     size = std::min(size, m_bufferSize - start);
