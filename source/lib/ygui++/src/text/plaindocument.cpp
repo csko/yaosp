@@ -25,7 +25,6 @@ namespace text {
 
 PlainDocument::PlainDocument(void) {
     m_rootElement = new PlainElement(0, 0, false);
-    //m_rootElement->addChild(new PlainElement(0, 0, false));
     m_buffer = new yutilpp::buffer::GapBuffer();
 }
 
@@ -85,7 +84,7 @@ bool PlainDocument::insert(int offset, const std::string& text) {
     int offsetToAdd = 0;
     int lenAtEnd = e->getLength() - (offset - e->getOffset());
     bool remainingIsEnd = e->m_lineEnd;
-    
+
     const std::pair<int, bool>& firstToken = tokens[0];
     const std::pair<int, bool>& lastToken = tokens[tokens.size() - 1];
 
@@ -107,7 +106,7 @@ bool PlainDocument::insert(int offset, const std::string& text) {
         assert(token.second);
 
         e = new PlainElement(currOffset, token.first, true);
-        
+
         m_rootElement->insertChild(index++, e);
         currOffset += token.first;
         offsetToAdd += token.first;

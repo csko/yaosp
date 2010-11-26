@@ -16,12 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <yaosp/input.h>
+
 #include <ygui++/textarea.hpp>
 #include <ygui++/text/plaindocument.hpp>
 
 namespace yguipp {
 
 TextArea::TextArea(void) {
+    m_caretPosition = 0;
+
     m_document = new yguipp::text::PlainDocument();
     m_document->addDocumentListener(this);
 
@@ -87,10 +91,28 @@ int TextArea::paint(GraphicsContext* g) {
 }
 
 int TextArea::keyPressed(int key) {
-    std::string s;
-    s.append(reinterpret_cast<char*>(&key), 1);
+    switch (key) {
+        case KEY_LEFT :
+            if (m_caretPosition > 0) {
+                m_caretPosition--;
+            }
 
-    m_document->insert(0, s);
+            break;
+
+        case KEY_RIGHT :
+            if (m_caretPosition < m_document->getLength()) {
+                m_caretPosition++;
+            }
+
+            break;
+
+        default : {
+            std::string s;
+            s.append(reinterpret_cast<char*>(&key), 1);
+
+            m_document->insert(m_caretPosition++, s);
+        }
+    }
 
     return 0;
 }

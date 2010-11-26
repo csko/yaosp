@@ -44,6 +44,7 @@ class TextArea : public Widget, public yguipp::event::DocumentListener {
   private:
     yguipp::Font* m_font;
 
+    int m_caretPosition;
     yguipp::text::Document* m_document;
 }; /* class TextArea */
 
