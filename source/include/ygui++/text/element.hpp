@@ -39,6 +39,8 @@ class Element {
     int getOffset(void);
     int getLength(void);
 
+    void setLength(int length);
+
     Element* getElement(size_t index);
     size_t getElementCount(void);
 

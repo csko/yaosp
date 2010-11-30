@@ -25,6 +25,8 @@ namespace text {
 
 PlainDocument::PlainDocument(void) {
     m_rootElement = new PlainElement(0, 0, false);
+    m_rootElement->addChild(new PlainElement(0, 0, false));
+
     m_buffer = new yutilpp::buffer::GapBuffer();
 }
 
@@ -54,86 +56,8 @@ bool PlainDocument::insert(int offset, const std::string& text) {
     m_buffer->insert(offset, text.data(), text.size());
 
     /* Update our internal element tree. */
-    std::vector< std::pair<int, bool> > tokens;
-    tokenize(text, tokens, "\n");
-    assert(!tokens.empty());
-
-    size_t index = 0;
-    PlainElement* e;
-
-    if (m_rootElement->getElementCount() == 0) {
-        e = new PlainElement(0, 0, false);
-        m_rootElement->addChild(e);
-    } else {
-        e = dynamic_cast<PlainElement*>(m_rootElement->getElement(index));
-
-        while (e != NULL) {
-            if ((e->getOffset() <= offset) &&
-                (offset <= (e->getOffset() + e->getLength() - 1))) {
-                break;
-            }
-
-            index++;
-            e = dynamic_cast<PlainElement*>(m_rootElement->getElement(index));
-        }
-    }
-
-    assert(e != NULL);
-
-    int currOffset = e->getOffset();
-    int offsetToAdd = 0;
-    int lenAtEnd = e->getLength() - (offset - e->getOffset());
-    bool remainingIsEnd = e->m_lineEnd;
-
-    const std::pair<int, bool>& firstToken = tokens[0];
-    const std::pair<int, bool>& lastToken = tokens[tokens.size() - 1];
-
-    e->decLength(lenAtEnd);
-    e->incLength(firstToken.first);
-    e->m_lineEnd = firstToken.second;
-
-    currOffset += e->getLength();
-    offsetToAdd += firstToken.first;
-
-    if (e->m_lineEnd) {
-        index++;
-    }
-
-    size_t lastIndex = lastToken.second ? tokens.size() : tokens.size() - 1;
-
-    for (size_t i = 1; i < lastIndex; i++) {
-        const std::pair<int, bool>& token = tokens[i];
-        assert(token.second);
-
-        e = new PlainElement(currOffset, token.first, true);
-
-        m_rootElement->insertChild(index++, e);
-        currOffset += token.first;
-        offsetToAdd += token.first;
-    }
-
-    if ((lenAtEnd > 0) ||
-        (!lastToken.second)) {
-        if (index == m_rootElement->getElementCount()) {
-            e = new PlainElement(currOffset - offsetToAdd, 0, remainingIsEnd);
-            m_rootElement->insertChild(index++, e);
-        } else {
-            e = dynamic_cast<PlainElement*>(m_rootElement->getElement(index++));
-        }
-
-        e->incLength(lenAtEnd);
-
-        /* Increase length and offset only if this is not the first element we touched. */
-        if ((!lastToken.second) &&
-            (tokens.size() > 1)) {
-            e->incLength(lastToken.first);
-            e->incOffset(offsetToAdd);
-        }
-    }
-
-    for (; index < m_rootElement->getElementCount(); index++) {
-        e = dynamic_cast<PlainElement*>(m_rootElement->getElement(index));
-        e->incOffset(offsetToAdd);
+    for (std::string::size_type i = 0; i < text.size(); i++) {
+        charInsertedAt(offset + i, text[i]);
     }
 
     fireTextInsertListeners(this);
@@ -147,18 +71,80 @@ bool PlainDocument::remove(int offset, int length) {
     return true;
 }
 
-void PlainDocument::tokenize(const std::string& s, std::vector< std::pair<int, bool> >& tokens, const std::string& delim) {
-    std::string::size_type i;
-    std::string::size_type j = 0;
-    std::string::size_type l = delim.size();
+void PlainDocument::charInsertedAt(int position, char c) {
+    assert((position >= 0) && (position <= getLength()));
 
-    while ((i = s.find(delim, j)) != std::string::npos) {
-        tokens.push_back(std::make_pair<int, bool>(i - j + l, true));
-        j = i + l;
+    size_t index = 0;
+    PlainElement* e = NULL;
+
+    for (size_t i = 0; i < m_rootElement->getElementCount(); i++) {
+        PlainElement* tmp = dynamic_cast<PlainElement*>(m_rootElement->getElement(i));
+        int tmpOffset = tmp->getOffset();
+
+        if ((position >= tmpOffset) &&
+            (position <= (tmpOffset + tmp->getLength()))) {
+            e = tmp;
+            index = i;
+            break;
+        }
     }
 
-    if (j < s.size()) {
-        tokens.push_back(std::make_pair<int, bool>(s.size() - j, false));
+    assert(e != NULL);
+
+    size_t shiftFrom;
+    bool atElementEnd = position == (e->getOffset() + e->getLength());
+
+    if (atElementEnd) {
+        switch (c) {
+            case '\n' :
+                if (e->m_lineEnd) {
+                    m_rootElement->insertChild(index + 1, new PlainElement(e->getOffset() + e->getLength(), 1, true));
+                    shiftFrom = index + 2;
+                } else {
+                    e->m_lineEnd = true;
+                    e->incLength(1);
+                    shiftFrom = index + 1;
+                }
+                break;
+
+            default :
+                if (e->m_lineEnd) {
+                    if (index == m_rootElement->getElementCount() - 1) {
+                        m_rootElement->addChild(new PlainElement(e->getOffset() + e->getLength(), 1, false));
+                    } else {
+                        m_rootElement->getElement(index + 1)->incLength(1);
+                    }
+
+                    shiftFrom = index + 2;
+                } else {
+                    e->incLength(1);
+                    shiftFrom = index + 1;
+                }
+                break;
+        }
+    } else {
+        switch (c) {
+            case '\n' : {
+                int offsetInElement = position - e->getOffset();
+                m_rootElement->insertChild(index + 1, new PlainElement(e->getOffset() + offsetInElement + 1, e->getLength() - offsetInElement, e->m_lineEnd));
+
+                e->m_lineEnd = true;
+                e->setLength(offsetInElement + 1);
+
+                shiftFrom = index + 2;
+
+                break;
+            }
+
+            default :
+                e->incLength(1);
+                shiftFrom = index + 1;
+                break;
+        }
+    }
+
+    for (size_t i = shiftFrom; i < m_rootElement->getElementCount(); i++) {
+        m_rootElement->getElement(i)->incOffset(1);
     }
 }
 

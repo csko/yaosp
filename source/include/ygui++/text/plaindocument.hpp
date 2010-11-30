@@ -40,7 +40,7 @@ class PlainDocument : public Document {
     bool remove(int offset, int length);
 
   private:
-    void tokenize(const std::string& text, std::vector< std::pair<int, bool> >& tokens, const std::string& delim = "\n");
+    void charInsertedAt(int position, char c);
 
     class PlainElement : public Element {
       public:

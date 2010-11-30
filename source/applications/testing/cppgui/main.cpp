@@ -43,6 +43,17 @@ class MyButton : public Button {
     Point getPreferredSize(void) { return Point(350, 350); }
 };
 
+void dumpElementTree(yguipp::text::Document* doc) {
+    yguipp::text::Element* root = doc->getRootElement();
+    std::cout << "elementCount=" << root->getElementCount() << std::endl;
+
+    for (size_t i = 0; i < root->getElementCount(); i++) {
+        yguipp::text::Element* e = root->getElement(i);
+        //std::cout << "offset=" << e->getOffset() << " length=" << e->getLength() << " (" << doc->getText(e->getOffset(), e->getLength()) << ")" << std::endl;
+        std::cout << "offset=" << e->getOffset() << " length=" << e->getLength() << std::endl;
+    }
+}
+
 int main(int argc, char** argv) {
     Application::createInstance("cppguitest");
     ImageLoaderManager::getInstance()->loadLibraries();
@@ -103,21 +114,13 @@ int main(int argc, char** argv) {
 
     container->add(scrollPanel, new BorderLayoutData(BorderLayoutData::CENTER));
     textArea->getDocument()->insert(0, "Hello\nWorld!\nThis is the third line with a few characters\n...\n");
+    dumpElementTree(textArea->getDocument());
 
     win->show();
 
     Application::getInstance()->mainLoop();
 
     return 0;
-}
-
-void dumpElementTree(yguipp::text::Document* doc) {
-    yguipp::text::Element* root = doc->getRootElement();
-
-    for (size_t i = 0; i < root->getElementCount(); i++) {
-        yguipp::text::Element* e = root->getElement(i);
-        std::cout << "offset=" << e->getOffset() << " length=" << e->getLength() << " (" << doc->getText(e->getOffset(), e->getLength()) << ")" << std::endl;
-    }
 }
 
 int main2(int argc, char** argv) {

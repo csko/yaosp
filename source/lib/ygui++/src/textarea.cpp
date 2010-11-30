@@ -80,9 +80,18 @@ int TextArea::paint(GraphicsContext* g) {
 
     for (size_t i = 0; i < root->getElementCount(); i++) {
         yguipp::text::Element* e = root->getElement(i);
-        std::string line = m_document->getText(e->getOffset(), e->getLength() - 1);
 
-        g->drawText(p, line);
+        std::string line = m_document->getText(e->getOffset(), e->getLength());
+
+        if (!line.empty()) {
+            std::string::size_type lineSize = line.size();
+
+            if (line[lineSize - 1] == '\n') {
+                line.erase(lineSize - 1, 1);
+            }
+
+            g->drawText(p, line);
+        }
 
         p.m_y += m_font->getHeight();
     }
@@ -104,6 +113,10 @@ int TextArea::keyPressed(int key) {
                 m_caretPosition++;
             }
 
+            break;
+
+        case KEY_ENTER :
+            m_document->insert(m_caretPosition++, "\n");
             break;
 
         default : {

@@ -61,6 +61,10 @@ int Element::getLength(void) {
     return m_length;
 }
 
+void Element::setLength(int length) {
+    m_length = length;
+}
+
 Element* Element::getElement(size_t index) {
     return m_children[index];
 }
