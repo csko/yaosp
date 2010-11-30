@@ -224,9 +224,10 @@ int GraphicsDriver::drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
         text += charLength;
         length -= charLength;
 
-        renderGlyph32(bitmap, clipRect, position, color, glyph);
-
-        position.m_x += glyph->getAdvance().m_x;
+        if (glyph != NULL) {
+            renderGlyph32(bitmap, clipRect, position, color, glyph);
+            position.m_x += glyph->getAdvance().m_x;
+        }
     }
 
     font->getStyle()->unLock();
@@ -411,11 +412,11 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
         p1.m_x = p2.m_x;
         p2.m_x = tmp;
     }
-    
+
     /* Draw the initial pixel, which is always exactly intersected by
        the line and so needs no weighting. */
     SetPixel(bitmap, p1.m_x, p1.m_y, color);
-    
+
     int xDir;
     int deltaX = p2.m_x - p1.m_x;
 
@@ -425,7 +426,7 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
         xDir = -1;
         deltaX = 0 - deltaX; /* make deltaX positive */
     }
-    
+
     /* Special-case horizontal, vertical, and diagonal lines, which require
        no weighting because they go right through the center of every pixel. */
     int deltaY = p2.m_y - p1.m_y;
@@ -449,7 +450,7 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
 
         return 0;
     }
-    
+
     if (deltaX == deltaY) {
         /* Diagonal line */
         do {
@@ -460,20 +461,20 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
 
         return 0;
     }
-    
+
     /* Line is not horizontal, diagonal, or vertical */
     unsigned short errorAdj;
     unsigned short errorAccTemp;
     unsigned short weighting;
-    
+
     /* Initialize the line error accumulator to 0 */
     unsigned short errorAcc = 0;
-    
+
     uint8_t rl = color.m_red;
     uint8_t gl = color.m_green;
     uint8_t bl = color.m_blue;
     double grayl = rl * 0.299 + gl * 0.587 + bl * 0.114;
-    
+
     /* Is this an X-major or Y-major line? */
     if (deltaY > deltaX) {
         /* Y-major line; calculate 16-bit fixed-point fractional part of a
@@ -492,7 +493,7 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
             }
 
             /* Y-major, so always advance Y */
-            p1.m_y++; 
+            p1.m_y++;
 
             /* The IntensityBits most significant bits of errorAcc give us the
                intensity weighting for this pixel, and the complement of the
@@ -500,13 +501,13 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
             weighting = errorAcc >> 8;
             assert(weighting < 256);
             assert((weighting ^ 255) < 256);
-            
+
             yguipp::Color clrBackGround = GetPixel(bitmap, p1.m_x, p1.m_y);
             uint8_t rb = clrBackGround.m_red;
             uint8_t gb = clrBackGround.m_green;
             uint8_t bb = clrBackGround.m_blue;
             double grayb = rb * 0.299 + gb * 0.587 + bb * 0.114;
-            
+
             uint8_t rr = (rb > rl ?
                 ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (rb - rl) + rl)) :
                 ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (rl - rb) + rb)));
@@ -518,13 +519,13 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
                 ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (bl - bb) + bb)));
 
             SetPixel(bitmap, p1.m_x, p1.m_y, yguipp::Color(rr, gr, br));
-            
+
             clrBackGround = GetPixel(bitmap, p1.m_x + xDir, p1.m_y);
             rb = clrBackGround.m_red;
             gb = clrBackGround.m_green;
             bb = clrBackGround.m_blue;
             grayb = rb * 0.299 + gb * 0.587 + bb * 0.114;
-            
+
             rr = (rb > rl ?
                 ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (rb - rl) + rl)) :
                 ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (rl - rb) + rb)));
@@ -561,7 +562,7 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
         }
 
         /* X-major, so always advance X */
-        p1.m_x += xDir; 
+        p1.m_x += xDir;
 
         /* The IntensityBits most significant bits of errorAcc give us the
            intensity weighting for this pixel, and the complement of the
@@ -569,44 +570,44 @@ int GraphicsDriver::drawLine32( Bitmap* bitmap, const yguipp::Rect& clipRect, yg
         weighting = errorAcc >> 8;
         assert(weighting < 256);
         assert((weighting ^ 255) < 256);
-        
+
         yguipp::Color clrBackGround = GetPixel(bitmap, p1.m_x, p1.m_y);
         uint8_t rb = clrBackGround.m_red;
         uint8_t gb = clrBackGround.m_green;
         uint8_t bb = clrBackGround.m_blue;
         double grayb = rb * 0.299 + gb * 0.587 + bb * 0.114;
-        
+
         uint8_t rr = (rb > rl ?
-            ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (rb - rl) + rl)) : 
+            ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (rb - rl) + rl)) :
             ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (rl - rb) + rb)));
         uint8_t gr = (gb > gl ?
-            ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (gb - gl) + gl)) : 
+            ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (gb - gl) + gl)) :
             ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (gl - gb) + gb)));
         uint8_t br = (bb > bl ?
-            ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (bb - bl) + bl)) : 
+            ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (bb - bl) + bl)) :
             ((uint8_t)(((double)(grayl < grayb ? weighting : (weighting ^ 255))) / 255.0 * (bl - bb) + bb)));
-        
+
         SetPixel(bitmap, p1.m_x, p1.m_y, yguipp::Color(rr, gr, br));
-        
+
         clrBackGround = GetPixel(bitmap, p1.m_x, p1.m_y + 1);
         rb = clrBackGround.m_red;
         gb = clrBackGround.m_green;
         bb = clrBackGround.m_blue;
         grayb = rb * 0.299 + gb * 0.587 + bb * 0.114;
-        
+
         rr = (rb > rl ?
-            ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (rb - rl) + rl)) : 
+            ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (rb - rl) + rl)) :
             ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (rl - rb) + rb)));
         gr = (gb > gl ?
-            ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (gb - gl) + gl)) : 
+            ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (gb - gl) + gl)) :
             ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (gl - gb) + gb)));
         br = (bb > bl ?
-            ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (bb - bl) + bl)) : 
+            ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (bb - bl) + bl)) :
             ((uint8_t)(((double)(grayl < grayb ? (weighting ^ 255) : weighting)) / 255.0 * (bl - bb) + bb)));
-        
+
         SetPixel(bitmap, p1.m_x, p1.m_y + 1, yguipp::Color(rr, gr, br));
     }
-    
+
     /* Draw the final pixel, which is always exactly intersected by the line
        and so needs no weighting. */
     SetPixel(bitmap, p2.m_x, p2.m_y, color);

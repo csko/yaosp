@@ -69,7 +69,9 @@ int FontNode::getWidth(const char* text, int length) {
         text += charLength;
         length -= charLength;
 
-        width += glyph->getAdvance().m_x;
+        if (glyph != NULL) {
+            width += glyph->getAdvance().m_x;
+        }
     }
 
     m_style->unLock();
