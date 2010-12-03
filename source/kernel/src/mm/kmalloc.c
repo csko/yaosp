@@ -34,6 +34,10 @@ static uint32_t alloc_size = 0;
 static spinlock_t kmalloc_lock = INIT_SPINLOCK("kmalloc");
 static kmalloc_block_t* root = NULL;
 
+static inline int kmalloc_block_validate(kmalloc_block_t* block) {
+    return (block->magic == KMALLOC_BLOCK_MAGIC);
+}
+
 static inline int kmalloc_chunk_validate(kmalloc_chunk_t* chunk) {
     return ((chunk->magic & 0xFFFFFFF0) == KMALLOC_CHUNK_MAGIC);
 }
@@ -80,7 +84,7 @@ static kmalloc_block_t* kmalloc_block_create(uint32_t pages) {
     return block;
 }
 
-static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
+static void* __kmalloc_from_block(kmalloc_block_t* block, uint32_t size, uint32_t* real_size) {
     void* p;
     kmalloc_chunk_t* chunk;
 
@@ -128,6 +132,7 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
 
     /* Update the number of allocated bytes. */
     alloc_size += chunk->size;
+    *real_size = chunk->size;
 
     /* Recalculate the biggest free chunk in this block. */
     block->biggest_free = 0;
@@ -151,11 +156,12 @@ static void* __kmalloc_from_block( kmalloc_block_t* block, uint32_t size ) {
 void* kmalloc( uint32_t size ) {
     void* p;
     uint32_t min_size;
+    uint32_t real_size = 0;
     kmalloc_block_t* block;
 
     /* Is this an invalid request? */
     if (__unlikely(size == 0)) {
-        kprintf( WARNING, "kmalloc(): Called with 0 size!\n" );
+        kprintf(WARNING, "kmalloc(): Called with 0 size!\n");
         return NULL;
     }
 
@@ -164,11 +170,17 @@ void* kmalloc( uint32_t size ) {
         size = sizeof(ptr_t);
     }
 
+#ifdef ENABLE_KMALLOC_BARRIERS
+    size += 2 * KMALLOC_BARRIER_SIZE;
+#endif /* ENABLE_KMALLOC_BARRIERS */
+
     spinlock_disable(&kmalloc_lock);
 
     block = root;
 
     while (block != NULL) {
+        ASSERT(kmalloc_block_validate(block));
+
         if (block->biggest_free >= size) {
             goto block_found;
         }
@@ -199,16 +211,26 @@ void* kmalloc( uint32_t size ) {
     /* allocate the required memory from the new block */
 
 block_found:
-    p = __kmalloc_from_block(block, size);
+    p = __kmalloc_from_block(block, size, &real_size);
 
 #ifdef ENABLE_KMALLOC_DEBUG
     kmalloc_debug(size, p);
 #endif
 
+#ifdef ENABLE_KMALLOC_BARRIERS
+    if (p != NULL) {
+        p = kmalloc_create_barriers(p, real_size);
+    }
+#endif /* ENABLE_KMALLOC_BARRIERS */
+
     spinunlock_enable(&kmalloc_lock);
 
     if (__likely(p != NULL)) {
-        memset(p, 0xAA, size);
+#ifdef ENABLE_KMALLOC_BARRIERS
+        memset(p, 0xaa, size - 2 * KMALLOC_BARRIER_SIZE);
+#else
+        memset(p, 0xaa, size);
+#endif /* ENABLE_KMALLOC_BARRIERS */
     }
 
     return p;
@@ -233,9 +255,14 @@ void* kcalloc( uint32_t nmemb, uint32_t size ) {
 void kfree( void* p ) {
     kmalloc_chunk_t* chunk;
 
-    if ( __unlikely( p == NULL ) ) {
+    if (__unlikely(p == NULL)) {
         return;
     }
+
+#ifdef ENABLE_KMALLOC_BARRIERS
+    kmalloc_validate_barriers(p);
+    p = (uint8_t*)p - KMALLOC_BARRIER_SIZE;
+#endif /* ENABLE_KMALLOC_BARRIERS */
 
     chunk = ( kmalloc_chunk_t* )( ( uint8_t* )p - sizeof( kmalloc_chunk_t ) );
 

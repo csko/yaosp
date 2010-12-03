@@ -61,3 +61,54 @@ void kmalloc_set_debug_output( kmalloc_debug_output_t* out ) {
 }
 
 #endif /* ENABLE_KMALLOC_DEBUG */
+
+#ifdef ENABLE_KMALLOC_BARRIERS
+
+#include <console.h>
+#include <lib/string.h>
+
+void* kmalloc_create_barriers(void* p, size_t size) {
+    uint8_t* data = (uint8_t*)p;
+    uint8_t* before = data;
+    uint8_t* after = data + size - KMALLOC_BARRIER_SIZE;
+
+    memset(before, 0xbb, KMALLOC_BARRIER_SIZE);
+    memset(after, 0xcc, KMALLOC_BARRIER_SIZE);
+
+    return (data + KMALLOC_BARRIER_SIZE);
+}
+
+void kmalloc_validate_barriers(void* p) {
+    int i;
+    uint8_t* data = (uint8_t*)p;
+    data -= KMALLOC_BARRIER_SIZE;
+
+    kmalloc_chunk_t* chunk = (kmalloc_chunk_t*)((uint8_t*)data - sizeof(kmalloc_chunk_t));
+    uint8_t* before = data;
+    uint8_t* after = data + chunk->size - KMALLOC_BARRIER_SIZE;
+
+    uint8_t* failed_ptr;
+    uint8_t expected_data;
+
+    for (i = 0; i < KMALLOC_BARRIER_SIZE; i++) {
+        if (before[i] != 0xbb) {
+            failed_ptr = before + i;
+            expected_data = 0xbb;
+            goto failed;
+        }
+
+        if (after[i] != 0xcc) {
+            failed_ptr = after + i;
+            expected_data = 0xcc;
+            goto failed;
+        }
+    }
+
+    return;
+
+failed:
+    dprintf_unlocked("kmalloc barrier validation failed at %x\n", failed_ptr);
+    dprintf_unlocked("    expected: %02x found: %02x\n", expected_data, *failed_ptr);
+}
+
+#endif /* ENABLE_KMALLOC_BARRIERS */

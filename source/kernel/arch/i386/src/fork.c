@@ -41,7 +41,7 @@ int arch_do_fork( thread_t* old_thread, thread_t* new_thread ) {
     if ( old_arch_thread->flags & THREAD_FPU_USED ) {
         if ( old_arch_thread->flags & THREAD_FPU_DIRTY ) {
             save_fpu_state( old_arch_thread->fpu_state );
-            old_arch_thread->flags &= ~THREAD_FPU_DIRTY; 
+            old_arch_thread->flags &= ~THREAD_FPU_DIRTY;
             set_task_switched();
         }
 

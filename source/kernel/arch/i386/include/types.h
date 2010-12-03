@@ -27,14 +27,12 @@ typedef unsigned int register_t;
 
 typedef struct registers {
     /* Saved segment registers */
-
     register_t fs;
     register_t es;
     register_t ds;
 
     /* General-purpose registers pushed by the pusha
        instruction */
-
     register_t edi;
     register_t esi;
     register_t ebp;
@@ -46,13 +44,11 @@ typedef struct registers {
 
     /* Interrupt number and error code pushed by the
        ISR macros */
-
     register_t int_number;
     register_t error_code;
 
     /* These are pushed to the stack by the CPU when
        an interrupt is fired */
-
     register_t eip;
     register_t cs;
     register_t eflags;

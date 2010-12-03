@@ -74,6 +74,15 @@ void kmalloc_set_debug_output( kmalloc_debug_output_t* out );
 
 #endif /* ENABLE_KMALLOC_DEBUG */
 
+#ifdef ENABLE_KMALLOC_BARRIERS
+
+#define KMALLOC_BARRIER_SIZE 512
+
+void* kmalloc_create_barriers(void* p, size_t size);
+void kmalloc_validate_barriers(void* p);
+
+#endif /* ENABLE_KMALLOC_BARRIERS */
+
 /**
  * Allocates a size byte(s) long memory chunk.
  *

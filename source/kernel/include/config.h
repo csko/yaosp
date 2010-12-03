@@ -25,6 +25,7 @@
 //#define ENABLE_DEBUGGER 1
 #define ENABLE_NETWORK 1
 //#define ENABLE_KMALLOC_DEBUG 1
+//#define ENABLE_KMALLOC_BARRIERS 1
 
 /**
  * The maximum number of CPUs supported.
@@ -68,12 +69,12 @@
 /**
  * The size of the kernel stack for threads.
  */
-#define KERNEL_STACK_SIZE ( 32 * 1024 )
+#define KERNEL_STACK_SIZE (32 * 1024)
 
 /**
  * The default size of the user stack for threads.
  */
-#define USER_STACK_SIZE ( 256 * 1024 )
+#define USER_STACK_SIZE (256 * 1024)
 
 #define KERNEL_PARAM_BUF_SIZE 4096
 #define MAX_KERNEL_PARAMS 64

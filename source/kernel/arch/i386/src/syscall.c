@@ -1,6 +1,6 @@
 /* i386 specific part of the system call handler
  *
- * Copyright (c) 2009 Zoltan Kovacs
+ * Copyright (c) 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -19,8 +19,8 @@
 #include <types.h>
 #include <syscall.h>
 
-void system_call_entry( registers_t* regs ) {
-    uint32_t parameters[ 5 ] = {
+void system_call_entry(registers_t* regs) {
+    uint32_t parameters[5] = {
         regs->ebx,
         regs->ecx,
         regs->edx,
@@ -28,5 +28,5 @@ void system_call_entry( registers_t* regs ) {
         regs->edi
     };
 
-    regs->eax = handle_system_call( regs->eax, parameters, ( void* )regs );
+    regs->eax = handle_system_call(regs->eax, parameters, (void*)regs);
 }
