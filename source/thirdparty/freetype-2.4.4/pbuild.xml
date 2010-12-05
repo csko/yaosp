@@ -20,10 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -->
 
 <build default="all">
-    <string name="package" value="freetype"/>
-    <string name="version" value="2.4.3"/>
-    <string name="source_file" value="freetype-2.4.3.tar.bz2"/>
-    <string name="md5sum" value="75ac7082bde7b3805dc5d6bc806fa045"/>
+    <string name="package"     value="freetype"/>
+    <string name="version"     value="2.4.4"/>
+    <string name="source_file" value="freetype-2.4.4.tar.bz2"/>
+    <string name="md5sum"      value="b3e2b6e2f1c3e0dffa1fd2a0f848b671"/>
 
     <pinclude file="${toplevel}/config/targets-thirdparty.xml" targets="clean,get_source,all"/>
 </build>
