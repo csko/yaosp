@@ -51,10 +51,11 @@ class FontGlyph {
 }; /* class FontGlyph */
 
 class FontStyle;
+class FontStorage;
 
 class FontNode {
   public:
-    FontNode(FontStyle* style, const yguipp::FontInfo& info);
+    FontNode(FontStorage* storage, FontStyle* style, const yguipp::FontInfo& info);
 
     int getWidth(const char* text, int length);
     FontGlyph* getGlyph(int c);
@@ -93,7 +94,9 @@ class FontNode {
     FT_Size setFaceSize(void);
 
   private:
+    FontStorage* m_storage;
     FontStyle* m_style;
+
     yguipp::FontInfo m_info;
     FontGlyph** m_glyphTable;
 
@@ -105,7 +108,7 @@ class FontNode {
 
 class FontStyle {
   public:
-    FontStyle(FT_Face face);
+    FontStyle(FontStorage* storage, FT_Face face);
 
     FontNode* getNode(const yguipp::FontInfo& info);
     inline int getGlyphCount(void) { return m_glyphCount; }
@@ -118,6 +121,8 @@ class FontStyle {
     inline void unLock(void) { m_mutex.unLock(); }
 
   private:
+    FontStorage* m_storage;
+
     FT_Face m_face;
     int m_glyphCount;
     bool m_scalable;
@@ -141,11 +146,15 @@ class FontFamily {
 class FontStorage {
   public:
     FontStorage(void);
+    ~FontStorage(void);
 
     bool init(void);
     bool loadFonts(void);
 
     FontNode* getFontNode(const std::string& family, const std::string& style, const yguipp::FontInfo& info);
+
+    void lockFT(void);
+    void unLockFT(void);
 
   private:
     FontFamily* getFamily(const std::string& familyName);
@@ -154,6 +163,7 @@ class FontStorage {
 
   private:
     FT_Library m_ftLibrary;
+    yutilpp::thread::Mutex m_ftLock;
     std::map<std::string, FontFamily*> m_families;
 }; /* class FontStorage */
 

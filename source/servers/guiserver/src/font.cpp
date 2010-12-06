@@ -32,7 +32,9 @@ FontGlyph::~FontGlyph(void) {
     delete[] m_raster;
 }
 
-FontNode::FontNode(FontStyle* style, const yguipp::FontInfo& info) : m_style(style), m_info(info) {
+FontNode::FontNode(FontStorage* storage, FontStyle* style, const yguipp::FontInfo& info) : m_storage(storage), m_style(style), m_info(info) {
+    m_storage->lockFT();
+
     m_glyphTable = new FontGlyph*[style->getGlyphCount()];
 
     for ( int i = 0; i < style->getGlyphCount(); i++ ) {
@@ -50,6 +52,8 @@ FontNode::FontNode(FontStyle* style, const yguipp::FontInfo& info) : m_style(sty
     m_ascender = (size->metrics.ascender + 63) / 64;
     m_lineGap = (size->metrics.height + 63) / 64 - (m_ascender - m_descender);
     m_advance = (size->metrics.max_advance + 63) / 64;
+
+    m_storage->unLockFT();
 }
 
 int FontNode::getWidth(const char* text, int length) {
@@ -101,12 +105,15 @@ FontGlyph* FontNode::getGlyph(int c) {
         return m_glyphTable[index];
     }
 
+    m_storage->lockFT();
+
     setFaceSize();
     FT_Set_Transform(face, NULL, NULL);
 
     error = FT_Load_Glyph(face, index, FT_LOAD_DEFAULT);
 
     if (error != 0) {
+        m_storage->unLockFT();
         dbprintf( "FontNode::getGlyph(): unable to load glyph char=%u index=%d (error=%d)\n", c, index, error);
         return NULL;
     }
@@ -129,14 +136,16 @@ FontGlyph* FontNode::getGlyph(int c) {
         }
 
         if (error != 0) {
-          dbprintf("FontNode::getGlyph(): failed to render glyph: 0x%x\n", error);
-          return NULL;
+            m_storage->unLockFT();
+            dbprintf("FontNode::getGlyph(): failed to render glyph: 0x%x\n", error);
+            return NULL;
         }
     }
 
     if ( (glyph->bitmap.width < 0) ||
          (glyph->bitmap.rows < 0) ||
          (glyph->bitmap.pitch < 0) ) {
+        m_storage->unLockFT();
         dbprintf(
             "FontNode::getGlyph(): glyph got invalid size %dx%d (%d)\n",
             glyph->bitmap.width, glyph->bitmap.rows, glyph->bitmap.pitch
@@ -154,6 +163,7 @@ FontGlyph* FontNode::getGlyph(int c) {
             break;
 
         default :
+            m_storage->unLockFT();
             dbprintf("FontNode::getGlyph(): unknown pixel mode: %d\n", glyph->bitmap.pixel_mode);
             return NULL;
     }
@@ -200,6 +210,8 @@ FontGlyph* FontNode::getGlyph(int c) {
         }
     }
 
+    m_storage->unLockFT();
+
     return fontGlyph;
 }
 
@@ -215,7 +227,7 @@ FT_Size FontNode::setFaceSize(void) {
     return face->size;
 }
 
-FontStyle::FontStyle(FT_Face face) : m_face(face), m_mutex("style_lock") {
+FontStyle::FontStyle(FontStorage* storage, FT_Face face) : m_storage(storage), m_face(face), m_mutex("style_lock") {
     m_glyphCount = face->num_glyphs;
     m_scalable = ((face->face_flags & FT_FACE_FLAG_SCALABLE) != 0);
     m_fixedWidth = ((face->face_flags & FT_FACE_FLAG_FIXED_WIDTH) != 0);
@@ -226,7 +238,7 @@ FontNode* FontStyle::getNode(const yguipp::FontInfo& info) {
     std::map<yguipp::FontInfo, FontNode*>::const_iterator it = m_nodes.find(info);
 
     if (it == m_nodes.end()) {
-        node = new FontNode(this, info);
+        node = new FontNode(m_storage, this, info);
         m_nodes[info] = node;
     } else {
         node = it->second;
@@ -252,15 +264,16 @@ FontStyle* FontFamily::getStyle(const std::string& styleName) {
     return it->second;
 }
 
-FontStorage::FontStorage(void) {
+FontStorage::FontStorage(void) : m_ftLock("ftLock") {
+}
+
+FontStorage::~FontStorage(void) {
 }
 
 bool FontStorage::init(void) {
     FT_Error error;
-
     error = FT_Init_FreeType(&m_ftLibrary);
-
-    return ( error == 0 );
+    return (error == 0);
 }
 
 bool FontStorage::loadFonts(void) {
@@ -337,6 +350,14 @@ FontNode* FontStorage::getFontNode(const std::string& family, const std::string&
     return fontStyle->getNode(info);
 }
 
+void FontStorage::lockFT(void) {
+    m_ftLock.lock();
+}
+
+void FontStorage::unLockFT(void) {
+    m_ftLock.unLock();
+}
+
 FontFamily* FontStorage::getFamily(const std::string& familyName) {
     std::map<std::string, FontFamily*>::const_iterator it = m_families.find(familyName);
 
@@ -361,7 +382,7 @@ bool FontStorage::loadFontFace(FT_Face face) {
         return false;
     }
 
-    style = new FontStyle(face);
+    style = new FontStyle(this, face);
     family->addStyle(face->style_name, style);
 
     return true;
