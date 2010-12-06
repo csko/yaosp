@@ -96,6 +96,8 @@ int TextArea::paint(GraphicsContext* g) {
         p.m_y += m_font->getHeight();
     }
 
+    paintCursor(g);
+
     return 0;
 }
 
@@ -104,6 +106,7 @@ int TextArea::keyPressed(int key) {
         case KEY_LEFT :
             if (m_caretPosition > 0) {
                 m_caretPosition--;
+                invalidate();
             }
 
             break;
@@ -111,6 +114,7 @@ int TextArea::keyPressed(int key) {
         case KEY_RIGHT :
             if (m_caretPosition < m_document->getLength()) {
                 m_caretPosition++;
+                invalidate();
             }
 
             break;
@@ -154,6 +158,47 @@ int TextArea::onTextInserted(yguipp::text::Document* document) {
 int TextArea::onTextRemoved(yguipp::text::Document* document) {
     invalidate();
     return 0;
+}
+
+int TextArea::paintCursor(GraphicsContext* g) {
+    int x;
+    int y;
+    Point p1;
+    Point p2;
+    yguipp::text::Element* e;
+
+    calcXYCaretPosition(x, y);
+    e = m_document->getRootElement()->getElement(y);
+
+    p1.m_y = m_font->getHeight() * y;
+    p1.m_x = m_font->getWidth(m_document->getText(e->getOffset(), x));
+
+    p2.m_y = p1.m_y + m_font->getHeight() - 1;
+    p2.m_x = p1.m_x;
+
+    g->setPenColor(Color(0, 0, 0));
+    g->drawLine(p1, p2);
+
+    return 0;
+}
+
+void TextArea::calcXYCaretPosition(int& x, int& y) {
+    size_t index = 0;
+    int pos = m_caretPosition;
+
+    yguipp::text::Element* root = m_document->getRootElement();
+    yguipp::text::Element* e = root->getElement(0);
+
+    y = 0;
+
+    while (pos > e->getLength()) {
+        y++;
+        pos -= e->getLength();
+
+        e = root->getElement(++index);
+    }
+
+    x = pos;
 }
 
 } /* namespace yguipp */

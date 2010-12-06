@@ -42,6 +42,11 @@ class TextArea : public Widget, public yguipp::event::DocumentListener {
     int onTextRemoved(yguipp::text::Document* document);
 
   private:
+    int paintCursor(GraphicsContext* g);
+
+    void calcXYCaretPosition(int& x, int& y);
+
+  private:
     yguipp::Font* m_font;
 
     int m_caretPosition;
