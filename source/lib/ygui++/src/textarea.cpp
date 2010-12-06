@@ -148,17 +148,42 @@ int TextArea::keyPressed(int key) {
 
             break;
 
-        case KEY_HOME :
-            break;
+        case KEY_HOME : {
+            yguipp::text::Element* e = currentLineElement();
+            
+            if (e != NULL) {
+                m_caretPosition = e->getOffset();
+                invalidate();
+            }
 
-        case KEY_END :
             break;
+        }
+
+        case KEY_END : {
+            yguipp::text::Element* e = currentLineElement();
+
+            if (e != NULL) {
+                int pos = e->getOffset() + e->getLength();
+
+                if ((e->getLength() > 0) &&
+                    (m_document->getText(pos - 1, 1) == "\n")) {
+                    pos--;
+                }
+
+                m_caretPosition = pos;
+                invalidate();
+            }
+
+            break;
+        }
 
         default : {
             std::string s;
             s.append(reinterpret_cast<char*>(&key), 1);
 
             m_document->insert(m_caretPosition++, s);
+
+            break;
         }
     }
 
@@ -228,6 +253,35 @@ void TextArea::calcXYCaretPosition(int& x, int& y) {
     } else {
         x = pos;
     }
+}
+
+yguipp::text::Element* TextArea::currentLineElement(void) {
+    size_t index = 0;
+    int pos = m_caretPosition;
+
+    yguipp::text::Element* root = m_document->getRootElement();
+    yguipp::text::Element* e = root->getElement(0);
+
+    while (1) {
+        if (pos <= e->getLength()) {
+            break;
+        }
+
+        pos -= e->getLength();
+
+        e = root->getElement(++index);
+    }
+
+    if ((pos == e->getLength()) &&
+        (m_document->getText(e->getOffset() + pos - 1, 1) == "\n")) {
+        if (index == root->getElementCount() - 1) {
+            e = NULL;
+        } else {
+            e = root->getElement(index + 1);
+        }
+    }
+
+    return e;
 }
 
 } /* namespace yguipp */

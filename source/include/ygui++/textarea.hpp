@@ -45,6 +45,7 @@ class TextArea : public Widget, public yguipp::event::DocumentListener {
     int paintCursor(GraphicsContext* g);
 
     void calcXYCaretPosition(int& x, int& y);
+    yguipp::text::Element* currentLineElement(void);
 
   private:
     yguipp::Font* m_font;
