@@ -67,7 +67,14 @@ bool PlainDocument::insert(int offset, const std::string& text) {
 
 bool PlainDocument::remove(int offset, int length) {
     m_buffer->remove(offset, length);
-    // todo: update Element tree
+
+    /* Update our internal element tree. */
+    for (int i = 0; i < length; i++) {
+        charRemovedAt(offset);
+    }
+
+    fireTextRemoveListeners(this);
+
     return true;
 }
 
@@ -145,6 +152,55 @@ void PlainDocument::charInsertedAt(int position, char c) {
 
     for (size_t i = shiftFrom; i < m_rootElement->getElementCount(); i++) {
         m_rootElement->getElement(i)->incOffset(1);
+    }
+}
+
+void PlainDocument::charRemovedAt(int position) {
+    assert((position >= 0) && (position < getLength()));
+
+    size_t index = 0;
+    PlainElement* e = NULL;
+
+    for (size_t i = 0; i < m_rootElement->getElementCount(); i++) {
+        PlainElement* tmp = dynamic_cast<PlainElement*>(m_rootElement->getElement(i));
+        int tmpOffset = tmp->getOffset();
+
+        if ((position >= tmpOffset) &&
+            (position < (tmpOffset + tmp->getLength()))) {
+            e = tmp;
+            index = i;
+            break;
+        }
+    }
+
+    assert(e != NULL);
+
+    size_t shiftFrom = index + 1;
+    bool atElementEnd = position == (e->getOffset() + e->getLength() - 1);
+
+    if (atElementEnd) {
+        if (e->m_lineEnd) {
+            if (index == m_rootElement->getElementCount() - 1) {
+                e->m_lineEnd = false;
+            } else {
+                PlainElement* tmp = dynamic_cast<PlainElement*>(m_rootElement->getElement(index + 1));
+
+                e->m_lineEnd = tmp->m_lineEnd;
+                e->incLength(tmp->getLength());
+                e->decLength(1);
+
+                m_rootElement->removeChild(index + 1);
+                delete tmp;
+            }
+        } else {
+            e->decLength(1);
+        }
+    } else {
+        e->decLength(1);
+    }
+
+    for (size_t i = shiftFrom; i < m_rootElement->getElementCount(); i++) {
+        m_rootElement->getElement(i)->decOffset(1);
     }
 }
 

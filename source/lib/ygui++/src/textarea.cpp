@@ -115,8 +115,24 @@ int TextArea::keyPressed(int key) {
 
             break;
 
+        case KEY_UP :
+            break;
+
+        case KEY_DOWN :
+            break;
+
         case KEY_ENTER :
             m_document->insert(m_caretPosition++, "\n");
+            break;
+
+        case KEY_BACKSPACE :
+            if (m_caretPosition <= 0) {
+                break;
+            }
+
+            m_caretPosition--;
+            m_document->remove(m_caretPosition, 1);
+
             break;
 
         default : {
@@ -136,6 +152,7 @@ int TextArea::onTextInserted(yguipp::text::Document* document) {
 }
 
 int TextArea::onTextRemoved(yguipp::text::Document* document) {
+    invalidate();
     return 0;
 }
 

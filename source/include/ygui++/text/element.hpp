@@ -31,8 +31,10 @@ class Element {
 
     void addChild(Element* element);
     void insertChild(size_t index, Element* element);
+    void removeChild(size_t index);
 
     void incOffset(int amount);
+    void decOffset(int amount);
     void incLength(int amount);
     void decLength(int amount);
 

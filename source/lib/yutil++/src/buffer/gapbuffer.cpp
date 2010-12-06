@@ -59,7 +59,9 @@ bool GapBuffer::insert(int position, const char* data, int size) {
 
 bool GapBuffer::remove(int position, int size) {
     moveGapTo(position + size);
+
     m_gapStart -= size;
+    m_gapSize += size;
 
     return true;
 }

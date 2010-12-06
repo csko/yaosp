@@ -41,6 +41,7 @@ class PlainDocument : public Document {
 
   private:
     void charInsertedAt(int position, char c);
+    void charRemovedAt(int position);
 
     class PlainElement : public Element {
       public:

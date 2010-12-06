@@ -41,8 +41,16 @@ void Element::insertChild(size_t index, Element* element) {
     m_children.insert(m_children.begin() + index, element);
 }
 
+void Element::removeChild(size_t index) {
+    m_children.erase(m_children.begin() + index);
+}
+
 void Element::incOffset(int amount) {
     m_offset += amount;
+}
+
+void Element::decOffset(int amount) {
+    m_offset -= amount;
 }
 
 void Element::incLength(int amount) {
