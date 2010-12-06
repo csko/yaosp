@@ -139,6 +139,21 @@ int TextArea::keyPressed(int key) {
 
             break;
 
+        case KEY_DELETE :
+            if (m_caretPosition >= m_document->getLength()) {
+                break;
+            }
+
+            m_document->remove(m_caretPosition, 1);
+
+            break;
+
+        case KEY_HOME :
+            break;
+
+        case KEY_END :
+            break;
+
         default : {
             std::string s;
             s.append(reinterpret_cast<char*>(&key), 1);
@@ -165,15 +180,19 @@ int TextArea::paintCursor(GraphicsContext* g) {
     int y;
     Point p1;
     Point p2;
-    yguipp::text::Element* e;
 
     calcXYCaretPosition(x, y);
-    e = m_document->getRootElement()->getElement(y);
 
     p1.m_y = m_font->getHeight() * y;
-    p1.m_x = m_font->getWidth(m_document->getText(e->getOffset(), x));
-
     p2.m_y = p1.m_y + m_font->getHeight() - 1;
+
+    if (y == (int)m_document->getRootElement()->getElementCount()) {
+        p1.m_x = 0;
+    } else {
+        yguipp::text::Element* e = m_document->getRootElement()->getElement(y);
+        p1.m_x = m_font->getWidth(m_document->getText(e->getOffset(), x));
+    }
+
     p2.m_x = p1.m_x;
 
     g->setPenColor(Color(0, 0, 0));
@@ -191,14 +210,24 @@ void TextArea::calcXYCaretPosition(int& x, int& y) {
 
     y = 0;
 
-    while (pos > e->getLength()) {
+    while (1) {
+        if (pos <= e->getLength()) {
+            break;
+        }
+
         y++;
         pos -= e->getLength();
 
         e = root->getElement(++index);
     }
 
-    x = pos;
+    if ((pos == e->getLength()) &&
+        (m_document->getText(e->getOffset() + pos - 1, 1) == "\n")) {
+        y++;
+        x = 0;
+    } else {
+        x = pos;
+    }
 }
 
 } /* namespace yguipp */

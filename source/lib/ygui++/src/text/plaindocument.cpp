@@ -66,12 +66,12 @@ bool PlainDocument::insert(int offset, const std::string& text) {
 }
 
 bool PlainDocument::remove(int offset, int length) {
-    m_buffer->remove(offset, length);
-
     /* Update our internal element tree. */
     for (int i = 0; i < length; i++) {
         charRemovedAt(offset);
     }
+
+    m_buffer->remove(offset, length);
 
     fireTextRemoveListeners(this);
 
