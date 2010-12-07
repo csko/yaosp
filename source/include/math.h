@@ -56,6 +56,8 @@ double tan( double x );
 double atan( double x );
 double sqrt( double x );
 
+long int lround(double x);
+
 #ifdef __cplusplus
 }
 #endif

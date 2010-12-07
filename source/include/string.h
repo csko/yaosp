@@ -63,6 +63,8 @@ float strtof(const char *nptr, char **endptr);
 char* strerror( int errnum );
 char* strsignal( int signum );
 
+int ffs(int i);
+
 #ifdef __cplusplus
 }
 #endif

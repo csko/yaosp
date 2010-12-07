@@ -25,6 +25,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>zlib-1.2.5</item>
         <item>libpng-1.4.3</item>
         <item>jpeg-8a</item>
+        <item>pixman-0.20.0</item>
+        <item>cairo-1.10.0</item>
     </array>
 
     <array name="libraries">

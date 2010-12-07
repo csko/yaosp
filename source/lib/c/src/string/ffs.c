@@ -1,4 +1,4 @@
-/* Not implemented math functions
+/* yaosp C library
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,24 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <math.h>
-#include <yaosp/debug.h>
+#include <string.h>
 
-double sinh( double x ) {
-    /* TODO */
-    dbprintf( "TODO: sinh() not yet implemented!\n" );
-    return 0;
+int ffs(int i) {
+    int n;
+
+    for (n = 0; i; ++n) {
+        i >>= 1;
+    }
+
+    return n;
 }
-
-double cosh( double x ) {
-    /* TODO */
-    dbprintf( "TODO: cosh() not yet implemented!\n" );
-    return 0;
-}
-
-double tanh( double x ) {
-    /* TODO */
-    dbprintf( "TODO: tanh() not yet implemented!\n" );
-    return 0;
-}
-

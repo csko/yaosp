@@ -113,6 +113,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/string/strtok.c</item>
         <item>src/string/strxfrm.c</item>
         <item>src/string/strtof.c</item>
+        <item>src/string/ffs.c</item>
         <item>src/unistd/sync.c</item>
         <item>src/unistd/sbrk.c</item>
         <item>src/unistd/fork.c</item>
@@ -302,6 +303,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/termios/tcsetpgrp.c</item>
         <item>src/math/s_ldexp.c</item>
         <item>src/math/s_modf.c</item>
+        <item>src/math/s_lround.c</item>
         <item>src/math/math_dummy.c</item>
         <item>src/yaosp/debug.c</item>
         <item>src/yaosp/sysinfo.c</item>
