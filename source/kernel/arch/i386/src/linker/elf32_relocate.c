@@ -87,6 +87,20 @@ static int do_elf32_relocate_i386( elf32_context_t* context, elf32_image_t* imag
                 break;
             }
 
+            case R_386_GLOB_DATA : {
+                elf32_image_t* img;
+                my_elf_symbol_t* sym;
+
+                if ( elf32_context_get_symbol( context, symbol->name, 0, 1, &img, ( void** )&sym ) != 0 ) {
+                    kprintf( ERROR, "Symbol %s not found.\n", symbol->name );
+                    return -ENOENT;
+                }
+
+                *target = img->text_region->address + sym->address - img->info.virtual_address;
+
+                break;
+            }
+
             case R_386_JMP_SLOT : {
                 elf32_image_t* img;
                 my_elf_symbol_t* sym;

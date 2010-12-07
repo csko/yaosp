@@ -55,6 +55,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
                 <input>${i}</input>
                 <output>objs/filename(${i}).o</output>
                 <include>./include</include>
+                <include>${includedir}/pixman</include>
                 <define key="USE_i386_ASM"/>
             </gcc>
         </for>
@@ -69,6 +70,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
             <input>${staticlibdir}/libfreetype.a</input>
             <input>${staticlibdir}/libpng.a</input>
             <input>${staticlibdir}/libz.a</input>
+            <input>${staticlibdir}/libcairo.a</input>
+            <input>${staticlibdir}/libpixman.a</input>
             <output>objs/guiserver</output>
             <flags>-Wl,-export-dynamic -lyutil++</flags>
         </gcc>
