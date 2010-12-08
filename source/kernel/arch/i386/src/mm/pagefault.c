@@ -192,7 +192,13 @@ static int handle_file_mapping( memory_region_t* region, uint32_t address ) {
         }
     }
 
-    ASSERT( i > 0 );
+    /* Maybe a different thread tried to access the same
+       page and already loaded it. */
+    if (i == 0) {
+        mutex_unlock(context->mutex);
+        return 0;
+    }
+
     page_count = i;
 
     /* Allocate memory for the new pages */
