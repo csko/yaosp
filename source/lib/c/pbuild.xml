@@ -30,6 +30,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>arch/i386/setjmp.S</item>
         <item>arch/i386/longjmp.S</item>
         <item>arch/i386/memcpy.S</item>
+        <item>arch/i386/atomic.S</item>
         <item>arch/i386/math/e_exp.S</item>
         <item>arch/i386/math/e_log.S</item>
         <item>arch/i386/math/s_sin.S</item>
@@ -336,6 +337,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/pthread/thread.c</item>
         <item>src/pthread/attr.c</item>
         <item>src/pthread/condition.c</item>
+        <item>src/pthread/once.c</item>
         <item>src/regex/collate.c</item>
         <item>src/regex/collcmp.c</item>
         <item>src/regex/regcomp.c</item>

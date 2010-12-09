@@ -28,6 +28,8 @@
 
 #define PTHREAD_MUTEX_INITIALIZER { 0, -1 }
 
+#define PTHREAD_ONCE_INIT 0
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -65,6 +67,8 @@ typedef struct pthread_cond {
     int cond_id;
 } pthread_cond_t;
 
+typedef int pthread_once_t;
+
 int pthread_attr_init( pthread_attr_t* attr );
 int pthread_attr_destroy( pthread_attr_t* attr );
 int pthread_attr_getname( pthread_attr_t* attr, char** name );
@@ -96,6 +100,8 @@ int pthread_cond_wait( pthread_cond_t* cond, pthread_mutex_t* mutex );
 int pthread_cond_timedwait( pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime );
 int pthread_cond_signal( pthread_cond_t* cond );
 int pthread_cond_broadcast( pthread_cond_t* cond );
+
+int pthread_once(pthread_once_t* once_control, void (*init_routine)(void));
 
 #ifdef __cplusplus
 }
