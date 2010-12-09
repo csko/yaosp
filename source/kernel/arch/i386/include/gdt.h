@@ -1,6 +1,6 @@
 /* Global Descriptor Table handling
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -49,7 +49,7 @@ typedef struct gdt {
     uint32_t base;
 } __attribute__(( packed )) gdt_t;
 
-extern gdt_descriptor_t gdt[ GDT_ENTRIES + MAX_CPU_COUNT ];
+extern gdt_descriptor_t gdt[GDT_ENTRIES + 2 * MAX_CPU_COUNT];
 
 void gdt_set_descriptor_base( uint16_t desc, uint32_t base );
 void gdt_set_descriptor_limit( uint16_t desc, uint32_t limit );

@@ -144,7 +144,9 @@ static system_call_entry_t system_call_table[] = {
     { "dlopen", sys_dlopen, 0, PARAM_COUNT(2) },
     { "dlclose", sys_dlclose, 0, PARAM_COUNT(1) },
     { "dlsym", sys_dlsym, 0, PARAM_COUNT(2) },
-    { "dlgetglobalinit", sys_dlgetglobalinit, 0, PARAM_COUNT(3) }
+    { "dlgetglobalinit", sys_dlgetglobalinit, 0, PARAM_COUNT(3) },
+    { "alloc_tld", sys_alloc_tld, 0, PARAM_COUNT(0) },
+    { "free_tlc", sys_free_tld, 0, PARAM_COUNT(1) | PARAM_TYPE(1, P_TYPE_INT) }
 };
 
 #ifdef ENABLE_SYSCALL_TRACE

@@ -124,7 +124,7 @@ __init int init_smp_late( void ) {
     thread_id id;
     cpu_t* processor;
 
-    ASSERT( processor_count > 0 );
+    ASSERT(processor_count > 0);
 
     /* Create the idle thread for present processors */
 

@@ -357,20 +357,20 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
     uint8_t* user_stack;
 
     /* Get the current process */
-
     current = current_thread();
     process = current->process;
 
     /* Calculate user stack size */
-
     if ( user_stack_size == 0 ) {
         user_stack_size = USER_STACK_SIZE;
     } else {
-        user_stack_size = PAGE_ALIGN( user_stack_size );
+        user_stack_size = PAGE_ALIGN(user_stack_size);
     }
 
-    /* Allocate a new thread */
+    user_stack_size += (TLD_SIZE * sizeof(ptr_t));
+    user_stack_size = PAGE_ALIGN(user_stack_size);
 
+    /* Allocate a new thread */
     thread = allocate_thread( name, process, priority, KERNEL_STACK_PAGES );
 
     if ( thread == NULL ) {
@@ -395,11 +395,14 @@ thread_id sys_create_thread( const char* name, int priority, thread_entry_t* ent
         goto error2;
     }
 
-    user_stack = ( uint8_t* )thread->user_stack_region->address;
-    thread->user_stack_end = ( void* )( user_stack + user_stack_size );
+    user_stack = (uint8_t*)thread->user_stack_region->address;
+    user_stack += user_stack_size;
+    thread->user_stack_end = (void*)user_stack;
+
+    user_stack -= (TLD_SIZE * sizeof(ptr_t));
+    thread->tld_data = (ptr_t*)user_stack;
 
     /* Initialize the architecture dependent part of the thread */
-
     error = arch_create_user_thread( thread, ( void* )entry, arg );
 
     if ( error < 0 ) {

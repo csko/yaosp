@@ -22,6 +22,7 @@
 #include <config.h>
 #include <loader.h>
 #include <time.h>
+#include <tld.h>
 #include <mm/context.h>
 #include <mm/region.h>
 #include <vfs/io_context.h>
@@ -53,6 +54,9 @@ typedef struct process {
     uint64_t vmem_size;
     uint64_t pmem_size;
 
+    lock_id tld_lock;
+    uint32_t tld_table[TLD_SIZE / 32];
+
     void* loader_data;
     application_loader_t* loader;
 } process_t;
@@ -81,6 +85,9 @@ process_id sys_getpid( void );
 int sys_exit( int exit_code );
 process_id sys_wait4( process_id pid, int* status, int options, struct rusage* rusage );
 int sys_getrusage( int who, struct rusage* usage );
+
+int sys_alloc_tld(void);
+int sys_free_tld(int tld);
 
 int init_processes( void );
 

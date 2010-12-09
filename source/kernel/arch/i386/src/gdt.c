@@ -1,6 +1,6 @@
 /* Global Descriptor Table handling
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -22,7 +22,7 @@
 #include <arch/gdt.h>
 #include <arch/cpu.h>
 
-gdt_descriptor_t gdt[ GDT_ENTRIES + MAX_CPU_COUNT ] = {
+gdt_descriptor_t gdt[GDT_ENTRIES + 2 * MAX_CPU_COUNT] = {
   /* NULL descriptor */
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
   /* Kernel CS */
@@ -59,8 +59,8 @@ void gdt_set_descriptor_access( uint16_t desc, uint8_t access ) {
 __init int init_gdt( void ) {
     gdt_t gdtp;
 
-    gdtp.size = sizeof( gdt ) - 1;
-    gdtp.base = ( uint32_t )&gdt;
+    gdtp.size = sizeof(gdt) - 1;
+    gdtp.base = (uint32_t)&gdt;
 
     __asm__ __volatile__(
         "lgdt %0\n"

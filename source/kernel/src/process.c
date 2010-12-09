@@ -62,12 +62,21 @@ process_t* allocate_process( char* name ) {
         goto error3;
     }
 
+    process->tld_lock = mutex_create("TLD table", MUTEX_NONE);
+
+    if (process->tld_lock < 0) {
+        goto error4;
+    }
+
     process->id = -1;
     process->heap_region = NULL;
 
     atomic_set( &process->thread_count, 0 );
 
     return process;
+
+ error4:
+    mutex_destroy(process->mutex);
 
  error3:
     kfree( process->name );
@@ -84,39 +93,34 @@ void destroy_process( process_t* process ) {
              the memory_context_delete_regions() will do it for us! */
 
     /* Destroy the application loader related structures */
-
     if ( process->loader != NULL ) {
         process->loader->destroy( process->loader_data );
     }
 
     /* Destroy the memory context */
-
     if ( process->memory_context != NULL ) {
         memory_context_delete_regions( process->memory_context );
         memory_context_destroy( process->memory_context );
     }
 
     /* Destroy the I/O context */
-
     if ( process->io_context != NULL ) {
         destroy_io_context( process->io_context );
     }
 
     /* Destroy the locking context */
-
     if ( process->lock_context != NULL ) {
         lock_context_destroy( process->lock_context );
     }
 
     /* Destroy the IPC ports of the process */
-
     ipc_destroy_process_ports( process );
 
     /* Delete other resources allocated by the process */
-
-    mutex_destroy( process->mutex );
-    kfree( process->name );
-    kfree( process );
+    mutex_destroy(process->tld_lock);
+    mutex_destroy(process->mutex);
+    kfree(process->name);
+    kfree(process);
 }
 
 int insert_process( process_t* process ) {
@@ -456,11 +460,36 @@ int sys_getrusage( int who, struct rusage* usage ) {
     return 0;
 }
 
+int sys_alloc_tld(void) {
+    int i;
+    int tld = -EAGAIN;
+    process_t* process = current_process();
+
+    mutex_lock(process->tld_lock, LOCK_IGNORE_SIGNAL);
+
+    for (i = 0; i < TLD_SIZE; i++) {
+        int byte_index = i / 32;
+        int bit_index = i % 32;
+
+        if ((process->tld_table[byte_index] & (1 << bit_index)) == 0) {
+            process->tld_table[byte_index] |= (1 << bit_index);
+            tld = i;
+            break;
+        }
+    }
+
+    mutex_unlock(process->tld_lock);
+
+    return tld;
+}
+
+int sys_free_tld(int tld) {
+    return 0;
+}
+
 static void* process_key( hashitem_t* item ) {
     process_t* process;
-
     process = ( process_t* )item;
-
     return ( void* )&process->id;
 }
 

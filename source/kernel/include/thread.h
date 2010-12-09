@@ -68,7 +68,6 @@ typedef struct thread {
     struct process* process;
 
     /* Scheduling time stuffs */
-
     uint64_t quantum;
     uint64_t exec_time;
     uint64_t cpu_time;
@@ -79,7 +78,6 @@ typedef struct thread {
     uint64_t prev_checkpoint;
 
     /* Kernel & user stack */
-
     uint32_t kernel_stack_pages;
     void* kernel_stack;
     void* kernel_stack_end;
@@ -90,13 +88,14 @@ typedef struct thread {
     void* syscall_stack;
 
     /* Signal handling */
-
     uint64_t pending_signals;
     uint64_t blocked_signals;
     struct sigaction signal_handlers[ _NSIG - 1 ];
 
-    /* Architecture specific data */
+    /* TLD data */
+    ptr_t* tld_data;
 
+    /* Architecture specific data */
     void* arch_data;
 } thread_t;
 

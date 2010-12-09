@@ -393,6 +393,10 @@ int do_execve( char* path, char** argv, char** envp, bool free_argv ) {
     stack = ( uint8_t* )thread->user_stack_region->address;
     stack += ( USER_STACK_PAGES * PAGE_SIZE );
 
+    /* Update TLD address of this thread. */
+    stack -= TLD_SIZE * sizeof(ptr_t);
+    thread->tld_data = (ptr_t*)stack;
+
     stack = copy_param_array_to_user( cloned_argv, user_argv, argc, stack );
     stack = copy_param_array_to_user( cloned_envv, user_envv, envc, stack );
 

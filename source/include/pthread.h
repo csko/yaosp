@@ -68,6 +68,7 @@ typedef struct pthread_cond {
 } pthread_cond_t;
 
 typedef int pthread_once_t;
+typedef int pthread_key_t;
 
 int pthread_attr_init( pthread_attr_t* attr );
 int pthread_attr_destroy( pthread_attr_t* attr );
@@ -102,6 +103,11 @@ int pthread_cond_signal( pthread_cond_t* cond );
 int pthread_cond_broadcast( pthread_cond_t* cond );
 
 int pthread_once(pthread_once_t* once_control, void (*init_routine)(void));
+
+int pthread_key_create(pthread_key_t* key, void (*destructor)(void*));
+int pthread_key_delete(pthread_key_t key);
+void* pthread_getspecific(pthread_key_t key);
+int pthread_setspecific(pthread_key_t key, const void* value);
 
 #ifdef __cplusplus
 }

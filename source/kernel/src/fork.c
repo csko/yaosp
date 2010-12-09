@@ -39,7 +39,6 @@ int sys_fork( void ) {
     this_process = this_thread->process;
 
     /* Create a new process */
-
     new_process = allocate_process( this_process->name );
 
     if ( new_process == NULL ) {
@@ -48,7 +47,6 @@ int sys_fork( void ) {
     }
 
     /* Clone the memory context of the old process */
-
     new_process->memory_context = memory_context_clone( this_process->memory_context, new_process );
 
     if ( new_process->memory_context == NULL ) {
@@ -66,7 +64,6 @@ int sys_fork( void ) {
     }
 
     /* Clone the I/O context */
-
     new_process->io_context = io_context_clone( this_process->io_context );
 
     if ( new_process->io_context == NULL ) {
@@ -75,7 +72,6 @@ int sys_fork( void ) {
     }
 
     /* Clone the locking context */
-
     new_process->lock_context = lock_context_clone( this_process->lock_context );
 
     if ( new_process->lock_context == NULL ) {
@@ -84,7 +80,6 @@ int sys_fork( void ) {
     }
 
     /* Create the main thread of the new process */
-
     new_thread = allocate_thread(
         this_thread->name,
         new_process,
@@ -98,12 +93,11 @@ int sys_fork( void ) {
     }
 
     /* Set the parent ID of the new thread */
-
     new_thread->parent_id = this_thread->id;
+    new_thread->tld_data = this_thread->tld_data;
 
     /* If the process has an userspace stack region then we have to find
        out the region ID of the cloned stack region. */
-
     if ( this_thread->user_stack_region != NULL ) {
         new_thread->user_stack_region = memory_context_get_region_for(
             new_process->memory_context,
@@ -120,7 +114,6 @@ int sys_fork( void ) {
     }
 
     /* Copy signal related informations to the new thread */
-
     memcpy(
         &new_thread->signal_handlers[ 0 ],
         &this_thread->signal_handlers[ 0 ],
@@ -128,7 +121,6 @@ int sys_fork( void ) {
     );
 
     /* Insert the new process and thread */
-
     scheduler_lock();
 
     error = insert_process( new_process );

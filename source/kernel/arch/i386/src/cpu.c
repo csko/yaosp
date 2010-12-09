@@ -90,7 +90,6 @@ __init int detect_cpu( void ) {
     char name[ 49 ] = { 0 };
 
     /* Clear the processor structures */
-
     memset( processor_table, 0, sizeof( cpu_t ) * MAX_CPU_COUNT );
     memset( arch_processor_table, 0, sizeof( i386_cpu_t ) * MAX_CPU_COUNT );
 
@@ -161,12 +160,10 @@ __init int detect_cpu( void ) {
 
     if ( largest_func_num >= 0x2 ) {
         cpuid( 0x2, regs );
-
         /* TODO: cache size detection */
     }
 
     /* Check extended functions */
-
     cpuid( 0x80000000, regs );
 
     largest_func_num = regs[ 0 ];
@@ -193,7 +190,6 @@ __init int detect_cpu( void ) {
         }
 
         /* Some CPU names have whitespace characters at the beginning, let's strip them */
-
         if ( j > 0 ) {
             size_t length;
 
@@ -204,7 +200,6 @@ __init int detect_cpu( void ) {
     }
 
     /* Put the boot processor information to the screen */
-
     kprintf( INFO, "Boot processor: %s\n", name );
     kprintf( INFO, "Features:" );
 
@@ -217,11 +212,11 @@ __init int detect_cpu( void ) {
     kprintf( INFO, "\n" );
 
     /* Setup TSS for all possible CPU */
+    for (i = 0; i < MAX_CPU_COUNT; i++) {
+        int entry;
+        tss_t* tss = &arch_processor_table[i].tss;
 
-    for ( i = 0; i < MAX_CPU_COUNT; i++ ) {
-        tss_t* tss = &arch_processor_table[ i ].tss;
-
-        memset( tss, 0, sizeof( tss_t ) );
+        memset(tss, 0, sizeof(tss_t) );
 
         tss->cs = KERNEL_CS;
         tss->ds = KERNEL_DS;
@@ -232,13 +227,23 @@ __init int detect_cpu( void ) {
         tss->esp0 = ( register_t )&_kernel_stack_top;
         tss->io_bitmap = 104;
 
-        gdt_set_descriptor_base( ( GDT_ENTRIES + i ) * 8, ( uint32_t )tss );
-        gdt_set_descriptor_limit( ( GDT_ENTRIES + i ) * 8, sizeof( tss_t ) );
-        gdt_set_descriptor_access( ( GDT_ENTRIES + i ) * 8, 0x89 );
+        entry = (GDT_ENTRIES + i) * 8;
+        gdt_set_descriptor_base(entry, (uint32_t)tss);
+        gdt_set_descriptor_limit(entry, sizeof(tss_t));
+        gdt_set_descriptor_access(entry, 0x89);
+    }
+
+    /* Setup GS segment for all possible CPU */
+    for (i = 0; i < MAX_CPU_COUNT; i++) {
+        int entry;
+
+        entry = (GDT_ENTRIES + MAX_CPU_COUNT + i) * 8;
+        gdt_set_descriptor_base(entry, 0);
+        gdt_set_descriptor_limit(entry, TLD_SIZE * sizeof(ptr_t));
+        gdt_set_descriptor_access(entry, 0xf2);
     }
 
     /* Load the TR register on the boot processor */
-
     __asm__ __volatile__(
         "ltr %%ax\n"
         :
@@ -257,8 +262,7 @@ __init int detect_cpu( void ) {
     }
 
     /* Initialize random number generator */
-
-    random_init( rdtsc() );
+    random_init(rdtsc());
 
     return 0;
 }

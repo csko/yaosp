@@ -1,6 +1,6 @@
 /* Architecture specific thread functions
  *
- * Copyright (c) 2008, 2009 Zoltan Kovacs
+ * Copyright (c) 2008, 2009, 2010 Zoltan Kovacs
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of version 2 of the GNU General Public License
@@ -21,6 +21,7 @@
 #include <config.h>
 #include <errno.h>
 #include <macros.h>
+#include <tld.h>
 #include <syscall_table.h>
 #include <mm/kmalloc.h>
 #include <lib/string.h>
@@ -92,56 +93,70 @@ int arch_create_kernel_thread( thread_t* thread, void* entry, void* arg ) {
 }
 
 int arch_create_user_thread( thread_t* thread, void* entry, void* arg ) {
-    register_t* stack;
-    registers_t* regs;
-    i386_thread_t* arch_thread;
-    uint8_t exit_code[ 9 ];
+    uint8_t* p;
     register_t exit_address;
+    i386_thread_t* arch_thread;
 
-    arch_thread = ( i386_thread_t* )thread->arch_data;
+    arch_thread = (i386_thread_t*)thread->arch_data;
 
-    stack = ( register_t* )thread->user_stack_end;
-    regs = ( registers_t* )( ( uint8_t* )stack - ( sizeof( registers_t ) + 8 /* arg + ret. addr */ + 12 /* exit code */ ) );
+    /*
+     * Layout of the stack:
+     *
+     * |-----------| <- top of the stack
+     * | TLD data  |
+     * |-----------|
+     * | Exit code | ||
+     * |-----------| || stack grows
+     * | regs      | ||   down :)
+     * |-----------| ||
+     * | user      | \/
+     * | stack     |
+     * | region    |
+     * |-----------| <- bottom of the stack
+     */
+    p = (uint8_t*)thread->user_stack_end;
+    p -= TLD_SIZE * sizeof(ptr_t);
 
-    /* Create the exit code */
+    /*
+     * Create the exit code:
+     *
+     * movl %%eax, %%ebx
+     * movl $SYS_exit_thread, %eax
+     * int $0x80
+     */
+    p -= 12;
+    exit_address = (register_t)p;
 
-    /* movl %%eax, %%ebx
-       movl $SYS_exit_thread, %eax
-       int $0x80 */
-
-    exit_code[ 0 ] = 0x89;
-    exit_code[ 1 ] = 0xC3;
-    exit_code[ 2 ] = 0xB8;
-    exit_code[ 7 ] = 0xCD;
-    exit_code[ 8 ] = 0x80;
-
-    *( ( register_t* )&exit_code[ 3 ] ) = SYS_exit_thread;
-
-    /* Put the exit code to the stack */
-
-    stack -= 3;
-    exit_address = ( register_t )stack;
-    memcpy( ( void* )stack, exit_code, sizeof( exit_code ) );
+    p[0] = 0x89;
+    p[1] = 0xC3;
+    p[2] = 0xB8;
+    p[7] = 0xCD;
+    p[8] = 0x80;
+    *((register_t*)&p[3]) = SYS_exit_thread;
 
     /* Initialize the top of the user stack */
+    p -= 8;
 
-    *--stack = ( register_t )arg;
-    *--stack = exit_address;
+    register_t* stack = (register_t*)p;
+    stack[0] = exit_address;
+    stack[1] = (register_t)arg;
 
-    /* Prepare the registers on the top of the stack */
+    /* Prepare the registers for iret on the top of the stack */
+    p -= sizeof(registers_t);
 
-    memset( regs, 0, sizeof( registers_t ) );
+    registers_t* regs = (registers_t*)p;
+    memset(regs, 0, sizeof(registers_t));
 
     regs->fs = USER_DS | 3;
     regs->es = USER_DS | 3;
     regs->ds = USER_DS | 3;
     regs->cs = USER_CS | 3;
-    regs->eip = ( register_t )entry;
+    regs->eip = (register_t)entry;
     regs->eflags = 0x203246;
-    regs->esp = ( register_t )( regs + 1 );
+    regs->esp = (register_t)(regs + 1);
     regs->ss = USER_DS | 3;
 
-    arch_thread->esp = ( register_t )regs;
+    arch_thread->esp = (register_t)regs;
 
     return 0;
 }
