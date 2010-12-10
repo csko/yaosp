@@ -16,9 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <cairo/cairo.h>
-#include <pixman.h>
-
 #include <yaosp/debug.h>
 
 #include <guiserver/guiserver.hpp>
@@ -123,35 +120,6 @@ int GuiServer::run(void) {
 
     ScreenMode mode(640, 480, yguipp::CS_RGB32);
     m_graphicsDriver->setMode(&mode);
-
-#if 0
-    // --- pixman testing ---
-    pixman_image_t* p = pixman_image_create_bits(PIXMAN_a8r8g8b8, 640, 480, reinterpret_cast<uint32_t*>(m_graphicsDriver->getFrameBuffer()), 640 * 4);
-    pixman_color_t c = {123, 123, 123, 123};
-    pixman_box32_t b = {0, 0, 100, 100};
-    pixman_image_fill_boxes(PIXMAN_OP_XOR, p, &c, 1, &b);
-    return 0;
-    // --- pixman testing ---
-#endif
-
-#if 0
-    // --- cairo testing ---
-    int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, 640);
-    dbprintf("stride=%d\n", stride);
-    cairo_surface_t* s = cairo_image_surface_create_for_data(
-        reinterpret_cast<unsigned char*>(m_graphicsDriver->getFrameBuffer()),
-        CAIRO_FORMAT_ARGB32, 640, 480, stride
-    );
-    cairo_t* cr = cairo_create(s);
-    //cairo_set_line_width(cr, 0.1);
-    cairo_set_source_rgb(cr, 1, 1, 1);
-    //cairo_rectangle(cr, 0, 0, 0.1, 0.1);
-    cairo_move_to(cr, 0, 0);
-    cairo_line_to(cr, 1, 1);
-    cairo_paint(cr);
-    return 0;
-    // --- cairo testing ---
-#endif
 
     m_screenBitmap = new Bitmap(
         640, 480, yguipp::CS_RGB32,
