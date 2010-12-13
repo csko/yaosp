@@ -28,7 +28,7 @@ class Black : public Decorator {
     Bitmap* m_maximizeImage;
     Bitmap* m_closeImage;
 
-    FontNode* m_titleFont;
+    ScaledFont* m_titleFont;
 
     static yguipp::Color m_headerColors[SIZE_HEADER];
 

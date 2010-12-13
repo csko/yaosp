@@ -28,7 +28,7 @@ namespace yguipp {
 
 class Font : public Object {
   public:
-    Font(const std::string& name, const std::string& style, const FontInfo& fontInfo);
+    Font(const std::string& name, const std::string& style, int pointSize);
     virtual ~Font(void);
 
   private:
@@ -49,13 +49,14 @@ class Font : public Object {
 
   private:
     int m_handle;
+
     int m_ascender;
     int m_descender;
     int m_height;
 
     std::string m_name;
     std::string m_style;
-    FontInfo m_fontInfo;
+    int m_pointSize;
 }; /* class Font */
 
 } /* namespace yguipp */

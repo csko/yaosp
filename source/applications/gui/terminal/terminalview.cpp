@@ -46,7 +46,7 @@ yguipp::Color TerminalView::m_normalColors[COLOR_COUNT] = {
 TerminalView::TerminalView(Terminal* terminal, TerminalBuffer* buffer) : m_terminal(terminal), m_buffer(buffer) {
     buffer->addListener(this);
 
-    m_font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(11));
+    m_font = new yguipp::Font("DejaVu Sans Mono", "Book", 11);
     m_font->init();
 }
 

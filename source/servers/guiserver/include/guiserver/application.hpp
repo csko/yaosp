@@ -20,15 +20,14 @@
 #define _APPLICATION_HPP_
 
 #include <map>
-#include <cairo/cairo.h>
 
 #include <ygui++/protocol.hpp>
 #include <yutil++/ipclistener.hpp>
 
 class Window;
 class GuiServer;
-class FontNode;
 class Bitmap;
+class ScaledFont;
 
 class Application : public yutilpp::IPCListener {
   private:
@@ -38,7 +37,7 @@ class Application : public yutilpp::IPCListener {
     bool init( AppCreate* request );
 
   public:
-    cairo_scaled_font_t* getFont(int fontHandle);
+    ScaledFont* getFont(int fontHandle);
     Bitmap* getBitmap(int bitmapHandle);
     inline yutilpp::IPCPort* getClientPort(void) { return m_clientPort; }
 
@@ -69,7 +68,7 @@ class Application : public yutilpp::IPCListener {
     typedef std::map<int, Window*> WindowMap;
     typedef WindowMap::iterator WindowMapIter;
     typedef WindowMap::const_iterator WindowMapCIter;
-    typedef std::map<int, cairo_scaled_font_t*> FontMap;
+    typedef std::map<int, ScaledFont*> FontMap;
     typedef FontMap::const_iterator FontMapCIter;
     typedef std::map<int, Bitmap*> BitmapMap;
     typedef BitmapMap::const_iterator BitmapMapCIter;

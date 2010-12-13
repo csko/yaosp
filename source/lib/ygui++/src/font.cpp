@@ -24,9 +24,9 @@
 
 namespace yguipp {
 
-Font::Font( const std::string& name, const std::string& style, const FontInfo& fontInfo ) : m_handle(-1), m_name(name),
-                                                                                            m_style(style),
-                                                                                            m_fontInfo(fontInfo) {
+Font::Font(const std::string& name, const std::string& style, int pointSize) : m_handle(-1), m_name(name),
+                                                                               m_style(style),
+                                                                               m_pointSize(pointSize) {
 }
 
 Font::~Font(void) {
@@ -46,7 +46,7 @@ bool Font::init(void) {
     request = reinterpret_cast<FontCreate*>(data);
 
     request->m_replyPort = app->getReplyPort()->getId();
-    request->m_fontInfo = m_fontInfo;
+    request->m_pointSize = m_pointSize;
     tmp = data + sizeof(FontCreate);
     memcpy(tmp, m_name.data(), m_name.size() + 1);
     tmp += m_name.size() + 1;

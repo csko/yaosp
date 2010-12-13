@@ -61,10 +61,6 @@ enum VAlignment {
     V_ALIGN_BOTTOM
 };
 
-enum FontFlags {
-    FONT_SMOOTHED = (1 << 0)
-};
-
 enum ActivationReason {
     WINDOW_OPENED,
     WINDOW_CLICKED,
@@ -87,18 +83,6 @@ enum AntiAliasMode {
     GRAY,
     SUBPIXEL
 }; /* enum AntiAliasMode */
-
-struct FontInfo {
-    FontInfo(int pointSize, int flags = FONT_SMOOTHED) : m_pointSize(pointSize), m_flags(flags) {}
-
-    int m_pointSize;
-    int m_flags;
-
-    bool operator<(const FontInfo& info) const {
-        return ( (m_pointSize < info.m_pointSize) ||
-                 ((m_pointSize == info.m_pointSize) && (m_flags < info.m_flags)) );
-    }
-};
 
 struct ScreenModeInfo {
     int m_width;

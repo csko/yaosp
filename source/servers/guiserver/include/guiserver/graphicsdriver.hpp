@@ -59,8 +59,6 @@ class GraphicsDriver {
                           const yguipp::Color& color, yguipp::DrawingMode mode );
     virtual int fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Rect& rect,
                           const yguipp::Color& color, yguipp::DrawingMode mode );
-    virtual int drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
-                          const yguipp::Color& color, FontNode* font, const char* text, int length );
     virtual int drawLine( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& p1,
                           const yguipp::Point& p2, const yguipp::Color& color, yguipp::DrawingMode mode );
     virtual int blitBitmap( Bitmap* dest, const yguipp::Point& point, Bitmap* src,
@@ -77,11 +75,6 @@ class GraphicsDriver {
     int fillRectCopy32( Bitmap* bitmap, const yguipp::Rect& rect, const yguipp::Color& color );
 
     int fillRectInvert32( Bitmap* bitmap, const yguipp::Rect& rect );
-
-    int drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, yguipp::Point position,
-                    const yguipp::Color& color, FontNode* font, const char* text, int length );
-    int renderGlyph32( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
-                       const yguipp::Color& color, FontGlyph* glyph );
 
     int blitBitmapCopy( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );
     int blitBitmapCopy32( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect );

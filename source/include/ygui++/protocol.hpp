@@ -143,7 +143,7 @@ struct WinMouseReleased {
 
 struct FontCreate {
     ipc_port_id m_replyPort;
-    yguipp::FontInfo m_fontInfo;
+    int m_pointSize;
     /* family */
     /* style */
 };

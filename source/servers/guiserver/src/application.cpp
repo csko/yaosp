@@ -50,7 +50,7 @@ bool Application::init( AppCreate* request ) {
     return true;
 }
 
-cairo_scaled_font_t* Application::getFont(int fontHandle) {
+ScaledFont* Application::getFont(int fontHandle) {
     FontMapCIter it = m_fontMap.find(fontHandle);
 
     if (it == m_fontMap.end()) {
@@ -179,33 +179,16 @@ int Application::handleFontCreate( FontCreate* request ) {
     family = reinterpret_cast<char*>(request + 1);
     style = family + strlen(family) + 1;
 
-    int fontHandle = getFontId();
-    cairo_font_face_t* fontFace = m_guiServer->getFontStorage()->getCairoFontFace(family, style);
+    ScaledFont* font = m_guiServer->getFontStorage()->getScaledFont(family, style, request->m_pointSize);
 
-    if (fontFace == NULL) {
+    if (font == NULL) {
         reply.m_fontHandle = -1;
     } else {
-        cairo_matrix_t fm;
-        cairo_matrix_t ctm;
-        cairo_matrix_init_scale(&fm, request->m_fontInfo.m_pointSize, request->m_fontInfo.m_pointSize);
-        cairo_matrix_init_identity(&ctm);
-
-        cairo_font_options_t* options = cairo_font_options_create();
-        cairo_font_options_set_antialias(options, CAIRO_ANTIALIAS_SUBPIXEL);
-        cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_FULL);
-
-        cairo_scaled_font_t* scaledFont = cairo_scaled_font_create(fontFace, &fm, &ctm, options);
-        cairo_font_options_destroy(options);
-
-        cairo_font_extents_t extents;
-        cairo_scaled_font_extents(scaledFont, &extents);
-
-        reply.m_fontHandle = fontHandle;
-        reply.m_ascender = extents.ascent;
-        reply.m_descender = -extents.descent;
-        reply.m_height = extents.height;
-
-        m_fontMap[reply.m_fontHandle] = scaledFont;
+        reply.m_fontHandle = getFontId();
+        reply.m_ascender = font->getAscent();
+        reply.m_descender = font->getDescent();
+        reply.m_height = font->getHeight();
+        m_fontMap[reply.m_fontHandle] = font;
     }
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));
@@ -215,14 +198,12 @@ int Application::handleFontCreate( FontCreate* request ) {
 
 int Application::handleFontStringWidth( FontStringWidth* request ) {
     FontStringWidthReply reply;
-    cairo_scaled_font_t* scaledFont = getFont(request->m_fontHandle);
+    ScaledFont* scaledFont = getFont(request->m_fontHandle);
 
     if (scaledFont == NULL) {
         reply.m_width = 0;
     } else {
-        cairo_text_extents_t extents;
-        cairo_scaled_font_text_extents(scaledFont, reinterpret_cast<char*>(request + 1), &extents);
-        reply.m_width = extents.x_advance;
+        reply.m_width = scaledFont->getWidth(reinterpret_cast<char*>(request + 1));
     }
 
     yutilpp::IPCPort::sendTo(request->m_replyPort, 0, reinterpret_cast<void*>(&reply), sizeof(reply));

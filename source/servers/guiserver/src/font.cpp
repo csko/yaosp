@@ -24,248 +24,37 @@
 
 #include <guiserver/font.hpp>
 
-FontGlyph::FontGlyph(const yguipp::Rect& bounds, const yguipp::Point& advance, int rasterSize) : m_bounds(bounds),
-                                                                                                 m_advance(advance) {
-    m_raster = new uint8_t[rasterSize];
+ScaledFont::ScaledFont(cairo_scaled_font_t* font) : m_font(font) {
+    cairo_scaled_font_extents(m_font, &m_fontExtents);
 }
 
-FontGlyph::~FontGlyph(void) {
-    delete[] m_raster;
+ScaledFont::~ScaledFont(void) {
+    cairo_scaled_font_destroy(m_font);
 }
 
-FontNode::FontNode(FontStorage* storage, FontStyle* style, const yguipp::FontInfo& info) : m_storage(storage), m_style(style), m_info(info) {
-    m_storage->lockFT();
-
-    m_glyphTable = new FontGlyph*[style->getGlyphCount()];
-
-    for ( int i = 0; i < style->getGlyphCount(); i++ ) {
-        m_glyphTable[i] = NULL;
-    }
-
-    FT_Size size = setFaceSize();
-
-    if (size->metrics.descender > 0) {
-        m_descender = -(size->metrics.descender + 63) / 64;
-    } else {
-        m_descender = (size->metrics.descender + 63) / 64;
-    }
-
-    m_ascender = (size->metrics.ascender + 63) / 64;
-    m_lineGap = (size->metrics.height + 63) / 64 - (m_ascender - m_descender);
-    m_advance = (size->metrics.max_advance + 63) / 64;
-
-    m_storage->unLockFT();
+cairo_scaled_font_t* ScaledFont::getCairoFont(void) {
+    return m_font;
 }
 
-int FontNode::getWidth(const char* text, int length) {
-    int width = 0;
-
-    m_style->lock();
-
-    while (length > 0) {
-        int charLength = FontNode::utf8CharLength(*text);
-
-        if (charLength > length) {
-            break;
-        }
-
-        FontGlyph* glyph = getGlyph( FontNode::utf8ToUnicode(text) );
-
-        text += charLength;
-        length -= charLength;
-
-        if (glyph != NULL) {
-            width += glyph->getAdvance().m_x;
-        }
-    }
-
-    m_style->unLock();
-
-    return width;
+int ScaledFont::getAscent(void) {
+    return m_fontExtents.ascent;
 }
 
-FontGlyph* FontNode::getGlyph(int c) {
-    int top;
-    int left;
-    int index;
-    FT_Face face;
-    FT_Error error;
-    int rasterSize;
-    FT_GlyphSlot glyph;
-    FontGlyph* fontGlyph;
-
-    face = m_style->getFace();
-    index = FT_Get_Char_Index(face, c);
-
-    if ( (index < 0) ||
-         (index >= m_style->getGlyphCount()) ) {
-        return NULL;
-    }
-
-    if ( m_glyphTable[index] != NULL ) {
-        return m_glyphTable[index];
-    }
-
-    m_storage->lockFT();
-
-    setFaceSize();
-    FT_Set_Transform(face, NULL, NULL);
-
-    error = FT_Load_Glyph(face, index, FT_LOAD_DEFAULT);
-
-    if (error != 0) {
-        m_storage->unLockFT();
-        dbprintf( "FontNode::getGlyph(): unable to load glyph char=%u index=%d (error=%d)\n", c, index, error);
-        return NULL;
-    }
-
-    glyph = face->glyph;
-
-    if (m_style->isScalable()) {
-        top = -((glyph->metrics.horiBearingY + 63) & -64) / 64;
-        left = (glyph->metrics.horiBearingX & -64) / 64;
-    } else {
-        top = -glyph->bitmap_top;
-        left = glyph->bitmap_left;
-    }
-
-    if (m_style->isScalable()) {
-        if (m_info.m_flags & yguipp::FONT_SMOOTHED) {
-            error = FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
-        } else {
-            error = FT_Render_Glyph(glyph, FT_RENDER_MODE_MONO);
-        }
-
-        if (error != 0) {
-            m_storage->unLockFT();
-            dbprintf("FontNode::getGlyph(): failed to render glyph: 0x%x\n", error);
-            return NULL;
-        }
-    }
-
-    if ( (glyph->bitmap.width < 0) ||
-         (glyph->bitmap.rows < 0) ||
-         (glyph->bitmap.pitch < 0) ) {
-        m_storage->unLockFT();
-        dbprintf(
-            "FontNode::getGlyph(): glyph got invalid size %dx%d (%d)\n",
-            glyph->bitmap.width, glyph->bitmap.rows, glyph->bitmap.pitch
-        );
-        return NULL;
-    }
-
-    switch (glyph->bitmap.pixel_mode) {
-        case ft_pixel_mode_grays :
-            rasterSize = glyph->bitmap.pitch * glyph->bitmap.rows;
-            break;
-
-        case ft_pixel_mode_mono :
-            rasterSize = glyph->bitmap.width * glyph->bitmap.rows;
-            break;
-
-        default :
-            m_storage->unLockFT();
-            dbprintf("FontNode::getGlyph(): unknown pixel mode: %d\n", glyph->bitmap.pixel_mode);
-            return NULL;
-    }
-
-    yguipp::Rect bounds;
-    yguipp::Point advance;
-
-    bounds = yguipp::Rect(left,top,left + glyph->bitmap.width - 1, top + glyph->bitmap.rows - 1);
-    if (m_style->isScalable()) {
-        if (m_style->isFixedWidth()) {
-            advance = yguipp::Point(m_advance,0);
-        } else {
-            advance = yguipp::Point(
-                (glyph->metrics.horiAdvance + 32) / 64,
-                (glyph->metrics.vertAdvance + 32) / 64
-            );
-        }
-    } else {
-        advance = yguipp::Point(glyph->bitmap.width,0);
-    }
-
-    fontGlyph = new FontGlyph(bounds, advance, rasterSize);
-    m_glyphTable[index] = fontGlyph;
-
-    switch (glyph->bitmap.pixel_mode) {
-        case ft_pixel_mode_grays :
-            fontGlyph->setBytesPerLine(glyph->bitmap.pitch);
-            memcpy(fontGlyph->getRaster(), glyph->bitmap.buffer, rasterSize);
-            break;
-
-        case ft_pixel_mode_mono : {
-            register uint8_t* raster = fontGlyph->getRaster();
-            fontGlyph->setBytesPerLine(glyph->bitmap.width);
-
-            for ( int y = 0; y < bounds.height(); ++y ) {
-                for ( int x = 0; x < bounds.width(); ++x ) {
-                    if ( glyph->bitmap.buffer[x / 8 + y * glyph->bitmap.pitch] & (1 << (7 - (x % 8))) ) {
-                        raster[x + y * fontGlyph->getBytesPerLine()] = 255;
-                    } else {
-                        raster[x + y * fontGlyph->getBytesPerLine()] = 0;
-                    }
-                }
-            }
-        }
-    }
-
-    m_storage->unLockFT();
-
-    return fontGlyph;
+int ScaledFont::getDescent(void) {
+    return m_fontExtents.descent;
 }
 
-FT_Size FontNode::setFaceSize(void) {
-    FT_Face face = m_style->getFace();
-
-    if (m_style->isScalable()) {
-        FT_Set_Char_Size(face, m_info.m_pointSize * 64, m_info.m_pointSize * 64, 96, 96);
-    } else {
-        FT_Set_Pixel_Sizes(face, 0, (m_info.m_pointSize * 64 * 96 / 72) / 64);
-    }
-
-    return face->size;
+int ScaledFont::getHeight(void) {
+    return m_fontExtents.height;
 }
 
-FontStyle::FontStyle(FontStorage* storage, FT_Face face) : m_storage(storage), m_face(face), m_mutex("style_lock") {
-    m_glyphCount = face->num_glyphs;
-    m_scalable = ((face->face_flags & FT_FACE_FLAG_SCALABLE) != 0);
-    m_fixedWidth = ((face->face_flags & FT_FACE_FLAG_FIXED_WIDTH) != 0);
+int ScaledFont::getWidth(const std::string& s) {
+    cairo_text_extents_t extents;
+    cairo_scaled_font_text_extents(m_font, s.c_str(), &extents);
+    return extents.x_advance;
 }
 
-FontNode* FontStyle::getNode(const yguipp::FontInfo& info) {
-    FontNode* node;
-    std::map<yguipp::FontInfo, FontNode*>::const_iterator it = m_nodes.find(info);
-
-    if (it == m_nodes.end()) {
-        node = new FontNode(m_storage, this, info);
-        m_nodes[info] = node;
-    } else {
-        node = it->second;
-    }
-
-    return node;
-}
-
-FontFamily::FontFamily(void) {
-}
-
-void FontFamily::addStyle(const std::string& styleName, FontStyle* style) {
-    m_styles[styleName] = style;
-}
-
-FontStyle* FontFamily::getStyle(const std::string& styleName) {
-    std::map<std::string, FontStyle*>::const_iterator it = m_styles.find(styleName);
-
-    if (it == m_styles.end()) {
-        return NULL;
-    }
-
-    return it->second;
-}
-
-FontStorage::FontStorage(void) : m_ftLock("ftLock") {
+FontStorage::FontStorage(void) {
 }
 
 FontStorage::~FontStorage(void) {
@@ -283,7 +72,6 @@ bool FontStorage::loadFonts(void) {
     yutilpp::storage::Directory* fontDir;
 
     /* Create a list of available font files. */
-
     fontDir = new yutilpp::storage::Directory("/yaosp/system/fonts");
     fontDir->init();
 
@@ -299,7 +87,6 @@ bool FontStorage::loadFonts(void) {
     delete fontDir;
 
     /* Load fonts one-by-one. */
-
     for ( std::vector<std::string>::const_iterator it = fontFiles.begin();
           it != fontFiles.end();
           ++it ) {
@@ -335,30 +122,6 @@ bool FontStorage::loadFonts(void) {
     return true;
 }
 
-FontNode* FontStorage::getFontNode(const std::string& family, const std::string& style, const yguipp::FontInfo& info) {
-    std::map<std::string, FontFamily*>::const_iterator it = m_families.find(family);
-
-    if (it == m_families.end()) {
-        return NULL;
-    }
-
-    FontStyle* fontStyle = it->second->getStyle(style);
-
-    if (fontStyle == NULL) {
-        return NULL;
-    }
-
-    return fontStyle->getNode(info);
-}
-
-void FontStorage::lockFT(void) {
-    m_ftLock.lock();
-}
-
-void FontStorage::unLockFT(void) {
-    m_ftLock.unLock();
-}
-
 cairo_font_face_t* FontStorage::getCairoFontFace(const std::string& family, const std::string& style) {
     std::map<FontInfo, FontData*>::const_iterator it = m_fonts.find(FontInfo(family, style));
 
@@ -369,35 +132,29 @@ cairo_font_face_t* FontStorage::getCairoFontFace(const std::string& family, cons
     return it->second->m_cairoFace;
 }
 
-FontFamily* FontStorage::getFamily(const std::string& familyName) {
-    std::map<std::string, FontFamily*>::const_iterator it = m_families.find(familyName);
+ScaledFont* FontStorage::getScaledFont(const std::string& family, const std::string& style, int pointSize) {
+    std::map<FontInfo, FontData*>::const_iterator it = m_fonts.find(FontInfo(family, style));
 
-    if (it == m_families.end()) {
+    if (it == m_fonts.end()) {
         return NULL;
     }
 
-    return it->second;
+    cairo_matrix_t fm;
+    cairo_matrix_t ctm;
+    cairo_matrix_init_scale(&fm, pointSize, pointSize);
+    cairo_matrix_init_identity(&ctm);
+
+    cairo_font_options_t* options = cairo_font_options_create();
+    cairo_font_options_set_antialias(options, CAIRO_ANTIALIAS_SUBPIXEL);
+    cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_FULL);
+
+    cairo_scaled_font_t* scaledFont = cairo_scaled_font_create(it->second->m_cairoFace, &fm, &ctm, options);
+    cairo_font_options_destroy(options);
+
+    return new ScaledFont(scaledFont);
 }
 
 bool FontStorage::loadFontFace(FT_Face face) {
-    FontFamily* family = getFamily(face->family_name);
-
-    if (family == NULL) {
-        family = new FontFamily();
-        m_families[face->family_name] = family;
-    }
-
-    FontStyle* style = family->getStyle(face->style_name);
-
-    if (style != NULL) {
-        return false;
-    }
-
-    style = new FontStyle(this, face);
-    family->addStyle(face->style_name, style);
-
-    // ------
-
     cairo_font_face_t* cairoFace = cairo_ft_font_face_create_for_ft_face(face, 0);
     m_fonts[FontInfo(face->family_name, face->style_name)] = new FontData(face, cairoFace);
 

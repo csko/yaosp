@@ -72,7 +72,7 @@ bool Window::handleRender(uint8_t* data, size_t size) {
             }
 
             case yguipp::R_SET_FONT :
-                cairo_set_scaled_font(cr, m_application->getFont(reinterpret_cast<yguipp::RSetFont*>(header)->m_fontHandle));
+                cairo_set_scaled_font(cr, m_application->getFont(reinterpret_cast<yguipp::RSetFont*>(header)->m_fontHandle)->getCairoFont());
                 data += sizeof(yguipp::RSetFont);
                 break;
 

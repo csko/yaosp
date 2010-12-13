@@ -33,7 +33,7 @@ Black::Black(GuiServer* guiServer) : Decorator(guiServer) {
     m_minimizeImage = new Bitmap(23, 23, yguipp::CS_RGB32, m_minimizeButton);
     m_maximizeImage = new Bitmap(23, 23, yguipp::CS_RGB32, m_maximizeButton);
     m_closeImage = new Bitmap(23, 23, yguipp::CS_RGB32, m_closeButton);
-    m_titleFont = guiServer->getFontStorage()->getFontNode("DejaVu Sans", "Bold", yguipp::FontInfo(8));
+    m_titleFont = guiServer->getFontStorage()->getScaledFont("DejaVu Sans", "Bold", 11);
 }
 
 Black::~Black(void) {
@@ -70,15 +70,20 @@ bool Black::calculateItemPositions(Window* window) {
 
 bool Black::update(GraphicsDriver* driver, Window* window) {
     Bitmap* bitmap = window->getBitmap();
+    RenderContext renderContext;
+    renderContext.init(bitmap);
+    cairo_t* cr = renderContext.getCairoContext();
 
     /* Window header background */
-
     for (int i = 0; i < SIZE_HEADER; i++) {
-        driver->fillRect(bitmap, bitmap->bounds(), yguipp::Rect(0, i, bitmap->width() - 1, i), m_headerColors[i], yguipp::DM_COPY);
+        const yguipp::Color& c = m_headerColors[i];
+        cairo_rectangle(cr, 0, i, bitmap->width(), 1);
+        cairo_set_source_rgb(cr, c.m_red / 255.0f, c.m_green / 255.0f, c.m_blue / 255.0f);
+        cairo_fill(cr);
     }
 
     /* Window header buttons */
-
+/*
     yguipp::Point buttonPos(bitmap->width(), 0);
 
     buttonPos.m_x -= m_closeImage->width();
@@ -87,16 +92,21 @@ bool Black::update(GraphicsDriver* driver, Window* window) {
     driver->blitBitmap(bitmap, buttonPos, m_maximizeImage, m_maximizeImage->bounds(), yguipp::DM_COPY);
     buttonPos.m_x -= m_minimizeImage->width();
     driver->blitBitmap(bitmap, buttonPos, m_minimizeImage, m_minimizeImage->bounds(), yguipp::DM_COPY);
+*/
 
     /* Window title */
-
     const std::string& title = window->getTitle();
     yguipp::Point textPos(
-        (bitmap->width() - m_titleFont->getWidth(title.c_str(), title.size())) / 2,
-        (SIZE_HEADER - (m_titleFont->getAscender() - m_titleFont->getDescender())) / 2 + m_titleFont->getAscender()
+        (bitmap->width() - m_titleFont->getWidth(title)) / 2,
+        (SIZE_HEADER - (m_titleFont->getAscent() + m_titleFont->getDescent())) / 2 + m_titleFont->getAscent()
     );
 
-    driver->drawText(bitmap, bitmap->bounds(), textPos, yguipp::Color(255, 255, 255), m_titleFont, title.c_str(), title.size());
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_set_scaled_font(cr, m_titleFont->getCairoFont());
+    cairo_move_to(cr, textPos.m_x, textPos.m_y);
+    cairo_show_text(cr, title.c_str());
+
+    renderContext.finish();
 
     return true;
 }

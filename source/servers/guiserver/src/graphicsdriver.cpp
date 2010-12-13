@@ -74,18 +74,6 @@ int GraphicsDriver::fillRect( Bitmap* bitmap, const yguipp::Rect& clipRect, cons
     return 0;
 }
 
-int GraphicsDriver::drawText( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
-                              const yguipp::Color& color, FontNode* font, const char* text, int length ) {
-    switch ( (int)bitmap->getColorSpace() ) {
-        case yguipp::CS_RGB32 :
-            drawText32(bitmap, clipRect, position, color, font, text, length);
-            break;
-    }
-
-    return 0;
-}
-
-
 int GraphicsDriver::drawLine( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& p1,
                               const yguipp::Point& p2, const yguipp::Color& color, yguipp::DrawingMode mode ) {
     switch ((int)bitmap->getColorSpace()) {
@@ -206,84 +194,6 @@ int GraphicsDriver::fillRectInvert32( Bitmap* bitmap, const yguipp::Rect& rect )
 
     return 0;
 
-}
-
-int GraphicsDriver::drawText32( Bitmap* bitmap, const yguipp::Rect& clipRect, yguipp::Point position,
-                                const yguipp::Color& color, FontNode* font, const char* text, int length ) {
-    font->getStyle()->lock();
-
-    while (length > 0) {
-        int charLength = FontNode::utf8CharLength(*text);
-
-        if (charLength > length) {
-            break;
-        }
-
-        FontGlyph* glyph = font->getGlyph( FontNode::utf8ToUnicode(text) );
-
-        text += charLength;
-        length -= charLength;
-
-        if (glyph != NULL) {
-            renderGlyph32(bitmap, clipRect, position, color, glyph);
-            position.m_x += glyph->getAdvance().m_x;
-        }
-    }
-
-    font->getStyle()->unLock();
-
-    return 0;
-}
-
-int GraphicsDriver::renderGlyph32( Bitmap* bitmap, const yguipp::Rect& clipRect, const yguipp::Point& position,
-                                   const yguipp::Color& color, FontGlyph* glyph ) {
-    yguipp::Rect visibleGlyphRect;
-
-    visibleGlyphRect = glyph->bounds() + position;
-    visibleGlyphRect &= clipRect;
-    visibleGlyphRect &= bitmap->bounds();
-
-    if ( !visibleGlyphRect.isValid() ) {
-        return 0;
-    }
-
-    yguipp::Point glyphLeftTop = (visibleGlyphRect - position).leftTop() - glyph->bounds().leftTop();
-    uint8_t* glyphRaster = glyph->getRaster() + glyphLeftTop.m_y * glyph->getBytesPerLine() + glyphLeftTop.m_x;
-    uint32_t* bitmapRaster = reinterpret_cast<uint32_t*>(bitmap->getBuffer()) +
-        visibleGlyphRect.m_top * bitmap->width() + visibleGlyphRect.m_left;
-
-    uint32_t glyphModulo = glyph->bounds().width() - visibleGlyphRect.width();
-    uint32_t bitmapModulo = bitmap->width() - visibleGlyphRect.width();
-
-    for ( int y = 0; y < visibleGlyphRect.height(); ++y ) {
-        for ( int x = 0; x < visibleGlyphRect.width(); ++x ) {
-            uint8_t alpha = *glyphRaster++;
-
-            if ( alpha == 0xFF ) {
-                *bitmapRaster = color.toColor32();
-            } else if ( alpha > 0 ) {
-                register uint32_t bgColor = *bitmapRaster;
-
-                uint8_t bgAlpha = bgColor >> 24;
-                uint8_t bgRed  = ( bgColor >> 16 ) & 0xFF;
-                uint8_t bgGreen = ( bgColor >> 8 ) & 0xFF;
-                uint8_t bgBlue = bgColor & 0xFF;
-
-                uint8_t tmpRed = bgRed + ( color.m_red - bgRed ) * alpha / 255;
-                uint8_t tmpGreen = bgGreen + ( color.m_green - bgGreen ) * alpha / 255;
-                uint8_t tmpBlue = bgBlue + ( color.m_blue - bgBlue ) * alpha / 255;
-
-                *bitmapRaster = (bgAlpha << 24) | (tmpRed << 16) | (tmpGreen << 8) | tmpBlue;
-            }
-
-            bitmapRaster++;
-        }
-
-        glyphRaster += glyphModulo;
-        bitmapRaster += bitmapModulo;
-    }
-
-    return 0;
 }
 
 int GraphicsDriver::blitBitmapCopy( Bitmap* dest, const yguipp::Point& point, Bitmap* src, const yguipp::Rect& rect ) {
