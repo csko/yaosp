@@ -294,14 +294,10 @@ void Window::doRepaint( bool forced ) {
     m_graphicsContext->pushRestrictedArea( Rect(m_size) );
     m_container->doPaint( m_graphicsContext, forced );
 
-    if (m_graphicsContext->needToFlush()) {
-        m_graphicsContext->finish();
-        m_renderTable->flush();
-        m_graphicsContext->cleanUp();
-        m_renderTable->waitForFlush();
-    } else {
-        m_renderTable->reset();
-    }
+    m_graphicsContext->finish();
+    m_renderTable->flush();
+    m_graphicsContext->cleanUp();
+    m_renderTable->waitForFlush();
 }
 
 Widget* Window::findWidgetAt( const Point& p ) {

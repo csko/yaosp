@@ -137,13 +137,15 @@ int MenuItem::paint( GraphicsContext* g ) {
 
     g->setFont(m_font);
     g->setPenColor(Color(0, 0, 0));
-    g->drawText(position, m_text);
+    //g->drawText(position, m_text);
+    g->moveTo(position);
+    g->showText(m_text);
 
     return 0;
 }
 
 void MenuItem::initFont( void ) {
-    m_font = new Font("DejaVu Sans", "Book", FontInfo(8));
+    m_font = new Font("DejaVu Sans", "Book", FontInfo(11));
     m_font->init();
     m_font->incRef();
 }

@@ -63,8 +63,7 @@ bool Font::init(void) {
     m_handle = reply.m_fontHandle;
     m_ascender = reply.m_ascender;
     m_descender = reply.m_descender;
-    m_lineGap = reply.m_lineGap;
-    m_charWidth = reply.m_charWidth;
+    m_height = reply.m_height;
 
     return true;
 }
@@ -81,20 +80,12 @@ int Font::getDescender(void) {
     return m_descender;
 }
 
-int Font::getLineGap(void) {
-    return m_lineGap;
-}
-
 int Font::getHeight(void) {
-    return ( m_ascender - m_descender + m_lineGap );
+    return m_height;
 }
 
 int Font::getWidth(const std::string& text) {
-    if (m_charWidth == -1) {
-        return getWidthFromServer(text);
-    } else {
-        return (text.size() * m_charWidth);
-    }
+    return getWidthFromServer(text);
 }
 
 int Font::getWidthFromServer(const std::string& text) {
@@ -105,14 +96,14 @@ int Font::getWidthFromServer(const std::string& text) {
     FontStringWidthReply reply;
     Application* app = Application::getInstance();
 
-    size = sizeof(FontStringWidth) + text.size();
+    size = sizeof(FontStringWidth) + text.size() + 1;
     data = new uint8_t[size];
     request = reinterpret_cast<FontStringWidth*>(data);
 
     request->m_replyPort = app->getReplyPort()->getId();
     request->m_fontHandle = m_handle;
-    request->m_length = text.size();
     memcpy(reinterpret_cast<void*>(request + 1), text.data(), text.size());
+    data[size - 1] = 0;
 
     app->getServerPort()->send(Y_FONT_STRING_WIDTH, data, size);
     app->getReplyPort()->receive(code, reinterpret_cast<void*>(&reply), sizeof(reply));

@@ -26,7 +26,8 @@
 namespace yguipp {
 
 GraphicsContext::GraphicsContext( Window* window ) : m_leftTop(0,0), m_clipRect(0, 0, 0, 0), m_penValid(false),
-                                                     m_penColor(0, 0, 0), m_needToFlush(false), m_window(window) {
+                                                     m_penColor(0, 0, 0), m_window(window) {
+    m_renderTable = window->getRenderTable();
 }
 
 GraphicsContext::~GraphicsContext( void ) {
@@ -34,26 +35,6 @@ GraphicsContext::~GraphicsContext( void ) {
 
 const Point& GraphicsContext::getLeftTop( void ) {
     return m_leftTop;
-}
-
-bool GraphicsContext::needToFlush( void ) {
-    return m_needToFlush;
-}
-
-void GraphicsContext::setPenColor( const Color& pen ) {
-    RSetPenColor* cmd;
-
-    if ((m_penValid) &&
-         (m_penColor == pen)) {
-        return;
-    }
-
-    m_penColor = pen;
-    m_penValid = true;
-
-    cmd = reinterpret_cast<RSetPenColor*>( m_window->getRenderTable()->allocate( sizeof(RSetPenColor) ) );
-    cmd->m_header.m_cmd = R_SET_PEN_COLOR;
-    cmd->m_penColor = pen;
 }
 
 void GraphicsContext::setClipRect( const Rect& rect ) {
@@ -75,108 +56,104 @@ void GraphicsContext::setFont( Font* font ) {
     cmd->m_fontHandle = font->getHandle();
 }
 
-void GraphicsContext::setDrawingMode( DrawingMode mode ) {
-    RSetDrawingMode* cmd;
-
-    cmd = reinterpret_cast<RSetDrawingMode*>( m_window->getRenderTable()->allocate( sizeof(RSetDrawingMode) ));
-    cmd->m_header.m_cmd = R_SET_DRAWING_MODE;
-    cmd->m_drawingMode = mode;
-}
-
 void GraphicsContext::translate( const Point& p ) {
     m_translateStack.push( TranslateItem(p) );
     m_leftTop += p;
 }
 
-void GraphicsContext::fillRect( const Rect& r ) {
-    RFillRect* cmd;
-    Rect visibleRect;
+void GraphicsContext::setPenColor( const Color& pen ) {
+    RSetPenColor* cmd;
 
-    visibleRect = (r + m_leftTop) & m_clipRect;
-
-    if (!visibleRect.isValid()) {
+    if ((m_penValid) &&
+         (m_penColor == pen)) {
         return;
     }
 
-    cmd = reinterpret_cast<RFillRect*>( m_window->getRenderTable()->allocate( sizeof(RFillRect) ) );
-    cmd->m_header.m_cmd = R_FILL_RECT;
-    cmd->m_rect = visibleRect;
+    m_penColor = pen;
+    m_penValid = true;
 
-    m_needToFlush = true;
+    cmd = reinterpret_cast<RSetPenColor*>( m_window->getRenderTable()->allocate( sizeof(RSetPenColor) ) );
+    cmd->m_header.m_cmd = R_SET_PEN_COLOR;
+    cmd->m_penColor = pen;
 }
 
-void GraphicsContext::drawRect( const Rect& r ) {
-    RDrawRect* cmd;
-    Rect visibleRect;
+void GraphicsContext::setLineWidth(double width) {
+    RSetLineWidth* cmd = reinterpret_cast<RSetLineWidth*>(m_renderTable->allocate(sizeof(RSetLineWidth)));
+    cmd->m_header.m_cmd = R_SET_LINE_WIDTH;
+    cmd->m_width = width;
+}
 
-    visibleRect = (r + m_leftTop) & m_clipRect;
+void GraphicsContext::setAntiAlias(AntiAliasMode mode) {
+    RSetAntiAlias* cmd = reinterpret_cast<RSetAntiAlias*>(m_renderTable->allocate(sizeof(RSetAntiAlias)));
+    cmd->m_header.m_cmd = R_SET_ANTIALIAS;
+    cmd->m_mode = mode;
+}
 
-    if (!visibleRect.isValid()) {
-        return;
-    }
+void GraphicsContext::moveTo(const Point& p) {
+    RMoveTo* cmd = reinterpret_cast<RMoveTo*>(m_renderTable->allocate(sizeof(RMoveTo)));
+    cmd->m_header.m_cmd = R_MOVE_TO;
+    cmd->m_p = p + m_leftTop;
+}
 
-    cmd = reinterpret_cast<RDrawRect*>( m_window->getRenderTable()->allocate( sizeof(RDrawRect) ) );
-    cmd->m_header.m_cmd = R_DRAW_RECT;
+void GraphicsContext::lineTo(const Point& p) {
+    RLineTo* cmd = reinterpret_cast<RLineTo*>(m_renderTable->allocate(sizeof(RLineTo)));
+    cmd->m_header.m_cmd = R_LINE_TO;
+    cmd->m_p = p + m_leftTop;
+}
+
+void GraphicsContext::rectangle(const Rect& r) {
+    RRectangle* cmd = reinterpret_cast<RRectangle*>(m_renderTable->allocate(sizeof(RRectangle)));
+    cmd->m_header.m_cmd = R_RECTANGLE;
     cmd->m_rect = r + m_leftTop;
-
-    m_needToFlush = true;
 }
 
-void GraphicsContext::drawBitmap( const Point& p, Bitmap* bitmap ) {
-    RDrawBitmap* cmd;
-    Rect visibleRect;
-    Point bitmapLeftTop = m_leftTop + p;
-
-    visibleRect = (bitmap->bounds() + bitmapLeftTop) & m_clipRect;
-
-    if (!visibleRect.isValid()) {
-        return;
-    }
-
-    cmd = reinterpret_cast<RDrawBitmap*>( m_window->getRenderTable()->allocate( sizeof(RDrawBitmap) ) );
-    cmd->m_header.m_cmd = R_DRAW_BITMAP;
-    cmd->m_position = bitmapLeftTop;
-    cmd->m_bitmapHandle = bitmap->getHandle();
-
-    m_needToFlush = true;
+void GraphicsContext::arc(const Point& center, double radius, double angle1, double angle2) {
+    RArc* cmd = reinterpret_cast<RArc*>(m_renderTable->allocate(sizeof(RArc)));
+    cmd->m_header.m_cmd = R_ARC;
+    cmd->m_center = center + m_leftTop;
+    cmd->m_radius = radius;
+    cmd->m_angle1 = angle1;
+    cmd->m_angle2 = angle2;
 }
 
-void GraphicsContext::drawText( const Point& p, const std::string& text, int length ) {
-    RDrawText* cmd;
+void GraphicsContext::closePath(void) {
+    RenderHeader* cmd = reinterpret_cast<RenderHeader*>(m_renderTable->allocate(sizeof(RenderHeader)));
+    cmd->m_cmd = R_CLOSE_PATH;
+}
 
-    if (length == 0) {
-        return;
-    } else if (length == -1) {
-        length = (int)text.size();
-    }
+void GraphicsContext::stroke(void) {
+    RenderHeader* cmd = reinterpret_cast<RenderHeader*>(m_renderTable->allocate(sizeof(RenderHeader)));
+    cmd->m_cmd = R_STROKE;
+}
 
-    cmd = reinterpret_cast<RDrawText*>( m_window->getRenderTable()->allocate( sizeof(RDrawText) + length ) );
-    cmd->m_header.m_cmd = R_DRAW_TEXT;
-    cmd->m_position = p + m_leftTop;
-    cmd->m_length = length;
+void GraphicsContext::fill(void) {
+    RenderHeader* cmd = reinterpret_cast<RenderHeader*>(m_renderTable->allocate(sizeof(RenderHeader)));
+    cmd->m_cmd = R_FILL;
+}
+
+void GraphicsContext::fillPreserve(void) {
+    RenderHeader* cmd = reinterpret_cast<RenderHeader*>(m_renderTable->allocate(sizeof(RenderHeader)));
+    cmd->m_cmd = R_FILL_PRESERVE;
+}
+
+void GraphicsContext::showText(const std::string& text) {
+    size_t size;
+    uint8_t* data;
+    RShowText* cmd;
+    size_t length = text.length();
+
+    size = sizeof(RShowText) + length + 1;
+    data = reinterpret_cast<uint8_t*>(m_window->getRenderTable()->allocate(size));
+    cmd = reinterpret_cast<RShowText*>(data);
+
+    cmd->m_header.m_cmd = R_SHOW_TEXT;
     memcpy(reinterpret_cast<void*>(cmd + 1), text.data(), length);
-
-    m_needToFlush = true;
+    data[size - 1] = 0;
 }
 
-void GraphicsContext::drawLine( const Point& p1, const Point& p2 ) {
-    RDrawLine* cmd;
-
-    cmd = reinterpret_cast<RDrawLine*>(m_window->getRenderTable()->allocate(sizeof(RDrawLine)));
-    cmd->m_header.m_cmd = R_DRAW_LINE;
-    cmd->m_p1 = p1 + m_leftTop;
-    cmd->m_p2 = p2 + m_leftTop;
-
-    m_needToFlush = true;
-}
-
-void GraphicsContext::finish( void ) {
-    if ( m_needToFlush ) {
-        RenderHeader* cmd;
-
-        cmd = reinterpret_cast<RenderHeader*>( m_window->getRenderTable()->allocate( sizeof(RenderHeader) ) );
-        cmd->m_cmd = R_DONE;
-    }
+void GraphicsContext::finish(void) {
+    RenderHeader* cmd = reinterpret_cast<RenderHeader*>(m_window->getRenderTable()->allocate(sizeof(RenderHeader)));
+    cmd->m_cmd = R_DONE;
 }
 
 void GraphicsContext::pushRestrictedArea( const Rect& rect ) {

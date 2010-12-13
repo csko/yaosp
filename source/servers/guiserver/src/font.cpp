@@ -17,6 +17,7 @@
  */
 
 #include <vector>
+#include <cairo/cairo-ft.h>
 
 #include <yaosp/debug.h>
 #include <yutil++/storage/directory.hpp>
@@ -219,9 +220,9 @@ FT_Size FontNode::setFaceSize(void) {
     FT_Face face = m_style->getFace();
 
     if (m_style->isScalable()) {
-        FT_Set_Char_Size(face, m_info.m_pointSize, m_info.m_pointSize, 96, 96);
+        FT_Set_Char_Size(face, m_info.m_pointSize * 64, m_info.m_pointSize * 64, 96, 96);
     } else {
-        FT_Set_Pixel_Sizes(face, 0, (m_info.m_pointSize * 96 / 72) / 64);
+        FT_Set_Pixel_Sizes(face, 0, (m_info.m_pointSize * 64 * 96 / 72) / 64);
     }
 
     return face->size;
@@ -358,6 +359,16 @@ void FontStorage::unLockFT(void) {
     m_ftLock.unLock();
 }
 
+cairo_font_face_t* FontStorage::getCairoFontFace(const std::string& family, const std::string& style) {
+    std::map<FontInfo, FontData*>::const_iterator it = m_fonts.find(FontInfo(family, style));
+
+    if (it == m_fonts.end()) {
+        return NULL;
+    }
+
+    return it->second->m_cairoFace;
+}
+
 FontFamily* FontStorage::getFamily(const std::string& familyName) {
     std::map<std::string, FontFamily*>::const_iterator it = m_families.find(familyName);
 
@@ -384,6 +395,11 @@ bool FontStorage::loadFontFace(FT_Face face) {
 
     style = new FontStyle(this, face);
     family->addStyle(face->style_name, style);
+
+    // ------
+
+    cairo_font_face_t* cairoFace = cairo_ft_font_face_create_for_ft_face(face, 0);
+    m_fonts[FontInfo(face->family_name, face->style_name)] = new FontData(face, cairoFace);
 
     return true;
 }

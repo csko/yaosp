@@ -27,9 +27,13 @@ Bitmap::Bitmap( uint32_t width, uint32_t height, yguipp::ColorSpace colorSpace,
     } else {
         m_buffer = buffer;
     }
+
+    m_surface = cairo_image_surface_create_for_data(m_buffer, CAIRO_FORMAT_ARGB32, m_width, m_height, m_width * 4);
 }
 
 Bitmap::~Bitmap( void ) {
+    cairo_surface_destroy(m_surface);
+
     // todo: delete region
 
     if (m_flags & FREE_BUFFER) {

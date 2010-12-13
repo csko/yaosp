@@ -24,149 +24,148 @@
 #include <guiserver/application.hpp>
 #include <guiserver/windowmanager.hpp>
 
-void Window::handleRender( uint8_t* data, size_t size ) {
+yguipp::Point Window::translateToWindow(const yguipp::Point& p) {
+    yguipp::Point r = p;
+
+    if ((m_flags & yguipp::WINDOW_NO_BORDER) == 0) {
+        r += m_guiServer->getWindowManager()->getDecorator()->leftTop();
+    }
+
+    return r;
+}
+
+yguipp::Rect Window::translateToWindow(const yguipp::Rect& r) {
+    yguipp::Rect r2 = r;
+
+    if ((m_flags & yguipp::WINDOW_NO_BORDER) == 0) {
+        r2 += m_guiServer->getWindowManager()->getDecorator()->leftTop();
+    }
+
+    return r2;
+}
+
+bool Window::handleRender(uint8_t* data, size_t size) {
+    cairo_t* cr = m_renderContext.getCairoContext();
+    bool renderingDone = false;
     uint8_t* dataEnd = data + size;
 
     while (data < dataEnd) {
-        yguipp::RenderHeader* header;
-
-        header = reinterpret_cast<yguipp::RenderHeader*>(data);
+        yguipp::RenderHeader* header = reinterpret_cast<yguipp::RenderHeader*>(data);
 
         switch (header->m_cmd) {
-            case yguipp::R_SET_PEN_COLOR :
-                m_penColor = reinterpret_cast<yguipp::RSetPenColor*>(header)->m_penColor;
-                data += sizeof(yguipp::RSetPenColor);
-                break;
+            case yguipp::R_SET_CLIP_RECT : {
+                yguipp::Rect clipRect = translateToWindow(reinterpret_cast<yguipp::RSetClipRect*>(header)->m_clipRect);
 
-            case yguipp::R_SET_FONT :
-                m_font = m_application->getFont(reinterpret_cast<yguipp::RSetFont*>(header)->m_fontHandle);
-                data += sizeof(yguipp::RSetFont);
-                break;
-
-            case yguipp::R_SET_CLIP_RECT :
-                m_clipRect = reinterpret_cast<yguipp::RSetClipRect*>(header)->m_clipRect;
-
-                if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                    m_clipRect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                }
+                cairo_reset_clip(cr);
+                cairo_rectangle(cr, clipRect.m_left, clipRect.m_top, clipRect.width(), clipRect.height());
+                cairo_clip(cr);
 
                 data += sizeof(yguipp::RSetClipRect);
                 break;
+            }
 
-            case yguipp::R_SET_DRAWING_MODE :
-                m_drawingMode = reinterpret_cast<yguipp::RSetDrawingMode*>(header)->m_drawingMode;
-                data += sizeof(yguipp::RSetDrawingMode);
-                break;
-
-            case yguipp::R_DRAW_RECT : {
-                yguipp::Rect rect = reinterpret_cast<yguipp::RFillRect*>(data)->m_rect;
-
-                if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                    rect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                }
-
-                m_guiServer->getGraphicsDriver()->drawRect(
-                    m_bitmap, m_clipRect, rect, m_penColor, yguipp::DM_COPY
-                );
-
-                data += sizeof(yguipp::RDrawRect);
+            case yguipp::R_SET_PEN_COLOR : {
+                yguipp::Color penColor = reinterpret_cast<yguipp::RSetPenColor*>(header)->m_penColor;
+                cairo_set_source_rgb(cr, penColor.m_red / 255.0f, penColor.m_green / 255.0f, penColor.m_blue / 255.0f);
+                data += sizeof(yguipp::RSetPenColor);
                 break;
             }
 
-            case yguipp::R_FILL_RECT : {
-                yguipp::Rect rect = reinterpret_cast<yguipp::RFillRect*>(data)->m_rect;
+            case yguipp::R_SET_FONT :
+                cairo_set_scaled_font(cr, m_application->getFont(reinterpret_cast<yguipp::RSetFont*>(header)->m_fontHandle));
+                data += sizeof(yguipp::RSetFont);
+                break;
 
-                if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                    rect += m_guiServer->getWindowManager()->getDecorator()->leftTop();
+            case yguipp::R_SET_LINE_WIDTH :
+                cairo_set_line_width(cr, reinterpret_cast<yguipp::RSetLineWidth*>(data)->m_width);
+                data += sizeof(yguipp::RSetLineWidth);
+                break;
+
+            case yguipp::R_SET_ANTIALIAS :
+                switch (reinterpret_cast<yguipp::RSetAntiAlias*>(data)->m_mode) {
+                    case yguipp::NONE : cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE); break;
+                    case yguipp::GRAY : cairo_set_antialias(cr, CAIRO_ANTIALIAS_GRAY); break;
+                    case yguipp::SUBPIXEL : cairo_set_antialias(cr, CAIRO_ANTIALIAS_SUBPIXEL); break;
                 }
 
-                m_guiServer->getGraphicsDriver()->fillRect(
-                    m_bitmap, m_clipRect, rect, m_penColor, yguipp::DM_COPY
-                );
+                data += sizeof(yguipp::RSetAntiAlias);
+                break;
 
-                data += sizeof(yguipp::RFillRect);
+            case yguipp::R_MOVE_TO : {
+                yguipp::Point p = translateToWindow(reinterpret_cast<yguipp::RMoveTo*>(data)->m_p);
+                cairo_move_to(cr, p.m_x, p.m_y);
+                data += sizeof(yguipp::RMoveTo);
                 break;
             }
 
-            case yguipp::R_DRAW_TEXT : {
-                yguipp::RDrawText* cmd = reinterpret_cast<yguipp::RDrawText*>(data);
-
-                if (m_font != NULL) {
-                    yguipp::Point position = cmd->m_position;
-
-                    if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                        position += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                    }
-
-                    m_guiServer->getGraphicsDriver()->drawText(
-                        m_bitmap, m_clipRect, position, m_penColor, m_font,
-                        reinterpret_cast<char*>(cmd + 1), cmd->m_length
-                    );
-
-                }
-
-                data += sizeof(yguipp::RDrawText);
-                data += cmd->m_length;
+            case yguipp::R_LINE_TO : {
+                yguipp::Point p = translateToWindow(reinterpret_cast<yguipp::RLineTo*>(data)->m_p);
+                cairo_line_to(cr, p.m_x, p.m_y);
+                data += sizeof(yguipp::RLineTo);
                 break;
             }
 
-            case yguipp::R_DRAW_BITMAP : {
-                yguipp::RDrawBitmap* cmd = reinterpret_cast<yguipp::RDrawBitmap*>(data);
-                Bitmap* bitmap = m_application->getBitmap(cmd->m_bitmapHandle);
-
-                if (bitmap != NULL) {
-                    yguipp::Rect bmpRect;
-                    yguipp::Point position = cmd->m_position;
-
-                    if ( (m_flags & yguipp::WINDOW_NO_BORDER) == 0 ) {
-                        position += m_guiServer->getWindowManager()->getDecorator()->leftTop();
-                    }
-
-                    bmpRect = (bitmap->bounds() + position) & m_clipRect;
-
-                    if (bmpRect.isValid()) {
-                        m_guiServer->getGraphicsDriver()->blitBitmap(
-                            m_bitmap, bmpRect.leftTop(),
-                            bitmap, bmpRect - position,
-                            m_drawingMode
-                        );
-                    }
-                }
-
-                data += sizeof(yguipp::RDrawBitmap);
+            case yguipp::R_RECTANGLE : {
+                yguipp::Rect r = translateToWindow(reinterpret_cast<yguipp::RRectangle*>(data)->m_rect);
+                cairo_rectangle(cr, r.m_left, r.m_top, r.width(), r.height());
+                data += sizeof(yguipp::RRectangle);
                 break;
             }
 
-            case yguipp::R_DRAW_LINE : {
-                yguipp::RDrawLine* cmd = reinterpret_cast<yguipp::RDrawLine*>(data);
-                yguipp::Point p1 = cmd->m_p1;
-                yguipp::Point p2 = cmd->m_p2;
+            case yguipp::R_ARC : {
+                yguipp::RArc* arc = reinterpret_cast<yguipp::RArc*>(data);
+                yguipp::Point center = translateToWindow(arc->m_center);
+                cairo_arc(cr, center.m_x, center.m_y, arc->m_radius, arc->m_angle1, arc->m_angle2);
+                data += sizeof(yguipp::RArc);
+                break;
+            }
 
-                if ((m_flags & yguipp::WINDOW_NO_BORDER) == 0) {
-                    yguipp::Point leftTop = m_guiServer->getWindowManager()->getDecorator()->leftTop();
+            case yguipp::R_CLOSE_PATH :
+                cairo_close_path(cr);
+                data += sizeof(yguipp::RenderHeader);
+                break;
 
-                    p1 += leftTop;
-                    p2 += leftTop;
-                }
+            case yguipp::R_STROKE :
+                cairo_stroke(cr);
+                data += sizeof(yguipp::RenderHeader);
+                break;
 
-                m_guiServer->getGraphicsDriver()->drawLine(
-                    m_bitmap, m_clipRect, p1, p2, m_penColor, yguipp::DM_COPY
-                );
+            case yguipp::R_FILL :
+                cairo_fill(cr);
+                data += sizeof(yguipp::RenderHeader);
+                break;
 
-                data += sizeof(yguipp::RDrawLine);
+            case yguipp::R_FILL_PRESERVE :
+                cairo_fill_preserve(cr);
+                data += sizeof(yguipp::RenderHeader);
+                break;
+
+            case yguipp::R_SHOW_TEXT : {
+                yguipp::RShowText* cmd = reinterpret_cast<yguipp::RShowText*>(data);
+                char* s = reinterpret_cast<char*>(cmd + 1);
+
+                cairo_show_text(cr, s);
+
+                data += sizeof(yguipp::RShowText);
+                data += strlen(s) + 1;
                 break;
             }
 
             case yguipp::R_DONE :
+                renderingDone = true;
+
                 if (m_visible) {
                     m_guiServer->getWindowManager()->updateWindowRegion(this, m_screenRect);
                 }
+
                 data += sizeof(yguipp::RenderHeader);
                 break;
 
             default :
                 dbprintf( "Window::handleRender(): unknown command: %d\n", (int)header->m_cmd );
-                return;
+                return false;
         }
     }
+
+    return renderingDone;
 }

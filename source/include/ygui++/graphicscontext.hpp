@@ -32,6 +32,7 @@ namespace yguipp {
 
 class Window;
 class Widget;
+class RenderTable;
 
 class GraphicsContext {
   public:
@@ -47,19 +48,25 @@ class GraphicsContext {
 
   public:
     const Point& getLeftTop( void );
-    bool needToFlush( void );
 
-    void setPenColor( const Color& pen );
-    void setClipRect( const Rect& rect );
-    void setFont( Font* font );
-    void setDrawingMode( DrawingMode mode );
+    void setPenColor(const Color& pen);
+    void setLineWidth(double width);
+    void setFont(Font* font);
+    void setClipRect(const Rect& rect);
+    void setAntiAlias(AntiAliasMode mode);
 
-    void translate( const Point& p );
-    void fillRect( const Rect& r );
-    void drawRect( const Rect& r );
-    void drawBitmap( const Point& p, Bitmap* bitmap );
-    void drawText( const Point& p, const std::string& text, int length = -1 );
-    void drawLine( const Point& p1, const Point& p2 );
+    void translate(const Point& p);
+    void moveTo(const Point& p);
+    void lineTo(const Point& p);
+    void rectangle(const Rect& r);
+    void arc(const Point& center, double radius, double angle1, double angle2);
+
+    void closePath(void);
+
+    void stroke(void);
+    void fill(void);
+    void fillPreserve(void);
+    void showText(const std::string& text);
 
     void finish( void );
 
@@ -93,12 +100,11 @@ class GraphicsContext {
     bool m_penValid;
     Color m_penColor;
 
-    bool m_needToFlush;
-
     std::stack<Rect> m_restrictedAreas;
     std::stack<TranslateItem> m_translateStack;
 
     Window* m_window;
+    RenderTable* m_renderTable;
 }; /* class GraphicsContext */
 
 } /* namespace yguipp */

@@ -19,6 +19,8 @@
 #ifndef _BITMAP_HPP_
 #define _BITMAP_HPP_
 
+#include <cairo/cairo.h>
+
 #include <yaosp/region.h>
 
 #include <ygui++/rect.hpp>
@@ -37,6 +39,8 @@ class Bitmap {
     ~Bitmap(void);
 
   public:
+    inline cairo_surface_t* getSurface(void) { return m_surface; }
+
     inline bool hasFlag(uint32_t flag) { return ((m_flags & flag) != 0); }
     inline void addFlag(uint32_t flag) { m_flags |= flag; }
     inline void removeFlag(uint32_t flag) { m_flags &= ~flag; }
@@ -61,6 +65,8 @@ class Bitmap {
     uint8_t* m_buffer;
     uint32_t m_flags;
     region_id m_region;
+
+    cairo_surface_t* m_surface;
 }; /* class Bitmap */
 
 #endif /* _BITMAP_HPP_ */

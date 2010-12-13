@@ -152,14 +152,12 @@ struct FontCreateReply {
     int m_fontHandle;
     int m_ascender;
     int m_descender;
-    int m_lineGap;
-    int m_charWidth;
+    int m_height;
 };
 
 struct FontStringWidth {
     ipc_port_id m_replyPort;
     int m_fontHandle;
-    int m_length;
     /* text */
 };
 

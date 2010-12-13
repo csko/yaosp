@@ -29,12 +29,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/window.cpp</item>
         <item>src/widget.cpp</item>
         <item>src/panel.cpp</item>
-        <item>src/label.cpp</item>
+        <!--item>src/label.cpp</item-->
         <item>src/button.cpp</item>
-        <item>src/image.cpp</item>
-        <item>src/menubar.cpp</item>
+        <!--item>src/image.cpp</item-->
+        <!--item>src/menubar.cpp</item>
         <item>src/menu.cpp</item>
-        <item>src/menuitem.cpp</item>
+        <item>src/menuitem.cpp</item-->
         <item>src/graphicscontext.cpp</item>
         <item>src/color.cpp</item>
         <item>src/font.cpp</item>
@@ -45,9 +45,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <item>src/scrollbar.cpp</item>
         <item>src/scrollpanel.cpp</item>
         <item>src/protocol.cpp</item>
-        <item>src/textarea.cpp</item>
+        <!--item>src/textarea.cpp</item-->
         <item>src/layout/borderlayout.cpp</item>
-        <item>src/border/lineborder.cpp</item>
+        <!--item>src/border/lineborder.cpp</item-->
         <item>src/event/actionlistener.cpp</item>
         <item>src/event/keylistener.cpp</item>
         <item>src/event/adjustmentlistener.cpp</item>

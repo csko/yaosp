@@ -1,4 +1,4 @@
-/* yaosp GUI library
+/* GUI server
  *
  * Copyright (c) 2010 Zoltan Kovacs
  *
@@ -16,47 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <ygui++/panel.hpp>
+#include <guiserver/rendercontext.hpp>
 
-namespace yguipp {
-
-Panel::Panel( void ) : m_layout(NULL) {
-    m_backgroundColor = Color(216, 216, 216);
+RenderContext::RenderContext(void) : m_cairo(NULL) {
 }
 
-Panel::~Panel( void ) {
+RenderContext::~RenderContext(void) {
 }
 
-void Panel::setLayout( layout::Layout* layout ) {
-    if ( m_layout != NULL ) {
-        m_layout->decRef();
+bool RenderContext::init(Bitmap* bitmap) {
+    if (m_cairo != NULL) {
+        return false;
     }
 
-    m_layout = layout;
+    m_cairo = cairo_create(bitmap->getSurface());
+    cairo_set_antialias(m_cairo, CAIRO_ANTIALIAS_NONE);
 
-    if ( m_layout != NULL ) {
-        m_layout->incRef();
-    }
+    return true;
 }
 
-void Panel::setBackgroundColor( const Color& c ) {
-    m_backgroundColor = c;
-}
-
-int Panel::validate( void ) {
-    if ( m_layout != NULL ) {
-        m_layout->doLayout(this);
+void RenderContext::finish(void) {
+    if (m_cairo == NULL) {
+        return;
     }
 
-    return 0;
+    cairo_destroy(m_cairo);
+    m_cairo = NULL;
 }
 
-int Panel::paint( GraphicsContext* g ) {
-    g->setPenColor(m_backgroundColor);
-    g->rectangle(getBounds());
-    g->fill();
-
-    return 0;
+cairo_t* RenderContext::getCairoContext(void) {
+    return m_cairo;
 }
-
-} /* namespace yguipp */

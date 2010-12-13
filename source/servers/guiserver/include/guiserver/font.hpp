@@ -25,6 +25,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_SYNTHESIS_H
+#include <cairo/cairo.h>
 
 #include <ygui++/yconstants.hpp>
 #include <ygui++/rect.hpp>
@@ -156,15 +157,40 @@ class FontStorage {
     void lockFT(void);
     void unLockFT(void);
 
+    cairo_font_face_t* getCairoFontFace(const std::string& family, const std::string& style);
+
   private:
     FontFamily* getFamily(const std::string& familyName);
 
     bool loadFontFace(FT_Face face);
 
   private:
+    struct FontInfo {
+        FontInfo(const std::string& family, const std::string& style)
+            : m_family(family), m_style(style) {}
+
+        bool operator<(const FontInfo& i) const {
+            return ((m_family < i.m_family) ||
+                    (m_family == i.m_family && m_style < i.m_style));
+        }
+
+        std::string m_family;
+        std::string m_style;
+    }; /* struct FontInfo */
+
+    struct FontData {
+        FontData(FT_Face face, cairo_font_face_t* cairoFace)
+            : m_face(face), m_cairoFace(cairoFace) {}
+
+        FT_Face m_face;
+        cairo_font_face_t* m_cairoFace;
+    }; /* struct FontData */
+
     FT_Library m_ftLibrary;
     yutilpp::thread::Mutex m_ftLock;
     std::map<std::string, FontFamily*> m_families;
+
+    std::map<FontInfo, FontData*> m_fonts;
 }; /* class FontStorage */
 
 #endif /* _FONT_HPP_ */

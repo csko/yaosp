@@ -16,6 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <math.h>
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_SYNTHESIS_H
+#include <cairo/cairo-ft.h>
+
 #include <yaosp/debug.h>
 
 #include <guiserver/guiserver.hpp>
@@ -106,7 +113,6 @@ void GuiServer::removeApplication(Application* application) {
 
 int GuiServer::run(void) {
     /* Setup screen mode. */
-
     m_graphicsDriver = GraphicsDriverLoader::detectDriver();
 
     if (m_graphicsDriver == NULL) {
@@ -128,7 +134,6 @@ int GuiServer::run(void) {
     m_screenBitmap->addFlag(Bitmap::SCREEN | Bitmap::VIDEO_MEMORY);
 
     /* Initialize other stuffs. */
-
     m_fontStorage = new FontStorage();
     m_fontStorage->init();
     m_fontStorage->loadFonts();
@@ -149,7 +154,6 @@ int GuiServer::run(void) {
     m_serverPort->registerAsNamed("guiserver");
 
     /* Mainloop. */
-
     while (1) {
         int ret;
         uint32_t code;

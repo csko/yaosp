@@ -24,9 +24,9 @@
 Window::Window( GuiServer* guiServer, Application* application ) : m_id(-1), m_visible(false), m_bitmap(NULL),
                                                                    m_mouseOnDecorator(false),
                                                                    m_mousePressedOnDecorator(false), m_moving(false),
-                                                                   m_resizing(false), m_drawingMode(yguipp::DM_COPY),
-                                                                   m_font(NULL), m_guiServer(guiServer),
-                                                                   m_application(application) {
+                                                                   m_resizing(false), m_guiServer(guiServer),
+                                                                   m_application(application),
+                                                                   m_rendering(false){
 }
 
 Window::~Window( void ) {
@@ -69,13 +69,24 @@ int Window::handleMessage( uint32_t code, void* data, size_t size ) {
             moveTo(reinterpret_cast<WinMoveTo*>(data)->m_position);
             break;
 
-        case Y_WINDOW_RENDER :
-            handleRender(
+        case Y_WINDOW_RENDER : {
+            if (!m_rendering) {
+                m_renderContext.init(m_bitmap);
+                m_rendering = true;
+            }
+
+            bool renderingFinished = handleRender(
                 reinterpret_cast<uint8_t*>(data) + sizeof(WinHeader),
                 size - sizeof(WinHeader)
             );
 
+            if (renderingFinished) {
+                m_renderContext.finish();
+                m_rendering = false;
+            }
+
             break;
+        }
     }
 
     return 0;

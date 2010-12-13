@@ -23,8 +23,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
     <pinclude file="${toplevel}/config/targets-recursive.xml" targets="clean,all,compile"/>
 
     <array name="subdirs">
-        <item>taskbar</item>
-        <item>desktop</item>
+        <!--item>taskbar</item>
+        <item>desktop</item-->
         <item>terminal</item>
     </array>
 </build>

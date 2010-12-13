@@ -82,8 +82,14 @@ enum Orientation {
     VERTICAL
 };
 
+enum AntiAliasMode {
+    NONE,
+    GRAY,
+    SUBPIXEL
+}; /* enum AntiAliasMode */
+
 struct FontInfo {
-    FontInfo(int pointSize, int flags = FONT_SMOOTHED) : m_pointSize(pointSize * 64), m_flags(flags) {}
+    FontInfo(int pointSize, int flags = FONT_SMOOTHED) : m_pointSize(pointSize), m_flags(flags) {}
 
     int m_pointSize;
     int m_flags;

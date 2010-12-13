@@ -46,7 +46,7 @@ yguipp::Color TerminalView::m_normalColors[COLOR_COUNT] = {
 TerminalView::TerminalView(Terminal* terminal, TerminalBuffer* buffer) : m_terminal(terminal), m_buffer(buffer) {
     buffer->addListener(this);
 
-    m_font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(8));
+    m_font = new yguipp::Font("DejaVu Sans Mono", "Book", yguipp::FontInfo(11));
     m_font->init();
 }
 
@@ -56,7 +56,7 @@ yguipp::Font* TerminalView::getFont(void) {
 
 yguipp::Point TerminalView::getPreferredSize(void) {
     return yguipp::Point(
-        80 * m_font->getWidth("a"),
+        m_font->getWidth("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
         std::max(25, m_buffer->getLineCount()) * m_font->getHeight()
     );
 }
@@ -71,7 +71,8 @@ int TerminalView::paint(yguipp::GraphicsContext* g) {
     yguipp::Point scrollOffset = getScrollOffset();
 
     g->setPenColor(yguipp::Color(0, 0, 0));
-    g->fillRect(yguipp::Rect(visibleSize) - scrollOffset);
+    g->rectangle(yguipp::Rect(visibleSize) - scrollOffset);
+    g->fill();
 
     g->setPenColor(yguipp::Color(255, 255, 255));
     g->setFont(m_font);
@@ -141,14 +142,16 @@ int TerminalView::paintLinePart(yguipp::GraphicsContext* g, TerminalLine* line, 
         rect.m_left = position.m_x;
         rect.m_right = position.m_x + textWidth - 1;
         rect.m_top = position.m_y - m_font->getAscender() + 1;
-        rect.m_bottom = position.m_y - m_font->getDescender() + m_font->getLineGap() - 1;
+        rect.m_bottom = rect.m_top + m_font->getHeight() - 1;
 
         g->setPenColor(m_normalColors[attr.m_bgColor]);
-        g->fillRect(rect);
+        g->rectangle(rect);
+        g->fill();
     }
 
     g->setPenColor(attr.m_bold ? m_boldColors[attr.m_fgColor] : m_normalColors[attr.m_fgColor]);
-    g->drawText(position, text);
+    g->moveTo(position);
+    g->showText(text);
 
     position.m_x += textWidth;
 
@@ -174,10 +177,12 @@ int TerminalView::paintCursor(yguipp::GraphicsContext* g, int cursorX, int curso
     const TerminalAttribute& attr = line->m_attr[cursorX];
 
     g->setPenColor(m_normalColors[attr.m_fgColor]);
-    g->fillRect(rect);
+    g->rectangle(rect);
+    g->fill();
 
-    g->setPenColor(attr.m_bold ? m_boldColors[attr.m_bgColor] : m_normalColors[attr.m_fgColor]);
-    g->drawText(p, line->m_text.substr(cursorX, 1));
+    g->setPenColor(attr.m_bold ? m_boldColors[attr.m_bgColor] : m_normalColors[attr.m_bgColor]);
+    g->moveTo(p);
+    g->showText(line->m_text.substr(cursorX, 1));
 
     return 0;
 }

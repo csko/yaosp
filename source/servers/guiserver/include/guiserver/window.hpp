@@ -28,6 +28,7 @@
 #include <guiserver/region.hpp>
 #include <guiserver/bitmap.hpp>
 #include <guiserver/font.hpp>
+#include <guiserver/rendercontext.hpp>
 
 class Application;
 class GuiServer;
@@ -87,7 +88,10 @@ class Window {
     void registerWindow(void);
     void unregisterWindow(void);
 
-    void handleRender( uint8_t* data, size_t size );
+    yguipp::Point translateToWindow(const yguipp::Point& p);
+    yguipp::Rect translateToWindow(const yguipp::Rect& r);
+
+    bool handleRender( uint8_t* data, size_t size );
 
     void calculateWindowRects( const yguipp::Point& position, const yguipp::Point& size,
                                yguipp::Rect& screenRect, yguipp::Rect& clientRect );
@@ -107,13 +111,11 @@ class Window {
     bool m_moving;
     bool m_resizing;
 
-    yguipp::Rect m_clipRect;
-    yguipp::Color m_penColor;
-    yguipp::DrawingMode m_drawingMode;
-    FontNode* m_font;
-
     GuiServer* m_guiServer;
     Application* m_application;
+
+    bool m_rendering;
+    RenderContext m_renderContext;
 }; /* class Window */
 
 #endif /* _WINDOW_HPP_ */

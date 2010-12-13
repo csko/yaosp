@@ -5,72 +5,86 @@
 #include <ygui++/rect.hpp>
 #include <ygui++/yconstants.hpp>
 
+#define _PACKED __attribute__((packed))
+
 namespace yguipp {
 
 enum {
-    R_SET_PEN_COLOR = 1,
+    R_SET_PEN_COLOR = 50,
+    R_SET_LINE_WIDTH,
     R_SET_FONT,
     R_SET_CLIP_RECT,
-    R_SET_DRAWING_MODE,
-    R_DRAW_RECT,
-    R_FILL_RECT,
-    R_DRAW_TEXT,
-    R_DRAW_BITMAP,
-    R_DRAW_LINE,
+    R_SET_ANTIALIAS,
+
+    R_MOVE_TO = 100,
+    R_LINE_TO,
+    R_RECTANGLE,
+    R_ARC,
+
+    R_CLOSE_PATH,
+
+    R_STROKE = 150,
+    R_FILL,
+    R_FILL_PRESERVE,
+    R_SHOW_TEXT,
     R_DONE
 };
 
 struct RenderHeader {
     uint8_t m_cmd;
-} __attribute__((packed));
-
-struct RSetPenColor {
-    RenderHeader m_header;
-    Color m_penColor;
-} __attribute__((packed));
+} _PACKED;
 
 struct RSetFont {
     RenderHeader m_header;
     int m_fontHandle;
-} __attribute__((packed));
+} _PACKED;
 
 struct RSetClipRect {
     RenderHeader m_header;
     Rect m_clipRect;
-} __attribute__((packed));
+} _PACKED;
 
-struct RSetDrawingMode {
+struct RSetAntiAlias {
     RenderHeader m_header;
-    DrawingMode m_drawingMode;
-} __attribute__((packed));
+    AntiAliasMode m_mode;
+} _PACKED;
 
-struct RDrawRect {
+struct RShowText {
+    RenderHeader m_header;
+} _PACKED;
+
+struct RSetPenColor {
+    RenderHeader m_header;
+    Color m_penColor;
+} _PACKED;
+
+struct RSetLineWidth {
+    RenderHeader m_header;
+    double m_width;
+} _PACKED;
+
+struct RMoveTo {
+    RenderHeader m_header;
+    Point m_p;
+} _PACKED;
+
+struct RLineTo {
+    RenderHeader m_header;
+    Point m_p;
+} _PACKED;
+
+struct RRectangle {
     RenderHeader m_header;
     Rect m_rect;
-} __attribute__((packed));
+} _PACKED;
 
-struct RFillRect {
+struct RArc {
     RenderHeader m_header;
-    Rect m_rect;
-} __attribute__((packed));
-
-struct RDrawText {
-    RenderHeader m_header;
-    Point m_position;
-    int m_length;
-} __attribute__((packed));
-
-struct RDrawBitmap {
-    RenderHeader m_header;
-    Point m_position;
-    int m_bitmapHandle;
-} __attribute__((packed));
-
-struct RDrawLine {
-    RenderHeader m_header;
-    Point m_p1;
-    Point m_p2;
-} __attribute__((packed));
+    Point m_center;
+    double m_radius;
+    double m_angle1;
+    double m_angle2;
+} _PACKED;
 
 } /* namespace yguipp */
 

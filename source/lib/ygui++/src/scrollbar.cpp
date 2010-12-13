@@ -155,40 +155,51 @@ int ScrollBar::paintVertical(GraphicsContext* g, const Point& size) {
     /* Top button */
     r = m_decRect;
     g->setPenColor(Color(0, 0, 0));
-    g->drawRect(r);
+    g->rectangle(r);
+    g->stroke();
     r.resize(1, 1, -1, -1);
     g->setPenColor(Color(216, 216, 216));
-    g->fillRect(r);
+    g->rectangle(r);
+    g->fill();
 
     /* Top ^ */
     g->setPenColor(Color(0, 0, 0));
+#if 0
     p1 = Point((r.m_left + r.m_right) / 2, r.m_top + 4);
     p2 = Point(r.m_left + 3, r.m_bottom - 4);
     g->drawLine(p1, p2);
     p2 = Point(r.m_right - 3, r.m_bottom - 4);
     g->drawLine(p1, p2);
+#endif
 
     /* Bottom button */
     r = m_incRect;
-    g->drawRect(r);
+    g->rectangle(r);
+    g->stroke();
     r.resize(1, 1, -1, -1);
     g->setPenColor(Color(216, 216, 216));
-    g->fillRect(r);
+    g->rectangle(r);
+    g->fill();
 
     /* Bottom V */
     g->setPenColor(Color(0, 0, 0));
+#if 0
     p1 = Point((r.m_left + r.m_right) / 2, r.m_bottom - 4);
     p2 = Point(r.m_left + 3, r.m_top + 4);
     g->drawLine(p1, p2);
     p2 = Point(r.m_right - 3, r.m_top + 4);
     g->drawLine(p1, p2);
+#endif
 
     /* Scrollbar lines */
-    g->fillRect(Rect(0, m_scrollButtonSize, 0, size.m_y - (m_scrollButtonSize + 1)));
-    g->fillRect(Rect(m_scrollBarSize - 1, 0, m_scrollBarSize - 1, size.m_y - (m_scrollButtonSize + 1)));
+    g->rectangle(Rect(0, m_scrollButtonSize, 0, size.m_y - (m_scrollButtonSize + 1)));
+    g->fill();
+    g->rectangle(Rect(m_scrollBarSize - 1, 0, m_scrollBarSize - 1, size.m_y - (m_scrollButtonSize + 1)));
+    g->fill();
 
     g->setPenColor(Color(180, 180, 180));
-    g->fillRect(Rect(1, m_scrollButtonSize, m_scrollBarSize - 2, size.m_y - (m_scrollButtonSize + 1)));
+    g->rectangle(Rect(1, m_scrollButtonSize, m_scrollBarSize - 2, size.m_y - (m_scrollButtonSize + 1)));
+    g->fill();
 
     return 0;
 }
@@ -201,40 +212,51 @@ int ScrollBar::paintHorizontal(GraphicsContext* g, const Point& size) {
     /* Left button */
     r = m_decRect;
     g->setPenColor(Color(0, 0, 0));
-    g->drawRect(r);
+    g->rectangle(r);
+    g->stroke();
     r.resize(1, 1, -1, -1);
     g->setPenColor(Color(216, 216, 216));
-    g->fillRect(r);
+    g->rectangle(r);
+    g->fill();
 
     /* Left < */
     g->setPenColor(Color(0, 0, 0));
+#if 0
     p1 = Point(r.m_left + 4, (r.m_top + r.m_bottom) / 2);
     p2 = Point(r.m_right - 4, r.m_top + 3);
     g->drawLine(p1, p2);
     p2 = Point(r.m_right - 4, r.m_bottom - 3);
     g->drawLine(p1, p2);
+#endif
 
     /* Right button */
     r = m_incRect;
-    g->drawRect(r);
+    g->rectangle(r);
+    g->stroke();
     r.resize(1, 1, -1, -1);
     g->setPenColor(Color(216, 216, 216));
-    g->fillRect(r);
+    g->rectangle(r);
+    g->fill();
 
     /* Right > */
     g->setPenColor(Color(0, 0, 0));
+#if 0
     p1 = Point(r.m_right - 4, (r.m_top + r.m_bottom) / 2);
     p2 = Point(r.m_left + 4, r.m_top + 3);
     g->drawLine(p1, p2);
     p2 = Point(r.m_left + 4, r.m_bottom - 3);
     g->drawLine(p1, p2);
+#endif
 
     /* Scrollbar lines */
-    g->fillRect(Rect(m_scrollButtonSize, 0, size.m_x - (m_scrollButtonSize + 1), 0));
-    g->fillRect(Rect(m_scrollButtonSize, m_scrollBarSize - 1, size.m_x - (m_scrollButtonSize + 1), m_scrollBarSize - 1));
+    g->rectangle(Rect(m_scrollButtonSize, 0, size.m_x - (m_scrollButtonSize + 1), 0));
+    g->fill();
+    g->rectangle(Rect(m_scrollButtonSize, m_scrollBarSize - 1, size.m_x - (m_scrollButtonSize + 1), m_scrollBarSize - 1));
+    g->fill();
 
     g->setPenColor(Color(180, 180, 180));
-    g->fillRect(Rect(m_scrollButtonSize, 1, size.m_x - (m_scrollButtonSize + 1), m_scrollBarSize - 2));
+    g->rectangle(Rect(m_scrollButtonSize, 1, size.m_x - (m_scrollButtonSize + 1), m_scrollBarSize - 2));
+    g->fill();
 
     return 0;
 }

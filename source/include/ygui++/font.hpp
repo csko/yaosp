@@ -41,7 +41,6 @@ class Font : public Object {
     int getHandle(void);
     int getAscender(void);
     int getDescender(void);
-    int getLineGap(void);
     int getHeight(void);
     int getWidth(const std::string& text);
 
@@ -52,8 +51,7 @@ class Font : public Object {
     int m_handle;
     int m_ascender;
     int m_descender;
-    int m_lineGap;
-    int m_charWidth;
+    int m_height;
 
     std::string m_name;
     std::string m_style;
