@@ -32,9 +32,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
         <!--item>src/label.cpp</item-->
         <item>src/button.cpp</item>
         <!--item>src/image.cpp</item-->
-        <!--item>src/menubar.cpp</item>
+        <item>src/menubar.cpp</item>
         <item>src/menu.cpp</item>
-        <item>src/menuitem.cpp</item-->
+        <item>src/menuitem.cpp</item>
         <item>src/graphicscontext.cpp</item>
         <item>src/color.cpp</item>
         <item>src/font.cpp</item>

@@ -132,7 +132,6 @@ static int start_gui( void ) {
         _exit( 0 );
     }
 
-#if 0
     if ( fork() == 0 ) {
         char* const argv[] = { "taskbar", NULL };
         char* const envv[] = {
@@ -158,21 +157,6 @@ static int start_gui( void ) {
         };
 
         execve( "/application/desktop/desktop", argv, envv );
-        _exit( 0 );
-    }
-#endif
-
-    if ( fork() == 0 ) {
-        char* const argv[] = { "terminal", NULL };
-        char* const envv[] = {
-            "PATH=/yaosp/application:/yaosp/package/python-2.6.5",
-            "HOME=/",
-            "TERM=xterm",
-            "TEMP=/temp",
-            NULL
-        };
-
-        execve( "/application/terminal/terminal", argv, envv );
         _exit( 0 );
     }
 

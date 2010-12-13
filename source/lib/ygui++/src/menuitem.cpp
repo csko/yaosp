@@ -117,27 +117,25 @@ int MenuItem::paint( GraphicsContext* g ) {
         g->setPenColor(Color(216, 216, 216));
     }
 
-    g->fillRect(bounds);
+    g->rectangle(bounds);
+    g->fill();
 
     position.m_x = 3;
 
     if (m_image != NULL) {
         position.m_y = (bounds.height() - m_image->height()) / 2;
 
-        g->setDrawingMode(DM_BLEND);
-        g->drawBitmap(position, m_image);
-        g->setDrawingMode(DM_COPY);
+        g->showBitmap(position, m_image);
 
         position.m_x += m_image->width();
         position.m_x += 3;
     }
 
     int asc = m_font->getAscender();
-    position.m_y = (bounds.height() - (asc - m_font->getDescender())) / 2 + asc;
+    position.m_y = (bounds.height() - (asc + m_font->getDescender())) / 2 + asc;
 
     g->setFont(m_font);
     g->setPenColor(Color(0, 0, 0));
-    //g->drawText(position, m_text);
     g->moveTo(position);
     g->showText(m_text);
 
@@ -145,7 +143,7 @@ int MenuItem::paint( GraphicsContext* g ) {
 }
 
 void MenuItem::initFont( void ) {
-    m_font = new Font("DejaVu Sans", "Book", FontInfo(11));
+    m_font = new Font("DejaVu Sans", "Book", 11);
     m_font->init();
     m_font->incRef();
 }

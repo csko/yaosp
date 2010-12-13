@@ -151,6 +151,20 @@ bool Window::handleRender(uint8_t* data, size_t size) {
                 break;
             }
 
+            case yguipp::R_SHOW_BITMAP : {
+                yguipp::RShowBitmap* cmd = reinterpret_cast<yguipp::RShowBitmap*>(data);
+                Bitmap* bitmap = m_application->getBitmap(cmd->m_handle);
+
+                if (bitmap != NULL) {
+                    yguipp::Point p = translateToWindow(cmd->m_position);
+                    cairo_set_source_surface(cr, bitmap->getSurface(), p.m_x, p.m_y);
+                    cairo_paint(cr);
+                }
+
+                data += sizeof(yguipp::RShowBitmap);
+                break;
+            }
+
             case yguipp::R_DONE :
                 renderingDone = true;
 

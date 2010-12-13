@@ -67,6 +67,7 @@ class GraphicsContext {
     void fill(void);
     void fillPreserve(void);
     void showText(const std::string& text);
+    void showBitmap(const Point& p, Bitmap* bitmap);
 
     void finish( void );
 

@@ -151,6 +151,13 @@ void GraphicsContext::showText(const std::string& text) {
     data[size - 1] = 0;
 }
 
+void GraphicsContext::showBitmap(const Point& p, Bitmap* bitmap) {
+    RShowBitmap* cmd = reinterpret_cast<RShowBitmap*>(m_renderTable->allocate(sizeof(RShowBitmap)));
+    cmd->m_header.m_cmd = R_SHOW_BITMAP;
+    cmd->m_position = p + m_leftTop;
+    cmd->m_handle = bitmap->getHandle();
+}
+
 void GraphicsContext::finish(void) {
     RenderHeader* cmd = reinterpret_cast<RenderHeader*>(m_window->getRenderTable()->allocate(sizeof(RenderHeader)));
     cmd->m_cmd = R_DONE;

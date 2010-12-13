@@ -10,23 +10,24 @@
 namespace yguipp {
 
 enum {
-    R_SET_PEN_COLOR = 50,
+    R_SET_PEN_COLOR = 1,
     R_SET_LINE_WIDTH,
     R_SET_FONT,
     R_SET_CLIP_RECT,
     R_SET_ANTIALIAS,
 
-    R_MOVE_TO = 100,
+    R_MOVE_TO,
     R_LINE_TO,
     R_RECTANGLE,
     R_ARC,
 
     R_CLOSE_PATH,
 
-    R_STROKE = 150,
+    R_STROKE,
     R_FILL,
     R_FILL_PRESERVE,
     R_SHOW_TEXT,
+    R_SHOW_BITMAP,
     R_DONE
 };
 
@@ -51,6 +52,12 @@ struct RSetAntiAlias {
 
 struct RShowText {
     RenderHeader m_header;
+} _PACKED;
+
+struct RShowBitmap {
+    RenderHeader m_header;
+    Point m_position;
+    int m_handle;
 } _PACKED;
 
 struct RSetPenColor {

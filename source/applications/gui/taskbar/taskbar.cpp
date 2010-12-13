@@ -49,9 +49,7 @@ int MenuButton::paint(GraphicsContext* g) {
         return 0;
     }
 
-    g->setDrawingMode(DM_BLEND);
-    g->drawBitmap((getSize() - m_image->getSize()) / 2, m_image);
-    g->setDrawingMode(DM_COPY);
+    g->showBitmap((getSize() - m_image->getSize()) / 2, m_image);
 
     return 0;
 }
