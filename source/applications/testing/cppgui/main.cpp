@@ -29,6 +29,7 @@
 #include <ygui++/menuitem.hpp>
 #include <ygui++/scrollpanel.hpp>
 #include <ygui++/textarea.hpp>
+#include <ygui++/tabpanel.hpp>
 #include <ygui++/layout/borderlayout.hpp>
 #include <ygui++/text/plaindocument.hpp>
 
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
     container->setLayout( new BorderLayout() );
     container->setBackgroundColor( Color(255,255,255) );
 
-    //container->add(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
+    container->add(new Label("PAGE_START"), new BorderLayoutData(BorderLayoutData::PAGE_START));
     MenuBar* menuBar = new MenuBar();
     //container->add(menuBar, new BorderLayoutData(BorderLayoutData::PAGE_START));
 
@@ -92,9 +93,9 @@ int main(int argc, char** argv) {
     saveMenu->add(new MenuItem("As Image"));
     saveMenu->add(new MenuItem("As Text"));
 
-    //container->add(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
-    //container->add(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
-    //container->add(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
+    container->add(new Label("PAGE_END"), new BorderLayoutData(BorderLayoutData::PAGE_END));
+    container->add(new Label("LS"), new BorderLayoutData(BorderLayoutData::LINE_START));
+    container->add(new Label("LE"), new BorderLayoutData(BorderLayoutData::LINE_END));
 
     //container->add(new Button("CENTER"), new BorderLayoutData(BorderLayoutData::CENTER));
     /*container->add(
@@ -105,6 +106,9 @@ int main(int argc, char** argv) {
     //scrollPanel->add(new MyButton());
     //container->add(scrollPanel, new BorderLayoutData(BorderLayoutData::CENTER));
     TextArea* textArea = new TextArea();
+    textArea->getDocument()->insert(0, "Hello\nWorld!\nThis is the third line with a few characters\n...\n");
+    //dumpElementTree(textArea->getDocument());
+
     Font* font = new yguipp::Font("DejaVu Sans Mono", "Book", 11);
     font->init();
     textArea->setFont(font);
@@ -112,9 +116,14 @@ int main(int argc, char** argv) {
     ScrollPanel* scrollPanel = new ScrollPanel();
     scrollPanel->add(textArea);
 
-    container->add(scrollPanel, new BorderLayoutData(BorderLayoutData::CENTER));
-    textArea->getDocument()->insert(0, "Hello\nWorld!\nThis is the third line with a few characters\n...\n");
-    //dumpElementTree(textArea->getDocument());
+    //container->add(scrollPanel, new BorderLayoutData(BorderLayoutData::CENTER));
+
+    TabPanel* tp = new TabPanel();
+    tp->addTab("main.c", scrollPanel);
+    tp->addTab("Hello World1", new Label("abc"));
+    tp->addTab(":)", new Button("123"));
+
+    container->add(tp, new BorderLayoutData(BorderLayoutData::CENTER));
 
     win->show();
 
