@@ -44,52 +44,39 @@ Point Label::getPreferredSize( void ) {
 int Label::paint( GraphicsContext* g ) {
     Rect bounds = getBounds();
 
-    g->setPenColor( Color(216, 216, 216) );
-    g->fillRect( bounds );
+    g->setPenColor(Color(216, 216, 216));
+    g->rectangle(bounds);
+    g->fill();
 
-    if ( !m_text.empty() ) {
-        Point position;
-
-        switch ( m_hAlign ) {
-            case H_ALIGN_LEFT :
-                position.m_x = 0;
-                break;
-
-            case H_ALIGN_CENTER :
-                position.m_x = ( bounds.width() - m_font->getWidth(m_text) ) / 2;
-                break;
-
-            case H_ALIGN_RIGHT :
-                position.m_x = bounds.m_right - m_font->getWidth(m_text) + 1;
-                break;
-        }
-
-        switch ( m_vAlign ) {
-            case V_ALIGN_TOP :
-                position.m_y = m_font->getAscender() - 1;
-                break;
-
-            case V_ALIGN_CENTER : {
-                int asc = m_font->getAscender();
-                position.m_y = ( bounds.height() - ( asc - m_font->getDescender() ) ) / 2 + asc;
-                break;
-            }
-
-            case V_ALIGN_BOTTOM :
-                position.m_y = bounds.m_bottom - m_font->getHeight() + 1;
-                break;
-        }
-
-        g->setFont( m_font );
-        g->setPenColor( Color(0, 0, 0) );
-        g->drawText( position, m_text );
+    if (m_text.empty()) {
+        return 0;
     }
+
+    Point p;
+
+    switch (m_hAlign) {
+        case H_ALIGN_LEFT : p.m_x = 0; break;
+        case H_ALIGN_RIGHT : p.m_x = bounds.m_right - m_font->getWidth(m_text) + 1; break;
+        case H_ALIGN_CENTER : p.m_x = (bounds.width() - m_font->getWidth(m_text)) / 2; break;
+    }
+
+    switch (m_vAlign) {
+        case V_ALIGN_TOP : p.m_y = m_font->getAscender() - 1; break;
+        case V_ALIGN_CENTER : p.m_y = (bounds.height() - (m_font->getAscender() + m_font->getDescender())) / 2 + m_font->getAscender(); break;
+        case V_ALIGN_BOTTOM : p.m_y = bounds.m_bottom - m_font->getHeight() + 1; break;
+    }
+
+
+    g->setFont(m_font);
+    g->setPenColor(Color(0, 0, 0));
+    g->moveTo(p);
+    g->showText(m_text);
 
     return 0;
 }
 
 void Label::initFont( void ) {
-    m_font = new Font( "DejaVu Sans", "Book", FontInfo(8) );
+    m_font = new Font("DejaVu Sans", "Book", 11);
     m_font->init();
     m_font->incRef();
 }

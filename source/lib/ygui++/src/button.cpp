@@ -51,7 +51,7 @@ int Button::paint( GraphicsContext* g ) {
     int y = 1;
     int width = bounds.width() - 1;
     int height = bounds.height() - 1;
-    int radius = 10;
+    int radius = 5;
     double degrees = M_PI / 180.0f;
 
     g->arc(Point(x + width - radius, y + radius),          radius, -90 * degrees,   0 * degrees);
@@ -75,59 +75,23 @@ int Button::paint( GraphicsContext* g ) {
         return 0;
     }
 
-    int asc = m_font->getAscender();
+    Point p;
+
+    switch (m_hAlign) {
+        case H_ALIGN_LEFT : p.m_x = 0; break;
+        case H_ALIGN_RIGHT : p.m_x = bounds.m_right - m_font->getWidth(m_text) + 1; break;
+        case H_ALIGN_CENTER : p.m_x = (bounds.width() - m_font->getWidth(m_text)) / 2; break;
+    }
+
+    switch (m_vAlign) {
+        case V_ALIGN_TOP : p.m_y = m_font->getAscender() - 1; break;
+        case V_ALIGN_CENTER : p.m_y = (bounds.height() - (m_font->getAscender() + m_font->getDescender())) / 2 + m_font->getAscender(); break;
+        case V_ALIGN_BOTTOM : p.m_y = bounds.m_bottom - m_font->getHeight() + 1; break;
+    }
+
     g->setFont(m_font);
-    g->moveTo(Point((bounds.width() - m_font->getWidth(m_text)) / 2, ( bounds.height() - ( asc - m_font->getDescender() ) ) / 2 + asc));
-    g->showText("Hello World");
-
-/*
-    if (m_pressed) {
-        g->setPenColor( Color(156, 156, 156) );
-    } else {
-        g->setPenColor( Color(216, 216, 216) );
-    }
-
-    g->fillRect(bounds);
-    g->setPenColor(Color(0, 0, 0));
-    g->drawRect(bounds);
-
-    if ( !m_text.empty() ) {
-        Point position;
-
-        switch ( m_hAlign ) {
-            case H_ALIGN_LEFT :
-                position.m_x = 0;
-                break;
-
-            case H_ALIGN_CENTER :
-                position.m_x = ( bounds.width() - m_font->getWidth(m_text) ) / 2;
-                break;
-
-            case H_ALIGN_RIGHT :
-                position.m_x = bounds.m_right - m_font->getWidth(m_text) + 1;
-                break;
-        }
-
-        switch ( m_vAlign ) {
-            case V_ALIGN_TOP :
-                position.m_y = m_font->getAscender() - 1;
-                break;
-
-            case V_ALIGN_CENTER : {
-                int asc = m_font->getAscender();
-                position.m_y = ( bounds.height() - ( asc - m_font->getDescender() ) ) / 2 + asc;
-                break;
-            }
-
-            case V_ALIGN_BOTTOM :
-                position.m_y = bounds.m_bottom - m_font->getHeight() + 1;
-                break;
-        }
-
-        g->setFont( m_font );
-        g->drawText( position, m_text );
-    }
-*/
+    g->moveTo(p);
+    g->showText(m_text);
 
     return 0;
 }

@@ -29,7 +29,7 @@ TextArea::TextArea(void) {
     m_document = new yguipp::text::PlainDocument();
     m_document->addDocumentListener(this);
 
-    m_font = new yguipp::Font("DejaVu Sans", "Book", yguipp::FontInfo(8));
+    m_font = new yguipp::Font("DejaVu Sans", "Book", 11);
     m_font->init();
 }
 
@@ -67,11 +67,12 @@ int TextArea::paint(GraphicsContext* g) {
     yguipp::Point visibleSize = getVisibleSize();
     yguipp::Point scrollOffset = getScrollOffset();
 
-    g->setPenColor(yguipp::Color(255, 255, 255));
-    g->fillRect(yguipp::Rect(visibleSize) - scrollOffset);
+    g->setPenColor(Color(255, 255, 255));
+    g->rectangle(Rect(visibleSize) - scrollOffset);
+    g->fill();
 
     g->setFont(m_font);
-    g->setPenColor(yguipp::Color(0, 0, 0));
+    g->setPenColor(Color(0, 0, 0));
 
     yguipp::Point p;
     p.m_y = m_font->getAscender();
@@ -90,7 +91,8 @@ int TextArea::paint(GraphicsContext* g) {
                 line.erase(lineSize - 1, 1);
             }
 
-            g->drawText(p, line);
+            g->moveTo(p);
+            g->showText(line);
         }
 
         p.m_y += m_font->getHeight();
@@ -150,7 +152,7 @@ int TextArea::keyPressed(int key) {
 
         case KEY_HOME : {
             yguipp::text::Element* e = currentLineElement();
-            
+
             if (e != NULL) {
                 m_caretPosition = e->getOffset();
                 invalidate();
@@ -221,7 +223,9 @@ int TextArea::paintCursor(GraphicsContext* g) {
     p2.m_x = p1.m_x;
 
     g->setPenColor(Color(0, 0, 0));
-    g->drawLine(p1, p2);
+    g->moveTo(p1);
+    g->lineTo(p2);
+    g->stroke();
 
     return 0;
 }
